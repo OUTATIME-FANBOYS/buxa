@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { Icon } from '@/components/ui';
-import { ROUTES } from '@/config/routes';
+import { ROUTES } from '@/config';
 
+/** Shown on the sign-in page when the public Supabase settings are missing, instead of a form that cannot work. */
 export function NotConfigured() {
   return (
     <main className="auth"><div className="auth-card">

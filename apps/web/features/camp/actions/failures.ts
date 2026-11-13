@@ -1,5 +1,5 @@
 import type { Membership } from '@buxa/contracts';
-import { HttpError } from '@/server/http/errors';
+import { isHttpError } from '@/server/http/errors';
 import { failure, type ActionState } from '@/lib/actions/state';
 import type { Session } from '@/server/auth/session';
 
@@ -14,7 +14,7 @@ export const membershipOf = (session: Session, orgId: string): Membership | null
  * error boundary. 409 is a taken address, 403 is a role that may not do this.
  */
 export function expectedFailure(error: unknown, fallback: string): ActionState {
-  if (!(error instanceof HttpError)) throw error;
+  if (!isHttpError(error)) throw error;
   if (error.statusCode === 409) return failure(SLUG_TAKEN, { slug: SLUG_TAKEN });
   if (error.statusCode === 403) return failure('Your role cannot do this.');
   return failure(fallback);

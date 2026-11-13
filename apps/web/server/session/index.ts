@@ -7,7 +7,7 @@ import type { Actor } from '@buxa/domain';
 import { ROUTES } from '@/config';
 import type { Session } from '../auth/session';
 import { sessionFromToken } from '../auth/sessionFromToken';
-import { HttpError } from '../http/errors';
+import { isHttpError } from '../http/errors';
 import { getRuntime } from '../runtime';
 import { hardenCookie } from './cookies';
 import { requestSessionClient } from './nextClient';
@@ -44,7 +44,7 @@ async function loadSession(): Promise<Session | null> {
   try {
     return await sessionFromToken(token, { verifier: runtime.verifier, users: runtime.repositories.users }, runtime.log);
   } catch (error) {
-    if (error instanceof HttpError && (error.statusCode === 401 || error.statusCode === 409)) return null;
+    if (isHttpError(error) && (error.statusCode === 401 || error.statusCode === 409)) return null;
     throw error;
   }
 }

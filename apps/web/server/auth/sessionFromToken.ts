@@ -1,7 +1,7 @@
 import { conflict, unauthorized } from '../http/errors';
 import type { Logger } from '../log';
 import type { UserRepository } from '../users/UserRepository';
-import { EmailInUseError } from '../users/UserRepository';
+import { isEmailInUse } from '../users/UserRepository';
 import type { Session } from './session';
 import type { Verifier } from './verifier';
 
@@ -22,6 +22,6 @@ export async function sessionFromToken(token: string, deps: { verifier: Verifier
     const user = await deps.users.upsertFromIdentity(identity);
     return { user, memberships: await deps.users.membershipsOf(user.id) };
   } catch (error) {
-    throw error instanceof EmailInUseError ? conflict(error.message) : error;
+    throw isEmailInUse(error) ? conflict(error.message) : error;
   }
 }
