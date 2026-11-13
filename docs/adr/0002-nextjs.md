@@ -1,6 +1,6 @@
 # ADR 0002: Next.js, full stack
 
-Status: accepted, in progress. Date: 2026-11-13.
+Status: accepted, in progress (steps 1 and 2 done). Date: 2026-11-13.
 
 ## Context
 The web app was a Vite single-page app with hash routes (`#/camp`), and a separate Fastify API. Roadmap phases 2 and 3 need **public pages**
@@ -17,8 +17,8 @@ Move to **Next.js (App Router)** and put the API in it too:
 - `packages/*` become npm workspaces. A single `config/routes.ts` (and later siblings) is the source of truth for anything used in more than one place.
 
 ## Order of work (each its own PR, tested end to end)
-1. Foundation: Next.js replaces Vite for the screens, workspaces, real URLs. The Fastify API is proxied in development. *(this change)*
-2. API into route handlers: services layer, `/v1` handlers, `proxy.ts` and CSP, tests ported, Fastify removed.
+1. Foundation: Next.js replaces Vite for the screens, workspaces, real URLs. *(done)*
+2. API into route handlers: services layer, `/v1` handlers, `proxy.ts` with a per-request-nonce CSP, tests ported, Fastify removed, Vercel build with migrations. *(done)*
 3. Server rendering: cookie sessions, Server Components for reads, Server Actions for mutations.
 4. Front-end organisation: feature folders, shared UI split into one file per component, single-source barrels (routes, copy, tokens).
 

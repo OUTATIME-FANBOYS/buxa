@@ -4,9 +4,9 @@ Short, checkable rules. Reviews cite these by name. Anything a tool can enforce 
 
 ## Layout
 ```
-apps/web          Next.js (App Router)       apps/api        Fastify API (moving into apps/web)
+apps/web          Next.js (App Router): pages, the /v1 API, and the server code behind it
 packages/domain   pure rules, no I/O         packages/db     migrations, transactions, tenant isolation
-packages/contracts  zod shapes shared by API and web
+packages/contracts  zod shapes shared by the server and the browser
 ```
 - **Dependencies point inward:** `apps/*` may import `packages/*`; `domain` imports nothing; `contracts` imports only `domain`; `db` imports only `domain`.
 - `packages/*` are npm workspaces: import them by name (`@buxa/domain`, `@buxa/db`, `@buxa/contracts`), never by relative path.
@@ -15,7 +15,7 @@ packages/contracts  zod shapes shared by API and web
   lives in `config/` (single sources such as `routes.ts`). Import with the `@/` alias. A screen is one component per file.
 - **Single source of truth:** a URL, a permission, a validation rule, a policy or a piece of copy is defined once and imported everywhere. If you are about to write the same
   string or rule a second time, put it in `config/` (or a package) first. URLs come from `config/routes.ts`, never typed inline.
-- Inside `apps/api/src`: `http/` (request/response plumbing), `auth/`, `<aggregate>/` (a repository interface + its Postgres adapter), `routes/` (one file per resource), `audit/`.
+- Inside `apps/web/server` (server-only code; `import 'server-only'` guards the secret-holding modules): `http/` (request/response plumbing, the `route` wrapper), `auth/`, `<aggregate>/` (a repository interface + its Postgres adapter), `services/` (the rules: what may be done, by whom), `audit/`, `runtime.ts` (one instance per process). A `route.ts` file only parses, finds the actor and calls a service.
 - Inside `apps/web/features/camp`: `api/`, `auth/`, `state/`, `hooks/`, `forms/`, `lib/`, `screens/`.
 
 ## Types
@@ -32,12 +32,12 @@ packages/contracts  zod shapes shared by API and web
 - **Repository interface + adapter** for persistence. Introduce an interface only when there are two implementations (here: Postgres and in-memory); otherwise a plain function is enough.
 - **Ports for outside systems** (`Verifier` for the identity provider).
 - **Domain errors, not driver errors.** Adapters translate (`SlugTakenError`); HTTP code maps domain errors to statuses.
-- Route handlers do four things only: parse → authorize → call a repository → return. No SQL, no rules.
+- Route handlers do four things only: parse → find the actor → call a service → return. No SQL, no rules. Server Components and Server Actions call the same services.
 
 ## Tenant data and security
 - Tenant tables have `org_id`, forced row-level security and a policy; the schema test fails if a new table lacks them.
 - Request code touches tenant data only through `withOrg()`. Cross-tenant lookups (sign-in, org creation) are listed in `docs/auth.md`.
-- Secrets never enter the repo or the web bundle. Only publishable keys go in `VITE_*` variables. Logs never contain headers, cookies, tokens or query strings.
+- Secrets never enter the repo or the web bundle. Only publishable keys go in `NEXT_PUBLIC_*` variables; everything else is server-only. Logs never contain headers, cookies, tokens or query strings.
 - Every write that matters records an audit entry through `recordAudit`.
 
 ## Tests

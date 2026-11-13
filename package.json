@@ -7,23 +7,21 @@
     "dev": "next dev apps/web -p 5173",
     "build": "next build apps/web",
     "test": "vitest run",
-    "server": "tsx apps/web/server/index.ts",
-    "server:dev": "tsx watch apps/web/server/index.ts",
+    "server": "tsx apps/web/legacy-server/index.ts",
+    "server:dev": "tsx watch apps/web/legacy-server/index.ts",
     "start": "next start apps/web",
-    "db:migrate": "tsx packages/db/src/cli.ts",
-    "api": "tsx apps/api/src/server.ts",
-    "api:dev": "tsx watch apps/api/src/server.ts",
+    "db:migrate": "tsx --env-file-if-exists=apps/web/.env.local packages/db/src/cli.ts",
     "typecheck": "tsc --noEmit && next typegen apps/web && tsc --noEmit -p apps/web"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
     "@supabase/supabase-js": "^2.119.0",
-    "fastify": "^5.12.8",
     "jose": "^6.2.17",
     "next": "^16.4.6",
     "pg": "^8.23.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
+    "server-only": "^0.0.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {

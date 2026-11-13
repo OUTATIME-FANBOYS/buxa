@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { publicEnv } from '@/config/env';
 
 const inBrowser = typeof window !== 'undefined';
 
@@ -9,5 +10,4 @@ export function createSupabaseClient(url: string | undefined, publishableKey: st
   return createClient(url.replace(/\/+$/, ''), publishableKey, { auth: { persistSession: inBrowser, autoRefreshToken: inBrowser } });
 }
 
-// Next.js only inlines NEXT_PUBLIC_* values it can see written out in full, so each is referenced literally here.
-export const supabase = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createSupabaseClient(publicEnv.supabaseUrl, publicEnv.supabasePublishableKey);

@@ -4,9 +4,9 @@ Supabase owns sign-up, passwords, email verification and sessions. The API never
 signed access token a browser sends as `Authorization: Bearer <token>`.
 
 ## How a request is trusted
-1. Signature is checked against the project's public keys (`<SUPABASE_URL>/auth/v1/.well-known/jwks.json`).
+1. Signature is checked against the project's public keys (`<NEXT_PUBLIC_SUPABASE_URL>/auth/v1/.well-known/jwks.json`).
    Only ES256/RS256 are accepted; `none` and shared-secret tokens are rejected.
-2. Issuer must be `<SUPABASE_URL>/auth/v1`, audience `authenticated`, and the token must not be expired.
+2. Issuer must be `<NEXT_PUBLIC_SUPABASE_URL>/auth/v1`, audience `authenticated`, and the token must not be expired.
 3. The user is found by the provider's user id (never by email), or created on first sign-in.
 4. The organisation comes from the `x-org-id` header and is honoured only if the user is a member.
    Unknown and forbidden organisations get the same 403 so ids can't be probed.
@@ -16,19 +16,19 @@ signed access token a browser sends as `Authorization: Bearer <token>`.
 ## Set up Supabase
 1. In the Supabase dashboard: **Project Settings → JWT Keys**, make sure an asymmetric (ECC/RSA) signing key is current.
    Projects still on the legacy shared secret must migrate; the API deliberately does not accept shared-secret tokens.
-2. Copy the project URL (**Project Settings → API**) into `.env` as `SUPABASE_URL`. It is public, not a secret.
+2. Copy the project URL (**Project Settings → API**) into `apps/web/.env.local` as `NEXT_PUBLIC_SUPABASE_URL` (with the publishable key as `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`). Both are public. The browser and the server read the same two values.
 3. Do not put the service-role key anywhere in this repo. The API does not need it.
 
 ## Try it
 ```bash
-npm run db:migrate && npm run api
+npm run db:migrate && npm run dev
 TOKEN=...   # a user's access token from your app, or:
-# curl -s "$SUPABASE_URL/auth/v1/token?grant_type=password" -H "apikey: <anon key>" \
+# curl -s "$NEXT_PUBLIC_SUPABASE_URL/auth/v1/token?grant_type=password" -H "apikey: <anon key>" \
 #      -H 'content-type: application/json' -d '{"email":"you@example.com","password":"..."}' | jq -r .access_token
-curl -s localhost:8788/v1/me -H "authorization: Bearer $TOKEN"
-curl -s -X POST localhost:8788/v1/orgs -H "authorization: Bearer $TOKEN" -H 'content-type: application/json' \
+curl -s localhost:5173/v1/me -H "authorization: Bearer $TOKEN"
+curl -s -X POST localhost:5173/v1/orgs -H "authorization: Bearer $TOKEN" -H 'content-type: application/json' \
      -d '{"name":"My Camp","slug":"my-camp"}'
-curl -s localhost:8788/v1/org -H "authorization: Bearer $TOKEN" -H "x-org-id: <id from above>"
+curl -s localhost:5173/v1/org -H "authorization: Bearer $TOKEN" -H "x-org-id: <id from above>"
 ```
 
 ## Endpoints (v1)
@@ -41,9 +41,9 @@ curl -s localhost:8788/v1/org -H "authorization: Bearer $TOKEN" -H "x-org-id: <i
 | `GET /v1/members` | member, `members:read` | Members of the selected organisation |
 
 ## Code map
-`apps/api/src`: `auth/` (verifier, authentication hook, org scope) → `routes/` (one file per resource) → `orgs/` and `users/`
-(repository interface + Postgres adapter) → `@buxa/db`. Routes only parse, authorize, call a repository and return.
-`GET /v1/org` returns `{ id, name, slug, createdAt, memberCount }`; every response shape is defined once in `packages/contracts`.
+`apps/web/server`: `app/v1/*/route.ts` (thin) → `http/route.ts` (request id, authentication, error shape, logging) → `services/` (permissions, then storage)
+→ `orgs/` and `users/` (repository interface + Postgres adapter) → `@buxa/db`. Every response shape is defined once in `packages/contracts`.
+`GET /v1/org` returns `{ id, name, slug, createdAt, memberCount }`.
 
 ## Known limits (to fix before release)
 - No rate limiting yet (sign-in is Supabase's; our endpoints need limits, especially `POST /v1/orgs`).

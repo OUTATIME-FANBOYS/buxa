@@ -12,7 +12,7 @@ Goal: a safe base to build every camp feature on. Nothing here is visible to cam
 |---|---|---|
 | 1 ✅ | Database foundation: Postgres, migrations, orgs, users, members, audit log, row-level security | Tenant-isolation tests pass in CI against real Postgres |
 | 2 ✅ | Shared permissions: `can(actor, action, resource)` as a pure module with a role × action table test | Every role/action pair asserted |
-| 3 ✅ | API skeleton (Fastify): health, request ids, structured logs, validated config | Integration test boots the app against Postgres |
+| 3 ✅ | API skeleton: health, request ids, structured logs, validated config (now Next.js route handlers) | Integration test boots the app against Postgres |
 | 4 ✅ | Auth: managed provider, session to actor, org selection | A user in two orgs sees only the selected one; forged org id rejected |
 | 5 ✅ | Move the web app to `apps/web` and talk to the API | Existing board tests still pass |
 | 6 ◐ | Staging deploy | Public URL; migrations run on deploy; rollback documented |
@@ -31,13 +31,13 @@ Foreign-key actions are allowed; direct edits are not.
 Without `DATABASE_URL` the database tests are skipped, so say so when reporting results.
 
 ## Running the API
-`npm run api` (default `http://127.0.0.1:8788`; needs `DATABASE_URL`). `/health` is liveness, `/ready` checks the database.
+`npm run dev` (http://localhost:5173) serves the web app and the API. `/health` is liveness, `/ready` checks the database.
 
 ## Running the web app
 1. `cp apps/web/.env.example apps/web/.env.local` and fill in the two public Supabase values.
-2. `npm run api` (port 8788) and `npm run dev` in two terminals; open the URL Vite prints.
+2. `npm run dev`; open the URL it prints.
 3. Sign in (or create an account), set up a camp, look around. The old kanban demo is still at `#/dashboard`.
 Without the env file the app shows a setup page instead of failing.
 
 ## Deploying
-See `docs/deploy.md`. Target: Vercel (static web app + one API function, one address). The build output, routing, security headers, migrations-on-production-build and rollback notes are done and verified locally; connecting the Vercel project is the remaining step.
+See `docs/deploy.md`. Vercel builds Next.js natively; a production build applies migrations first. Connecting the Vercel project is the remaining step.
