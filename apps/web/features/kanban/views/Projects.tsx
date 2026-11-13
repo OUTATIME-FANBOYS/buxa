@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { Avatar, Empty, Menu, Pill, Progress, useUi } from '../components/ui';
-import { Icon } from '../components/Icon';
+import { Avatar, Empty, Menu, Pill, Progress, useUi } from '@/components/ui';
+import { Icon } from '@/components/ui';
 import { ProjectDialog } from '../components/dialogs';
 import { diffDays, fmt, today } from '../lib/dates';
 import { navigate } from '../lib/router';

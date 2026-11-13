@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Dialog, Field, useUi } from './ui';
+import { Dialog, Field, useUi } from '@/components/ui';
 import { useStore } from '../store';
 import type { Column, ColumnKind, Project, Role } from '../types';
 import { navigate } from '../lib/router';

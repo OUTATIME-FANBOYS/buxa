@@ -2,7 +2,7 @@
 import { useMemo } from 'react';
 import type { Column, Project, Task } from '../types';
 import { useStore } from '../store';
-import { useUi, type MenuItem } from './ui';
+import { useUi, type MenuItem } from '@/components/ui';
 
 export function useTaskCommands() {
   const { actions } = useStore(); const { toast, openTask } = useUi();

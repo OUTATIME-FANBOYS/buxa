@@ -1,7 +1,7 @@
 'use client';
 
 import { useReducer, useState, type FormEvent, type Reducer } from 'react';
-import { Dialog, Field, useUi } from '@/features/kanban/components/ui';
+import { Dialog, Field, useUi } from '@/components/ui';
 import { ApiError } from '../api/client';
 import { editing, submissionReducer, type Submission, type SubmissionAction } from '../forms/submission';
 import { validateCampName } from '../forms/validators';

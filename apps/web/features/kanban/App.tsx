@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { StoreProvider, useStore } from './store';
-import { UiProvider } from './components/ui';
+import { UiProvider } from '@/components/ui';
 import { Auth } from './components/Auth';
 import { Shell } from './components/Shell';
 import { TaskDrawer } from './components/TaskDrawer';
@@ -13,7 +13,7 @@ import { Team } from './views/Team';
 import { Agents } from './views/Agents';
 import { Reports } from './views/Reports';
 import { Settings } from './views/Settings';
-import { Empty } from './components/ui';
+import { Empty } from '@/components/ui';
 import { CalendarView } from './components/Views';
 
 function WorkspaceCalendar() {

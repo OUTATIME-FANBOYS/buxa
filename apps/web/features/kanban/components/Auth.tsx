@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { Field } from './ui';
-import { Icon } from './Icon';
+import { Field } from '@/components/ui';
+import { Icon } from '@/components/ui';
 import { DEMO_PASSWORD } from '../lib/seed';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

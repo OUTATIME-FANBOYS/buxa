@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { UiProvider } from '@/features/kanban/components/ui';
+import { UiProvider } from '@/components/ui';
 import { AuthProvider } from '../auth/AuthProvider';
 import { supabase } from '../auth/supabase';
 import { NotConfigured } from './NotConfigured';

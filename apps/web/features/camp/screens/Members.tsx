@@ -1,6 +1,6 @@
 'use client';
 
-import { Avatar, Pill } from '@/features/kanban/components/ui';
+import { Avatar, Pill } from '@/components/ui';
 import { useLoad } from '../hooks/useLoad';
 import { ROLE_LABEL } from '../lib/abilities';
 import { useCamp } from '../state/CampProvider';

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../store';
-import { Avatar, Empty, Menu, Pill, Segmented, useUi, type Tone } from '../components/ui';
-import { Icon } from '../components/Icon';
+import { Avatar, Empty, Menu, Pill, Segmented, useUi, type Tone } from '@/components/ui';
+import { Icon } from '@/components/ui';
 import { AgentDialog, ConnectAgentDialog } from '../components/dialogs';
 import { ago } from '../lib/dates';
 import * as A from '../lib/agents';

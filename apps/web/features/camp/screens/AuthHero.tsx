@@ -1,4 +1,4 @@
-import { Icon } from '@/features/kanban/components/Icon';
+import { Icon } from '@/components/ui';
 
 /** The brand panel beside the sign-in form. Decorative, so hidden from assistive technology. */
 export function AuthHero() {

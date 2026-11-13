@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useStore } from '../store';
-import { Icon } from '../components/Icon';
-import { Avatar, Empty, Progress, Segmented, useUi, Pill } from '../components/ui';
+import { Icon } from '@/components/ui';
+import { Avatar, Empty, Progress, Segmented, useUi, Pill } from '@/components/ui';
 import { BoardView } from '../components/Board';
 import { CalendarView, ListView, TimelineView } from '../components/Views';
 import { FilterBar } from '../components/FilterBar';

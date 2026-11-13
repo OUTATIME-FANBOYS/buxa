@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useStore } from '../store';
 import { ROUTES } from '@/config/routes';
-import { Icon } from './Icon';
-import { Avatar, Menu, Popover, useUi, Empty } from './ui';
+import { Icon } from '@/components/ui';
+import { Avatar, Menu, Popover, useUi, Empty } from '@/components/ui';
 import { navigate, type Route } from '../lib/router';
 import { ProjectDialog, WorkspaceDialog } from './dialogs';
 import { ago, diffDays, today } from '../lib/dates';

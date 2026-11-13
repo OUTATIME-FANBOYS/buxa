@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Empty } from '@/features/kanban/components/ui';
+import { Empty } from '@/components/ui';
 import type { ApiError } from '../api/client';
 
 /** A centred message on the sign-in backdrop, for the moments before the app shell exists. */

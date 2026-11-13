@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useStore } from '../store';
-import { Field, Segmented, useUi } from '../components/ui';
+import { Field, Segmented, useUi } from '@/components/ui';
 import { AgentDialog } from '../components/dialogs';
 import type { ThemePref } from '../types';
 

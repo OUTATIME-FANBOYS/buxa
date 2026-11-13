@@ -1,5 +1,5 @@
 import { Component, type ReactNode } from 'react';
-import { Empty } from './ui';
+import { Empty } from '@/components/ui';
 
 export class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null as Error | null };

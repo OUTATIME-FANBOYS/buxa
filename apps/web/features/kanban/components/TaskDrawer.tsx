@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../store';
-import { Dialog, Field, Menu, PriorityMark, Progress, Avatar, useUi } from './ui';
-import { Icon } from './Icon';
+import { Dialog, Field, Menu, PriorityMark, Progress, Avatar, useUi } from '@/components/ui';
+import { Icon } from '@/components/ui';
 import type { Priority, Task } from '../types';
 import { PRIORITIES, PRIORITY_LABEL, fmtSize, subtaskProgress } from '../lib/tasks';
 import { ago, fmt } from '../lib/dates';

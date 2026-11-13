@@ -3,9 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { Membership, User } from '@buxa/contracts';
-import { Icon } from '@/features/kanban/components/Icon';
+import { Icon } from '@/components/ui';
 import { ROUTES } from '@/config/routes';
-import { Avatar, Menu, useUi } from '@/features/kanban/components/ui';
+import { Avatar, Menu, useUi } from '@/components/ui';
 import { isDark, setTheme } from '../lib/theme';
 
 interface Props { user: User; orgs: readonly Membership[]; current: Membership | null; onSelect: (orgId: string) => void; onSignOut: () => void }

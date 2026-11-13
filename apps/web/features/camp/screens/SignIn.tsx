@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { useReducer, useState, type ChangeEvent, type FormEvent, type Reducer } from 'react';
-import { Field } from '@/features/kanban/components/ui';
-import { Icon } from '@/features/kanban/components/Icon';
+import { Field } from '@/components/ui';
+import { Icon } from '@/components/ui';
 import { ROUTES } from '@/config/routes';
 import { useAuth } from '../auth/AuthProvider';
 import { editing, hasErrors, submissionReducer, type Submission, type SubmissionAction } from '../forms/submission';

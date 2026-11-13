@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
-import { Empty } from '@/features/kanban/components/ui';
+import { Empty } from '@/components/ui';
 import { ROUTES } from '@/config/routes';
 import { useAuth } from '../auth/AuthProvider';
 import { CampProvider, useCamp } from '../state/CampProvider';

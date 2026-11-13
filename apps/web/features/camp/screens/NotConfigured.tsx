@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Icon } from '@/features/kanban/components/Icon';
+import { Icon } from '@/components/ui';
 import { ROUTES } from '@/config/routes';
 
 export function NotConfigured() {

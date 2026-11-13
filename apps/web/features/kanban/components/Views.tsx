@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import type { Project, Task } from '../types';
 import { useStore } from '../store';
-import { Icon } from './Icon';
-import { Avatar, Empty, PriorityMark, useUi, KIND_TONE, Pill } from './ui';
+import { Icon } from '@/components/ui';
+import { Avatar, Empty, PriorityMark, useUi, KIND_TONE, Pill } from '@/components/ui';
 import { DueChip } from './Board';
 import { PRIORITY_RANK, subtaskProgress } from '../lib/tasks';
 import { addDays, diffDays, fmt, parse, toISO, today } from '../lib/dates';

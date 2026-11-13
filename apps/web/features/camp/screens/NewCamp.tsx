@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useReducer, useState, type FormEvent, type Reducer } from 'react';
 import { suggestSlug } from '@buxa/domain';
-import { Field } from '@/features/kanban/components/ui';
+import { Field } from '@/components/ui';
 import { ROUTES } from '@/config/routes';
 import { ApiError } from '../api/client';
 import { editing, hasErrors, submissionReducer, type Submission, type SubmissionAction } from '../forms/submission';

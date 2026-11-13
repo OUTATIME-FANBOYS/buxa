@@ -4,8 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 import type { Membership, User } from '@buxa/contracts';
-import { Icon } from '@/features/kanban/components/Icon';
-import { useUi } from '@/features/kanban/components/ui';
+import { Icon } from '@/components/ui';
+import { useUi } from '@/components/ui';
 import { ROUTES, type RoutePath } from '@/config/routes';
 import { TopBar } from './TopBar';
 

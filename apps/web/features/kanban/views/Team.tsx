@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { Avatar, Empty, Menu, Pill, useUi } from '../components/ui';
-import { Icon } from '../components/Icon';
+import { Avatar, Empty, Menu, Pill, useUi } from '@/components/ui';
+import { Icon } from '@/components/ui';
 import { InviteDialog } from '../components/dialogs';
 import type { Role } from '../types';
 

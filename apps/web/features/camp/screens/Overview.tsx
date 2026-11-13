@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Icon } from '@/features/kanban/components/Icon';
+import { Icon } from '@/components/ui';
 import { ROUTES } from '@/config/routes';
 import { useLoad } from '../hooks/useLoad';
 import { ROLE_LABEL, abilitiesFor, roleAllows } from '../lib/abilities';

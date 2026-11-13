@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useStore } from '../store';
-import { Icon } from '../components/Icon';
-import { Avatar, Empty, Pill, Progress, PriorityMark, useUi, type Tone } from '../components/ui';
+import { Icon } from '@/components/ui';
+import { Avatar, Empty, Pill, Progress, PriorityMark, useUi, type Tone } from '@/components/ui';
 import { Bars, Ring, StatusBar } from '../components/charts';
 import { DueChip } from '../components/Board';
 import { addDays, ago, diffDays, fmt, isoDay, today } from '../lib/dates';

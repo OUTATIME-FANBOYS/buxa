@@ -1,8 +1,8 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import type { Column, Project, Task } from '../types';
 import { useStore } from '../store';
-import { Icon } from './Icon';
-import { Avatar, Menu, PriorityMark, useUi } from './ui';
+import { Icon } from '@/components/ui';
+import { Avatar, Menu, PriorityMark, useUi } from '@/components/ui';
 import { dueInfo, subtaskProgress } from '../lib/tasks';
 import { ColumnDialog } from './dialogs';
 import { taskMenuItems, useTaskCommands } from './taskCommands';
