@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useStore } from '../store';
+import { useStore } from '../state/store';
 import { Empty, Progress, Segmented } from '@/components/ui';
 import { Bars, HBars, Legend, Ring } from '../components/charts';
 import { Stat } from './Dashboard';

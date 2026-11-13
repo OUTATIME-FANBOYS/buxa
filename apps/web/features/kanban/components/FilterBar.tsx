@@ -1,9 +1,9 @@
 import { useCallback, useRef, useState, type ReactNode } from 'react';
 import type { Filter, DueFilter, Project, Sort } from '../types';
-import { useStore } from '../store';
+import { useStore } from '../state/store';
 import { Icon } from '@/components/ui';
 import { Menu, Popover, PriorityMark, Avatar, useUi } from '@/components/ui';
-import { PRIORITIES, PRIORITY_LABEL, emptyFilter, isFilterActive } from '../lib/tasks';
+import { PRIORITIES, emptyFilter, isFilterActive } from '../lib/tasks';
 
 function Chip({ label, count, children, width = 220 }: { label: string; count: number; children: ReactNode; width?: number }) {
   const [open, setOpen] = useState(false); const ref = useRef<HTMLButtonElement>(null);

@@ -1,11 +1,12 @@
 /** One place for what "duplicate / archive / delete / move" mean to the user, including the toast and the undo. */
 import { useMemo } from 'react';
-import type { Column, Project, Task } from '../types';
-import { useStore } from '../store';
-import { useUi, type MenuItem } from '@/components/ui';
+import type { Column, Task } from '../types';
+import { useStore } from '../state/store';
+import { useTaskDrawer } from '../state/TaskDrawerContext';
+import { useUi } from '@/components/ui';
 
 export function useTaskCommands() {
-  const { actions } = useStore(); const { toast, openTask } = useUi();
+  const { actions } = useStore(); const { toast } = useUi(); const { openTask } = useTaskDrawer();
   return useMemo(() => ({
     open: (t: Task) => openTask(t.id),
     moveTo(t: Task, c: Column) { actions.moveTask(t.id, c.id, null); toast(`Moved to ${c.name}`); },
@@ -15,15 +16,3 @@ export function useTaskCommands() {
   }), [actions, toast, openTask]);
 }
 export type TaskCommands = ReturnType<typeof useTaskCommands>;
-
-/** The ⋯ menu for a task card. Read-only members only get "Open". */
-export function taskMenuItems(t: Task, project: Project, readOnly: boolean, cmd: TaskCommands): (MenuItem | false)[] {
-  if (readOnly) return [{ label: 'Open', icon: 'edit', onSelect: () => cmd.open(t) }];
-  return [
-    { label: 'Open', icon: 'edit', onSelect: () => cmd.open(t) },
-    { label: 'Duplicate', icon: 'copy', onSelect: () => cmd.duplicate(t) },
-    ...project.columns.filter(c => c.id !== t.columnId).map(c => ({ label: `Move to ${c.name}`, icon: 'arrowRight', onSelect: () => cmd.moveTo(t, c) })),
-    { label: t.archived ? 'Restore' : 'Archive', icon: 'archive', onSelect: () => cmd.toggleArchive(t) },
-    { label: 'Delete', icon: 'trash', danger: true, onSelect: () => cmd.remove(t) },
-  ];
-}

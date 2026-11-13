@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
-import { useStore } from '../store';
+import { useTaskDrawer } from '../state/TaskDrawerContext';
+import { useStore } from '../state/store';
 import { Icon } from '@/components/ui';
-import { Avatar, Empty, Pill, Progress, PriorityMark, useUi, type Tone } from '@/components/ui';
+import { Avatar, Empty, Pill, Progress, PriorityMark, type Tone } from '@/components/ui';
 import { Bars, Ring, StatusBar } from '../components/charts';
-import { DueChip } from '../components/Board';
+import { DueChip } from '../components/board/DueChip';
 import { addDays, ago, diffDays, fmt, isoDay, today } from '../lib/dates';
 import { navigate } from '../lib/router';
 import { HEALTH_LABEL, HEALTH_TONE, healthOf, progressOf, summarize } from '../lib/stats';
@@ -19,7 +20,7 @@ export function Stat({ label, value, note, tone = 'neutral', icon, strong }: { l
 }
 
 export function ActivityList({ items, limit = 8 }: { items: ReturnType<typeof useStore>['s']['activity']; limit?: number }) {
-  const { userById, s } = useStore(); const { openTask } = useUi();
+  const { userById, s } = useStore(); const { openTask } = useTaskDrawer();
   if (!items.length) return <Empty icon="inbox" title="No activity yet" body="Updates appear here as your team works." />;
   return (
     <ul className="activity">
@@ -37,7 +38,7 @@ export function ActivityList({ items, limit = 8 }: { items: ReturnType<typeof us
 }
 
 export function Dashboard() {
-  const { s, me, wsTasks, projects, kindOf, workspace, userById } = useStore(); const { openTask } = useUi();
+  const { s, me, wsTasks, projects, kindOf, workspace, userById } = useStore(); const { openTask } = useTaskDrawer();
   const { live, done, active: prog, open, overdue, progress } = summarize(wsTasks, kindOf); const pct = progress.pct;
   const notStarted = open.length - prog.length;
   const upcoming = live.filter(t => kindOf(t) !== 'done' && t.due && t.due >= today()).sort((a, b) => a.due!.localeCompare(b.due!)).slice(0, 6);

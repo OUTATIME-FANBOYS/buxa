@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useStore } from '../store';
+import { useStore } from '../state/store';
 import { Avatar, Empty, Menu, Pill, Progress, useUi } from '@/components/ui';
 import { Icon } from '@/components/ui';
 import { ProjectDialog } from '../components/dialogs';
