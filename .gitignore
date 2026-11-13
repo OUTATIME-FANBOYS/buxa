@@ -23,3 +23,8 @@ test-results
 !.vscode/extensions.json
 dist-api
 .vercel
+
+# Next.js
+.next
+next-env.d.ts
+out

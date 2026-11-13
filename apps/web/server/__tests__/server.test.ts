@@ -6,10 +6,10 @@ import http from 'node:http';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { createApp } from '../app';
-import { AGENT_ID, buildSeed } from '../../src/lib/seed';
-import { pickData } from '../../src/lib/dataSlices';
-import * as A from '../../src/lib/agents';
-import type { AppState } from '../../src/types';
+import { AGENT_ID, buildSeed } from '../../features/kanban/lib/seed';
+import { pickData } from '../../features/kanban/lib/dataSlices';
+import * as A from '../../features/kanban/lib/agents';
+import type { AppState } from '../../features/kanban/types';
 
 let dir: string; let app: ReturnType<typeof createApp>; let base: string;
 const H = { 'content-type': 'application/json', 'x-buxa-client': 'test' };

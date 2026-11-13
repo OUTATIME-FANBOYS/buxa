@@ -4,15 +4,19 @@ Short, checkable rules. Reviews cite these by name. Anything a tool can enforce 
 
 ## Layout
 ```
-apps/api        Fastify HTTP API          apps/web        React app (camp area in src/camp; original kanban in the rest)
-packages/domain pure rules, no I/O         packages/db     migrations, transactions, tenant isolation
+apps/web          Next.js (App Router)       apps/api        Fastify API (moving into apps/web)
+packages/domain   pure rules, no I/O         packages/db     migrations, transactions, tenant isolation
 packages/contracts  zod shapes shared by API and web
 ```
 - **Dependencies point inward:** `apps/*` may import `packages/*`; `domain` imports nothing; `contracts` imports only `domain`; `db` imports only `domain`.
-- Import packages by name (`@buxa/domain`, `@buxa/db`, `@buxa/contracts`), never by relative path across packages.
+- `packages/*` are npm workspaces: import them by name (`@buxa/domain`, `@buxa/db`, `@buxa/contracts`), never by relative path.
 - One concern per file. If a file needs a section comment to separate jobs, split it. Aim for under ~120 lines per file and ~30 per function.
+- Inside `apps/web`: `app/` holds routes only (thin `page.tsx`, `layout.tsx`, `route.ts`); behaviour lives in `features/<name>/`; anything every feature needs
+  lives in `config/` (single sources such as `routes.ts`). Import with the `@/` alias. A screen is one component per file.
+- **Single source of truth:** a URL, a permission, a validation rule, a policy or a piece of copy is defined once and imported everywhere. If you are about to write the same
+  string or rule a second time, put it in `config/` (or a package) first. URLs come from `config/routes.ts`, never typed inline.
 - Inside `apps/api/src`: `http/` (request/response plumbing), `auth/`, `<aggregate>/` (a repository interface + its Postgres adapter), `routes/` (one file per resource), `audit/`.
-- Inside `apps/web/src/camp`: `api/`, `auth/`, `state/`, `hooks/`, `forms/`, `lib/`, `screens/`. A screen is one component per file.
+- Inside `apps/web/features/camp`: `api/`, `auth/`, `state/`, `hooks/`, `forms/`, `lib/`, `screens/`.
 
 ## Types
 - `strict` TypeScript. No `any`, no `as unknown as`, no `!` non-null assertions. If a type cannot prove it, restructure so it can (return a non-null type from a function that checks, pass the value as a prop).

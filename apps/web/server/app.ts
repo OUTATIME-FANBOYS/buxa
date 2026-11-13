@@ -3,8 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { AddressInfo } from 'node:net';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { isData } from '../src/lib/dataSlices';
-import * as A from '../src/lib/agents';
+import { isData } from '../features/kanban/lib/dataSlices';
+import * as A from '../features/kanban/lib/agents';
 import { Store, Tokens } from './store';
 import { buildMcp } from './mcp';
 
