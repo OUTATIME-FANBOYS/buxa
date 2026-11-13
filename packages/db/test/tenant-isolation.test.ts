@@ -46,20 +46,28 @@ describe.skipIf(!url)('tenant isolation (row-level security)', () => {
   });
 
   it('cannot write into another organisation', async () => {
-    await expect(withOrg(pool, a, db => db.query(`INSERT INTO org_members(org_id, user_id, role) VALUES ($1,$2,'viewer')`, [b, ua]))).rejects.toThrow(/row-level security/);
+    await expect(withOrg(pool, a, db => db.query(`INSERT INTO org_members(org_id, user_id, role) VALUES ($1,$2,'viewer')`, [b, ua]))).rejects.toThrow(/permission denied/);
     await expect(withOrg(pool, a, db => db.query(`INSERT INTO audit_log(org_id, action, entity) VALUES ($1,'x','y')`, [b]))).rejects.toThrow(/row-level security/);
   });
 
   it('cannot change or delete another organisation’s rows (silently affects nothing)', async () => {
     await withOrg(pool, a, async db => {
       expect((await db.query(`UPDATE orgs SET name = 'hacked' WHERE id = $1`, [b])).rowCount).toBe(0);
-      expect((await db.query(`DELETE FROM org_members WHERE org_id = $1`, [b])).rowCount).toBe(0);
     });
+    await expect(withOrg(pool, a, db => db.query(`DELETE FROM org_members WHERE org_id = $1`, [b]))).rejects.toThrow(/permission denied/);
     expect((await pool.query('SELECT name FROM orgs WHERE id = $1', [b])).rows[0].name).toBe('Camp B');
   });
 
   it('cannot move a row to another organisation by updating org_id', async () => {
-    await expect(withOrg(pool, a, db => db.query(`UPDATE org_members SET org_id = $1 WHERE org_id = $2`, [b, a]))).rejects.toThrow(/row-level security/);
+    await expect(withOrg(pool, a, db => db.query(`UPDATE org_members SET org_id = $1 WHERE org_id = $2`, [b, a]))).rejects.toThrow(/permission denied/);
+  });
+
+  it('memberships are read-only for the request role, even inside its own organisation (no self-promotion)', async () => {
+    const grants = await pool.query(`SELECT has_table_privilege('buxa_app','org_members','INSERT') AS i, has_table_privilege('buxa_app','org_members','UPDATE') AS u, has_table_privilege('buxa_app','org_members','DELETE') AS d, has_table_privilege('buxa_app','org_members','SELECT') AS s`);
+    expect(grants.rows[0]).toEqual({ i: false, u: false, d: false, s: true });
+    await expect(withOrg(pool, a, db => db.query(`UPDATE org_members SET role = 'owner' WHERE user_id = $1`, [ua]))).rejects.toThrow(/permission denied/);
+    await expect(withOrg(pool, a, db => db.query(`INSERT INTO org_members(org_id, user_id, role) VALUES ($1,$2,'owner')`, [a, ub]))).rejects.toThrow(/permission denied/);
+    expect((await withOrg(pool, a, db => db.query('SELECT 1 FROM org_members'))).rowCount).toBe(1); // reads still work, scoped to the org
   });
 
   it('the audit log is append-only, even for the owner role', async () => {

@@ -49,7 +49,8 @@ curl -s localhost:8788/v1/org -H "authorization: Bearer $TOKEN" -H "x-org-id: <i
 - No rate limiting yet (sign-in is Supabase's; our endpoints need limits, especially `POST /v1/orgs`).
 - The sign-in lookup uses the privileged database connection, which must be able to bypass row-level security
   (true for a superuser and for Supabase's `postgres` role). Revisit with a dedicated function when we deploy.
-- Email-verified status is not checked yet; it matters once invitations link people by email.
+- Email verification relies on Supabase's "Confirm email" setting, not on a claim in the token (`user_metadata` is user-editable, so `email_verified` there proves nothing). The API refuses to start in production if that setting is off. Revisit when invitations link people by email.
+- `org_members` is read-only for request handling (migration `0006`); the only write path is organisation creation on the privileged connection. Member-management routes must add narrow write policies, not widen the read one.
 - Multi-factor authentication for staff accounts that see children's data is not enforced yet.
 
 ## In the browser

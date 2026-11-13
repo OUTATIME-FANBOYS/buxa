@@ -5,6 +5,8 @@ const schema = z.object({
   DATABASE_URL: z.string({ error: 'is required (see .env.example)' }).refine(v => /^postgres(ql)?:\/\//.test(v), 'must be a postgres:// URL'),
   /** Supabase project URL, e.g. https://abcd.supabase.co. Required except in tests. */
   SUPABASE_URL: z.string().url().optional(),
+  /** Supabase publishable key (public). Lets the API check that sign-ups require email confirmation. Falls back to VITE_SUPABASE_PUBLISHABLE_KEY, which the web build already needs. */
+  SUPABASE_PUBLISHABLE_KEY: z.string().min(1).optional(),
   /** Folder holding the built web app. When set, the API also serves it (one service, one origin). */
   STATIC_DIR: z.string().min(1).optional(),
   /** Maximum database connections this instance opens. Keep (instances x this) under the database or pooler limit. */

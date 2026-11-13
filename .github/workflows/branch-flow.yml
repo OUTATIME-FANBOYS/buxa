@@ -8,8 +8,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: PRs into main must come from develop
+        env:
+          # Passed through the environment, never pasted into the script: a branch name is attacker-controlled text.
+          HEAD_REF: ${{ github.head_ref }}
         run: |
-          if [ "${{ github.head_ref }}" != "develop" ]; then
-            echo "::error::PRs into main must come from develop (got '${{ github.head_ref }}'). Open this PR against develop."
+          if [ "$HEAD_REF" != "develop" ]; then
+            echo "::error::PRs into main must come from develop (got '$HEAD_REF'). Open this PR against develop."
             exit 1
           fi
