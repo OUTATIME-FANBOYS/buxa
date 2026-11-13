@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
-import type { AppState } from '../src/types';
-import { isData, pickData, repairData, type Data } from '../src/lib/dataSlices';
+import type { AppState } from '../features/kanban/types';
+import { isData, pickData, repairData, type Data } from '../features/kanban/lib/dataSlices';
 
 /** Atomic, debounced JSON file writer: a crash mid-write can never leave a half-written file. */
 class JsonFile<T> {

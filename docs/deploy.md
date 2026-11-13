@@ -1,3 +1,5 @@
+> **Being rewritten.** The web app is now Next.js and the API is moving into its route handlers (see `docs/adr/0002-nextjs.md`). Vercel deploys Next.js natively, so most of the custom build tooling described below is gone. Until that change lands, this guide is out of date; the Supabase, database and rollback sections still apply.
+
 # Deploying Buxa on Vercel (staging)
 
 The web app is served from Vercel's CDN and the API runs as one Vercel Function, both on the same address, so there is no

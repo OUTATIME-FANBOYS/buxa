@@ -29,7 +29,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci
-      - run: npx tsc --noEmit
+      - run: npm run typecheck
       - run: npm test
       - run: npm run build
 
@@ -44,23 +44,3 @@ jobs:
           export DATABASE_URL=postgres://deployer:deployer@localhost:5434/buxa_managed
           npm run db:migrate
           npx vitest run packages apps/api
-
-  vercel-output:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm }
-      - run: npm ci
-      - name: Build the Vercel deployment output
-        run: npm run build:vercel
-      - name: The output has everything Vercel needs
-        run: |
-          test -f .vercel/output/config.json
-          test -f .vercel/output/functions/api.func/index.mjs
-          test -f .vercel/output/functions/api.func/.vc-config.json
-          test -f .vercel/output/static/index.html
-      - name: The function bundle loads and refuses to start without configuration
-        run: |
-          if node --input-type=module -e "await import('./.vercel/output/functions/api.func/index.mjs')" 2>err.txt; then echo "expected a configuration error"; exit 1; fi
-          grep -q "Invalid configuration" err.txt

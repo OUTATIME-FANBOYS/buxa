@@ -4,40 +4,39 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite apps/web",
-    "build": "tsc --noEmit && npm run build:web",
+    "dev": "next dev apps/web -p 5173",
+    "build": "next build apps/web",
     "test": "vitest run",
-    "preview": "vite preview apps/web",
     "server": "tsx apps/web/server/index.ts",
     "server:dev": "tsx watch apps/web/server/index.ts",
-    "start": "npm run build && tsx apps/web/server/index.ts",
+    "start": "next start apps/web",
     "db:migrate": "tsx packages/db/src/cli.ts",
     "api": "tsx apps/api/src/server.ts",
     "api:dev": "tsx watch apps/api/src/server.ts",
-    "build:web": "vite build apps/web",
-    "build:vercel": "tsx deploy/vercel/build.ts",
-    "preview:vercel": "tsx deploy/vercel/preview.ts"
+    "typecheck": "tsc --noEmit && next typegen apps/web && tsc --noEmit -p apps/web"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
     "@supabase/supabase-js": "^2.119.0",
     "fastify": "^5.12.8",
     "jose": "^6.2.17",
+    "next": "^16.4.6",
     "pg": "^8.23.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
     "@types/pg": "^8.23.1",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "esbuild": "^0.25.12",
     "tsx": "^4.23.15",
     "typescript": "^5.6.3",
-    "vite": "^5.4.11",
     "vitest": "^2.1.9"
-  }
+  },
+  "workspaces": [
+    "packages/*"
+  ]
 }

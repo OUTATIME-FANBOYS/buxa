@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import type { AppState } from '../src/types';
-import * as G from '../src/lib/gateway';
+import type { AppState } from '../features/kanban/types';
+import * as G from '../features/kanban/lib/gateway';
 import type { Store } from './store';
 
 const INSTRUCTIONS = `You are connected to Buxa, a Kanban board shared with people and other agents.
