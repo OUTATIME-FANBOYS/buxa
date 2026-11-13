@@ -1,8 +1,7 @@
-'use client';
-
 import type { ReactNode } from 'react';
 
-const P: Record<string, ReactNode> = {
+/** The glyph set: each entry is the inside of a 24x24 stroked svg. */
+export const ICON_PATHS: Record<string, ReactNode> = {
   plus: <path d="M12 5v14M5 12h14" />,
   search: <><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></>,
   dashboard: <><rect x="3" y="3" width="7" height="9" rx="1.5" /><rect x="14" y="3" width="7" height="5" rx="1.5" /><rect x="14" y="12" width="7" height="9" rx="1.5" /><rect x="3" y="16" width="7" height="5" rx="1.5" /></>,
@@ -47,12 +46,3 @@ const P: Record<string, ReactNode> = {
   undo: <path d="M3 7v6h6M3.5 13a9 9 0 1 0 2.6-6.4" />,
   inbox: <path d="M22 12h-6l-2 3h-4l-2-3H2M5.5 5.1L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.7 4H7.3a2 2 0 0 0-1.8 1.1z" />,
 };
-
-export function Icon({ name, size = 16, className }: { name: keyof typeof P | string; size?: number; className?: string }) {
-  return (
-    <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-      {P[name]}
-    </svg>
-  );
-}

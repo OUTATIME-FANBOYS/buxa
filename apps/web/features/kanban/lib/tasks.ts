@@ -52,6 +52,6 @@ export function sortTasks(tasks: Task[], sort: Filter['sort']): Task[] {
 
 export const subtaskProgress = (t: Task) => ({ done: t.subtasks.filter(s => s.done).length, total: t.subtasks.length });
 export const soonDate = () => addDays(today(), 7);
-export const initials = (name: string) => name.split(/\s+/).map(p => p[0]).slice(0, 2).join('').toUpperCase();
+export { initials } from '@/lib/text';
 export const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-3);
 export const fmtSize = (n: number) => n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(0)} KB` : `${(n / 1048576).toFixed(1)} MB`;
