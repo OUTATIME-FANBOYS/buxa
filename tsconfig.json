@@ -21,10 +21,8 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": [
-    "src",
-    "server",
-    "packages",
-    "apps"
+    "apps",
+    "packages"
   ],
   "exclude": [
     "node_modules"

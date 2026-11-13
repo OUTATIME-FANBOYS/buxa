@@ -12,10 +12,10 @@ npm run build
 Use the avatar menu to switch persona and see their notifications.
 
 ## Structure
-- `src/store.tsx` — single state container, all actions, autosave (debounced) to localStorage
-- `src/lib/` — dates, task/filter helpers, seed data, hash router
-- `src/components/` — Shell, Board (drag & drop), TaskDrawer, FilterBar, Views (list/calendar/timeline), charts, primitives
-- `src/pages/` — Dashboard, My Tasks, Projects, Board, Team, Reports, Settings
+- `apps/web/src/store.tsx` — single state container, all actions, autosave (debounced) to localStorage
+- `apps/web/src/lib/` — dates, task/filter helpers, seed data, hash router
+- `apps/web/src/components/` — Shell, Board (drag & drop), TaskDrawer, FilterBar, Views (list/calendar/timeline), charts, primitives
+- `apps/web/src/pages/` — Dashboard, My Tasks, Projects, Board, Team, Reports, Settings
 
 ## Keyboard
 `C` new task · `/` or `⌘K` search · focus a card and press `Alt + ←/→` to move it · `Esc` closes menus/panels.
@@ -32,7 +32,7 @@ Turn on **Settings → Agents** to let AI agents work on your boards. Leave it o
 - Approved and automatic changes run through the normal domain commands *as the agent*, so history and notifications work as usual and record the run and the agent's reason.
 - **History** is the audit trail. A whole run can be reverted where nobody has worked on its changes since.
 - Agents are limited to the projects you choose. An approval is refused if the task changed after the proposal was made.
-- "Try a simulated run" uses a scripted agent that goes through the same path a real agent will. Real agents (over MCP or an API) are the next step; see `src/lib/agents.ts`.
+- "Try a simulated run" uses a scripted agent that goes through the same path a real agent will. Real agents (over MCP or an API) are the next step; see `apps/web/src/lib/agents.ts`.
 
 ## Local server and MCP (connect a real agent)
 
