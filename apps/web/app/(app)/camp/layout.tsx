@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react';
-import { CampGate } from '@/features/camp/screens/CampGate';
+import { CampFrame } from '@/features/camp';
+import { getCurrentCamp, requireSession } from '@/server/session';
 
-export default function CampLayout({ children }: { children: ReactNode }) {
-  return <CampGate>{children}</CampGate>;
+export default async function CampLayout({ children }: { children: ReactNode }) {
+  const session = await requireSession();
+  const camp = await getCurrentCamp(session);
+  return <CampFrame user={session.user} camps={session.memberships} current={camp}>{children}</CampFrame>;
 }

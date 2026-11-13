@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Overview } from '@/features/camp/screens/Overview';
+import { Overview } from '@/features/camp';
 
 export const metadata: Metadata = { title: 'Overview' };
 
