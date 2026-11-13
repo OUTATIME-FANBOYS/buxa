@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useStore } from '../store';
-import { Icon } from '../components/Icon';
-import { Avatar, Empty, Progress, Segmented, useUi, Pill } from '../components/ui';
-import { BoardView } from '../components/Board';
-import { CalendarView, ListView, TimelineView } from '../components/Views';
+import { useTaskDrawer } from '../state/TaskDrawerContext';
+import { useStore } from '../state/store';
+import { Icon } from '@/components/ui';
+import { Avatar, Empty, Progress, Segmented, Pill } from '@/components/ui';
+import { BoardView } from '../components/board/Board';
+import { CalendarView, ListView, TimelineView } from '../components/board-views';
 import { FilterBar } from '../components/FilterBar';
 import { ProjectDialog } from '../components/dialogs';
 import { emptyFilter, matchesFilter, sortTasks } from '../lib/tasks';
@@ -13,7 +14,7 @@ import { navigate } from '../lib/router';
 import { HEALTH_LABEL, HEALTH_TONE, healthOf, progressOf } from '../lib/stats';
 
 export function BoardPage({ projectId }: { projectId?: string }) {
-  const { s, actions, project, projects, kindOf, readOnly, members } = useStore(); const { openTask } = useUi();
+  const { s, actions, project, kindOf, readOnly, members } = useStore(); const { openTask } = useTaskDrawer();
   const [filter, setFilter] = useState<Filter>(emptyFilter); const [edit, setEdit] = useState(false);
   const target = projectId ? s.projects.find(p => p.id === projectId) : project;
 

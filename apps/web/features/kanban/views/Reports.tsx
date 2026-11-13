@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
-import { useStore } from '../store';
-import { Empty, Progress, Segmented } from '../components/ui';
+import { useStore } from '../state/store';
+import { Empty, Progress, Segmented } from '@/components/ui';
 import { Bars, HBars, Legend, Ring } from '../components/charts';
 import { Stat } from './Dashboard';
 import { addDays, diffDays, fmt, isoDay, today } from '../lib/dates';
 import { PRIORITIES, PRIORITY_LABEL } from '../lib/tasks';
-import { Avatar, Pill } from '../components/ui';
+import { Avatar, Pill } from '@/components/ui';
 import { HEALTH_LABEL, HEALTH_TONE, healthOf, isOverdue, progressOf, summarize } from '../lib/stats';
 import { AgentSummary } from '../components/AgentSummary';
 

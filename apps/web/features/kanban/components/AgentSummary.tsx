@@ -1,7 +1,7 @@
-import { useStore } from '../store';
+import { useStore } from '../state/store';
 import { Ring, HBars, Legend } from './charts';
-import { Avatar } from './ui';
-import { Icon } from './Icon';
+import { Avatar } from '@/components/ui';
+import { Icon } from '@/components/ui';
 import * as A from '../lib/agents';
 
 /** Agent work at a glance. Renders nothing unless agents are on and this workspace has one, so plain boards stay plain. */

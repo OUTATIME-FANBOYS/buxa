@@ -23,6 +23,10 @@ packages/contracts  zod shapes shared by the server and the browser
 - Data crossing a boundary is validated, not cast: request bodies and responses use the `@buxa/contracts` zod schemas; token claims use zod; database rows are typed with `query<Row>`.
 - Closed sets are unions or `as const` arrays (`Role`, `Action`, `AuditAction`), never loose strings. Business rules shared by API and web live in `@buxa/domain` once (`isUuid`, `isSlug`, `authorize`).
 
+## Errors that cross modules
+- Next.js can load one server file once per route, so a class can exist in two copies and `instanceof` fails across them (a 403 became a 500 once pages and route handlers shared the runtime).
+  Our error classes carry a `kind` marker and are recognised with a guard (`isHttpError`, `isEmailInUse`, `isSlugTaken`); never `instanceof` one of them. `server/http/errors.test.ts` reproduces the failure.
+
 ## No implicit state machines
 - Two or more booleans/strings that together describe "where we are" (`busy` + `error` + `done`) are a state machine. Model it as a discriminated union with a reducer, and test the transitions (`forms/submission.ts` is the pattern).
 - `useState` is fine for independent values (a text field, an open/closed menu).

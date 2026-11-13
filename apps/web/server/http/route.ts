@@ -3,7 +3,7 @@ import { AUTH_CHALLENGE, authenticate } from '../auth/authenticate';
 import type { Session } from '../auth/session';
 import type { Logger } from '../log';
 import { getRuntime, type Runtime } from '../runtime';
-import { HttpError, errorBody } from './errors';
+import { HttpError, errorBody, isHttpError } from './errors';
 import { generateRequestId } from './requestId';
 
 const MAX_BODY_BYTES = 1_048_576;
@@ -18,7 +18,7 @@ export const created = (body: object): Response => Response.json(body, { status:
 
 /** The one error shape every response uses. Expected failures show their message; anything else is a generic 500 and is logged. */
 function failure(error: unknown, requestId: string, log: Logger): Response {
-  if (error instanceof HttpError) {
+  if (isHttpError(error)) {
     const response = Response.json(errorBody(error.statusCode, error.message, requestId), { status: error.statusCode });
     if (error.statusCode === 401) response.headers.set('www-authenticate', AUTH_CHALLENGE);
     return response;

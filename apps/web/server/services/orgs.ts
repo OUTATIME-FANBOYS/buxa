@@ -2,7 +2,7 @@ import type { CreatedOrg, Members, NewOrgInput, Org, OrgPatchInput, OrgSummary }
 import type { Actor } from '@buxa/domain';
 import { assertAllowed } from '../auth/authorize';
 import { conflict } from '../http/errors';
-import { SlugTakenError, type OrgRepository } from '../orgs/OrgRepository';
+import { isSlugTaken, type OrgRepository } from '../orgs/OrgRepository';
 
 /**
  * What can be done with camps. Route handlers call it now and Server Actions will too, so the rules (who may do what, what a
@@ -20,7 +20,7 @@ export function createOrgService(orgs: OrgRepository): OrgService {
     async createCamp(ownerId, input) {
       // Any signed-in person may start a camp; they become its owner.
       try { return await orgs.createWithOwner(input, ownerId); }
-      catch (error) { throw error instanceof SlugTakenError ? conflict(error.message) : error; }
+      catch (error) { throw isSlugTaken(error) ? conflict(error.message) : error; }
     },
     async getCamp(actor) {
       assertAllowed(actor, 'org:read');

@@ -1,8 +1,8 @@
-import { HttpError, conflict, unauthorized } from '../http/errors';
+import { HttpError, unauthorized } from '../http/errors';
 import type { Logger } from '../log';
 import type { UserRepository } from '../users/UserRepository';
-import { EmailInUseError } from '../users/UserRepository';
 import type { Session } from './session';
+import { sessionFromToken } from './sessionFromToken';
 import type { Verifier } from './verifier';
 
 const bearerToken = (header: string | null): string => (header?.startsWith('Bearer ') ? header.slice(7).trim() : '');
@@ -15,20 +15,7 @@ export async function authenticate(headers: Headers, deps: { verifier?: Verifier
   if (!deps.verifier) throw new HttpError(503, 'Sign-in is not configured');
   const token = bearerToken(headers.get('authorization'));
   if (!token) throw unauthorized();
-
-  let identity;
-  try { identity = await deps.verifier(token); }
-  catch (error) {
-    log.info({ reason: error instanceof Error ? error.name : 'unknown' }, 'token rejected');
-    throw unauthorized('Invalid or expired token');
-  }
-
-  try {
-    const user = await deps.users.upsertFromIdentity(identity);
-    return { user, memberships: await deps.users.membershipsOf(user.id) };
-  } catch (error) {
-    throw error instanceof EmailInUseError ? conflict(error.message) : error;
-  }
+  return sessionFromToken(token, { verifier: deps.verifier, users: deps.users }, log);
 }
 
 /** The challenge to send with a 401, so clients know a bearer token is expected. */

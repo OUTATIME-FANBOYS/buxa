@@ -133,7 +133,7 @@ describe('ordinary board use is unaffected', () => {
 
 describe('older saved data', () => {
   it('loads state saved before agents existed, with agents switched off', async () => {
-    const { normalize } = await import('../../store');
+    const { normalize } = await import('../../state/normalize');
     const { agents: _a, runs: _r, proposals: _p, ...old } = buildSeed(); void _a; void _r; void _p;
     const legacy = { ...old, ui: { ...old.ui, agentsEnabled: undefined } } as unknown as AppState;
     const n = normalize(legacy);

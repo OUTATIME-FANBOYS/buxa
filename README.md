@@ -17,7 +17,7 @@ npm run dev                                   # http://localhost:5173  (the web 
 
 ## Layout
 ```
-apps/web          Next.js app: app/ (pages and the /v1 API routes), features/ (camp, kanban), server/ (API internals), config/ (single sources)
+apps/web          Next.js app: app/ (routes), features/ (auth, camp, kanban), components/ui (shared UI), providers/, styles/, config/ (single sources), server/ (API, sessions, services)
 packages/domain   pure rules: roles, permissions, slugs, ids
 packages/db       migrations, transactions, tenant isolation
 packages/contracts  zod shapes shared by the API and the web app

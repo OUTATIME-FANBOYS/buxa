@@ -1,7 +1,13 @@
 /** An error a client should see: a status code and a message safe to show. Anything else becomes a generic 500. */
 export class HttpError extends Error {
+  /** How the error is recognised. Next.js can load this file more than once (per route), so `instanceof` is unreliable; see isHttpError. */
+  readonly kind = 'http-error';
   constructor(readonly statusCode: number, message: string) { super(message); this.name = 'HttpError'; }
 }
+
+/** True for an HttpError from any copy of this module. Use this, never `instanceof HttpError`. */
+export const isHttpError = (error: unknown): error is HttpError =>
+  error instanceof Error && (error as { kind?: unknown }).kind === 'http-error' && typeof (error as { statusCode?: unknown }).statusCode === 'number';
 export const unauthorized = (message = 'Sign in required') => new HttpError(401, message);
 export const forbidden = (message: string) => new HttpError(403, message);
 export const notFound = (message: string) => new HttpError(404, message);
