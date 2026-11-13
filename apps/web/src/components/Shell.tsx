@@ -48,6 +48,7 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
         </div>
         <nav>
           <ul>
+            <li><a href="#/camp" title={collapsed ? 'Camp home' : undefined}><Icon name="users" size={18} /><span className="collapsible">Camp home</span></a></li>
             {nav.map(n => {
               const active = route.name === n.key;
               const to = n.key === 'board' && project ? '/board/' + project.id : n.to;

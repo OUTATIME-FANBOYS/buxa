@@ -18,11 +18,18 @@
     "types": [
       "node"
     ],
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@buxa/domain": [
+        "packages/domain/src/index.ts"
+      ]
+    }
   },
   "include": [
     "apps",
-    "packages"
+    "packages",
+    "vitest.config.ts"
   ],
   "exclude": [
     "node_modules"

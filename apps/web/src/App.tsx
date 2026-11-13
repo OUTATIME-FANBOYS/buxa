@@ -16,7 +16,7 @@ import { Settings } from './pages/Settings';
 import { Empty } from './components/ui';
 import { CalendarView } from './components/Views';
 
-class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+export class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null as Error | null };
   static getDerivedStateFromError(error: Error) { return { error }; }
   render() {
@@ -59,5 +59,5 @@ function Routes() {
 }
 
 export default function App() {
-  return <ErrorBoundary><StoreProvider><UiProvider><Routes /></UiProvider></StoreProvider></ErrorBoundary>;
+  return <StoreProvider><UiProvider><Routes /></UiProvider></StoreProvider>;
 }
