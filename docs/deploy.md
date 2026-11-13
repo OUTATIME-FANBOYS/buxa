@@ -13,6 +13,7 @@ database and a Supabase project (for sign-in). Staging uses **mock data only**.
 | `DATABASE_URL` | runtime | Postgres URL the app uses. Through a connection pooler is fine. |
 | `MIGRATION_DATABASE_URL` | runtime (optional) | A **direct** connection used only for migrations (a transaction-mode pooler cannot hold the advisory lock). Defaults to `DATABASE_URL`. |
 | `SUPABASE_URL` | runtime | Project URL. The API verifies tokens against its public keys. |
+| `SUPABASE_PUBLISHABLE_KEY` | runtime (optional) | Public key, used only to read the project's "Confirm email" setting at start-up. Falls back to `VITE_SUPABASE_PUBLISHABLE_KEY`, which Render already provides. |
 | `RUN_MIGRATIONS` | runtime | `true` applies pending migrations before the server starts. |
 | `PORT`, `HOST` | runtime | Defaults 8788 / 0.0.0.0 in the image. Most platforms set `PORT`. |
 | `LOG_LEVEL` | runtime | Default `info`. |
@@ -43,14 +44,15 @@ docker run --rm -p 8788:8788 -e DATABASE_URL=postgres://... -e SUPABASE_URL=http
 1. **Supabase, database URL.** Project Settings → Database → Connection string → **Session pooler**. Render connects over IPv4 and the
    direct connection is IPv6-only on the free plan; session mode also supports the advisory lock migrations use. Copy the URI and put your
    database password in it (reset the password in the same page if you do not have it). The user will look like `postgres.<project-ref>`.
-2. **Supabase, signing keys.** Project Settings → JWT Keys: an asymmetric (ECC/RSA) signing key must be current.
-3. **Render.** New → Blueprint → connect `OUTATIME-FANBOYS/buxa` → it finds `render.yaml`. Fill the four prompts:
+2. **Supabase, email confirmation.** Authentication → Providers → Email: keep **Confirm email** ON. With `NODE_ENV=production` the API reads this setting at start-up and **refuses to start** if sign-ups are auto-confirmed (otherwise anyone could register with an address they do not own). If the check cannot run, it logs a warning and starts.
+3. **Supabase, signing keys.** Project Settings → JWT Keys: an asymmetric (ECC/RSA) signing key must be current.
+4. **Render.** New → Blueprint → connect `OUTATIME-FANBOYS/buxa` → it finds `render.yaml`. Fill the four prompts:
    `DATABASE_URL` (step 1), `SUPABASE_URL` and `VITE_SUPABASE_URL` (the project URL), `VITE_SUPABASE_PUBLISHABLE_KEY` (publishable key).
    Paste secrets only into Render's form, never into the repo or a chat.
-4. **Supabase, sign-in links.** Authentication → URL Configuration: set **Site URL** to the Render address (`https://buxa-staging.onrender.com`
+5. **Supabase, sign-in links.** Authentication → URL Configuration: set **Site URL** to the Render address (`https://buxa-staging.onrender.com`
    or similar) so confirmation emails link back to it.
-5. **First check.** Open `<render-url>/ready` (expect `{"status":"ready"}`), then the site: create an account, set up a camp.
-6. **Optional hardening.** Supabase → Settings → Data API: turn it off. Migration `0005` already removes its access to our tables.
+6. **First check.** Open `<render-url>/ready` (expect `{"status":"ready"}`), then the site: create an account, set up a camp.
+7. **Optional hardening.** Supabase → Settings → Data API: turn it off. Migration `0005` already removes its access to our tables.
 
 The first request after idle takes about 30 seconds on the free plan. Render passes service environment variables to the Docker build,
 which is how the `VITE_*` values reach the web bundle; if the page says "Connect Supabase", re-deploy after checking those two values.
