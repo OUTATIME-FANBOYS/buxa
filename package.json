@@ -11,10 +11,13 @@
     "server": "tsx server/index.ts",
     "server:dev": "tsx watch server/index.ts",
     "start": "npm run build && tsx server/index.ts",
-    "db:migrate": "tsx packages/db/src/cli.ts"
+    "db:migrate": "tsx packages/db/src/cli.ts",
+    "api": "tsx apps/api/src/server.ts",
+    "api:dev": "tsx watch apps/api/src/server.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
+    "fastify": "^5.12.8",
     "pg": "^8.23.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

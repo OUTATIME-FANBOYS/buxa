@@ -23,7 +23,8 @@
   "include": [
     "src",
     "server",
-    "packages"
+    "packages",
+    "apps"
   ],
   "exclude": [
     "node_modules"
