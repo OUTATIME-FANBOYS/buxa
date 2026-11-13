@@ -1,10 +1,19 @@
 import 'server-only';
+import { cache } from 'react';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import type { Membership } from '@buxa/contracts';
 import type { Actor } from '@buxa/domain';
+import { ROUTES } from '@/config';
 import type { Session } from '../auth/session';
+import { sessionFromToken } from '../auth/sessionFromToken';
+import { HttpError } from '../http/errors';
+import { getRuntime } from '../runtime';
+import { hardenCookie } from './cookies';
+import { requestSessionClient } from './nextClient';
 
 /**
- * CONTRACT between chunks A1 (implements this) and B1/B2 (use it). Signatures are frozen; A1 replaces the bodies marked STUB.
+ * CONTRACT between chunks A1 (implements this) and B1/B2 (use it). Signatures are frozen.
  *
  * Server Components, layouts and Server Actions get "who is signed in" and "which camp are they working in" only from here.
  * Sessions are HttpOnly cookies; the browser never holds a token.
@@ -13,30 +22,58 @@ import type { Session } from '../auth/session';
 /** HttpOnly cookie that remembers which camp the person selected. Never trusted on its own: it is checked against their memberships. */
 export const CAMP_COOKIE = 'buxa-camp';
 
-/** The verified session for this request, or null when signed out. Cached for the duration of one request. STUB */
-export async function getSession(): Promise<Session | null> {
-  throw new Error('getSession is not implemented yet (chunk A1)');
+const ONE_YEAR_SECONDS = 365 * 24 * 60 * 60;
+
+/** The access token in the session cookie, unchecked. Nothing may rely on it until `sessionFromToken` has verified it. */
+async function cookieToken(): Promise<string | null> {
+  try {
+    const client = await requestSessionClient();
+    if (!client) return null;
+    const { data } = await client.auth.getSession();
+    return data.session?.access_token ?? null;
+  } catch {
+    return null; // a corrupt or unreadable cookie is the same as no cookie
+  }
 }
 
-/** Like getSession, but a signed-out visitor is redirected to the sign-in page. Never returns null. STUB */
+async function loadSession(): Promise<Session | null> {
+  const runtime = getRuntime();
+  if (!runtime.verifier) return null;
+  const token = await cookieToken();
+  if (!token) return null;
+  try {
+    return await sessionFromToken(token, { verifier: runtime.verifier, users: runtime.repositories.users }, runtime.log);
+  } catch (error) {
+    if (error instanceof HttpError && (error.statusCode === 401 || error.statusCode === 409)) return null;
+    throw error;
+  }
+}
+
+/** The verified session for this request, or null when signed out. Cached for the duration of one request. */
+export const getSession: () => Promise<Session | null> = cache(loadSession);
+
+/** Like getSession, but a signed-out visitor is redirected to the sign-in page. Never returns null. */
 export async function requireSession(): Promise<Session> {
-  throw new Error('requireSession is not implemented yet (chunk A1)');
+  const session = await getSession();
+  if (!session) redirect(ROUTES.signIn);
+  return session;
 }
 
 /**
  * The camp to work in: the selected one if the person still belongs to it, otherwise their first, otherwise null (they have no camp yet).
- * Reads the CAMP_COOKIE; the cookie is validated against `session.memberships`. STUB
+ * Reads the CAMP_COOKIE; the cookie is validated against `session.memberships`.
  */
 export async function getCurrentCamp(session: Session): Promise<Membership | null> {
-  throw new Error(`getCurrentCamp is not implemented yet (chunk A1) for ${session.user.id}`);
+  const selected = (await cookies()).get(CAMP_COOKIE)?.value;
+  return session.memberships.find(membership => membership.orgId === selected) ?? session.memberships[0] ?? null;
 }
 
-/** Remember the selected camp. Only callable from a Server Action or Route Handler (it writes a cookie). STUB */
+/** Remember the selected camp. Only callable from a Server Action or Route Handler (it writes a cookie). */
 export async function rememberCamp(orgId: string): Promise<void> {
-  throw new Error(`rememberCamp is not implemented yet (chunk A1) for ${orgId}`);
+  (await cookies()).set(CAMP_COOKIE, orgId, hardenCookie({ maxAge: ONE_YEAR_SECONDS }));
 }
 
-/** The Actor the permission rules and services expect. Pure; real already. */
+/** The Actor the permission rules and services expect. Pure. */
 export function toActor(session: Session, camp: Membership): Actor {
   return { userId: session.user.id, orgId: camp.orgId, role: camp.role };
 }
