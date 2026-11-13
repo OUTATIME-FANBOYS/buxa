@@ -23,6 +23,12 @@
     "paths": {
       "@buxa/domain": [
         "packages/domain/src/index.ts"
+      ],
+      "@buxa/db": [
+        "packages/db/src/index.ts"
+      ],
+      "@buxa/contracts": [
+        "packages/contracts/src/index.ts"
       ]
     }
   },

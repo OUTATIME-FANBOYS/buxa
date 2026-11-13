@@ -5,6 +5,9 @@
 - `main` is released work only. It is updated by one PR, `develop` → `main`, at the end of a major release, then tagged `vX.Y.0`.
 - Work happens on short-lived branches off `develop`: `feat/…`, `fix/…`, `chore/…`, `docs/…`.
 
+## Code
+Follow `CODING_STANDARDS.md` (layout, types, state machines, patterns, security, tests).
+
 ## Pull requests
 - Target `develop`. CI (`verify`) must pass: typecheck, tests (including database tests), build.
 - Merge feature/fix PRs with **squash**. Merge the release PR (`develop` → `main`) with a **merge commit** so the two branches don't diverge.

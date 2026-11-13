@@ -1,2 +1,3 @@
 export { migrate } from './migrate';
-export { withOrg } from './tenant';
+export { transaction, withOrg } from './tenant';
+export { errorMessage, isUniqueViolation } from './errors';

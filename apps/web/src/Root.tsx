@@ -1,12 +1,21 @@
-import { useEffect, useState } from 'react';
-import App, { ErrorBoundary } from './App';
-import { CampApp } from './camp/screens';
-import { isCampHash } from './camp/lib';
+import { Suspense, lazy, useEffect } from 'react';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { useHash } from './camp/hooks/useHash';
+import { go, isCampHash, isEmptyHash } from './camp/lib/routing';
 
-/** The camp area lives at #/camp (and the empty hash). Every older hash still opens the original kanban app. */
+// Each area is its own chunk, so the sign-in page does not download the whole kanban app and vice versa.
+const CampApp = lazy(() => import('./camp/screens/CampApp').then(m => ({ default: m.CampApp })));
+const KanbanApp = lazy(() => import('./App'));
+
+/** The camp area lives at #/camp (and the bare address). Every older hash still opens the original kanban app. */
 export default function Root() {
-  const [hash, setHash] = useState(location.hash);
-  useEffect(() => { const f = () => setHash(location.hash); addEventListener('hashchange', f); return () => removeEventListener('hashchange', f); }, []);
-  useEffect(() => { if (hash === '' || hash === '#' || hash === '#/') location.replace('#/camp'); }, [hash]);
-  return <ErrorBoundary>{isCampHash(hash) ? <CampApp /> : <App />}</ErrorBoundary>;
+  const hash = useHash();
+  useEffect(() => { if (isEmptyHash(hash)) go('/camp'); }, [hash]);
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<p className="muted" role="status" style={{ padding: 24 }}>Loading…</p>}>
+        {isCampHash(hash) ? <CampApp /> : <KanbanApp />}
+      </Suspense>
+    </ErrorBoundary>
+  );
 }

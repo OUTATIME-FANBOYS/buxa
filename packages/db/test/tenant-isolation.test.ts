@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
-import { ROLES } from '../../domain/src';
+import { ROLES } from '@buxa/domain';
 import { migrate, withOrg } from '../src';
 
 const url = process.env.DATABASE_URL;
