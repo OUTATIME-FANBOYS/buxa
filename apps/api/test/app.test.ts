@@ -10,7 +10,11 @@ const stream = { write: (l: string) => { lines.push(l); } };
 
 describe('config', () => {
   it('applies defaults', () => {
-    expect(loadConfig({ DATABASE_URL: 'postgres://x/y' })).toMatchObject({ PORT: 8788, HOST: '127.0.0.1', LOG_LEVEL: 'info', NODE_ENV: 'development' });
+    expect(loadConfig({ DATABASE_URL: 'postgres://x/y', SUPABASE_URL: 'https://a.supabase.co' })).toMatchObject({ PORT: 8788, HOST: '127.0.0.1', LOG_LEVEL: 'info', NODE_ENV: 'development' });
+  });
+  it('requires SUPABASE_URL outside tests', () => {
+    expect(() => loadConfig({ DATABASE_URL: 'postgres://x/y' })).toThrow(/SUPABASE_URL: is required/);
+    expect(loadConfig({ DATABASE_URL: 'postgres://x/y', NODE_ENV: 'test' }).SUPABASE_URL).toBeUndefined();
   });
   it('fails with every problem listed and no secret echoed', () => {
     const msg = (() => { try { loadConfig({ PORT: '99999', DATABASE_URL: 'mysql://user:hunter2@h/db' }); } catch (e) { return (e as Error).message; } return ''; })();
