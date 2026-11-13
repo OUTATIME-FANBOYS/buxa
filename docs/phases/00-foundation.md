@@ -13,7 +13,7 @@ Goal: a safe base to build every camp feature on. Nothing here is visible to cam
 | 1 ✅ | Database foundation: Postgres, migrations, orgs, users, members, audit log, row-level security | Tenant-isolation tests pass in CI against real Postgres |
 | 2 ✅ | Shared permissions: `can(actor, action, resource)` as a pure module with a role × action table test | Every role/action pair asserted |
 | 3 ✅ | API skeleton (Fastify): health, request ids, structured logs, validated config | Integration test boots the app against Postgres |
-| 4 | Auth: managed provider, session to actor, org selection | A user in two orgs sees only the selected one; forged org id rejected |
+| 4 ✅ | Auth: managed provider, session to actor, org selection | A user in two orgs sees only the selected one; forged org id rejected |
 | 5 | Move the web app to `apps/web` and talk to the API | Existing board tests still pass |
 | 6 | Staging deploy | Public URL; migrations run on deploy; rollback documented |
 

@@ -2,10 +2,14 @@ import { randomUUID } from 'node:crypto';
 import Fastify, { type FastifyError, type FastifyInstance } from 'fastify';
 import type { Pool } from 'pg';
 import type { Config } from './config';
+import type { Verifier } from './auth/verifier';
+import { registerV1 } from './routes/v1';
 
 export interface AppDeps {
   config: Pick<Config, 'LOG_LEVEL' | 'NODE_ENV'>;
   pool: Pool;
+  /** Without a verifier no /v1 routes exist, so a misconfigured deploy cannot serve unauthenticated data. */
+  verifier?: Verifier;
   /** Tests pass a stream to read the logs. */
   logStream?: { write(line: string): void };
 }
@@ -13,7 +17,7 @@ export interface AppDeps {
 const SAFE_ID = /^[A-Za-z0-9._-]{8,64}$/;
 
 /** Builds the HTTP app. No port is opened here, so tests can drive it with `app.inject`. */
-export function buildApp({ config, pool, logStream }: AppDeps): FastifyInstance {
+export function buildApp({ config, pool, verifier, logStream }: AppDeps): FastifyInstance {
   const app = Fastify({
     bodyLimit: 1_048_576,
     // Keep a caller's request id only if it is plain and short; otherwise make one (stops log injection).
@@ -42,7 +46,7 @@ export function buildApp({ config, pool, logStream }: AppDeps): FastifyInstance 
   });
 
   const fail = (status: number, code: string, message: string, requestId: string) => ({ statusCode: status, body: { error: { code, message, requestId } } });
-  const CODES: Record<number, string> = { 400: 'bad_request', 401: 'unauthorized', 403: 'forbidden', 404: 'not_found', 413: 'payload_too_large', 415: 'unsupported_media_type', 429: 'rate_limited' };
+  const CODES: Record<number, string> = { 400: 'bad_request', 401: 'unauthorized', 403: 'forbidden', 404: 'not_found', 409: 'conflict', 413: 'payload_too_large', 415: 'unsupported_media_type', 429: 'rate_limited' };
 
   app.setNotFoundHandler((req, reply) => {
     const f = fail(404, 'not_found', 'Route not found', req.id);
@@ -73,6 +77,8 @@ export function buildApp({ config, pool, logStream }: AppDeps): FastifyInstance 
       return reply.code(503).send({ status: 'unavailable' });
     }
   });
+
+  if (verifier) registerV1(app, { pool, verifier });
 
   return app;
 }
