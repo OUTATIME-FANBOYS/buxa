@@ -5,6 +5,8 @@ const schema = z.object({
   DATABASE_URL: z.string({ error: 'is required (see .env.example)' }).refine(v => /^postgres(ql)?:\/\//.test(v), 'must be a postgres:// URL'),
   /** Supabase project URL, e.g. https://abcd.supabase.co. Required except in tests. */
   SUPABASE_URL: z.string().url().optional(),
+  /** Folder holding the built web app. When set, the API also serves it (one service, one origin). */
+  STATIC_DIR: z.string().min(1).optional(),
   PORT: z.coerce.number().int().min(1).max(65535).default(8788),
   HOST: z.string().min(1).default('127.0.0.1'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),

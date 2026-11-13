@@ -33,6 +33,9 @@ export const serverApi = {
 
 const sameData = (a: Data, b: Data) => DATA_KEYS.every(k => a[k] === b[k]);
 
+/** The original kanban's single-user server exists only in development (or when explicitly enabled). Elsewhere the board is local-only and never calls it. */
+const SYNC_AVAILABLE = import.meta.env.DEV || import.meta.env.VITE_LEGACY_SYNC === 'true';
+
 export function createSync(h: Host) {
   let version = 0; let last: Data | null = null; let chain: Promise<unknown> = Promise.resolve(); let timer: ReturnType<typeof setTimeout> | undefined;
   let retry: ReturnType<typeof setTimeout> | undefined; let events: EventSource | null = null; let stopped = false; let active = false;
@@ -74,6 +77,7 @@ export function createSync(h: Host) {
   }
 
   async function start() {
+    if (!SYNC_AVAILABLE) { h.onStatus('local'); return; }
     h.onStatus('connecting');
     let info; try { info = await serverApi.health(); } catch { if (!stopped) { h.pending.length = 0; h.onStatus('local'); } return; }
     if (stopped) return;

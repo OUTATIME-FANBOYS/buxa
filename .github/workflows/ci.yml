@@ -3,6 +3,7 @@ on:
   push: { branches: [main, develop] }
   pull_request:
   workflow_dispatch:
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -13,6 +14,14 @@ jobs:
         ports: ["5433:5432"]
         options: >-
           --health-cmd "pg_isready -U buxa" --health-interval 3s --health-retries 20
+      # A second, separate server for the managed-database check below. Postgres roles belong to the whole server,
+      # so a role created for one database would hide the problem we want to catch in the other.
+      postgres-managed:
+        image: postgres:16
+        env: { POSTGRES_USER: postgres, POSTGRES_PASSWORD: admin }
+        ports: ["5434:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 3s --health-retries 20
     env:
       DATABASE_URL: postgres://buxa:buxa@localhost:5433/buxa
     steps:
@@ -23,3 +32,26 @@ jobs:
       - run: npx tsc --noEmit
       - run: npm test
       - run: npm run build
+
+      # Managed Postgres (Supabase and others) does not give you a superuser. Run the database and API tests as a login that
+      # can create roles and bypass row-level security, but is not a superuser, so a migration or query that only works for
+      # a superuser fails here instead of on the first deploy.
+      - name: Database and API tests as a non-superuser (like managed Postgres)
+        env:
+          PGPASSWORD: admin
+        run: |
+          psql -h localhost -p 5434 -U postgres -c "CREATE ROLE deployer LOGIN PASSWORD 'deployer' CREATEROLE BYPASSRLS NOSUPERUSER" -c "CREATE DATABASE buxa_managed OWNER deployer"
+          export DATABASE_URL=postgres://deployer:deployer@localhost:5434/buxa_managed
+          npm run db:migrate
+          npx vitest run packages apps/api
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the production image
+        run: docker build --build-arg VITE_SUPABASE_URL=https://example.supabase.co --build-arg VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_placeholder -t buxa:ci .
+      - name: The image starts as a non-root user and fails fast on a bad configuration
+        run: |
+          test "$(docker run --rm --entrypoint id buxa:ci -un)" = "node"
+          if docker run --rm buxa:ci >/dev/null 2>&1; then echo "expected a startup failure without DATABASE_URL"; exit 1; fi

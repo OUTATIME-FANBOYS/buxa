@@ -15,7 +15,7 @@ Goal: a safe base to build every camp feature on. Nothing here is visible to cam
 | 3 ✅ | API skeleton (Fastify): health, request ids, structured logs, validated config | Integration test boots the app against Postgres |
 | 4 ✅ | Auth: managed provider, session to actor, org selection | A user in two orgs sees only the selected one; forged org id rejected |
 | 5 ✅ | Move the web app to `apps/web` and talk to the API | Existing board tests still pass |
-| 6 | Staging deploy | Public URL; migrations run on deploy; rollback documented |
+| 6 ◐ | Staging deploy | Public URL; migrations run on deploy; rollback documented |
 
 ## Exit criteria
 - Two orgs cannot read or write each other's data, for every table, proven by tests that run in CI.
@@ -38,3 +38,6 @@ Without `DATABASE_URL` the database tests are skipped, so say so when reporting 
 2. `npm run api` (port 8788) and `npm run dev` in two terminals; open the URL Vite prints.
 3. Sign in (or create an account), set up a camp, look around. The old kanban demo is still at `#/dashboard`.
 Without the env file the app shows a setup page instead of failing.
+
+## Deploying
+See `docs/deploy.md`. The container, migrations-on-start, rollback notes and CI image build are done; choosing a host and going live is next.

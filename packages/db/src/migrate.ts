@@ -4,7 +4,8 @@ import { fileURLToPath } from 'node:url';
 import type { Pool } from 'pg';
 import { errorMessage } from './errors';
 
-const DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'migrations');
+/** Where the .sql files live. Bundled deployments set MIGRATIONS_DIR; from source it is next to this package. */
+const DIR = process.env.MIGRATIONS_DIR ?? join(dirname(fileURLToPath(import.meta.url)), '..', 'migrations');
 
 /** Applies any migration files not yet recorded, in filename order, each in its own transaction. */
 export async function migrate(pool: Pool): Promise<string[]> {
