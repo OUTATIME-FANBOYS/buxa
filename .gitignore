@@ -10,3 +10,14 @@ dist
 coverage
 .agents
 .claude/skills
+
+# Build and tooling output
+*.tsbuildinfo
+.vite
+.turbo
+.cache
+playwright-report
+test-results
+.idea
+.vscode/*
+!.vscode/extensions.json

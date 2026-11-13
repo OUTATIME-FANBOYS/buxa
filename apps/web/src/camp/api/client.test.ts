@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ApiError, createApi } from '../api';
+import { ApiError, createApi } from './client';
 
+const ME = { user: { id: 'u', email: 'a@b.test', name: 'A' }, orgs: [] };
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 const make = (impl: (url: string, init: RequestInit) => Promise<Response>, extra = {}) => {
   const f = vi.fn(impl as never);
@@ -10,7 +11,7 @@ const hdr = (f: ReturnType<typeof vi.fn>, i = 0) => (f.mock.calls[i][1] as Reque
 
 describe('api client', () => {
   it('sends the bearer token and no org header for /me', async () => {
-    const { f, api } = make(async () => json(200, { user: { id: 'u' }, orgs: [] }));
+    const { f, api } = make(async () => json(200, ME));
     await api.me();
     expect(f.mock.calls[0][0]).toBe('/v1/me');
     expect(hdr(f).authorization).toBe('Bearer tok-1');
@@ -22,7 +23,7 @@ describe('api client', () => {
     expect(hdr(f)['x-org-id']).toBe('org-9');
   });
   it('posts JSON bodies', async () => {
-    const { f, api } = make(async () => json(201, { id: 'o1' }));
+    const { f, api } = make(async () => json(201, { id: 'o1', name: 'Camp', slug: 'camp-x', role: 'owner' }));
     await api.createOrg('Camp', 'camp-x');
     const init = f.mock.calls[0][1] as RequestInit;
     expect(init.method).toBe('POST'); expect(hdr(f)['content-type']).toBe('application/json');
@@ -37,7 +38,7 @@ describe('api client', () => {
   it('retries once with a refreshed token after a 401', async () => {
     let n = 0;
     const refresh = vi.fn(async () => 'tok-2');
-    const { f, api } = make(async () => (++n === 1 ? json(401, { error: { code: 'unauthorized', message: 'x' } }) : json(200, { user: {}, orgs: [] })), { refreshToken: refresh });
+    const { f, api } = make(async () => (++n === 1 ? json(401, { error: { code: 'unauthorized', message: 'x' } }) : json(200, ME)), { refreshToken: refresh });
     await api.me();
     expect(f).toHaveBeenCalledTimes(2); expect(hdr(f, 1).authorization).toBe('Bearer tok-2'); expect(refresh).toHaveBeenCalledTimes(1);
   });
@@ -61,5 +62,9 @@ describe('api client', () => {
   it('reports an unreachable server as a network error', async () => {
     const { api } = make(async () => { throw new TypeError('Failed to fetch'); });
     await expect(api.me()).rejects.toMatchObject({ status: 0, code: 'network' });
+  });
+  it('rejects a response that does not match the contract instead of trusting it', async () => {
+    const { api } = make(async () => json(200, { user: { id: 1 }, orgs: 'nope' }));
+    await expect(api.me()).rejects.toMatchObject({ status: 502, code: 'bad_response' });
   });
 });

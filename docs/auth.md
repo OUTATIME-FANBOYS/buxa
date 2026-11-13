@@ -40,6 +40,11 @@ curl -s localhost:8788/v1/org -H "authorization: Bearer $TOKEN" -H "x-org-id: <i
 | `PATCH /v1/org` | admin+, `org:update` | Rename it (audited) |
 | `GET /v1/members` | member, `members:read` | Members of the selected organisation |
 
+## Code map
+`apps/api/src`: `auth/` (verifier, authentication hook, org scope) → `routes/` (one file per resource) → `orgs/` and `users/`
+(repository interface + Postgres adapter) → `@buxa/db`. Routes only parse, authorize, call a repository and return.
+`GET /v1/org` returns `{ id, name, slug, createdAt, memberCount }`; every response shape is defined once in `packages/contracts`.
+
 ## Known limits (to fix before release)
 - No rate limiting yet (sign-in is Supabase's; our endpoints need limits, especially `POST /v1/orgs`).
 - The sign-in lookup uses the privileged database connection, which must be able to bypass row-level security
