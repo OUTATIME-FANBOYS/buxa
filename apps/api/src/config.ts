@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  DATABASE_URL: z.string({ error: 'is required (see .env.example)' }).min(1, 'is required (see .env.example)').refine(v => /^postgres(ql)?:\/\//.test(v), 'must be a postgres:// URL'),
+  DATABASE_URL: z.string({ error: 'is required (see .env.example)' }).refine(v => /^postgres(ql)?:\/\//.test(v), 'must be a postgres:// URL'),
   /** Supabase project URL, e.g. https://abcd.supabase.co. Required except in tests. */
   SUPABASE_URL: z.string().url().optional(),
   PORT: z.coerce.number().int().min(1).max(65535).default(8788),

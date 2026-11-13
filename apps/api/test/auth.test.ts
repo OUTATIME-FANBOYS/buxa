@@ -1,36 +1,36 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
-import { SignJWT, createLocalJWKSet, exportJWK, generateKeyPair, type JWK } from 'jose';
-import { migrate } from '../../../packages/db/src';
+import { migrate } from '@buxa/db';
+import { MeSchema, OrgSchema } from '@buxa/contracts';
 import { buildApp } from '../src/app';
-import { createVerifier } from '../src/auth/verifier';
+import { ISSUER as ISS, createTestIdentityProvider, type TokenOptions } from './tokens';
 
 const url = process.env.DATABASE_URL;
-const ISS = 'https://test-project.supabase.co/auth/v1';
 const tag = Math.random().toString(36).slice(2, 8);
 const uid = () => crypto.randomUUID();
 
 describe.skipIf(!url)('authentication and organisation access', () => {
   const pool = new pg.Pool({ connectionString: url });
   let app: ReturnType<typeof buildApp>;
-  let priv: CryptoKey, other: CryptoKey;
+  let idp: Awaited<ReturnType<typeof createTestIdentityProvider>>;
+  let other: CryptoKey;
   const made = { orgs: [] as string[], users: [] as string[] };
 
-  async function token(over: { sub?: string; email?: string; iss?: string; aud?: string; exp?: string; key?: CryptoKey; alg?: string } = {}) {
+  /** A signed token; the default email carries this run's tag so cleanup can find the users it creates. */
+  type Override = { sub?: string; email?: string; iss?: string; aud?: string; exp?: string; key?: CryptoKey };
+  async function token(over: Override = {}) {
     const sub = over.sub ?? uid();
-    return new SignJWT({ email: over.email ?? `${sub.slice(0, 8)}-${tag}@camp.test`, user_metadata: { name: 'Test Person' } })
-      .setProtectedHeader({ alg: over.alg ?? 'ES256', kid: 'k1' }).setSubject(sub).setIssuer(over.iss ?? ISS)
-      .setAudience(over.aud ?? 'authenticated').setIssuedAt().setExpirationTime(over.exp ?? '1h').sign(over.key ?? priv);
+    const options: TokenOptions = { sub, email: over.email ?? `${sub.slice(0, 8)}-${tag}@camp.test`, issuer: over.iss, audience: over.aud, expiresIn: over.exp, signWith: over.key };
+    return idp.token(options);
   }
   const call = (t: string | null, o: { method?: string; url: string; org?: string; payload?: unknown }) =>
     app.inject({ method: (o.method ?? 'GET') as 'GET', url: o.url, payload: o.payload as object, headers: { ...(t ? { authorization: `Bearer ${t}` } : {}), ...(o.org ? { 'x-org-id': o.org } : {}) } });
 
   beforeAll(async () => {
     await migrate(pool);
-    const kp = await generateKeyPair('ES256'); priv = kp.privateKey;
-    other = (await generateKeyPair('ES256')).privateKey;
-    const jwk: JWK = { ...(await exportJWK(kp.publicKey)), kid: 'k1', alg: 'ES256', use: 'sig' };
-    app = buildApp({ config: { LOG_LEVEL: 'silent', NODE_ENV: 'test' }, pool, verifier: createVerifier({ issuer: ISS, keys: createLocalJWKSet({ keys: [jwk] }) }) });
+    idp = await createTestIdentityProvider();
+    other = idp.strangerKey;
+    app = buildApp({ config: { LOG_LEVEL: 'silent', NODE_ENV: 'test' }, pool, verifier: idp.verifier });
   });
   afterAll(async () => {
     await pool.query('DELETE FROM orgs WHERE id = ANY($1)', [made.orgs]);
@@ -106,7 +106,9 @@ describe.skipIf(!url)('authentication and organisation access', () => {
     });
     it('a user in two organisations sees only the one they select', async () => {
       const t = await token(); const a = await makeOrg(t, 'one'); const b = await makeOrg(t, 'two');
-      expect((await call(t, { url: '/v1/org', org: a })).json().id).toBe(a);
+      const parsed = OrgSchema.parse((await call(t, { url: '/v1/org', org: a })).json()); // the Postgres adapter honours the contract
+      expect(parsed).toMatchObject({ id: a, memberCount: 1 });
+      expect(MeSchema.parse((await call(t, { url: '/v1/me' })).json()).orgs).toHaveLength(2);
       expect((await call(t, { url: '/v1/org', org: b })).json().id).toBe(b);
       const m = (await call(t, { url: '/v1/members', org: a })).json().members;
       expect(m).toHaveLength(1);
