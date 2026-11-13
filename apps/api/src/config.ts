@@ -7,8 +7,6 @@ const schema = z.object({
   SUPABASE_URL: z.string().url().optional(),
   /** Supabase publishable key (public). Lets the API check that sign-ups require email confirmation. Falls back to VITE_SUPABASE_PUBLISHABLE_KEY, which the web build already needs. */
   SUPABASE_PUBLISHABLE_KEY: z.string().min(1).optional(),
-  /** Folder holding the built web app. When set, the API also serves it (one service, one origin). */
-  STATIC_DIR: z.string().min(1).optional(),
   /** Maximum database connections this instance opens. Keep (instances x this) under the database or pooler limit. */
   DB_POOL_MAX: z.coerce.number().int().min(1).max(50).default(10),
   PORT: z.coerce.number().int().min(1).max(65535).default(8788),
