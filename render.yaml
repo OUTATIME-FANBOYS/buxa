@@ -1,0 +1,26 @@
+# Render Blueprint: the staging service, as code. Create it with Render > New > Blueprint and pick this repository.
+# Secrets and account-specific values are not stored here (sync: false): Render asks for them when the blueprint is created.
+services:
+  - type: web
+    name: buxa-staging
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free                  # sleeps when idle; fine for staging. Use a paid plan for always-on.
+    branch: develop             # staging follows develop
+    autoDeployTrigger: checksPass   # deploy only after CI is green
+    healthCheckPath: /ready     # Render keeps the old version until the new one is ready
+    envVars:
+      - key: RUN_MIGRATIONS
+        value: "true"           # migrate on start; a failed migration stops this deploy and the previous version keeps serving
+      - key: LOG_LEVEL
+        value: info
+      - key: DB_POOL_MAX
+        value: "8"              # stays under Supabase's pooler limit
+      - key: DATABASE_URL       # Supabase > Project Settings > Database > Connection string > "Session pooler" (works over IPv4)
+        sync: false
+      - key: SUPABASE_URL       # e.g. https://<project-ref>.supabase.co
+        sync: false
+      - key: VITE_SUPABASE_URL  # same value as SUPABASE_URL; baked into the web bundle at build time (public)
+        sync: false
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY  # the publishable key only; never a secret or service_role key
+        sync: false

@@ -7,7 +7,7 @@ export function registerHttpBasics(app: FastifyInstance): void {
   app.addHook('onSend', async (_req, reply) => {
     reply.header('x-content-type-options', 'nosniff');
     reply.header('referrer-policy', 'no-referrer');
-    reply.header('cache-control', 'no-store');
+    if (!reply.hasHeader('cache-control')) reply.header('cache-control', 'no-store'); // API responses; static files set their own
     reply.header('x-frame-options', 'DENY');
   });
 

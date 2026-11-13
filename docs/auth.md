@@ -56,4 +56,4 @@ curl -s localhost:8788/v1/org -H "authorization: Bearer $TOKEN" -H "x-org-id: <i
 The web app signs in with `@supabase/supabase-js` (publishable key only, never a secret key) and sends the access token to `/v1/*`
 through the dev server's proxy. Supabase keeps the session in this browser's local storage and refreshes it automatically; on a 401
 the client refreshes once and retries, then asks the person to sign in again. Because the token lives in local storage, any script
-injection could read it, so keep third-party scripts out of the app and add a Content-Security-Policy before release.
+injection could read it, so the page ships a strict Content-Security-Policy (same-origin scripts only, no inline scripts, no framing, connections only to this origin and Supabase) and third-party scripts must stay out of the app.

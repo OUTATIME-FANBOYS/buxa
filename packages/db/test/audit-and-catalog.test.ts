@@ -62,3 +62,18 @@ describe.skipIf(!url)('schema guarantees', () => {
     });
   });
 });
+
+describe.skipIf(!url)('Supabase Data API is locked out', () => {
+  const pool = new pg.Pool({ connectionString: url });
+  afterAll(() => pool.end());
+
+  // The roles only exist on Supabase. Where they do, they must hold no privileges on any of our tables.
+  it('anon and authenticated have no privileges on any table in public (when those roles exist)', async () => {
+    const roles = (await pool.query<{ rolname: string }>(`SELECT rolname FROM pg_roles WHERE rolname IN ('anon', 'authenticated')`)).rows.map(r => r.rolname);
+    const tables = (await pool.query<{ t: string }>(`SELECT tablename AS t FROM pg_tables WHERE schemaname = 'public'`)).rows.map(r => r.t);
+    for (const role of roles) for (const table of tables) {
+      const r = await pool.query(`SELECT has_table_privilege($1, format('public.%I', $2::text), 'SELECT,INSERT,UPDATE,DELETE') AS any`, [role, table]);
+      expect(r.rows[0].any, `${role} on ${table}`).toBe(false);
+    }
+  });
+});

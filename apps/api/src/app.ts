@@ -3,13 +3,14 @@ import type { Pool } from 'pg';
 import type { Verifier } from './auth/verifier';
 import type { Config } from './config';
 import { registerHttpBasics } from './http/basics';
+import { registerStaticSite } from './http/staticSite';
 import { generateRequestId } from './http/requestId';
 import { createPgRepositories, type Repositories } from './repositories';
 import { healthRoutes } from './routes/health';
 import { registerV1 } from './routes/v1';
 
 export interface AppDeps {
-  config: Pick<Config, 'LOG_LEVEL' | 'NODE_ENV'>;
+  config: Pick<Config, 'LOG_LEVEL' | 'NODE_ENV'> & { STATIC_DIR?: string };
   pool: Pool;
   /** Without a verifier no /v1 routes exist, so a misconfigured deploy cannot serve unauthenticated data. */
   verifier?: Verifier;
@@ -39,5 +40,6 @@ export function buildApp({ config, pool, verifier, repositories = createPgReposi
   registerHttpBasics(app);
   healthRoutes(app, { pool });
   if (verifier) registerV1(app, { verifier, repositories });
+  if (config.STATIC_DIR) registerStaticSite(app, config.STATIC_DIR);
   return app;
 }
