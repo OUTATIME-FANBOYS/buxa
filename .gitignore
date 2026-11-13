@@ -28,3 +28,4 @@ dist-api
 .next
 next-env.d.ts
 out
+.claude/worktrees
