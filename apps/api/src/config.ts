@@ -7,6 +7,8 @@ const schema = z.object({
   SUPABASE_URL: z.string().url().optional(),
   /** Folder holding the built web app. When set, the API also serves it (one service, one origin). */
   STATIC_DIR: z.string().min(1).optional(),
+  /** Maximum database connections this instance opens. Keep (instances x this) under the database or pooler limit. */
+  DB_POOL_MAX: z.coerce.number().int().min(1).max(50).default(10),
   PORT: z.coerce.number().int().min(1).max(65535).default(8788),
   HOST: z.string().min(1).default('127.0.0.1'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),

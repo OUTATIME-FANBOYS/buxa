@@ -8,7 +8,7 @@ function startServer(): void {
   let config;
   try { config = loadConfig(); } catch (error) { console.error(error instanceof Error ? error.message : error); process.exit(1); }
 
-  const pool = new pg.Pool({ connectionString: config.DATABASE_URL, max: 10, connectionTimeoutMillis: 5000 });
+  const pool = new pg.Pool({ connectionString: config.DATABASE_URL, max: config.DB_POOL_MAX, connectionTimeoutMillis: 5000 });
   const base = config.SUPABASE_URL?.replace(/\/+$/, '');
   const verifier = base
     ? createVerifier({ issuer: `${base}/auth/v1`, keys: createRemoteJWKSet(new URL(`${base}/auth/v1/.well-known/jwks.json`)) })

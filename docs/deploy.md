@@ -16,6 +16,7 @@ database and a Supabase project (for sign-in). Staging uses **mock data only**.
 | `RUN_MIGRATIONS` | runtime | `true` applies pending migrations before the server starts. |
 | `PORT`, `HOST` | runtime | Defaults 8788 / 0.0.0.0 in the image. Most platforms set `PORT`. |
 | `LOG_LEVEL` | runtime | Default `info`. |
+| `DB_POOL_MAX` | runtime | Connections this instance may open (default 10). Keep instances × this under the database or pooler limit. |
 | `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` | **build** args | Public values baked into the web bundle. Publishable key only; never a secret or `service_role` key. |
 
 ## Database requirements
@@ -36,6 +37,23 @@ Try it locally against any Postgres:
 ```bash
 docker run --rm -p 8788:8788 -e DATABASE_URL=postgres://... -e SUPABASE_URL=https://<ref>.supabase.co -e RUN_MIGRATIONS=true buxa:<tag>
 ```
+
+## Staging on Render, with Supabase
+`render.yaml` describes the service. Steps (you do these; they need your accounts):
+1. **Supabase, database URL.** Project Settings → Database → Connection string → **Session pooler**. Render connects over IPv4 and the
+   direct connection is IPv6-only on the free plan; session mode also supports the advisory lock migrations use. Copy the URI and put your
+   database password in it (reset the password in the same page if you do not have it). The user will look like `postgres.<project-ref>`.
+2. **Supabase, signing keys.** Project Settings → JWT Keys: an asymmetric (ECC/RSA) signing key must be current.
+3. **Render.** New → Blueprint → connect `OUTATIME-FANBOYS/buxa` → it finds `render.yaml`. Fill the four prompts:
+   `DATABASE_URL` (step 1), `SUPABASE_URL` and `VITE_SUPABASE_URL` (the project URL), `VITE_SUPABASE_PUBLISHABLE_KEY` (publishable key).
+   Paste secrets only into Render's form, never into the repo or a chat.
+4. **Supabase, sign-in links.** Authentication → URL Configuration: set **Site URL** to the Render address (`https://buxa-staging.onrender.com`
+   or similar) so confirmation emails link back to it.
+5. **First check.** Open `<render-url>/ready` (expect `{"status":"ready"}`), then the site: create an account, set up a camp.
+6. **Optional hardening.** Supabase → Settings → Data API: turn it off. Migration `0005` already removes its access to our tables.
+
+The first request after idle takes about 30 seconds on the free plan. Render passes service environment variables to the Docker build,
+which is how the `VITE_*` values reach the web bundle; if the page says "Connect Supabase", re-deploy after checking those two values.
 
 ## Rolling back
 - **Application:** redeploy the previous image tag. Images are immutable, so this is exact.
