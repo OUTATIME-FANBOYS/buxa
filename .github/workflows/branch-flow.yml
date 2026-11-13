@@ -1,0 +1,15 @@
+name: Branch flow
+# Features and fixes go to develop. Only develop is released to main.
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  only-from-develop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: PRs into main must come from develop
+        run: |
+          if [ "${{ github.head_ref }}" != "develop" ]; then
+            echo "::error::PRs into main must come from develop (got '${{ github.head_ref }}'). Open this PR against develop."
+            exit 1
+          fi
