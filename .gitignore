@@ -1,0 +1,12 @@
+node_modules
+dist
+.buxa-data
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.claude/settings.local.json
+coverage
+.agents
+.claude/skills
