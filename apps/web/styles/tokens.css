@@ -1,0 +1,57 @@
+/* ---------- Tokens ---------- */
+/*
+ * Colour system: cool neutrals plus five hues, each with four steps.
+ *   text step  (--accent, --ok, --warn, --crit, --agent): 4.5:1 or better on every surface
+ *   soft + ink (--x-soft, --x-ink):                      tinted backgrounds for pills and icons, ink is 4.5:1 on soft
+ *   fill       (--f-x):                                   chart marks and dots, 3:1 on surfaces, checked for colour-blind separation
+ * Meaning is fixed: brand = primary and in progress, ok = done, warn = needs attention, crit = overdue or destructive,
+ * agent = anything an AI agent did. The agent hue is never a chart series next to brand (they merge for some viewers).
+ */
+:root {
+  --bg: #f4f5fa; --surface: #ffffff; --surface-2: #f8f9fc; --surface-3: #eceef5; --hover: #eef0f6;
+  --line: #e2e5ee; --line-strong: #cbd0dd; --control: #868da3;
+  --text: #141726; --text-2: #474d63; --text-3: #5f667d;
+  --accent: #4a43e0; --accent-soft: #ecebff; --accent-deep: #3730b8; --f-brand: #4f46e5;
+  --ok: #0b7a55; --ok-soft: #def5ea; --ok-ink: #065f46; --f-ok: #0e9f6e;
+  --warn: #a34a07; --warn-soft: #fdf0d5; --warn-ink: #8f3f0a; --f-warn: #d17a00;
+  --crit: #c62424; --crit-soft: #fde7e7; --crit-ink: #a81d1d; --f-crit: #e02d3c;
+  --agent: #7c3aed; --agent-soft: #f0e9ff; --agent-ink: #5b21b6; --f-agent: #8b4df0;
+  --f-neutral: #868da3; --neutral-soft: #eceef5; --neutral-ink: #474d63;
+  --accent-ink: #ffffff; --on-solid: #ffffff; --on-inverse-accent: #b3b7ff;
+  --hero-bg: #3f38cf; --hero-fg: #ffffff; --hero-fg-2: #dcdbff;
+  --p-low: var(--text-3); --p-medium: var(--accent); --p-high: var(--warn); --p-critical: var(--crit);
+  --track: #e4e7f0; --grid: #e9ebf2;
+  --shadow-1: 0 1px 2px rgba(20,23,38,.06);
+  --shadow: 0 1px 2px rgba(20,23,38,.06), 0 12px 32px rgba(20,23,38,.12);
+  --r-1: 6px; --r-2: 8px; --r-3: 12px;
+  --s1: .25rem; --s2: .5rem; --s3: .75rem; --s4: 1rem; --s5: 1.5rem; --s6: 2rem; --s7: 3rem;
+  --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  --fs-s: .75rem; --fs-b: .875rem; --fs-h: 1.375rem; --fs-n: 1.75rem;
+  --ease: cubic-bezier(.2,.7,.2,1); --ease-out: cubic-bezier(.22,1,.36,1);
+  --material: color-mix(in srgb, var(--surface) 78%, transparent);
+  color-scheme: light;
+}
+[data-theme="dark"] {
+  --bg: #0e1017; --surface: #161922; --surface-2: #1b1f2a; --surface-3: #232836; --hover: #222736;
+  --line: #262b3a; --line-strong: #363c4f; --control: #6b7289;
+  --text: #e9ebf3; --text-2: #aab0c5; --text-3: #8d93aa;
+  --accent: #959bff; --accent-soft: #24264d; --accent-deep: #b3b7ff; --f-brand: #7a85f6;
+  --ok: #3fcf8e; --ok-soft: #12342a; --ok-ink: #6fe0ae; --f-ok: #22ae80;
+  --warn: #f2b045; --warn-soft: #3a2c12; --warn-ink: #f7c570; --f-warn: #bd8a10;
+  --crit: #ff7d74; --crit-soft: #40201f; --crit-ink: #ffa099; --f-crit: #d63a55;
+  --agent: #b596ff; --agent-soft: #2c2350; --agent-ink: #cbb5ff; --f-agent: #9d7bf0;
+  --f-neutral: #6b7289; --neutral-soft: #232836; --neutral-ink: #aab0c5;
+  --accent-ink: #0e1017; --on-solid: #0e1017; --on-inverse-accent: #3730b8;
+  --hero-bg: #1c1e45; --hero-fg: #e9ebf3; --hero-fg-2: #b3b7ff;
+  --track: #262b3a; --grid: #222634;
+  --shadow-1: 0 1px 2px rgba(0,0,0,.35);
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.5);
+  color-scheme: dark;
+}
+/* Tones: one class sets the four steps, components read them. */
+.tone-neutral, .pill-neutral { --tone: var(--text-2); --tone-soft: var(--neutral-soft); --tone-ink: var(--neutral-ink); --tone-f: var(--f-neutral); }
+.tone-brand, .pill-brand { --tone: var(--accent); --tone-soft: var(--accent-soft); --tone-ink: var(--accent-deep); --tone-f: var(--f-brand); }
+.tone-ok, .pill-ok { --tone: var(--ok); --tone-soft: var(--ok-soft); --tone-ink: var(--ok-ink); --tone-f: var(--f-ok); }
+.tone-warn, .pill-warn { --tone: var(--warn); --tone-soft: var(--warn-soft); --tone-ink: var(--warn-ink); --tone-f: var(--f-warn); }
+.tone-crit, .pill-crit { --tone: var(--crit); --tone-soft: var(--crit-soft); --tone-ink: var(--crit-ink); --tone-f: var(--f-crit); }
+.tone-agent, .pill-agent { --tone: var(--agent); --tone-soft: var(--agent-soft); --tone-ink: var(--agent-ink); --tone-f: var(--f-agent); }

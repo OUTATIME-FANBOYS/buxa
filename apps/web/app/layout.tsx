@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import { connection } from 'next/server';
 import Script from 'next/script';
 import type { ReactNode } from 'react';
-import './globals.css';
+import '../styles/index.css';
 
 export const metadata: Metadata = {
   title: { default: 'Buxa', template: '%s · Buxa' },

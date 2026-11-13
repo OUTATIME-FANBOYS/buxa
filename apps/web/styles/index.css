@@ -1,0 +1,57 @@
+/*
+ * Buxa styles: the ONE place the import order is defined (app/layout.tsx imports only this file).
+ *
+ * CSS order is behaviour: at equal specificity the later rule wins. This list is the order of the
+ * original single stylesheet, split by concern, so the cascade is unchanged. Do not reorder entries
+ * without re-checking every selector that appears in more than one file (for example `.filters`,
+ * `.main`, `.grid-3`, `.search`, `.toast`) and the pixel screenshots.
+ *
+ * Layers, in load order:
+ *   1. tokens.css                      the single source of colours, spacing, radii, type scale, motion.
+ *                                      Dark theme overrides sit next to the light values. Also the `.tone-*` classes.
+ *   2. base.css                        resets, element defaults, utility classes (.muted, .row, .stack, .sr-only ...).
+ *   3. components/buttons-fields.css   buttons, icon buttons, inputs, selects, form fields.
+ *   4. layout/shell.css                app shell: sidebar, topbar, search, avatars, main column.
+ *      layout/pages.css                page scaffolding: headers, panels, stats, lists, cards, empty states.
+ *   5. features/kanban/filters.css     filter bar, chips, segmented control.
+ *   6. components/popover-menu-dialog.css  popovers, menus, notifications, dialogs, drawer and its contents, keyframes.
+ *   7. components/signals.css          priority, due date, meta, pills, dots.
+ *   8. features/kanban/board.css       board, columns, cards, drag ghost.
+ *      components/table.css            data tables.
+ *      features/kanban/calendar.css, timeline.css, charts.css
+ *   9. components/toasts.css, layout/auth.css   toasts, sign-in and demo-login screen.
+ *  10. responsive.css                  breakpoints and user-preference queries (reduced motion/transparency, high contrast).
+ *                                      Loaded after the components they adjust, and BEFORE agents/camp: their rules are
+ *                                      later in the cascade than these overrides, exactly as before.
+ *  11. features/kanban/agents.css      agent governance UI (proposals, runs, trust, agent avatars).
+ *  12. features/camp.css               camp area (setup, steps, abilities).
+ *
+ * Where does a new style go?
+ *   - A colour, spacing, radius, font size, shadow or easing value: tokens.css (add a custom property, never a literal).
+ *   - A reset, element default or one-line utility: base.css.
+ *   - A reusable, feature-agnostic piece of UI (works in any feature): components/<name>.css.
+ *   - Page chrome shared by every screen (shell, page scaffolding, auth): layout/<name>.css.
+ *   - Something only one feature uses: features/<feature>.css, or features/<feature>/<part>.css when it needs several files.
+ *   - A new file: add one @import below, in the position its rules need in the cascade, and say why in this comment.
+ *   - A media query: prefer beside its component only when no other file styles the same selector;
+ *     otherwise put it in responsive.css so the order stays explicit.
+ * Class names and custom-property names are shared with the TSX; renaming one is a code change, not a style change.
+ */
+@import './tokens.css';
+@import './base.css';
+@import './components/buttons-fields.css';
+@import './layout/shell.css';
+@import './layout/pages.css';
+@import './features/kanban/filters.css';
+@import './components/popover-menu-dialog.css';
+@import './components/signals.css';
+@import './features/kanban/board.css';
+@import './components/table.css';
+@import './features/kanban/calendar.css';
+@import './features/kanban/timeline.css';
+@import './features/kanban/charts.css';
+@import './components/toasts.css';
+@import './layout/auth.css';
+@import './responsive.css';
+@import './features/kanban/agents.css';
+@import './features/camp.css';
