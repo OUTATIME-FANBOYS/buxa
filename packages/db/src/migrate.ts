@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Pool } from 'pg';
+import { errorMessage } from './errors';
 
 const DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'migrations');
 
@@ -21,7 +22,7 @@ export async function migrate(pool: Pool): Promise<string[]> {
         await c.query('INSERT INTO schema_migrations(name) VALUES ($1)', [file]);
         await c.query('COMMIT');
         applied.push(file);
-      } catch (e) { await c.query('ROLLBACK'); throw new Error(`Migration ${file} failed: ${(e as Error).message}`); }
+      } catch (e) { await c.query('ROLLBACK'); throw new Error(`Migration ${file} failed: ${errorMessage(e)}`); }
     }
   } finally { await c.query('SELECT pg_advisory_unlock(727274)').catch(() => {}); c.release(); }
   return applied;
