@@ -1,6 +1,6 @@
 # ADR 0001: Backend stack
 
-Status: proposed. Date: 2026-11-13.
+Status: accepted (stack); data-access detail amended 2026-11-13. Date: 2026-11-13.
 
 ## Context
 The prototype keeps whole-app state in the browser and a single JSON file on a local server. That cannot
@@ -12,7 +12,7 @@ support multiple orgs, payments, concurrency-safe seat counts, or children's dat
   counts and holds. Managed host (Neon or Supabase) with point-in-time recovery.
 - **API:** Fastify with typed routes and zod validation. Business rules stay in a pure `domain` package that
   the API calls; no rules in route handlers.
-- **Data access:** Drizzle ORM with SQL migrations checked in; every migration reviewed in a PR.
+- **Data access:** plain SQL migrations checked in (row-level security is SQL anyway), run by `packages/db`; every migration reviewed in a PR. A typed query layer (Drizzle or similar) can be added later without changing the schema. *(Changed from the first draft, which named Drizzle.)*
 - **Auth:** managed provider (Clerk or Supabase Auth), not hand-rolled, because accounts hold minors' data.
   Authorization is ours: a shared `can(actor, action, resource)` used by API and UI.
 - **Payments:** Stripe Connect (Standard accounts). Webhooks are idempotent and verified.
