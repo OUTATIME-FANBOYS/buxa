@@ -1,29 +1,23 @@
-import { useState } from 'react';
-import { useStore } from '../store';
-import { Field } from '@/components/ui';
-import { Icon } from '@/components/ui';
+import { useReducer, useState } from 'react';
+import { useStore } from '../state/store';
+import { authFormReducer, initialAuthForm, validateAuth } from '../state/authForm';
+import { Field, Icon } from '@/components/ui';
 import { DEMO_PASSWORD } from '../lib/seed';
-
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function Auth() {
   const { s, actions } = useStore();
-  const [mode, setMode] = useState<'in' | 'up'>('in');
+  const [form, dispatch] = useReducer(authFormReducer, initialAuthForm);
   const [name, setName] = useState(''); const [email, setEmail] = useState(''); const [pw, setPw] = useState('');
-  const [errs, setErrs] = useState<Record<string, string>>({}); const [busy, setBusy] = useState(false);
+  const { mode } = form; const errs = form.phase === 'editing' ? form.errors : {}; const busy = form.phase === 'submitting';
   const demoUsers = s.users.filter(u => s.accounts.some(a => a.userId === u.id && a.demo)).slice(0, 3);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const er: Record<string, string> = {};
-    if (mode === 'up' && !name.trim()) er.name = 'Tell us what to call you.';
-    if (!EMAIL.test(email.trim())) er.email = 'Enter a valid email address.';
-    if (pw.length < (mode === 'up' ? 8 : 1)) er.pw = mode === 'up' ? 'Use at least 8 characters.' : 'Enter your password.';
-    setErrs(er); if (Object.keys(er).length) return;
-    setBusy(true);
+    const er = validateAuth(mode, name, email, pw);
+    dispatch({ type: 'invalid', errors: er }); if (Object.keys(er).length) return;
+    dispatch({ type: 'submitStarted' });
     const msg = mode === 'in' ? await actions.signIn(email, pw) : await actions.signUp(name, email, pw);
-    setBusy(false);
-    if (msg) setErrs({ form: msg });
+    dispatch({ type: 'finished', message: msg });
   };
 
   return (
@@ -57,7 +51,7 @@ export function Auth() {
         </form>
         <p className="auth-switch muted">
           {mode === 'in' ? 'New here?' : 'Already have an account?'}{' '}
-          <button className="link" onClick={() => { setMode(mode === 'in' ? 'up' : 'in'); setErrs({}); }}>{mode === 'in' ? 'Create an account' : 'Sign in'}</button>
+          <button className="link" onClick={() => dispatch({ type: 'switchMode' })}>{mode === 'in' ? 'Create an account' : 'Sign in'}</button>
         </p>
         <div className="auth-demo">
           <span className="eyebrow">Explore the demo workspace</span>

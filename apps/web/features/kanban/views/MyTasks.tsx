@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { useStore } from '../store';
+import { useStore } from '../state/store';
 import { Empty, Segmented } from '@/components/ui';
-import { ListView } from '../components/Views';
+import { ListView } from '../components/board-views';
 import { Icon } from '@/components/ui';
 import { diffDays, today } from '../lib/dates';
 import type { Task } from '../types';
