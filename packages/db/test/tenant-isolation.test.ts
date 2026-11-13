@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
+import { ROLES } from '../../domain/src';
 import { migrate, withOrg } from '../src';
 
 const url = process.env.DATABASE_URL;
@@ -69,6 +70,11 @@ describe.skipIf(!url)('tenant isolation (row-level security)', () => {
 
   it('rejects a malformed organisation id before it reaches SQL', async () => {
     await expect(withOrg(pool, `'; DROP TABLE orgs; --`, async () => 1)).rejects.toThrow(/Invalid organisation id/);
+  });
+
+  it('database roles match the permissions module (no drift)', async () => {
+    const r = await pool.query(`SELECT unnest(enum_range(NULL::org_role))::text AS role`);
+    expect(r.rows.map(x => x.role).sort()).toEqual([...ROLES].sort());
   });
 
   it('migrations are idempotent', async () => { expect(await migrate(pool)).toEqual([]); });
