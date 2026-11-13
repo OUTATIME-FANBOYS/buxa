@@ -1,10 +1,31 @@
 {
   "compilerOptions": {
-    "target": "ES2020", "lib": ["ES2022", "DOM", "DOM.Iterable"], "module": "ESNext",
-    "moduleResolution": "bundler", "jsx": "react-jsx", "strict": true, "noEmit": true,
-    "skipLibCheck": true, "isolatedModules": true, "resolveJsonModule": true,
-    "noUnusedLocals": false, "types": ["node"], "noFallthroughCasesInSwitch": true
+    "target": "ES2020",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "noUnusedLocals": false,
+    "types": [
+      "node"
+    ],
+    "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "server"],
-  "exclude": ["node_modules"]
+  "include": [
+    "src",
+    "server",
+    "packages"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
