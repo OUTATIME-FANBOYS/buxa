@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { NewCamp } from '@/features/camp/screens/NewCamp';
+import { NewCampForm } from '@/features/camp/forms/NewCampForm';
 
 export const metadata: Metadata = { title: 'New camp' };
 
 export default function Page() {
-  return <NewCamp first={false} />;
+  return <NewCampForm first={false} />;
 }
