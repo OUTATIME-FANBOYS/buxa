@@ -1,4 +1,7 @@
 /**
+ * @deprecated Retired by `ActionState` (lib/actions/state.ts). Kept only because the old screens (rewritten by B1/A1) still import it;
+ * the integrator deletes it together with them.
+ *
  * The life of one form submission, as an explicit state machine instead of separate busy/error/note flags.
  * Every state is one value; every way of moving between them is listed in `submissionReducer`.
  *

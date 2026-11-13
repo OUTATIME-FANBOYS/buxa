@@ -1,3 +1,7 @@
+/**
+ * @deprecated The `@buxa/contracts` schemas are now the validators (see features/camp/actions/input.ts). Kept only because the old
+ * screens (rewritten by B1/A1) still import it; the integrator deletes it together with them.
+ */
 import { NewOrgInputSchema, OrgPatchInputSchema } from '@buxa/contracts';
 import type { ZodType } from 'zod';
 import type { FieldErrors } from './submission';
