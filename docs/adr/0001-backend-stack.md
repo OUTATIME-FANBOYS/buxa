@@ -32,3 +32,6 @@ support multiple orgs, payments, concurrency-safe seat counts, or children's dat
 4. Concurrency tests: N parallel registrations against capacity K never exceed K.
 5. Playwright end-to-end for the main flows, plus axe accessibility checks.
 6. Stripe in test mode with webhook replay.
+
+## Hosting (decided 2026-11-13)
+Vercel: the web app on the CDN and the Fastify API as a Node.js function (Fluid compute), deployed from the Build Output API (`deploy/vercel`). Supabase hosts Postgres and sign-in. No container image: it was built and verified first, then removed because Vercel needs none and a second packaging format is more to maintain. Revisit (a container host such as Fly.io or Cloud Run) if the API ever needs long-lived connections or background workers.

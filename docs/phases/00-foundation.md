@@ -40,4 +40,4 @@ Without `DATABASE_URL` the database tests are skipped, so say so when reporting 
 Without the env file the app shows a setup page instead of failing.
 
 ## Deploying
-See `docs/deploy.md`. The container, migrations-on-start, rollback notes and CI image build are done; choosing a host and going live is next.
+See `docs/deploy.md`. Target: Vercel (static web app + one API function, one address). The build output, routing, security headers, migrations-on-production-build and rollback notes are done and verified locally; connecting the Vercel project is the remaining step.
