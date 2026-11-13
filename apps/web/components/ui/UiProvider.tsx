@@ -6,19 +6,11 @@ import { Dialog } from './Dialog';
 interface ToastAction { label: string; run: () => void }
 interface Toast { id: number; text: string; tone?: 'error'; action?: ToastAction }
 export interface ConfirmOpts { title: string; body?: string; confirmLabel?: string; danger?: boolean }
-/** @deprecated Kanban-only; use `TaskDrawerState` from `@/features/kanban/state/TaskDrawerContext`. */
-export interface LegacyTaskDrawerState { id: string | 'new'; defaults?: { columnId?: string; due?: string; projectId?: string } }
 
 interface UiCtx {
   toast: (text: string, opts?: { tone?: 'error'; action?: ToastAction }) => void;
   confirm: (o: ConfirmOpts) => Promise<boolean>;
   sidebarOpen: boolean; setSidebarOpen: (b: boolean) => void;
-  /** @deprecated Use `useTaskDrawer()` from `@/features/kanban/state/TaskDrawerContext`. Removed by the integrator. */
-  drawer: LegacyTaskDrawerState | null;
-  /** @deprecated Use `useTaskDrawer().openTask`. */
-  openTask: (id: string | 'new', defaults?: LegacyTaskDrawerState['defaults']) => void;
-  /** @deprecated Use `useTaskDrawer().closeTask`. */
-  closeTask: () => void;
 }
 const Ctx = createContext<UiCtx | null>(null);
 export const useUi = () => { const c = useContext(Ctx); if (!c) throw new Error('UiProvider missing'); return c; };
@@ -27,7 +19,6 @@ export function UiProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [queue, setQueue] = useState<(ConfirmOpts & { resolve: (b: boolean) => void })[]>([]);
   const conf = queue[0] ?? null;
-  const [drawer, setDrawer] = useState<LegacyTaskDrawerState | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const seq = useRef(0);
 
@@ -38,9 +29,7 @@ export function UiProvider({ children }: { children: ReactNode }) {
   }, []);
   // Concurrent confirms queue up: every promise settles, one dialog at a time.
   const confirm = useCallback((o: ConfirmOpts) => new Promise<boolean>(resolve => setQueue(q => [...q, { ...o, resolve }])), []);
-  const openTask = useCallback<UiCtx['openTask']>((id, defaults) => setDrawer({ id, defaults }), []);
-  const closeTask = useCallback(() => setDrawer(null), []);
-  const value = useMemo(() => ({ toast, confirm, drawer, openTask, closeTask, sidebarOpen, setSidebarOpen }), [toast, confirm, drawer, openTask, closeTask, sidebarOpen]);
+  const value = useMemo(() => ({ toast, confirm, sidebarOpen, setSidebarOpen }), [toast, confirm, sidebarOpen]);
 
   const done = (b: boolean) => { conf?.resolve(b); setQueue(q => q.slice(1)); };
   return (

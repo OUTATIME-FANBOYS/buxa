@@ -1,8 +1,9 @@
+import { PriorityMark } from '../PriorityMark';
 import { useMemo, useState } from 'react';
 import type { Project, Task } from '../../types';
 import { useStore } from '../../state/store';
 import { useTaskDrawer } from '../../state/TaskDrawerContext';
-import { Avatar, Empty, Icon, KIND_TONE, Pill, PriorityMark } from '@/components/ui';
+import { Avatar, Empty, Icon, KIND_TONE, Pill } from '@/components/ui';
 import { DueChip } from '../board/DueChip';
 import { PRIORITY_RANK, subtaskProgress } from '../../lib/tasks';
 

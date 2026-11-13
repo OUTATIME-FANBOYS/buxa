@@ -1,6 +1,6 @@
 # Steps 3 and 4: server rendering and front-end organisation
 
-Status: in progress. Branch: `integration/steps-3-4`. Context: `docs/adr/0002-nextjs.md`.
+Status: **done** (steps 3 and 4 built in parallel; see "What changed from the plan" at the end). Branch: `integration/steps-3-4`. Context: `docs/adr/0002-nextjs.md`.
 
 Step 3 moves the camp area to **cookie sessions, Server Components and Server Actions** (the browser stops holding tokens; public, indexable pages become possible).
 Step 4 **organises the front end** so each thing is defined once and lives in an obvious place.
@@ -95,3 +95,14 @@ All six chunks start together; they own disjoint files. Merge order into the int
 - The shared local Postgres is `postgres://buxa:buxa@localhost:5433/buxa`. Do not reset it or delete other people's rows; tests use unique tags. Run any dev server on your own port (A1 5181, A2 5182, A3 5183, A4 5184, B1 5185, B2 5186).
 - No real credentials exist for you. Never ask for, write or commit secrets, `.env*` files, the Supabase address, or personal data. Do not use any password you find in the conversation or logs.
 - Verify with `npm run typecheck`, `npx vitest run`, `npm run build`. Report honestly: what you ran, what passed, what you could not verify, and any file outside your ownership you needed changed.
+
+## What changed from the plan
+- All six chunks landed. Two agents' worktrees started on an old base (they branched from the integration branch themselves); merges were clean.
+- A1: sign-in is a Server Action form; `getSession` reuses one token check shared with the bearer API; the proxy caps the Supabase refresh at 2.5 s.
+- A2: shared UI split into one file per component; Pill, Avatar, Empty, Field, Progress and Icon are Server Component safe.
+- A3: the kanban CSS is several files under `styles/features/kanban/`, not one, because the original order interleaves it with other layers; 28 screenshots byte-identical.
+- A4: also replaced four implicit state machines (board drag, connect-agent dialog, auth form, list sort) with explicit states and tests. The global-search combobox still uses three flags.
+- B1/B2: the camp area is Server Components plus Server Actions; the hand-rolled form reducer and validators are gone (`ActionState` + the contract schemas replace them).
+- Integration found and fixed one bug no unit test could (errors compared with `instanceof` across module copies) and moved the theme storage key into `config/theme.ts` with a test that keeps the static `theme-init.js` in step.
+- Removed at integration: the browser token code, deprecated drawer fields on the shared provider, the `PriorityMark` barrel export, the motion and `initials` shims.
+- Not done: files over ~120 lines remain in `features/kanban/lib/{domain,agents,gateway,seed}.ts` (pure logic); the search combobox flags; real touch-drag on mobile was never run.

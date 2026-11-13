@@ -1,3 +1,4 @@
+import { LEGACY_THEME_KEY, THEME_KEY } from '@/config';
 import type { AppState } from '../types';
 import { buildDemo } from '../lib/demo';
 import { normalize } from './normalize';
@@ -20,8 +21,8 @@ export function loadState(): AppState {
 export const storage = {
   save(state: AppState) {
     localStorage.setItem(KEY, JSON.stringify(state));
-    localStorage.setItem('buxa.theme', JSON.stringify(state.ui.theme));
+    localStorage.setItem(THEME_KEY, JSON.stringify(state.ui.theme));
     localStorage.removeItem(LEGACY_KEY);
-    localStorage.removeItem('tessera.theme');
+    localStorage.removeItem(LEGACY_THEME_KEY);
   },
 };

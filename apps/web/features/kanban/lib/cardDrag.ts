@@ -4,7 +4,7 @@
  */
 import { flushSync } from 'react-dom';
 import type { Column, Task } from '../types';
-import { haptic, reduceMotion, springAnimate, VelocityTracker } from './motion';
+import { haptic, reduceMotion, springAnimate, VelocityTracker } from '@/lib/motion';
 
 /* ---------- Pointer-driven card drag: 1:1 tracking, velocity handoff, interruptible ---------- */
 export type Drag = { kind: 'task' | 'column'; id: string } | null;

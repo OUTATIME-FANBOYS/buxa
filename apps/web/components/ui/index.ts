@@ -16,5 +16,3 @@ export { Dialog, useDialogClose } from './Dialog';
 export { UiProvider, useUi, type ConfirmOpts } from './UiProvider';
 export { KIND_TONE, type Tone } from './tones';
 
-/** @deprecated Kanban-specific; import from `@/features/kanban/components/PriorityMark`. The integrator removes this export. */
-export { PriorityMark } from '@/features/kanban/components/PriorityMark';

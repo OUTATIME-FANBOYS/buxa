@@ -1,8 +1,9 @@
+import { PriorityMark } from '../PriorityMark';
 import { memo } from 'react';
 import type { Project, Task } from '../../types';
 import { useStore } from '../../state/store';
 import { useTaskDrawer } from '../../state/TaskDrawerContext';
-import { Avatar, Icon, Menu, PriorityMark } from '@/components/ui';
+import { Avatar, Icon, Menu } from '@/components/ui';
 import { subtaskProgress } from '../../lib/tasks';
 import { justDragged } from '../../lib/cardDrag';
 import { useTaskCommands } from '../../hooks/useTaskCommands';

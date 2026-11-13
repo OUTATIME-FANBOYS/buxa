@@ -1,8 +1,9 @@
+import { PriorityMark } from './PriorityMark';
 import { useCallback, useRef, useState, type ReactNode } from 'react';
 import type { Filter, DueFilter, Project, Sort } from '../types';
 import { useStore } from '../state/store';
 import { Icon } from '@/components/ui';
-import { Menu, Popover, PriorityMark, Avatar, useUi } from '@/components/ui';
+import { Menu, Popover, Avatar, useUi } from '@/components/ui';
 import { PRIORITIES, emptyFilter, isFilterActive } from '../lib/tasks';
 
 function Chip({ label, count, children, width = 220 }: { label: string; count: number; children: ReactNode; width?: number }) {
