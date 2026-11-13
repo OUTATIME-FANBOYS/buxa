@@ -43,4 +43,4 @@ jobs:
           psql -h localhost -p 5434 -U postgres -c "CREATE ROLE deployer LOGIN PASSWORD 'deployer' CREATEROLE BYPASSRLS NOSUPERUSER" -c "CREATE DATABASE buxa_managed OWNER deployer"
           export DATABASE_URL=postgres://deployer:deployer@localhost:5434/buxa_managed
           npm run db:migrate
-          npx vitest run packages apps/api
+          npx vitest run packages apps/web/server

@@ -8,19 +8,16 @@ Built phase by phase; see `docs/ROADMAP.md`. The repository is public, so it hol
 ## Run it locally
 ```bash
 npm install
-docker compose up -d db                      # Postgres on 127.0.0.1:5433
-cp .env.example .env && cp apps/web/.env.example apps/web/.env.local   # then fill in the public Supabase values
-export DATABASE_URL=postgres://buxa:buxa@localhost:5433/buxa SUPABASE_URL=https://<project>.supabase.co
+docker compose up -d db                       # Postgres on 127.0.0.1:5433
+cp apps/web/.env.example apps/web/.env.local  # then fill in the two public Supabase values; DATABASE_URL is already set for the local database
 npm run db:migrate
-npm run api                                  # the API, port 8788 (moves into Next.js route handlers in the next change)
-npm run dev                                  # the web app, http://localhost:5173
+npm run dev                                   # http://localhost:5173  (the web app and the API are one Next.js app)
 ```
-`npm run typecheck`, `npm test` (database tests need `DATABASE_URL`), `npm run build`.
+`npm run typecheck`, `npm test` (database tests need `DATABASE_URL`), `npm run build`, `npm start`. The first request to each page in dev mode compiles it, so give a fresh start a moment.
 
 ## Layout
 ```
-apps/web          Next.js app: app/ (routes), features/ (camp, kanban), config/ (single sources such as routes)
-apps/api          Fastify API (being moved into apps/web route handlers)
+apps/web          Next.js app: app/ (pages and the /v1 API routes), features/ (camp, kanban), server/ (API internals), config/ (single sources)
 packages/domain   pure rules: roles, permissions, slugs, ids
 packages/db       migrations, transactions, tenant isolation
 packages/contracts  zod shapes shared by the API and the web app

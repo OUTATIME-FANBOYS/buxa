@@ -21,8 +21,8 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": [
-    "apps/api",
     "packages",
+    "scripts",
     "vitest.config.ts"
   ],
   "exclude": [
