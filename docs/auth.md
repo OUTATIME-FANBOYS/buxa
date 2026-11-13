@@ -46,3 +46,9 @@ curl -s localhost:8788/v1/org -H "authorization: Bearer $TOKEN" -H "x-org-id: <i
   (true for a superuser and for Supabase's `postgres` role). Revisit with a dedicated function when we deploy.
 - Email-verified status is not checked yet; it matters once invitations link people by email.
 - Multi-factor authentication for staff accounts that see children's data is not enforced yet.
+
+## In the browser
+The web app signs in with `@supabase/supabase-js` (publishable key only, never a secret key) and sends the access token to `/v1/*`
+through the dev server's proxy. Supabase keeps the session in this browser's local storage and refreshes it automatically; on a 401
+the client refreshes once and retries, then asks the person to sign in again. Because the token lives in local storage, any script
+injection could read it, so keep third-party scripts out of the app and add a Content-Security-Policy before release.
