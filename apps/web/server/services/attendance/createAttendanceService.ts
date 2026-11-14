@@ -135,16 +135,18 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       ]);
       const byId = new Map(persons.map(p => [p.id, p] as const));
 
+      // Minor status is contact-level (people:read_contact): viewers get null, which the screen reads as unknown.
+      const seeContact = can(actor, 'people:read_contact');
       const result: OnSiteEntry[] = [];
       for (const [index, record] of records.entries()) {
         const person = byId.get(record.personId);
         if (!person) continue;
-        const minor = isMinor(person, today);
+        const minor = seeContact ? isMinor(person, today) : null;
         result.push({
           entry: entries[index],
           person: toSummary(person, groups.filter(m => m.personId === person.id), onSite.has(person.id), today),
           isMinor: minor,
-          pickupOptions: minor ? await pickupOptionsFor(people, orgId, person.id) : [],
+          pickupOptions: minor === true ? await pickupOptionsFor(people, orgId, person.id) : [],
         });
       }
       return result;

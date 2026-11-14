@@ -24,7 +24,11 @@ export type CheckOutResult =
 /** Someone who may collect a child (a guardian with can_pickup in one of the child's households). */
 export interface PickupOption { personId: string; name: string; relationship: string }
 
-export interface OnSiteEntry { entry: AttendanceEntry; person: PersonSummary; isMinor: boolean; pickupOptions: PickupOption[] }
+/**
+ * `isMinor` is null when the actor may not see contact-level status (no people:read_contact, i.e. viewers). Pickup options are
+ * only given when the child is known to be a minor, so they are empty for those viewers too.
+ */
+export interface OnSiteEntry { entry: AttendanceEntry; person: PersonSummary; isMinor: boolean | null; pickupOptions: PickupOption[] }
 
 /**
  * Check-in and check-out, applying decideCheckIn and decideCheckOut from @buxa/domain. "Today" is the camp's local day
