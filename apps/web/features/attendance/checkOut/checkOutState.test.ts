@@ -99,6 +99,10 @@ describe('canSubmitCheckOut', () => {
     expect(canSubmitCheckOut(true, { collectedBy: null, overrideReason: 'Parent on the phone' })).toBe(true);
     expect(canSubmitCheckOut(true, { collectedBy: null, overrideReason: '   ' })).toBe(false);
   });
+
+  it('does not block when the screen cannot tell whether the person is a child (the server decides)', () => {
+    expect(canSubmitCheckOut(null, EMPTY_DRAFT)).toBe(true);
+  });
 });
 
 describe('checkOutInputFor', () => {

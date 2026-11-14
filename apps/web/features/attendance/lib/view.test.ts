@@ -93,6 +93,11 @@ describe('on-site view', () => {
     expect(row).toEqual({ personId: 'p-ada', name: 'Ada Lovelace', arrivedAt: '02:00', isMinor: true, pickupOptions: [] });
   });
 
+  it('keeps an unknown minor status as unknown (null), not as an adult or a child', () => {
+    const row = toOnSiteRow({ entry: entry('p-ada', '2026-11-13T08:12:00Z'), person: ada, isMinor: null, pickupOptions: [] }, 'Asia/Kolkata');
+    expect(row.isMinor).toBeNull();
+  });
+
   it('counts people in the header wording', () => {
     expect(onSiteSummary(1)).toBe('1 person on site now');
     expect(onSiteSummary(0)).toBe('0 people on site now');

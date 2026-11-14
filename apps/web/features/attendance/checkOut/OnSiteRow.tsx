@@ -33,7 +33,7 @@ export function OnSiteRow({ row, canRecord, canOverride }: Props) {
       <div className="onsite-head">
         <div className="onsite-who">
           <span className="onsite-name">{row.name}</span>
-          {row.isMinor && <Pill tone="neutral" dot={false}>Minor</Pill>}
+          {row.isMinor === true && <Pill tone="neutral" dot={false}>Minor</Pill>}
           <span className="muted small">Arrived {row.arrivedAt}</span>
         </div>
         {canRecord && (

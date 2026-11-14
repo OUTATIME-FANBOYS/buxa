@@ -1,7 +1,7 @@
 import { getRuntime } from '@/server/runtime';
 import { MembersTable } from '../components/MembersTable';
-import { PageHeader } from '../components/PageHeader';
-import { campContext } from './campContext';
+import { PageHeader } from '@/components/ui';
+import { campContext } from '../lib/campContext';
 
 export async function Members() {
   const { actor } = await campContext();
