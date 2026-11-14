@@ -19,7 +19,7 @@ payments → seats & rosters → scheduling → comms & extras.** Scheduling is 
 | # | Phase | Deliverable | Exit criteria |
 |---|---|---|---|
 | 0 | Foundation | Monorepo, Postgres, migrations, managed auth, orgs (tenants), roles, audit log, CI | Two orgs cannot see each other's rows (tested); CI green; deploy to a staging URL |
-| 1 | Members & check-in | People & households, memberships (valid/expired), QR + name lookup, attendance log | Staff check in a member in under 5 seconds on a phone; attendance export |
+| 1 | Members & check-in (spec: `docs/phases/01-members-checkin.md`) | People & households, memberships (valid/expired), QR + name lookup, attendance log | Staff check in a member in under 5 seconds on a phone; attendance export |
 | 2 | Events & calendar | Programs → sessions, recurring events, capacity, public pages, iCal feed | Recurrence rules tested incl. DST; public page works without login |
 | 3 | Registration & payments | Sign-up forms with custom fields, Stripe Connect, waitlist, refunds | Concurrent sign-ups never exceed capacity; payments reconcile with Stripe |
 | 4 | Seats & rosters | Groups, cabins, rooms, assign people, per-session check-in | Ratio rules enforced; assignments conflict-checked |
