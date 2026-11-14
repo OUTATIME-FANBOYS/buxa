@@ -1,10 +1,9 @@
 import type { NewMembershipInput, PersonMembership, RevokeMembershipInput } from '@buxa/contracts';
 import type { Actor } from '@buxa/domain';
-import type { MembershipRepository } from '../memberships/MembershipRepository';
-import type { OrgRepository } from '../orgs/OrgRepository';
-import type { PeopleRepository } from '../people/PeopleRepository';
-import { unimplemented } from '../unimplemented';
-import type { Clock } from './clock';
+import type { MembershipRepository } from '../../memberships/MembershipRepository';
+import type { OrgRepository } from '../../orgs/OrgRepository';
+import type { PeopleRepository } from '../../people/PeopleRepository';
+import type { Clock } from '../clock';
 
 /** Memberships: a person's right to attend for a date range. Status is computed for the camp's local day, never stored. */
 export interface MembershipService {
@@ -17,8 +16,3 @@ export interface MembershipService {
 }
 
 export interface MembershipServiceDeps { memberships: MembershipRepository; people: PeopleRepository; orgs: OrgRepository; clock: Clock }
-
-/** Replaced by the real implementation in chunk P2. */
-export function createMembershipService(_deps: MembershipServiceDeps): MembershipService {
-  return unimplemented('MembershipService');
-}

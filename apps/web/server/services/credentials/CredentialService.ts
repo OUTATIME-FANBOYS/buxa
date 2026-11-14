@@ -1,12 +1,11 @@
 import type { IssuedBadge, PersonSummary } from '@buxa/contracts';
 import type { Actor } from '@buxa/domain';
-import type { AttendanceRepository } from '../attendance/AttendanceRepository';
-import type { CredentialRepository } from '../credentials/CredentialRepository';
-import type { MembershipRepository } from '../memberships/MembershipRepository';
-import type { OrgRepository } from '../orgs/OrgRepository';
-import type { PeopleRepository } from '../people/PeopleRepository';
-import { unimplemented } from '../unimplemented';
-import type { Clock } from './clock';
+import type { AttendanceRepository } from '../../attendance/AttendanceRepository';
+import type { CredentialRepository } from '../../credentials/CredentialRepository';
+import type { MembershipRepository } from '../../memberships/MembershipRepository';
+import type { OrgRepository } from '../../orgs/OrgRepository';
+import type { PeopleRepository } from '../../people/PeopleRepository';
+import type { Clock } from '../clock';
 
 /** The outcome of reading a code. `unknown` is the single neutral answer for unreadable, unknown and revoked codes alike. */
 export type ScanResult = { kind: 'unknown' } | { kind: 'person'; person: PersonSummary };
@@ -30,9 +29,4 @@ export interface CredentialService {
 export interface CredentialServiceDeps {
   credentials: CredentialRepository; people: PeopleRepository; memberships: MembershipRepository; attendance: AttendanceRepository;
   orgs: OrgRepository; clock: Clock;
-}
-
-/** Replaced by the real implementation in chunk P2. */
-export function createCredentialService(_deps: CredentialServiceDeps): CredentialService {
-  return unimplemented('CredentialService');
 }

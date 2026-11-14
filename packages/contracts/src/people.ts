@@ -49,6 +49,9 @@ export const NewPersonInputSchema = z.object({
   roles: z.array(CampRoleSchema).min(1, 'Choose at least one role.'),
   /** Required when the person is a camper: a household that already has a guardian. */
   householdId: z.string().uuid().optional(),
+  /** Or a new household with this name, created in the same transaction (it starts with no guardian, so only a guardian fits). */
+  newHouseholdName: Optional(120),
+  /** Required when the person joins a household. */
   relationship: Optional(40),
 });
 export type NewPersonInput = z.infer<typeof NewPersonInputSchema>;

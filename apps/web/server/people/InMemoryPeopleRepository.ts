@@ -1,5 +1,5 @@
 import { matchesName, MAX_SEARCH_RESULTS, normalizeForSearch, type Actor, type CampRole } from '@buxa/domain';
-import { PersonNotFoundError, type HouseholdLinkRecord, type HouseholdRecord, type NewPersonRecord, type PeopleRepository, type PersonFilter, type PersonPatchRecord, type PersonRecord } from './PeopleRepository';
+import { PersonNotFoundError, type HouseholdLinkRecord, type HouseholdRecord, type NewPersonRecord, type PeopleRepository, type PersonFilter, type PersonHouseholdLink, type PersonPatchRecord, type PersonRecord } from './PeopleRepository';
 import { compareText, newId, instant, type InMemoryDatabase, type StoredPerson } from './InMemoryDatabase';
 import { InMemoryHouseholds } from './InMemoryHouseholds';
 
@@ -46,7 +46,7 @@ export class InMemoryPeopleRepository implements PeopleRepository {
     this.households = new InMemoryHouseholds(db);
   }
 
-  async create(actor: Actor, input: NewPersonRecord): Promise<PersonRecord> {
+  async create(actor: Actor, input: NewPersonRecord, household?: PersonHouseholdLink): Promise<PersonRecord> {
     const person: StoredPerson = {
       id: newId(),
       orgId: actor.orgId,
@@ -62,6 +62,10 @@ export class InMemoryPeopleRepository implements PeopleRepository {
     };
     this.db.people.set(person.id, person);
     this.db.record(actor, 'person.create', 'person', person.id);
+    if (household) {
+      const householdId = household.householdId !== undefined ? household.householdId : this.households.create(actor, household.newHouseholdName).id;
+      this.households.link(actor, { householdId, personId: person.id, relationship: household.relationship, isGuardian: household.isGuardian, canPickup: household.canPickup });
+    }
     return toRecord(person);
   }
 
@@ -108,6 +112,10 @@ export class InMemoryPeopleRepository implements PeopleRepository {
 
   async getHousehold(orgId: string, id: string): Promise<HouseholdRecord | null> {
     return this.households.get(orgId, id);
+  }
+
+  async listHouseholds(orgId: string): Promise<HouseholdRecord[]> {
+    return this.households.list(orgId);
   }
 
   async householdsOf(orgId: string, personId: string): Promise<HouseholdRecord[]> {

@@ -1,12 +1,11 @@
 import type { Household, HouseholdLinkInput, NewHouseholdInput, NewPersonInput, Person, PersonListQuery, PersonPatchInput, PersonSummary } from '@buxa/contracts';
 import type { Actor } from '@buxa/domain';
-import type { AttendanceRepository } from '../attendance/AttendanceRepository';
-import type { CredentialRepository } from '../credentials/CredentialRepository';
-import type { MembershipRepository } from '../memberships/MembershipRepository';
-import type { OrgRepository } from '../orgs/OrgRepository';
-import type { PeopleRepository } from '../people/PeopleRepository';
-import { unimplemented } from '../unimplemented';
-import type { Clock } from './clock';
+import type { AttendanceRepository } from '../../attendance/AttendanceRepository';
+import type { CredentialRepository } from '../../credentials/CredentialRepository';
+import type { MembershipRepository } from '../../memberships/MembershipRepository';
+import type { OrgRepository } from '../../orgs/OrgRepository';
+import type { PeopleRepository } from '../../people/PeopleRepository';
+import type { Clock } from '../clock';
 
 /**
  * People and households. Every method checks the actor's permission first (assertAllowed), applies the rules from @buxa/domain and
@@ -34,14 +33,11 @@ export interface PeopleService {
   unlinkFromHousehold(actor: Actor, householdId: string, personId: string): Promise<Household>;
   /** Needs people:read. */
   getHousehold(actor: Actor, id: string): Promise<Household>;
+  /** Every household in the camp, by name, with members. For a household picker. Needs people:read. */
+  listHouseholds(actor: Actor): Promise<Household[]>;
 }
 
 export interface PeopleServiceDeps {
   people: PeopleRepository; memberships: MembershipRepository; credentials: CredentialRepository; attendance: AttendanceRepository;
   orgs: OrgRepository; clock: Clock;
-}
-
-/** Replaced by the real implementation in chunk P2. */
-export function createPeopleService(_deps: PeopleServiceDeps): PeopleService {
-  return unimplemented('PeopleService');
 }

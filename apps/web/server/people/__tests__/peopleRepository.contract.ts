@@ -146,6 +146,31 @@ export function peopleRepositoryContract(factory: RepositoryFactory): void {
         expect((await fx.repos.people.householdsOf(fx.actor.orgId, child.id)).map(h => h.id)).toEqual([household.id]);
       });
 
+      it('create can join a new household in the same step, with the link flags', async () => {
+        const parent = await fx.repos.people.create(fx.actor, samplePerson({ roles: ['guardian'], familyName: 'Parent' }), {
+          newHouseholdName: 'The Parents', relationship: 'mother', isGuardian: true, canPickup: false,
+        });
+        const households = await fx.repos.people.listHouseholds(fx.actor.orgId);
+        expect(households).toHaveLength(1);
+        expect(households[0]).toMatchObject({ name: 'The Parents', members: [{ personId: parent.id, relationship: 'mother', isGuardian: true, canPickup: false }] });
+      });
+
+      it('create can join an existing household', async () => {
+        const household = await fx.repos.people.createHousehold(fx.actor, 'The Lovelaces');
+        const child = await fx.repos.people.create(fx.actor, samplePerson({ roles: ['camper'] }), {
+          householdId: household.id, relationship: 'daughter', isGuardian: false, canPickup: false,
+        });
+        expect((await fx.repos.people.getHousehold(fx.actor.orgId, household.id))?.members.map(m => m.personId)).toEqual([child.id]);
+      });
+
+      it('listHouseholds orders by name and includes the members', async () => {
+        await fx.repos.people.createHousehold(fx.actor, 'Zeta');
+        await fx.repos.people.createHousehold(fx.actor, 'Alpha');
+        expect((await fx.repos.people.listHouseholds(fx.actor.orgId)).map(h => h.name)).toEqual(['Alpha', 'Zeta']);
+        expect(await fx.repos.people.listHouseholds(fx.actor.orgId)).toHaveLength(2);
+        expect(await fx.repos.people.listHouseholds(fx.otherActor.orgId)).toEqual([]);
+      });
+
       it('link replaces the existing link for the same person', async () => {
         const person = await fx.repos.people.create(fx.actor, samplePerson());
         const household = await fx.repos.people.createHousehold(fx.actor, 'Home');

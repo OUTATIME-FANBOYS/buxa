@@ -29,6 +29,13 @@ export async function requireHousehold(db: Db, id: string): Promise<HouseholdRec
   return household;
 }
 
+export async function listHouseholds(db: Db): Promise<HouseholdRecord[]> {
+  const { rows } = await db.query<HouseholdRow>('SELECT id, name FROM households ORDER BY name, id');
+  const result: HouseholdRecord[] = [];
+  for (const row of rows) result.push(await withMembers(db, row));
+  return result;
+}
+
 export async function householdsOf(db: Db, personId: string): Promise<HouseholdRecord[]> {
   if (!isUuid(personId)) return [];
   const { rows } = await db.query<HouseholdRow>(

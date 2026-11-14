@@ -2,8 +2,8 @@ import type { Pool } from 'pg';
 import { withOrg } from '@buxa/db';
 import { isUuid, type Actor } from '@buxa/domain';
 import { recordAudit } from '../audit/recordAudit';
-import type { HouseholdLinkRecord, HouseholdRecord, NewPersonRecord, PeopleRepository, PersonFilter, PersonPatchRecord, PersonRecord } from './PeopleRepository';
-import { deleteMember, getHousehold, householdsOf, insertHousehold, requireHousehold, upsertMember } from './PgHouseholds';
+import type { HouseholdLinkRecord, HouseholdRecord, NewPersonRecord, PeopleRepository, PersonFilter, PersonHouseholdLink, PersonPatchRecord, PersonRecord } from './PeopleRepository';
+import { deleteMember, getHousehold, householdsOf, insertHousehold, listHouseholds, requireHousehold, upsertMember } from './PgHouseholds';
 import { getPeople, getPerson, listPeople, requirePerson, searchPeople } from './PgPersonQueries';
 import { insertPerson, updatePerson } from './PgPersonWrites';
 
@@ -11,10 +11,21 @@ import { insertPerson, updatePerson } from './PgPersonWrites';
 export class PgPeopleRepository implements PeopleRepository {
   constructor(private readonly pool: Pool) {}
 
-  create(actor: Actor, input: NewPersonRecord): Promise<PersonRecord> {
+  create(actor: Actor, input: NewPersonRecord, household?: PersonHouseholdLink): Promise<PersonRecord> {
     return withOrg(this.pool, actor.orgId, async db => {
       const id = await insertPerson(db, actor.orgId, input);
       await recordAudit(db, { actor, action: 'person.create', entity: 'person', entityId: id });
+      if (household) {
+        let householdId: string;
+        if (household.householdId !== undefined) {
+          householdId = household.householdId;
+        } else {
+          householdId = await insertHousehold(db, actor.orgId, household.newHouseholdName);
+          await recordAudit(db, { actor, action: 'household.create', entity: 'household', entityId: householdId });
+        }
+        await upsertMember(db, actor.orgId, { householdId, personId: id, relationship: household.relationship, isGuardian: household.isGuardian, canPickup: household.canPickup });
+        await recordAudit(db, { actor, action: 'household.update', entity: 'household', entityId: householdId, data: { personId: id } });
+      }
       return requirePerson(db, id);
     });
   }
@@ -64,6 +75,10 @@ export class PgPeopleRepository implements PeopleRepository {
 
   getHousehold(orgId: string, id: string): Promise<HouseholdRecord | null> {
     return withOrg(this.pool, orgId, db => getHousehold(db, id));
+  }
+
+  listHouseholds(orgId: string): Promise<HouseholdRecord[]> {
+    return withOrg(this.pool, orgId, db => listHouseholds(db));
   }
 
   householdsOf(orgId: string, personId: string): Promise<HouseholdRecord[]> {
