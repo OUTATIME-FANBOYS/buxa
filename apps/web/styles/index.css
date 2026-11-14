@@ -56,5 +56,6 @@
 @import './responsive.css';
 @import './features/kanban/agents.css';
 @import './features/camp.css';
+@import './features/attendance.css';
 @import './features/people.css';
 @import './features/badge-scanner.css';
