@@ -10,7 +10,7 @@ export async function Members() {
 
   return (
     <div className="page">
-      <PageHeader title="Members" subtitle={subtitle} />
+      <PageHeader title="Team access" subtitle={subtitle} />
       <MembersTable members={members} />
     </div>
   );

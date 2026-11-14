@@ -16,18 +16,19 @@ export const ACTIONS = [
   'members:read', 'members:invite', 'members:change_role', 'members:remove', 'members:leave',
   'audit:read',
   'data:export', 'data:erase',
-  'people:read', 'people:create', 'people:update', 'people:delete',
-  'attendance:read', 'attendance:record',
+  'people:read', 'people:read_contact', 'people:create', 'people:update', 'people:delete',
+  'memberships:manage', 'credentials:manage',
+  'attendance:read', 'attendance:record', 'attendance:override', 'attendance:export',
   'events:read', 'events:create', 'events:update', 'events:delete',
   'tasks:read', 'tasks:create', 'tasks:update', 'tasks:move', 'tasks:comment', 'tasks:delete', 'tasks:manage_board',
 ] as const;
 export type Action = (typeof ACTIONS)[number];
 
 const VIEWER: Action[] = ['org:read', 'members:read', 'people:read', 'attendance:read', 'events:read', 'tasks:read', 'members:leave'];
-const STAFF: Action[] = [...VIEWER, 'people:create', 'people:update', 'attendance:record', 'tasks:create', 'tasks:update', 'tasks:move', 'tasks:comment'];
+const STAFF: Action[] = [...VIEWER, 'people:read_contact', 'people:create', 'people:update', 'attendance:record', 'tasks:create', 'tasks:update', 'tasks:move', 'tasks:comment'];
 const ADMIN: Action[] = [
   ...STAFF, 'org:update', 'members:invite', 'members:change_role', 'members:remove', 'audit:read',
-  'people:delete', 'events:create', 'events:update', 'events:delete', 'tasks:delete', 'tasks:manage_board',
+  'people:delete', 'memberships:manage', 'credentials:manage', 'attendance:override', 'attendance:export', 'events:create', 'events:update', 'events:delete', 'tasks:delete', 'tasks:manage_board',
 ];
 const OWNER: Action[] = [...ADMIN, 'org:delete', 'org:transfer_ownership', 'data:export', 'data:erase'];
 

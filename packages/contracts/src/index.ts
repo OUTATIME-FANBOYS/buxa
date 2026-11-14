@@ -3,7 +3,7 @@
  * receives, the client validates what it gets back, and the TypeScript types come from the same source.
  */
 import { z } from 'zod';
-import { ROLES, SLUG_HINT, isSlug } from '@buxa/domain';
+import { ROLES, SLUG_HINT, isSlug, isTimeZone, DEFAULT_TIMEZONE } from '@buxa/domain';
 
 export const RoleSchema = z.enum(ROLES);
 
@@ -16,7 +16,7 @@ export type Membership = z.infer<typeof MembershipSchema>;
 export const MeSchema = z.object({ user: UserSchema, orgs: z.array(MembershipSchema) });
 export type Me = z.infer<typeof MeSchema>;
 
-export const OrgSchema = z.object({ id: z.string(), name: z.string(), slug: z.string(), createdAt: z.string(), memberCount: z.number().int() });
+export const OrgSchema = z.object({ id: z.string(), name: z.string(), slug: z.string(), createdAt: z.string(), memberCount: z.number().int(), timezone: z.string() });
 export type Org = z.infer<typeof OrgSchema>;
 
 export const OrgSummarySchema = z.object({ id: z.string(), name: z.string(), slug: z.string() });
@@ -32,9 +32,14 @@ export type Members = z.infer<typeof MembersSchema>;
 
 /** What a client may send. */
 const NameSchema = z.string().trim().min(1, 'Give your camp a name.').max(120);
-export const NewOrgInputSchema = z.object({ name: NameSchema, slug: z.string().refine(isSlug, SLUG_HINT) });
+export const TimeZoneSchema = z.string().refine(isTimeZone, 'Choose a valid time zone, for example America/Los_Angeles.');
+export const NewOrgInputSchema = z.object({ name: NameSchema, slug: z.string().refine(isSlug, SLUG_HINT), timezone: TimeZoneSchema.default(DEFAULT_TIMEZONE) });
 export type NewOrgInput = z.infer<typeof NewOrgInputSchema>;
-export const OrgPatchInputSchema = z.object({ name: NameSchema });
+export const OrgPatchInputSchema = z.object({ name: NameSchema.optional(), timezone: TimeZoneSchema.optional() })
+  .refine(v => v.name !== undefined || v.timezone !== undefined, 'Nothing to change.');
 export type OrgPatchInput = z.infer<typeof OrgPatchInputSchema>;
 
 export const ErrorBodySchema = z.object({ error: z.object({ code: z.string(), message: z.string(), requestId: z.string().optional() }) });
+
+export * from './people';
+export * from './attendance';

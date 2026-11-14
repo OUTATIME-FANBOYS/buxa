@@ -6,8 +6,9 @@ import { CAMP_NAV, isActive, navFor } from './navItems';
 const hrefs = (role: Parameters<typeof navFor>[0]) => navFor(role).map(item => item.href);
 
 describe('navFor', () => {
-  it('shows every item to a member of a camp', () => {
-    for (const role of ROLES) expect(hrefs(role)).toEqual(CAMP_NAV.map(item => item.href));
+  it('shows every item to staff and above; a viewer does not see check-in (it needs attendance:record)', () => {
+    for (const role of ROLES.filter(r => r !== 'viewer')) expect(hrefs(role)).toEqual(CAMP_NAV.map(item => item.href));
+    expect(hrefs('viewer')).toEqual(CAMP_NAV.map(item => item.href).filter(h => h !== ROUTES.checkIn));
   });
 
   it('shows only items needing no permission when there is no camp yet', () => {

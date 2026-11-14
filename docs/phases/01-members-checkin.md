@@ -1,6 +1,6 @@
 # Phase 1: people, memberships and check-in
 
-Status: **spec for review. No code yet.** Roadmap row: "Members & check-in: QR scan + name lookup, valid / expired, attendance log."
+Status: **in build.** Wave 0 (migration 0007, domain rules, contracts, permissions, routes, frozen interfaces) is done; chunks P1 to P6 follow. Roadmap row: "Members & check-in: QR scan + name lookup, valid / expired, attendance log."
 Decided with the owner: members are **children with parents or guardians, adults who take part, organisers, instructors and admin people**; a membership is **a date range** (a season or a year); a check-in records **who, when, which staff member, and check-out too**.
 
 ## Goal and exit criteria

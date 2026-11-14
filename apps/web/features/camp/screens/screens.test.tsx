@@ -77,7 +77,7 @@ describe('CampFrame', () => {
 
   it('shows the page inside the frame when there is a camp', () => {
     const frame = CampFrame({ user, camps: [camp], current: camp, children: 'THE-PAGE' });
-    expect(JSON.stringify(frame.props.nav.map((i: { label: string }) => i.label))).toBe('["Overview","Members","Staff board"]');
+    expect(JSON.stringify(frame.props.nav.map((i: { label: string }) => i.label))).toBe('["Overview","Check-in","On site","People","Attendance","Team access","Staff board"]');
     expect(frame.props.children).toBe('THE-PAGE');
   });
 

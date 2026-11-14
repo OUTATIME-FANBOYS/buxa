@@ -18,8 +18,8 @@ describe('renameCampAction and selectCampAction', () => {
     vi.clearAllMocks();
     world = startWorld();
     [owner, viewer, outsider] = [await world.person(), await world.person(), await world.person()];
-    orgId = (await world.store.createWithOwner({ name: 'Sunrise Lake', slug: 'sunrise-lake' }, owner)).id;
-    otherOrgId = (await world.store.createWithOwner({ name: 'Other Camp', slug: 'other-camp' }, outsider)).id;
+    orgId = (await world.store.createWithOwner({ name: 'Sunrise Lake', slug: 'sunrise-lake', timezone: 'UTC' }, owner)).id;
+    otherOrgId = (await world.store.createWithOwner({ name: 'Other Camp', slug: 'other-camp', timezone: 'UTC' }, outsider)).id;
     world.addMember(orgId, viewer, 'viewer');
   });
   afterEach(() => world.stop());

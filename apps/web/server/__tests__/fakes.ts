@@ -4,9 +4,10 @@ import type { Role } from '@buxa/domain';
 import type { Identity } from '../auth/identity';
 import { OrgNotFoundError, SlugTakenError, type OrgRepository } from '../orgs/OrgRepository';
 import type { Repositories } from '../repositories';
+import { unimplemented } from '../unimplemented';
 import { EmailInUseError, type UserRepository } from '../users/UserRepository';
 
-interface StoredOrg { id: string; name: string; slug: string; createdAt: string }
+interface StoredOrg { id: string; name: string; slug: string; createdAt: string; timezone: string }
 
 /** An in-memory stand-in for Postgres. It is the second adapter that makes the repository interfaces a real seam. */
 export class InMemoryStore implements UserRepository, OrgRepository {
@@ -28,7 +29,7 @@ export class InMemoryStore implements UserRepository, OrgRepository {
   }
   async createWithOwner(input: NewOrgInput, ownerId: string): Promise<CreatedOrg> {
     if ([...this.orgs.values()].some(o => o.slug === input.slug)) throw new SlugTakenError();
-    const org = { id: randomUUID(), name: input.name, slug: input.slug, createdAt: new Date().toISOString() };
+    const org = { id: randomUUID(), name: input.name, slug: input.slug, createdAt: new Date().toISOString(), timezone: input.timezone };
     this.orgs.set(org.id, org);
     this.members.push({ orgId: org.id, userId: ownerId, role: 'owner' });
     this.audit.push({ action: 'org.create', orgId: org.id, actorId: ownerId });
@@ -40,11 +41,20 @@ export class InMemoryStore implements UserRepository, OrgRepository {
   }
   async rename(actor: { userId: string; orgId: string }, input: OrgPatchInput): Promise<OrgSummary> {
     const o = this.orgs.get(actor.orgId); if (!o) throw new OrgNotFoundError();
-    o.name = input.name; this.audit.push({ action: 'org.update', orgId: o.id, actorId: actor.userId });
+    if (input.name !== undefined) o.name = input.name;
+    if (input.timezone !== undefined) o.timezone = input.timezone;
+    this.audit.push({ action: 'org.update', orgId: o.id, actorId: actor.userId });
     return { id: o.id, name: o.name, slug: o.slug };
   }
   async listMembers(orgId: string): Promise<Member[]> {
     return this.members.filter(m => m.orgId === orgId).map(m => { const u = this.users.get(m.userId)!; return { id: u.id, name: u.name, email: u.email, role: m.role }; });
   }
-  asRepositories(): Repositories { return { users: this, orgs: this }; }
+  asRepositories(): Repositories {
+    // The phase 1 in-memory adapters replace these placeholders in chunk P1.
+    return {
+      users: this, orgs: this,
+      people: unimplemented('PeopleRepository'), memberships: unimplemented('MembershipRepository'),
+      credentials: unimplemented('CredentialRepository'), attendance: unimplemented('AttendanceRepository'),
+    };
+  }
 }

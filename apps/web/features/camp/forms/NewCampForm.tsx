@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { suggestSlug } from '@buxa/domain';
 import { ROUTES } from '@/config';
 import { fieldError, idle } from '@/lib/actions/state';
@@ -18,6 +18,9 @@ export function NewCampForm({ first }: { first: boolean }) {
 
   const onName = (name: string) => setDraft(d => ({ ...d, name, slug: d.slugSource === 'suggested' ? suggestSlug(name) : d.slug }));
   const onSlug = (slug: string) => setDraft(d => ({ ...d, slug: slug.toLowerCase(), slugSource: 'typed' }));
+  // The camp's day is the creator's local day. Sent as a hidden field; without JavaScript the server falls back to UTC (editable later).
+  const [timezone, setTimezone] = useState('');
+  useEffect(() => setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone), []);
   const formMessage = state.status === 'error' && !state.fieldErrors ? state.message : undefined;
 
   return (
@@ -28,6 +31,7 @@ export function NewCampForm({ first }: { first: boolean }) {
           <p className="muted">{first ? 'You will be its owner. You can add people after this.' : 'You will be the owner of the new camp.'}</p>
         </div>
         <form action={formAction} className="stack">
+          <input type="hidden" name="timezone" value={timezone} />
           <TextField label="Camp name" name="name" value={draft.name} onChange={onName} error={fieldError(state, 'name')} maxLength={120} autoFocus />
           <TextField label="Address" name="slug" value={draft.slug} onChange={onSlug} error={fieldError(state, 'slug')} maxLength={50}
             hint="Used in links to your camp. Lowercase letters, numbers and dashes." />
