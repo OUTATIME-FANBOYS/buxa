@@ -9,7 +9,7 @@ import type { Clock } from '../clock';
 
 /**
  * People and households. Every method checks the actor's permission first (assertAllowed), applies the rules from @buxa/domain and
- * returns what that role may see: viewers receive names, roles and status only (date of birth, email and phone come back null).
+ * returns what that role may see: viewers receive names, roles and status only (date of birth, email, phone and isMinor come back null).
  * Expected failures are thrown as HttpError (400 invalid, 403 not allowed, 404 not found, 409 conflict) with a message safe to show.
  * Rules the implementation must enforce: a camper needs `householdId` of a household that has a guardian; roles are never empty;
  * the household link refuses `canPickup` without `isGuardian`.

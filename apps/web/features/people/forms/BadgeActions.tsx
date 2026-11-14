@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
-import { BadgeCard } from '@/features/badge';
+import { BadgeCard, PrintButton } from '@/features/badge';
 import { idle } from '@/lib/actions/state';
 import { issueBadgeAction, revokeBadgeAction } from '../actions';
 import type { BadgeState } from '../lib/badgeState';
@@ -47,7 +47,7 @@ export function BadgeActions({ personId, hasActiveBadge, personName, roleLabel, 
         <div className="stack people-badge">
           <p role="status" className="people-message people-message-ok">New badge. It is shown once: print it now.</p>
           <BadgeCard personName={personName} roleLabel={roleLabel} campName={campName} payload={newBadge} />
-          <div><button type="button" className="btn" onClick={() => window.print()}>Print badge</button></div>
+          <div><PrintButton /></div>
         </div>
       )}
     </div>

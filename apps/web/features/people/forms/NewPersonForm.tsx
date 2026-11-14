@@ -8,15 +8,16 @@ import { ROUTES } from '@/config/routes';
 import { fieldError, idle } from '@/lib/actions/state';
 import { createPersonAction } from '../actions';
 import { CAMPER_NEEDS_HOUSEHOLD } from '../lib/copy';
+import { householdChoiceLabel, type HouseholdChoice } from '../lib/householdChoices';
 import { FormMessage } from './FormMessage';
 
 export interface HouseholdTarget { id: string; name: string }
 
 /**
- * Add a person. With `household` (from the guardian's page) the person joins that household; otherwise the form can start a new
- * household, for a parent or guardian. Works without JavaScript as a plain POST.
+ * Add a person. With `household` (from the guardian's page) the person joins that household. Otherwise the form offers the camp's
+ * existing households, or a new one for a parent or guardian. Works without JavaScript as a plain POST.
  */
-export function NewPersonForm({ household }: { household: HouseholdTarget | null }) {
+export function NewPersonForm({ household, households }: { household: HouseholdTarget | null; households: readonly HouseholdChoice[] }) {
   const [state, formAction, pending] = useActionState(createPersonAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -66,18 +67,27 @@ export function NewPersonForm({ household }: { household: HouseholdTarget | null
           <>
             <input type="hidden" name="householdId" value={household.id} />
             <p>This person joins the <strong>{household.name}</strong> household.</p>
-            <Field label="How they are related" error={err('relationship')} hint="For example: son, daughter, mother, father.">
-              <input name="relationship" autoComplete="off" maxLength={40} aria-invalid={invalid('relationship')} />
-            </Field>
-            {err('householdId') && <p className="field-error" role="alert">{err('householdId')}</p>}
           </>
         ) : (
           <>
-            <Field label="New household name" error={err('newHouseholdName') ?? err('householdId')} hint={CAMPER_NEEDS_HOUSEHOLD}>
-              <input name="newHouseholdName" autoComplete="off" maxLength={120} aria-invalid={invalid('newHouseholdName') ?? invalid('householdId')} />
+            {households.length > 0 && (
+              <Field label="Existing household" error={err('householdId')} hint="Join a household already in the camp. A child needs one with a parent or guardian in it.">
+                <select name="householdId" defaultValue="" aria-invalid={invalid('householdId')}>
+                  <option value="">Not an existing household</option>
+                  {households.map(h => <option key={h.id} value={h.id}>{householdChoiceLabel(h)}</option>)}
+                </select>
+              </Field>
+            )}
+            <Field label="New household name" error={err('newHouseholdName') ?? (households.length === 0 ? err('householdId') : undefined)}
+              hint={CAMPER_NEEDS_HOUSEHOLD}>
+              <input name="newHouseholdName" autoComplete="off" maxLength={120} aria-invalid={invalid('newHouseholdName') ?? (households.length === 0 ? invalid('householdId') : undefined)} />
             </Field>
           </>
         )}
+        <Field label="How they are related" error={err('relationship')} hint="For example: son, daughter, mother, father. Needed when they join a household.">
+          <input name="relationship" autoComplete="off" maxLength={40} aria-invalid={invalid('relationship')} />
+        </Field>
+        {household && err('householdId') && <p className="field-error" role="alert">{err('householdId')}</p>}
       </fieldset>
 
       <fieldset className="plain">

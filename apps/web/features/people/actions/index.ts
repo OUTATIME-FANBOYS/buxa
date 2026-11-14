@@ -7,3 +7,4 @@ export { linkHouseholdAction } from './linkHouseholdAction';
 export { revokeBadgeAction } from './revokeBadgeAction';
 export { revokeMembershipAction } from './revokeMembershipAction';
 export { unlinkHouseholdAction } from './unlinkHouseholdAction';
+export { updatePersonAction } from './updatePersonAction';

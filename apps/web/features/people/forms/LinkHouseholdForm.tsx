@@ -9,7 +9,7 @@ import { FormMessage } from './FormMessage';
 export interface PersonOption { id: string; name: string }
 export interface HouseholdOption { id: string; name: string }
 
-/** Link a person to one of these households. A child's collector must be a guardian (the form says so; the server enforces it). */
+/** Link one of the matching people to a household. A child's collector must be a guardian (the form says so; the server enforces it). */
 export function LinkHouseholdForm({ households, people }: { households: readonly HouseholdOption[]; people: readonly PersonOption[] }) {
   const [state, formAction, pending] = useActionState(linkHouseholdAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
@@ -19,8 +19,7 @@ export function LinkHouseholdForm({ households, people }: { households: readonly
   const err = (name: string) => fieldError(state, name);
 
   return (
-    <form ref={formRef} action={formAction} className="stack people-subpanel">
-      <h3 className="people-subheading">Link someone to a household</h3>
+    <form ref={formRef} action={formAction} className="stack">
       <div className="people-form-grid">
         <Field label="Household" error={err('householdId')}>
           <select name="householdId" aria-invalid={err('householdId') ? true : undefined} defaultValue={households[0]?.id}>

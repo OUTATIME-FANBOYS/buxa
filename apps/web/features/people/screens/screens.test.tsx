@@ -9,7 +9,7 @@ import { forbidden, notFound as notFoundError } from '@/server/http/errors';
 const notFound = vi.hoisted(() => vi.fn(() => { throw new Error('NEXT_NOT_FOUND'); }));
 const session = vi.hoisted(() => ({ camp: null as Membership | null }));
 const services = vi.hoisted(() => ({
-  people: { list: vi.fn(), get: vi.fn(), getHousehold: vi.fn() },
+  people: { list: vi.fn(), get: vi.fn(), getHousehold: vi.fn(), listHouseholds: vi.fn() },
   attendance: { history: vi.fn() },
   orgs: { getCamp: vi.fn() },
 }));
@@ -26,6 +26,7 @@ vi.mock('@/server/session', () => ({
 const { PeopleList } = await import('./PeopleList');
 const { NewPerson } = await import('./NewPerson');
 const { PersonScreen } = await import('./PersonScreen');
+const { EditPerson } = await import('./EditPerson');
 
 const ID = { ben: '22222222-2222-4222-8222-222222222222', anna: '55555555-5555-4555-8555-555555555555', household: '11111111-1111-4111-8111-111111111111', membership: '33333333-3333-4333-8333-333333333333' };
 
@@ -56,8 +57,9 @@ beforeEach(() => {
   services.people.list.mockResolvedValue([summary(), summary({ id: ID.anna, givenName: 'Anna', roles: ['guardian'], status: 'none', onSite: false })]);
   services.people.get.mockResolvedValue(person());
   services.people.getHousehold.mockResolvedValue(household);
+  services.people.listHouseholds.mockResolvedValue([household]);
   services.attendance.history.mockResolvedValue([]);
-  services.orgs.getCamp.mockResolvedValue({ id: 'o1', name: 'Sunrise', slug: 'sunrise', createdAt: '2026-03-04T10:00:00Z', memberCount: 2 });
+  services.orgs.getCamp.mockResolvedValue({ id: 'o1', name: 'Sunrise', slug: 'sunrise', timezone: 'Asia/Kolkata', createdAt: '2026-03-04T10:00:00Z', memberCount: 2 });
   as('staff');
 });
 
@@ -144,6 +146,32 @@ describe('NewPerson', () => {
   });
 });
 
+describe('NewPerson household picker', () => {
+  const stone: Household = { id: '66666666-6666-4666-8666-666666666666', name: 'Stone family', members: [] };
+
+  it('offers the existing households, and says which ones have no guardian yet', async () => {
+    services.people.listHouseholds.mockResolvedValueOnce([household, stone]);
+    const html = render(await NewPerson({}));
+    expect(html).toContain(`<option value="${ID.household}">Lee family</option>`);
+    expect(html).toContain(`<option value="${stone.id}">Stone family (no parent or guardian yet)</option>`);
+    expect(html).toContain('Not an existing household');
+    expect(services.people.listHouseholds).toHaveBeenCalledWith({ userId: 'u1', orgId: 'o1', role: 'staff' });
+  });
+
+  it('keeps the picker out of the way when joining from a guardian page (?household=)', async () => {
+    const html = render(await NewPerson({ householdId: ID.household }));
+    expect(html).not.toContain('Existing household');
+    expect(services.people.listHouseholds).not.toHaveBeenCalled();
+  });
+
+  it('still offers a new household when the camp has none yet', async () => {
+    services.people.listHouseholds.mockResolvedValueOnce([]);
+    const html = render(await NewPerson({}));
+    expect(html).not.toContain('Existing household');
+    expect(html).toContain('New household name');
+  });
+});
+
 describe('PersonScreen', () => {
   it('finds the person as the actor, and answers not-found for an unknown one', async () => {
     await PersonScreen({ id: ID.ben });
@@ -218,5 +246,77 @@ describe('PersonScreen', () => {
     const html = render(await PersonScreen({ id: ID.ben }));
     expect(html).not.toContain('Archive person');
     expect(html).toContain('Archived people cannot have a badge');
+  });
+
+  it('offers Edit details to staff, and not to viewers', async () => {
+    expect(render(await PersonScreen({ id: ID.ben }))).toContain(`href="/camp/people/${ID.ben}/edit"`);
+    as('viewer');
+    expect(render(await PersonScreen({ id: ID.ben }))).not.toContain('Edit details');
+  });
+
+  it('searches the camp by name for someone to link, and offers only the matches (never the person themselves)', async () => {
+    services.people.list.mockResolvedValueOnce([summary(), summary({ id: ID.anna, givenName: 'Anna', roles: ['guardian'], status: 'none', onSite: false })]);
+    const html = render(await PersonScreen({ id: ID.ben, searchParams: { q: ' Anna ' } }));
+    expect(services.people.list).toHaveBeenCalledWith({ userId: 'u1', orgId: 'o1', role: 'staff' }, { query: 'Anna' });
+    expect(html).toContain('value="Anna"');
+    expect(html).toContain(`<option value="${ID.anna}">Anna Lee</option>`);
+    expect(html).not.toContain(`<option value="${ID.ben}">`);
+  });
+
+  it('asks for a search first, and does not load the whole camp to fill the link form', async () => {
+    const html = render(await PersonScreen({ id: ID.ben }));
+    expect(services.people.list).not.toHaveBeenCalled();
+    expect(html).toContain('Search by name to find someone in the camp.');
+  });
+
+  it('says so when a search matches nobody', async () => {
+    services.people.list.mockResolvedValueOnce([]);
+    expect(render(await PersonScreen({ id: ID.ben, searchParams: { q: 'zzz' } }))).toContain('No one matches that search.');
+  });
+
+  it('offers every household in the camp for linking, not only the ones this person is in', async () => {
+    const stone = { id: '66666666-6666-4666-8666-666666666666', name: 'Stone family', members: [] };
+    services.people.listHouseholds.mockResolvedValueOnce([household, stone]);
+    services.people.list.mockResolvedValueOnce([summary({ id: ID.anna, givenName: 'Anna', roles: ['guardian'], status: 'none', onSite: false })]);
+    const html = render(await PersonScreen({ id: ID.ben, searchParams: { q: 'Anna' } }));
+    expect(html).toContain(`<option value="${stone.id}">Stone family</option>`);
+  });
+
+  it('shows a membership revoke time in the camp zone, not the server zone', async () => {
+    services.people.get.mockResolvedValueOnce(person({
+      memberships: [{ id: ID.membership, personId: ID.ben, plan: 'Summer 2027', startsOn: '2027-07-01', endsOn: '2027-08-20',
+        revokedAt: '2027-07-02T23:30:00Z', revokedReason: 'Refund', status: 'revoked' }],
+    }));
+    as('admin');
+    const html = render(await PersonScreen({ id: ID.ben }));
+    // 23:30 UTC is 05:00 the next day in Asia/Kolkata (UTC+5:30).
+    expect(html).toContain('Revoked 3 Jul, 05:00: Refund');
+    expect(html).not.toContain('23:30');
+  });
+});
+
+describe('EditPerson', () => {
+  it('pre-fills the form with the person and the roles they have', async () => {
+    services.people.get.mockResolvedValueOnce(person({ dateOfBirth: '2016-05-02', email: 'ben@example.test' }));
+    const html = render(await EditPerson({ id: ID.ben }));
+    expect(html).toContain('value="Ben"');
+    expect(html).toContain('value="2016-05-02"');
+    expect(html).toContain('value="ben@example.test"');
+    // React's attribute order is not part of the contract, so match the checked box in either order.
+    expect(html).toMatch(/<input[^>]*checked=""[^>]*value="camper"|<input[^>]*value="camper"[^>]*checked=""/);
+    expect(html).not.toMatch(/<input[^>]*checked=""[^>]*value="guardian"|<input[^>]*value="guardian"[^>]*checked=""/);
+    expect(html).toContain('Save changes');
+  });
+
+  it('tells a role that cannot change people why, without a form', async () => {
+    as('viewer');
+    const html = render(await EditPerson({ id: ID.ben }));
+    expect(html).toContain('Your role cannot change people');
+    expect(html).not.toContain('Save changes');
+  });
+
+  it('answers not-found for an unknown person', async () => {
+    services.people.get.mockRejectedValueOnce(notFoundError('no such person'));
+    await expect(EditPerson({ id: ID.anna })).rejects.toThrow('NEXT_NOT_FOUND');
   });
 });
