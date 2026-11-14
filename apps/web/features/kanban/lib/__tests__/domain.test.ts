@@ -1,20 +1,20 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { buildSeed } from '../seed';
+import { PROJECT, USER, WORKSPACE, buildSeed } from '../seed';
 import * as D from '../domain';
 import { summarize } from '../stats';
 import type { AppState } from '../../types';
 
 let s: AppState;
 const as = (state: AppState, userId: string): AppState => ({ ...state, session: { userId } });
-const proj = () => s.projects.find(p => p.id === 'p-web')!;
+const proj = () => s.projects.find(p => p.id === PROJECT.registration)!;
 const col = (name: string) => proj().columns.find(c => c.name === name)!.id;
 const task = (id: string) => s.tasks.find(t => t.id === id)!;
 
-beforeEach(() => { s = as(buildSeed(), 'u-maya'); });
+beforeEach(() => { s = as(buildSeed(), USER.rosa); });
 
 describe('moveTask', () => {
   it('sets completedAt on entering a done column and clears it on leaving', () => {
-    const id = 't-4'; // Write homepage hero copy, assigned to Sofia
+    const id = 't-4'; // Send parent welcome email, assigned to Nia
     s = D.moveTask(s, id, col('Done'), null);
     expect(task(id).completedAt).toBeTruthy();
     s = D.moveTask(s, id, col('In Progress'), null);
@@ -27,11 +27,11 @@ describe('moveTask', () => {
   });
   it('notifies the assignee but never the actor', () => {
     const before = s.notices.length;
-    s = D.moveTask(s, 't-4', col('In Review'), null); // Sofia's task, Maya acts
+    s = D.moveTask(s, 't-4', col('In Review'), null); // Nia's task, Rosa acts
     expect(s.notices.length).toBe(before + 1);
-    expect(s.notices[0].userId).toBe('u-sofia');
-    s = D.moveTask(s, 't-8', col('In Review'), null); // Maya's own task
-    expect(s.notices.filter(n => n.userId === 'u-maya' && n.text.includes('moved')).length).toBe(0);
+    expect(s.notices[0].userId).toBe(USER.nia);
+    s = D.moveTask(s, 't-8', col('In Review'), null); // Rosa's own task
+    expect(s.notices.filter(n => n.userId === USER.rosa && n.text.includes('moved')).length).toBe(0);
   });
   it('records history and activity', () => {
     s = D.moveTask(s, 't-4', col('To Do'), null); // already there → no-op log
@@ -49,28 +49,28 @@ describe('updateTask', () => {
     expect(task('t-4').history.some(h => h.text.startsWith('renamed'))).toBe(false);
   });
   it('notifies a new assignee', () => {
-    s = D.updateTask(s, 't-4', { assigneeId: 'u-dan' });
-    expect(s.notices[0]).toMatchObject({ userId: 'u-dan', kind: 'assign' });
+    s = D.updateTask(s, 't-4', { assigneeId: USER.tom });
+    expect(s.notices[0]).toMatchObject({ userId: USER.tom, kind: 'assign' });
   });
 });
 
 describe('addComment', () => {
   it('notifies mentioned users, otherwise the assignee', () => {
-    s = D.addComment(s, 't-4', 'Nice work @Daniel');
-    expect(s.notices.some(n => n.userId === 'u-dan' && n.kind === 'mention')).toBe(true);
-    expect(s.notices.some(n => n.userId === 'u-sofia' && n.kind === 'comment')).toBe(true);
+    s = D.addComment(s, 't-4', 'Nice work @Tom');
+    expect(s.notices.some(n => n.userId === USER.tom && n.kind === 'mention')).toBe(true);
+    expect(s.notices.some(n => n.userId === USER.nia && n.kind === 'comment')).toBe(true);
   });
 });
 
 describe('columns', () => {
   it('deleteColumn moves tasks and completes them when the target is done', () => {
-    s = D.deleteColumn(s, 'p-web', col('In Review'), col('Done'));
+    s = D.deleteColumn(s, PROJECT.registration, col('In Review'), col('Done'));
     expect(proj().columns.some(c => c.name === 'In Review')).toBe(false);
     expect(task('t-12').columnId).toBe(col('Done'));
     expect(task('t-12').completedAt).toBeTruthy();
   });
   it('moveColumn reorders', () => {
-    s = D.moveColumn(s, 'p-web', col('Done'), col('Backlog'));
+    s = D.moveColumn(s, PROJECT.registration, col('Done'), col('Backlog'));
     expect(proj().columns[0].name).toBe('Done');
   });
 });
@@ -78,23 +78,23 @@ describe('columns', () => {
 describe('updateColumn kind change', () => {
   it('backfills completedAt when a column becomes done, and clears it when it stops being done', () => {
     expect(task('t-12').completedAt).toBeUndefined(); // In Review
-    s = D.updateColumn(s, 'p-web', col('In Review'), { kind: 'done' });
+    s = D.updateColumn(s, PROJECT.registration, col('In Review'), { kind: 'done' });
     expect(task('t-12').completedAt).toBeTruthy();
-    s = D.updateColumn(s, 'p-web', col('Done'), { kind: 'active' });
+    s = D.updateColumn(s, PROJECT.registration, col('Done'), { kind: 'active' });
     expect(task('t-12').completedAt).toBeTruthy(); // still in the (now done) In Review column
     expect(s.tasks.filter(t => t.columnId === col('Done')).every(t => !t.completedAt)).toBe(true);
   });
   it('renaming alone leaves completion untouched', () => {
     const id = col('Done'); const before = s.tasks.filter(t => t.columnId === id).map(t => t.completedAt);
-    s = D.updateColumn(s, 'p-web', id, { name: 'Shipped' });
+    s = D.updateColumn(s, PROJECT.registration, id, { name: 'Shipped' });
     expect(s.tasks.filter(t => t.columnId === id).map(t => t.completedAt)).toEqual(before);
   });
 });
 
 describe('invite', () => {
   it('rejects duplicates and adds pending users', () => {
-    expect(D.invite(s, 'w-nw', 'daniel@northwind.studio', 'member').error).toMatch(/already/);
-    const r = D.invite(s, 'w-nw', 'new.person@x.io', 'viewer');
+    expect(D.invite(s, WORKSPACE.camp, 'tom@example.com', 'member').error).toMatch(/already/);
+    const r = D.invite(s, WORKSPACE.camp, 'new.person@x.io', 'viewer');
     expect(r.error).toBeNull();
     expect(r.state.users.find(u => u.email === 'new.person@x.io')).toMatchObject({ pending: true, name: 'New Person' });
   });
@@ -103,7 +103,7 @@ describe('invite', () => {
 describe('stats', () => {
   it('one definition of done/overdue/progress', () => {
     const kindOf = (t: AppState['tasks'][number]) => s.projects.find(p => p.id === t.projectId)!.columns.find(c => c.id === t.columnId)!.kind;
-    const r = summarize(s.tasks.filter(t => t.projectId === 'p-web'), kindOf);
+    const r = summarize(s.tasks.filter(t => t.projectId === PROJECT.registration), kindOf);
     expect(r.progress.total).toBe(r.done.length + r.open.length);
     expect(r.overdue.every(t => kindOf(t) !== 'done')).toBe(true);
   });
@@ -124,7 +124,7 @@ describe('healthOf', () => {
 
 describe('createTask defaults', () => {
   it('an explicit undefined never erases a default', () => {
-    const next = D.createTask(s, 'new-1', { projectId: 'p-web', columnId: col('Backlog'), title: 'x', description: undefined, priority: undefined, tags: undefined });
+    const next = D.createTask(s, 'new-1', { projectId: PROJECT.registration, columnId: col('Backlog'), title: 'x', description: undefined, priority: undefined, tags: undefined });
     expect(task('new-1')).toBeUndefined(); // (s is the old state)
     const t = next.tasks.find(x => x.id === 'new-1')!;
     expect(t).toMatchObject({ description: '', priority: 'medium', tags: [] });

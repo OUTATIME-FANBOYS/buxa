@@ -49,8 +49,8 @@ export function simulateRun(s: AppState, agentId: string, projectId: string): { 
 
   // 4. Recently finished work: open a follow-up to confirm it landed.
   tasks.filter(t => kindOf(t.columnId) === 'done' && t.completedAt && diffDays(today(), isoDay(t.completedAt)) <= 14).slice(0, MAX_PER_RULE).forEach(t => {
-    const title = `Follow up: confirm “${t.title}” in production`;
-    if (!tasks.some(x => x.title === title)) items.push({ change: { kind: 'create_task', draft: { projectId, columnId: firstCol.id, title, priority: 'low', tags: ['follow-up'], description: `Opened automatically after “${t.title}” was completed.` } }, reason: 'Recently completed work usually needs a check after release.' });
+    const title = `Follow up: confirm “${t.title}” is in place`;
+    if (!tasks.some(x => x.title === title)) items.push({ change: { kind: 'create_task', draft: { projectId, columnId: firstCol.id, title, priority: 'low', tags: ['follow-up'], description: `Opened automatically after “${t.title}” was completed.` } }, reason: 'Recently completed work usually needs a quick check that it stuck.' });
   });
 
   if (!items.length) return { state: s, count: 0 };
