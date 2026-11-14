@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import { authorize, toLocalDate } from '@buxa/domain';
-import { Empty } from '@/components/ui';
-import { PageHeader } from '@/features/camp/components/PageHeader';
+import { Empty, PageHeader } from '@/components/ui';
 import { getRuntime } from '@/server/runtime';
 import { Notice } from '../components/Notice';
 import { LogFilters } from '../components/LogFilters';

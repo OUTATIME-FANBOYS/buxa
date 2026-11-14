@@ -20,7 +20,6 @@ vi.mock('@/server/session', () => ({
   getCurrentCamp: async () => (session.camp ? { orgId: 'o1', role: session.role, name: 'Sunrise', slug: 'sunrise' } : null),
   toActor: (_s: unknown, camp: { role: Role }) => ({ userId: 'u1', orgId: 'o1', role: camp.role }),
 }));
-vi.mock('@/features/camp/components/PageHeader', () => ({ PageHeader: ({ title, subtitle }: { title: string; subtitle?: string }) => `HEAD:${title}|${subtitle ?? ''}` }));
 vi.mock('@/features/scanner', () => ({
   ScanField: ({ label }: { label: string }) => `SCAN:${label}`,
   CameraScanner: () => 'CAMERA',

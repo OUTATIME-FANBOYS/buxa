@@ -1,9 +1,12 @@
 import type { CheckOutInput } from '@buxa/contracts';
 import type { CheckOutDraft } from './checkOutState';
 
-/** Whether the panel may be submitted. A child needs a chosen guardian or a written override reason; an adult needs nothing. */
-export function canSubmitCheckOut(minor: boolean, draft: CheckOutDraft): boolean {
-  if (!minor) return true;
+/**
+ * Whether the panel may be submitted. A known child needs a chosen guardian or a written override reason; an adult needs nothing.
+ * When the screen cannot tell (null), it does not block: the server answers with what is missing.
+ */
+export function canSubmitCheckOut(minor: boolean | null, draft: CheckOutDraft): boolean {
+  if (minor !== true) return true;
   return draft.collectedBy !== null || hasText(draft.overrideReason);
 }
 

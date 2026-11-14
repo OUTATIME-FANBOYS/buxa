@@ -27,17 +27,19 @@ export function CheckOutPanel(props: CheckOutPanelProps) {
   const radioName = `pickup-${row.personId}`;
   const submittable = !busy && canSubmitCheckOut(row.isMinor, draft);
   const copy = refusal ? checkOutRefusalCopy(refusal) : null;
+  // Unknown (null) still shows any guardians, but only a known child is required to have one.
+  const showGuardians = row.isMinor !== false && row.pickupOptions.length > 0;
+  // The static line and the refusal's notice would say the same thing, so the line yields to the notice once there is one.
+  const noGuardianLine = row.isMinor === true && row.pickupOptions.length === 0 && !copy;
 
   return (
     <form id={id} className="checkout-panel" onSubmit={event => { event.preventDefault(); if (submittable) onSubmit(); }}>
-      {row.isMinor && row.pickupOptions.length > 0 && (
+      {showGuardians && (
         <PickupChoices name={radioName} options={row.pickupOptions} value={draft.collectedBy}
           onChange={collectedBy => onPatch({ collectedBy })} />
       )}
-      {row.isMinor && row.pickupOptions.length === 0 && (
-        <p className="muted">No guardian who may collect this child is linked yet.</p>
-      )}
-      {row.isMinor && canOverride && (
+      {noGuardianLine && <p className="muted">No guardian who may collect this child is linked yet.</p>}
+      {row.isMinor !== false && canOverride && (
         <div className="stack">
           <label className="field" htmlFor={reasonId}>
             <span className="field-label">Admin override: reason (only if no guardian can collect)</span>

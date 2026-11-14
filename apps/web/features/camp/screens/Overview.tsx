@@ -1,12 +1,12 @@
 import { can } from '@buxa/domain';
 import { getRuntime } from '@/server/runtime';
 import { AbilitiesPanel } from '../components/AbilitiesPanel';
-import { PageHeader } from '../components/PageHeader';
+import { PageHeader } from '@/components/ui';
 import { Stat } from '../components/Stat';
 import { StaffBoardPanel } from '../components/StaffBoardPanel';
 import { RenameCampButton } from '../forms/RenameCampButton';
 import { ROLE_LABEL } from '../lib/abilities';
-import { campContext } from './campContext';
+import { campContext } from '../lib/campContext';
 
 const formatDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
 

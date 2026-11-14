@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { createScanDeduper } from './dedupe';
 import { normalizeScan } from './scan-input';
 
@@ -10,10 +10,14 @@ import { normalizeScan } from './scan-input';
  */
 export interface ScanFieldProps { onScan: (raw: string) => void; label: string; disabled?: boolean; status?: ReactNode }
 
-export function ScanField({ onScan, label, disabled, status }: ScanFieldProps) {
+/** Lets a parent put focus back in the field (for example after its screen clears for the next person). Does nothing while disabled. */
+export interface ScanFieldHandle { focus: () => void }
+
+export const ScanField = forwardRef<ScanFieldHandle, ScanFieldProps>(function ScanField({ onScan, label, disabled, status }, handle) {
   const input = useRef<HTMLInputElement>(null);
   const [dedupe] = useState(() => createScanDeduper());
   const focus = useCallback(() => { if (!disabled) input.current?.focus(); }, [disabled]);
+  useImperativeHandle(handle, () => ({ focus }), [focus]);
 
   useEffect(() => {
     focus();
@@ -45,4 +49,4 @@ export function ScanField({ onScan, label, disabled, status }: ScanFieldProps) {
       <div className="scan-status" role="status" aria-live="polite">{status}</div>
     </form>
   );
-}
+});

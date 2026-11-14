@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import { authorize } from '@buxa/domain';
-import { Empty } from '@/components/ui';
-import { PageHeader } from '@/features/camp/components/PageHeader';
+import { Empty, PageHeader } from '@/components/ui';
 import { CheckInConsole } from '../checkIn/CheckInConsole';
 import { campActor, campZone } from '../lib/campActor';
 
