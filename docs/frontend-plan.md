@@ -61,7 +61,7 @@ Every chunk gets its own git worktree and branch, and opens a PR **into `integra
 - **Owns:** `apps/web/styles/**` (new), `apps/web/app/globals.css` (becomes a thin entry or is replaced), the CSS import line in `apps/web/app/layout.tsx`.
 - **Delivers:** split the 414-line `globals.css` (17 commented sections) into `styles/tokens.css` (the single source for colours, spacing, radii, type, motion), `base.css`, `components/*.css` (buttons-fields, popover-menu-dialog, toasts, signals, table), `layout/*.css` (shell, pages), `features/{kanban,camp}.css`, and `responsive.css` or per-file media queries, with one entry file defining the **import order, which preserves today's cascade**. **No class names, token names or values change.** Document the layering and where new styles go in a header comment of the entry file.
 - **Must not touch:** any `.tsx`/`.ts` other than the one CSS import in `app/layout.tsx`.
-- **Done when:** before/after **full-page screenshots are pixel-identical** for: `/sign-in`, `/kanban` (demo login "Continue as Maya Chen"; then dashboard, a board with the task drawer open, calendar, agents), in light and dark, at 1280 and 375 wide. Keep the comparison script out of the repo; report the numbers.
+- **Done when:** before/after **full-page screenshots are pixel-identical** for: `/sign-in`, `/kanban` (demo login "Continue as Rosa Delgado"; then dashboard, a board with the task drawer open, calendar, agents), in light and dark, at 1280 and 375 wide. Keep the comparison script out of the repo; report the numbers.
 
 ### A4: Kanban feature breakdown (step 4)
 - **Owns:** `apps/web/features/kanban/**` **except** `components/ui.tsx`, `components/Icon.tsx` (A2) and the shim lines A2 adds; `apps/web/app/kanban/**`.

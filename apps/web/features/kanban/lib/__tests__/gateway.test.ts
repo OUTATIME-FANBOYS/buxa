@@ -1,47 +1,47 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { AGENT_ID, buildSeed } from '../seed';
+import { AGENT_ID, CAMP_PROJECT_IDS, PROJECT, PROJECT_NAME, USER, WORKSPACE, buildSeed } from '../seed';
 import * as G from '../gateway';
 import * as A from '../agents';
 import type { AppState } from '../../types';
 
 let s: AppState;
 const call = <T,>(r: G.Out<T>): T => { expect(r.error).toBeUndefined(); s = r.state; return r.value as T; };
-const col = (name: string) => s.projects.find(p => p.id === 'p-web')!.columns.find(c => c.name === name)!.id;
+const col = (name: string) => s.projects.find(p => p.id === PROJECT.registration)!.columns.find(c => c.name === name)!.id;
 
 beforeEach(() => { s = buildSeed(); });
 
 describe('reads are limited to the agent’s scope', () => {
   it('lists only projects in scope and hides the rest as "not found"', () => {
-    expect(G.listProjects(s, AGENT_ID).map(p => p.id).sort()).toEqual(['p-app', 'p-mkt', 'p-web']);
-    s = A.updateAgent(s, AGENT_ID, { scope: ['p-web'] });
-    expect(G.listProjects(s, AGENT_ID).map(p => p.id)).toEqual(['p-web']);
-    expect(G.listTasks(s, AGENT_ID, { project: 'Mobile App v2' }).error).toMatch(/scope/);
-    const appTask = s.tasks.find(t => t.projectId === 'p-app')!;
+    expect(G.listProjects(s, AGENT_ID).map(p => p.id).sort()).toEqual([...CAMP_PROJECT_IDS].sort());
+    s = A.updateAgent(s, AGENT_ID, { scope: [PROJECT.registration] });
+    expect(G.listProjects(s, AGENT_ID).map(p => p.id)).toEqual([PROJECT.registration]);
+    expect(G.listTasks(s, AGENT_ID, { project: PROJECT_NAME.facilities }).error).toMatch(/scope/);
+    const appTask = s.tasks.find(t => t.projectId === PROJECT.facilities)!;
     expect(G.getTask(s, AGENT_ID, appTask.id).error).toMatch(/scope/);
     expect(G.comment(s, AGENT_ID, { taskId: appTask.id, body: 'hi', reason: 'x' }).error).toMatch(/scope/);
   });
   it('finds tasks by column name and text', () => {
-    const rows = G.listTasks(s, AGENT_ID, { project: 'Website Relaunch', column: 'in progress' }).value as { column: string }[];
+    const rows = G.listTasks(s, AGENT_ID, { project: PROJECT_NAME.registration, column: 'in progress' }).value as { column: string }[];
     expect(rows.length).toBeGreaterThan(0); expect(rows.every(r => r.column === 'In Progress')).toBe(true);
-    expect((G.listTasks(s, AGENT_ID, { project: 'p-web', query: 'pricing' }).value as unknown[]).length).toBeGreaterThan(0);
+    expect((G.listTasks(s, AGENT_ID, { project: PROJECT.registration, query: 'deposit' }).value as unknown[]).length).toBeGreaterThan(0);
   });
   it('describes the agent’s own permissions', () => {
     const w = G.whoami(s, AGENT_ID)!;
-    expect(w.permissions).toMatchObject({ create_task: 'allowed', move_task: 'needs approval' }); expect(w.projects).toHaveLength(3);
+    expect(w.permissions).toMatchObject({ create_task: 'allowed', move_task: 'needs approval' }); expect(w.projects).toHaveLength(CAMP_PROJECT_IDS.length);
   });
 });
 
 describe('writes become proposals, judged by policy', () => {
   it('creates a task immediately when allowed, using names rather than ids', () => {
-    const o = call(G.createTask(s, AGENT_ID, { project: 'Website Relaunch', title: 'Audit alt text', column: 'to do', priority: 'high', assignee: 'Priya Raman', tags: ['A11y'], reason: 'Found missing alt text' }));
+    const o = call(G.createTask(s, AGENT_ID, { project: PROJECT_NAME.registration, title: 'Audit allergy list', column: 'to do', priority: 'high', assignee: 'Hannah Lindqvist', tags: ['Allergies'], reason: 'Found missing allergy notes' }));
     expect(o.status).toBe('applied');
     const t = s.tasks.find(x => x.id === o.taskId)!;
-    expect(t).toMatchObject({ title: 'Audit alt text', columnId: col('To Do'), priority: 'high', assigneeId: 'u-priya', tags: ['a11y'], createdBy: AGENT_ID });
+    expect(t).toMatchObject({ title: 'Audit allergy list', columnId: col('To Do'), priority: 'high', assigneeId: USER.hannah, tags: ['allergies'], createdBy: AGENT_ID });
   });
   it('queues a move that needs approval, then applies it when a person approves', () => {
     const o = call(G.moveTask(s, AGENT_ID, { taskId: 't-4', column: 'In Review', reason: 'Copy is ready' }));
     expect(o.status).toBe('pending'); expect(s.tasks.find(t => t.id === 't-4')!.columnId).not.toBe(col('In Review'));
-    s = A.decide({ ...s, session: { userId: 'u-maya' } }, o.proposalId, 'approve');
+    s = A.decide({ ...s, session: { userId: USER.rosa } }, o.proposalId, 'approve');
     expect(s.tasks.find(t => t.id === 't-4')!.columnId).toBe(col('In Review'));
   });
   it('reports a blocked change with the reason', () => {
@@ -61,23 +61,23 @@ describe('writes become proposals, judged by policy', () => {
     expect(s.runs.filter(r => r.source === 'mcp')).toHaveLength(2);
   });
   it('rejects bad input with a message the agent can act on', () => {
-    expect(G.createTask(s, AGENT_ID, { project: 'p-web', title: '  ', reason: 'x' }).error).toMatch(/title/i);
-    expect(G.createTask(s, AGENT_ID, { project: 'p-web', title: 'x', column: 'Nope', reason: 'x' }).error).toMatch(/Columns:/);
-    expect(G.createTask(s, AGENT_ID, { project: 'p-web', title: 'x', due: 'tomorrow', reason: 'x' }).error).toMatch(/YYYY-MM-DD/);
-    expect(G.createTask(s, AGENT_ID, { project: 'p-web', title: 'x'.repeat(300), reason: 'x' }).error).toMatch(/too long/);
+    expect(G.createTask(s, AGENT_ID, { project: PROJECT.registration, title: '  ', reason: 'x' }).error).toMatch(/title/i);
+    expect(G.createTask(s, AGENT_ID, { project: PROJECT.registration, title: 'x', column: 'Nope', reason: 'x' }).error).toMatch(/Columns:/);
+    expect(G.createTask(s, AGENT_ID, { project: PROJECT.registration, title: 'x', due: 'tomorrow', reason: 'x' }).error).toMatch(/YYYY-MM-DD/);
+    expect(G.createTask(s, AGENT_ID, { project: PROJECT.registration, title: 'x'.repeat(300), reason: 'x' }).error).toMatch(/too long/);
     expect(G.comment(s, AGENT_ID, { taskId: 't-4', body: 'hi', reason: '' }).error).toMatch(/reason/i);
     expect(G.moveTask(s, AGENT_ID, { taskId: 't-4', column: 'Nope', reason: 'x' }).error).toMatch(/No column/);
   });
   it('never touches the board when paused', () => {
     s = A.updateAgent(s, AGENT_ID, { paused: true });
-    expect(call(G.createTask(s, AGENT_ID, { project: 'p-web', title: 'x', reason: 'r' })).status).toBe('blocked');
+    expect(call(G.createTask(s, AGENT_ID, { project: PROJECT.registration, title: 'x', reason: 'r' })).status).toBe('blocked');
   });
 });
 
 describe('review rights', () => {
   const R = 'u-agent-reviewer';
   beforeEach(() => {
-    s = A.addAgent(s, 'w-nw', 'Reviewer', 'Claude', '', ['p-web']); const id = s.agents.at(-1)!.userId;
+    s = A.addAgent(s, WORKSPACE.camp, 'Reviewer', 'Claude', '', [PROJECT.registration]); const id = s.agents.at(-1)!.userId;
     s = { ...s, users: s.users.map(u => (u.id === id ? { ...u, id: R } : u)), agents: s.agents.map(a => (a.userId === id ? { ...a, userId: R } : a)) };
   });
   it('sees and decides only what it was granted', () => {
@@ -97,11 +97,11 @@ describe('review rights', () => {
 
 describe('tasks created with only the required fields', () => {
   it('get every default, and stay searchable', () => {
-    const o = call(G.createTask(s, AGENT_ID, { project: 'p-web', title: 'Bare minimum', reason: 'r' }));
+    const o = call(G.createTask(s, AGENT_ID, { project: PROJECT.registration, title: 'Bare minimum', reason: 'r' }));
     const t = s.tasks.find(x => x.id === o.taskId)!;
     expect(t).toMatchObject({ description: '', priority: 'medium', tags: [], subtasks: [], comments: [], archived: false });
-    expect((G.listTasks(s, AGENT_ID, { project: 'p-web', query: 'minimum' }).value as unknown[]).length).toBe(1);
-    expect((G.listTasks(s, AGENT_ID, { project: 'p-web', query: 'no-such-text' }).value as unknown[]).length).toBe(0);
+    expect((G.listTasks(s, AGENT_ID, { project: PROJECT.registration, query: 'minimum' }).value as unknown[]).length).toBe(1);
+    expect((G.listTasks(s, AGENT_ID, { project: PROJECT.registration, query: 'no-such-text' }).value as unknown[]).length).toBe(0);
   });
   it('are repaired when old data lacking defaults is loaded', async () => {
     const { repairData } = await import('../dataSlices');
@@ -109,6 +109,6 @@ describe('tasks created with only the required fields', () => {
     const fixed = repairData(broken);
     expect(fixed.tasks[0]).toMatchObject({ description: '', priority: 'medium' }); expect(fixed.tasks[1]).toBe(s.tasks[1]);
     expect(repairData(s)).toBe(s); // untouched data keeps its identity
-    expect((G.listTasks({ ...broken, ...fixed } as AppState, AGENT_ID, { project: 'p-web', query: 'x' }).error)).toBeUndefined();
+    expect((G.listTasks({ ...broken, ...fixed } as AppState, AGENT_ID, { project: PROJECT.registration, query: 'x' }).error)).toBeUndefined();
   });
 });
