@@ -34,10 +34,11 @@ export type HouseholdMember = z.infer<typeof HouseholdMemberSchema>;
 export const HouseholdSchema = z.object({ id: z.string(), name: z.string(), members: z.array(HouseholdMemberSchema) });
 export type Household = z.infer<typeof HouseholdSchema>;
 
-/** The full record. `dateOfBirth`, `email` and `phone` are null for viewers: the server withholds them (people:read_contact). */
+/** The full record. `dateOfBirth`, `email`, `phone` and `isMinor` are null for viewers: the server withholds them (people:read_contact). */
 export const PersonSchema = PersonSummarySchema.extend({
   dateOfBirth: LocalDateSchema.nullable(), email: z.string().nullable(), phone: z.string().nullable(),
-  isMinor: z.boolean(), memberships: z.array(PersonMembershipSchema), households: z.array(HouseholdSchema),
+  /** Null for roles without people:read_contact: a minor flag is personal detail, like the date of birth it comes from. */
+  isMinor: z.boolean().nullable(), memberships: z.array(PersonMembershipSchema), households: z.array(HouseholdSchema),
   /** Whether a badge is currently active. The token itself is never readable after issue. */
   hasActiveBadge: z.boolean(),
 });
@@ -59,7 +60,7 @@ export type NewPersonInput = z.infer<typeof NewPersonInputSchema>;
 export const PersonPatchInputSchema = z.object({
   givenName: Name.optional(), familyName: Name.optional(), preferredName: z.string().trim().max(80).nullable().optional(),
   dateOfBirth: LocalDateSchema.nullable().optional(), email: z.string().trim().max(254).nullable().optional(), phone: z.string().trim().max(32).nullable().optional(),
-  roles: z.array(CampRoleSchema).min(1).optional(),
+  roles: z.array(CampRoleSchema).min(1, 'Choose at least one role.').optional(),
 });
 export type PersonPatchInput = z.infer<typeof PersonPatchInputSchema>;
 

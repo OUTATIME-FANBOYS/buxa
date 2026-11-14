@@ -42,7 +42,7 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
 
   const todayFor = async (orgId: string): Promise<LocalDate> => campToday(clock, await campZone(orgs, orgId));
 
-  /** The full record as this actor may see it. Contact details are withheld from anyone without people:read_contact. */
+  /** The full record as this actor may see it. Contact details and the minor flag are withheld from anyone without people:read_contact. */
   async function personView(actor: Actor, record: PersonRecord, today: LocalDate): Promise<Person> {
     const orgId = actor.orgId;
     const [ms, households, open, badge] = await Promise.all([
@@ -57,7 +57,7 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       dateOfBirth: seeContact ? record.dateOfBirth : null,
       email: seeContact ? record.email : null,
       phone: seeContact ? record.phone : null,
-      isMinor: isMinor(record, today),
+      isMinor: seeContact ? isMinor(record, today) : null,
       memberships: ms.map(m => toPersonMembership(m, today)),
       households: await toHouseholds(people, orgId, households),
       hasActiveBadge: badge !== null,

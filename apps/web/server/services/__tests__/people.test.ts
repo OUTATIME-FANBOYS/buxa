@@ -65,6 +65,25 @@ describe('PeopleService redaction', () => {
     expect(asStaff.phone).toBe('+44 7700 900123');
   });
 
+  it('withholds the minor flag from viewers, and gives staff the computed value', async () => {
+    const camp = await createCamp();
+    const admin = camp.actor('admin');
+    const guardian = await guardianWithHousehold(camp, 'Ana');
+    const household = (await camp.people.get(admin, guardian.id)).households[0];
+    const kim = await camp.people.create(admin, { givenName: 'Kim', familyName: 'Lee', roles: ['camper'], householdId: household.id, relationship: 'Child', dateOfBirth: '2015-03-01' });
+
+    expect((await camp.people.get(camp.actor('viewer'), kim.id)).isMinor).toBeNull();
+    expect((await camp.people.get(camp.actor('staff'), kim.id)).isMinor).toBe(true);
+    expect((await camp.people.get(camp.actor('viewer'), guardian.id)).isMinor).toBeNull();
+  });
+
+  it('gives a viewer a null minor flag even for a person with no birth date (no inference leaks)', async () => {
+    const camp = await createCamp();
+    const ben = await camp.people.create(camp.actor('admin'), adult('Ben', 'Stone'));
+    expect((await camp.people.get(camp.actor('viewer'), ben.id)).isMinor).toBeNull();
+    expect((await camp.people.get(camp.actor('staff'), ben.id)).isMinor).toBe(false);
+  });
+
   it('keeps contact details out of the list rows for everyone', async () => {
     const camp = await withFixtures(await createCamp());
     const rows = await camp.people.list(camp.actor('staff'));
