@@ -26,6 +26,13 @@ export class InMemoryHouseholds {
     return household ? toRecord(household) : null;
   }
 
+  list(orgId: string): HouseholdRecord[] {
+    return [...this.db.households.values()]
+      .filter(h => h.orgId === orgId)
+      .sort((a, b) => compareText(a.name, b.name) || compareText(a.id, b.id))
+      .map(toRecord);
+  }
+
   householdsOf(orgId: string, personId: string): HouseholdRecord[] {
     return [...this.db.households.values()]
       .filter(h => h.orgId === orgId && h.members.has(personId))

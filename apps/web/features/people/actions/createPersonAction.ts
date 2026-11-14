@@ -42,8 +42,9 @@ export async function createPersonAction(_previous: ActionState, form: FormData)
 
   let person;
   try {
-    const householdId = input.householdId ?? (newHouseholdName ? (await getRuntime().services.people.createHousehold(actor, { name: newHouseholdName })).id : undefined);
-    person = await getRuntime().services.people.create(actor, { ...input, householdId });
+    // A new household is created in the same transaction as the person, so a refused person leaves no empty household behind.
+    const newHousehold = input.householdId === undefined && newHouseholdName !== '' ? newHouseholdName : undefined;
+    person = await getRuntime().services.people.create(actor, { ...input, newHouseholdName: newHousehold });
   } catch (error) { return expectedFailure(error, 'Could not add the person.'); }
 
   revalidatePath(ROUTES.people);

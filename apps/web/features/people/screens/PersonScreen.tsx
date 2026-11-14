@@ -23,10 +23,11 @@ export async function PersonScreen({ id }: { id: string }) {
 
   const { canUpdate, canCreate, canManage, canBadge, canArchive, canSeeVisits } = permissionsFor(actor);
   const services = getRuntime().services;
+  // The camp's own zone (orgs.timezone) is what every time on this page is shown in. Every role may read the camp.
   const [visits, others, camp] = await Promise.all([
     canSeeVisits ? services.attendance.history(actor, person.id) : Promise.resolve([]),
     canUpdate ? services.people.list(actor) : Promise.resolve([]),
-    canBadge ? services.orgs.getCamp(actor) : Promise.resolve(null),
+    services.orgs.getCamp(actor),
   ]);
   const roleLabel = person.roles.map((role: CampRole) => CAMP_ROLE_LABELS[role]).join(', ');
   const linkable = others.filter(p => p.id !== person.id).map(p => ({ id: p.id, name: `${p.givenName} ${p.familyName}` }));
@@ -43,9 +44,9 @@ export async function PersonScreen({ id }: { id: string }) {
         <HouseholdPanel households={person.households} canUpdate={canUpdate} canCreate={canCreate} linkable={linkable} />
         <MembershipsPanel personId={person.id} memberships={person.memberships} canManage={canManage} />
         <BadgePanel personId={person.id} personName={`${person.givenName} ${person.familyName}`} roleLabel={roleLabel}
-          campName={camp?.name ?? ''} hasActiveBadge={person.hasActiveBadge} archived={person.archived} canManage={canBadge} />
+          campName={camp.name} hasActiveBadge={person.hasActiveBadge} archived={person.archived} canManage={canBadge} />
       </div>
-      {canSeeVisits && <AttendanceHistory entries={visits} />}
+      {canSeeVisits && <AttendanceHistory entries={visits} timeZone={camp.timezone} />}
     </div>
   );
 }

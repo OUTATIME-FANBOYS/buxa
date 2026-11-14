@@ -1,11 +1,10 @@
 import type { AttendanceEntry, AttendanceFilter, CheckInInput, CheckOutInput, PersonSummary } from '@buxa/contracts';
 import type { Actor, AccessStatus } from '@buxa/domain';
-import type { AttendanceRepository } from '../attendance/AttendanceRepository';
-import type { MembershipRepository } from '../memberships/MembershipRepository';
-import type { OrgRepository } from '../orgs/OrgRepository';
-import type { PeopleRepository } from '../people/PeopleRepository';
-import { unimplemented } from '../unimplemented';
-import type { Clock } from './clock';
+import type { AttendanceRepository } from '../../attendance/AttendanceRepository';
+import type { MembershipRepository } from '../../memberships/MembershipRepository';
+import type { OrgRepository } from '../../orgs/OrgRepository';
+import type { PeopleRepository } from '../../people/PeopleRepository';
+import type { Clock } from '../clock';
 
 /** Expected outcomes are results, not exceptions, so a screen can render each one. Unexpected problems still throw. */
 export type CheckInResult =
@@ -47,9 +46,4 @@ export interface AttendanceService {
 
 export interface AttendanceServiceDeps {
   attendance: AttendanceRepository; people: PeopleRepository; memberships: MembershipRepository; orgs: OrgRepository; clock: Clock;
-}
-
-/** Replaced by the real implementation in chunk P2. */
-export function createAttendanceService(_deps: AttendanceServiceDeps): AttendanceService {
-  return unimplemented('AttendanceService');
 }

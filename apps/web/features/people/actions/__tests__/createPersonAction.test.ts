@@ -66,10 +66,10 @@ describe('createPersonAction', () => {
     expect(h.revalidatePath).toHaveBeenCalledWith(ROUTES.people);
   });
 
-  it('makes a new household first for a guardian, then adds the guardian to it', async () => {
+  it('passes a new household name to the service, which creates it in the same transaction as the guardian', async () => {
     await expect(createPersonAction(idle, formOf({ ...adult, newHouseholdName: ' Lee family ' }))).rejects.toThrow('NEXT_REDIRECT');
-    expect(h.people.createHousehold).toHaveBeenCalledWith(h.actor, { name: 'Lee family' });
-    expect(h.people.create).toHaveBeenCalledWith(h.actor, expect.objectContaining({ householdId: IDS.household }));
+    expect(h.people.createHousehold).not.toHaveBeenCalled();
+    expect(h.people.create).toHaveBeenCalledWith(h.actor, expect.objectContaining({ newHouseholdName: 'Lee family' }));
   });
 
   it('turns a 403 from the service into a friendly state and does not redirect', async () => {
