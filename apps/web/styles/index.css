@@ -25,6 +25,7 @@
  *                                      later in the cascade than these overrides, exactly as before.
  *  11. features/kanban/agents.css      agent governance UI (proposals, runs, trust, agent avatars).
  *  12. features/camp.css               camp area (setup, steps, abilities).
+ *  13. features/people.css             people screens: lists, households, memberships, badges (print).
  *
  * Where does a new style go?
  *   - A colour, spacing, radius, font size, shadow or easing value: tokens.css (add a custom property, never a literal).
@@ -55,3 +56,4 @@
 @import './responsive.css';
 @import './features/kanban/agents.css';
 @import './features/camp.css';
+@import './features/people.css';
