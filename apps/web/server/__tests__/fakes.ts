@@ -2,19 +2,30 @@ import { randomUUID } from 'node:crypto';
 import type { CreatedOrg, Member, Membership, NewOrgInput, Org, OrgPatchInput, OrgSummary, User } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
 import type { Identity } from '../auth/identity';
+import { InMemoryAttendanceRepository } from '../attendance';
+import { InMemoryCredentialRepository } from '../credentials';
+import { InMemoryMembershipRepository } from '../memberships';
 import { OrgNotFoundError, SlugTakenError, type OrgRepository } from '../orgs/OrgRepository';
+import { InMemoryPeopleRepository, InMemoryDatabase, type AuditRecord } from '../people';
 import type { Repositories } from '../repositories';
-import { unimplemented } from '../unimplemented';
 import { EmailInUseError, type UserRepository } from '../users/UserRepository';
 
 interface StoredOrg { id: string; name: string; slug: string; createdAt: string; timezone: string }
 
-/** An in-memory stand-in for Postgres. It is the second adapter that makes the repository interfaces a real seam. */
+/**
+ * An in-memory stand-in for Postgres: users and organisations here, and the people, membership, badge and attendance adapters
+ * sharing one InMemoryDatabase. It is the second adapter that makes the repository interfaces a real seam.
+ */
 export class InMemoryStore implements UserRepository, OrgRepository {
   readonly users = new Map<string, User & { authId: string }>();
   readonly orgs = new Map<string, StoredOrg>();
   readonly members: { orgId: string; userId: string; role: Role }[] = [];
-  readonly audit: { action: string; orgId: string; actorId: string }[] = [];
+  private readonly database = new InMemoryDatabase();
+
+  /** Every audit row written through this store's adapters, oldest first. */
+  get audit(): readonly AuditRecord[] {
+    return this.database.audit;
+  }
 
   async upsertFromIdentity(identity: Identity): Promise<User> {
     const existing = [...this.users.values()].find(u => u.authId === identity.authId);
@@ -32,7 +43,7 @@ export class InMemoryStore implements UserRepository, OrgRepository {
     const org = { id: randomUUID(), name: input.name, slug: input.slug, createdAt: new Date().toISOString(), timezone: input.timezone };
     this.orgs.set(org.id, org);
     this.members.push({ orgId: org.id, userId: ownerId, role: 'owner' });
-    this.audit.push({ action: 'org.create', orgId: org.id, actorId: ownerId });
+    this.database.record({ userId: ownerId, orgId: org.id }, 'org.create', 'org', org.id);
     return { id: org.id, name: org.name, slug: org.slug, role: 'owner' };
   }
   async get(orgId: string): Promise<Org> {
@@ -43,18 +54,29 @@ export class InMemoryStore implements UserRepository, OrgRepository {
     const o = this.orgs.get(actor.orgId); if (!o) throw new OrgNotFoundError();
     if (input.name !== undefined) o.name = input.name;
     if (input.timezone !== undefined) o.timezone = input.timezone;
-    this.audit.push({ action: 'org.update', orgId: o.id, actorId: actor.userId });
+    this.database.record(actor, 'org.update', 'org', o.id);
     return { id: o.id, name: o.name, slug: o.slug };
   }
   async listMembers(orgId: string): Promise<Member[]> {
     return this.members.filter(m => m.orgId === orgId).map(m => { const u = this.users.get(m.userId)!; return { id: u.id, name: u.name, email: u.email, role: m.role }; });
   }
   asRepositories(): Repositories {
-    // The phase 1 in-memory adapters replace these placeholders in chunk P1.
+    const db = this.database;
     return {
-      users: this, orgs: this,
-      people: unimplemented('PeopleRepository'), memberships: unimplemented('MembershipRepository'),
-      credentials: unimplemented('CredentialRepository'), attendance: unimplemented('AttendanceRepository'),
+      users: this,
+      orgs: this,
+      people: new InMemoryPeopleRepository(db),
+      memberships: new InMemoryMembershipRepository(db),
+      credentials: new InMemoryCredentialRepository(db),
+      attendance: new InMemoryAttendanceRepository(db),
     };
   }
+}
+
+/** Repositories backed by memory, plus the audit log they write, for tests. */
+export type InMemoryRepositories = Repositories & { readonly audit: readonly AuditRecord[] };
+
+export function createInMemoryRepositories(): InMemoryRepositories {
+  const store = new InMemoryStore();
+  return Object.assign(store.asRepositories(), { audit: store.audit });
 }
