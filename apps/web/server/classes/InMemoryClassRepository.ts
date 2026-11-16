@@ -3,7 +3,7 @@ import type { Actor, ActiveEnrolmentFacts, AuditAction, LocalDate } from '@buxa/
 import type { Class, Enrolment, EnrolmentStatus, NewClassInput, Session } from '@buxa/contracts';
 import { systemClock, type Clock } from '../services/clock';
 import type { AuditRecord } from '../people/InMemoryDatabase';
-import type { ClassRepository, EnrolRequest, EnrolmentRule, NewSessionRecord } from './ClassRepository';
+import type { ClassRepository, EnrolRequest, EnrolmentRule, GatheredEnrolmentFacts, NewSessionRecord } from './ClassRepository';
 import { ClassNotFoundError, CamperNotFoundError, EnrolmentNotFoundError, SessionNotFoundError, refusalError } from './errors';
 
 interface StoredClass extends Class { orgId: string }
@@ -86,16 +86,17 @@ export class InMemoryClassRepository implements ClassRepository {
       if (!session) throw new SessionNotFoundError();
       const cls = this.classIn(actor.orgId, session.classId);
       if (!cls) throw new ClassNotFoundError();
-      await yieldToDatabase();
       const camper = this.camperIn(actor.orgId, request.camperId);
       if (!camper) throw new CamperNotFoundError();
-
-      const decision = rule({
+      const facts: GatheredEnrolmentFacts = {
         session: { sessionId: session.id, className: cls.name, startsAt: session.startsAt, endsAt: session.endsAt, capacity: session.capacity, ageRange: cls.ageRange },
         seatsTaken: this.countWhere(session.id, 'enrolled'),
         camperDateOfBirth: camper.dateOfBirth,
         camperActive: this.activeFor(actor.orgId, camper.id),
-      });
+      };
+      // The facts are read now and the write happens after the round trip, as in Postgres. Only the lock keeps them current.
+      await yieldToDatabase();
+      const decision = rule(facts);
       if (decision.kind === 'refuse') throw refusalError(decision);
 
       const row: StoredEnrolment = {
