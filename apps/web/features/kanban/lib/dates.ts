@@ -17,5 +17,5 @@ export function ago(iso: string): string {
   return fmt(isoDay(iso));
 }
 export const iso = (daysFromNow: number, hour = 10) => {
-  const d = new Date(); d.setDate(d.getDate() + daysFromNow); d.setHours(hour, Math.floor(Math.random() * 50), 0, 0); return d.toISOString();
+  const d = new Date(); d.setDate(d.getDate() + daysFromNow); d.setHours(hour, (Math.abs(daysFromNow) * 7) % 50, 0, 0); return d.toISOString();
 };
