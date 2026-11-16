@@ -1,15 +1,46 @@
 name: CI
 on:
-  push: { branches: [main] }
+  push: { branches: [main, develop] }
   pull_request:
+  workflow_dispatch:
+
 jobs:
   verify:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: buxa, POSTGRES_PASSWORD: buxa, POSTGRES_DB: buxa }
+        ports: ["5433:5432"]
+        options: >-
+          --health-cmd "pg_isready -U buxa" --health-interval 3s --health-retries 20
+      # A second, separate server for the managed-database check below. Postgres roles belong to the whole server,
+      # so a role created for one database would hide the problem we want to catch in the other.
+      postgres-managed:
+        image: postgres:16
+        env: { POSTGRES_USER: postgres, POSTGRES_PASSWORD: admin }
+        ports: ["5434:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 3s --health-retries 20
+    env:
+      DATABASE_URL: postgres://buxa:buxa@localhost:5433/buxa
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci
-      - run: npx tsc --noEmit
+      - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+      # Managed Postgres (Supabase and others) does not give you a superuser. Run the database and API tests as a login that
+      # can create roles and bypass row-level security, but is not a superuser, so a migration or query that only works for
+      # a superuser fails here instead of on the first deploy.
+      - name: Database and API tests as a non-superuser (like managed Postgres)
+        env:
+          PGPASSWORD: admin
+        run: |
+          psql -h localhost -p 5434 -U postgres -c "CREATE ROLE deployer LOGIN PASSWORD 'deployer' CREATEROLE BYPASSRLS NOSUPERUSER" -c "CREATE DATABASE buxa_managed OWNER deployer"
+          export DATABASE_URL=postgres://deployer:deployer@localhost:5434/buxa_managed
+          npm run db:migrate
+          npx vitest run packages apps/web/server

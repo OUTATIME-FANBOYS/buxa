@@ -10,3 +10,25 @@ dist
 coverage
 .agents
 .claude/skills
+
+# Build and tooling output
+*.tsbuildinfo
+.vite
+.turbo
+.cache
+playwright-report
+test-results
+.idea
+.vscode/*
+!.vscode/extensions.json
+dist-api
+.vercel
+
+# Next.js
+.next
+next-env.d.ts
+out
+.claude/worktrees
+
+# Archify working folders (candidates and receipts)
+.archify/

@@ -1,0 +1,11 @@
+/* ---------- Signals ---------- */
+.prio { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-s); font-weight: 600; color: var(--pc); }
+.prio-low { --pc: var(--p-low); } .prio-medium { --pc: var(--p-medium); } .prio-high { --pc: var(--p-high); } .prio-critical { --pc: var(--p-critical); }
+.prio-bg-low { --pc: var(--p-low); } .prio-bg-medium { --pc: var(--p-medium); } .prio-bg-high { --pc: var(--p-high); } .prio-bg-critical { --pc: var(--p-critical); }
+.due { display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-s); font-weight: 600; color: var(--text-2); border-radius: 4px; padding: 1px 6px 1px 4px; line-height: 18px; }
+.due-overdue { color: var(--crit-ink); background: var(--crit-soft); } .due-soon { color: var(--warn-ink); background: var(--warn-soft); } .due-done { color: var(--ok); }
+.meta { display: inline-flex; align-items: center; gap: 3px; font-size: var(--fs-s); color: var(--text-2); font-weight: 600; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-s); font-weight: 600; letter-spacing: 0; line-height: 20px; padding: 0 8px; border-radius: 10px; white-space: nowrap; background: var(--tone-soft); color: var(--tone-ink); }
+.pill-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--tone-f); flex: none; }
+.kind-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--f-neutral); } .kind-active { background: var(--f-brand); } .kind-done { background: var(--f-ok); }
+.tag-agent { background: var(--agent-soft); color: var(--agent-ink); }

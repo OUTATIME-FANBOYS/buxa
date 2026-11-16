@@ -1,0 +1,67 @@
+/* ---------- Tokens ---------- */
+/*
+ * Brand palette: five primary colours, each with derived steps for text, tints and chart fills.
+ *   Stormy Teal    #0F7173  accent (buttons, links, brand marks)
+ *   Vibrant Coral  #F05D5E  critical marks; text uses a darker or lighter derived step
+ *   Platinum       #E7ECEF  light background; dark-mode text
+ *   Shadow Grey    #272932  light-mode text; dark-mode surface
+ *   Midnight Violet #36213E hero and agent hue; dark-mode hero
+ *   text step  (--accent, --ok, --warn, --crit, --agent): 4.5:1 or better on every surface
+ *   soft + ink (--x-soft, --x-ink):                      tinted backgrounds for pills and icons, ink is 4.5:1 on soft
+ *   fill       (--f-x):                                   chart marks and dots, 3:1 on surfaces, checked for colour-blind separation
+ * Meaning is fixed: brand = primary and in progress, ok = done, warn = needs attention, crit = overdue or destructive,
+ * agent = anything an AI agent did. The agent hue is never a chart series next to brand (they merge for some viewers).
+ */
+:root {
+  --bg: #e7ecef; --surface: #ffffff; --surface-2: #f4f6f8; --surface-3: #dce3e8; --hover: #eef2f4;
+  --line: #d3dbe0; --line-strong: #b8c3ca; --control: #6b7480;
+  --text: #272932; --text-2: #4a4e5c; --text-3: #5a5f6e;
+  --accent: #0f7173; --accent-soft: #d3eaea; --accent-deep: #0a4f51; --f-brand: #0f7173;
+  --ok: #0b7a55; --ok-soft: #def5ea; --ok-ink: #065f46; --f-ok: #0e9f6e;
+  --warn: #a34a07; --warn-soft: #fdf0d5; --warn-ink: #8f3f0a; --f-warn: #d17a00;
+  --crit: #a3282b; --crit-soft: #fbe4e4; --crit-ink: #7f1d20; --f-crit: #f05d5e;
+  --agent: #4f2d66; --agent-soft: #efe7f4; --agent-ink: #36213e; --f-agent: #7b5597;
+  --f-neutral: #6b7480; --neutral-soft: #dce3e8; --neutral-ink: #4a4e5c;
+  --accent-ink: #ffffff; --on-solid: #ffffff; --on-inverse-accent: #9fd6d7;
+  --coral: #f05d5e; --on-coral: #14161c; --on-fill: #14161c;
+  --hero-bg: #36213e; --hero-fg: #ffffff; --hero-fg-2: #c9b2d9;
+  --p-low: var(--text-3); --p-medium: var(--accent); --p-high: var(--warn); --p-critical: var(--crit);
+  --track: #d3dbe0; --grid: #dce3e8;
+  --shadow-1: 0 1px 2px rgba(39,41,50,.06);
+  --shadow: 0 1px 2px rgba(39,41,50,.06), 0 12px 32px rgba(39,41,50,.12);
+  --r-1: 6px; --r-2: 8px; --r-3: 12px;
+  --s1: .25rem; --s2: .5rem; --s3: .75rem; --s4: 1rem; --s5: 1.5rem; --s6: 2rem; --s7: 3rem;
+  --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  --fs-s: .75rem; --fs-b: .875rem; --fs-h: 1.375rem; --fs-n: 1.75rem;
+  --control-h: 44px; /* one height for inputs, selects and buttons; 44px is also the touch target */
+  --ease: cubic-bezier(.2,.7,.2,1); --ease-out: cubic-bezier(.22,1,.36,1);
+  --material: color-mix(in srgb, var(--surface) 78%, transparent);
+  color-scheme: light;
+}
+[data-theme="dark"] {
+  --bg: #1e2026; --surface: #272932; --surface-2: #2e313b; --surface-3: #373a46; --hover: #31343f;
+  --line: #3a3e4b; --line-strong: #4d5263; --control: #8a90a0;
+  --text: #e7ecef; --text-2: #b9bec9; --text-3: #9ea4b0;
+  --accent: #5cc2c4; --accent-soft: #1d3c3d; --accent-deep: #a6dfe0; --f-brand: #2fa3a6;
+  --ok: #3fcf8e; --ok-soft: #12342a; --ok-ink: #6fe0ae; --f-ok: #22ae80;
+  --warn: #f2b045; --warn-soft: #3a2c12; --warn-ink: #f7c570; --f-warn: #bd8a10;
+  --crit: #ff8a8b; --crit-soft: #3d2227; --crit-ink: #ffb3b4; --f-crit: #f05d5e;
+  --agent: #c9b2d9; --agent-soft: #34263f; --agent-ink: #e0d0ee; --f-agent: #9b7bb8;
+  --f-neutral: #8a90a0; --neutral-soft: #373a46; --neutral-ink: #b9bec9;
+  --accent-ink: #1e2026; --on-solid: #1e2026; --on-inverse-accent: #0a4f51;
+  --coral: #f05d5e; --on-coral: #14161c; --on-fill: #14161c;
+  --hero-bg: #36213e; --hero-fg: #e7ecef; --hero-fg-2: #c9b2d9;
+  --track: #3a3e4b; --grid: #31343f;
+  --shadow-1: 0 1px 2px rgba(0,0,0,.35);
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.5);
+  color-scheme: dark;
+}
+/* Tones: one class sets the four steps, components read them. */
+.tone-neutral, .pill-neutral { --tone: var(--text-2); --tone-soft: var(--neutral-soft); --tone-ink: var(--neutral-ink); --tone-f: var(--f-neutral); }
+.tone-brand, .pill-brand { --tone: var(--accent); --tone-soft: var(--accent-soft); --tone-ink: var(--accent-deep); --tone-f: var(--f-brand); }
+.tone-ok, .pill-ok { --tone: var(--ok); --tone-soft: var(--ok-soft); --tone-ink: var(--ok-ink); --tone-f: var(--f-ok); }
+.tone-warn, .pill-warn { --tone: var(--warn); --tone-soft: var(--warn-soft); --tone-ink: var(--warn-ink); --tone-f: var(--f-warn); }
+.tone-crit, .pill-crit { --tone: var(--crit); --tone-soft: var(--crit-soft); --tone-ink: var(--crit-ink); --tone-f: var(--f-crit); }
+.tone-agent, .pill-agent { --tone: var(--agent); --tone-soft: var(--agent-soft); --tone-ink: var(--agent-ink); --tone-f: var(--f-agent); }
+/* hero: the same violet family, for highlights that are not AI activity */
+.tone-hero, .pill-hero { --tone: var(--agent); --tone-soft: var(--agent-soft); --tone-ink: var(--agent-ink); --tone-f: var(--f-agent); }

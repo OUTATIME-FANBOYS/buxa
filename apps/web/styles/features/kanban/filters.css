@@ -1,0 +1,13 @@
+/* ---------- Filters ---------- */
+.filters { display: flex; flex-wrap: wrap; gap: var(--s2); align-items: center; position: relative; }
+.search-local { display: flex; align-items: center; gap: var(--s2); height: 32px; padding: 0 var(--s3); background: var(--surface); border-radius: var(--r-1); border: 1px solid var(--line-strong); color: var(--text-3); width: 220px; }
+.search-local input { border: 0; height: 100%; padding: 0; background: transparent; color: var(--text); } .search-local input:focus-visible { outline: none; } .search-local:focus-within { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 var(--s3); border-radius: var(--r-1); border: 1px solid var(--line-strong); background: var(--surface); font-weight: 600; font-size: 13px; color: var(--text-2); white-space: nowrap; }
+.chip:hover { background: var(--hover); color: var(--text); } .chip.on { border-color: var(--accent); color: var(--accent-deep); background: var(--accent-soft); }
+.chip-count { background: var(--accent); color: var(--accent-ink); border-radius: 8px; font-size: 11px; padding: 0 5px; line-height: 16px; }
+.chip-check { cursor: pointer; } .chip-check input { width: 14px; height: 14px; }
+.check-row { display: flex; align-items: center; gap: var(--s3); padding: 7px var(--s3); border-radius: var(--r-1); cursor: pointer; } .check-row:hover { background: var(--hover); } .check-row > span { display: inline-flex; align-items: center; gap: var(--s2); }
+.save-filter { display: flex; gap: var(--s2); align-items: center; width: 100%; } .save-filter input { max-width: 240px; height: 32px; }
+.segmented { display: inline-flex; background: var(--surface-3); border-radius: var(--r-1); padding: 2px; gap: 2px; }
+.segmented button { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 var(--s3); border-radius: 5px; font-weight: 600; color: var(--text-2); }
+.segmented button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); } .segmented button:hover:not(.on) { color: var(--text); }

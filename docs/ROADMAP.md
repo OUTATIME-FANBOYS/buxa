@@ -19,13 +19,20 @@ payments → seats & rosters → scheduling → comms & extras.** Scheduling is 
 | # | Phase | Deliverable | Exit criteria |
 |---|---|---|---|
 | 0 | Foundation | Monorepo, Postgres, migrations, managed auth, orgs (tenants), roles, audit log, CI | Two orgs cannot see each other's rows (tested); CI green; deploy to a staging URL |
-| 1 | Members & check-in | People & households, memberships (valid/expired), QR + name lookup, attendance log | Staff check in a member in under 5 seconds on a phone; attendance export |
+| 1 | Members & check-in (spec: `docs/phases/01-members-checkin.md`) | People & households, memberships (valid/expired), QR + name lookup, attendance log, staff mobile app (installable web app, see below) | Staff check in a member in under 5 seconds on a phone (iOS Safari and Android Chrome); attendance export; staff can install the app and sign in from a phone |
 | 2 | Events & calendar | Programs → sessions, recurring events, capacity, public pages, iCal feed | Recurrence rules tested incl. DST; public page works without login |
 | 3 | Registration & payments | Sign-up forms with custom fields, Stripe Connect, waitlist, refunds | Concurrent sign-ups never exceed capacity; payments reconcile with Stripe |
 | 4 | Seats & rosters | Groups, cabins, rooms, assign people, per-session check-in | Ratio rules enforced; assignments conflict-checked |
 | 5 | Scheduling | Conflict detection first, auto-schedule later | Conflicts for staff, rooms and gear reported with zero false negatives in tests |
 | 6 | Comms & extras | Reminders, waivers, parent portal, reports | Waiver stored with timestamp and version; reminders idempotent |
 | ops | Staff board (existing kanban) | Move onto the new backend, scoped per org | Existing 60 tests ported or replaced |
+
+## Staff mobile app
+
+Staff use a phone at the check-in desk, so phase 1 includes a mobile app. Decision: start with an installable web app
+(PWA) built into the existing site, not a native app. One codebase, no app-store review, and the camera scanner
+works in the browser. A native app is revisited only if the PWA cannot meet the 5-second check-in target on real
+phones. Mobile check-in needs a connection; offline check-in is out of scope (see `docs/phases/01-members-checkin.md`).
 
 ## Decisions that must be made early (from the roadmap)
 

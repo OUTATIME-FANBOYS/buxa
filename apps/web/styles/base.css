@@ -1,0 +1,28 @@
+/* ---------- Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 var(--fs-b)/1.45 var(--font); letter-spacing: -.006em; font-optical-sizing: auto; -webkit-font-smoothing: antialiased; }
+h1, h2, h3, p, ul, dl, dd { margin: 0; } ul { padding: 0; list-style: none; }
+h1 { font-size: var(--fs-h); font-weight: 650; letter-spacing: -.024em; line-height: 1.15; }
+.small, .eyebrow, .tag, .count, .axis, .tl-days span { letter-spacing: 0; }
+h2 { font-size: var(--fs-b); font-weight: 600; display: flex; align-items: center; } h3 { font-size: var(--fs-b); font-weight: 600; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+a { color: inherit; text-decoration: none; }
+code { font-size: var(--fs-s); background: var(--surface-3); padding: 1px 5px; border-radius: 4px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--r-1); }
+::selection { background: var(--accent-soft); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip { position: absolute; left: 8px; top: -48px; background: var(--accent); color: var(--accent-ink); padding: 8px 12px; border-radius: var(--r-1); z-index: 100; }
+.skip:focus { top: 8px; }
+.muted { color: var(--text-2); } .small { font-size: var(--fs-s); } .block { display: block; }
+.grow { flex: 1; } .text-crit { color: var(--crit); }
+.eyebrow { font-size: var(--fs-s); color: var(--text-3); font-weight: 600; }
+.pad { padding: var(--s2) var(--s3); }
+.clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.stack { display: grid; gap: var(--s4); } .row { display: flex; gap: var(--s2); align-items: center; flex-wrap: wrap; }
+.row-end { display: flex; gap: var(--s2); justify-content: flex-end; align-items: center; }
+.flip { transform: rotate(180deg); }
+kbd.kbd { font: 500 11px var(--font); color: var(--text-3); border: 1px solid var(--line-strong); border-radius: 4px; padding: 0 5px; line-height: 18px; background: var(--surface); }
+.link { color: var(--accent); font-weight: 600; text-underline-offset: 3px; } .link:hover { text-decoration: underline; } .link:disabled { color: var(--text-3); cursor: default; text-decoration: none; }
+.link-inline { font-weight: 600; text-align: left; } .link-inline:hover { color: var(--accent); }
