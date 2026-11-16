@@ -20,9 +20,9 @@ beforeEach(() => {
 
 describe('trust policy', () => {
   it('applies an automatic change at once, as the agent, with provenance', () => {
-    const p = propose({ kind: 'create_task', draft: { projectId: PROJECT.registration, columnId: col('Backlog'), title: 'Agent ticket' } }, 'found a gap');
+    const p = propose({ kind: 'create_task', draft: { projectId: PROJECT.registration, columnId: col('Backlog'), title: 'Agent task' } }, 'found a gap');
     expect(p.status).toBe('applied');
-    const t = s.tasks.find(x => x.title === 'Agent ticket')!;
+    const t = s.tasks.find(x => x.title === 'Agent task')!;
     expect(t.createdBy).toBe(AGENT_ID);
     expect(t.history[0].via).toMatchObject({ runId, reason: 'found a gap' });
     expect(s.session.userId).toBe(USER.rosa); expect(s.acting).toBeUndefined();
