@@ -4,7 +4,7 @@ import type { AppState } from '../types';
  * The parts of the app's state that are shared with the server: everything about the work itself.
  * Who is signed in, which page is open and the theme stay per browser, so they are never synced.
  */
-export const DATA_KEYS = ['users', 'accounts', 'workspaces', 'projects', 'tasks', 'activity', 'notices', 'savedFilters', 'agents', 'runs', 'proposals'] as const;
+export const DATA_KEYS = ['users', 'workspaces', 'projects', 'tasks', 'activity', 'notices', 'savedFilters', 'agents', 'runs', 'proposals'] as const;
 export type DataKey = (typeof DATA_KEYS)[number];
 export type Data = Pick<AppState, DataKey>;
 

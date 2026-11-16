@@ -3,7 +3,6 @@
 import { useRef, type ReactNode } from 'react';
 import { useStore } from '../../state/store';
 import { useGlobalShortcuts } from '../../hooks/useGlobalShortcuts';
-import { DemoAccountMenu } from './DemoAccountMenu';
 import { GlobalSearch } from './GlobalSearch';
 import { Notifications } from './Notifications';
 
@@ -17,9 +16,9 @@ function useSaveLabel() {
 
 /**
  * The task pieces of the top bar: search (⌘K or /), the save state, notifications, and the account.
- * `account` is the signed-in person's menu; without one, the browser demo's account menu is shown.
+ * `account` is the signed-in person's menu.
  */
-export function TaskTopBar({ account }: { account?: ReactNode }) {
+export function TaskTopBar({ account }: { account: ReactNode }) {
   const { saveStatus, sync, project } = useStore();
   const searchRef = useRef<HTMLInputElement>(null);
   useGlobalShortcuts(searchRef, !!project);
@@ -29,7 +28,7 @@ export function TaskTopBar({ account }: { account?: ReactNode }) {
       <GlobalSearch inputRef={searchRef} />
       <span className={`save-state save-${sync === 'offline' ? 'error' : saveStatus}`} role="status">{label}</span>
       <Notifications />
-      {account ?? <DemoAccountMenu />}
+      {account}
     </>
   );
 }

@@ -1,3 +1,4 @@
+import { can } from '@buxa/domain';
 import { getRuntime } from '@/server/runtime';
 import { MembersTable } from '../components/MembersTable';
 import { PageHeader } from '@/components/ui';
@@ -11,7 +12,7 @@ export async function Members() {
   return (
     <div className="page">
       <PageHeader title="Team access" subtitle={subtitle} />
-      <MembersTable members={members} />
+      <MembersTable members={members} showEmail={can(actor, 'members:read_contact')} />
     </div>
   );
 }

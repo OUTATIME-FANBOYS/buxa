@@ -144,7 +144,7 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
         const minor = seeContact ? isMinor(person, today) : null;
         result.push({
           entry: entries[index],
-          person: toSummary(person, groups.filter(m => m.personId === person.id), onSite.has(person.id), today),
+          person: toSummary(person, groups.filter(m => m.personId === person.id), onSite.has(person.id), today, true),
           isMinor: minor,
           pickupOptions: minor === true ? await pickupOptionsFor(people, orgId, person.id) : [],
         });

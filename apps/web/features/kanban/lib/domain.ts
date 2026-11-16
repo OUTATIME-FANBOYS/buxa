@@ -38,29 +38,6 @@ export function notify(s: AppState, userId: string | undefined, kind: Notice['ki
   return { ...s, notices: [{ id: clock.id(), userId, at: clock.now(), kind, text, read: false, taskId: task?.id, projectId: task?.projectId }, ...s.notices].slice(0, 300) };
 }
 
-/* ---------- accounts ---------- */
-export function signUp(s: AppState, a: { userId: string; workspaceId: string; projectId: string; name: string; email: string; hash: string }): AppState {
-  const cols = defaultColumns(); const at = clock.now();
-  const mk = (title: string, col: number, priority: Priority, dueDays: number | null, description = ''): Task => ({
-    id: clock.id(), projectId: a.projectId, columnId: cols[col].id, title, description, priority, assigneeId: a.userId,
-    due: dueDays === null ? undefined : new Date(Date.now() + dueDays * 86400000).toISOString().slice(0, 10),
-    tags: [], subtasks: [], comments: [], attachments: [], history: [{ id: clock.id(), at, actorId: a.userId, text: 'created this' }],
-    archived: false, createdAt: at, createdBy: a.userId,
-  });
-  return {
-    ...s,
-    users: [...s.users, { id: a.userId, name: a.name, email: a.email }],
-    accounts: [...s.accounts, { email: a.email, hash: a.hash, userId: a.userId }],
-    workspaces: [...s.workspaces, { id: a.workspaceId, name: `${a.name.split(' ')[0]}’s Workspace`, members: [{ userId: a.userId, role: 'owner' }] }],
-    projects: [...s.projects, { id: a.projectId, workspaceId: a.workspaceId, name: 'My first project', description: 'A place to try things out. Rename it, or start a new project.', columns: cols, createdAt: at }],
-    tasks: [...s.tasks,
-      mk('Drag this card to another column', 1, 'medium', 2, 'Drag cards between columns, or use the ⋯ menu, or Alt + ← / →.'),
-      mk('Open a card to add subtasks, comments and files', 1, 'low', 5),
-      mk('Press C to create a task from anywhere', 0, 'low', null)],
-    session: { userId: a.userId }, ui: { ...s.ui, workspaceId: a.workspaceId, projectId: a.projectId, view: 'board', agentsEnabled: false },
-  };
-}
-
 /** Where the UI should land for a user: their workspace/project, falling back to the first they belong to. */
 export function uiFor(s: AppState, userId: string): AppState['ui'] {
   const ws = s.workspaces.find(w => w.id === s.ui.workspaceId && w.members.some(m => m.userId === userId)) ?? s.workspaces.find(w => w.members.some(m => m.userId === userId));

@@ -31,6 +31,9 @@ curl -s -X POST localhost:5173/v1/orgs -H "authorization: Bearer $TOKEN" -H 'con
 curl -s localhost:5173/v1/org -H "authorization: Bearer $TOKEN" -H "x-org-id: <id from above>"
 ```
 
+## Sample accounts
+There are no browser-only accounts and no shared demo password. Sample accounts for each persona will come from a later seed step that creates real Supabase accounts; until then, sign up with a real email address.
+
 ## Endpoints (v1)
 | Route | Needs | Does |
 |---|---|---|
@@ -47,10 +50,9 @@ curl -s localhost:5173/v1/org -H "authorization: Bearer $TOKEN" -H "x-org-id: <i
 
 ## Known limits (to fix before release)
 - No rate limiting yet (sign-in is Supabase's; our endpoints need limits, especially `POST /v1/orgs`).
-- The sign-in lookup uses the privileged database connection, which must be able to bypass row-level security
-  (true for a superuser and for Supabase's `postgres` role). Revisit with a dedicated function when we deploy.
-- Email verification relies on Supabase's "Confirm email" setting, not on a claim in the token (`user_metadata` is user-editable, so `email_verified` there proves nothing). The API refuses to start in production if that setting is off. Revisit when invitations link people by email.
-- `org_members` is read-only for request handling (migration `0006`); the only write path is organisation creation on the privileged connection. Member-management routes must add narrow write policies, not widen the read one.
+- The sign-in user row and membership lookup run as `SECURITY DEFINER` functions (`buxa_upsert_user`, `buxa_memberships_of`, migration `0009`), called as `buxa_app`. They do not need a login that bypasses row-level security. The runtime login itself is still to be set up as `docs/deploy.md` describes.
+- Email verification relies on Supabase's "Confirm email" setting, not on a claim in the token (`user_metadata` is user-editable, so `email_verified` there proves nothing). In production, if that setting is off, the API answers 503 on every route and the app shows a maintenance page instead of its pages and forms (checked on first use, not at process start). Revisit when invitations link people by email.
+- `org_members` is read-only for request handling (migration `0006`); the only write path is organisation creation, through the `buxa_create_org` function. Member-management routes must add narrow write policies, not widen the read one.
 - Multi-factor authentication for staff accounts that see children's data is not enforced yet.
 
 ## In the browser: cookie sessions

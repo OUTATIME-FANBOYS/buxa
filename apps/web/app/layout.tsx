@@ -3,14 +3,24 @@ import { headers } from 'next/headers';
 import { connection } from 'next/server';
 import Script from 'next/script';
 import type { ReactNode } from 'react';
+import { BRAND } from '@/config/brand';
 import '../styles/index.css';
 
 export const metadata: Metadata = {
-  title: { default: 'Buxa', template: '%s · Buxa' },
-  description: 'Camp and membership management.',
+  title: { default: BRAND.name, template: `%s · ${BRAND.name}` },
+  description: BRAND.description,
+  applicationName: BRAND.name,
+  // The home-screen icon on iPhone and iPad. Safari adds the manifest's icons itself on Android and desktop.
+  icons: { apple: '/icons/apple-touch-icon.png' },
+  appleWebApp: { capable: true, title: BRAND.name, statusBarStyle: 'default' },
 };
 
-export const viewport: Viewport = { colorScheme: 'light dark' };
+export const viewport: Viewport = {
+  colorScheme: 'light dark',
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: BRAND.themeColour,
+};
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   // Render per request: the Content-Security-Policy uses a fresh nonce each time, so pages cannot be built ahead of time.

@@ -32,11 +32,19 @@ describe('AttendanceService permissions', () => {
     expect((await thrown(() => camp.attendance.exportCsv(viewer, FILTER))).statusCode).toBe(403);
   });
 
-  it('lets a viewer read the log and the on-site list', async () => {
+  it('refuses a viewer the attendance log, the on-site list and a person history (403), and lets staff read them', async () => {
     const { camp, staff, viewer, ids } = await build();
     await camp.attendance.checkIn(staff, { personId: ids.ben, method: 'qr' });
-    expect(await camp.attendance.log(viewer, FILTER)).toHaveLength(1);
-    expect(await camp.attendance.onSite(viewer)).toHaveLength(1);
+    expect((await thrown(() => camp.attendance.log(viewer, FILTER))).statusCode).toBe(403);
+    expect((await thrown(() => camp.attendance.onSite(viewer))).statusCode).toBe(403);
+    expect((await thrown(() => camp.attendance.history(viewer, ids.ben))).statusCode).toBe(403);
+    expect(await camp.attendance.log(staff, FILTER)).toHaveLength(1);
+    expect(await camp.attendance.onSite(staff)).toHaveLength(1);
+  });
+
+  it('refuses a viewer a CSV export of attendance (403)', async () => {
+    const { camp, viewer } = await build();
+    expect((await thrown(() => camp.attendance.exportCsv(viewer, FILTER))).statusCode).toBe(403);
   });
 
   it('answers a staff override with not-valid (canOverride false), because only admins may override', async () => {

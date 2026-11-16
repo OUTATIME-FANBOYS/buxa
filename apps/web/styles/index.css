@@ -19,13 +19,14 @@
  *   8. features/kanban/board.css       board, columns, cards, drag ghost.
  *      components/table.css            data tables.
  *      features/kanban/calendar.css, timeline.css, charts.css
- *   9. components/toasts.css, layout/auth.css   toasts, sign-in and demo-login screen.
+ *   9. components/toasts.css, layout/auth.css   toasts, sign-in screen.
  *  10. responsive.css                  breakpoints and user-preference queries (reduced motion/transparency, high contrast).
  *                                      Loaded after the components they adjust, and BEFORE agents/camp: their rules are
  *                                      later in the cascade than these overrides, exactly as before.
  *  11. features/kanban/agents.css      agent governance UI (proposals, runs, trust, agent avatars).
  *  12. features/camp.css               camp area (setup, steps, abilities).
  *  13. features/people.css             people screens: lists, households, memberships, badges (print).
+ *  14. features/help.css               the help page: sections, steps, example tables and code samples.
  *
  * Where does a new style go?
  *   - A colour, spacing, radius, font size, shadow or easing value: tokens.css (add a custom property, never a literal).
@@ -58,4 +59,6 @@
 @import './features/camp.css';
 @import './features/attendance.css';
 @import './features/people.css';
+@import './features/help.css';
 @import './features/badge-scanner.css';
+@import './features/install.css';

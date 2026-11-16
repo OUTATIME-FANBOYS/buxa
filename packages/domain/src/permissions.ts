@@ -13,10 +13,10 @@ export const rank = (r: Role) => RANK[r];
 /** `resource:verb`. Add actions here first; the compiler then forces a decision for each role. */
 export const ACTIONS = [
   'org:read', 'org:update', 'org:delete', 'org:transfer_ownership',
-  'members:read', 'members:invite', 'members:change_role', 'members:remove', 'members:leave',
+  'members:read', 'members:read_contact', 'members:invite', 'members:change_role', 'members:remove', 'members:leave',
   'audit:read',
   'data:export', 'data:erase',
-  'people:read', 'people:read_contact', 'people:create', 'people:update', 'people:delete',
+  'people:read', 'people:read_contact', 'people:create', 'people:update', 'people:delete', 'people:authorise_pickup',
   'memberships:manage', 'credentials:manage',
   'attendance:read', 'attendance:record', 'attendance:override', 'attendance:export',
   'events:read', 'events:create', 'events:update', 'events:delete',
@@ -25,11 +25,11 @@ export const ACTIONS = [
 ] as const;
 export type Action = (typeof ACTIONS)[number];
 
-const VIEWER: Action[] = ['org:read', 'members:read', 'people:read', 'attendance:read', 'events:read', 'tasks:read', 'members:leave'];
-const STAFF: Action[] = [...VIEWER, 'people:read_contact', 'people:create', 'people:update', 'attendance:record', 'classes:manage', 'tasks:create', 'tasks:update', 'tasks:move', 'tasks:comment'];
+const VIEWER: Action[] = ['org:read', 'members:read', 'people:read', 'events:read', 'tasks:read', 'members:leave'];
+const STAFF: Action[] = [...VIEWER, 'people:read_contact', 'people:create', 'people:update', 'attendance:read', 'attendance:record', 'classes:manage', 'tasks:create', 'tasks:update', 'tasks:move', 'tasks:comment'];
 const ADMIN: Action[] = [
-  ...STAFF, 'org:update', 'members:invite', 'members:change_role', 'members:remove', 'audit:read',
-  'people:delete', 'memberships:manage', 'credentials:manage', 'attendance:override', 'attendance:export', 'events:create', 'events:update', 'events:delete', 'tasks:delete', 'tasks:manage_board',
+  ...STAFF, 'org:update', 'members:read_contact', 'members:invite', 'members:change_role', 'members:remove', 'audit:read',
+  'people:delete', 'people:authorise_pickup', 'memberships:manage', 'credentials:manage', 'attendance:override', 'attendance:export', 'events:create', 'events:update', 'events:delete', 'tasks:delete', 'tasks:manage_board',
 ];
 const OWNER: Action[] = [...ADMIN, 'org:delete', 'org:transfer_ownership', 'data:export', 'data:erase'];
 

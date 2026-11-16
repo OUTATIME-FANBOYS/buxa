@@ -13,6 +13,9 @@ export interface Logger {
 
 type Write = (line: string) => void;
 
+/** The name of an error, safe to log: never its message, which can echo a token or an address. */
+export const errorName = (error: unknown): string => (error instanceof Error ? error.name : 'unknown');
+
 /** Errors do not survive JSON.stringify, so they are written out by hand. */
 const serialise = (value: unknown): unknown =>
   value instanceof Error ? { type: value.name, message: value.message, stack: value.stack } : value;

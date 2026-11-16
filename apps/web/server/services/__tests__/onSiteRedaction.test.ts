@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { createCamp } from './support';
 
-/** Staff and a viewer see the same on-site list; only staff see minor status and pickup options. */
+/** The on-site list is for staff. Minor status and pickup options are also withheld from any staff member without people:read_contact. */
 describe('AttendanceService on-site redaction', () => {
-  it('withholds minor status and pickup options from a viewer, and shows them to staff', async () => {
+  it('refuses a viewer the on-site list, and shows staff the minor status and pickup options', async () => {
     const camp = await createCamp('UTC', '2027-07-10T09:00:00Z');
     const admin = camp.actor('admin');
     const staff = camp.actor('staff');
@@ -20,10 +20,7 @@ describe('AttendanceService on-site redaction', () => {
     camp.at('2027-07-10T10:30:00Z');
     await camp.attendance.checkIn(staff, { personId: kim.id, method: 'qr' });
 
-    const asViewer = await camp.attendance.onSite(viewer);
-    expect(asViewer.map(row => row.person.givenName)).toEqual(['Ben', 'Kim']);
-    expect(asViewer.map(row => row.isMinor)).toEqual([null, null]);
-    expect(asViewer[1].pickupOptions).toEqual([]);
+    await expect(camp.attendance.onSite(viewer)).rejects.toMatchObject({ statusCode: 403 });
 
     const asStaff = await camp.attendance.onSite(staff);
     expect(asStaff.map(row => row.isMinor)).toEqual([false, true]);

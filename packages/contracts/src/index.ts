@@ -25,7 +25,8 @@ export type OrgSummary = z.infer<typeof OrgSummarySchema>;
 export const CreatedOrgSchema = OrgSummarySchema.extend({ role: RoleSchema });
 export type CreatedOrg = z.infer<typeof CreatedOrgSchema>;
 
-export const MemberSchema = z.object({ id: z.string(), name: z.string(), email: z.string(), role: RoleSchema });
+/** `email` is null unless the reader is an admin or above (members:read_contact). */
+export const MemberSchema = z.object({ id: z.string(), name: z.string(), email: z.string().nullable(), role: RoleSchema });
 export type Member = z.infer<typeof MemberSchema>;
 export const MembersSchema = z.object({ members: z.array(MemberSchema) });
 export type Members = z.infer<typeof MembersSchema>;
