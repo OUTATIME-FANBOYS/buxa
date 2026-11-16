@@ -36,9 +36,10 @@ describe('the sidebar groups', () => {
 });
 
 describe('navFor', () => {
-  it('shows every item to staff and above; a viewer does not see check-in (it needs attendance:record)', () => {
+  it('shows every item to staff and above; a viewer sees no attendance items (check-in, on site, attendance)', () => {
     for (const role of ROLES.filter(r => r !== 'viewer')) expect(hrefs(role)).toEqual(CAMP_NAV.map(item => item.href));
-    expect(hrefs('viewer')).toEqual(CAMP_NAV.map(item => item.href).filter(h => h !== ROUTES.checkIn));
+    const attendance: string[] = [ROUTES.checkIn, ROUTES.onSite, ROUTES.attendance];
+    expect(hrefs('viewer')).toEqual(CAMP_NAV.map(item => item.href).filter(h => !attendance.includes(h)));
   });
 
   it('shows only items needing no permission when there is no camp yet', () => {
