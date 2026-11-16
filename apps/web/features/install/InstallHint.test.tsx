@@ -32,8 +32,8 @@ function setDevice({ userAgent, phone }: { userAgent: string; phone: boolean }) 
   vi.stubGlobal('matchMedia', (query: string) => ({ matches: query.includes('max-width') ? phone : false, media: query, addEventListener() {}, removeEventListener() {} }));
 }
 
-async function render() {
-  await act(async () => { root.render(<InstallHint />); });
+function render() {
+  act(() => { root.render(<InstallHint />); });
 }
 
 beforeEach(() => {
@@ -43,8 +43,8 @@ beforeEach(() => {
   root = createRoot(host);
 });
 
-afterEach(async () => {
-  await act(async () => root.unmount());
+afterEach(() => {
+  act(() => root.unmount());
   host.remove();
   vi.unstubAllGlobals();
   Reflect.deleteProperty(navigator, 'userAgent');
@@ -52,31 +52,31 @@ afterEach(async () => {
 });
 
 describe('install hint', () => {
-  it('shows iOS steps on an iPhone at phone width', async () => {
+  it('shows iOS steps on an iPhone at phone width', () => {
     setDevice({ userAgent: IPHONE, phone: true });
-    await render();
+    render();
     expect(host.querySelector('.install-hint')).not.toBeNull();
     expect(host.textContent).toContain('tap the Share button, then Add to Home Screen');
   });
 
-  it('renders nothing on a desktop browser', async () => {
+  it('renders nothing on a desktop browser', () => {
     setDevice({ userAgent: DESKTOP, phone: false });
-    await render();
+    render();
     expect(host.querySelector('.install-hint')).toBeNull();
   });
 
-  it('"Not now" hides it and remembers the choice in this browser', async () => {
+  it('"Not now" hides it and remembers the choice in this browser', () => {
     setDevice({ userAgent: IPHONE, phone: true });
-    await render();
-    await act(async () => host.querySelector<HTMLButtonElement>('.btn-ghost')?.click());
+    render();
+    act(() => host.querySelector<HTMLButtonElement>('.btn-ghost')?.click());
     expect(host.querySelector('.install-hint')).toBeNull();
     expect(values.get(INSTALL_HINT_KEY)).toBe('1');
   });
 
-  it('stays hidden when the choice was already remembered', async () => {
+  it('stays hidden when the choice was already remembered', () => {
     values.set(INSTALL_HINT_KEY, '1');
     setDevice({ userAgent: IPHONE, phone: true });
-    await render();
+    render();
     expect(host.querySelector('.install-hint')).toBeNull();
   });
 });
