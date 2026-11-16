@@ -23,3 +23,9 @@ Follow `CODING_STANDARDS.md` (layout, types, state machines, patterns, security,
 GitHub branch protection is not available on this plan (private repo, free org). Until it is enabled, these rules are enforced by CI
 and convention. When the org moves to GitHub Team, apply: require PR + `verify` check on `develop` and `main`, require `Only from develop`
 on `main`, block force pushes and deletions, include administrators.
+
+## Pull request titles and descriptions
+
+- **Title:** `<type>(<scope>): <short imperative summary>`, sentence case after the colon, no full stop, under 72 characters. Types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`. Example: `fix(security): block viewer access to attendance logs`.
+- **Body:** use the template (`.github/pull_request_template.md`): What are we fixing, Why, How, How it was verified, Risks and follow-ups.
+- **Emojis:** the template's section headings carry them. Keep them; do not add more inside the text.
