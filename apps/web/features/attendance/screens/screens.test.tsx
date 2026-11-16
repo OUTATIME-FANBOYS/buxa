@@ -104,6 +104,13 @@ describe('OnSiteScreen', () => {
 });
 
 describe('AttendanceScreen', () => {
+  it('links to the export section of the help page from the header', async () => {
+    services.attendance.log.mockResolvedValue([]);
+    const html = renderToStaticMarkup(await AttendanceScreen({ searchParams: {} }));
+    expect(html).toContain('href="/camp/help#exports"');
+    expect(html).toContain('>Help<');
+  });
+
   it('defaults the dates to today in the camp zone, not the server zone', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-11-13T20:30:00Z')); // already the 14th in Kolkata
