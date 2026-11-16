@@ -1,7 +1,7 @@
-# Phase 8: payments and go-live
+# Phase 9: payments and go-live
 
 Status: **spec for review. No code yet.** Roadmap row: "Payments & go-live: Stripe Connect payments, refunds, and every security item needed for real children's data."
-Depends on: every earlier phase. Until this phase is done, the app runs on demo and mock data only (see the real data rule in `docs/ROADMAP.md`).
+Depends on: every earlier phase, and phase 8 (plans to charge for). Until this phase is done, the app runs on demo and mock data only (see the real data rule in `docs/ROADMAP.md`).
 
 ## Part A: payments
 

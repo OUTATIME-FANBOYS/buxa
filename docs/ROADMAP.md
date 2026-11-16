@@ -26,9 +26,10 @@ payments → seats & rosters → scheduling → comms & extras.** Scheduling is 
 | 5 | Scheduling (spec: `docs/phases/05-scheduling.md`) | Conflict detection for staff, rooms and equipment; auto-schedule later | Conflicts reported with zero false negatives in tests |
 | 6 | Comms & extras (spec: `docs/phases/06-comms-extras.md`) | Reminders, waivers, parent and instructor portals, reports | Waiver stored with timestamp and version; reminders idempotent; guardians see only their own children |
 | 7 | Staff board (spec: `docs/phases/07-staff-board.md`) | Tasks and projects on the database, scoped per camp | Existing 60 tests ported or replaced; tenant isolation tested |
-| 8 | Payments & go-live (spec: `docs/phases/08-payments-go-live.md`) | Stripe Connect payments, refunds, and every security item needed for real children's data | Privacy review signed off; payments reconcile with Stripe; external penetration test passed; restore from backup tested |
+| 8 | Licensing & plans (spec: `docs/phases/08-licensing-plans.md`) | Plans per camp, feature entitlements and locks enforced on the server, trials, limits, manual plan assignment | Every locked feature refused without its entitlement (generated test); lapsed camps can read and export |
+| 9 | Payments & go-live (spec: `docs/phases/09-payments-go-live.md`) | Stripe Connect payments for plans and registrations, refunds, and every security item needed for real children's data | Privacy review signed off; payments reconcile with Stripe; external penetration test passed; restore from backup tested |
 
-**Real data rule:** until phase 8 is done, the app runs on mock and demo data only. No family or child's real information is stored, and no card is charged.
+**Real data rule:** until phase 9 is done, the app runs on mock and demo data only. No family or child's real information is stored, and no card is charged.
 
 ## Staff mobile app
 
