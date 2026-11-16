@@ -7,7 +7,8 @@
   .sidebar { position: fixed; inset: 0 auto 0 0; width: 264px; z-index: 70; transform: translateX(-100%); transition: transform .22s var(--ease); box-shadow: var(--shadow); }
   .nav-open .sidebar { transform: none; }
   .nav-scrim { display: block; position: fixed; inset: 0; background: rgba(15,15,12,.4); z-index: 65; } .only-mobile { display: inline-grid; }
-  .auth { grid-template-columns: 1fr; } .auth-hero { display: none; } .auth-brand { display: flex; }
+  /* minmax(0, 1fr), not 1fr: a plain 1fr grows to fit the widest unbreakable child (the card's nowrap buttons) and pushes the page 3px wider than the phone. */
+  .auth { grid-template-columns: minmax(0, 1fr); } .auth-hero { display: none; } .auth-card { padding: var(--s5) var(--s4); } .auth-brand { display: flex; }
   .search { width: auto; flex: 1; margin-left: 0; } .kbd, .save-state { display: none; } .crumb-text { max-width: 96px; } .crumb-sep { display: none; } .crumbs .crumb:nth-child(3) { display: none; }
 }
 @media (max-width: 720px) {
