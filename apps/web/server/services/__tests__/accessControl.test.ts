@@ -28,7 +28,7 @@ describe('viewers do not get custody information (S-03)', () => {
   });
 
   it('a viewer gets the same names but no custody fields in the people list and the household views', async () => {
-    const { camp, ana, householdId } = await family();
+    const { camp, householdId } = await family();
     const viewer = camp.actor('viewer');
     const [row] = (await camp.people.list(viewer, { query: 'Ana' }));
     expect(row).toMatchObject({ givenName: 'Ana', roles: ['guardian'], status: null, onSite: null });
