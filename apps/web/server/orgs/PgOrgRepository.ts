@@ -1,6 +1,6 @@
 import type { Pool } from 'pg';
 import type { CreatedOrg, Member, NewOrgInput, Org, OrgPatchInput, OrgSummary } from '@buxa/contracts';
-import { isUniqueViolation, transaction, withOrg } from '@buxa/db';
+import { isUniqueViolation, withOrg } from '@buxa/db';
 import type { Actor } from '@buxa/domain';
 import { recordAudit } from '../audit/recordAudit';
 import { OrgNotFoundError, SlugTakenError, type OrgRepository } from './OrgRepository';
@@ -10,16 +10,16 @@ interface OrgRow { id: string; name: string; slug: string; created_at: Date; mem
 export class PgOrgRepository implements OrgRepository {
   constructor(private readonly pool: Pool) {}
 
-  /** The organisation does not exist yet, so row-level security cannot scope this one; it uses the privileged pool. */
+  /**
+   * The organisation does not exist yet, so row-level security cannot scope this write. buxa_create_org (migration 0009)
+   * creates the organisation, its owner membership and the audit row in one statement, as the request role.
+   */
   async createWithOwner(input: NewOrgInput, ownerId: string): Promise<CreatedOrg> {
     try {
-      return await transaction(this.pool, async db => {
-        const { rows } = await db.query<OrgSummary>('INSERT INTO orgs(name, slug, timezone) VALUES ($1, $2, $3) RETURNING id, name, slug', [input.name, input.slug, input.timezone]);
-        const org = rows[0];
-        await db.query(`INSERT INTO org_members(org_id, user_id, role) VALUES ($1, $2, 'owner')`, [org.id, ownerId]);
-        await recordAudit(db, { actor: { userId: ownerId, orgId: org.id }, action: 'org.create', entity: 'org', entityId: org.id });
-        return { ...org, role: 'owner' };
-      });
+      const { rows } = await withOrg(this.pool, null, db => db.query<OrgSummary>(
+        'SELECT org_id AS id, org_name AS name, org_slug AS slug FROM buxa_create_org($1, $2, $3, $4)',
+        [input.name, input.slug, input.timezone, ownerId]));
+      return { ...rows[0], role: 'owner' };
     } catch (error) {
       throw isUniqueViolation(error) ? new SlugTakenError() : error;
     }

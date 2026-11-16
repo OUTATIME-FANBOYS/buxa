@@ -1,14 +1,16 @@
-import { badRequest, notFound } from '../../http/errors';
+import { badRequest, conflict, notFound } from '../../http/errors';
+import { isBadgeConflict } from '../../credentials/CredentialRepository';
 import { isMembershipNotFound } from '../../memberships/MembershipRepository';
 import { isHouseholdNotFound, isPersonNotFound } from '../../people/PeopleRepository';
 import { isOrgNotFound } from '../../orgs/OrgRepository';
 
 /**
- * Storage errors that mean "not in this camp" become a 404 the client can show. Values the database refuses (a check constraint, a
- * value too long or of the wrong type) become a 400 with a generic message: the database's own text names constraints and columns,
- * so it is never shown. Anything else is left alone and becomes a 500.
+ * Storage errors that mean "not in this camp" become a 404 the client can show, and a lost write race becomes a 409. Values the
+ * database refuses (a check constraint, a value too long or of the wrong type) become a 400 with a generic message: the database's
+ * own text names constraints and columns, so it is never shown. Anything else is left alone and becomes a 500.
  */
 export function translateRepositoryError(error: unknown): unknown {
+  if (isBadgeConflict(error)) return conflict(error.message);
   if (isPersonNotFound(error)) return notFound('Person not found');
   if (isHouseholdNotFound(error)) return notFound('Household not found');
   if (isMembershipNotFound(error)) return notFound('Membership not found');
