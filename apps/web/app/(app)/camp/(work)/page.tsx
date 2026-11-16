@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { NewCampForm } from '@/features/camp/forms/NewCampForm';
-import { loadCampHome } from '@/features/camp/lib/campHome';
+import { loadCampHome } from '@/logic/composers/index.server';
 import { HomePage } from '@/features/kanban/pages';
 import { getCurrentCamp, getOptionalSession } from '@/server/session';
 

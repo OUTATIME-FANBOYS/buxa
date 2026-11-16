@@ -1,5 +1,5 @@
 import type { Tone } from '../tones';
-import type { CampHome } from '../../../features/camp/lib/campHome';
+import type { CampHome } from '../../composers/index.server';
 import type { TaskCounts } from './homeTasks';
 
 export interface HomeCard { label: string; value: number; note: string; tone: Tone; icon: string; strong?: boolean }

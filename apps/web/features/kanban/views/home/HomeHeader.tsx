@@ -1,6 +1,6 @@
 import { PageHeader } from '../../../../components/ui/PageHeader';
 import { RenameCampButton } from '../../../camp/forms/RenameCampButton';
-import { type CampHome } from '../../../camp/lib/campHome';
+import { type CampHome } from '../../../../logic/composers/index.server';
 import { greetingFor } from '../../../../logic/common';
 
 /** The one header for Home: the greeting, the camp as context, and Rename for the roles allowed to rename (checked on the server). */

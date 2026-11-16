@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import type { CampHome } from '../camp/lib/campHome';
+import type { CampHome } from '../../logic/composers/index.server';
 import { ROUTES, boardPath } from '../../config/routes';
 import { Empty } from '../../components/ui/Empty';
 import { useStore } from './state/store';

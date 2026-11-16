@@ -3,7 +3,7 @@ import { authorize } from '@buxa/domain';
 import { Empty } from '../../../components/ui/Empty';
 import { PageHeader } from '../../../components/ui/PageHeader';
 import { CheckInConsole } from '../checkIn/CheckInConsole';
-import { campActor, campZone } from '../lib/campActor';
+import { campActor, campZone } from '../../../logic/composers/index.server';
 
 /** The check-in page. Without attendance:record the person gets a friendly answer, not an error. */
 export async function CheckInScreen() {

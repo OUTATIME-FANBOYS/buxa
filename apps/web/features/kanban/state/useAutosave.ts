@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AppState } from '../../../logic/common';
-import { storage, type SaveStatus } from './persistence';
+import { storage, type SaveStatus } from '../../../logic/composers';
 
 /** Saves the state shortly after it stops changing and reports whether the save worked. The first render is not a change. */
 export function useAutosave(state: AppState): SaveStatus {

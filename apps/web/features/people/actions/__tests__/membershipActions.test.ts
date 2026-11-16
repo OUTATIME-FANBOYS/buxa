@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { personPath } from '../../../../config/routes';
 import { idle } from '../../../../logic/common';
 import { forbidden } from '../../../../server/http/errors';
-import { addMembershipAction } from '../addMembershipAction';
-import { revokeMembershipAction } from '../revokeMembershipAction';
+import { addMembershipAction } from '../../../../logic/composers';
+import { revokeMembershipAction } from '../../../../logic/composers';
 import { formOf, IDS } from './form';
 
 const h = vi.hoisted(() => ({
@@ -13,7 +13,7 @@ const h = vi.hoisted(() => ({
 }));
 vi.mock('next/cache', () => ({ revalidatePath: h.revalidatePath }));
 vi.mock('../../../../server/runtime', () => ({ getRuntime: () => ({ services: { memberships: h.memberships } }) }));
-vi.mock('../../lib/camp', () => ({ currentActor: async () => h.actor }));
+vi.mock('../../../../logic/composers/people/camp', () => ({ currentActor: async () => h.actor }));
 
 const season = { personId: IDS.person, plan: 'Summer 2027', startsOn: '2027-07-01', endsOn: '2027-08-20' };
 

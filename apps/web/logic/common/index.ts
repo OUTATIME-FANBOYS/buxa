@@ -4,6 +4,7 @@ export * from './attendance/card';
 export * from './attendance/checkInState';
 export * from './attendance/checkOutInput';
 export * from './attendance/checkOutState';
+export * from './attendance/exportHeaders';
 export * from './attendance/inputs';
 export * from './attendance/labels';
 export * from './attendance/logFilter';

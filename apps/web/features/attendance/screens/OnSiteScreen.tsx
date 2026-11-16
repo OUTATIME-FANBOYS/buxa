@@ -4,7 +4,7 @@ import { Empty } from '../../../components/ui/Empty';
 import { PageHeader } from '../../../components/ui/PageHeader';
 import { getRuntime } from '../../../server/runtime';
 import { ON_SITE_LIST_ID, OnSiteRow } from '../checkOut/OnSiteRow';
-import { campActor, campZone } from '../lib/campActor';
+import { campActor, campZone } from '../../../logic/composers/index.server';
 import { onSiteSummary, toOnSiteRow } from '../../../logic/common';
 
 /** Everyone on site now, oldest arrival first, with check-out for staff. */

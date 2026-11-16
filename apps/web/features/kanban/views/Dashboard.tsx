@@ -1,7 +1,7 @@
 'use client';
 
 import { Empty } from '../../../components/ui/Empty';
-import type { CampHome } from '../../camp/lib/campHome';
+import type { CampHome } from '../../../logic/composers/index.server';
 import { useStore } from '../state/store';
 import { taskCounts } from '../../../logic/common';
 import { HomeHeader } from './home/HomeHeader';

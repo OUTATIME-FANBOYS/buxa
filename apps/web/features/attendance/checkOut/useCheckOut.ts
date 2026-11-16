@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useReducer } from 'react';
-import { checkOutAction } from '../actions/checkOut';
+import { checkOutAction } from '../../../logic/composers';
 import { checkOutInputFor } from '../../../logic/common';
 import { CHECK_OUT_CLOSED, checkOutReducer, type CheckOutDraft } from '../../../logic/common';
 

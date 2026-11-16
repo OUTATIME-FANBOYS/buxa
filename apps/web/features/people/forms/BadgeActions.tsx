@@ -4,8 +4,8 @@ import { useActionState } from 'react';
 import { BadgeCard } from '../../badge/BadgeCard';
 import { PrintButton } from '../../../elements';
 import { idle } from '../../../logic/common';
-import { issueBadgeAction } from '../actions/issueBadgeAction';
-import { revokeBadgeAction } from '../actions/revokeBadgeAction';
+import { issueBadgeAction } from '../../../logic/composers';
+import { revokeBadgeAction } from '../../../logic/composers';
 import type { BadgeState } from '../../../logic/common';
 import { FormMessage } from './FormMessage';
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, type ReactNode } from 'react';
-import type { SessionIdentity } from './state/actions/auth';
+import type { SessionIdentity } from '../../logic/composers';
 import { useStore } from './state/store';
 
 /**

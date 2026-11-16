@@ -5,9 +5,9 @@ import { personPath } from '../../../config/routes';
 import { Empty } from '../../../components/ui/Empty';
 import { PageHeader } from '../components/PageHeader';
 import { EditPersonForm } from '../forms/EditPersonForm';
-import { currentActor } from '../lib/camp';
+import { currentActor } from '../../../logic/composers/index.server';
 import { displayName } from '../../../logic/common';
-import { loadPerson } from '../lib/loadPerson';
+import { loadPerson } from '../../../logic/composers/index.server';
 
 /** Change one person's details. Only people:update may; everyone else is told so, without a form to fill in. */
 export async function EditPerson({ id }: { id: string }) {

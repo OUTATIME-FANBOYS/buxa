@@ -4,7 +4,7 @@ import { useActionState, useEffect, useState } from 'react';
 import { Dialog } from '../../../components/ui/Dialog';
 import { useUi } from '../../../components/ui/UiProvider';
 import { fieldError, idle } from '../../../logic/common';
-import { renameCampAction } from '../actions/renameCampAction';
+import { renameCampAction } from '../../../logic/composers';
 import { TextField } from '../../../elements';
 
 const FORM_ID = 'rename-camp';

@@ -12,8 +12,8 @@ vi.mock('next/navigation', () => ({ redirect: (url: string) => { throw new Error
 
 import MaintenancePage from '../../app/maintenance/page';
 import { MAINTENANCE_MESSAGE } from '../../logic/common';
-import { signIn } from '../../features/auth/actions/signIn';
-import { signUp } from '../../features/auth/actions/signUp';
+import { signIn } from '../../logic/composers';
+import { signUp } from '../../logic/composers';
 import { idle } from '../../logic/common';
 import { MAINTENANCE_PATH, isRefusing } from '../availability';
 import { installRuntime } from '../runtime';

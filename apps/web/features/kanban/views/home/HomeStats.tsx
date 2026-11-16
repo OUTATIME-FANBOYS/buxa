@@ -1,4 +1,4 @@
-import type { CampHome } from '../../../camp/lib/campHome';
+import type { CampHome } from '../../../../logic/composers/index.server';
 import type { TaskCounts } from '../../../../logic/common';
 import { homeCards } from '../../../../logic/common';
 import { StatCard } from './StatCard';

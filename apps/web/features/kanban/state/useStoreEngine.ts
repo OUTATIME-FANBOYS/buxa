@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AppState } from '../../../logic/common';
 import { createSync, type SyncState, type Updater } from '../../../logic/common';
-import { createActions } from './actions';
-import { loadState } from './persistence';
+import { createActions } from '../../../logic/composers';
+import { loadState } from '../../../logic/composers';
 import { useAutosave } from './useAutosave';
 import { useTheme } from './useTheme';
 

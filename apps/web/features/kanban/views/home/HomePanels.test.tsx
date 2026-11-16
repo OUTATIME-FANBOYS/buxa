@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import type { CampHome } from '../../../camp/lib/campHome';
+import type { CampHome } from '../../../../logic/composers/index.server';
 import { HomeStats } from './HomeStats';
 import { OnSitePanel } from './OnSitePanel';
 import { StaffTasksPanel } from './StaffTasksPanel';

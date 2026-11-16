@@ -6,7 +6,7 @@ import { getRuntime } from '../../../server/runtime';
 import { Notice } from '../components/Notice';
 import { LogFilters } from '../components/LogFilters';
 import { LogTable } from '../components/LogTable';
-import { campActor, campZone } from '../lib/campActor';
+import { campActor, campZone } from '../../../logic/composers/index.server';
 import { attendanceExportPath } from '../../../logic/common';
 import { parseLogFilter } from '../../../logic/common';
 import { HELP_LINK_LABEL, helpLink } from '../../../logic/common';

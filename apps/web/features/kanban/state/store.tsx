@@ -17,6 +17,6 @@ export function useStore() {
   return useMemo(() => ({ s, actions, saveStatus, sync, serverInfo, ...deriveView(s) }), [s, actions, saveStatus, sync, serverInfo]);
 }
 
-export type { Actions } from './actions';
-export type { SaveStatus } from './persistence';
+export type { Actions } from '../../../logic/composers';
+export type { SaveStatus } from '../../../logic/composers';
 export { normalize } from '../../../logic/common';

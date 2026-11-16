@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import { TaskDrawer } from './components/drawer/TaskDrawer';
 import { WorkGate } from './WorkGate';
-import type { SessionIdentity } from './state/actions/auth';
+import type { SessionIdentity } from '../../logic/composers';
 import { StoreProvider } from './state/store';
 import { TaskDrawerProvider } from './state/TaskDrawerContext';
 

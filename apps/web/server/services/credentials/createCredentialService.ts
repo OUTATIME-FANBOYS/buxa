@@ -1,7 +1,7 @@
 import { credentialPayload, parseCredentialPayload } from '@buxa/domain';
 import { assertAllowed } from '../../auth/authorize';
 import { conflict, notFound } from '../../http/errors';
-import { generateCredentialToken, hashCredentialToken } from '../../../lib/qr/tokens';
+import { generateCredentialToken, hashCredentialToken } from '../../../logic/composers/index.server';
 import { campToday } from '../shared/campDay';
 import { guard } from '../shared/errors';
 import { campZone, toSummary } from '../shared/views';

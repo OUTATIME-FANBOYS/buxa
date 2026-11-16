@@ -5,7 +5,7 @@ import type { Membership } from '@buxa/contracts';
 import { Icon } from '../../../elements';
 import { Menu } from '../../../components/ui/Menu';
 import { ROUTES } from '../../../config/routes';
-import { selectCampAction } from '../actions/selectCampAction';
+import { selectCampAction } from '../../../logic/composers';
 
 /** The camp name in the top bar; opens a menu to switch camp or start another. */
 export function CampSwitcher({ camps, current }: { camps: readonly Membership[]; current: Membership | null }) {

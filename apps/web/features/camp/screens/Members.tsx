@@ -2,7 +2,7 @@ import { can } from '@buxa/domain';
 import { getRuntime } from '../../../server/runtime';
 import { MembersTable } from '../components/MembersTable';
 import { PageHeader } from '../../../components/ui/PageHeader';
-import { campContext } from '../lib/campContext';
+import { campContext } from '../../../logic/composers/index.server';
 
 export async function Members() {
   const { actor } = await campContext();

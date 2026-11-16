@@ -26,9 +26,9 @@ vi.mock('../../scanner/ScanField', () => ({
 vi.mock('../../scanner/CameraScanner', () => ({
   CameraScanner: () => 'CAMERA',
 }));
-vi.mock('../actions/searchPeople', () => ({ searchPeopleAction: async () => ({ kind: 'ok', value: [] }) }));
-vi.mock('../actions/checkIn', () => ({ checkInAction: async () => ({ kind: 'ok', value: { ok: false, reason: 'archived' } }) }));
-vi.mock('../actions/checkOut', () => ({ checkOutAction: async () => ({ kind: 'ok', value: { ok: false, reason: 'not_on_site' } }) }));
+vi.mock('../../../logic/composers/attendance/searchPeople', () => ({ searchPeopleAction: async () => ({ kind: 'ok', value: [] }) }));
+vi.mock('../../../logic/composers/attendance/checkIn', () => ({ checkInAction: async () => ({ kind: 'ok', value: { ok: false, reason: 'archived' } }) }));
+vi.mock('../../../logic/composers/attendance/checkOut', () => ({ checkOutAction: async () => ({ kind: 'ok', value: { ok: false, reason: 'not_on_site' } }) }));
 
 const { CheckInScreen } = await import('./CheckInScreen');
 const { OnSiteScreen } = await import('./OnSiteScreen');

@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ROUTES } from '../../../../config/routes';
 import { idle } from '../../../../logic/common';
-import { renameCampAction } from '../renameCampAction';
-import { selectCampAction } from '../selectCampAction';
+import { renameCampAction } from '../../../../logic/composers';
+import { selectCampAction } from '../../../../logic/composers';
 import { formOf, startWorld } from './support';
 
 const mocks = vi.hoisted(() => ({ requireSession: vi.fn(), rememberCamp: vi.fn(), revalidatePath: vi.fn() }));

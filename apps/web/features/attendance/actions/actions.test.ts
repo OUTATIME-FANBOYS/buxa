@@ -16,12 +16,12 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock('../../../server/runtime', () => ({ getRuntime: () => ({ services: mocks.services, rateLimiter: mocks.rateLimiter }) }));
 vi.mock('../../../server/session', () => ({ requireSession: vi.fn(), getCurrentCamp: vi.fn(), toActor: vi.fn() }));
-vi.mock('../lib/campActor', () => ({ campActor: mocks.campActor }));
+vi.mock('../../../logic/composers/attendance/campActor', () => ({ campActor: mocks.campActor, campZone: vi.fn(async () => 'Europe/London') }));
 
-const { checkInAction } = await import('./checkIn');
-const { checkOutAction } = await import('./checkOut');
-const { scanCodeAction } = await import('./scanCode');
-const { searchPeopleAction } = await import('./searchPeople');
+const { checkInAction } = await import('../../../logic/composers');
+const { checkOutAction } = await import('../../../logic/composers');
+const { scanCodeAction } = await import('../../../logic/composers');
+const { searchPeopleAction } = await import('../../../logic/composers');
 
 const actor: Actor = { userId: 'u1', orgId: 'o1', role: 'staff' };
 const PERSON = '6f1c2b8e-9a3d-4c5e-8f70-1a2b3c4d5e6f';

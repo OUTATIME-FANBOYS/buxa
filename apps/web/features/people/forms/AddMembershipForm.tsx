@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef } from 'react';
 import { Field } from '../../../elements';
 import { fieldError, idle } from '../../../logic/common';
-import { addMembershipAction } from '../actions/addMembershipAction';
+import { addMembershipAction } from '../../../logic/composers';
 import { FormMessage } from './FormMessage';
 
 /** A new membership: a plan name and a date range (camp-local days, both included). */

@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { personPath } from '../../../../config/routes';
 import { idle } from '../../../../logic/common';
 import { conflict, forbidden } from '../../../../server/http/errors';
-import { issueBadgeAction } from '../issueBadgeAction';
-import { revokeBadgeAction } from '../revokeBadgeAction';
+import { issueBadgeAction } from '../../../../logic/composers';
+import { revokeBadgeAction } from '../../../../logic/composers';
 import { formOf, IDS } from './form';
 
 const h = vi.hoisted(() => ({
@@ -13,7 +13,7 @@ const h = vi.hoisted(() => ({
 }));
 vi.mock('next/cache', () => ({ revalidatePath: h.revalidatePath }));
 vi.mock('../../../../server/runtime', () => ({ getRuntime: () => ({ services: { credentials: h.credentials } }) }));
-vi.mock('../../lib/camp', () => ({ currentActor: async () => h.actor }));
+vi.mock('../../../../logic/composers/people/camp', () => ({ currentActor: async () => h.actor }));
 
 const SECRET_TOKEN = 'TOKEN-SHOULD-NOT-LEAVE-THE-SERVER';
 

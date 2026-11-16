@@ -6,8 +6,8 @@ import { Empty } from '../../../components/ui/Empty';
 import { getRuntime } from '../../../server/runtime';
 import { PageHeader } from '../components/PageHeader';
 import { NewPersonForm } from '../forms/NewPersonForm';
-import { currentActor } from '../lib/camp';
-import { loadHousehold } from '../lib/loadHousehold';
+import { currentActor } from '../../../logic/composers/index.server';
+import { loadHousehold } from '../../../logic/composers/index.server';
 import { toHouseholdChoices } from '../../../logic/common';
 
 /**

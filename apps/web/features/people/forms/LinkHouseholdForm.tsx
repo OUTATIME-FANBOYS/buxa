@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef } from 'react';
 import { Field } from '../../../elements';
 import { fieldError, idle } from '../../../logic/common';
-import { linkHouseholdAction } from '../actions/linkHouseholdAction';
+import { linkHouseholdAction } from '../../../logic/composers';
 import { FormMessage } from './FormMessage';
 
 export interface PersonOption { id: string; name: string }

@@ -3,8 +3,8 @@
 import { useActionState, useState, type ChangeEvent } from 'react';
 import { Field } from '../../../elements';
 import { fieldError, idle, type ActionState } from '../../../logic/common';
-import { signIn } from '../actions/signIn';
-import { signUp } from '../actions/signUp';
+import { signIn } from '../../../logic/composers';
+import { signUp } from '../../../logic/composers';
 
 export type AuthMode = 'in' | 'up';
 

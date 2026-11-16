@@ -17,9 +17,9 @@ import { createTestIdentityProvider } from '../../../server/__tests__/tokens';
 import { CAMP_COOKIE, getSession } from '../../../server/session';
 import { gotrue, stubIdentityProvider } from '../../../server/session/__tests__/gotrue';
 import { FakeCookieStore, SESSION_COOKIE, personWithCamps, sessionCookieValue } from '../../../server/session/__tests__/support';
-import { signIn } from './signIn';
-import { signOut } from './signOut';
-import { signUp } from './signUp';
+import { signIn } from '../../../logic/composers';
+import { signOut } from '../../../logic/composers';
+import { signUp } from '../../../logic/composers';
 
 const form = (fields: Record<string, string>): FormData => { const data = new FormData(); for (const [k, v] of Object.entries(fields)) data.set(k, v); return data; };
 const sub = crypto.randomUUID();

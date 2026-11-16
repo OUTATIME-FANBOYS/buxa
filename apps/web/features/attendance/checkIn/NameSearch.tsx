@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { ActionOutcome } from '../../../logic/common';
-import { searchPeopleAction } from '../actions/searchPeople';
+import { searchPeopleAction } from '../../../logic/composers';
 import type { PersonCard } from '../../../logic/common';
 import { StatusPill } from '../components/StatusPill';
 import { attendanceDisplayName } from '../../../logic/common';

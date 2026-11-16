@@ -10,9 +10,9 @@ import { ContactDetails } from '../components/ContactDetails';
 import { HouseholdPanel } from '../components/HouseholdPanel';
 import { MembershipsPanel } from '../components/MembershipsPanel';
 import { PersonHeader } from '../components/PersonHeader';
-import { currentActor } from '../lib/camp';
+import { currentActor } from '../../../logic/composers/index.server';
 import { readListParams } from '../../../logic/common';
-import { loadPerson } from '../lib/loadPerson';
+import { loadPerson } from '../../../logic/composers/index.server';
 
 /**
  * One person. What is shown follows the role: contact details come back null for viewers (and are then left out), link and

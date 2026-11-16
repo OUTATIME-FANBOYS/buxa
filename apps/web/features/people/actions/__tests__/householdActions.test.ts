@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { personPath } from '../../../../config/routes';
 import { idle } from '../../../../logic/common';
 import { conflict, forbidden } from '../../../../server/http/errors';
-import { linkHouseholdAction } from '../linkHouseholdAction';
-import { unlinkHouseholdAction } from '../unlinkHouseholdAction';
+import { linkHouseholdAction } from '../../../../logic/composers';
+import { unlinkHouseholdAction } from '../../../../logic/composers';
 import { formOf, IDS } from './form';
 
 const h = vi.hoisted(() => ({
@@ -13,7 +13,7 @@ const h = vi.hoisted(() => ({
 }));
 vi.mock('next/cache', () => ({ revalidatePath: h.revalidatePath }));
 vi.mock('../../../../server/runtime', () => ({ getRuntime: () => ({ services: { people: h.people } }) }));
-vi.mock('../../lib/camp', () => ({ currentActor: async () => h.actor }));
+vi.mock('../../../../logic/composers/people/camp', () => ({ currentActor: async () => h.actor }));
 
 const link = { householdId: IDS.household, personId: IDS.person, relationship: 'Mother', isGuardian: 'on' };
 

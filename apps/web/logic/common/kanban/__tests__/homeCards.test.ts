@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { CampHome } from '../../../../features/camp/lib/campHome';
+import type { CampHome } from '../../../composers/index.server';
 import type { TaskCounts } from '../homeTasks';
 import { homeCards } from '../homeCards';
 

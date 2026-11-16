@@ -5,7 +5,7 @@ import { ROUTES } from '../../../config/routes';
 import { Empty } from '../../../components/ui/Empty';
 import { isHttpError } from '../../../server/http/errors';
 import { getRuntime } from '../../../server/runtime';
-import { currentActor } from '../lib/camp';
+import { currentActor } from '../../../logic/composers/index.server';
 import { readListParams, toListQuery, type ListParams } from '../../../logic/common';
 import { PeopleSearch } from '../components/PeopleSearch';
 import { PeopleTable } from '../components/PeopleTable';

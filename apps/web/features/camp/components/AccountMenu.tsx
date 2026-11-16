@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import type { User } from '@buxa/contracts';
 import { Avatar } from '../../../elements';
 import { Menu } from '../../../components/ui/Menu';
-import { signOut } from '../../auth/actions/signOut';
+import { signOut } from '../../../logic/composers';
 import { useDarkMode } from './useDarkMode';
 
 /** The avatar menu: who you are, light/dark, sign out. Signing out is a Server Action submitted through a form. */

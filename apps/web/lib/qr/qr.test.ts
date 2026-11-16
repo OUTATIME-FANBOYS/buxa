@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import jsQR from 'jsqr';
 import { credentialPayload, isCredentialToken } from '@buxa/domain';
-import { generateCredentialToken, hashCredentialToken } from './tokens';
+import { generateCredentialToken, hashCredentialToken } from '../../logic/composers/index.server';
 import { qrPath, qrSvg } from '../../logic/common';
 
 describe('credential tokens', () => {
