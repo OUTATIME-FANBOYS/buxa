@@ -6,7 +6,7 @@
 .page-head { display: flex; gap: var(--s4); justify-content: space-between; align-items: flex-start; flex-wrap: wrap; }
 .page-title { display: grid; gap: var(--s1); min-width: 0; max-width: 720px; } .page-actions { display: flex; gap: var(--s3); align-items: center; flex-wrap: wrap; }
 .proj-meta { display: flex; align-items: center; gap: var(--s4); flex-wrap: wrap; margin-top: var(--s2); }
-.proj-progress { display: flex; align-items: center; gap: var(--s3); } .proj-progress .progress { width: 120px; }
+.proj-progress { display: flex; align-items: center; gap: var(--s3); } .proj-progress .progress { width: 120px; } .proj-progress .progress span, .proj-bars .progress span { background: var(--f-ok); }
 .progress { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; } .progress span { display: block; height: 100%; background: var(--tone-f, var(--f-brand)); border-radius: 3px; transition: width .3s var(--ease); }
 .view { min-height: 0; overflow: auto; }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-3); padding: var(--s5); display: grid; gap: var(--s4); align-content: start; min-width: 0; }
@@ -17,7 +17,7 @@
 .stat-top { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s2); min-height: 32px; } .stat-icon, .h-icon { display: inline-grid; place-items: center; flex: none; background: var(--tone-soft); color: var(--tone-ink); }
 .stat-icon { width: 32px; height: 32px; border-radius: var(--r-2); } .h-icon { width: 22px; height: 22px; border-radius: var(--r-1); margin-right: var(--s2); }
 .stat-label { font-size: var(--fs-s); font-weight: 600; color: var(--text-2); } .stat-num { font-size: var(--fs-n); font-weight: 600; letter-spacing: -.03em; line-height: 1.2; font-variant-numeric: tabular-nums; }
-.stat-strong .stat-num { color: var(--tone); }
+.stat-strong .stat-num { color: var(--tone); } .stat.tone-crit .stat-icon { background: var(--coral); color: var(--on-fill); } .stat.tone-ok .stat-icon { background: var(--f-ok); color: var(--on-fill); }
 .completion { display: flex; gap: var(--s5); align-items: center; flex-wrap: wrap; } .ring { position: relative; flex: none; } .ring-text { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
 .ring-text .stat-num { font-size: 24px; }
 .proj-bars { flex: 1; min-width: 180px; display: grid; gap: var(--s3); } .proj-bars li a { display: flex; justify-content: space-between; align-items: center; gap: var(--s2); margin-bottom: 6px; font-weight: 600; } .pb-meta { display: inline-flex; align-items: center; gap: var(--s2); flex: none; } .proj-bars li a:hover { color: var(--accent); }

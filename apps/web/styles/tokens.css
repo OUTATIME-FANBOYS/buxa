@@ -23,6 +23,7 @@
   --agent: #4f2d66; --agent-soft: #efe7f4; --agent-ink: #36213e; --f-agent: #7b5597;
   --f-neutral: #6b7480; --neutral-soft: #dce3e8; --neutral-ink: #4a4e5c;
   --accent-ink: #ffffff; --on-solid: #ffffff; --on-inverse-accent: #9fd6d7;
+  --coral: #f05d5e; --on-coral: #14161c; --on-fill: #14161c;
   --hero-bg: #36213e; --hero-fg: #ffffff; --hero-fg-2: #c9b2d9;
   --p-low: var(--text-3); --p-medium: var(--accent); --p-high: var(--warn); --p-critical: var(--crit);
   --track: #d3dbe0; --grid: #dce3e8;
@@ -47,6 +48,7 @@
   --agent: #c9b2d9; --agent-soft: #34263f; --agent-ink: #e0d0ee; --f-agent: #9b7bb8;
   --f-neutral: #8a90a0; --neutral-soft: #373a46; --neutral-ink: #b9bec9;
   --accent-ink: #1e2026; --on-solid: #1e2026; --on-inverse-accent: #0a4f51;
+  --coral: #f05d5e; --on-coral: #14161c; --on-fill: #14161c;
   --hero-bg: #36213e; --hero-fg: #e7ecef; --hero-fg-2: #c9b2d9;
   --track: #3a3e4b; --grid: #31343f;
   --shadow-1: 0 1px 2px rgba(0,0,0,.35);
