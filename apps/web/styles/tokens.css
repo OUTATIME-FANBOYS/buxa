@@ -33,6 +33,7 @@
   --s1: .25rem; --s2: .5rem; --s3: .75rem; --s4: 1rem; --s5: 1.5rem; --s6: 2rem; --s7: 3rem;
   --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
   --fs-s: .75rem; --fs-b: .875rem; --fs-h: 1.375rem; --fs-n: 1.75rem;
+  --control-h: 44px; /* one height for inputs, selects and buttons; 44px is also the touch target */
   --ease: cubic-bezier(.2,.7,.2,1); --ease-out: cubic-bezier(.22,1,.36,1);
   --material: color-mix(in srgb, var(--surface) 78%, transparent);
   color-scheme: light;

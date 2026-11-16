@@ -5,7 +5,7 @@ import type { ListParams } from '../lib/listQuery';
 /** A plain GET form: works without JavaScript, and the search is bookmarkable (`?q=` and `?role=`). */
 export function PeopleSearch({ params }: { params: ListParams }) {
   return (
-    <form role="search" method="get" action={ROUTES.people} className="row">
+    <form role="search" method="get" action={ROUTES.people} className="form-row">
       <label className="field">
         <span className="field-label">Search by name</span>
         <input type="search" name="q" defaultValue={params.q} maxLength={80} autoComplete="off" />

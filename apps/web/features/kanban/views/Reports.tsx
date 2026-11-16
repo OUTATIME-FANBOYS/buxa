@@ -4,7 +4,7 @@ import { boardPath } from '@/config/routes';
 import { useStore } from '../state/store';
 import { Empty, Progress, Segmented } from '@/components/ui';
 import { Bars, HBars, Legend, Ring } from '../components/charts';
-import { Stat } from './Dashboard';
+import { StatCard as Stat } from './home/StatCard';
 import { addDays, diffDays, fmt, isoDay, today } from '../lib/dates';
 import { PRIORITIES, PRIORITY_LABEL } from '../lib/tasks';
 import { Avatar, Pill } from '@/components/ui';

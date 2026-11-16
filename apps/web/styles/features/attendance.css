@@ -39,8 +39,8 @@
 .choice { display: flex; align-items: center; gap: var(--s3); padding: var(--s2) var(--s3); border: 1px solid var(--line-strong); border-radius: var(--r-1); cursor: pointer; flex-wrap: wrap; }
 .choice input { width: 20px; height: 20px; }
 
-.log-filters { display: flex; gap: var(--s3); align-items: end; flex-wrap: wrap; }
-.log-filters .field { min-width: 160px; flex: 1 1 160px; }
-.log-filters .btn { min-width: 44px; }
+.log-filters { margin: 0; }
+.log-export { margin-left: auto; }
+@media (max-width: 720px) { .log-export { margin-left: 0; } }
 .log-table th[scope='row'] { font-weight: 600; text-align: left; }
 .num { font-variant-numeric: tabular-nums; white-space: nowrap; }

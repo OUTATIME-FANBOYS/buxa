@@ -1,14 +1,14 @@
 import type { Metadata } from 'next';
-import { NewCampForm, Overview } from '@/features/camp';
+import { NewCampForm, loadCampHome } from '@/features/camp';
 import { HomePage } from '@/features/kanban';
 import { getCurrentCamp, getOptionalSession } from '@/server/session';
 
 export const metadata: Metadata = { title: 'Home' };
 
-/** Home: the camp's overview above the task dashboard. With a session but no camp yet, first-run setup comes first. */
+/** Home: one page with the camp's facts and the staff tasks. With a session but no camp yet, first-run setup comes first. */
 export default async function Page() {
   const session = await getOptionalSession();
   const camp = session ? await getCurrentCamp(session) : null;
   if (session && !camp) return <NewCampForm first />;
-  return <HomePage overview={camp ? <Overview /> : null} />;
+  return <HomePage camp={camp ? await loadCampHome() : null} />;
 }
