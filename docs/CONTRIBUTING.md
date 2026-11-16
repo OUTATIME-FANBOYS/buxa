@@ -43,8 +43,11 @@ Vitest is the unit test runner for the whole repo, including `apps/web`, `packag
 
 ## Merging
 
-- **Feature and fix PRs** are squash-merged into `develop`.
-- **Release PRs** (`develop` to `main`) are merged with a merge commit, so the two branches do not diverge.
+- **Work branches into a phase branch:** feature and fix PRs are **squash-merged** into their phase branch, one commit per feature.
+- **Phase branch into `develop`:** a **merge commit** (not squash, not rebase). The phase's history stays visible.
+- **`develop` into `main`:** a **merge commit**, then the version tag (`vX.Y.Z`) on the `main` commit.
+- Nothing merges into `develop` by squash or rebase. Phase branches may be renamed later; the rule applies to whatever branch merges into `develop`.
+- Do not merge a phase until its tests pass and its exit criteria in `docs/phases/` are met.
 
 ## Release
 
