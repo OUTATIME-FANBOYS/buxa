@@ -51,7 +51,7 @@ There are no browser-only accounts and no shared demo password. Sample accounts 
 ## Known limits (to fix before release)
 - No rate limiting yet (sign-in is Supabase's; our endpoints need limits, especially `POST /v1/orgs`).
 - The sign-in user row and membership lookup run as `SECURITY DEFINER` functions (`buxa_upsert_user`, `buxa_memberships_of`, migration `0009`), called as `buxa_app`. They do not need a login that bypasses row-level security. The runtime login itself is still to be set up as `docs/deploy.md` describes.
-- Email verification relies on Supabase's "Confirm email" setting, not on a claim in the token (`user_metadata` is user-editable, so `email_verified` there proves nothing). The API refuses to start in production if that setting is off. Revisit when invitations link people by email.
+- Email verification relies on Supabase's "Confirm email" setting, not on a claim in the token (`user_metadata` is user-editable, so `email_verified` there proves nothing). In production, if that setting is off, the API answers 503 on every route and the app shows a maintenance page instead of its pages and forms (checked on first use, not at process start). Revisit when invitations link people by email.
 - `org_members` is read-only for request handling (migration `0006`); the only write path is organisation creation, through the `buxa_create_org` function. Member-management routes must add narrow write policies, not widen the read one.
 - Multi-factor authentication for staff accounts that see children's data is not enforced yet.
 

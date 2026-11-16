@@ -13,6 +13,8 @@ export interface HouseholdPanelProps {
   householdOptions: readonly HouseholdOption[];
   canUpdate: boolean;
   canCreate: boolean;
+  /** Whether the pick-up flag can be set when linking (people:authorise_pickup, admin and above). */
+  canAuthorisePickup: boolean;
   /** The search for someone to link, from `?q=`; empty until staff search. */
   query: string;
   /** People matching `query` (never this person). */
@@ -23,7 +25,7 @@ export interface HouseholdPanelProps {
  * The households this person belongs to, with each member's guardian and pick-up status. Staff can link anyone in the camp to any
  * household: they search by name first, then choose from the matches. Adding a child starts from here too.
  */
-export function HouseholdPanel({ personId, households, householdOptions, canUpdate, canCreate, query, linkable }: HouseholdPanelProps) {
+export function HouseholdPanel({ personId, households, householdOptions, canUpdate, canCreate, canAuthorisePickup, query, linkable }: HouseholdPanelProps) {
   return (
     <section className="panel" aria-labelledby="household-heading">
       <h2 id="household-heading" className="people-heading">Household</h2>
@@ -45,7 +47,7 @@ export function HouseholdPanel({ personId, households, householdOptions, canUpda
           <PersonFinder personId={personId} query={query} />
           {query === '' && <p className="muted">Search by name to find someone in the camp.</p>}
           {query !== '' && linkable.length === 0 && <p className="muted">No one matches that search.</p>}
-          {linkable.length > 0 && <LinkHouseholdForm households={householdOptions} people={linkable} />}
+          {linkable.length > 0 && <LinkHouseholdForm households={householdOptions} people={linkable} canAuthorisePickup={canAuthorisePickup} />}
         </div>
       )}
     </section>

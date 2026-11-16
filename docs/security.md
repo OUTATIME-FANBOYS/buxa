@@ -34,11 +34,20 @@ Status: **the app is not ready for real children's data.** Real data is stored o
 - **Web headers:** a per-request Content-Security-Policy with a fresh nonce, plus standard security headers.
 - **Inputs:** validated with zod at the boundary; exports neutralise spreadsheet formulas.
 - **Pages:** camp pages require a session, and each action checks the actor's role.
+- **Rate limits:** fixed windows counted in Postgres (`rate_limits`, migration 0010), so every serverless instance shares them. Each limit is keyed by a hash of the rule and the identity, so no address or user id is stored in the clear. A limited request gets a 429 with `Retry-After` (the server action shows the message in the form). The limits, all in `apps/web/server/rateLimit/limiter.ts`:
+  - **Starting a camp** (`POST /v1/orgs` and the camp form): 10 per hour per person. Both paths share the budget. Chosen to allow a camp operator to set up several camps, while stopping a loop of slug and row creation.
+  - **Badge scans** (scanner server action): 120 per minute per signed-in person, which allows about one scan every half second. A busy gate scans a person every few seconds, so staff should not reach it in normal use. It bounds scan volume if a session is abused.
+  - **Readiness probe** (`GET /ready`): the database check is cached for 5 seconds per instance, so most calls run no query at all. The cache is per instance, and the rate limit of 30 checks per minute per client address applies only when the cache has expired. The client address is the last `X-Forwarded-For` hop, which the platform appends.
+  - If the limiter cannot be reached, the probe still answers, and the database check decides.
+- **Request bodies:** capped at 1 MB by counting bytes as they are read. A request without a Content-Length is cut off at the same point.
+- **Input format:** email and phone are checked for shape in `packages/contracts` (`contact.ts`). A value the database refuses (check constraint, too long, wrong type) is a 400 with a generic message, never a 500 and never the database's own text.
+- **Static files:** `_next/static`, `_next/image` and `icon.svg` send `X-Content-Type-Options: nosniff` (from `next.config.ts`, because `proxy.ts` skips them).
+- **Local dev server** (`npm run server`, not part of the deployed app): it listens on loopback only unless `BUXA_ALLOW_REMOTE_HOST=yes` is set. Every `/api` request must send the run secret in `X-Buxa-Run-Secret`. The server prints a new secret each run, or uses `BUXA_LEGACY_SECRET` (at least 16 characters) if set. The browser reads the same value from `NEXT_PUBLIC_LEGACY_SECRET`. The event stream takes it as a `run_secret` query parameter, because the browser's EventSource cannot send headers.
 
 ## 3. Planned, not built
 
 - **Access logging for people records:** who viewed which child's record, and when. Needed before real data.
-- **Rate limiting** on the API and on check-in scanning. Supabase limits sign-in attempts; nothing limits our own endpoints.
+- **Rate limiting** on the other API endpoints. Camp creation, scanning and the readiness probe are limited (section 2). Supabase limits sign-in attempts.
 - **Two-factor sign-in for admins and staff.**
 - **Field-level encryption** for sensitive fields such as medical notes (phase 6 or later; medical data is out of scope for now).
 - **Error and security monitoring** with a service that alerts on repeated failures.
@@ -62,7 +71,7 @@ Report suspected security issues privately to the repository owner. Do not open 
 - [ ] Privacy review of children's data (COPPA, state rules), with consent and notice text
 - [ ] Retention periods and a deletion process for each record type
 - [ ] Access logging for people and attendance records
-- [ ] Rate limits on API and scanner endpoints
+- [ ] Rate limits on API and scanner endpoints (camp creation, scanning and `/ready` are done; see section 2)
 - [ ] Two-factor sign-in for staff and admins
 - [ ] Automated backups with a tested restore
 - [ ] Separate production Supabase project and Vercel environment

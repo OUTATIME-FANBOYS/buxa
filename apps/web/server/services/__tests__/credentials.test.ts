@@ -79,11 +79,12 @@ describe('CredentialService', () => {
     expect(await other.credentials.scan(other.actor('staff'), badge.payload)).toEqual({ kind: 'unknown' });
   });
 
-  it('scans a live badge to a summary with status and on-site flag, for a viewer too', async () => {
+  it('scans a live badge to a summary with status and on-site flag for staff, and refuses a viewer (403)', async () => {
     const { camp, admin, person } = await camperWithPerson();
     await camp.memberships.add(admin, { personId: person.id, plan: 'Summer', startsOn: '2027-07-01', endsOn: '2027-08-31' });
     const badge = await camp.credentials.issue(admin, person.id);
-    const result = await camp.credentials.scan(camp.actor('viewer'), `  ${badge.payload}\n`);
+    expect((await thrown(() => camp.credentials.scan(camp.actor('viewer'), badge.payload))).statusCode).toBe(403);
+    const result = await camp.credentials.scan(camp.actor('staff'), `  ${badge.payload}\n`);
     expect(result).toEqual({
       kind: 'person',
       person: { id: person.id, givenName: 'Ben', familyName: 'Stone', preferredName: null, roles: ['participant'], status: 'valid', onSite: false, archived: false },

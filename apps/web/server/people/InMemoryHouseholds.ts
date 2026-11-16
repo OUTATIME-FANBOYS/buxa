@@ -44,7 +44,7 @@ export class InMemoryHouseholds {
     if (!this.db.inOrg(this.db.people, actor.orgId, link.personId)) throw new PersonNotFoundError();
     const household = this.require(actor.orgId, link.householdId);
     household.members.set(link.personId, { relationship: link.relationship, isGuardian: link.isGuardian, canPickup: link.canPickup });
-    this.db.record(actor, 'household.update', 'household', link.householdId, { personId: link.personId });
+    this.db.record(actor, 'household.update', 'household', link.householdId, { personId: link.personId, isGuardian: link.isGuardian, canPickup: link.canPickup });
     return toRecord(household);
   }
 

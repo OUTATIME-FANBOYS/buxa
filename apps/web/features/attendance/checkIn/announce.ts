@@ -10,7 +10,10 @@ export function checkInAnnouncement(state: CheckInState, timeZone: string): stri
     case 'idle': return '';
     case 'unknown': return 'Code not recognised.';
     case 'error': return state.message;
-    case 'ready': return `${displayName(state.card.person)}. ${STATUS_DISPLAY[state.card.person.status].label}.`;
+    case 'ready': {
+      const { status } = state.card.person;
+      return `${displayName(state.card.person)}.${status === null ? '' : ` ${STATUS_DISPLAY[status].label}.`}`;
+    }
     case 'submitting': return 'Checking in.';
     case 'refused': {
       const copy = checkInRefusalCopy(state.refusal, timeZone);

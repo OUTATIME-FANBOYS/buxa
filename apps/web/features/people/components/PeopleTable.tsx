@@ -5,11 +5,12 @@ import { AccessPill } from './AccessPill';
 import { OnSitePill } from './OnSitePill';
 import { RolePills } from './RolePills';
 
-export function PeopleTable({ people }: { people: readonly PersonSummary[] }) {
+/** The membership and on-site columns are for staff; viewers see names and roles only. */
+export function PeopleTable({ people, staffView }: { people: readonly PersonSummary[]; staffView: boolean }) {
   return (
     <div className="table-wrap"><table className="table">
       <caption className="sr-only">People in the camp</caption>
-      <thead><tr><th scope="col">Name</th><th scope="col">Roles</th><th scope="col">Membership</th><th scope="col">On site</th></tr></thead>
+      <thead><tr><th scope="col">Name</th><th scope="col">Roles</th>{staffView && <th scope="col">Membership</th>}{staffView && <th scope="col">On site</th>}</tr></thead>
       <tbody>
         {people.map(person => (
           <tr key={person.id}>
@@ -17,8 +18,8 @@ export function PeopleTable({ people }: { people: readonly PersonSummary[] }) {
               {person.givenName} {person.familyName}{person.preferredName ? ` (${person.preferredName})` : ''}
             </Link></td>
             <td><RolePills roles={person.roles} /></td>
-            <td><AccessPill status={person.status} /></td>
-            <td><OnSitePill onSite={person.onSite} /></td>
+            {staffView && <td><AccessPill status={person.status} /></td>}
+            {staffView && <td><OnSitePill onSite={person.onSite} /></td>}
           </tr>
         ))}
       </tbody>

@@ -8,11 +8,11 @@ const as = (role: Role, userId = 'me'): Actor => ({ userId, orgId: ORG, role });
 //                          viewer staff admin owner
 const MATRIX: Record<Action, string> = {
   'org:read':                'YYYY', 'org:update':              '..YY', 'org:delete':              '...Y', 'org:transfer_ownership': '...Y',
-  'members:read':            'YYYY', 'members:invite':          '..YY', 'members:change_role':     '..YY', 'members:remove':         '..YY', 'members:leave': 'YYYY',
+  'members:read':            'YYYY', 'members:read_contact':    '..YY', 'members:invite':          '..YY', 'members:change_role':     '..YY', 'members:remove':         '..YY', 'members:leave': 'YYYY',
   'audit:read':              '..YY', 'data:export':             '...Y', 'data:erase':              '...Y',
   'people:read':             'YYYY', 'people:read_contact':     '.YYY', 'people:create':           '.YYY', 'people:update':          '.YYY',
-  'people:delete':           '..YY', 'memberships:manage':      '..YY', 'credentials:manage':      '..YY',
-  'attendance:read':         'YYYY', 'attendance:record':       '.YYY', 'attendance:override':     '..YY', 'attendance:export':      '..YY',
+  'people:delete':           '..YY', 'people:authorise_pickup': '..YY', 'memberships:manage':      '..YY', 'credentials:manage':      '..YY',
+  'attendance:read':         '.YYY', 'attendance:record':       '.YYY', 'attendance:override':     '..YY', 'attendance:export':      '..YY',
   'events:read':             'YYYY', 'events:create':           '..YY', 'events:update':           '..YY', 'events:delete':          '..YY',
   'tasks:read':              'YYYY', 'tasks:create':            '.YYY', 'tasks:update':            '.YYY', 'tasks:move':             '.YYY',
   'tasks:comment':           '.YYY', 'tasks:delete':            '..YY', 'tasks:manage_board':      '..YY',

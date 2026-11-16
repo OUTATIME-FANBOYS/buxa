@@ -19,7 +19,7 @@ export async function runAttendanceAction<I, R>(
     return { kind: 'ok', value: await call(actor, parsed.data) };
   } catch (error) {
     if (isHttpError(error) && error.statusCode === 403) return { kind: 'forbidden', message: error.message };
-    if (isHttpError(error) && error.statusCode === 400) return { kind: 'invalid', message: error.message };
+    if (isHttpError(error) && (error.statusCode === 400 || error.statusCode === 429)) return { kind: 'invalid', message: error.message }; // 429: the message says when to try again
     throw error;
   }
 }
