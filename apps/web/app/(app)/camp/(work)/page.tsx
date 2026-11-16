@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { NewCampForm } from '@/components';
 import { loadCampHome } from '@/logic/composers/index.server';
-import { HomePage } from '@/features/kanban/pages';
+import { HomePage } from '@/screens';
 import { getCurrentCamp, getOptionalSession } from '@/server/session';
 
 export const metadata: Metadata = { title: 'Home' };

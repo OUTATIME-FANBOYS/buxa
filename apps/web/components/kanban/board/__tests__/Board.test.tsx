@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { UiProvider } from '@/providers/providers';
+import { UiProvider } from '@/providers/UiProvider';
 import { buildSeed } from '@/logic/common';
 import { BoardView } from '../Board';
 

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { NewPerson } from '@/features/people/screens/NewPerson';
+import { NewPerson } from '@/screens';
 
 export const metadata: Metadata = { title: 'Add person' };
 

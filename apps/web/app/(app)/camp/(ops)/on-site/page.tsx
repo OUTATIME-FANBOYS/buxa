@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { OnSiteScreen } from '@/features/attendance/screens/OnSiteScreen';
+import { OnSiteScreen } from '@/screens';
 
 export const metadata: Metadata = { title: 'On site' };
 

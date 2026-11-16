@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ROUTES } from '../../../../config/routes';
 import { conflict, forbidden } from '../../../../server/http/errors';
 import { archivePersonAction } from '../archivePersonAction';
-import { IDS } from '../../../../features/people/actions/__tests__/form';
+import { IDS } from './form';
 
 const h = vi.hoisted(() => ({
   actor: null as null | { userId: string; orgId: string; role: 'owner' | 'admin' | 'staff' | 'viewer' },

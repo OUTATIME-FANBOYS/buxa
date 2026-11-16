@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 import type { Column, Task } from '@/logic/common';
 import { useStore } from '@/components';
 import { useTaskDrawer } from '@/components';
-import { useUi } from '@/providers/providers';
+import { useUi } from '@/providers/UiProvider';
 
 export function useTaskCommands() {
   const { actions } = useStore(); const { toast } = useUi(); const { openTask } = useTaskDrawer();

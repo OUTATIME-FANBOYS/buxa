@@ -5,7 +5,7 @@ import type { Priority, Project, Task } from '@/logic/common';
 import { useStore } from '@/components';
 import { useTaskDrawer } from '@/components';
 import { datesError, titleError } from '@/logic/common';
-import { useUi } from '@/providers/providers';
+import { useUi } from '@/providers/UiProvider';
 
 type Errors = { title?: string; due?: string };
 

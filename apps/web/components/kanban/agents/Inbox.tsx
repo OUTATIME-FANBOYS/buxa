@@ -1,6 +1,6 @@
 import { Avatar } from '@/elements';
 import { Empty } from '../../Empty';
-import { useUi } from '@/providers/providers';
+import { useUi } from '@/providers/UiProvider';
 import { useStore } from '../state/store';
 import { ago } from '@/logic/common';
 import * as A from '@/logic/common';

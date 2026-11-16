@@ -8,7 +8,7 @@ import { Icon } from '@/elements';
 import { Menu } from '../Menu';
 import { Popover } from '../Popover';
 import { Avatar } from '@/elements';
-import { useUi } from '@/providers/providers';
+import { useUi } from '@/providers/UiProvider';
 import { PRIORITIES, emptyFilter, isFilterActive } from '@/logic/common';
 
 function Chip({ label, count, children, width = 220 }: { label: string; count: number; children: ReactNode; width?: number }) {

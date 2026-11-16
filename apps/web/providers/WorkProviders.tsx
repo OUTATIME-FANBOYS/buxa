@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { TaskDrawer } from '@/components';
-import { WorkGate } from '@/features/kanban/WorkGate';
+import { WorkGate } from './WorkGate';
 import type { SessionIdentity } from '@/logic/composers';
 import { StoreProvider } from '@/components';
 import { TaskDrawerProvider } from '@/components';

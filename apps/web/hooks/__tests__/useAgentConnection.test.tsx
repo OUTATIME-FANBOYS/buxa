@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { UiProvider } from '@/providers/providers';
+import { UiProvider } from '@/providers/UiProvider';
 import { serverApi } from '@/logic/common';
 import { useAgentConnection } from '../useAgentConnection';
 

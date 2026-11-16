@@ -2,7 +2,7 @@
 
 import { Dialog } from '../../Dialog';
 import { Field } from '@/elements';
-import { useUi } from '@/providers/providers';
+import { useUi } from '@/providers/UiProvider';
 import { useStore } from '../state/store';
 import { UNREACHABLE, type AgentConnection } from '@/logic/common';
 import { useAgentConnection } from '@/hooks/hooks';

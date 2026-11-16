@@ -4,7 +4,7 @@ import { idle } from '../../../common';
 import { forbidden } from '../../../../server/http/errors';
 import { createPersonAction } from '../createPersonAction';
 import { CAMPER_NEEDS_HOUSEHOLD, CHOOSE_ONE_HOUSEHOLD, NEW_HOUSEHOLD_NO_GUARDIAN } from '../../../common';
-import { formOf, IDS } from '../../../../features/people/actions/__tests__/form';
+import { formOf, IDS } from './form';
 
 const h = vi.hoisted(() => ({
   actor: null as null | { userId: string; orgId: string; role: 'owner' | 'admin' | 'staff' | 'viewer' },

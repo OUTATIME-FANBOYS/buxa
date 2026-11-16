@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { BoardsPage } from '@/features/kanban/pages';
+import { BoardsPage } from '@/screens';
 
 export const metadata: Metadata = { title: 'Boards' };
 

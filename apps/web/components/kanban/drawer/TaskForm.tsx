@@ -2,7 +2,7 @@ import type { Project, Task } from '@/logic/common';
 import { useStore } from '../state/store';
 import { Dialog } from '../../Dialog';
 import { Field } from '@/elements';
-import { useUi } from '@/providers/providers';
+import { useUi } from '@/providers/UiProvider';
 import { useTaskCommands } from '@/hooks/hooks';
 import { useTaskDraft } from '@/hooks/hooks';
 import { TaskDrawerHeader } from './TaskDrawerHeader';

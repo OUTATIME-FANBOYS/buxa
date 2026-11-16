@@ -5,7 +5,7 @@ import type { Column, Project, Task } from '@/logic/common';
 import { useStore } from '@/components';
 import { boardDndReducer, idleDnd } from '@/logic/common';
 import { createDrag } from '@/features/kanban/lib/cardDrag';
-import { useUi } from '@/providers/providers';
+import { useUi } from '@/providers/UiProvider';
 
 /**
  * Drag and drop for a board. Cards use pointer tracking (lib/cardDrag); columns keep native drag on desktop,

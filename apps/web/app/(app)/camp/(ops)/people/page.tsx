@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { PeopleList } from '@/features/people/screens/PeopleList';
+import { PeopleList } from '@/screens';
 
 export const metadata: Metadata = { title: 'People' };
 

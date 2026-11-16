@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ROUTES } from '../../../../config/routes';
 import { idle } from '../../../common';
 import { createCampAction } from '../createCampAction';
-import { formOf, startWorld } from '../../../../features/camp/actions/__tests__/support';
+import { formOf, startWorld } from './support';
 
 const mocks = vi.hoisted(() => ({ requireSession: vi.fn(), rememberCamp: vi.fn(), revalidatePath: vi.fn(), redirect: vi.fn() }));
 vi.mock('../../../../server/session', async importOriginal => ({ ...(await importOriginal<object>()), requireSession: mocks.requireSession, rememberCamp: mocks.rememberCamp }));

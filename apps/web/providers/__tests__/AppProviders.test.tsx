@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AppProviders } from '../AppProviders';
-import { useUi } from '../UiProvider';
+import { useUi } from '@/providers/UiProvider';
 
 function Probe() { useUi(); return <p>uses ui</p>; }
 

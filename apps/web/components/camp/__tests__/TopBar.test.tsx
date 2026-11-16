@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { UiProvider } from '@/providers/providers';
+import { UiProvider } from '@/providers/UiProvider';
 import { TopBar } from '../TopBar';
 
 describe('TopBar', () => {

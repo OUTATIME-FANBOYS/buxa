@@ -1,6 +1,6 @@
 import { Icon } from '@/elements';
 import { Pill } from '@/elements';
-import { useUi } from '@/providers/providers';
+import { useUi } from '@/providers/UiProvider';
 import { useStore } from '../state/store';
 import { useTaskDrawer } from '../state/TaskDrawerContext';
 import * as A from '@/logic/common';

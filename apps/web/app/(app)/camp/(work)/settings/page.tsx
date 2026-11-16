@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { SettingsPage } from '@/features/kanban/pages';
+import { SettingsPage } from '@/screens';
 
 export const metadata: Metadata = { title: 'Settings' };
 

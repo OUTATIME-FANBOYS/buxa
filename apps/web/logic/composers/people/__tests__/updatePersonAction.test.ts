@@ -3,7 +3,7 @@ import { personPath } from '../../../../config/routes';
 import { idle } from '../../../common';
 import { conflict, forbidden, badRequest, notFound } from '../../../../server/http/errors';
 import { updatePersonAction } from '../updatePersonAction';
-import { formOf, IDS } from '../../../../features/people/actions/__tests__/form';
+import { formOf, IDS } from './form';
 
 const h = vi.hoisted(() => ({
   actor: null as null | { userId: string; orgId: string; role: 'owner' | 'admin' | 'staff' | 'viewer' },

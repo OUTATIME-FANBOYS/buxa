@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useUi } from '@/providers/providers';
+import { useUi } from '@/providers/UiProvider';
 import { archivePersonAction } from '@/logic/composers';
 
 /**
