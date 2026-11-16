@@ -16,7 +16,7 @@ describe('the sidebar groups', () => {
       ['Home'],
       ['Check-in', 'On site', 'People', 'Attendance'],
       ['My tasks', 'Projects', 'Boards', 'Calendar', 'Agents', 'Reports'],
-      ['Team access', 'Settings'],
+      ['Team access', 'Settings', 'Help'],
     ]);
   });
 
@@ -30,7 +30,7 @@ describe('the sidebar groups', () => {
     const requires = Object.fromEntries(CAMP_NAV.map(item => [item.label, item.requires]));
     expect(requires).toMatchObject({
       'Check-in': 'attendance:record', 'On site': 'attendance:read', People: 'people:read', Attendance: 'attendance:read',
-      'Team access': 'members:read', Home: undefined, 'My tasks': undefined, Projects: undefined, Settings: undefined,
+      'Team access': 'members:read', Home: undefined, 'My tasks': undefined, Projects: undefined, Settings: undefined, Help: undefined,
     });
   });
 });
@@ -42,7 +42,7 @@ describe('navFor', () => {
   });
 
   it('shows only items needing no permission when there is no camp yet', () => {
-    expect(hrefs(null)).toEqual([ROUTES.camp, ROUTES.tasks, ROUTES.projects, ROUTES.boards, ROUTES.calendar, ROUTES.agents, ROUTES.reports, ROUTES.settings]);
+    expect(hrefs(null)).toEqual([ROUTES.camp, ROUTES.tasks, ROUTES.projects, ROUTES.boards, ROUTES.calendar, ROUTES.agents, ROUTES.reports, ROUTES.settings, ROUTES.help]);
   });
 
   it('hides an item from a role that lacks its permission, and keeps the rest', () => {
