@@ -1,34 +1,33 @@
 import type { Pool } from 'pg';
 import type { Membership, User } from '@buxa/contracts';
-import { isUniqueViolation } from '@buxa/db';
+import { isUniqueViolation, withOrg } from '@buxa/db';
 import type { Identity } from '../auth/identity';
 import { EmailInUseError, type UserRepository } from './UserRepository';
 
 /**
- * Signing in is the one cross-tenant lookup (a person's own memberships), so this adapter uses the privileged pool.
- * Everything else goes through withOrg(). See docs/auth.md, "Known limits".
+ * Signing in needs two lookups row-level security cannot scope (no organisation is known yet, or the lookup spans all of
+ * them). Both are SECURITY DEFINER functions (migration 0009), called as the request role with no organisation set, so
+ * this adapter never uses a login that bypasses row-level security. See docs/security.md, section 2.
  */
 export class PgUserRepository implements UserRepository {
   constructor(private readonly pool: Pool) {}
 
   async upsertFromIdentity(identity: Identity): Promise<User> {
     try {
-      const result = await this.pool.query<User>(
-        `INSERT INTO users(auth_id, email, name) VALUES ($1, $2, $3)
-         ON CONFLICT (auth_id) DO UPDATE SET email = EXCLUDED.email
-         RETURNING id, email, name`,
-        [identity.authId, identity.email, identity.name]);
-      return result.rows[0];
+      const { rows } = await withOrg(this.pool, null, db => db.query<User>(
+        'SELECT user_id AS id, user_email AS email, user_name AS name FROM buxa_upsert_user($1, $2, $3)',
+        [identity.authId, identity.email, identity.name]));
+      return rows[0];
     } catch (error) {
       throw isUniqueViolation(error) ? new EmailInUseError() : error;
     }
   }
 
-  async membershipsOf(userId: string): Promise<Membership[]> {
-    const result = await this.pool.query<Membership>(
-      `SELECT m.org_id AS "orgId", m.role, o.name, o.slug
-         FROM org_members m JOIN orgs o ON o.id = m.org_id
-        WHERE m.user_id = $1 ORDER BY o.name`, [userId]);
-    return result.rows;
+  membershipsOf(userId: string): Promise<Membership[]> {
+    return withOrg(this.pool, null, async db => {
+      const { rows } = await db.query<Membership>(
+        'SELECT member_org_id AS "orgId", member_role AS role, org_name AS name, org_slug AS slug FROM buxa_memberships_of($1)', [userId]);
+      return rows;
+    });
   }
 }

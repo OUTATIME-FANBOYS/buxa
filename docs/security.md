@@ -22,7 +22,11 @@ Status: **the app is not ready for real children's data.** Real data is stored o
 ## 2. What is built
 
 - **Tenant isolation:** every camp table has row-level security, forced on for the app's database role. A test fails if a new table lacks it. Cross-camp foreign keys are blocked by composite keys.
-- **Least privilege:** the app connects as a restricted role. It cannot read the migration history, and it has no delete rights on people, memberships, badges, check-ins or households. Erasure needs a separate, reviewed process.
+- **Least privilege, enforced now:**
+  - In the database (migrations `0004` to `0009`): the request role `buxa_app` cannot read `schema_migrations`, is not a superuser and has no `BYPASSRLS` or `CREATEROLE`. It cannot insert or change users, organisations or memberships directly. It has no delete rights on people, memberships, badges, check-ins or households. Its only cross-organisation paths are three `SECURITY DEFINER` functions with a fixed search path, executable by `buxa_app` only: the sign-in user row, the sign-in membership lookup, and organisation creation. Tests: `packages/db/test/narrow-privileges.test.ts`, `apps/web/server/users/__tests__/runtimeLogin.pg.test.ts`.
+  - In the code: every tenant query runs through `withOrg`, which switches to `buxa_app`. Request handling does not use the migration login.
+  - **Not enforced by the database yet:** the login the server connects with is whatever `DATABASE_URL` names. Until the operator creates a separate runtime login with no bypass (`docs/deploy.md`, "Database requirements"), that login is the migration login, which can bypass row-level security for any query that does not go through `withOrg`. Until that step is done, the statements above describe the code, not the live connection.
+  - Erasure needs a separate, reviewed process.
 - **Audit log:** every write to people, memberships, badges and attendance is recorded in the same transaction. The log cannot be updated, deleted or truncated by the app role.
 - **Authentication:** tokens are verified against Supabase's public keys (ES256 or RS256 only). `none` and shared-secret tokens are rejected. Users are matched by provider id, not email. See `docs/auth.md`.
 - **Authorisation:** a permission matrix in `packages/domain` decides every action, server-side. The UI hides controls for convenience only; the server enforces the same rules.

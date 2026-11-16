@@ -1,11 +1,14 @@
-import { notFound } from '../../http/errors';
+import { conflict, notFound } from '../../http/errors';
+import { isBadgeConflict } from '../../credentials/CredentialRepository';
 import { isMembershipNotFound } from '../../memberships/MembershipRepository';
 import { isHouseholdNotFound, isPersonNotFound } from '../../people/PeopleRepository';
 
 /**
- * Storage errors that mean "not in this camp" become a 404 the client can show. Anything else is left alone and becomes a 500.
+ * Storage errors that mean "not in this camp" become a 404, and a lost write race becomes a 409 the client can show.
+ * Anything else is left alone and becomes a 500.
  */
 export function translateRepositoryError(error: unknown): unknown {
+  if (isBadgeConflict(error)) return conflict(error.message);
   if (isPersonNotFound(error)) return notFound('Person not found');
   if (isHouseholdNotFound(error)) return notFound('Household not found');
   if (isMembershipNotFound(error)) return notFound('Membership not found');

@@ -17,8 +17,8 @@ npm run build && npm start        # http://localhost:3000, uses apps/web/.env.lo
 ## Settings (Vercel → Project → Settings → Environment Variables)
 | Variable | Environments | Notes |
 |---|---|---|
-| `DATABASE_URL` | Production, Preview | Supabase **session pooler** URI (see below). Used by the API at runtime. |
-| `MIGRATION_DATABASE_URL` | **Production only** | Same URI. Used only by production builds to apply migrations. Keeping it out of Preview means a preview build can never change the schema. |
+| `DATABASE_URL` | Production, Preview | Supabase **session pooler** URI for the **runtime login** (see "Database requirements"). Used by the API at runtime. It must not be the migration login. |
+| `MIGRATION_DATABASE_URL` | **Production only** | The **migration login** (the one that may bypass row-level security). Used only by production builds to apply migrations. Keeping it out of Preview means a preview build can never change the schema. |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | all | Public values from Supabase. Publishable key only. The browser and the server read the same two. |
 | `DB_POOL_MAX` | all (optional) | Connections per function instance (default 10). Use a small number such as `5`: many instances may run at once. |
 | `LOG_LEVEL` | all (optional) | Default `info`. |
@@ -29,9 +29,23 @@ Paste secrets only into Vercel's form, never into the repo or a chat.
 
 ## Database requirements
 - Postgres 15 or newer. Row-level security is how tenants are kept apart, so it is not optional.
-- The login that runs migrations needs `CREATEROLE` and must be able to bypass row-level security (a superuser, or Supabase's `postgres` role).
-  Migration `0004` grants it the right to switch to the restricted `buxa_app` role.
-- If the app connects as a **different** login than the migration login, run once: `GRANT buxa_app TO <app_login>;`.
+There are two logins. They must be different.
+
+- **Migration login** (`MIGRATION_DATABASE_URL`; locally, `DATABASE_URL`). Applies migrations. It needs `CREATEROLE` and must be able to bypass row-level security (a superuser, or Supabase's `postgres` role). Migration `0004` lets it switch to `buxa_app`. The three privileged functions from migration `0009` run with its rights, so it keeps that ability.
+- **Runtime login** (`DATABASE_URL` in production and preview). Serves every request. It must be a member of `buxa_app` and must **not** have `SUPERUSER`, `BYPASSRLS` or `CREATEROLE`. Every tenant query switches to `buxa_app` (`withOrg`). The three cross-organisation paths (the sign-in user row, the sign-in membership lookup, and organisation creation) are `SECURITY DEFINER` functions that only `buxa_app` may run.
+
+**Operator step: create the runtime login** (once, as the migration login, in the Supabase SQL editor or `psql`). Choose a long random password and keep it in Vercel's form only:
+```sql
+CREATE ROLE buxa_runtime LOGIN PASSWORD '<long random password>' NOSUPERUSER NOBYPASSRLS NOCREATEROLE NOCREATEDB;
+GRANT buxa_app TO buxa_runtime;
+```
+Then build `DATABASE_URL` from the session pooler with that login. On Supabase the pooler user name is `buxa_runtime.<project-ref>`. Check the attributes before you deploy:
+```sql
+SELECT rolsuper, rolbypassrls, rolcreaterole FROM pg_roles WHERE rolname = 'buxa_runtime';  -- all three must be false
+```
+After the change, `/ready` must still answer `{"status":"ready"}`. Until this step is done, `DATABASE_URL` is still the migration login, which bypasses row-level security. The code no longer relies on that bypass, but the defence in depth only exists once the runtime login is separate.
+
+The code path is covered by `apps/web/server/users/__tests__/runtimeLogin.pg.test.ts`, which runs the sign-in and organisation repositories through a login with these attributes.
 - Use Supabase's **Session pooler** connection string (Project Settings → Database → Connection string). Vercel connects over IPv4, and the direct
   connection is IPv6-only on the free plan; session mode also supports the advisory lock migrations use.
 - CI runs the database and server tests as a non-superuser to catch anything that only works for a superuser.

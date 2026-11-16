@@ -1,11 +1,11 @@
 import type { Pool } from 'pg';
-import { withOrg } from '@buxa/db';
+import { isUniqueViolation, withOrg } from '@buxa/db';
 import { isUuid, type Actor } from '@buxa/domain';
 import { recordAudit } from '../audit/recordAudit';
 import { PersonNotFoundError } from '../people/PeopleRepository';
 import { personExists } from '../people/PgPersonQueries';
 import { nullableIso, toIso, type Db } from '../people/pgRows';
-import type { CredentialRecord, CredentialRepository } from './CredentialRepository';
+import { BadgeConflictError, type CredentialRecord, type CredentialRepository } from './CredentialRepository';
 
 interface CredentialRow {
   id: string;
@@ -35,7 +35,16 @@ async function activeOf(db: Db, personId: string): Promise<CredentialRecord | nu
 export class PgCredentialRepository implements CredentialRepository {
   constructor(private readonly pool: Pool) {}
 
-  issue(actor: Actor, personId: string, tokenHash: Buffer, at: string): Promise<CredentialRecord> {
+  /** A concurrent issue that loses the race on the active-badge unique index is reported as BadgeConflictError, not a 500. */
+  async issue(actor: Actor, personId: string, tokenHash: Buffer, at: string): Promise<CredentialRecord> {
+    try {
+      return await this.issueOnce(actor, personId, tokenHash, at);
+    } catch (error) {
+      throw isUniqueViolation(error) ? new BadgeConflictError() : error;
+    }
+  }
+
+  private issueOnce(actor: Actor, personId: string, tokenHash: Buffer, at: string): Promise<CredentialRecord> {
     return withOrg(this.pool, actor.orgId, async db => {
       if (!(await personExists(db, personId))) throw new PersonNotFoundError();
       const revoked = await db.query<{ id: string }>(

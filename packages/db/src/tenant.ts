@@ -1,20 +1,32 @@
 import type { Pool, PoolClient } from 'pg';
 import { isUuid } from '@buxa/domain';
+import { errorMessage } from './errors';
 
-/** Runs `work` in one transaction: committed if it returns, rolled back if it throws. */
+/**
+ * Runs `work` in one transaction: committed if it returns, rolled back if it throws.
+ * If the rollback itself fails, the connection may still be inside a transaction with the role switched, so it is
+ * destroyed (released with an error) instead of returning to the pool, and the rollback failure is thrown with the
+ * original error as its cause.
+ */
 export async function transaction<T>(pool: Pool, work: (db: PoolClient) => Promise<T>): Promise<T> {
   const db = await pool.connect();
+  let result: T;
   try {
     await db.query('BEGIN');
-    const result = await work(db);
+    result = await work(db);
     await db.query('COMMIT');
-    return result;
   } catch (error) {
-    await db.query('ROLLBACK').catch(() => {}); // keep the original error, not a rollback failure
-    throw error;
-  } finally {
+    try {
+      await db.query('ROLLBACK');
+    } catch (rollbackError) {
+      db.release(rollbackError instanceof Error ? rollbackError : new Error(String(rollbackError)));
+      throw new Error(`Rollback failed and the database connection was discarded: ${errorMessage(rollbackError)}`, { cause: error });
+    }
     db.release();
+    throw error;
   }
+  db.release();
+  return result;
 }
 
 /**
