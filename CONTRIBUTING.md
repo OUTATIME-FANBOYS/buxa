@@ -23,3 +23,16 @@ Follow `CODING_STANDARDS.md` (layout, types, state machines, patterns, security,
 GitHub branch protection is not available on this plan (private repo, free org). Until it is enabled, these rules are enforced by CI
 and convention. When the org moves to GitHub Team, apply: require PR + `verify` check on `develop` and `main`, require `Only from develop`
 on `main`, block force pushes and deletions, include administrators.
+
+## Branches, pull request titles and descriptions
+
+- **Branches:** `release/type/name`, for example `v0.2/feat/phase-2-classes` or `v0.1/fix/audit-s02-viewer-access`. The release is the version the work ships in (`v0.N`), the type is `feat`, `fix`, `docs`, `chore`, `refactor` or `test`, and the name is short kebab-case.
+- **Title:** `Buxa-<release>-<Type>-<Phase or area>-<Description>`, with the type capitalised (`Feat`, `Fix`, `Docs`, `Chore`, `Refactor`, `Test`). Spaces are allowed in the description. Examples: `Buxa-v0.2-Docs-Phase2-Bulk Import`, `Buxa-v0.1-Fix-Security-Viewer Access`. Commit messages keep the conventional form `type(scope): summary`.
+- **Body:** use the template (`.github/pull_request_template.md`): What are we fixing, Why, How, How it was verified, Risks and follow-ups.
+- **Emojis:** the template's section headings carry them. Keep them; do not add more inside the text.
+
+## Release checklist
+
+- Every major release (`v0.N.0`) regenerates the flow diagrams in `docs/architecture/` with archify in its PR, and re-exports each diagram's PNG preview (same base name) with them. The PNG is the Export > PNG of the interactive diagram. Keep the Flows section in the root `README.md` in step: each interactive link must point at the `develop` htmlpreview form.
+- The release PR (`develop` to `main`) is a merge commit, then the tag `vX.Y.0` is pushed on the `main` commit.
+
