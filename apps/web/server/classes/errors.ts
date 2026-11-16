@@ -25,6 +25,12 @@ export class CamperNotFoundError extends Error {
   constructor() { super('Camper not found'); this.name = 'CamperNotFoundError'; }
 }
 
+/** A session names an instructor who is not a person in this camp. */
+export class InstructorNotFoundError extends Error {
+  readonly kind = 'instructor-not-found';
+  constructor() { super('Instructor not found'); this.name = 'InstructorNotFoundError'; }
+}
+
 /** The refusals an adapter throws from inside the enrolment transaction, so nothing is written. Each carries the domain refusal. */
 export class SessionFullError extends Error {
   readonly kind = 'session-full';
@@ -59,7 +65,7 @@ export function refusalError(refusal: Refusal): EnrolmentRefusalError {
   }
 }
 
-export type ClassErrorKind = 'class-not-found' | 'session-not-found' | 'enrolment-not-found' | 'camper-not-found' | EnrolmentRefusalError['kind'];
+export type ClassErrorKind = 'class-not-found' | 'session-not-found' | 'enrolment-not-found' | 'camper-not-found' | 'instructor-not-found' | EnrolmentRefusalError['kind'];
 
 export const isClassError = (e: unknown, kind: ClassErrorKind): boolean =>
   e instanceof Error && (e as { kind?: unknown }).kind === kind;
