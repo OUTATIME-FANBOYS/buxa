@@ -3,7 +3,7 @@ import type { BoardDnd } from '@/logic/common';
 import { useStore } from '../state/store';
 import { Icon } from '@/elements';
 import { Menu } from '../../Menu';
-import type { useBoardDnd } from '../hooks/useBoardDnd';
+import type { useBoardDnd } from '@/hooks/hooks';
 import { QuickAdd } from './QuickAdd';
 import { TaskCard } from './TaskCard';
 

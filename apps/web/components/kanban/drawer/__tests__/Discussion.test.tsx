@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { buildSeed } from '@/logic/common';
 import { type Task } from '@/logic/common';
-import { UiProvider } from '../../../UiProvider';
+import { UiProvider } from '@/providers/providers';
 import { Discussion } from '../Discussion';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));

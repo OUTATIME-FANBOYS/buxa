@@ -4,7 +4,7 @@ import { buildSeed } from '@/logic/common';
 import { TaskDrawerHeader } from '../TaskDrawerHeader';
 
 vi.mock('@/components/kanban/state/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
-vi.mock('@/components/kanban/hooks/useTaskCommands', () => ({ useTaskCommands: () => ({ duplicate: () => 'x', toggleArchive() {} }) }));
+vi.mock('@/hooks/useTaskCommands', () => ({ useTaskCommands: () => ({ duplicate: () => 'x', toggleArchive() {} }) }));
 
 const seed = buildSeed();
 const project = seed.projects[0];

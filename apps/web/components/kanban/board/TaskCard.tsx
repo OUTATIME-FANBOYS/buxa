@@ -11,7 +11,7 @@ import { Menu } from '../../Menu';
 import { tagHue } from '@/logic/common';
 import { subtaskProgress } from '@/logic/common';
 import { justDragged } from '@/features/kanban/lib/cardDrag';
-import { useTaskCommands } from '../hooks/useTaskCommands';
+import { useTaskCommands } from '@/hooks/hooks';
 import { DueChip } from './DueChip';
 import { taskMenuItems } from './taskMenuItems';
 

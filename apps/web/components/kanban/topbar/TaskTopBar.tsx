@@ -2,7 +2,7 @@
 
 import { useRef, type ReactNode } from 'react';
 import { useStore } from '../state/store';
-import { useGlobalShortcuts } from '../hooks/useGlobalShortcuts';
+import { useGlobalShortcuts } from '@/hooks/hooks';
 import { GlobalSearch } from './GlobalSearch';
 import { Notifications } from './Notifications';
 

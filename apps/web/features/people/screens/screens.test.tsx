@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Household, Membership, Person, PersonSummary } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
-import { UiProvider } from '../../../components';
+import { UiProvider } from '../../../providers/providers';
 import { forbidden, notFound as notFoundError } from '../../../server/http/errors';
 
 const notFound = vi.hoisted(() => vi.fn(() => { throw new Error('NEXT_NOT_FOUND'); }));

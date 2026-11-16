@@ -6,7 +6,7 @@ import { TaskTopBar } from '../TaskTopBar';
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
 vi.mock('@/components/kanban/state/store', () => ({ useStore: () => h.store }));
 vi.mock('@/components/kanban/state/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
-vi.mock('@/components/kanban/hooks/useGlobalShortcuts', () => ({ useGlobalShortcuts: () => undefined }));
+vi.mock('@/hooks/useGlobalShortcuts', () => ({ useGlobalShortcuts: () => undefined }));
 
 const seed = buildSeed();
 

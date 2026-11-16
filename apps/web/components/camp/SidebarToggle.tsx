@@ -1,7 +1,7 @@
 'use client';
 
 import { Icon } from '@/elements';
-import { useUi } from '../UiProvider';
+import { useUi } from '@/providers/providers';
 
 export function SidebarToggle() {
   const { setSidebarOpen } = useUi();

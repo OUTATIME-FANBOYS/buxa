@@ -2,10 +2,10 @@
 
 import { Dialog } from '../../Dialog';
 import { Field } from '@/elements';
-import { useUi } from '../../UiProvider';
+import { useUi } from '@/providers/providers';
 import { useStore } from '../state/store';
 import { UNREACHABLE, type AgentConnection } from '@/logic/common';
-import { useAgentConnection } from '../hooks/useAgentConnection';
+import { useAgentConnection } from '@/hooks/hooks';
 
 function TokenReveal({ name, token, url }: { name: string; token: string; url: string }) {
   const { toast } = useUi();

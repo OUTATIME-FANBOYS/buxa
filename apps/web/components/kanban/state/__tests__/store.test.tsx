@@ -7,7 +7,7 @@ import { StoreProvider, useStore } from '../store';
 
 const seed = buildSeed();
 const actions = { setTheme: vi.fn() };
-vi.mock('@/components/kanban/hooks/useStoreEngine', () => ({
+vi.mock('@/hooks/useStoreEngine', () => ({
   useStoreEngine: () => ({ state: seed, saveStatus: 'saved', sync: 'local', serverInfo: {}, actions }),
 }));
 

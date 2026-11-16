@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useStore } from '../../../components';
 import { Field } from '../../../elements';
 import { Segmented } from '../../../elements';
-import { useUi } from '../../../components';
+import { useUi } from '../../../providers/providers';
 import { ROUTES } from '../../../config/routes';
 import { AgentDialog } from '../../../components';
 import { ResetDemoButton } from '../../../components';

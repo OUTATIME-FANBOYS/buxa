@@ -1,6 +1,6 @@
 import type { Project, Task } from '@/logic/common';
 import type { MenuItem } from '../../Menu';
-import type { TaskCommands } from '../hooks/useTaskCommands';
+import type { TaskCommands } from '@/hooks/hooks';
 
 /** The ⋯ menu for a task card. Read-only members only get "Open". */
 export function taskMenuItems(t: Task, project: Project, readOnly: boolean, cmd: TaskCommands): (MenuItem | false)[] {

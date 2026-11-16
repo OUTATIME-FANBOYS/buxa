@@ -7,7 +7,7 @@ import { LiveRegion } from '@/elements';
 import { NameSearch } from './NameSearch';
 import { ResultPanel } from './ResultPanel';
 import { ScanPanel } from './ScanPanel';
-import { useCheckIn } from './useCheckIn';
+import { useCheckIn } from '@/hooks/hooks';
 
 interface Props { timeZone: string; canOverride: boolean }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, type RefObject } from 'react';
-import { useTaskDrawer } from '../state/TaskDrawerContext';
+import { useTaskDrawer } from '@/components';
 
 /** ⌘K or "/" focuses search; "c" starts a new task (when a project exists and no dialog is open). Ignored while typing. */
 export function useGlobalShortcuts(searchRef: RefObject<HTMLInputElement | null>, hasProject: boolean) {

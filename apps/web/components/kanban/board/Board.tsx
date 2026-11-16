@@ -4,8 +4,8 @@ import { useState } from 'react';
 import type { Column, Project, Task } from '@/logic/common';
 import { useStore } from '../state/store';
 import { Icon } from '@/elements';
-import { useUi } from '../../UiProvider';
-import { useBoardDnd } from '../hooks/useBoardDnd';
+import { useUi } from '@/providers/providers';
+import { useBoardDnd } from '@/hooks/hooks';
 import { ColumnDialog } from '../dialogs/ColumnDialog';
 import { BoardColumn } from './BoardColumn';
 

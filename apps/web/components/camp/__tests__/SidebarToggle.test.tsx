@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { UiProvider } from '../../UiProvider';
+import { UiProvider } from '@/providers/providers';
 import { SidebarToggle } from '../SidebarToggle';
 
 describe('SidebarToggle', () => {

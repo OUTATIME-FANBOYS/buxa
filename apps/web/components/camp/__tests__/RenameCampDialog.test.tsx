@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { UiProvider } from '../../UiProvider';
+import { UiProvider } from '@/providers/providers';
 import { RenameCampDialog } from '../RenameCampDialog';
 
 vi.mock('@/logic/composers/camp/renameCampAction', () => ({ renameCampAction: async () => ({ status: 'idle' }) }));

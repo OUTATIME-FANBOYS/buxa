@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Dialog } from '../../Dialog';
 import { Field } from '@/elements';
-import { useUi } from '../../UiProvider';
+import { useUi } from '@/providers/providers';
 import { useStore } from '../state/store';
 
 export function AgentDialog({ onClose }: { onClose: () => void }) {

@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { buildSeed } from '@/logic/common';
-import { UiProvider } from '../../../UiProvider';
+import { UiProvider } from '@/providers/providers';
 import { TaskSections } from '../TaskSections';
 
 vi.mock('@/components/kanban/state/store', () => ({ useStore: () => ({ actions: {} }) }));
-vi.mock('@/components/kanban/hooks/useAttachmentUpload', () => ({ useAttachmentUpload: () => ({ busy: false, input: { current: null }, upload: () => undefined }) }));
+vi.mock('@/hooks/useAttachmentUpload', () => ({ useAttachmentUpload: () => ({ busy: false, input: { current: null }, upload: () => undefined }) }));
 
 describe('TaskSections', () => {
   it('shows subtasks, attachments and the discussion, in that order, below a saved task', () => {

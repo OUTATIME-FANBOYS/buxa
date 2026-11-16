@@ -1,8 +1,8 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { useStore } from '../state/store';
-import { useUi } from '../../UiProvider';
+import { useStore } from '@/components';
+import { useUi } from '@/providers/providers';
 
 const MAX_FILE = 1024 * 1024;
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Dialog } from './Dialog';
+import { Dialog } from '@/components';
 
 interface ToastAction { label: string; run: () => void }
 interface Toast { id: number; text: string; tone?: 'error'; action?: ToastAction }

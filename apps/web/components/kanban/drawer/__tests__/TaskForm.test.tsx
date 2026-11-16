@@ -2,14 +2,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { UiProvider } from '../../../UiProvider';
+import { UiProvider } from '@/providers/providers';
 import { buildSeed } from '@/logic/common';
 import { TaskForm } from '../TaskForm';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
 vi.mock('@/components/kanban/state/store', () => ({ useStore: () => h.store }));
 vi.mock('@/components/kanban/state/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
-vi.mock('@/components/kanban/hooks/useTaskCommands', () => ({ useTaskCommands: () => ({ open() {}, duplicate() {}, moveTo() {}, toggleArchive() {}, remove() {} }) }));
+vi.mock('@/hooks/useTaskCommands', () => ({ useTaskCommands: () => ({ open() {}, duplicate() {}, moveTo() {}, toggleArchive() {}, remove() {} }) }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 

@@ -5,7 +5,7 @@ import type { User } from '@buxa/contracts';
 import { Avatar } from '@/elements';
 import { Menu } from '../Menu';
 import { signOut } from '@/logic/composers';
-import { useDarkMode } from './useDarkMode';
+import { useDarkMode } from '@/hooks/hooks';
 
 /** The avatar menu: who you are, light/dark, sign out. Signing out is a Server Action submitted through a form. */
 export function AccountMenu({ user }: { user: User }) {

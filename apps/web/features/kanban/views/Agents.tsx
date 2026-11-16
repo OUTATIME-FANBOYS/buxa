@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Empty } from '../../../components';
 import { Icon } from '../../../elements';
 import { Segmented } from '../../../elements';
-import { useUi } from '../../../components';
+import { useUi } from '../../../providers/providers';
 import { useStore } from '../../../components';
 import { AgentDialog } from '../../../components';
 import { AgentCard } from '../../../components';

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { UiProvider } from '../../UiProvider';
+import { UiProvider } from '@/providers/providers';
 import { Shell } from '../Shell';
 
 vi.mock('next/navigation', () => ({ usePathname: () => '/camp', useRouter: () => ({ push() {}, refresh() {} }) }));

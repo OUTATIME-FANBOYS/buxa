@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dialog } from '../../Dialog';
 import { Field } from '@/elements';
-import { useUi } from '../../UiProvider';
+import { useUi } from '@/providers/providers';
 import { boardPath } from '@/config/routes';
 import { useStore } from '../state/store';
 import type { Project } from '@/logic/common';

@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Pill } from '@/elements';
 import type { OnSiteRowView } from '@/logic/common';
-import { useCheckOut } from './useCheckOut';
+import { useCheckOut } from '@/hooks/hooks';
 import { CheckOutPanel } from './CheckOutPanel';
 
 /** The list's id that receives focus after a check-out, since the row it came from leaves the list. */

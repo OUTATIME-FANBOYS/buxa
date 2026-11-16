@@ -2,7 +2,7 @@ import type { Project, Task } from '@/logic/common';
 import { Icon } from '@/elements';
 import { Menu } from '../../Menu';
 import { useTaskDrawer } from '../state/TaskDrawerContext';
-import { useTaskCommands } from '../hooks/useTaskCommands';
+import { useTaskCommands } from '@/hooks/hooks';
 
 export function TaskDrawerHeader({ task, project, readOnly, onClose, onDelete }: { task: Task | null; project: Project; readOnly: boolean; onClose: () => void; onDelete: () => void }) {
   const { openTask } = useTaskDrawer(); const cmd = useTaskCommands();

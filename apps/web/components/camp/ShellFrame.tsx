@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
-import { useUi } from '../UiProvider';
+import { useUi } from '@/providers/providers';
 
 /** The page skeleton and its small-screen open/close state. Everything inside arrives already rendered by the server. */
 export function ShellFrame({ sidebar, topBar, children }: { sidebar: ReactNode; topBar: ReactNode; children: ReactNode }) {

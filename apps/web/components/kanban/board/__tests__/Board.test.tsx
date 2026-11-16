@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { UiProvider } from '../../../UiProvider';
+import { UiProvider } from '@/providers/providers';
 import { buildSeed } from '@/logic/common';
 import { BoardView } from '../Board';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
 vi.mock('@/components/kanban/state/store', () => ({ useStore: () => h.store }));
 vi.mock('@/components/kanban/state/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
-vi.mock('@/components/kanban/hooks/useTaskCommands', () => ({ useTaskCommands: () => ({ open() {}, duplicate() {}, moveTo() {}, toggleArchive() {}, remove() {} }) }));
-vi.mock('@/components/kanban/hooks/useBoardDnd', () => ({
+vi.mock('@/hooks/useTaskCommands', () => ({ useTaskCommands: () => ({ open() {}, duplicate() {}, moveTo() {}, toggleArchive() {}, remove() {} }) }));
+vi.mock('@/hooks/useBoardDnd', () => ({
   useBoardDnd: () => ({ dnd: { mode: null, over: null, id: null }, scroller: { current: null }, grab: () => undefined, columnDrag: { over: () => undefined, drop: () => undefined, leave: () => undefined, start: () => undefined, end: () => undefined } }),
 }));
 

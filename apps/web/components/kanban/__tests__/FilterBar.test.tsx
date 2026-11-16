@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { UiProvider } from '../../UiProvider';
+import { UiProvider } from '@/providers/providers';
 import { buildSeed } from '@/logic/common';
 import { emptyFilter } from '@/logic/common';
 import { type Filter } from '@/logic/common';

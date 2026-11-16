@@ -2,12 +2,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { UiProvider } from '../../../UiProvider';
+import { UiProvider } from '@/providers/providers';
 import { ConnectAgentDialog } from '../ConnectAgentDialog';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
 vi.mock('@/components/kanban/state/store', () => ({ useStore: () => h.store }));
-vi.mock('@/components/kanban/hooks/useAgentConnection', () => ({
+vi.mock('@/hooks/useAgentConnection', () => ({
   useAgentConnection: () => ({ conn: { phase: 'ready', info: { exists: false, createdAt: null, lastSeen: null } }, issue() {}, revoke() {} }),
 }));
 

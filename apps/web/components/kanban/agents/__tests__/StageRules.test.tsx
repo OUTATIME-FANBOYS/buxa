@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { buildSeed, type Agent } from '@/logic/common';
+import { buildSeed } from '@/logic/common';
+import { type Agent } from '@/logic/common';
 import { StageRules } from '../StageRules';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));

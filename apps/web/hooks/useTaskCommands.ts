@@ -3,9 +3,9 @@
 /** One place for what "duplicate / archive / delete / move" mean to the user, including the toast and the undo. */
 import { useMemo } from 'react';
 import type { Column, Task } from '@/logic/common';
-import { useStore } from '../state/store';
-import { useTaskDrawer } from '../state/TaskDrawerContext';
-import { useUi } from '../../UiProvider';
+import { useStore } from '@/components';
+import { useTaskDrawer } from '@/components';
+import { useUi } from '@/providers/providers';
 
 export function useTaskCommands() {
   const { actions } = useStore(); const { toast } = useUi(); const { openTask } = useTaskDrawer();

@@ -7,7 +7,7 @@ import { TaskCard } from '../TaskCard';
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
 vi.mock('@/components/kanban/state/store', () => ({ useStore: () => h.store }));
 vi.mock('@/components/kanban/state/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
-vi.mock('@/components/kanban/hooks/useTaskCommands', () => ({ useTaskCommands: () => ({ open() {}, duplicate() {}, moveTo() {}, toggleArchive() {}, remove() {} }) }));
+vi.mock('@/hooks/useTaskCommands', () => ({ useTaskCommands: () => ({ open() {}, duplicate() {}, moveTo() {}, toggleArchive() {}, remove() {} }) }));
 
 const seed = buildSeed();
 const project = seed.projects[0];

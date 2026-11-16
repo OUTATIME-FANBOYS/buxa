@@ -7,7 +7,7 @@ import { Empty } from '../../../components';
 import { Menu } from '../../../components';
 import { Pill } from '../../../elements';
 import { Progress } from '../../../elements';
-import { useUi } from '../../../components';
+import { useUi } from '../../../providers/providers';
 import { Icon } from '../../../elements';
 import { ProjectDialog } from '../../../components';
 import { diffDays, fmt, today } from '../../../logic/common';

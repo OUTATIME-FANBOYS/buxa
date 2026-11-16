@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import type { Column, Project, Task } from '@/logic/common';
-import { useStore } from '../state/store';
+import { useStore } from '@/components';
 import { boardDndReducer, idleDnd } from '@/logic/common';
 import { createDrag } from '@/features/kanban/lib/cardDrag';
-import { useUi } from '../../UiProvider';
+import { useUi } from '@/providers/providers';
 
 /**
  * Drag and drop for a board. Cards use pointer tracking (lib/cardDrag); columns keep native drag on desktop,
