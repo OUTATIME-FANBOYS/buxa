@@ -1,21 +1,21 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { boardPath } from '../../../config/routes';
-import { useStore } from '../state/store';
-import { Empty } from '../../../components/ui/Empty';
+import { useStore } from '../../../components';
+import { Empty } from '../../../components';
 import { Progress } from '../../../elements';
 import { Segmented } from '../../../elements';
-import { Bars } from '../components/charts/Bars';
-import { HBars } from '../components/charts/HBars';
+import { Bars } from '../../../components';
+import { HBars } from '../../../components';
 import { Legend } from '../../../elements';
 import { Ring } from '../../../elements';
-import { StatCard as Stat } from './home/StatCard';
+import { StatCard as Stat } from '../../../components';
 import { addDays, diffDays, fmt, isoDay, today } from '../../../logic/common';
 import { PRIORITIES, PRIORITY_LABEL } from '../../../logic/common';
 import { Avatar } from '../../../elements';
 import { Pill } from '../../../elements';
 import { HEALTH_LABEL, HEALTH_TONE, healthOf, isOverdue, progressOf, summarize } from '../../../logic/common';
-import { AgentSummary } from '../components/AgentSummary';
+import { AgentSummary } from '../../../components';
 
 export function Reports() {
   const { wsTasks, projects, kindOf, members, workspace } = useStore();

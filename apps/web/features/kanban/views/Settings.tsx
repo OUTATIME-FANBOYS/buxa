@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react';
-import { useStore } from '../state/store';
+import { useStore } from '../../../components';
 import { Field } from '../../../elements';
 import { Segmented } from '../../../elements';
-import { useUi } from '../../../components/ui/UiProvider';
+import { useUi } from '../../../components';
 import { ROUTES } from '../../../config/routes';
-import { AgentDialog } from '../components/dialogs/AgentDialog';
-import { ResetDemoButton } from '../components/ResetDemoButton';
+import { AgentDialog } from '../../../components';
+import { ResetDemoButton } from '../../../components';
 import type { ThemePref } from '../../../logic/common';
 
 export function Settings() {

@@ -2,9 +2,9 @@ import * as React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { CampHome } from '../../../../logic/composers/index.server';
-import { HomeStats } from './HomeStats';
-import { OnSitePanel } from './OnSitePanel';
-import { StaffTasksPanel } from './StaffTasksPanel';
+import { HomeStats } from '../../../../components';
+import { OnSitePanel } from '../../../../components';
+import { StaffTasksPanel } from '../../../../components';
 
 Object.assign(globalThis, { React });
 

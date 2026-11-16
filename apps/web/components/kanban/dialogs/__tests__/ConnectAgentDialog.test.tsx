@@ -1,0 +1,30 @@
+// @vitest-environment jsdom
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+import { UiProvider } from '../../../UiProvider';
+import { ConnectAgentDialog } from '../ConnectAgentDialog';
+
+const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
+vi.mock('@/components/kanban/state/store', () => ({ useStore: () => h.store }));
+vi.mock('@/components/kanban/hooks/useAgentConnection', () => ({
+  useAgentConnection: () => ({ conn: { phase: 'ready', info: { exists: false, createdAt: null, lastSeen: null } }, issue() {}, revoke() {} }),
+}));
+
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+
+describe('ConnectAgentDialog', () => {
+  let root: Root;
+  beforeEach(() => {
+    h.store = { serverInfo: { mcpUrl: 'http://127.0.0.1:3100/mcp' } };
+    root = createRoot(document.body.appendChild(document.createElement('div')));
+  });
+  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+
+  it('opens as a dialog and says a new token is not connected yet', () => {
+    act(() => root.render(<UiProvider><ConnectAgentDialog agentId="u-agent-triage" name="Triage Agent" onClose={() => undefined} /></UiProvider>));
+    const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
+    expect(dialog).not.toBeNull();
+    expect(dialog.textContent).toContain('Not connected yet');
+  });
+});

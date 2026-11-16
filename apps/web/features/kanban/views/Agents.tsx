@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react';
-import { Empty } from '../../../components/ui/Empty';
+import { Empty } from '../../../components';
 import { Icon } from '../../../elements';
 import { Segmented } from '../../../elements';
-import { useUi } from '../../../components/ui/UiProvider';
-import { useStore } from '../state/store';
-import { AgentDialog } from '../components/dialogs/AgentDialog';
-import { AgentCard } from './agents/AgentCard';
-import { History } from './agents/History';
-import { Inbox } from './agents/Inbox';
+import { useUi } from '../../../components';
+import { useStore } from '../../../components';
+import { AgentDialog } from '../../../components';
+import { AgentCard } from '../../../components';
+import { History } from '../../../components';
+import { Inbox } from '../../../components';
 
 type Tab = 'inbox' | 'history' | 'agents';
 

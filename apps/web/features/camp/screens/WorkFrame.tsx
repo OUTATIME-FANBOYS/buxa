@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import type { Role } from '@buxa/domain';
 import { ROUTES } from '../../../config/routes';
 import { navGroupsFor } from '../../../logic/common';
-import { Shell } from '../components/Shell';
+import { Shell } from '../../../components';
 
 interface Props {
   /** The role in the camp being worked in, or null when the person has no camp yet. Decides which camp items show. */

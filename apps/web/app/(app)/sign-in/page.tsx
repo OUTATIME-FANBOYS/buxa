@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { ROUTES } from '@/config/routes';
 import { publicEnv } from '@/config/env';
-import { AuthHero } from '@/features/auth/components/AuthHero';
-import { NotConfigured } from '@/features/auth/components/NotConfigured';
-import { SignInForm } from '@/features/auth/components/SignInForm';
+import { AuthHero } from '@/components';
+import { NotConfigured } from '@/components';
+import { SignInForm } from '@/components';
 import { MAINTENANCE_PATH, isServiceRefused } from '@/server/availability';
 import { getSession } from '@/server/session';
 

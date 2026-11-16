@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation';
 import { authorize } from '@buxa/domain';
-import { Empty } from '../../../components/ui/Empty';
-import { PageHeader } from '../../../components/ui/PageHeader';
+import { Empty } from '../../../components';
+import { PageHeader } from '../../../components';
 import { getRuntime } from '../../../server/runtime';
-import { ON_SITE_LIST_ID, OnSiteRow } from '../checkOut/OnSiteRow';
+import { ON_SITE_LIST_ID, OnSiteRow } from '../../../components';
 import { campActor, campZone } from '../../../logic/composers/index.server';
 import { onSiteSummary, toOnSiteRow } from '../../../logic/common';
 

@@ -1,6 +1,6 @@
-import { PageHeader } from '../../../components/ui/PageHeader';
+import { PageHeader } from '../../../components';
 import { HELP_PAGE, HELP_SECTIONS } from '../../../logic/common';
-import { HelpSection } from './HelpSection';
+import { HelpSection } from '../../../components';
 
 /** The whole help page: the page title, then every section in order. */
 export function HelpPage() {

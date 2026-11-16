@@ -20,7 +20,7 @@ vi.mock('../../../server/session', () => ({
 }));
 vi.mock('../../../logic/composers/camp/selectCampAction', () => ({ selectCampAction: async () => {} }));
 vi.mock('../../../logic/composers/auth/signOut', () => ({ signOut: async () => {} }));
-vi.mock('../forms/NewCampForm', () => ({ NewCampForm: ({ first }: { first: boolean }) => `NEW-CAMP-${first ? 'FIRST' : 'EXTRA'}` }));
+vi.mock('../../../components/camp/NewCampForm', () => ({ NewCampForm: ({ first }: { first: boolean }) => `NEW-CAMP-${first ? 'FIRST' : 'EXTRA'}` }));
 
 // Vitest compiles JSX with the classic runtime, which needs React in scope.
 Object.assign(globalThis, { React });

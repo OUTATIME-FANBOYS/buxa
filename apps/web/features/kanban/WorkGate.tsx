@@ -2,7 +2,7 @@
 
 import { useEffect, type ReactNode } from 'react';
 import type { SessionIdentity } from '../../logic/composers';
-import { useStore } from './state/store';
+import { useStore } from '../../components';
 
 /**
  * The work pages act as the signed-in person. Until the board has adopted that person as its current user, nothing renders.

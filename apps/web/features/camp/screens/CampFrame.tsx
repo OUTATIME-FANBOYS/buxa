@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
 import type { Membership, User } from '@buxa/contracts';
 import { ROUTES } from '../../../config/routes';
-import { InstallHint } from '../../install/InstallHint';
-import { NewCampForm } from '../forms/NewCampForm';
-import { AccountMenu } from '../components/AccountMenu';
-import { CampSwitcher } from '../components/CampSwitcher';
+import { InstallHint } from '../../../components';
+import { NewCampForm } from '../../../components';
+import { AccountMenu } from '../../../components';
+import { CampSwitcher } from '../../../components';
 import { navGroupsFor } from '../../../logic/common';
-import { Shell } from '../components/Shell';
+import { Shell } from '../../../components';
 
 interface Props { user: User; camps: readonly Membership[]; current: Membership | null; children: ReactNode }
 

@@ -1,11 +1,11 @@
 import { notFound } from 'next/navigation';
 import { authorize, toLocalDate } from '@buxa/domain';
-import { Empty } from '../../../components/ui/Empty';
-import { PageHeader } from '../../../components/ui/PageHeader';
+import { Empty } from '../../../components';
+import { PageHeader } from '../../../components';
 import { getRuntime } from '../../../server/runtime';
-import { Notice } from '../components/Notice';
-import { LogFilters } from '../components/LogFilters';
-import { LogTable } from '../components/LogTable';
+import { Notice } from '../../../components';
+import { LogFilters } from '../../../components';
+import { LogTable } from '../../../components';
 import { campActor, campZone } from '../../../logic/composers/index.server';
 import { attendanceExportPath } from '../../../logic/common';
 import { parseLogFilter } from '../../../logic/common';

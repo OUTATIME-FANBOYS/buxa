@@ -1,13 +1,13 @@
 'use client';
 
-import { Empty } from '../../../components/ui/Empty';
+import { Empty } from '../../../components';
 import type { CampHome } from '../../../logic/composers/index.server';
-import { useStore } from '../state/store';
+import { useStore } from '../../../components';
 import { taskCounts } from '../../../logic/common';
-import { HomeHeader } from './home/HomeHeader';
-import { HomeStats } from './home/HomeStats';
-import { OnSitePanel } from './home/OnSitePanel';
-import { StaffTasksPanel } from './home/StaffTasksPanel';
+import { HomeHeader } from '../../../components';
+import { HomeStats } from '../../../components';
+import { OnSitePanel } from '../../../components';
+import { StaffTasksPanel } from '../../../components';
 
 /**
  * Home: one page. With a camp it shows the camp's facts and the staff tasks together; without one (the browser demo) it shows the tasks alone.

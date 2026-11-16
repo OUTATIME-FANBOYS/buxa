@@ -1,11 +1,29 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { basename, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 /** The phone block of each stylesheet: everything inside the first `@media (max-width: 720px)` after the given marker. */
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const attendance = read('./features/attendance.css');
 const phoneBlock = attendance.slice(attendance.indexOf('@media (max-width: 720px)'), attendance.indexOf('.log-filters'));
-const tsx = (path: string) => read(`../features/${path}`);
+// Components move between layers, so a component is found by its file name anywhere under apps/web.
+const appRoot = fileURLToPath(new URL('../', import.meta.url));
+const findByName = (dir: string, name: string): string | null => {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) { const hit = findByName(full, name); if (hit) return hit; }
+    else if (entry.name === name) return full;
+  }
+  return null;
+};
+const tsx = (path: string) => {
+  const name = basename(path);
+  const file = findByName(appRoot, name);
+  if (!file) throw new Error(`no source file named ${name}`);
+  return readFileSync(file, 'utf8');
+};
 
 describe('sign-in on a phone', () => {
   it('the single column may shrink below its widest child, so the page does not scroll sideways', () => {

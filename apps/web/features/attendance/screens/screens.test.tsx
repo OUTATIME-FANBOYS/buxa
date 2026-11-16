@@ -20,10 +20,10 @@ vi.mock('../../../server/session', () => ({
   getCurrentCamp: async () => (session.camp ? { orgId: 'o1', role: session.role, name: 'Sunrise', slug: 'sunrise' } : null),
   toActor: (_s: unknown, camp: { role: Role }) => ({ userId: 'u1', orgId: 'o1', role: camp.role }),
 }));
-vi.mock('../../scanner/ScanField', () => ({
+vi.mock('../../../components/scanner/ScanField', () => ({
   ScanField: ({ label }: { label: string }) => `SCAN:${label}`,
 }));
-vi.mock('../../scanner/CameraScanner', () => ({
+vi.mock('../../../components/scanner/CameraScanner', () => ({
   CameraScanner: () => 'CAMERA',
 }));
 vi.mock('../../../logic/composers/attendance/searchPeople', () => ({ searchPeopleAction: async () => ({ kind: 'ok', value: [] }) }));

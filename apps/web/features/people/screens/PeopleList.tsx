@@ -2,13 +2,13 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { ROUTES } from '../../../config/routes';
-import { Empty } from '../../../components/ui/Empty';
+import { Empty } from '../../../components';
 import { isHttpError } from '../../../server/http/errors';
 import { getRuntime } from '../../../server/runtime';
 import { currentActor } from '../../../logic/composers/index.server';
 import { readListParams, toListQuery, type ListParams } from '../../../logic/common';
-import { PeopleSearch } from '../components/PeopleSearch';
-import { PeopleTable } from '../components/PeopleTable';
+import { PeopleSearch } from '../../../components';
+import { PeopleTable } from '../../../components';
 import type { PersonSummary } from '@buxa/contracts';
 import type { Actor } from '@buxa/domain';
 

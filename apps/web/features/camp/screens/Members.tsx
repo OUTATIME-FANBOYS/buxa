@@ -1,7 +1,7 @@
 import { can } from '@buxa/domain';
 import { getRuntime } from '../../../server/runtime';
-import { MembersTable } from '../components/MembersTable';
-import { PageHeader } from '../../../components/ui/PageHeader';
+import { MembersTable } from '../../../components';
+import { PageHeader } from '../../../components';
 import { campContext } from '../../../logic/composers/index.server';
 
 export async function Members() {
