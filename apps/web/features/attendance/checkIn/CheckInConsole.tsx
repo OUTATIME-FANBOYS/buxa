@@ -26,16 +26,13 @@ export function CheckInConsole({ timeZone, canOverride }: Props) {
 
   return (
     <div className="checkin">
-      <section className="checkin-input" aria-label="Scan a badge">
+      <section className="checkin-input" aria-label="Find a person">
         <ScanPanel scanRef={scanRef} disabled={busy} onCode={raw => { void scanCode(raw); }} />
+        <NameSearch onPick={pickPerson} />
       </section>
-      {/* On a phone the result follows the scan field, above the name search, so it is visible without scrolling. */}
       <section className="checkin-result" aria-label="Result">
         <ResultPanel state={state} timeZone={timeZone} canOverride={canOverride}
           onCheckIn={(card, method, reason) => { void checkIn(card, method, reason); }} onClear={clear} />
-      </section>
-      <section className="checkin-find" aria-label="Find a person">
-        <NameSearch onPick={pickPerson} />
       </section>
       <LiveRegion message={checkInAnnouncement(state, timeZone)} />
     </div>

@@ -20,14 +20,14 @@ Goal: a safe base to build every camp feature on. Nothing here is visible to cam
 ## Exit criteria
 - Two orgs cannot read or write each other's data, for every table, proven by tests that run in CI.
 - Audit log cannot be edited or deleted directly.
-- CI is green on `main`; staging is live.
+- CI is green on `develop`; staging is live (step 6 is still in progress).
 
 ## Known tension (decided)
 Audit rows are append-only, but deliberately deleting an org or user (erasure of a child's data) must still work.
 Foreign-key actions are allowed; direct edits are not.
 
 ## Local setup
-`cp .env.example .env`, `docker compose up -d db`, `export DATABASE_URL=...`, `npm run db:migrate`, `npm test`.
+`docker compose up -d db`, `export DATABASE_URL=postgres://buxa:buxa@localhost:5433/buxa`, `npm run db:migrate`, `npm test`.
 Without `DATABASE_URL` the database tests are skipped, so say so when reporting results.
 
 ## Running the API
@@ -36,7 +36,7 @@ Without `DATABASE_URL` the database tests are skipped, so say so when reporting 
 ## Running the web app
 1. `cp apps/web/.env.example apps/web/.env.local` and fill in the two public Supabase values.
 2. `npm run dev`; open the URL it prints.
-3. Sign in (or create an account), set up a camp, look around. The old kanban demo is still at `#/dashboard`.
+3. Sign in (or create an account), set up a camp, look around. The old kanban demo is still at `/kanban`.
 Without the env file the app shows a setup page instead of failing.
 
 ## Deploying

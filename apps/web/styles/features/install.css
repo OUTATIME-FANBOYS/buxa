@@ -1,9 +1,0 @@
-/* ---------- Install hint: "Add to home screen" for signed-in staff on a phone ---------- */
-/* Loaded last so it can sit under the page content without changing any other rule. Not shown on desktop (see installRules.ts). */
-.install-hint { display: grid; gap: var(--s3); margin-top: var(--s4); padding: var(--s4); border-radius: var(--r-3);
-  background: var(--accent-soft); color: var(--accent-deep); border: 1px solid var(--accent); }
-.install-hint-body { display: grid; gap: var(--s1); }
-.install-hint-title { display: flex; align-items: center; gap: var(--s2); font-weight: 600; }
-.install-hint p { margin: 0; }
-.install-hint-actions { display: flex; gap: var(--s2); justify-content: flex-end; flex-wrap: wrap; }
-.install-hint .btn { min-height: 44px; }
