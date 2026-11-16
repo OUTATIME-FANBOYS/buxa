@@ -1,5 +1,5 @@
 import type { Session } from '@buxa/contracts';
-import { Pill } from '@/elements';
+import { Pill } from '@/elements/export';
 import type { Tone } from '@/logic/common';
 
 /** Whether a session has places, is full, or is full with a waitlist. Always a word, never colour alone. */

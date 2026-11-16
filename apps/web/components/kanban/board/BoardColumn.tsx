@@ -1,7 +1,7 @@
 import type { Column, Project, Task } from '@/logic/common';
 import type { BoardDnd } from '@/logic/common';
 import { useStore } from '@/providers/providers';
-import { Icon } from '@/elements';
+import { Icon } from '@/elements/export';
 import { Menu } from '../../Menu';
 import type { useBoardDnd } from '@/hooks/hooks';
 import { QuickAdd } from './QuickAdd';

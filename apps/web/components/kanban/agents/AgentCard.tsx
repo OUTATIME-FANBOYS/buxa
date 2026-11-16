@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Avatar } from '@/elements';
-import { Icon } from '@/elements';
-import { Pill } from '@/elements';
-import { Segmented } from '@/elements';
+import { Avatar } from '@/elements/export';
+import { Icon } from '@/elements/export';
+import { Pill } from '@/elements/export';
+import { Segmented } from '@/elements/export';
 import { useStore } from '@/providers/providers';
 import { ConnectAgentDialog } from '../dialogs/ConnectAgentDialog';
 import * as A from '@/logic/common';

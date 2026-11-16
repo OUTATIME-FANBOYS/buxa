@@ -2,14 +2,14 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can, isUuid } from '@buxa/domain';
 import { ROUTES, classPath, newSessionPath } from '@/config/routes';
-import { Empty, PageHeader } from '@/components';
+import { Empty, PageHeader } from '@/components/export';
 import { campZone } from '@/logic/composers/index.server';
 import { currentActor } from '@/logic/composers/index.server';
 import { FORBIDDEN_ENROLMENTS, FORBIDDEN_READ } from '@/logic/common';
 import { loadClassPage, loadEnrolments, loadPeopleWithRole } from '@/logic/composers/index.server';
-import { EnrolmentTable } from '@/components';
-import { SessionTable } from '@/components';
-import { EnrolForm } from '@/components';
+import { EnrolmentTable } from '@/components/export';
+import { SessionTable } from '@/components/export';
+import { EnrolForm } from '@/components/export';
 
 const pick = (value: string | string[] | undefined): string | null => (typeof value === 'string' && isUuid(value) ? value : null);
 

@@ -1,15 +1,15 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Empty } from '@/components';
-import { Icon } from '@/elements';
-import { Segmented } from '@/elements';
+import { Empty } from '@/components/export';
+import { Icon } from '@/elements/export';
+import { Segmented } from '@/elements/export';
 import { useUi } from '@/providers/UiProvider';
 import { useStore } from '@/providers/providers';
-import { AgentDialog } from '@/components';
-import { AgentCard } from '@/components';
-import { History } from '@/components';
-import { Inbox } from '@/components';
+import { AgentDialog } from '@/components/export';
+import { AgentCard } from '@/components/export';
+import { History } from '@/components/export';
+import { Inbox } from '@/components/export';
 
 type Tab = 'inbox' | 'history' | 'agents';
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { Dialog } from '../../Dialog';
-import { Field } from '@/elements';
+import { Field } from '@/elements/export';
 import { useUi } from '@/providers/UiProvider';
 import { useStore } from '@/providers/providers';
 import { UNREACHABLE, type AgentConnection } from '@/logic/common';

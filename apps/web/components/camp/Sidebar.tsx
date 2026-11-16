@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Icon } from '@/elements';
+import { Icon } from '@/elements/export';
 import type { RoutePath } from '@/config/routes';
 import type { NavGroup } from '@/logic/common';
 import { SidebarNav } from './SidebarNav';

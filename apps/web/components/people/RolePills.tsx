@@ -1,5 +1,5 @@
 import { CAMP_ROLE_LABELS, type CampRole } from '@buxa/domain';
-import { Pill } from '@/elements';
+import { Pill } from '@/elements/export';
 
 export function RolePills({ roles }: { roles: readonly CampRole[] }) {
   if (roles.length === 0) return <span className="muted">No roles</span>;

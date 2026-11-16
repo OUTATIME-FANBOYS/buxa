@@ -1,5 +1,5 @@
 import { useStore } from '@/providers/providers';
-import { CalendarView } from '@/components';
+import { CalendarView } from '@/components/export';
 
 export function WorkspaceCalendar() {
   const { wsTasks, readOnly, projects, project } = useStore();

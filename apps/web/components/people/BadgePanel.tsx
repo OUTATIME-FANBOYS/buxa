@@ -1,4 +1,4 @@
-import { Pill } from '@/elements';
+import { Pill } from '@/elements/export';
 import { BadgeActions } from './forms/BadgeActions';
 
 export interface BadgePanelProps {

@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import type { Task } from '@/logic/common';
 import { useStore } from '@/providers/providers';
 import { useTaskDrawer } from '@/providers/providers';
-import { Icon } from '@/elements';
+import { Icon } from '@/elements/export';
 import { fmt, parse, toISO, today } from '@/logic/common';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

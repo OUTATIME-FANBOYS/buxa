@@ -4,9 +4,9 @@ import { useMemo, useState } from 'react';
 import type { Task } from '@/logic/common';
 import { useStore } from '@/providers/providers';
 import { useTaskDrawer } from '@/providers/providers';
-import { Avatar } from '@/elements';
+import { Avatar } from '@/elements/export';
 import { Empty } from '../../Empty';
-import { Icon } from '@/elements';
+import { Icon } from '@/elements/export';
 import { subtaskProgress } from '@/logic/common';
 import { addDays, diffDays, fmt, parse, today } from '@/logic/common';
 

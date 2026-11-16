@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { BoardsPage } from '@/views';
+import { BoardsPage } from '@/views/export';
 
 export const metadata: Metadata = { title: 'Boards' };
 

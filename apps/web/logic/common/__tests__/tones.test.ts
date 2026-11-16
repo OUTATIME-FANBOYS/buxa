@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { avatarHue, KIND_TONE, PALETTE_HUES, tagHue } from '../tones';
-import { progressValue } from '../../../elements';
+import { progressValue } from '../../../elements/export';
 
 describe('KIND_TONE', () => {
   it('maps every column kind to a tone', () => {

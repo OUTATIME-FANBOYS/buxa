@@ -1,6 +1,6 @@
 'use client';
 
-import { Icon } from '@/elements';
+import { Icon } from '@/elements/export';
 import { useUi } from '@/providers/UiProvider';
 
 export function SidebarToggle() {

@@ -2,10 +2,10 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can, IMPORT_COLUMNS, MAX_IMPORT_ROWS } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
-import { Empty, PageHeader } from '@/components';
+import { Empty, PageHeader } from '@/components/export';
 import { currentActor } from '@/logic/composers/index.server';
 import { FORBIDDEN_MANAGE } from '@/logic/common';
-import { ImportForm } from '@/components';
+import { ImportForm } from '@/components/export';
 
 /**
  * Bulk import: download the template, fill it in a spreadsheet, upload it, read the preview, then confirm. Viewers get the forbidden

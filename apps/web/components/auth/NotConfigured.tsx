@@ -1,4 +1,4 @@
-import { Icon } from '@/elements';
+import { Icon } from '@/elements/export';
 
 /** Shown on the sign-in page when the public Supabase settings are missing, instead of a form that cannot work. */
 export function NotConfigured() {

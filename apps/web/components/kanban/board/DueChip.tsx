@@ -1,4 +1,4 @@
-import { Icon } from '@/elements';
+import { Icon } from '@/elements/export';
 import { dueInfo } from '@/logic/common';
 
 export const DueChip = ({ due, kind }: { due?: string; kind: 'open' | 'active' | 'done' }) => {

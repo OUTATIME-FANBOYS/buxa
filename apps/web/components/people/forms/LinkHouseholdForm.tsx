@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useRef } from 'react';
-import { Field } from '@/elements';
+import { Field } from '@/elements/export';
 import { fieldError, idle } from '@/logic/common';
 import { linkHouseholdAction } from '@/logic/composers';
 import { FormMessage } from './FormMessage';

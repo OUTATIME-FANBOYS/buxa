@@ -40,6 +40,7 @@ export * from './charts/HBars';
 export * from './help/CodeBlock';
 export * from './help/ExampleTable';
 export * from './help/HelpSection';
+export * from './install/InstallHint';
 export * from './kanban/AgentSummary';
 export * from './kanban/FilterBar';
 export * from './kanban/ResetDemoButton';

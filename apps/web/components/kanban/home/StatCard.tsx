@@ -1,4 +1,4 @@
-import { Icon } from '@/elements';
+import { Icon } from '@/elements/export';
 import { type Tone } from '@/logic/common';
 
 export interface StatCardProps { label: string; value: number | string; note?: string; tone?: Tone; icon?: string; strong?: boolean }

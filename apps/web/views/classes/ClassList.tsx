@@ -2,11 +2,11 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
-import { Empty, PageHeader } from '@/components';
+import { Empty, PageHeader } from '@/components/export';
 import { currentActor } from '@/logic/composers/index.server';
 import { FORBIDDEN_READ } from '@/logic/common';
 import { loadClasses } from '@/logic/composers/index.server';
-import { ClassesTable } from '@/components';
+import { ClassesTable } from '@/components/export';
 
 /** The camp's classes. Anyone who can read classes sees them; only staff with classes:manage see the create and import buttons. */
 export async function ClassList() {

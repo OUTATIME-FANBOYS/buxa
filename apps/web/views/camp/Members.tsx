@@ -1,7 +1,7 @@
 import { can } from '@buxa/domain';
 import { loadMembers } from '@/logic/composers/index.server';
-import { MembersTable } from '@/components';
-import { PageHeader } from '@/components';
+import { MembersTable } from '@/components/export';
+import { PageHeader } from '@/components/export';
 import { campContext } from '@/logic/composers/index.server';
 
 export async function Members() {

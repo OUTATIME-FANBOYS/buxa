@@ -1,6 +1,6 @@
 import type { Member } from '@buxa/contracts';
-import { Avatar } from '@/elements';
-import { Pill } from '@/elements';
+import { Avatar } from '@/elements/export';
+import { Pill } from '@/elements/export';
 import { ROLE_LABEL } from '@/logic/common';
 
 /** Email is shown only where the reader may see it (admins and above); everyone else sees names and roles. */

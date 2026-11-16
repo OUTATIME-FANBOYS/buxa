@@ -1,5 +1,5 @@
-import { Icon } from '@/elements';
-import { Pill } from '@/elements';
+import { Icon } from '@/elements/export';
+import { Pill } from '@/elements/export';
 import { useUi } from '@/providers/UiProvider';
 import { useStore } from '@/providers/providers';
 import { useTaskDrawer } from '@/providers/providers';

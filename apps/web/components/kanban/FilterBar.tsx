@@ -1,13 +1,13 @@
 'use client';
 
-import { PriorityMark } from '@/elements';
+import { PriorityMark } from '@/elements/export';
 import { useCallback, useRef, useState, type ReactNode } from 'react';
 import type { Filter, DueFilter, Project, Sort } from '@/logic/common';
 import { useStore } from '@/providers/providers';
-import { Icon } from '@/elements';
+import { Icon } from '@/elements/export';
 import { Menu } from '../Menu';
 import { Popover } from '../Popover';
-import { Avatar } from '@/elements';
+import { Avatar } from '@/elements/export';
 import { useUi } from '@/providers/UiProvider';
 import { PRIORITIES, emptyFilter, isFilterActive } from '@/logic/common';
 

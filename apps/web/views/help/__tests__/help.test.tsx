@@ -3,10 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { HELP_SECTIONS } from '@/logic/common';
 import { IMPORTS_SECTION } from '@/logic/common';
 import { EXPORTS_SECTION } from '@/logic/common';
-import { CodeBlock } from '@/components';
-import { ExampleTable } from '@/components';
+import { CodeBlock } from '@/components/export';
+import { ExampleTable } from '@/components/export';
 import { HelpPage } from '../HelpPage';
-import { HelpSection } from '@/components';
+import { HelpSection } from '@/components/export';
 
 /** The heading levels in the order they appear in the markup, for example ['h1', 'h2', 'h3']. */
 const headingLevels = (html: string): string[] => [...html.matchAll(/<(h[1-6])[ >]/g)].map(m => m[1] ?? '');

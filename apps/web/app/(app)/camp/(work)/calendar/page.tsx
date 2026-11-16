@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { CalendarPage } from '@/views';
+import { CalendarPage } from '@/views/export';
 
 export const metadata: Metadata = { title: 'Calendar' };
 

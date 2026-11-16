@@ -2,12 +2,12 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
-import { Empty } from '@/components';
+import { Empty } from '@/components/export';
 import { loadPeopleOrForbidden } from '@/logic/composers/index.server';
 import { currentActor } from '@/logic/composers/index.server';
 import { readListParams, type ListParams } from '@/logic/common';
-import { PeopleSearch } from '@/components';
-import { PeopleTable } from '@/components';
+import { PeopleSearch } from '@/components/export';
+import { PeopleTable } from '@/components/export';
 import type { PersonSummary } from '@buxa/contracts';
 import type { Actor } from '@buxa/domain';
 

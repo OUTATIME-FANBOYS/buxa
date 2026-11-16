@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
 import { authorize } from '@buxa/domain';
-import { Empty } from '@/components';
-import { PageHeader } from '@/components';
-import { CheckInConsole } from '@/components';
+import { Empty } from '@/components/export';
+import { PageHeader } from '@/components/export';
+import { CheckInConsole } from '@/components/export';
 import { campActor, campZone } from '@/logic/composers/index.server';
 
 /** The check-in page. Without attendance:record the person gets a friendly answer, not an error. */
