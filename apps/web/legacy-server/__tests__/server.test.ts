@@ -6,7 +6,7 @@ import http from 'node:http';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { createApp } from '../app';
-import { AGENT_ID, buildSeed } from '../../features/kanban/lib/seed';
+import { AGENT_ID, CAMP_PROJECT_IDS, PROJECT, PROJECT_NAME, USER, buildSeed } from '../../features/kanban/lib/seed';
 import { pickData } from '../../features/kanban/lib/dataSlices';
 import * as A from '../../features/kanban/lib/agents';
 import type { AppState } from '../../features/kanban/types';
@@ -75,35 +75,35 @@ describe('MCP endpoint', () => {
     const names = (await c.listTools()).tools.map(x => x.name);
     expect(names).toEqual(expect.arrayContaining(['whoami', 'list_projects', 'list_tasks', 'get_task', 'create_task', 'update_task', 'move_task', 'add_comment', 'list_my_proposals', 'review_proposal']));
     const who = (await call(c, 'whoami')).json;
-    expect(who.permissions).toMatchObject({ create_task: 'allowed', complete_task: 'needs approval' }); expect(who.projects.length).toBe(3);
+    expect(who.permissions).toMatchObject({ create_task: 'allowed', complete_task: 'needs approval' }); expect(who.projects.length).toBe(CAMP_PROJECT_IDS.length);
     await c.close();
   });
 
   it('applies an allowed write, queues one that needs approval, and the app sees both', async () => {
     const c = await connect(await token()); const v0 = (await api('GET', '/api/state')).json.version;
-    const made = await call(c, 'create_task', { project: 'Website Relaunch', title: 'Check 404 page', column: 'Backlog', reason: 'Found while crawling' });
+    const made = await call(c, 'create_task', { project: PROJECT_NAME.registration, title: 'Check cabin 4 window latch', column: 'Backlog', reason: 'Found during the cabin walk-through' });
     expect(made.json.status).toBe('applied');
     const moved = await call(c, 'move_task', { taskId: made.json.taskId, column: 'Done', reason: 'Looks finished' });
     expect(moved.json.status).toBe('pending');
     const state = (await api('GET', '/api/state')).json; expect(state.version).toBeGreaterThan(v0);
     const task = state.data.tasks.find((t: any) => t.id === made.json.taskId);
-    expect(task).toMatchObject({ title: 'Check 404 page', createdBy: AGENT_ID }); expect(task.history[0].via.reason).toBe('Found while crawling');
+    expect(task).toMatchObject({ title: 'Check cabin 4 window latch', createdBy: AGENT_ID }); expect(task.history[0].via.reason).toBe('Found during the cabin walk-through');
     expect(state.data.proposals.find((p: any) => p.id === moved.json.proposalId).status).toBe('pending');
     // a person approves in the app; the agent can then see the outcome
-    const approved = A.decide({ ...buildStateFrom(state.data), session: { userId: 'u-maya' } }, moved.json.proposalId, 'approve');
+    const approved = A.decide({ ...buildStateFrom(state.data), session: { userId: USER.rosa } }, moved.json.proposalId, 'approve');
     expect((await api('PUT', '/api/state', { baseVersion: state.version, data: pickData(approved) })).status).toBe(200);
     const mine = (await call(c, 'list_my_proposals', { status: 'approved' })).json; expect(mine.map((p: any) => p.id)).toContain(moved.json.proposalId);
     await c.close();
   });
 
   it('keeps an agent inside its scope and reports bad input as tool errors', async () => {
-    const st = (await api('GET', '/api/state')).json; const data = { ...st.data, agents: st.data.agents.map((a: any) => ({ ...a, scope: ['p-web'] })) };
+    const st = (await api('GET', '/api/state')).json; const data = { ...st.data, agents: st.data.agents.map((a: any) => ({ ...a, scope: [PROJECT.registration] })) };
     await api('PUT', '/api/state', { baseVersion: st.version, data });
     const c = await connect(await token());
-    expect((await call(c, 'list_tasks', { project: 'Mobile App v2' })).error).toBe(true);
-    const appTask = st.data.tasks.find((t: any) => t.projectId === 'p-app').id;
+    expect((await call(c, 'list_tasks', { project: PROJECT_NAME.facilities })).error).toBe(true);
+    const appTask = st.data.tasks.find((t: any) => t.projectId === PROJECT.facilities).id;
     expect((await call(c, 'get_task', { taskId: appTask })).text).toMatch(/scope/);
-    expect((await call(c, 'create_task', { project: 'p-web', title: 'x', due: 'soon', reason: 'r' })).text).toMatch(/YYYY-MM-DD/);
+    expect((await call(c, 'create_task', { project: PROJECT.registration, title: 'x', due: 'soon', reason: 'r' })).text).toMatch(/YYYY-MM-DD/);
     expect((await call(c, 'move_task', { taskId: 't-4', column: 'Nowhere', reason: 'r' })).text).toMatch(/No column/);
     await c.close();
   });

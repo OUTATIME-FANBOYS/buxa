@@ -19,7 +19,7 @@ export function ProjectDialog({ project, onClose }: { project?: Project; onClose
   return (
     <Dialog title={project ? 'Edit project' : 'New project'} onClose={onClose}>
       <form onSubmit={submit} className="stack" noValidate>
-        <Field label="Name" error={err}><input value={name} onChange={e => { setName(e.target.value); setErr(null); }} data-autofocus placeholder="e.g. Brand refresh" /></Field>
+        <Field label="Name" error={err}><input value={name} onChange={e => { setName(e.target.value); setErr(null); }} data-autofocus placeholder="e.g. Summer 2028 Registration" /></Field>
         <Field label="Description"><textarea rows={3} value={desc} onChange={e => setDesc(e.target.value)} maxLength={300} placeholder="What is this project for?" /></Field>
         <Field label="Deadline"><input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} /></Field>
         <div className="row-end"><button type="button" className="btn" onClick={onClose}>Cancel</button><button className="btn btn-primary">{project ? 'Save' : 'Create project'}</button></div>

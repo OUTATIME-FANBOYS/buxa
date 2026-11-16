@@ -16,7 +16,7 @@ export function InviteDialog({ onClose }: { onClose: () => void }) {
         if (m) return setErr(m);
         toast(`Invitation added for ${email.trim()}`); onClose();
       }}>
-        <Field label="Email" error={err}><input type="email" value={email} onChange={e => { setEmail(e.target.value); setErr(null); }} data-autofocus placeholder="name@company.com" /></Field>
+        <Field label="Email" error={err}><input type="email" value={email} onChange={e => { setEmail(e.target.value); setErr(null); }} data-autofocus placeholder="name@example.com" /></Field>
         <Field label="Role" hint="Viewers can read everything but cannot edit.">
           <select value={role} onChange={e => setRole(e.target.value as Role)}><option value="admin">Admin</option><option value="member">Member</option><option value="viewer">Viewer</option></select>
         </Field>
