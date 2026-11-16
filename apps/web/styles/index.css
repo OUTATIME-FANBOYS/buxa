@@ -59,5 +59,6 @@
 @import './features/camp.css';
 @import './features/attendance.css';
 @import './features/people.css';
+@import './features/classes.css';
 @import './features/help.css';
 @import './features/badge-scanner.css';

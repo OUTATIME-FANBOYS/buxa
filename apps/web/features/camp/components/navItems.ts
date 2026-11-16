@@ -45,6 +45,7 @@ export const CAMP_NAV_GROUPS: readonly NavGroup[] = [
       { href: ROUTES.tasks, label: 'My tasks', icon: 'tasks' },
       { href: ROUTES.projects, label: 'Projects', icon: 'folder' },
       { href: ROUTES.boards, label: 'Boards', icon: 'kanban' },
+      { href: ROUTES.classes, label: 'Classes', icon: 'calendar', requires: 'events:read' },
       { href: ROUTES.calendar, label: 'Calendar', icon: 'calendar' },
       { href: ROUTES.agents, label: 'Agents', icon: 'agent' },
       { href: ROUTES.reports, label: 'Reports', icon: 'chart' },

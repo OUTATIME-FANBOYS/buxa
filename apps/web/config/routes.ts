@@ -14,6 +14,11 @@ export const ROUTES = {
   checkIn: '/camp/check-in',
   onSite: '/camp/on-site',
   attendance: '/camp/attendance',
+  // Classes: programs, their sessions and enrolments. Reading needs events:read; creating, enrolling and importing need classes:manage.
+  classes: '/camp/classes',
+  newClass: '/camp/classes/new',
+  classImport: '/camp/classes/import',
+  classImportTemplate: '/camp/classes/import/template',
   // Work: tasks kept in this browser (the kanban demo), shown in the same shell.
   tasks: '/camp/tasks',
   projects: '/camp/projects',
@@ -30,6 +35,12 @@ export type RoutePath = (typeof ROUTES)[keyof typeof ROUTES];
 
 /** A person's page. Ids are validated by the page, not here. */
 export const personPath = (id: string): string => `${ROUTES.people}/${encodeURIComponent(id)}`;
+
+/** One class: its sessions, capacity and enrolments. */
+export const classPath = (classId: string): string => `${ROUTES.classes}/${encodeURIComponent(classId)}`;
+
+/** The page that adds a session to a class. */
+export const newSessionPath = (classId: string): string => `${classPath(classId)}/sessions/new`;
 
 /** The page that changes a person's details. Needs people:update. */
 export const personEditPath = (id: string): string => `${personPath(id)}/edit`;

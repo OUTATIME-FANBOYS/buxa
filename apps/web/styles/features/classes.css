@@ -1,0 +1,15 @@
+/* ---------- Classes (programs, sessions, enrolments, bulk import) ---------- */
+/* Every control on these screens is at least 44px tall, for touch and for keyboard users alike. */
+.classes-target { min-height: 44px; }
+.classes-actions { display: flex; flex-wrap: wrap; gap: var(--s3); align-items: center; }
+.classes-inline { display: inline-flex; flex-wrap: wrap; gap: var(--s2); align-items: center; }
+.classes-form, .classes-enrol, .classes-import { max-width: 680px; }
+.classes-facts { margin: 0; }
+.classes-columns { display: inline-block; max-width: 100%; overflow-wrap: anywhere; font-size: var(--fs-s); }
+.classes-problems { margin: 0; padding-left: var(--s4); display: grid; gap: var(--s1); }
+.classes-import-table td:nth-child(7) { min-width: 220px; white-space: normal; }
+.classes-enrolments { padding-top: var(--s4); border-top: 1px solid var(--line); }
+@media (max-width: 720px) {
+  .classes-form .form-row > .field, .classes-enrol .form-row > .field { flex-basis: 100%; }
+  .classes-actions .btn { flex: 1 1 100%; }
+}
