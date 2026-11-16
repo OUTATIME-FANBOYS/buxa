@@ -14,13 +14,18 @@ Buxa has two sets of sample data, and both are about **Camp Birchwood**, a ficti
 
 It creates no tasks and no tickets.
 
-**Browser demo (the sign-in page's demo accounts, and the Kanban board)**, stored in the browser only:
+**Browser demo (the Kanban board)**, stored in the browser only:
 
 - the workspace `Camp Birchwood` with five staff-operations projects: Summer 2027 Registration, Facilities & Safety Prep, Staff Hiring & Training, Parent Communications, and Activities & Programme
 - 55 tasks in those projects, with subtasks, comments and due dates
 - five fictional staff users and a triage agent, with a little agent history
 
+The board acts as the account you are signed in with. The browser seed's staff are fictional people in the board's data only; signing in never adds or changes them.
 The browser seed lives in `apps/web/features/kanban/lib/seed/`. It is the only source of browser demo data.
+
+## Sample persona accounts (later)
+
+There are no browser-only accounts and no shared demo password. Sample accounts for each persona (director, registrar, operations, and so on) will come from a later seed step that creates real Supabase accounts, so they sign in like anyone else. That step is not built yet.
 
 ## Running the database seed
 

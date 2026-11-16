@@ -11,7 +11,7 @@ export function ResetDemoButton() {
   const reset = async () => {
     const ok = await confirm({
       title: 'Reset demo data?',
-      body: 'This replaces everything in this browser with the Camp Birchwood sample, including tasks, accounts and changes you made.',
+      body: 'This replaces everything in this browser with the Camp Birchwood sample, including tasks, projects and changes you made.',
       confirmLabel: 'Reset',
       danger: true,
     });

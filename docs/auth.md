@@ -31,6 +31,9 @@ curl -s -X POST localhost:5173/v1/orgs -H "authorization: Bearer $TOKEN" -H 'con
 curl -s localhost:5173/v1/org -H "authorization: Bearer $TOKEN" -H "x-org-id: <id from above>"
 ```
 
+## Sample accounts
+There are no browser-only accounts and no shared demo password. Sample accounts for each persona will come from a later seed step that creates real Supabase accounts; until then, sign up with a real email address.
+
 ## Endpoints (v1)
 | Route | Needs | Does |
 |---|---|---|
