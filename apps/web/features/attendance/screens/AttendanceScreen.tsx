@@ -8,6 +8,7 @@ import { LogTable } from '../components/LogTable';
 import { campActor, campZone } from '../lib/campActor';
 import { attendanceExportPath } from '../lib/paths';
 import { parseLogFilter } from '../lib/logFilter';
+import { HELP_LINK_LABEL, helpLink } from '@/features/help';
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>;
 
@@ -37,7 +38,7 @@ export async function AttendanceScreen({ searchParams }: { searchParams: SearchP
 
   return (
     <div className="page">
-      <PageHeader title="Attendance" subtitle="Who came in and out, in camp time." />
+      <PageHeader title="Attendance" subtitle="Who came in and out, in camp time." actions={<a className="btn" href={helpLink('exports')}>{HELP_LINK_LABEL}</a>} />
       <LogFilters values={values} people={people}>
         {parsed.ok && canExport && <a className="btn log-export" href={attendanceExportPath(parsed.filter)} download>Download CSV</a>}
       </LogFilters>
