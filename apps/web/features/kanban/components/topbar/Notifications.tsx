@@ -1,8 +1,10 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useStore } from '../../state/store';
 import { useTaskDrawer } from '../../state/TaskDrawerContext';
-import { Empty, Icon, Popover } from '@/components/ui';
-import { ago, diffDays, today } from '../../lib/dates';
+import { Empty } from '../../../../components/ui/Empty';
+import { Icon } from '../../../../components/ui/Icon';
+import { Popover } from '../../../../components/ui/Popover';
+import { ago, diffDays, today } from '../../../../logic/common';
 
 const NOTICE_ICON: Record<string, string> = { mention: 'at', comment: 'message', complete: 'check', invite: 'users' };
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Column, Project } from '../../types';
+import type { Column, Project } from '../../../../logic/common';
 import { useStore } from '../../state/store';
 
 export function QuickAdd({ project, column, onDone }: { project: Project; column: Column; onDone: () => void }) {

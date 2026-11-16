@@ -1,4 +1,4 @@
-import type { ThemePref, UiState, ViewKind } from '../../types';
+import type { ThemePref, UiState, ViewKind } from '../../../../logic/common';
 import type { ActionContext } from './context';
 
 export function uiActions({ set }: ActionContext) {

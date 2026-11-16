@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { ThemePref } from '../types';
+import type { ThemePref } from '../../../logic/common';
 
 /** Mirrors the theme preference onto `<html data-theme>`, following the system setting when the preference is "system". */
 export function useTheme(theme: ThemePref) {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import type { ActionState } from '@/lib/actions/state';
+import type { ActionState } from '../../../logic/common';
 
 /**
  * A form-level result. It takes focus when a result arrives (success, or an error with no field to point at), so a keyboard user and

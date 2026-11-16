@@ -1,6 +1,6 @@
-import type { Column, ColumnKind, Role } from '../../types';
-import * as D from '../../lib/domain';
-import { uid } from '../../lib/tasks';
+import type { Column, ColumnKind, Role } from '../../../../logic/common';
+import * as D from '../../../../logic/common';
+import { uid } from '../../../../logic/common';
 import type { ActionContext } from './context';
 
 /** Columns, projects, workspaces and members. */

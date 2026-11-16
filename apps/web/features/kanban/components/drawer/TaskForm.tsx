@@ -1,6 +1,8 @@
-import type { Project, Task } from '../../types';
+import type { Project, Task } from '../../../../logic/common';
 import { useStore } from '../../state/store';
-import { Dialog, Field, useUi } from '@/components/ui';
+import { Dialog } from '../../../../components/ui/Dialog';
+import { Field } from '../../../../components/ui/Field';
+import { useUi } from '../../../../components/ui/UiProvider';
 import { useTaskCommands } from '../../hooks/useTaskCommands';
 import { useTaskDraft } from '../../hooks/useTaskDraft';
 import { TaskDrawerHeader } from './TaskDrawerHeader';

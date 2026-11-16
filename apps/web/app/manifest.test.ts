@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { BRAND } from '@/config/brand';
 import { ROUTES } from '@/config/routes';
-import manifest from './manifest';
+import manifest from '@/app/manifest';
 
 const tokens = readFileSync(new URL('../styles/tokens.css', import.meta.url), 'utf8');
 const rootToken = (name: string) => new RegExp(`--${name}:\\s*(#[0-9a-f]{6})`, 'i').exec(tokens)?.[1]?.toUpperCase();

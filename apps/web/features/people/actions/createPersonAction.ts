@@ -3,13 +3,13 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { NewPersonInputSchema, NewHouseholdInputSchema } from '@buxa/contracts';
-import { ROUTES, personPath } from '@/config/routes';
-import { failure, type ActionState } from '@/lib/actions/state';
-import { getRuntime } from '@/server/runtime';
+import { ROUTES, personPath } from '../../../config/routes';
+import { failure, type ActionState } from '../../../logic/common';
+import { getRuntime } from '../../../server/runtime';
 import { currentActor } from '../lib/camp';
-import { CAMPER_NEEDS_HOUSEHOLD, CHOOSE_ONE_HOUSEHOLD, HOUSEHOLD_NAME_NEEDED, NEW_HOUSEHOLD_NO_GUARDIAN } from '../lib/copy';
+import { CAMPER_NEEDS_HOUSEHOLD, CHOOSE_ONE_HOUSEHOLD, HOUSEHOLD_NAME_NEEDED, NEW_HOUSEHOLD_NO_GUARDIAN } from '../../../logic/common';
 import { expectedFailure, NO_CAMP } from './failures';
-import { dropBlank, field, fieldAll, parseWith } from './parse';
+import { dropBlank, field, fieldAll, parseWith } from '../../../logic/common';
 
 const OPTIONAL = ['preferredName', 'dateOfBirth', 'email', 'phone', 'householdId', 'relationship'] as const;
 

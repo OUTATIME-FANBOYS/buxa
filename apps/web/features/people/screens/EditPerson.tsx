@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
-import { personPath } from '@/config/routes';
-import { Empty } from '@/components/ui';
+import { personPath } from '../../../config/routes';
+import { Empty } from '../../../components/ui/Empty';
 import { PageHeader } from '../components/PageHeader';
 import { EditPersonForm } from '../forms/EditPersonForm';
 import { currentActor } from '../lib/camp';
-import { displayName } from '../lib/format';
+import { displayName } from '../../../logic/common';
 import { loadPerson } from '../lib/loadPerson';
 
 /** Change one person's details. Only people:update may; everyone else is told so, without a form to fill in. */

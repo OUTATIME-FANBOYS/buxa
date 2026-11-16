@@ -3,9 +3,9 @@
 import Link from 'next/link';
 import { useActionState, useEffect, useState } from 'react';
 import { suggestSlug } from '@buxa/domain';
-import { ROUTES } from '@/config';
-import { fieldError, idle } from '@/lib/actions/state';
-import { createCampAction } from '../actions';
+import { ROUTES } from '../../../config/routes';
+import { fieldError, idle } from '../../../logic/common';
+import { createCampAction } from '../actions/createCampAction';
 import { TextField } from './TextField';
 
 /** Where the address came from: made from the name until the person types their own. */

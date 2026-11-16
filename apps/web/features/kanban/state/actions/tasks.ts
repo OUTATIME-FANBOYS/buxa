@@ -1,6 +1,6 @@
-import type { Attachment, Filter, Task } from '../../types';
-import * as D from '../../lib/domain';
-import { uid } from '../../lib/tasks';
+import type { Attachment, Filter, Task } from '../../../../logic/common';
+import * as D from '../../../../logic/common';
+import { uid } from '../../../../logic/common';
 import type { ActionContext } from './context';
 
 /** Task commands: ids are minted here, rules live in the domain. */

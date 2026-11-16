@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation';
 import { authorize } from '@buxa/domain';
-import { Empty, PageHeader } from '@/components/ui';
-import { getRuntime } from '@/server/runtime';
+import { Empty } from '../../../components/ui/Empty';
+import { PageHeader } from '../../../components/ui/PageHeader';
+import { getRuntime } from '../../../server/runtime';
 import { ON_SITE_LIST_ID, OnSiteRow } from '../checkOut/OnSiteRow';
 import { campActor, campZone } from '../lib/campActor';
-import { onSiteSummary, toOnSiteRow } from '../lib/onSiteView';
+import { onSiteSummary, toOnSiteRow } from '../../../logic/common';
 
 /** Everyone on site now, oldest arrival first, with check-out for staff. */
 export async function OnSiteScreen() {

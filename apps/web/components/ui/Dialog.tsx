@@ -2,8 +2,8 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { project, reduceMotion, rubberband, springAnimate, VelocityTracker } from '@/lib/motion';
-import { FOCUSABLE } from './focus';
+import { project, reduceMotion, rubberband, springAnimate, VelocityTracker } from '../../logic/common';
+import { FOCUSABLE } from '../../logic/common';
 import { Icon } from './Icon';
 
 const CloseCtx = createContext<() => void>(() => {});

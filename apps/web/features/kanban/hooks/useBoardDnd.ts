@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
-import type { Column, Project, Task } from '../types';
+import type { Column, Project, Task } from '../../../logic/common';
 import { useStore } from '../state/store';
-import { boardDndReducer, idleDnd } from '../state/boardDnd';
+import { boardDndReducer, idleDnd } from '../../../logic/common';
 import { createDrag } from '../lib/cardDrag';
-import { useUi } from '@/components/ui';
+import { useUi } from '../../../components/ui/UiProvider';
 
 /**
  * Drag and drop for a board. Cards use pointer tracking (lib/cardDrag); columns keep native drag on desktop,

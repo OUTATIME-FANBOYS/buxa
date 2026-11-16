@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Icon } from '@/components/ui';
+import { Icon } from '../../../components/ui/Icon';
 import { AuthForm, type AuthMode } from './AuthForm';
 
 /** The sign-in card: switches between signing in and creating an account. The page around it is rendered on the server. */

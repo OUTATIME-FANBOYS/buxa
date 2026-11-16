@@ -1,4 +1,5 @@
-import { Icon, type Tone } from '@/components/ui';
+import { Icon } from '../../../../components/ui/Icon';
+import { type Tone } from '../../../../logic/common';
 
 export interface StatCardProps { label: string; value: number | string; note?: string; tone?: Tone; icon?: string; strong?: boolean }
 

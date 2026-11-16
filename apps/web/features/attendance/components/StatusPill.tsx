@@ -1,6 +1,6 @@
 import type { AccessStatus } from '@buxa/domain';
-import { Pill } from '@/components/ui';
-import { STATUS_DISPLAY } from '../lib/status';
+import { Pill } from '../../../components/ui/Pill';
+import { STATUS_DISPLAY } from '../../../logic/common';
 
 /** A status as a pill: the words are the meaning, the colour only repeats it. */
 export function StatusPill({ status }: { status: AccessStatus | null }) {

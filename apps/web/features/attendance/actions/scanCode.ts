@@ -1,11 +1,11 @@
 'use server';
 
-import { getRuntime } from '@/server/runtime';
-import { RATE_RULES, enforceRateLimit } from '@/server/rateLimit/limiter';
-import { lookupFor, type Lookup } from '../lib/card';
-import { ScanInputSchema } from '../lib/inputs';
+import { getRuntime } from '../../../server/runtime';
+import { RATE_RULES, enforceRateLimit } from '../../../server/rateLimit/limiter';
+import { lookupFor, type Lookup } from '../../../logic/common';
+import { ScanInputSchema } from '../../../logic/common';
 import { runAttendanceAction } from '../lib/runAction';
-import type { ActionOutcome } from './outcome';
+import type { ActionOutcome } from '../../../logic/common';
 
 /** Read a code from the scanner or camera. One neutral `unknown` for every code that does not identify a person. */
 export async function scanCodeAction(input: unknown): Promise<ActionOutcome<Lookup>> {

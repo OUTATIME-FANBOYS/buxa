@@ -1,4 +1,4 @@
-import { qrPath } from '@/lib/qr/svg';
+import { qrPath } from '../../logic/common';
 
 /** A printable badge with a QR code of `payload` (what `credentialPayload(token)` returns). Server-renderable; the code is inline SVG. */
 export interface BadgeCardProps { personName: string; roleLabel: string; campName: string; payload: string }

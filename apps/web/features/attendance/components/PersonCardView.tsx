@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { CAMP_ROLE_LABELS } from '@buxa/domain';
-import type { PersonCard } from '../lib/card';
-import { displayName } from '../lib/name';
-import { formatCampTime } from '../lib/time';
+import type { PersonCard } from '../../../logic/common';
+import { attendanceDisplayName } from '../../../logic/common';
+import { formatCampTime } from '../../../logic/common';
 import { StatusPill } from './StatusPill';
 
 interface Props { card: PersonCard; timeZone: string; children: ReactNode }
@@ -13,7 +13,7 @@ export function PersonCardView({ card, timeZone, children }: Props) {
   const roles = person.roles.map(role => CAMP_ROLE_LABELS[role]).join(', ');
   return (
     <article className="result-card" aria-labelledby="result-name">
-      <h2 id="result-name" className="result-name">{displayName(person)}</h2>
+      <h2 id="result-name" className="result-name">{attendanceDisplayName(person)}</h2>
       {roles && <p className="muted">{roles}</p>}
       <div className="row"><StatusPill status={person.status} /></div>
       {onSiteSince && <p className="result-since">On site since {formatCampTime(onSiteSince, timeZone)}</p>}

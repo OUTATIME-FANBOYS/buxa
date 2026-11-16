@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import type { Priority, Project, Task } from '../types';
+import type { Priority, Project, Task } from '../../../logic/common';
 import { useStore } from '../state/store';
 import { useTaskDrawer } from '../state/TaskDrawerContext';
-import { datesError, titleError } from '../lib/taskValidation';
-import { useUi } from '@/components/ui';
+import { datesError, titleError } from '../../../logic/common';
+import { useUi } from '../../../components/ui/UiProvider';
 
 type Errors = { title?: string; due?: string };
 

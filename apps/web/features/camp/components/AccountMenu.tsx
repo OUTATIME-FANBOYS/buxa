@@ -2,8 +2,9 @@
 
 import { useRef } from 'react';
 import type { User } from '@buxa/contracts';
-import { Avatar, Menu } from '@/components/ui';
-import { signOut } from '@/features/auth';
+import { Avatar } from '../../../components/ui/Avatar';
+import { Menu } from '../../../components/ui/Menu';
+import { signOut } from '../../auth/actions/signOut';
 import { useDarkMode } from './useDarkMode';
 
 /** The avatar menu: who you are, light/dark, sign out. Signing out is a Server Action submitted through a form. */

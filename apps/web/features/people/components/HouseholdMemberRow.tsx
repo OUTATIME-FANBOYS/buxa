@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { HouseholdMember } from '@buxa/contracts';
-import { Pill } from '@/components/ui';
-import { personPath } from '@/config/routes';
+import { Pill } from '../../../components/ui/Pill';
+import { personPath } from '../../../config/routes';
 import { UnlinkButton } from '../forms/UnlinkButton';
 
 /** One member of a household, with the two facts that decide pick-up, as words. */

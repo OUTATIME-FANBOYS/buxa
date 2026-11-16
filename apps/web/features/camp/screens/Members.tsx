@@ -1,7 +1,7 @@
 import { can } from '@buxa/domain';
-import { getRuntime } from '@/server/runtime';
+import { getRuntime } from '../../../server/runtime';
 import { MembersTable } from '../components/MembersTable';
-import { PageHeader } from '@/components/ui';
+import { PageHeader } from '../../../components/ui/PageHeader';
 import { campContext } from '../lib/campContext';
 
 export async function Members() {

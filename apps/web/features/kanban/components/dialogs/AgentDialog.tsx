@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Dialog, Field, useUi } from '@/components/ui';
+import { Dialog } from '../../../../components/ui/Dialog';
+import { Field } from '../../../../components/ui/Field';
+import { useUi } from '../../../../components/ui/UiProvider';
 import { useStore } from '../../state/store';
 
 export function AgentDialog({ onClose }: { onClose: () => void }) {

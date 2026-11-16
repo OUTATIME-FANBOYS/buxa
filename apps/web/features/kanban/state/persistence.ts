@@ -1,7 +1,7 @@
-import { LEGACY_THEME_KEY, THEME_KEY } from '@/config';
-import type { AppState } from '../types';
-import { buildDemo } from '../lib/demo';
-import { normalize } from './normalize';
+import { LEGACY_THEME_KEY, THEME_KEY } from '../../../config/theme';
+import type { AppState } from '../../../logic/common';
+import { buildDemo } from '../../../logic/common';
+import { normalize } from '../../../logic/common';
 
 const KEY = 'buxa.state.v1';
 const LEGACY_KEY = 'tessera.state.v1'; // the app's previous name; read once so nobody loses their data

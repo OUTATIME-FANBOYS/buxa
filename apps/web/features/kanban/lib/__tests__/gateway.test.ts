@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { AGENT_ID, CAMP_PROJECT_IDS, PROJECT, PROJECT_NAME, USER, WORKSPACE, buildSeed } from '../seed';
+import { AGENT_ID, CAMP_PROJECT_IDS, PROJECT, PROJECT_NAME, USER, WORKSPACE } from '../../../../logic/common';
+import { buildSeed } from '../../../../logic/common';
 import * as G from '../gateway';
-import * as A from '../agents';
-import type { AppState } from '../../types';
+import * as A from '../../../../logic/common';
+import type { AppState } from '../../../../logic/common';
 
 let s: AppState;
 const call = <T,>(r: G.Out<T>): T => { expect(r.error).toBeUndefined(); s = r.state; return r.value as T; };
@@ -104,7 +105,7 @@ describe('tasks created with only the required fields', () => {
     expect((G.listTasks(s, AGENT_ID, { project: PROJECT.registration, query: 'no-such-text' }).value as unknown[]).length).toBe(0);
   });
   it('are repaired when old data lacking defaults is loaded', async () => {
-    const { repairData } = await import('../dataSlices');
+    const { repairData } = await import('../../../../logic/common');
     const broken = { ...s, tasks: [{ ...s.tasks[0], description: undefined, priority: undefined } as never, ...s.tasks.slice(1)] };
     const fixed = repairData(broken);
     expect(fixed.tasks[0]).toMatchObject({ description: '', priority: 'medium' }); expect(fixed.tasks[1]).toBe(s.tasks[1]);

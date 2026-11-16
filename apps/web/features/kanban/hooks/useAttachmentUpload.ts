@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useStore } from '../state/store';
-import { useUi } from '@/components/ui';
+import { useUi } from '../../../components/ui/UiProvider';
 
 const MAX_FILE = 1024 * 1024;
 

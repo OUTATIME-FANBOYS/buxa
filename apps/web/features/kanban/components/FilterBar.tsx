@@ -1,10 +1,13 @@
 import { PriorityMark } from './PriorityMark';
 import { useCallback, useRef, useState, type ReactNode } from 'react';
-import type { Filter, DueFilter, Project, Sort } from '../types';
+import type { Filter, DueFilter, Project, Sort } from '../../../logic/common';
 import { useStore } from '../state/store';
-import { Icon } from '@/components/ui';
-import { Menu, Popover, Avatar, useUi } from '@/components/ui';
-import { PRIORITIES, emptyFilter, isFilterActive } from '../lib/tasks';
+import { Icon } from '../../../components/ui/Icon';
+import { Menu } from '../../../components/ui/Menu';
+import { Popover } from '../../../components/ui/Popover';
+import { Avatar } from '../../../components/ui/Avatar';
+import { useUi } from '../../../components/ui/UiProvider';
+import { PRIORITIES, emptyFilter, isFilterActive } from '../../../logic/common';
 
 function Chip({ label, count, children, width = 220 }: { label: string; count: number; children: ReactNode; width?: number }) {
   const [open, setOpen] = useState(false); const ref = useRef<HTMLButtonElement>(null);

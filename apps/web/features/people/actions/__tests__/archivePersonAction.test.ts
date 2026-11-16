@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ROUTES } from '@/config/routes';
-import { conflict, forbidden } from '@/server/http/errors';
+import { ROUTES } from '../../../../config/routes';
+import { conflict, forbidden } from '../../../../server/http/errors';
 import { archivePersonAction } from '../archivePersonAction';
 import { IDS } from './form';
 
@@ -12,8 +12,8 @@ const h = vi.hoisted(() => ({
 }));
 vi.mock('next/cache', () => ({ revalidatePath: h.revalidatePath }));
 vi.mock('next/navigation', () => ({ redirect: h.redirect }));
-vi.mock('@/server/runtime', () => ({ getRuntime: () => ({ services: { people: h.people } }) }));
-vi.mock('@/features/people/lib/camp', () => ({ currentActor: async () => h.actor }));
+vi.mock('../../../../server/runtime', () => ({ getRuntime: () => ({ services: { people: h.people } }) }));
+vi.mock('../../lib/camp', () => ({ currentActor: async () => h.actor }));
 
 describe('archivePersonAction', () => {
   beforeEach(() => {

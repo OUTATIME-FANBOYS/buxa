@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import type { CampHome } from '@/features/camp/client';
+import type { CampHome } from '../../../camp/lib/campHome';
 
-vi.mock('@/features/camp/client', () => ({ RenameCampButton: () => 'RENAME-BUTTON' }));
+vi.mock('../../../camp/forms/RenameCampButton', () => ({ RenameCampButton: () => 'RENAME-BUTTON' }));
 
 Object.assign(globalThis, { React });
 const { HomeHeader } = await import('./HomeHeader');

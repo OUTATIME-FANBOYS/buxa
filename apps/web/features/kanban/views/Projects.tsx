@@ -2,13 +2,18 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useStore } from '../state/store';
-import { Avatar, Empty, Menu, Pill, Progress, useUi } from '@/components/ui';
-import { Icon } from '@/components/ui';
-import { ProjectDialog } from '../components/dialogs';
-import { diffDays, fmt, today } from '../lib/dates';
-import { boardPath } from '@/config/routes';
-import { HEALTH_LABEL, HEALTH_TONE, healthOf, progressOf } from '../lib/stats';
-import type { Project } from '../types';
+import { Avatar } from '../../../components/ui/Avatar';
+import { Empty } from '../../../components/ui/Empty';
+import { Menu } from '../../../components/ui/Menu';
+import { Pill } from '../../../components/ui/Pill';
+import { Progress } from '../../../components/ui/Progress';
+import { useUi } from '../../../components/ui/UiProvider';
+import { Icon } from '../../../components/ui/Icon';
+import { ProjectDialog } from '../components/dialogs/ProjectDialog';
+import { diffDays, fmt, today } from '../../../logic/common';
+import { boardPath } from '../../../config/routes';
+import { HEALTH_LABEL, HEALTH_TONE, healthOf, progressOf } from '../../../logic/common';
+import type { Project } from '../../../logic/common';
 
 export function Projects() {
   const { s, actions, projects, workspace, wsTasks, kindOf, members, readOnly } = useStore(); const { confirm, toast } = useUi();

@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AttendanceEntry, PersonSummary } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
-import type { OnSiteEntry } from '@/server/services';
+import type { OnSiteEntry } from '../../../server/services/attendance/AttendanceService';
 
 const notFound = vi.hoisted(() => vi.fn(() => { throw new Error('NEXT_NOT_FOUND'); }));
 const session = vi.hoisted(() => ({ camp: true as boolean, role: 'staff' as Role, timeZone: 'Asia/Kolkata' }));
@@ -14,14 +14,16 @@ const services = vi.hoisted(() => ({
 }));
 
 vi.mock('next/navigation', () => ({ notFound, useRouter: () => ({ refresh() {}, push() {} }) }));
-vi.mock('@/server/runtime', () => ({ getRuntime: () => ({ services }) }));
-vi.mock('@/server/session', () => ({
+vi.mock('../../../server/runtime', () => ({ getRuntime: () => ({ services }) }));
+vi.mock('../../../server/session', () => ({
   requireSession: async () => ({ user: { id: 'u1', email: 'a@example.test', name: 'Ada' }, memberships: [] }),
   getCurrentCamp: async () => (session.camp ? { orgId: 'o1', role: session.role, name: 'Sunrise', slug: 'sunrise' } : null),
   toActor: (_s: unknown, camp: { role: Role }) => ({ userId: 'u1', orgId: 'o1', role: camp.role }),
 }));
-vi.mock('@/features/scanner', () => ({
+vi.mock('../../scanner/ScanField', () => ({
   ScanField: ({ label }: { label: string }) => `SCAN:${label}`,
+}));
+vi.mock('../../scanner/CameraScanner', () => ({
   CameraScanner: () => 'CAMERA',
 }));
 vi.mock('../actions/searchPeople', () => ({ searchPeopleAction: async () => ({ kind: 'ok', value: [] }) }));

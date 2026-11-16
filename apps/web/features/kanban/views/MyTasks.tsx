@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { useTaskDrawer } from '../state/TaskDrawerContext';
-import { Empty, Segmented } from '@/components/ui';
-import { ListView } from '../components/board-views';
-import { Icon } from '@/components/ui';
-import { diffDays, today } from '../lib/dates';
-import type { Task } from '../types';
+import { Empty } from '../../../components/ui/Empty';
+import { Segmented } from '../../../components/ui/Segmented';
+import { ListView } from '../components/board-views/ListView';
+import { Icon } from '../../../components/ui/Icon';
+import { diffDays, today } from '../../../logic/common';
+import type { Task } from '../../../logic/common';
 
 export function MyTasks() {
   const { s, me, wsTasks, kindOf, projects, readOnly } = useStore(); const { openTask } = useTaskDrawer();

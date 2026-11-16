@@ -1,6 +1,6 @@
 'use client';
 
-import { Empty } from '@/components/ui';
+import { Empty } from '../../../components/ui/Empty';
 
 /** Shown inside the page frame when a page could not load. The message is for the person; the error goes to the console. */
 export function ErrorState({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {

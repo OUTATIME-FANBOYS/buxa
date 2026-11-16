@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ROUTES } from '@/config';
-import { idle } from '@/lib/actions/state';
+import { ROUTES } from '../../../../config/routes';
+import { idle } from '../../../../logic/common';
 import { renameCampAction } from '../renameCampAction';
 import { selectCampAction } from '../selectCampAction';
 import { formOf, startWorld } from './support';
 
 const mocks = vi.hoisted(() => ({ requireSession: vi.fn(), rememberCamp: vi.fn(), revalidatePath: vi.fn() }));
-vi.mock('@/server/session', async importOriginal => ({ ...(await importOriginal<object>()), requireSession: mocks.requireSession, rememberCamp: mocks.rememberCamp }));
+vi.mock('../../../../server/session', async importOriginal => ({ ...(await importOriginal<object>()), requireSession: mocks.requireSession, rememberCamp: mocks.rememberCamp }));
 vi.mock('next/cache', () => ({ revalidatePath: mocks.revalidatePath }));
 
 describe('renameCampAction and selectCampAction', () => {

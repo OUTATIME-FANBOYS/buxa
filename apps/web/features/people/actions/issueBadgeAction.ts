@@ -2,13 +2,13 @@
 
 import { revalidatePath } from 'next/cache';
 import { isUuid } from '@buxa/domain';
-import { personPath } from '@/config/routes';
-import { failure } from '@/lib/actions/state';
-import { getRuntime } from '@/server/runtime';
+import { personPath } from '../../../config/routes';
+import { failure } from '../../../logic/common';
+import { getRuntime } from '../../../server/runtime';
 import { currentActor } from '../lib/camp';
-import type { BadgeState } from '../lib/badgeState';
+import type { BadgeState } from '../../../logic/common';
 import { expectedFailure, NO_CAMP } from './failures';
-import { field } from './parse';
+import { field } from '../../../logic/common';
 
 /**
  * Issue a badge, or reissue one (which revokes the old badge). Returns the QR payload once; the token is not returned separately and

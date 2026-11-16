@@ -1,7 +1,7 @@
 import { useEffect, useReducer } from 'react';
-import { serverApi } from '../lib/sync';
-import { connectionReducer, initialConnection } from '../state/agentConnection';
-import { useUi } from '@/components/ui';
+import { serverApi } from '../../../logic/common';
+import { connectionReducer, initialConnection } from '../../../logic/common';
+import { useUi } from '../../../components/ui/UiProvider';
 
 /** Talks to the local Buxa server about one agent's connection token and keeps the dialog's phase in step. */
 export function useAgentConnection(agentId: string, name: string) {

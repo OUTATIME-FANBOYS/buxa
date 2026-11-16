@@ -1,5 +1,5 @@
-import { Icon } from '@/components/ui';
-import type { Tone } from '@/components/ui/tones';
+import { Icon } from '../../../components/ui/Icon';
+import type { Tone } from '../../../logic/common';
 
 interface Props { tone: Tone; title: string; body?: string }
 

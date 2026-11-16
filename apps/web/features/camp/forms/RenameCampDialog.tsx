@@ -1,9 +1,10 @@
 'use client';
 
 import { useActionState, useEffect, useState } from 'react';
-import { Dialog, useUi } from '@/components/ui';
-import { fieldError, idle } from '@/lib/actions/state';
-import { renameCampAction } from '../actions';
+import { Dialog } from '../../../components/ui/Dialog';
+import { useUi } from '../../../components/ui/UiProvider';
+import { fieldError, idle } from '../../../logic/common';
+import { renameCampAction } from '../actions/renameCampAction';
 import { TextField } from './TextField';
 
 const FORM_ID = 'rename-camp';

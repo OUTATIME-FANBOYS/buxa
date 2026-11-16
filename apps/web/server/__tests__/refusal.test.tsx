@@ -10,10 +10,11 @@ const env = vi.hoisted(() => {
 vi.mock('next/headers', () => ({ cookies: async () => env.store }));
 vi.mock('next/navigation', () => ({ redirect: (url: string) => { throw new Error(`REDIRECT ${url}`); } }));
 
-import MaintenancePage from '@/app/maintenance/page';
-import { MAINTENANCE_MESSAGE } from '@/features/auth/lib/messages';
-import { signIn, signUp } from '@/features/auth/actions';
-import { idle } from '@/lib/actions/state';
+import MaintenancePage from '../../app/maintenance/page';
+import { MAINTENANCE_MESSAGE } from '../../logic/common';
+import { signIn } from '../../features/auth/actions/signIn';
+import { signUp } from '../../features/auth/actions/signUp';
+import { idle } from '../../logic/common';
 import { MAINTENANCE_PATH, isRefusing } from '../availability';
 import { installRuntime } from '../runtime';
 import { requireSession } from '../session';

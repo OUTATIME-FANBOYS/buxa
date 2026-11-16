@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react';
-import { AccountMenu, CampSwitcher, WorkFrame } from '@/features/camp';
-import { TaskTopBar, WorkArea } from '@/features/kanban';
+import { AccountMenu } from '@/features/camp/components/AccountMenu';
+import { CampSwitcher } from '@/features/camp/components/CampSwitcher';
+import { WorkFrame } from '@/features/camp/screens/WorkFrame';
+import { TaskTopBar } from '@/features/kanban/components/topbar/TaskTopBar';
+import { WorkArea } from '@/features/kanban/WorkArea';
 import { getCurrentCamp, requireSession } from '@/server/session';
 
 /**

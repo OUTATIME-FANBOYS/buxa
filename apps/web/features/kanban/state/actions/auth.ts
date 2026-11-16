@@ -1,5 +1,5 @@
-import type { User } from '../../types';
-import * as D from '../../lib/domain';
+import type { User } from '../../../../logic/common';
+import * as D from '../../../../logic/common';
 import type { ActionContext } from './context';
 
 /** The signed-in person as the server knows them. The kanban only ever learns this from the verified session. */

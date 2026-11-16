@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
-import type { Task } from '../../types';
+import type { Task } from '../../../../logic/common';
 import { useStore } from '../../state/store';
 import { useTaskDrawer } from '../../state/TaskDrawerContext';
-import { Avatar, Empty, Icon } from '@/components/ui';
-import { subtaskProgress } from '../../lib/tasks';
-import { addDays, diffDays, fmt, parse, today } from '../../lib/dates';
+import { Avatar } from '../../../../components/ui/Avatar';
+import { Empty } from '../../../../components/ui/Empty';
+import { Icon } from '../../../../components/ui/Icon';
+import { subtaskProgress } from '../../../../logic/common';
+import { addDays, diffDays, fmt, parse, today } from '../../../../logic/common';
 
 const DAYS = 42; const DAYW = 28;
 

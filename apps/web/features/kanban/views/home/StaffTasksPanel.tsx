@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { Icon } from '@/components/ui';
-import { ROUTES } from '@/config/routes';
-import { taskSummary, type TaskCounts } from '../../lib/homeTasks';
+import { Icon } from '../../../../components/ui/Icon';
+import { ROUTES } from '../../../../config/routes';
+import { taskSummary, type TaskCounts } from '../../../../logic/common';
 
 /** A short summary of the task numbers, with the way into the boards. */
 export function StaffTasksPanel({ tasks }: { tasks: TaskCounts }) {

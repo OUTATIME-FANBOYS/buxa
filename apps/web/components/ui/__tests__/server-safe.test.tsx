@@ -4,11 +4,18 @@ import { beforeAll, describe, expect, it } from 'vitest';
 
 // The root vitest config compiles JSX with the classic runtime (needs `React` in scope); Next uses the automatic one.
 // Provide it here rather than editing the shared config, then load the components.
-type Ui = typeof import('@/components/ui');
+type Ui = Record<string, any>;
 let ui: Ui;
 beforeAll(async () => {
   Object.assign(globalThis, { React });
-  ui = await import('@/components/ui');
+  // Built from the files, not the retired barrel, so each module is one import.
+  ui = {
+    ...(await import('../Icon')), ...(await import('../Pill')), ...(await import('../Avatar')),
+    ...(await import('../Empty')), ...(await import('../PageHeader')), ...(await import('../Field')),
+    ...(await import('../Progress')), ...(await import('../Segmented')), ...(await import('../Popover')),
+    ...(await import('../Menu')), ...(await import('../Dialog')), ...(await import('../UiProvider')),
+    ...(await import('../../../logic/common')),
+  };
 });
 
 // The server-safe components render to the exact markup the stylesheet expects.

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../../state/store';
-import { useUi } from '@/components/ui';
+import { useUi } from '../../../../components/ui/UiProvider';
 
 /** A comment box with @mention suggestions drawn from the workspace members. */
 export function CommentComposer({ taskId, members }: { taskId: string; members: { id: string; name: string }[] }) {

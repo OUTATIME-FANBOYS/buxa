@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
-import { ROUTES } from '@/config/routes';
-import { Empty } from '@/components/ui';
-import { isHttpError } from '@/server/http/errors';
-import { getRuntime } from '@/server/runtime';
+import { ROUTES } from '../../../config/routes';
+import { Empty } from '../../../components/ui/Empty';
+import { isHttpError } from '../../../server/http/errors';
+import { getRuntime } from '../../../server/runtime';
 import { currentActor } from '../lib/camp';
-import { readListParams, toListQuery, type ListParams } from '../lib/listQuery';
+import { readListParams, toListQuery, type ListParams } from '../../../logic/common';
 import { PeopleSearch } from '../components/PeopleSearch';
 import { PeopleTable } from '../components/PeopleTable';
 import type { PersonSummary } from '@buxa/contracts';

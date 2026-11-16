@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { personPath } from '@/config/routes';
-import { idle } from '@/lib/actions/state';
-import { forbidden } from '@/server/http/errors';
+import { personPath } from '../../../../config/routes';
+import { idle } from '../../../../logic/common';
+import { forbidden } from '../../../../server/http/errors';
 import { addMembershipAction } from '../addMembershipAction';
 import { revokeMembershipAction } from '../revokeMembershipAction';
 import { formOf, IDS } from './form';
@@ -12,8 +12,8 @@ const h = vi.hoisted(() => ({
   revalidatePath: vi.fn(),
 }));
 vi.mock('next/cache', () => ({ revalidatePath: h.revalidatePath }));
-vi.mock('@/server/runtime', () => ({ getRuntime: () => ({ services: { memberships: h.memberships } }) }));
-vi.mock('@/features/people/lib/camp', () => ({ currentActor: async () => h.actor }));
+vi.mock('../../../../server/runtime', () => ({ getRuntime: () => ({ services: { memberships: h.memberships } }) }));
+vi.mock('../../lib/camp', () => ({ currentActor: async () => h.actor }));
 
 const season = { personId: IDS.person, plan: 'Summer 2027', startsOn: '2027-07-01', endsOn: '2027-08-20' };
 

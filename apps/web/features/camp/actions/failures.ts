@@ -1,7 +1,7 @@
 import type { Membership } from '@buxa/contracts';
-import { isHttpError } from '@/server/http/errors';
-import { failure, type ActionState } from '@/lib/actions/state';
-import type { Session } from '@/server/auth/session';
+import { isHttpError } from '../../../server/http/errors';
+import { failure, type ActionState } from '../../../logic/common';
+import type { Session } from '../../../server/auth/session';
 
 export const SLUG_TAKEN = 'That address is taken. Try another.';
 

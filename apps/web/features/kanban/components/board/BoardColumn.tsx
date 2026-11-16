@@ -1,7 +1,8 @@
-import type { Column, Project, Task } from '../../types';
-import type { BoardDnd } from '../../state/boardDnd';
+import type { Column, Project, Task } from '../../../../logic/common';
+import type { BoardDnd } from '../../../../logic/common';
 import { useStore } from '../../state/store';
-import { Icon, Menu } from '@/components/ui';
+import { Icon } from '../../../../components/ui/Icon';
+import { Menu } from '../../../../components/ui/Menu';
 import type { useBoardDnd } from '../../hooks/useBoardDnd';
 import { QuickAdd } from './QuickAdd';
 import { TaskCard } from './TaskCard';

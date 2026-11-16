@@ -1,7 +1,7 @@
-import type { Session } from '@/server/auth/session';
+import type { Session } from '../../../../server/auth/session';
 import type { Role } from '@buxa/domain';
-import { InMemoryStore } from '@/server/__tests__/fakes';
-import { startRuntime } from '@/server/__tests__/harness';
+import { InMemoryStore } from '../../../../server/__tests__/fakes';
+import { startRuntime } from '../../../../server/__tests__/harness';
 
 /** A posted form from plain values. */
 export function formOf(values: Record<string, string>): FormData {

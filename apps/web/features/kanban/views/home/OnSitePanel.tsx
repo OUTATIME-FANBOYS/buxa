@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ROUTES } from '@/config/routes';
+import { ROUTES } from '../../../../config/routes';
 
 /** How many people are on site now, with the link to the list. Shown only to roles that may read attendance. */
 export function OnSitePanel({ count }: { count: number }) {

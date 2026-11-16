@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { ActionOutcome } from '../actions/outcome';
+import type { ActionOutcome } from '../../../logic/common';
 import { searchPeopleAction } from '../actions/searchPeople';
-import type { PersonCard } from '../lib/card';
+import type { PersonCard } from '../../../logic/common';
 import { StatusPill } from '../components/StatusPill';
-import { displayName } from '../lib/name';
+import { attendanceDisplayName } from '../../../logic/common';
 
 const DEBOUNCE_MS = 200;
 
@@ -40,7 +40,7 @@ export function NameSearch({ onPick }: { onPick: (card: PersonCard) => void }) {
         {trimmed !== '' && current?.kind === 'ok' && current.value.map(card => (
           <li key={card.person.id}>
             <button type="button" className="name-result" onClick={() => onPick(card)}>
-              <span className="name-result-name">{displayName(card.person)}</span>
+              <span className="name-result-name">{attendanceDisplayName(card.person)}</span>
               <StatusPill status={card.person.status} />
               {card.onSiteSince && <span className="muted small">On site</span>}
             </button>

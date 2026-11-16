@@ -1,6 +1,6 @@
-import type { CampHome } from '@/features/camp/client';
-import type { TaskCounts } from '../../lib/homeTasks';
-import { homeCards } from './homeCards';
+import type { CampHome } from '../../../camp/lib/campHome';
+import type { TaskCounts } from '../../../../logic/common';
+import { homeCards } from '../../../../logic/common';
 import { StatCard } from './StatCard';
 
 /** One row for the whole Home: camp facts and task facts side by side. */

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
-import { NewCampForm, loadCampHome } from '@/features/camp';
-import { HomePage } from '@/features/kanban';
+import { NewCampForm } from '@/features/camp/forms/NewCampForm';
+import { loadCampHome } from '@/features/camp/lib/campHome';
+import { HomePage } from '@/features/kanban/pages';
 import { getCurrentCamp, getOptionalSession } from '@/server/session';
 
 export const metadata: Metadata = { title: 'Home' };

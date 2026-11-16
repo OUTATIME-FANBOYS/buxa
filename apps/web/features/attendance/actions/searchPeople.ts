@@ -1,11 +1,11 @@
 'use server';
 
 import { MAX_SEARCH_RESULTS } from '@buxa/domain';
-import { getRuntime } from '@/server/runtime';
-import { cardsFor, type PersonCard } from '../lib/card';
-import { SearchInputSchema } from '../lib/inputs';
+import { getRuntime } from '../../../server/runtime';
+import { cardsFor, type PersonCard } from '../../../logic/common';
+import { SearchInputSchema } from '../../../logic/common';
 import { runAttendanceAction } from '../lib/runAction';
-import type { ActionOutcome } from './outcome';
+import type { ActionOutcome } from '../../../logic/common';
 
 /** Type-ahead name search for the check-in screen. At most MAX_SEARCH_RESULTS people; an empty query finds nobody. */
 export async function searchPeopleAction(input: unknown): Promise<ActionOutcome<PersonCard[]>> {

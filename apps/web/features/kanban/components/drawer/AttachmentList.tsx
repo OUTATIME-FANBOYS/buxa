@@ -1,7 +1,7 @@
-import type { Task } from '../../types';
+import type { Task } from '../../../../logic/common';
 import { useStore } from '../../state/store';
-import { Icon } from '@/components/ui';
-import { fmtSize } from '../../lib/tasks';
+import { Icon } from '../../../../components/ui/Icon';
+import { fmtSize } from '../../../../logic/common';
 import { useAttachmentUpload } from '../../hooks/useAttachmentUpload';
 
 export function AttachmentList({ task, ro }: { task: Task; ro: boolean }) {

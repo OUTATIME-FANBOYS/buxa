@@ -1,12 +1,12 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { ROUTES } from '@/config';
-import { failure, success, type ActionState } from '@/lib/actions/state';
-import { isServiceRefused } from '@/server/availability';
-import { requestSessionClient } from '@/server/session/nextClient';
-import { parseSignUp } from '../lib/credentials';
-import { CONFIRM_EMAIL_MESSAGE, MAINTENANCE_MESSAGE, describeSignUpError, isAlreadyRegistered } from '../lib/messages';
+import { ROUTES } from '../../../config/routes';
+import { failure, success, type ActionState } from '../../../logic/common';
+import { isServiceRefused } from '../../../server/availability';
+import { requestSessionClient } from '../../../server/session/nextClient';
+import { parseSignUp } from '../../../logic/common';
+import { CONFIRM_EMAIL_MESSAGE, MAINTENANCE_MESSAGE, describeSignUpError, isAlreadyRegistered } from '../../../logic/common';
 
 /**
  * Creates an account. When the address needs confirming the answer is the same for a new and an already-registered address,

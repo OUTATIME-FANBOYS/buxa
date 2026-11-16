@@ -1,6 +1,6 @@
 import type { AccessStatus } from '@buxa/domain';
-import { Pill } from '@/components/ui';
-import { ACCESS_LABEL, ACCESS_TONE } from '../lib/status';
+import { Pill } from '../../../components/ui/Pill';
+import { ACCESS_LABEL, ACCESS_TONE } from '../../../logic/common';
 
 /** A membership status as a pill: the words are the meaning, the colour only reinforces them. Renders nothing when withheld (null). */
 export function AccessPill({ status }: { status: AccessStatus | null }) {

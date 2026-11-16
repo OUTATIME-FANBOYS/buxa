@@ -2,12 +2,12 @@
 
 import { revalidatePath } from 'next/cache';
 import { OrgPatchInputSchema } from '@buxa/contracts';
-import { ROUTES } from '@/config';
-import { failure, success, type ActionState } from '@/lib/actions/state';
-import { getRuntime } from '@/server/runtime';
-import { requireSession, toActor } from '@/server/session';
+import { ROUTES } from '../../../config/routes';
+import { failure, success, type ActionState } from '../../../logic/common';
+import { getRuntime } from '../../../server/runtime';
+import { requireSession, toActor } from '../../../server/session';
 import { expectedFailure, membershipOf } from './failures';
-import { parseInput, text } from './input';
+import { parseInput, text } from '../../../logic/common';
 
 /** Rename a camp the person belongs to. The camp id comes from the form but is checked against their memberships. */
 export async function renameCampAction(_previous: ActionState, form: FormData): Promise<ActionState> {

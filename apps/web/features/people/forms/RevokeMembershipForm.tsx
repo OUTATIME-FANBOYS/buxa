@@ -1,9 +1,9 @@
 'use client';
 
 import { useActionState, useEffect, useRef } from 'react';
-import { Field } from '@/components/ui';
-import { fieldError, idle } from '@/lib/actions/state';
-import { revokeMembershipAction } from '../actions';
+import { Field } from '../../../components/ui/Field';
+import { fieldError, idle } from '../../../logic/common';
+import { revokeMembershipAction } from '../actions/revokeMembershipAction';
 import { FormMessage } from './FormMessage';
 
 /** Revoke a membership. The reason is required: it is recorded with the revocation and in the audit log. */

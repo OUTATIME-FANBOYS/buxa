@@ -2,10 +2,10 @@ import type { Actor, Role } from '@buxa/domain';
 import type { Clock } from '../clock';
 import { InMemoryStore } from '../../__tests__/fakes';
 import type { Repositories } from '../../repositories';
-import { createAttendanceService } from '../attendance';
-import { createCredentialService } from '../credentials';
-import { createMembershipService } from '../memberships';
-import { createPeopleService } from '../people';
+import { createAttendanceService } from '../attendance/createAttendanceService';
+import { createCredentialService } from '../credentials/createCredentialService';
+import { createMembershipService } from '../memberships/createMembershipService';
+import { createPeopleService } from '../people/createPeopleService';
 
 /**
  * A camp built on the in-memory adapters, with every real service wired the way `createServices` wires them, and a clock the test

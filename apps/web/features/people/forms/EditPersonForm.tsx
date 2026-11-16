@@ -4,10 +4,10 @@ import Link from 'next/link';
 import { useActionState, useEffect, useRef } from 'react';
 import type { Person } from '@buxa/contracts';
 import { CAMP_ROLES, CAMP_ROLE_LABELS } from '@buxa/domain';
-import { personPath } from '@/config/routes';
-import { Field } from '@/components/ui';
-import { fieldError, idle } from '@/lib/actions/state';
-import { updatePersonAction } from '../actions';
+import { personPath } from '../../../config/routes';
+import { Field } from '../../../components/ui/Field';
+import { fieldError, idle } from '../../../logic/common';
+import { updatePersonAction } from '../actions/updatePersonAction';
 import { FormMessage } from './FormMessage';
 
 /** The fields a person's details can change, as the form posts them. Contact fields and date of birth are only given to staff. */

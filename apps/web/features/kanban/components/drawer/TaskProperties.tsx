@@ -1,10 +1,10 @@
 import { PriorityMark } from '../PriorityMark';
 import { useMemo } from 'react';
-import type { Priority, Project, Task } from '../../types';
+import type { Priority, Project, Task } from '../../../../logic/common';
 import { useStore } from '../../state/store';
 import type { TaskDraft } from '../../hooks/useTaskDraft';
-import { Field } from '@/components/ui';
-import { PRIORITIES, PRIORITY_LABEL } from '../../lib/tasks';
+import { Field } from '../../../../components/ui/Field';
+import { PRIORITIES, PRIORITY_LABEL } from '../../../../logic/common';
 import { TagInput } from './TagInput';
 
 /** Status, priority, assignee, dates and tags. For a saved task each change is written straight through. */

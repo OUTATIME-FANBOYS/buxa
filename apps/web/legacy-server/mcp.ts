@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import type { AppState } from '../features/kanban/types';
+import type { AppState } from '../logic/common';
 import * as G from '../features/kanban/lib/gateway';
 import type { Store } from './store';
 

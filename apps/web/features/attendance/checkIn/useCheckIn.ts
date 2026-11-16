@@ -4,8 +4,8 @@ import { useCallback, useEffect, useReducer } from 'react';
 import type { CheckInMethod } from '@buxa/contracts';
 import { checkInAction } from '../actions/checkIn';
 import { scanCodeAction } from '../actions/scanCode';
-import type { PersonCard } from '../lib/card';
-import { CHECK_IN_IDLE, checkInReducer, lookupEvent } from './checkInState';
+import type { PersonCard } from '../../../logic/common';
+import { CHECK_IN_IDLE, checkInReducer, lookupEvent } from '../../../logic/common';
 
 /** How long the confirmation stays before the screen clears for the next person. */
 export const CONFIRM_MS = 2000;

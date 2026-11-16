@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Icon } from '@/components/ui';
+import { Icon } from '../../../../components/ui/Icon';
 
 export function TagInput({ tags, onChange, suggestions }: { tags: string[]; onChange: (t: string[]) => void; suggestions: string[] }) {
   const [v, setV] = useState('');

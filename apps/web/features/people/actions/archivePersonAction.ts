@@ -3,9 +3,9 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { isUuid } from '@buxa/domain';
-import { ROUTES } from '@/config/routes';
-import { failure, type ActionState } from '@/lib/actions/state';
-import { getRuntime } from '@/server/runtime';
+import { ROUTES } from '../../../config/routes';
+import { failure, type ActionState } from '../../../logic/common';
+import { getRuntime } from '../../../server/runtime';
 import { currentActor } from '../lib/camp';
 import { expectedFailure, NO_CAMP } from './failures';
 

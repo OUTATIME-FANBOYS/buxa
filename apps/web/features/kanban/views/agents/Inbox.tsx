@@ -1,9 +1,11 @@
-import { Avatar, Empty, useUi } from '@/components/ui';
+import { Avatar } from '../../../../components/ui/Avatar';
+import { Empty } from '../../../../components/ui/Empty';
+import { useUi } from '../../../../components/ui/UiProvider';
 import { useStore } from '../../state/store';
-import { ago } from '../../lib/dates';
-import * as A from '../../lib/agents';
-import type { Proposal } from '../../types';
-import { groupByRun } from './groupByRun';
+import { ago } from '../../../../logic/common';
+import * as A from '../../../../logic/common';
+import type { Proposal } from '../../../../logic/common';
+import { groupByRun } from '../../../../logic/common';
 import { ProposalRow } from './ProposalRow';
 
 export function Inbox({ proposals }: { proposals: Proposal[] }) {

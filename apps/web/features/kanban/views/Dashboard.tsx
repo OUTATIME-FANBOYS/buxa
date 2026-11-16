@@ -1,9 +1,9 @@
 'use client';
 
-import { Empty } from '@/components/ui';
-import type { CampHome } from '@/features/camp/client';
+import { Empty } from '../../../components/ui/Empty';
+import type { CampHome } from '../../camp/lib/campHome';
 import { useStore } from '../state/store';
-import { taskCounts } from '../lib/homeTasks';
+import { taskCounts } from '../../../logic/common';
 import { HomeHeader } from './home/HomeHeader';
 import { HomeStats } from './home/HomeStats';
 import { OnSitePanel } from './home/OnSitePanel';

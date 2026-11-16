@@ -3,12 +3,12 @@
 import Link from 'next/link';
 import { useActionState, useEffect, useRef } from 'react';
 import { CAMP_ROLES, CAMP_ROLE_LABELS } from '@buxa/domain';
-import { Field } from '@/components/ui';
-import { ROUTES } from '@/config/routes';
-import { fieldError, idle } from '@/lib/actions/state';
-import { createPersonAction } from '../actions';
-import { CAMPER_NEEDS_HOUSEHOLD } from '../lib/copy';
-import { householdChoiceLabel, type HouseholdChoice } from '../lib/householdChoices';
+import { Field } from '../../../components/ui/Field';
+import { ROUTES } from '../../../config/routes';
+import { fieldError, idle } from '../../../logic/common';
+import { createPersonAction } from '../actions/createPersonAction';
+import { CAMPER_NEEDS_HOUSEHOLD } from '../../../logic/common';
+import { householdChoiceLabel, type HouseholdChoice } from '../../../logic/common';
 import { FormMessage } from './FormMessage';
 
 export interface HouseholdTarget { id: string; name: string }

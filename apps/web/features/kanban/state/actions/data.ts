@@ -1,6 +1,6 @@
-import type { AppState } from '../../types';
-import { buildDemo } from '../../lib/demo';
-import { normalize } from '../normalize';
+import type { AppState } from '../../../../logic/common';
+import { buildDemo } from '../../../../logic/common';
+import { normalize } from '../../../../logic/common';
 import type { ActionContext } from './context';
 
 export function dataActions({ get, replace }: ActionContext) {

@@ -1,5 +1,5 @@
-import type { Project, Task } from '../../types';
-import type { MenuItem } from '@/components/ui';
+import type { Project, Task } from '../../../../logic/common';
+import type { MenuItem } from '../../../../components/ui/Menu';
 import type { TaskCommands } from '../../hooks/useTaskCommands';
 
 /** The ⋯ menu for a task card. Read-only members only get "Open". */

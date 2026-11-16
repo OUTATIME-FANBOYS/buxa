@@ -1,10 +1,10 @@
 import 'server-only';
 import { toLocalDate } from '@buxa/domain';
-import { getRuntime } from '@/server/runtime';
-import { isHttpError } from '@/server/http/errors';
+import { getRuntime } from '../../../server/runtime';
+import { isHttpError } from '../../../server/http/errors';
 import { campActor, campZone } from './campActor';
-import { parseLogFilter } from './logFilter';
-import { attendanceFileName } from './paths';
+import { parseLogFilter } from '../../../logic/common';
+import { attendanceFileName } from '../../../logic/common';
 
 const PLAIN = { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' };
 

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { AppState } from '../../types';
-import { buildSeed, WORKSPACE } from '../../lib/seed';
+import type { AppState } from '../../../../logic/common';
+import { buildSeed } from '../../../../logic/common';
+import { WORKSPACE } from '../../../../logic/common';
 import { dataActions } from './data';
 
 function harness() {

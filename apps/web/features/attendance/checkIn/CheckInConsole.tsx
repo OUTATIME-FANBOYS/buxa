@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import type { ScanFieldHandle } from '@/features/scanner';
-import { checkInAnnouncement } from './announce';
+import type { ScanFieldHandle } from '../../scanner/ScanField';
+import { checkInAnnouncement } from '../../../logic/common';
 import { LiveRegion } from '../components/LiveRegion';
 import { NameSearch } from './NameSearch';
 import { ResultPanel } from './ResultPanel';

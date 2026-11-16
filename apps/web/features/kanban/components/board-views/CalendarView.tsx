@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
-import type { Task } from '../../types';
+import type { Task } from '../../../../logic/common';
 import { useStore } from '../../state/store';
 import { useTaskDrawer } from '../../state/TaskDrawerContext';
-import { Icon } from '@/components/ui';
-import { fmt, parse, toISO, today } from '../../lib/dates';
+import { Icon } from '../../../../components/ui/Icon';
+import { fmt, parse, toISO, today } from '../../../../logic/common';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const monthStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);

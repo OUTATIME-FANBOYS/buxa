@@ -1,5 +1,5 @@
-import { isHttpError } from '@/server/http/errors';
-import { failure, type ActionState } from '@/lib/actions/state';
+import { isHttpError } from '../../../server/http/errors';
+import { failure, type ActionState } from '../../../logic/common';
 
 export const NO_CAMP = 'Choose a camp first.';
 export const FORBIDDEN = 'Your role cannot do this.';

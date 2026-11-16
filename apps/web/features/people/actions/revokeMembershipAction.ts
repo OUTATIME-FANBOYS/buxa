@@ -3,12 +3,12 @@
 import { revalidatePath } from 'next/cache';
 import { RevokeMembershipInputSchema } from '@buxa/contracts';
 import { isUuid } from '@buxa/domain';
-import { personPath } from '@/config/routes';
-import { failure, success, type ActionState } from '@/lib/actions/state';
-import { getRuntime } from '@/server/runtime';
+import { personPath } from '../../../config/routes';
+import { failure, success, type ActionState } from '../../../logic/common';
+import { getRuntime } from '../../../server/runtime';
 import { currentActor } from '../lib/camp';
 import { expectedFailure, NO_CAMP } from './failures';
-import { field, parseWith } from './parse';
+import { field, parseWith } from '../../../logic/common';
 
 /** Revoke a membership. The reason is required and recorded. Needs memberships:manage. */
 export async function revokeMembershipAction(_previous: ActionState, form: FormData): Promise<ActionState> {

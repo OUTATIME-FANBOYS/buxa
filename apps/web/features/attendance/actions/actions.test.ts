@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AttendanceEntry, PersonSummary } from '@buxa/contracts';
 import type { Actor } from '@buxa/domain';
-import { badRequest, forbidden, HttpError } from '@/server/http/errors';
-import type { CheckInResult, CheckOutResult, OnSiteEntry, ScanResult } from '@/server/services';
+import { badRequest, forbidden, HttpError } from '../../../server/http/errors';
+import type { CheckInResult, CheckOutResult, OnSiteEntry } from '../../../server/services/attendance/AttendanceService';
+import type { ScanResult } from '../../../server/services/credentials/CredentialService';
 
 const mocks = vi.hoisted(() => ({
   campActor: vi.fn(),
@@ -13,8 +14,8 @@ const mocks = vi.hoisted(() => ({
   },
   rateLimiter: { hit: vi.fn() },
 }));
-vi.mock('@/server/runtime', () => ({ getRuntime: () => ({ services: mocks.services, rateLimiter: mocks.rateLimiter }) }));
-vi.mock('@/server/session', () => ({ requireSession: vi.fn(), getCurrentCamp: vi.fn(), toActor: vi.fn() }));
+vi.mock('../../../server/runtime', () => ({ getRuntime: () => ({ services: mocks.services, rateLimiter: mocks.rateLimiter }) }));
+vi.mock('../../../server/session', () => ({ requireSession: vi.fn(), getCurrentCamp: vi.fn(), toActor: vi.fn() }));
 vi.mock('../lib/campActor', () => ({ campActor: mocks.campActor }));
 
 const { checkInAction } = await import('./checkIn');

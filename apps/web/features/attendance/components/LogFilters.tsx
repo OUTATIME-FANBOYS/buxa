@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { PersonSummary } from '@buxa/contracts';
-import { ROUTES } from '@/config/routes';
-import { displayName } from '../lib/name';
+import { ROUTES } from '../../../config/routes';
+import { attendanceDisplayName } from '../../../logic/common';
 
 export interface LogFilterValues { from: string; to: string; personId: string }
 
@@ -21,7 +21,7 @@ export function LogFilters({ values, people, children }: { values: LogFilterValu
         <span className="field-label">Person</span>
         <select name="personId" defaultValue={values.personId}>
           <option value="">Everyone</option>
-          {people.map(person => <option key={person.id} value={person.id}>{displayName(person)}</option>)}
+          {people.map(person => <option key={person.id} value={person.id}>{attendanceDisplayName(person)}</option>)}
         </select>
       </label>
       <button type="submit" className="btn btn-primary">Show</button>

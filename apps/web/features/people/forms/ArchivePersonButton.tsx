@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useUi } from '@/components/ui';
-import { archivePersonAction } from '../actions';
+import { useUi } from '../../../components/ui/UiProvider';
+import { archivePersonAction } from '../actions/archivePersonAction';
 
 /**
  * Archive behind a confirmation. Archiving hides the person from search and revokes their badge. A refusal (checked in right now) is

@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ROUTES, personPath } from '@/config/routes';
-import { idle } from '@/lib/actions/state';
-import { forbidden } from '@/server/http/errors';
+import { ROUTES, personPath } from '../../../../config/routes';
+import { idle } from '../../../../logic/common';
+import { forbidden } from '../../../../server/http/errors';
 import { createPersonAction } from '../createPersonAction';
-import { CAMPER_NEEDS_HOUSEHOLD, CHOOSE_ONE_HOUSEHOLD, NEW_HOUSEHOLD_NO_GUARDIAN } from '../../lib/copy';
+import { CAMPER_NEEDS_HOUSEHOLD, CHOOSE_ONE_HOUSEHOLD, NEW_HOUSEHOLD_NO_GUARDIAN } from '../../../../logic/common';
 import { formOf, IDS } from './form';
 
 const h = vi.hoisted(() => ({
@@ -14,8 +14,8 @@ const h = vi.hoisted(() => ({
 }));
 vi.mock('next/cache', () => ({ revalidatePath: h.revalidatePath }));
 vi.mock('next/navigation', () => ({ redirect: h.redirect }));
-vi.mock('@/server/runtime', () => ({ getRuntime: () => ({ services: { people: h.people } }) }));
-vi.mock('@/features/people/lib/camp', () => ({ currentActor: async () => h.actor }));
+vi.mock('../../../../server/runtime', () => ({ getRuntime: () => ({ services: { people: h.people } }) }));
+vi.mock('../../lib/camp', () => ({ currentActor: async () => h.actor }));
 
 const adult = { givenName: 'Anna', familyName: 'Lee', roles: 'guardian' };
 const camper = { givenName: 'Ben', familyName: 'Lee', roles: 'camper' };

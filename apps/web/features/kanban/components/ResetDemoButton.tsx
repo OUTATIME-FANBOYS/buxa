@@ -1,5 +1,5 @@
 import { useStore } from '../state/store';
-import { useUi } from '@/components/ui';
+import { useUi } from '../../../components/ui/UiProvider';
 
 /**
  * Restores the browser demo (the Camp Birchwood staff sample) from the single seed source, after a confirmation. It changes only this

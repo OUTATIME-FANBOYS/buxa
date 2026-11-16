@@ -2,15 +2,15 @@
 
 import { useEffect, useRef } from 'react';
 import type { CheckInMethod } from '@buxa/contracts';
-import { Empty } from '@/components/ui';
+import { Empty } from '../../../components/ui/Empty';
 import { Notice } from '../components/Notice';
 import { PersonCardView } from '../components/PersonCardView';
 import { OverrideForm } from '../components/OverrideForm';
-import { checkInRefusalCopy } from '../lib/refusals';
-import { formatCampTime } from '../lib/time';
-import type { PersonCard } from '../lib/card';
-import { displayName } from '../lib/name';
-import type { CheckInState } from './checkInState';
+import { checkInRefusalCopy } from '../../../logic/common';
+import { formatCampTime } from '../../../logic/common';
+import type { PersonCard } from '../../../logic/common';
+import { attendanceDisplayName } from '../../../logic/common';
+import type { CheckInState } from '../../../logic/common';
 
 interface Props {
   state: CheckInState;
@@ -32,7 +32,7 @@ export function ResultPanel({ state, timeZone, canOverride, onCheckIn, onClear }
     case 'unknown': return <Notice tone="neutral" title="Code not recognised" body="Try the scan again, or find the name on the left." />;
     case 'error': return <Notice tone="crit" title="Could not look that up" body={state.message} />;
     case 'done': return (
-      <Notice tone="ok" title={`${displayName(state.card.person)} checked in`}
+      <Notice tone="ok" title={`${attendanceDisplayName(state.card.person)} checked in`}
         body={`At ${formatCampTime(state.entry.checkedInAt, timeZone)}${state.overridden ? ', with an override on record' : ''}. Next person in a moment.`} />
     );
     case 'ready':

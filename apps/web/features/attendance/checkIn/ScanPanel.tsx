@@ -1,7 +1,8 @@
 'use client';
 
 import { useRef, useState, type RefObject } from 'react';
-import { CameraScanner, ScanField, type ScanFieldHandle } from '@/features/scanner';
+import { CameraScanner } from '../../scanner/CameraScanner';
+import { ScanField, type ScanFieldHandle } from '../../scanner/ScanField';
 
 interface Props { scanRef: RefObject<ScanFieldHandle | null>; disabled: boolean; onCode: (raw: string) => void }
 

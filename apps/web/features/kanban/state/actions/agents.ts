@@ -1,6 +1,6 @@
-import type { ProposalKind, Trust } from '../../types';
-import * as Ag from '../../lib/agents';
-import { simulateRun } from '../../lib/agentSim';
+import type { ProposalKind, Trust } from '../../../../logic/common';
+import * as Ag from '../../../../logic/common';
+import { simulateRun } from '../../../../logic/common';
 import type { ActionContext } from './context';
 
 export function agentActions({ set, get }: ActionContext) {

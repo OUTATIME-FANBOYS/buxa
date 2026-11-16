@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import type { Task } from '../../types';
-import { Avatar, Icon } from '@/components/ui';
-import { ago, fmt } from '../../lib/dates';
+import type { Task } from '../../../../logic/common';
+import { Avatar } from '../../../../components/ui/Avatar';
+import { Icon } from '../../../../components/ui/Icon';
+import { ago, fmt } from '../../../../logic/common';
 import { CommentComposer } from './CommentComposer';
 
 type Named = { name: string } | undefined;

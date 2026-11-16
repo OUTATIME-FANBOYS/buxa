@@ -1,18 +1,24 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTaskDrawer } from '../state/TaskDrawerContext';
 import { useStore } from '../state/store';
-import { Icon } from '@/components/ui';
-import { Avatar, Empty, Progress, Segmented, Pill } from '@/components/ui';
+import { Icon } from '../../../components/ui/Icon';
+import { Avatar } from '../../../components/ui/Avatar';
+import { Empty } from '../../../components/ui/Empty';
+import { Progress } from '../../../components/ui/Progress';
+import { Segmented } from '../../../components/ui/Segmented';
+import { Pill } from '../../../components/ui/Pill';
 import { BoardView } from '../components/board/Board';
-import { CalendarView, ListView, TimelineView } from '../components/board-views';
+import { CalendarView } from '../components/board-views/CalendarView';
+import { ListView } from '../components/board-views/ListView';
+import { TimelineView } from '../components/board-views/TimelineView';
 import { FilterBar } from '../components/FilterBar';
-import { ProjectDialog } from '../components/dialogs';
-import { emptyFilter, matchesFilter, sortTasks } from '../lib/tasks';
-import { diffDays, fmt, today } from '../lib/dates';
-import type { Filter, ViewKind } from '../types';
+import { ProjectDialog } from '../components/dialogs/ProjectDialog';
+import { emptyFilter, matchesFilter, sortTasks } from '../../../logic/common';
+import { diffDays, fmt, today } from '../../../logic/common';
+import type { Filter, ViewKind } from '../../../logic/common';
 import { useRouter } from 'next/navigation';
-import { ROUTES } from '@/config/routes';
-import { HEALTH_LABEL, HEALTH_TONE, healthOf, progressOf } from '../lib/stats';
+import { ROUTES } from '../../../config/routes';
+import { HEALTH_LABEL, HEALTH_TONE, healthOf, progressOf } from '../../../logic/common';
 
 export function BoardPage({ projectId }: { projectId?: string }) {
   const router = useRouter();

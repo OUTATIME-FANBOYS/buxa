@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import type { OnSiteRowView } from '../lib/onSiteView';
-import { EMPTY_DRAFT } from './checkOutState';
+import type { OnSiteRowView } from '../../../logic/common';
+import { EMPTY_DRAFT } from '../../../logic/common';
 import { CheckOutPanel, type CheckOutPanelProps } from './CheckOutPanel';
 
 const row = (overrides: Partial<OnSiteRowView>): OnSiteRowView => ({

@@ -1,8 +1,8 @@
 'use client';
 
 import { useActionState } from 'react';
-import { idle } from '@/lib/actions/state';
-import { unlinkHouseholdAction } from '../actions';
+import { idle } from '../../../logic/common';
+import { unlinkHouseholdAction } from '../actions/unlinkHouseholdAction';
 import { FormMessage } from './FormMessage';
 
 /** Take someone out of a household. Its result is shown beside the member, so a refused removal (a child's last guardian) explains itself. */

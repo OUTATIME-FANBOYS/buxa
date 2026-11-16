@@ -1,11 +1,15 @@
 import { PriorityMark } from '../PriorityMark';
 import { useMemo, useState } from 'react';
-import type { Project, Task } from '../../types';
+import type { Project, Task } from '../../../../logic/common';
 import { useStore } from '../../state/store';
 import { useTaskDrawer } from '../../state/TaskDrawerContext';
-import { Avatar, Empty, Icon, KIND_TONE, Pill } from '@/components/ui';
+import { Avatar } from '../../../../components/ui/Avatar';
+import { Empty } from '../../../../components/ui/Empty';
+import { Icon } from '../../../../components/ui/Icon';
+import { KIND_TONE } from '../../../../logic/common';
+import { Pill } from '../../../../components/ui/Pill';
 import { DueChip } from '../board/DueChip';
-import { PRIORITY_RANK, subtaskProgress } from '../../lib/tasks';
+import { PRIORITY_RANK, subtaskProgress } from '../../../../logic/common';
 
 type SortKey = 'title' | 'status' | 'priority' | 'assignee' | 'due';
 /** No sort yet (`null`), or one column in one direction: the two can only be set together. */

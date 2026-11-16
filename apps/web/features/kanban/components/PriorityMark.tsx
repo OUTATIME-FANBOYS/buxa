@@ -1,5 +1,5 @@
-import type { Priority } from '../types';
-import { PRIORITIES, PRIORITY_LABEL } from '../lib/tasks';
+import type { Priority } from '../../../logic/common';
+import { PRIORITIES, PRIORITY_LABEL } from '../../../logic/common';
 
 export function PriorityMark({ priority, label = false }: { priority: Priority; label?: boolean }) {
   const n = PRIORITIES.indexOf(priority) + 1;

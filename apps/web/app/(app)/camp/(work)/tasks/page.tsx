@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { TasksPage } from '@/features/kanban';
+import { TasksPage } from '@/features/kanban/pages';
 
 export const metadata: Metadata = { title: 'My tasks' };
 

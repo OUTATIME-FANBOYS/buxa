@@ -1,7 +1,7 @@
 import 'server-only';
 import type { Actor } from '@buxa/domain';
-import { getRuntime } from '@/server/runtime';
-import { findCampContext } from '@/features/camp';
+import { getRuntime } from '../../../server/runtime';
+import { findCampContext } from '../../camp/lib/campContext';
 
 /** Who is asking, in the camp they are working in. Null when they have no camp selected (the caller answers not-found). */
 export async function campActor(): Promise<Actor | null> {

@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { Avatar, Icon, Pill, Segmented } from '@/components/ui';
+import { Avatar } from '../../../../components/ui/Avatar';
+import { Icon } from '../../../../components/ui/Icon';
+import { Pill } from '../../../../components/ui/Pill';
+import { Segmented } from '../../../../components/ui/Segmented';
 import { useStore } from '../../state/store';
-import { ConnectAgentDialog } from '../../components/dialogs';
-import * as A from '../../lib/agents';
-import type { Agent, Trust } from '../../types';
-import { TRUST_LABEL, TRUST_TONE } from './labels';
+import { ConnectAgentDialog } from '../../components/dialogs/ConnectAgentDialog';
+import * as A from '../../../../logic/common';
+import type { Agent, Trust } from '../../../../logic/common';
+import { TRUST_LABEL, TRUST_TONE } from '../../../../logic/common';
 import { StageRules } from './StageRules';
 
 export function AgentCard({ agent, canManage }: { agent: Agent; canManage: boolean }) {

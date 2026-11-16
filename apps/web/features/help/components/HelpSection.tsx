@@ -1,4 +1,4 @@
-import type { HelpSectionContent, HelpSubsection } from '../content/types';
+import type { HelpSectionContent, HelpSubsection } from '../../../logic/common';
 import { CodeBlock } from './CodeBlock';
 import { ExampleTable } from './ExampleTable';
 

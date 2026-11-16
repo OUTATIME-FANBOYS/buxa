@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ROUTES } from '@/config';
-import { idle } from '@/lib/actions/state';
+import { ROUTES } from '../../../../config/routes';
+import { idle } from '../../../../logic/common';
 import { createCampAction } from '../createCampAction';
 import { formOf, startWorld } from './support';
 
 const mocks = vi.hoisted(() => ({ requireSession: vi.fn(), rememberCamp: vi.fn(), revalidatePath: vi.fn(), redirect: vi.fn() }));
-vi.mock('@/server/session', async importOriginal => ({ ...(await importOriginal<object>()), requireSession: mocks.requireSession, rememberCamp: mocks.rememberCamp }));
+vi.mock('../../../../server/session', async importOriginal => ({ ...(await importOriginal<object>()), requireSession: mocks.requireSession, rememberCamp: mocks.rememberCamp }));
 vi.mock('next/cache', () => ({ revalidatePath: mocks.revalidatePath }));
 // The real redirect throws to stop the action; so does this one.
 vi.mock('next/navigation', () => ({ redirect: mocks.redirect }));

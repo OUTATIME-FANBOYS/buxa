@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { Icon } from '@/components/ui';
-import type { RoutePath } from '@/config/routes';
-import type { NavGroup } from './navItems';
+import { Icon } from '../../../components/ui/Icon';
+import type { RoutePath } from '../../../config/routes';
+import type { NavGroup } from '../../../logic/common';
 import { SidebarNav } from './SidebarNav';
 
 /** Brand and navigation. Takes its groups as data, so a layout decides what the person sees. */

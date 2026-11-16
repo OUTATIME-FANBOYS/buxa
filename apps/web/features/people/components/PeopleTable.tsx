@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { PersonSummary } from '@buxa/contracts';
-import { personPath } from '@/config/routes';
+import { personPath } from '../../../config/routes';
 import { AccessPill } from './AccessPill';
 import { OnSitePill } from './OnSitePill';
 import { RolePills } from './RolePills';

@@ -1,10 +1,12 @@
 import { useRef, useState } from 'react';
 import { useStore } from '../state/store';
-import { Field, Segmented, useUi } from '@/components/ui';
-import { ROUTES } from '@/config/routes';
-import { AgentDialog } from '../components/dialogs';
+import { Field } from '../../../components/ui/Field';
+import { Segmented } from '../../../components/ui/Segmented';
+import { useUi } from '../../../components/ui/UiProvider';
+import { ROUTES } from '../../../config/routes';
+import { AgentDialog } from '../components/dialogs/AgentDialog';
 import { ResetDemoButton } from '../components/ResetDemoButton';
-import type { ThemePref } from '../types';
+import type { ThemePref } from '../../../logic/common';
 
 export function Settings() {
   const { s, actions, me } = useStore(); const { toast } = useUi();

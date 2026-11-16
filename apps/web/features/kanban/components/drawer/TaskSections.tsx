@@ -1,4 +1,4 @@
-import type { Task } from '../../types';
+import type { Task } from '../../../../logic/common';
 import { AttachmentList } from './AttachmentList';
 import { Discussion } from './Discussion';
 import { SubtaskList } from './SubtaskList';

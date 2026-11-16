@@ -1,4 +1,4 @@
-import { personPath } from '@/config/routes';
+import { personPath } from '../../../config/routes';
 
 export interface PersonFinderProps { personId: string; query: string }
 

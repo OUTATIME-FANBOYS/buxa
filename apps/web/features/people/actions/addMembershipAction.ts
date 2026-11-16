@@ -2,12 +2,12 @@
 
 import { revalidatePath } from 'next/cache';
 import { NewMembershipInputSchema } from '@buxa/contracts';
-import { personPath } from '@/config/routes';
-import { failure, success, type ActionState } from '@/lib/actions/state';
-import { getRuntime } from '@/server/runtime';
+import { personPath } from '../../../config/routes';
+import { failure, success, type ActionState } from '../../../logic/common';
+import { getRuntime } from '../../../server/runtime';
 import { currentActor } from '../lib/camp';
 import { expectedFailure, NO_CAMP } from './failures';
-import { field, parseWith } from './parse';
+import { field, parseWith } from '../../../logic/common';
 
 /** Give a person a membership (a date range with a plan name). Needs memberships:manage; the service checks it again. */
 export async function addMembershipAction(_previous: ActionState, form: FormData): Promise<ActionState> {

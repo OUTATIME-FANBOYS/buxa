@@ -1,10 +1,10 @@
 'use server';
 
 import { CheckOutInputSchema } from '@buxa/contracts';
-import { getRuntime } from '@/server/runtime';
-import type { CheckOutResult } from '@/server/services';
+import { getRuntime } from '../../../server/runtime';
+import type { CheckOutResult } from '../../../server/services/attendance/AttendanceService';
 import { runAttendanceAction } from '../lib/runAction';
-import type { ActionOutcome } from './outcome';
+import type { ActionOutcome } from '../../../logic/common';
 
 /** Check a person out. A child needs an authorised guardian (or an admin's written reason); refusals come back as results. */
 export async function checkOutAction(input: unknown): Promise<ActionOutcome<CheckOutResult>> {

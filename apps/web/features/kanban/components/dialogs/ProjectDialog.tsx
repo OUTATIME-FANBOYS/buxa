@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Dialog, Field, useUi } from '@/components/ui';
-import { boardPath } from '@/config/routes';
+import { Dialog } from '../../../../components/ui/Dialog';
+import { Field } from '../../../../components/ui/Field';
+import { useUi } from '../../../../components/ui/UiProvider';
+import { boardPath } from '../../../../config/routes';
 import { useStore } from '../../state/store';
-import type { Project } from '../../types';
+import type { Project } from '../../../../logic/common';
 
 export function ProjectDialog({ project, onClose }: { project?: Project; onClose: () => void }) {
   const router = useRouter();

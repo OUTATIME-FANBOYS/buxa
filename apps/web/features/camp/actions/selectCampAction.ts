@@ -1,8 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { ROUTES } from '@/config';
-import { rememberCamp, requireSession } from '@/server/session';
+import { ROUTES } from '../../../config/routes';
+import { rememberCamp, requireSession } from '../../../server/session';
 import { membershipOf } from './failures';
 
 /** Switch to another of the person's camps. A camp they do not belong to is ignored: the cookie is never set from a claim. */

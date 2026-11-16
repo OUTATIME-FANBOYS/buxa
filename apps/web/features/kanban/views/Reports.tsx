@@ -1,14 +1,20 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { boardPath } from '@/config/routes';
+import { boardPath } from '../../../config/routes';
 import { useStore } from '../state/store';
-import { Empty, Progress, Segmented } from '@/components/ui';
-import { Bars, HBars, Legend, Ring } from '../components/charts';
+import { Empty } from '../../../components/ui/Empty';
+import { Progress } from '../../../components/ui/Progress';
+import { Segmented } from '../../../components/ui/Segmented';
+import { Bars } from '../components/charts/Bars';
+import { HBars } from '../components/charts/HBars';
+import { Legend } from '../components/charts/Legend';
+import { Ring } from '../components/charts/Ring';
 import { StatCard as Stat } from './home/StatCard';
-import { addDays, diffDays, fmt, isoDay, today } from '../lib/dates';
-import { PRIORITIES, PRIORITY_LABEL } from '../lib/tasks';
-import { Avatar, Pill } from '@/components/ui';
-import { HEALTH_LABEL, HEALTH_TONE, healthOf, isOverdue, progressOf, summarize } from '../lib/stats';
+import { addDays, diffDays, fmt, isoDay, today } from '../../../logic/common';
+import { PRIORITIES, PRIORITY_LABEL } from '../../../logic/common';
+import { Avatar } from '../../../components/ui/Avatar';
+import { Pill } from '../../../components/ui/Pill';
+import { HEALTH_LABEL, HEALTH_TONE, healthOf, isOverdue, progressOf, summarize } from '../../../logic/common';
 import { AgentSummary } from '../components/AgentSummary';
 
 export function Reports() {

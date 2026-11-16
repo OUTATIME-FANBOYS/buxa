@@ -1,8 +1,8 @@
 import type { PersonMembership } from '@buxa/contracts';
-import { formatCampDateTime } from '@/features/attendance/lib/time';
+import { formatCampDateTime } from '../../../logic/common';
 import { AccessPill } from './AccessPill';
 import { RevokeMembershipForm } from '../forms/RevokeMembershipForm';
-import { formatLocalDate } from '../lib/format';
+import { formatLocalDate } from '../../../logic/common';
 
 export interface MembershipRowProps { membership: PersonMembership; personId: string; canManage: boolean; timeZone: string }
 

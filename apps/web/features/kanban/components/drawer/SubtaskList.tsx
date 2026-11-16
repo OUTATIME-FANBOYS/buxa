@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import type { Task } from '../../types';
+import type { Task } from '../../../../logic/common';
 import { useStore } from '../../state/store';
-import { Icon, Progress } from '@/components/ui';
-import { subtaskProgress } from '../../lib/tasks';
+import { Icon } from '../../../../components/ui/Icon';
+import { Progress } from '../../../../components/ui/Progress';
+import { subtaskProgress } from '../../../../logic/common';
 
 export function SubtaskList({ task, ro }: { task: Task; ro: boolean }) {
   const { actions } = useStore(); const [sub, setSub] = useState('');

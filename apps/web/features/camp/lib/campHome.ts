@@ -1,6 +1,6 @@
 import { authorize, can } from '@buxa/domain';
 import type { PersonSummary } from '@buxa/contracts';
-import { getRuntime } from '@/server/runtime';
+import { getRuntime } from '../../../server/runtime';
 import { campContext } from './campContext';
 
 /** What the camp Home shows. A count is null when the viewer's role may not read it, so the page never shows a number its own page would refuse. */

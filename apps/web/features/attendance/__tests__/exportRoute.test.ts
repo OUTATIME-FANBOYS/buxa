@@ -1,18 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Actor } from '@buxa/domain';
-import { forbidden } from '@/server/http/errors';
+import { forbidden } from '../../../server/http/errors';
 
 const mocks = vi.hoisted(() => ({
   actor: null as Actor | null,
   timeZone: 'UTC',
   exportCsv: vi.fn(),
 }));
-vi.mock('@/server/runtime', () => ({
+vi.mock('../../../server/runtime', () => ({
   getRuntime: () => ({ services: { attendance: { exportCsv: mocks.exportCsv }, orgs: { getCamp: async () => ({ timezone: mocks.timeZone }) } } }),
 }));
-vi.mock('@/server/session', () => ({ requireSession: async () => ({}), getCurrentCamp: async () => ({}), toActor: () => mocks.actor }));
+vi.mock('../../../server/session', () => ({ requireSession: async () => ({}), getCurrentCamp: async () => ({}), toActor: () => mocks.actor }));
 
-const { GET } = await import('@/app/(app)/camp/(ops)/attendance/export/route');
+const { GET } = await import('../../../app/(app)/camp/(ops)/attendance/export/route');
 
 const owner: Actor = { userId: 'u1', orgId: 'o1', role: 'owner' };
 const request = (query: string) => new Request(`https://camp.example.test/camp/attendance/export${query}`);

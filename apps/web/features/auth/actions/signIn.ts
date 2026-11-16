@@ -1,12 +1,12 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { ROUTES } from '@/config';
-import { failure, type ActionState } from '@/lib/actions/state';
-import { isServiceRefused } from '@/server/availability';
-import { requestSessionClient } from '@/server/session/nextClient';
-import { parseSignIn } from '../lib/credentials';
-import { MAINTENANCE_MESSAGE, describeSignInError } from '../lib/messages';
+import { ROUTES } from '../../../config/routes';
+import { failure, type ActionState } from '../../../logic/common';
+import { isServiceRefused } from '../../../server/availability';
+import { requestSessionClient } from '../../../server/session/nextClient';
+import { parseSignIn } from '../../../logic/common';
+import { MAINTENANCE_MESSAGE, describeSignInError } from '../../../logic/common';
 
 /** Signs in with email and password. The session lands in HttpOnly cookies; the browser never sees a token. */
 export async function signIn(_previous: ActionState, formData: FormData): Promise<ActionState> {

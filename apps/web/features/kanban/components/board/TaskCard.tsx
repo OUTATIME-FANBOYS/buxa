@@ -1,10 +1,13 @@
 import { PriorityMark } from '../PriorityMark';
 import { memo } from 'react';
-import type { Project, Task } from '../../types';
+import type { Project, Task } from '../../../../logic/common';
 import { useStore } from '../../state/store';
 import { useTaskDrawer } from '../../state/TaskDrawerContext';
-import { Avatar, Icon, Menu, tagHue } from '@/components/ui';
-import { subtaskProgress } from '../../lib/tasks';
+import { Avatar } from '../../../../components/ui/Avatar';
+import { Icon } from '../../../../components/ui/Icon';
+import { Menu } from '../../../../components/ui/Menu';
+import { tagHue } from '../../../../logic/common';
+import { subtaskProgress } from '../../../../logic/common';
 import { justDragged } from '../../lib/cardDrag';
 import { useTaskCommands } from '../../hooks/useTaskCommands';
 import { DueChip } from './DueChip';

@@ -1,9 +1,11 @@
 import { useStore } from '../state/store';
-import { Ring, HBars, Legend } from './charts';
-import { Avatar } from '@/components/ui';
-import { ROUTES } from '@/config/routes';
-import { Icon } from '@/components/ui';
-import * as A from '../lib/agents';
+import { Ring } from './charts/Ring';
+import { HBars } from './charts/HBars';
+import { Legend } from './charts/Legend';
+import { Avatar } from '../../../components/ui/Avatar';
+import { ROUTES } from '../../../config/routes';
+import { Icon } from '../../../components/ui/Icon';
+import * as A from '../../../logic/common';
 
 /** Agent work at a glance. Renders nothing unless agents are on and this workspace has one, so plain boards stay plain. */
 export function AgentSummary({ detailed = false }: { detailed?: boolean }) {

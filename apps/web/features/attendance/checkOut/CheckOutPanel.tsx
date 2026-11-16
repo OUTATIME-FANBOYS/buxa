@@ -2,10 +2,10 @@
 
 import { useId } from 'react';
 import { Notice } from '../components/Notice';
-import type { OnSiteRowView } from '../lib/onSiteView';
-import { checkOutRefusalCopy, type CheckOutRefusal } from '../lib/refusals';
-import { canSubmitCheckOut } from './checkOutInput';
-import type { CheckOutDraft } from './checkOutState';
+import type { OnSiteRowView } from '../../../logic/common';
+import { checkOutRefusalCopy, type CheckOutRefusal } from '../../../logic/common';
+import { canSubmitCheckOut } from '../../../logic/common';
+import type { CheckOutDraft } from '../../../logic/common';
 import { PickupChoices } from './PickupChoices';
 
 export interface CheckOutPanelProps {

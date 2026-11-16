@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Dialog, Field } from '@/components/ui';
+import { Dialog } from '../../../../components/ui/Dialog';
+import { Field } from '../../../../components/ui/Field';
 import { useStore } from '../../state/store';
-import type { Column, ColumnKind } from '../../types';
+import type { Column, ColumnKind } from '../../../../logic/common';
 
 export function ColumnDialog({ projectId, column, onClose }: { projectId: string; column?: Column; onClose: () => void }) {
   const { actions } = useStore();

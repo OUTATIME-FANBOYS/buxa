@@ -1,9 +1,11 @@
-import { Icon, Pill, useUi } from '@/components/ui';
+import { Icon } from '../../../../components/ui/Icon';
+import { Pill } from '../../../../components/ui/Pill';
+import { useUi } from '../../../../components/ui/UiProvider';
 import { useStore } from '../../state/store';
 import { useTaskDrawer } from '../../state/TaskDrawerContext';
-import * as A from '../../lib/agents';
-import type { Proposal } from '../../types';
-import { KIND_ICON, STATUS_LABEL, STATUS_TONE } from './labels';
+import * as A from '../../../../logic/common';
+import type { Proposal } from '../../../../logic/common';
+import { KIND_ICON, STATUS_LABEL, STATUS_TONE } from '../../../../logic/common';
 
 export function ProposalRow({ p, actions: showActions }: { p: Proposal; actions: boolean }) {
   const { s, actions } = useStore(); const { toast } = useUi(); const { openTask } = useTaskDrawer();

@@ -1,9 +1,9 @@
 'use client';
 
 import { useActionState, useEffect, useRef } from 'react';
-import { Field } from '@/components/ui';
-import { fieldError, idle } from '@/lib/actions/state';
-import { linkHouseholdAction } from '../actions';
+import { Field } from '../../../components/ui/Field';
+import { fieldError, idle } from '../../../logic/common';
+import { linkHouseholdAction } from '../actions/linkHouseholdAction';
 import { FormMessage } from './FormMessage';
 
 export interface PersonOption { id: string; name: string }

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Household } from '@buxa/contracts';
-import { ROUTES } from '@/config/routes';
+import { ROUTES } from '../../../config/routes';
 import { LinkHouseholdForm, type HouseholdOption, type PersonOption } from '../forms/LinkHouseholdForm';
 import { PersonFinder } from '../forms/PersonFinder';
 import { HouseholdMemberRow } from './HouseholdMemberRow';

@@ -1,10 +1,12 @@
 'use client';
 
 import { useActionState } from 'react';
-import { BadgeCard, PrintButton } from '@/features/badge';
-import { idle } from '@/lib/actions/state';
-import { issueBadgeAction, revokeBadgeAction } from '../actions';
-import type { BadgeState } from '../lib/badgeState';
+import { BadgeCard } from '../../badge/BadgeCard';
+import { PrintButton } from '../../badge/PrintButton';
+import { idle } from '../../../logic/common';
+import { issueBadgeAction } from '../actions/issueBadgeAction';
+import { revokeBadgeAction } from '../actions/revokeBadgeAction';
+import type { BadgeState } from '../../../logic/common';
 import { FormMessage } from './FormMessage';
 
 export interface BadgeActionsProps {

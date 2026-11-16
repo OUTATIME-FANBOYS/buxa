@@ -1,5 +1,5 @@
-import { Icon } from '@/components/ui';
-import { dueInfo } from '../../lib/tasks';
+import { Icon } from '../../../../components/ui/Icon';
+import { dueInfo } from '../../../../logic/common';
 
 export const DueChip = ({ due, kind }: { due?: string; kind: 'open' | 'active' | 'done' }) => {
   const d = dueInfo(due, kind); if (!d) return null;

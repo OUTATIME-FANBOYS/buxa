@@ -1,9 +1,9 @@
 'use client';
 
 import { useActionState, useEffect, useRef } from 'react';
-import { Field } from '@/components/ui';
-import { fieldError, idle } from '@/lib/actions/state';
-import { addMembershipAction } from '../actions';
+import { Field } from '../../../components/ui/Field';
+import { fieldError, idle } from '../../../logic/common';
+import { addMembershipAction } from '../actions/addMembershipAction';
 import { FormMessage } from './FormMessage';
 
 /** A new membership: a plan name and a date range (camp-local days, both included). */

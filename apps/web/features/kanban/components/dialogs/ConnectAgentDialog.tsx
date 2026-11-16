@@ -1,6 +1,8 @@
-import { Dialog, Field, useUi } from '@/components/ui';
+import { Dialog } from '../../../../components/ui/Dialog';
+import { Field } from '../../../../components/ui/Field';
+import { useUi } from '../../../../components/ui/UiProvider';
 import { useStore } from '../../state/store';
-import { UNREACHABLE, type AgentConnection } from '../../state/agentConnection';
+import { UNREACHABLE, type AgentConnection } from '../../../../logic/common';
 import { useAgentConnection } from '../../hooks/useAgentConnection';
 
 function TokenReveal({ name, token, url }: { name: string; token: string; url: string }) {

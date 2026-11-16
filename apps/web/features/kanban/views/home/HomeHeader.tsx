@@ -1,6 +1,7 @@
-import { PageHeader } from '@/components/ui';
-import { RenameCampButton, type CampHome } from '@/features/camp/client';
-import { greetingFor } from './greeting';
+import { PageHeader } from '../../../../components/ui/PageHeader';
+import { RenameCampButton } from '../../../camp/forms/RenameCampButton';
+import { type CampHome } from '../../../camp/lib/campHome';
+import { greetingFor } from '../../../../logic/common';
 
 /** The one header for Home: the greeting, the camp as context, and Rename for the roles allowed to rename (checked on the server). */
 export function HomeHeader({ firstName, camp }: { firstName: string; camp: CampHome | null }) {

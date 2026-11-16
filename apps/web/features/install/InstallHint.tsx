@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Icon } from '@/components/ui';
-import { browserStorage, readDismissed, writeDismissed } from './dismissal';
-import { PHONE_QUERY, installPlatform, shouldShowInstallHint, type InstallPlatform } from './installRules';
+import { Icon } from '../../components/ui/Icon';
+import { browserStorage, readDismissed, writeDismissed } from '../../logic/common';
+import { PHONE_QUERY, installPlatform, shouldShowInstallHint, type InstallPlatform } from '../../logic/common';
 
 /** The event Android Chrome fires when the app can be installed. It is not in the standard DOM typings. */
 interface InstallPromptEvent extends Event { prompt: () => Promise<void> }

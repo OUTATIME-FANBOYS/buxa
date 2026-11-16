@@ -1,6 +1,6 @@
 import { Component, type ReactNode } from 'react';
-import { Empty } from '@/components/ui';
-import { ROUTES } from '@/config/routes';
+import { Empty } from '../../../components/ui/Empty';
+import { ROUTES } from '../../../config/routes';
 
 export class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null as Error | null };

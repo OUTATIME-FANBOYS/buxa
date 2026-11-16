@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { Role } from '@buxa/domain';
-import { ROUTES } from '@/config/routes';
-import { navGroupsFor } from '../components/navItems';
+import { ROUTES } from '../../../config/routes';
+import { navGroupsFor } from '../../../logic/common';
 import { Shell } from '../components/Shell';
 
 interface Props {

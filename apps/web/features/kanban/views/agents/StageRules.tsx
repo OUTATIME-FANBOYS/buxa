@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useStore } from '../../state/store';
-import { Pill } from '@/components/ui';
-import { TRUST_TONE } from './labels';
-import type { Agent, Trust } from '../../types';
+import { Pill } from '../../../../components/ui/Pill';
+import { TRUST_TONE } from '../../../../logic/common';
+import type { Agent, Trust } from '../../../../logic/common';
 
 /** Which stages this agent may move tasks into, one project at a time. "Default" falls back to its general move policy. */
 type StageChoice = 'default' | Trust;

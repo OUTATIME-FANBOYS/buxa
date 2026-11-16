@@ -1,4 +1,4 @@
-import type { AppState } from '../../types';
+import type { AppState } from '../../../../logic/common';
 
 /** What every group of actions needs: change state, read the latest state, or replace it wholesale. */
 export interface ActionContext {

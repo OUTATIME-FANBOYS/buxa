@@ -1,12 +1,16 @@
 import { useState } from 'react';
-import { Avatar, Empty, Icon, Menu, useUi } from '@/components/ui';
+import { Avatar } from '../../../../components/ui/Avatar';
+import { Empty } from '../../../../components/ui/Empty';
+import { Icon } from '../../../../components/ui/Icon';
+import { Menu } from '../../../../components/ui/Menu';
+import { useUi } from '../../../../components/ui/UiProvider';
 import { useStore } from '../../state/store';
-import { ago } from '../../lib/dates';
-import * as A from '../../lib/agents';
-import type { Agent, Proposal, ProposalStatus } from '../../types';
-import { groupByRun } from './groupByRun';
+import { ago } from '../../../../logic/common';
+import * as A from '../../../../logic/common';
+import type { Agent, Proposal, ProposalStatus } from '../../../../logic/common';
+import { groupByRun } from '../../../../logic/common';
 import { ProposalRow } from './ProposalRow';
-import { STATUS_LABEL } from './labels';
+import { STATUS_LABEL } from '../../../../logic/common';
 
 /** The audit trail: every decided proposal, filterable, exportable, and revertible per run. */
 export function History({ proposals, agents }: { proposals: Proposal[]; agents: Agent[] }) {

@@ -11,8 +11,8 @@ const services = vi.hoisted(() => ({
 }));
 
 vi.mock('next/navigation', () => ({ notFound }));
-vi.mock('@/server/runtime', () => ({ getRuntime: () => ({ services }) }));
-vi.mock('@/server/session', () => ({
+vi.mock('../../../server/runtime', () => ({ getRuntime: () => ({ services }) }));
+vi.mock('../../../server/session', () => ({
   requireSession: async () => session.current,
   getCurrentCamp: async () => session.camp,
   toActor: (s: { user: { id: string } }, camp: Membership) => ({ userId: s.user.id, orgId: camp.orgId, role: camp.role }),

@@ -1,9 +1,10 @@
 'use client';
 
 import { useActionState, useState, type ChangeEvent } from 'react';
-import { Field } from '@/components/ui';
-import { fieldError, idle, type ActionState } from '@/lib/actions/state';
-import { signIn, signUp } from '../actions';
+import { Field } from '../../../components/ui/Field';
+import { fieldError, idle, type ActionState } from '../../../logic/common';
+import { signIn } from '../actions/signIn';
+import { signUp } from '../actions/signUp';
 
 export type AuthMode = 'in' | 'up';
 

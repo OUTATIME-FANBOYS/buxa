@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can, CAMP_ROLE_LABELS, type Actor, type CampRole } from '@buxa/domain';
-import { personEditPath } from '@/config/routes';
-import { getRuntime } from '@/server/runtime';
+import { personEditPath } from '../../../config/routes';
+import { getRuntime } from '../../../server/runtime';
 import { ArchivePersonButton } from '../forms/ArchivePersonButton';
 import { AttendanceHistory } from '../components/AttendanceHistory';
 import { BadgePanel } from '../components/BadgePanel';
@@ -11,7 +11,7 @@ import { HouseholdPanel } from '../components/HouseholdPanel';
 import { MembershipsPanel } from '../components/MembershipsPanel';
 import { PersonHeader } from '../components/PersonHeader';
 import { currentActor } from '../lib/camp';
-import { readListParams } from '../lib/listQuery';
+import { readListParams } from '../../../logic/common';
 import { loadPerson } from '../lib/loadPerson';
 
 /**

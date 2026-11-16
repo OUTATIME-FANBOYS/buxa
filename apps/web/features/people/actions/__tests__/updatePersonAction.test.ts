@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { personPath } from '@/config/routes';
-import { idle } from '@/lib/actions/state';
-import { conflict, forbidden, badRequest, notFound } from '@/server/http/errors';
+import { personPath } from '../../../../config/routes';
+import { idle } from '../../../../logic/common';
+import { conflict, forbidden, badRequest, notFound } from '../../../../server/http/errors';
 import { updatePersonAction } from '../updatePersonAction';
 import { formOf, IDS } from './form';
 
@@ -13,8 +13,8 @@ const h = vi.hoisted(() => ({
 }));
 vi.mock('next/cache', () => ({ revalidatePath: h.revalidatePath }));
 vi.mock('next/navigation', () => ({ redirect: h.redirect }));
-vi.mock('@/server/runtime', () => ({ getRuntime: () => ({ services: { people: h.people } }) }));
-vi.mock('@/features/people/lib/camp', () => ({ currentActor: async () => h.actor }));
+vi.mock('../../../../server/runtime', () => ({ getRuntime: () => ({ services: { people: h.people } }) }));
+vi.mock('../../lib/camp', () => ({ currentActor: async () => h.actor }));
 
 const details = {
   id: IDS.person, givenName: 'Ben', familyName: 'Lee', preferredName: '', dateOfBirth: '2016-05-02',

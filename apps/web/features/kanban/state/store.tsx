@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { deriveView } from './derive';
+import { deriveView } from '../../../logic/common';
 import { useStoreEngine } from './useStoreEngine';
 
 type Engine = ReturnType<typeof useStoreEngine>;
@@ -19,4 +19,4 @@ export function useStore() {
 
 export type { Actions } from './actions';
 export type { SaveStatus } from './persistence';
-export { normalize } from './normalize';
+export { normalize } from '../../../logic/common';

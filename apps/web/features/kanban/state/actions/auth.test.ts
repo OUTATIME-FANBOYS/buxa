@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildSeed } from '../../lib/seed';
-import type { AppState } from '../../types';
+import { buildSeed } from '../../../../logic/common';
+import type { AppState } from '../../../../logic/common';
 import { authActions, type SessionIdentity } from './auth';
 
 function harness(initial: AppState) {

@@ -1,14 +1,15 @@
 import { notFound } from 'next/navigation';
 import { authorize, toLocalDate } from '@buxa/domain';
-import { Empty, PageHeader } from '@/components/ui';
-import { getRuntime } from '@/server/runtime';
+import { Empty } from '../../../components/ui/Empty';
+import { PageHeader } from '../../../components/ui/PageHeader';
+import { getRuntime } from '../../../server/runtime';
 import { Notice } from '../components/Notice';
 import { LogFilters } from '../components/LogFilters';
 import { LogTable } from '../components/LogTable';
 import { campActor, campZone } from '../lib/campActor';
-import { attendanceExportPath } from '../lib/paths';
-import { parseLogFilter } from '../lib/logFilter';
-import { HELP_LINK_LABEL, helpLink } from '@/features/help';
+import { attendanceExportPath } from '../../../logic/common';
+import { parseLogFilter } from '../../../logic/common';
+import { HELP_LINK_LABEL, helpLink } from '../../../logic/common';
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>;
 

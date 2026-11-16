@@ -12,14 +12,14 @@ const orgs = vi.hoisted(() => ({
 }));
 
 vi.mock('next/navigation', () => ({ notFound, usePathname: () => '/camp', useRouter: () => ({ push() {}, refresh() {} }) }));
-vi.mock('@/server/runtime', () => ({ getRuntime: () => ({ services: { orgs } }) }));
-vi.mock('@/server/session', () => ({
+vi.mock('../../../server/runtime', () => ({ getRuntime: () => ({ services: { orgs } }) }));
+vi.mock('../../../server/session', () => ({
   requireSession: async () => session.current,
   getCurrentCamp: async () => session.camp,
   toActor: (s: { user: { id: string } }, camp: Membership) => ({ userId: s.user.id, orgId: camp.orgId, role: camp.role }),
 }));
-vi.mock('@/features/camp/actions', () => ({ selectCampAction: async () => {} }));
-vi.mock('@/features/auth', () => ({ signOut: async () => {} }));
+vi.mock('../actions/selectCampAction', () => ({ selectCampAction: async () => {} }));
+vi.mock('../../auth/actions/signOut', () => ({ signOut: async () => {} }));
 vi.mock('../forms/NewCampForm', () => ({ NewCampForm: ({ first }: { first: boolean }) => `NEW-CAMP-${first ? 'FIRST' : 'EXTRA'}` }));
 
 // Vitest compiles JSX with the classic runtime, which needs React in scope.
