@@ -29,7 +29,7 @@ docs/               roadmap, ADRs, security, phase specs, architecture diagrams
 
 ## 3. Layers
 
-The **target** layout is in [architecture/folders.md](architecture/folders.md). Today the code is organised as `features/<domain>/`, `components/ui/`, `server/`, `lib/` and `providers/`; the move to layers has not started. Until it does, the same import direction applies inside `features/`.
+The **target** layout is the layer plan, which is pending the restructure. Today the code is organised as `features/<domain>/`, `components/ui/`, `server/`, `lib/` and `providers/`; the move to layers has not started. Until it does, the same import direction applies inside `features/`.
 
 | Layer | Folder (target) | What goes in | May import |
 |---|---|---|---|
