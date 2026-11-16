@@ -1,6 +1,5 @@
 import type { Priority, Project, Task } from '../../types';
 import { addDays, iso, today } from '../dates';
-import { uid } from '../tasks';
 import { USER, type ProjectId } from './ids';
 
 /** Index into a project's default columns: 0 Backlog, 1 To Do, 2 In Progress, 3 In Review, 4 Done. */
@@ -39,14 +38,15 @@ export function buildTasks(specs: TaskSpec[], projects: Project[]): Task[] {
   };
   return specs.map((s, i) => {
     const created = s.extras.created ?? -(8 + (i % 12));
+    const id = 't-' + (i + 1);
     return {
-      id: 't-' + (i + 1), projectId: s.project, columnId: columnId(s.project, s.slot), title: s.title,
+      id, projectId: s.project, columnId: columnId(s.project, s.slot), title: s.title,
       description: s.extras.desc ?? '', priority: s.priority, assigneeId: s.who,
       start: s.start === null ? undefined : addDays(today(), s.start), due: s.due === null ? undefined : addDays(today(), s.due),
-      tags: s.tags, subtasks: (s.extras.subs ?? []).map(([title, done]) => ({ id: uid(), title, done })),
-      comments: (s.extras.comments ?? []).map(([authorId, body], n) => ({ id: uid(), authorId, body, at: iso(-(n + 1), 9 + n) })),
-      attachments: (s.extras.files ?? []).map(name => ({ id: uid(), name, size: 184000, type: 'application/pdf', at: iso(-2) })),
-      history: [{ id: uid(), at: iso(created), actorId: USER.hannah, text: 'created this' }],
+      tags: s.tags, subtasks: (s.extras.subs ?? []).map(([title, done], n) => ({ id: `${id}-sub-${n}`, title, done })),
+      comments: (s.extras.comments ?? []).map(([authorId, body], n) => ({ id: `${id}-com-${n}`, authorId, body, at: iso(-(n + 1), 9 + n) })),
+      attachments: (s.extras.files ?? []).map((name, n) => ({ id: `${id}-file-${n}`, name, size: 184000, type: 'application/pdf', at: iso(-2) })),
+      history: [{ id: `${id}-hist`, at: iso(created), actorId: USER.hannah, text: 'created this' }],
       archived: false, createdAt: iso(created), createdBy: USER.hannah,
       completedAt: s.extras.done !== undefined ? iso(s.extras.done, 16) : undefined,
     };
