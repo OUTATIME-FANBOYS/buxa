@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useState, type ChangeEvent } from 'react';
-import { Field } from '../../../components/ui/Field';
+import { Field } from '../../../elements';
 import { fieldError, idle, type ActionState } from '../../../logic/common';
 import { signIn } from '../actions/signIn';
 import { signUp } from '../actions/signUp';

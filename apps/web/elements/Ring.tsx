@@ -1,4 +1,4 @@
-import type { ChartTone } from './tone';
+import type { ChartTone } from './chartTone';
 
 export function Ring({ value, size = 132, stroke = 10, label, tone = 'brand' }: { value: number; size?: number; stroke?: number; label: string; tone?: ChartTone }) {
   const r = (size - stroke) / 2; const c = 2 * Math.PI * r; const v = Math.min(100, Math.max(0, value));

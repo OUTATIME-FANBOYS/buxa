@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dialog } from '../../../../components/ui/Dialog';
-import { Field } from '../../../../components/ui/Field';
+import { Field } from '../../../../elements';
 import { useUi } from '../../../../components/ui/UiProvider';
 import { boardPath } from '../../../../config/routes';
 import { useStore } from '../../state/store';

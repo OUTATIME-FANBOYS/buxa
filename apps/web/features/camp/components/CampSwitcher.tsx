@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import type { Membership } from '@buxa/contracts';
-import { Icon } from '../../../components/ui/Icon';
+import { Icon } from '../../../elements';
 import { Menu } from '../../../components/ui/Menu';
 import { ROUTES } from '../../../config/routes';
 import { selectCampAction } from '../actions/selectCampAction';

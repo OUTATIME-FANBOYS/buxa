@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import type { ScanFieldHandle } from '../../scanner/ScanField';
 import { checkInAnnouncement } from '../../../logic/common';
-import { LiveRegion } from '../components/LiveRegion';
+import { LiveRegion } from '../../../elements';
 import { NameSearch } from './NameSearch';
 import { ResultPanel } from './ResultPanel';
 import { ScanPanel } from './ScanPanel';

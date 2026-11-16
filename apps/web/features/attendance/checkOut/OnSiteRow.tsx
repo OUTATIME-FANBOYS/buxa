@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Pill } from '../../../components/ui/Pill';
+import { Pill } from '../../../elements';
 import type { OnSiteRowView } from '../../../logic/common';
 import { useCheckOut } from './useCheckOut';
 import { CheckOutPanel } from './CheckOutPanel';

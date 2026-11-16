@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Icon } from '../../components/ui/Icon';
+import { Icon } from '../../elements';
 import { browserStorage, readDismissed, writeDismissed } from '../../logic/common';
 import { PHONE_QUERY, installPlatform, shouldShowInstallHint, type InstallPlatform } from '../../logic/common';
 

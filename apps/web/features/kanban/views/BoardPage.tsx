@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTaskDrawer } from '../state/TaskDrawerContext';
 import { useStore } from '../state/store';
-import { Icon } from '../../../components/ui/Icon';
-import { Avatar } from '../../../components/ui/Avatar';
+import { Icon } from '../../../elements';
+import { Avatar } from '../../../elements';
 import { Empty } from '../../../components/ui/Empty';
-import { Progress } from '../../../components/ui/Progress';
-import { Segmented } from '../../../components/ui/Segmented';
-import { Pill } from '../../../components/ui/Pill';
+import { Progress } from '../../../elements';
+import { Segmented } from '../../../elements';
+import { Pill } from '../../../elements';
 import { BoardView } from '../components/board/Board';
 import { CalendarView } from '../components/board-views/CalendarView';
 import { ListView } from '../components/board-views/ListView';

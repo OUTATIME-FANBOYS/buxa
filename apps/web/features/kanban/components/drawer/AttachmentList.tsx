@@ -1,6 +1,6 @@
 import type { Task } from '../../../../logic/common';
 import { useStore } from '../../state/store';
-import { Icon } from '../../../../components/ui/Icon';
+import { Icon } from '../../../../elements';
 import { fmtSize } from '../../../../logic/common';
 import { useAttachmentUpload } from '../../hooks/useAttachmentUpload';
 

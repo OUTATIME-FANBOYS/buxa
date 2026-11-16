@@ -1,9 +1,9 @@
-import { PriorityMark } from '../PriorityMark';
+import { PriorityMark } from '../../../../elements';
 import { useMemo } from 'react';
 import type { Priority, Project, Task } from '../../../../logic/common';
 import { useStore } from '../../state/store';
 import type { TaskDraft } from '../../hooks/useTaskDraft';
-import { Field } from '../../../../components/ui/Field';
+import { Field } from '../../../../elements';
 import { PRIORITIES, PRIORITY_LABEL } from '../../../../logic/common';
 import { TagInput } from './TagInput';
 

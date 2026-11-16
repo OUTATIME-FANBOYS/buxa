@@ -1,5 +1,5 @@
 import type { Project, Task } from '../../../../logic/common';
-import { Icon } from '../../../../components/ui/Icon';
+import { Icon } from '../../../../elements';
 import { Menu } from '../../../../components/ui/Menu';
 import { useTaskDrawer } from '../../state/TaskDrawerContext';
 import { useTaskCommands } from '../../hooks/useTaskCommands';

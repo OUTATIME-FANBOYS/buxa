@@ -5,7 +5,7 @@ import { useActionState, useEffect, useRef } from 'react';
 import type { Person } from '@buxa/contracts';
 import { CAMP_ROLES, CAMP_ROLE_LABELS } from '@buxa/domain';
 import { personPath } from '../../../config/routes';
-import { Field } from '../../../components/ui/Field';
+import { Field } from '../../../elements';
 import { fieldError, idle } from '../../../logic/common';
 import { updatePersonAction } from '../actions/updatePersonAction';
 import { FormMessage } from './FormMessage';

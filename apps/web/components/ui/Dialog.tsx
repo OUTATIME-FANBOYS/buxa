@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { createPortal } from 'react-dom';
 import { project, reduceMotion, rubberband, springAnimate, VelocityTracker } from '../../logic/common';
 import { FOCUSABLE } from '../../logic/common';
-import { Icon } from './Icon';
+import { Icon } from '../../elements';
 
 const CloseCtx = createContext<() => void>(() => {});
 /** The close function of the nearest Dialog, so a child can dismiss it with the exit animation. */

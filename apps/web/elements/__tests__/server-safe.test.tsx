@@ -11,10 +11,10 @@ beforeAll(async () => {
   // Built from the files, not the retired barrel, so each module is one import.
   ui = {
     ...(await import('../Icon')), ...(await import('../Pill')), ...(await import('../Avatar')),
-    ...(await import('../Empty')), ...(await import('../PageHeader')), ...(await import('../Field')),
-    ...(await import('../Progress')), ...(await import('../Segmented')), ...(await import('../Popover')),
-    ...(await import('../Menu')), ...(await import('../Dialog')), ...(await import('../UiProvider')),
-    ...(await import('../../../logic/common')),
+    ...(await import('@/components/ui/Empty')), ...(await import('@/components/ui/PageHeader')), ...(await import('../Field')),
+    ...(await import('../Progress')), ...(await import('../Segmented')), ...(await import('@/components/ui/Popover')),
+    ...(await import('@/components/ui/Menu')), ...(await import('@/components/ui/Dialog')), ...(await import('@/components/ui/UiProvider')),
+    ...(await import('@/logic/common')),
   };
 });
 

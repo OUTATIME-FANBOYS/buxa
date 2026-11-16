@@ -1,5 +1,5 @@
-import { Icon } from '../../../../components/ui/Icon';
-import { Pill } from '../../../../components/ui/Pill';
+import { Icon } from '../../../../elements';
+import { Pill } from '../../../../elements';
 import { useUi } from '../../../../components/ui/UiProvider';
 import { useStore } from '../../state/store';
 import { useTaskDrawer } from '../../state/TaskDrawerContext';

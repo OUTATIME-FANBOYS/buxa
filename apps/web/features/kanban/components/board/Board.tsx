@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Column, Project, Task } from '../../../../logic/common';
 import { useStore } from '../../state/store';
-import { Icon } from '../../../../components/ui/Icon';
+import { Icon } from '../../../../elements';
 import { useUi } from '../../../../components/ui/UiProvider';
 import { useBoardDnd } from '../../hooks/useBoardDnd';
 import { ColumnDialog } from '../dialogs/ColumnDialog';

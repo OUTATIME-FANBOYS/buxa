@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Dialog } from '../../../../components/ui/Dialog';
-import { Field } from '../../../../components/ui/Field';
+import { Field } from '../../../../elements';
 import { useUi } from '../../../../components/ui/UiProvider';
 import { useStore } from '../../state/store';
 

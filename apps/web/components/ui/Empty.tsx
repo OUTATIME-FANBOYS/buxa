@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Icon } from './Icon';
+import { Icon } from '../../elements';
 
 export function Empty({ icon = 'inbox', title, body, action }: { icon?: string; title: string; body?: string; action?: ReactNode }) {
   return (

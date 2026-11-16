@@ -2,9 +2,9 @@ import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { useTaskDrawer } from '../state/TaskDrawerContext';
 import { Empty } from '../../../components/ui/Empty';
-import { Segmented } from '../../../components/ui/Segmented';
+import { Segmented } from '../../../elements';
 import { ListView } from '../components/board-views/ListView';
-import { Icon } from '../../../components/ui/Icon';
+import { Icon } from '../../../elements';
 import { diffDays, today } from '../../../logic/common';
 import type { Task } from '../../../logic/common';
 

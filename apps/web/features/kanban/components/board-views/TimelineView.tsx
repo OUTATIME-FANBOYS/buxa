@@ -2,9 +2,9 @@ import { useMemo, useState } from 'react';
 import type { Task } from '../../../../logic/common';
 import { useStore } from '../../state/store';
 import { useTaskDrawer } from '../../state/TaskDrawerContext';
-import { Avatar } from '../../../../components/ui/Avatar';
+import { Avatar } from '../../../../elements';
 import { Empty } from '../../../../components/ui/Empty';
-import { Icon } from '../../../../components/ui/Icon';
+import { Icon } from '../../../../elements';
 import { subtaskProgress } from '../../../../logic/common';
 import { addDays, diffDays, fmt, parse, today } from '../../../../logic/common';
 

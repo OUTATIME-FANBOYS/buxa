@@ -1,4 +1,4 @@
-import { Icon } from '../../../../components/ui/Icon';
+import { Icon } from '../../../../elements';
 import { dueInfo } from '../../../../logic/common';
 
 export const DueChip = ({ due, kind }: { due?: string; kind: 'open' | 'active' | 'done' }) => {

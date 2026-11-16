@@ -5,7 +5,7 @@ import { Dialog } from '../../../components/ui/Dialog';
 import { useUi } from '../../../components/ui/UiProvider';
 import { fieldError, idle } from '../../../logic/common';
 import { renameCampAction } from '../actions/renameCampAction';
-import { TextField } from './TextField';
+import { TextField } from '../../../elements';
 
 const FORM_ID = 'rename-camp';
 

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../../state/store';
 import { useTaskDrawer } from '../../state/TaskDrawerContext';
-import { Icon } from '../../../../components/ui/Icon';
+import { Icon } from '../../../../elements';
 
 export function GlobalSearch({ inputRef }: { inputRef: React.RefObject<HTMLInputElement | null> }) {
   const { wsTasks, userById, s } = useStore(); const { openTask } = useTaskDrawer();

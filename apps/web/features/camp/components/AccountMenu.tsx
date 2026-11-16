@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import type { User } from '@buxa/contracts';
-import { Avatar } from '../../../components/ui/Avatar';
+import { Avatar } from '../../../elements';
 import { Menu } from '../../../components/ui/Menu';
 import { signOut } from '../../auth/actions/signOut';
 import { useDarkMode } from './useDarkMode';

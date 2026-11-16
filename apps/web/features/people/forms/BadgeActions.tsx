@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { BadgeCard } from '../../badge/BadgeCard';
-import { PrintButton } from '../../badge/PrintButton';
+import { PrintButton } from '../../../elements';
 import { idle } from '../../../logic/common';
 import { issueBadgeAction } from '../actions/issueBadgeAction';
 import { revokeBadgeAction } from '../actions/revokeBadgeAction';

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useStore } from '../state/store';
-import { Field } from '../../../components/ui/Field';
-import { Segmented } from '../../../components/ui/Segmented';
+import { Field } from '../../../elements';
+import { Segmented } from '../../../elements';
 import { useUi } from '../../../components/ui/UiProvider';
 import { ROUTES } from '../../../config/routes';
 import { AgentDialog } from '../components/dialogs/AgentDialog';

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Empty } from '../../../components/ui/Empty';
-import { Icon } from '../../../components/ui/Icon';
-import { Segmented } from '../../../components/ui/Segmented';
+import { Icon } from '../../../elements';
+import { Segmented } from '../../../elements';
 import { useUi } from '../../../components/ui/UiProvider';
 import { useStore } from '../state/store';
 import { AgentDialog } from '../components/dialogs/AgentDialog';

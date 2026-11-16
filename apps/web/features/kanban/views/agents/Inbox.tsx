@@ -1,4 +1,4 @@
-import { Avatar } from '../../../../components/ui/Avatar';
+import { Avatar } from '../../../../elements';
 import { Empty } from '../../../../components/ui/Empty';
 import { useUi } from '../../../../components/ui/UiProvider';
 import { useStore } from '../../state/store';

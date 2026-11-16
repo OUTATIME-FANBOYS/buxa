@@ -1,4 +1,4 @@
-import { Icon } from '../../../components/ui/Icon';
+import { Icon } from '../../../elements';
 
 /** Shown on the sign-in page when the public Supabase settings are missing, instead of a form that cannot work. */
 export function NotConfigured() {

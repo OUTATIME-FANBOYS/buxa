@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useRef } from 'react';
-import { Field } from '../../../components/ui/Field';
+import { Field } from '../../../elements';
 import { fieldError, idle } from '../../../logic/common';
 import { addMembershipAction } from '../actions/addMembershipAction';
 import { FormMessage } from './FormMessage';

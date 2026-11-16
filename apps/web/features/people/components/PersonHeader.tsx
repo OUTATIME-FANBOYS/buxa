@@ -1,5 +1,5 @@
 import type { Person } from '@buxa/contracts';
-import { Pill } from '../../../components/ui/Pill';
+import { Pill } from '../../../elements';
 import { AccessPill } from './AccessPill';
 import { OnSitePill } from './OnSitePill';
 import { RolePills } from './RolePills';

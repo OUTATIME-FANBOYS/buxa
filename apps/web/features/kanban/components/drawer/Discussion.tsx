@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Task } from '../../../../logic/common';
-import { Avatar } from '../../../../components/ui/Avatar';
-import { Icon } from '../../../../components/ui/Icon';
+import { Avatar } from '../../../../elements';
+import { Icon } from '../../../../elements';
 import { ago, fmt } from '../../../../logic/common';
 import { CommentComposer } from './CommentComposer';
 

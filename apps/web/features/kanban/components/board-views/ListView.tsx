@@ -1,13 +1,13 @@
-import { PriorityMark } from '../PriorityMark';
+import { PriorityMark } from '../../../../elements';
 import { useMemo, useState } from 'react';
 import type { Project, Task } from '../../../../logic/common';
 import { useStore } from '../../state/store';
 import { useTaskDrawer } from '../../state/TaskDrawerContext';
-import { Avatar } from '../../../../components/ui/Avatar';
+import { Avatar } from '../../../../elements';
 import { Empty } from '../../../../components/ui/Empty';
-import { Icon } from '../../../../components/ui/Icon';
+import { Icon } from '../../../../elements';
 import { KIND_TONE } from '../../../../logic/common';
-import { Pill } from '../../../../components/ui/Pill';
+import { Pill } from '../../../../elements';
 import { DueChip } from '../board/DueChip';
 import { PRIORITY_RANK, subtaskProgress } from '../../../../logic/common';
 

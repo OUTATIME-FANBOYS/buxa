@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Dialog } from '../../../../components/ui/Dialog';
-import { Field } from '../../../../components/ui/Field';
+import { Field } from '../../../../elements';
 import { useStore } from '../../state/store';
 import type { Column, ColumnKind } from '../../../../logic/common';
 

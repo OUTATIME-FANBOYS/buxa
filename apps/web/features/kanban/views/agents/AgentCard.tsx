@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Avatar } from '../../../../components/ui/Avatar';
-import { Icon } from '../../../../components/ui/Icon';
-import { Pill } from '../../../../components/ui/Pill';
-import { Segmented } from '../../../../components/ui/Segmented';
+import { Avatar } from '../../../../elements';
+import { Icon } from '../../../../elements';
+import { Pill } from '../../../../elements';
+import { Segmented } from '../../../../elements';
 import { useStore } from '../../state/store';
 import { ConnectAgentDialog } from '../../components/dialogs/ConnectAgentDialog';
 import * as A from '../../../../logic/common';

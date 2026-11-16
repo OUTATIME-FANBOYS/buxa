@@ -1,4 +1,4 @@
-import type { ChartTone } from './tone';
+import type { ChartTone } from './chartTone';
 
 /** One stacked bar that splits a whole into labelled parts. Every part is named with its count, so colour is never the only cue. */
 export function StatusBar({ parts, ariaLabel }: { parts: { name: string; value: number; tone: ChartTone }[]; ariaLabel: string }) {

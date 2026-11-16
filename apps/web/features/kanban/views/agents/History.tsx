@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Avatar } from '../../../../components/ui/Avatar';
+import { Avatar } from '../../../../elements';
 import { Empty } from '../../../../components/ui/Empty';
-import { Icon } from '../../../../components/ui/Icon';
+import { Icon } from '../../../../elements';
 import { Menu } from '../../../../components/ui/Menu';
 import { useUi } from '../../../../components/ui/UiProvider';
 import { useStore } from '../../state/store';

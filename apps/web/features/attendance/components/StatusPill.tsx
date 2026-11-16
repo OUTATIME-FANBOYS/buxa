@@ -1,5 +1,5 @@
 import type { AccessStatus } from '@buxa/domain';
-import { Pill } from '../../../components/ui/Pill';
+import { Pill } from '../../../elements';
 import { STATUS_DISPLAY } from '../../../logic/common';
 
 /** A status as a pill: the words are the meaning, the colour only repeats it. */

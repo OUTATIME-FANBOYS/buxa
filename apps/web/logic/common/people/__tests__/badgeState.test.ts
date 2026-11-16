@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { BadgeState } from '../../../../logic/common';
+import type { BadgeState } from '../badgeState';
 
 describe('BadgeState', () => {
   it('is either an ordinary action state or the one issued moment with its payload', () => {

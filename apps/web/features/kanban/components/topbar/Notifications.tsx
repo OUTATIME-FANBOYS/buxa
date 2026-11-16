@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { useStore } from '../../state/store';
 import { useTaskDrawer } from '../../state/TaskDrawerContext';
 import { Empty } from '../../../../components/ui/Empty';
-import { Icon } from '../../../../components/ui/Icon';
+import { Icon } from '../../../../elements';
 import { Popover } from '../../../../components/ui/Popover';
 import { ago, diffDays, today } from '../../../../logic/common';
 

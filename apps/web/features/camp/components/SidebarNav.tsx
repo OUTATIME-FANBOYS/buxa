@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Icon } from '../../../components/ui/Icon';
+import { Icon } from '../../../elements';
 import { isActive, type NavGroup } from '../../../logic/common';
 
 /** The links in their groups, a client island only to mark the current page. */

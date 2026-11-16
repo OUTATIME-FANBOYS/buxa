@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { HouseholdMember } from '@buxa/contracts';
-import { Pill } from '../../../components/ui/Pill';
+import { Pill } from '../../../elements';
 import { personPath } from '../../../config/routes';
 import { UnlinkButton } from '../forms/UnlinkButton';
 

@@ -1,11 +1,11 @@
-import { PriorityMark } from './PriorityMark';
+import { PriorityMark } from '../../../elements';
 import { useCallback, useRef, useState, type ReactNode } from 'react';
 import type { Filter, DueFilter, Project, Sort } from '../../../logic/common';
 import { useStore } from '../state/store';
-import { Icon } from '../../../components/ui/Icon';
+import { Icon } from '../../../elements';
 import { Menu } from '../../../components/ui/Menu';
 import { Popover } from '../../../components/ui/Popover';
-import { Avatar } from '../../../components/ui/Avatar';
+import { Avatar } from '../../../elements';
 import { useUi } from '../../../components/ui/UiProvider';
 import { PRIORITIES, emptyFilter, isFilterActive } from '../../../logic/common';
 

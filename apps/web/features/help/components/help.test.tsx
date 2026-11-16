@@ -1,12 +1,12 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { HELP_SECTIONS } from '../content';
-import { IMPORTS_SECTION } from '../imports';
-import { EXPORTS_SECTION } from '../exports';
-import { CodeBlock } from '../../../../features/help/components/CodeBlock';
-import { ExampleTable } from '../../../../features/help/components/ExampleTable';
-import { HelpPage } from '../../../../features/help/components/HelpPage';
-import { HelpSection } from '../../../../features/help/components/HelpSection';
+import { HELP_SECTIONS } from '../../../logic/common';
+import { IMPORTS_SECTION } from '../../../logic/common';
+import { EXPORTS_SECTION } from '../../../logic/common';
+import { CodeBlock } from './CodeBlock';
+import { ExampleTable } from './ExampleTable';
+import { HelpPage } from './HelpPage';
+import { HelpSection } from './HelpSection';
 
 /** The heading levels in the order they appear in the markup, for example ['h1', 'h2', 'h3']. */
 const headingLevels = (html: string): string[] => [...html.matchAll(/<(h[1-6])[ >]/g)].map(m => m[1] ?? '');

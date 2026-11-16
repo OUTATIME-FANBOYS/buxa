@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Icon } from '../../../../components/ui/Icon';
+import { Icon } from '../../../../elements';
 import { ROUTES } from '../../../../config/routes';
 import { taskSummary, type TaskCounts } from '../../../../logic/common';
 

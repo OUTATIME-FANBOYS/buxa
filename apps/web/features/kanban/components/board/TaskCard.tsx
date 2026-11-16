@@ -1,10 +1,10 @@
-import { PriorityMark } from '../PriorityMark';
+import { PriorityMark } from '../../../../elements';
 import { memo } from 'react';
 import type { Project, Task } from '../../../../logic/common';
 import { useStore } from '../../state/store';
 import { useTaskDrawer } from '../../state/TaskDrawerContext';
-import { Avatar } from '../../../../components/ui/Avatar';
-import { Icon } from '../../../../components/ui/Icon';
+import { Avatar } from '../../../../elements';
+import { Icon } from '../../../../elements';
 import { Menu } from '../../../../components/ui/Menu';
 import { tagHue } from '../../../../logic/common';
 import { subtaskProgress } from '../../../../logic/common';
