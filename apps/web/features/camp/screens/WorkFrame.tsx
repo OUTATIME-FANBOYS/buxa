@@ -5,7 +5,7 @@ import { navGroupsFor } from '../components/navItems';
 import { Shell } from '../components/Shell';
 
 interface Props {
-  /** The role in the camp being worked in, or null when there is no camp (the browser demo). Decides which camp items show. */
+  /** The role in the camp being worked in, or null when the person has no camp yet. Decides which camp items show. */
   role: Role | null;
   topBarStart?: ReactNode;
   /** Whatever the work pages need at the end of the top bar: search, save state, notifications, account. */
@@ -13,7 +13,7 @@ interface Props {
   children: ReactNode;
 }
 
-/** The shell for work pages. Unlike CampFrame it does not require a session, so the browser demo can use it. */
+/** The shell for work pages. The layout around it requires a session; the camp role is null until the person has a camp. */
 export function WorkFrame({ role, topBarStart, topBarEnd, children }: Props) {
   return (
     <Shell nav={navGroupsFor(role)} brandHref={ROUTES.camp} topBarStart={topBarStart} topBarEnd={topBarEnd}>
