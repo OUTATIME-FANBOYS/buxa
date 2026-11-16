@@ -23,7 +23,7 @@ packages/db       migrations, transactions, tenant isolation
 packages/contracts  zod shapes shared by the API and the web app
 docs/             roadmap, ADRs, auth, deploy
 ```
-Rules for the code are in `CODING_STANDARDS.md`; how to contribute is in `CONTRIBUTING.md`.
+Rules for the code are in `docs/CODING_STANDARDS.md`; how to contribute is in `docs/CONTRIBUTING.md`.
 
 ## The staff task board
 The original kanban demo lives at `/kanban`. It is client-only and keeps its data in the browser. It acts as the account you sign in with; there are no browser-only demo accounts. Sample accounts for each persona will come from a later seed step that creates real Supabase accounts.
