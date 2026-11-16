@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { avatarHue, KIND_TONE } from '@/components/ui/tones';
+import { avatarHue, KIND_TONE, PALETTE_HUES, tagHue } from '@/components/ui/tones';
 import { progressValue } from '@/components/ui/Progress';
 
 describe('KIND_TONE', () => {
@@ -11,12 +11,19 @@ describe('KIND_TONE', () => {
 describe('avatarHue', () => {
   it('is stable for a name and always one of the person hues', () => {
     expect(avatarHue('Maya Chen')).toBe(avatarHue('Maya Chen'));
-    for (const n of ['A', 'Maya Chen', 'Jo', '', 'Zoë Ångström']) expect(['brand', 'ok', 'warn', 'neutral']).toContain(avatarHue(n));
+    for (const n of ['A', 'Maya Chen', 'Jo', '', 'Zoë Ångström']) expect(PALETTE_HUES).toContain(avatarHue(n));
   });
-  it('is the char-code sum modulo four hues', () => {
-    expect(avatarHue('A')).toBe('ok'); // 65 % 4 = 1
-    expect(avatarHue('B')).toBe('warn'); // 66 % 4 = 2
+  it('is the char-code sum modulo the five palette hues', () => {
+    expect(avatarHue('A')).toBe('brand'); // 65 % 5 = 0
+    expect(avatarHue('B')).toBe('ok'); // 66 % 5 = 1
     expect(avatarHue('')).toBe('brand'); // 0
+  });
+});
+
+describe('tagHue', () => {
+  it('is stable and case-insensitive, and always a palette hue', () => {
+    expect(tagHue('Planning')).toBe(tagHue('planning'));
+    expect(PALETTE_HUES).toContain(tagHue('payments'));
   });
 });
 

@@ -62,3 +62,5 @@
 .tone-warn, .pill-warn { --tone: var(--warn); --tone-soft: var(--warn-soft); --tone-ink: var(--warn-ink); --tone-f: var(--f-warn); }
 .tone-crit, .pill-crit { --tone: var(--crit); --tone-soft: var(--crit-soft); --tone-ink: var(--crit-ink); --tone-f: var(--f-crit); }
 .tone-agent, .pill-agent { --tone: var(--agent); --tone-soft: var(--agent-soft); --tone-ink: var(--agent-ink); --tone-f: var(--f-agent); }
+/* hero: the same violet family, for highlights that are not AI activity */
+.tone-hero, .pill-hero { --tone: var(--agent); --tone-soft: var(--agent-soft); --tone-ink: var(--agent-ink); --tone-f: var(--f-agent); }

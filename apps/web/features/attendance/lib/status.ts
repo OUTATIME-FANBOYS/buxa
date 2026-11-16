@@ -7,8 +7,8 @@ import type { Tone } from '@/components/ui/tones';
  */
 export const STATUS_DISPLAY: Readonly<Record<AccessStatus, { label: string; tone: Tone }>> = {
   valid: { label: 'Valid', tone: 'ok' },
-  not_started: { label: 'Not started yet', tone: 'warn' },
+  not_started: { label: 'Not started yet', tone: 'brand' },
   expired: { label: 'Expired', tone: 'crit' },
-  revoked: { label: 'Revoked', tone: 'crit' },
+  revoked: { label: 'Revoked', tone: 'neutral' },
   none: { label: 'No membership', tone: 'neutral' },
 };

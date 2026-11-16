@@ -26,7 +26,7 @@
 .avatar-btn { border-radius: 50%; display: inline-grid; }
 .avatar { display: inline-grid; place-items: center; border-radius: 50%; background: var(--surface-3); color: var(--text-2); font-weight: 600; flex: none; border: 1px solid var(--line); line-height: 1; }
 .avatar-empty { background: transparent; border-style: dashed; border-color: var(--control); color: var(--text-3); }
-.avatar-brand { background: var(--accent-soft); color: var(--accent-deep); border-color: transparent; } .avatar-ok { background: var(--ok-soft); color: var(--ok-ink); border-color: transparent; } .avatar-warn { background: var(--warn-soft); color: var(--warn-ink); border-color: transparent; }
+.avatar-brand { background: var(--accent-soft); color: var(--accent-deep); border-color: transparent; } .avatar-ok { background: var(--ok-soft); color: var(--ok-ink); border-color: transparent; } .avatar-warn { background: var(--warn-soft); color: var(--warn-ink); border-color: transparent; } .avatar-crit { background: var(--crit-soft); color: var(--crit-ink); border-color: transparent; } .avatar-agent { background: var(--agent-soft); color: var(--agent-ink); border-color: transparent; }
 .avatars { display: inline-flex; } .avatars .avatar { margin-left: -4px; box-shadow: 0 0 0 2px var(--bg); } .avatars .avatar:first-child { margin-left: 0; }
 .main { flex: 1; min-height: 0; overflow: auto; padding: calc(56px + var(--s5)) var(--s5) var(--s5); scroll-padding-top: 72px; }
 .only-mobile { display: none; } .nav-scrim { display: none; }

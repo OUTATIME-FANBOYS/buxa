@@ -3,7 +3,7 @@ import { memo } from 'react';
 import type { Project, Task } from '../../types';
 import { useStore } from '../../state/store';
 import { useTaskDrawer } from '../../state/TaskDrawerContext';
-import { Avatar, Icon, Menu } from '@/components/ui';
+import { Avatar, Icon, Menu, tagHue } from '@/components/ui';
 import { subtaskProgress } from '../../lib/tasks';
 import { justDragged } from '../../lib/cardDrag';
 import { useTaskCommands } from '../../hooks/useTaskCommands';
@@ -35,7 +35,7 @@ export const TaskCard = memo(function TaskCard({ task, project, readOnly, draggi
         <h3>{task.title}</h3>
         <Menu label={`Actions for ${task.title}`} className="icon-btn card-menu" trigger={<Icon name="more" />} items={taskMenuItems(task, project, readOnly, cmd)} />
       </div>
-      {task.tags.length > 0 && <div className="tags">{task.tags.slice(0, 3).map(t => <span key={t} className="tag">{t}</span>)}{task.tags.length > 3 && <span className="tag">+{task.tags.length - 3}</span>}</div>}
+      {task.tags.length > 0 && <div className="tags">{task.tags.slice(0, 3).map(t => <span key={t} className={`tag hue-${tagHue(t)}`}>{t}</span>)}{task.tags.length > 3 && <span className="tag">+{task.tags.length - 3}</span>}</div>}
       <div className="card-meta">
         <PriorityMark priority={task.priority} />
         <DueChip due={task.due} kind={kind} />
