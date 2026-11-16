@@ -81,7 +81,19 @@ Rules that apply once the layers exist:
 - **A feature exposes an `index.ts`.** Code outside `features/<name>/` imports from `@/features/<name>`, not from a deep path. Several folders have one today (`features/attendance`, `features/camp`, `server/services`).
 - **Single source of truth.** A URL, permission, validation rule, theme key or piece of copy is defined once and imported everywhere. URLs come from `config/routes.ts`; permissions come from `packages/domain`; the theme storage key is in `config/theme.ts`. If you are about to write the same string a second time, move it first.
 
-## 6. Tests
+## 6. Lint
+- Run `npm run lint` before pushing. CI runs it after typecheck and fails on any error. `npm run lint:fix` fixes what it can.
+- Config: `eslint.config.mjs` (flat config, ESLint 9). Errors that must not come back:
+  - `@typescript-eslint/no-explicit-any`: no `any`; use `unknown` and narrow it, or a real type.
+  - `@typescript-eslint/no-unused-vars`: remove what is not used.
+  - `react-hooks/rules-of-hooks` and `react-hooks/exhaustive-deps`: hooks at the top level, and dependency lists that are complete.
+  - `jsx-a11y/alt-text` and `jsx-a11y/label-has-associated-control`: every image has alt text; every form label is tied to its control.
+  - `no-console`: use `console.warn` or `console.error` in product code. Scripts, tests and CLI entry points may log.
+- Warnings are debt, not permission: `@typescript-eslint/no-non-null-assertion` and the typescript-eslint type-checked rules are warnings until the existing code is cleared. Do not add new ones.
+- Layer-direction rules (which folder may import which) are not enforced yet. They come after the `apps/web` restructure.
+- Do not disable a rule inline without a reason on the same line (`// eslint-disable-line rule -- reason`).
+
+## 7. Tests
 
 - **Vitest is the unit test runner** for the whole repo (`npm test` runs `vitest run`). Unit tests sit next to the file (`x.test.ts`) or in a `__tests__/` folder beside it. A test counts only if it imports the file directly.
 - **Test first for files being changed or moved.** Before a file is changed or moved, a test for its current behaviour is written (or confirmed) and is green. Tests move with their subject and their imports are updated in the same commit. Existing untested files need no test before an unrelated change.
@@ -90,7 +102,7 @@ Rules that apply once the layers exist:
 - **Prefer real signed tokens and a real database.** Use the in-memory repositories (`InMemory*Repository`) to test routes without one.
 - **Structure tests** check that the database tables have tenant columns and forced row-level security (`packages/db/test/audit-and-catalog.test.ts`, `packages/db/test/narrow-privileges.test.ts`). They fail the build when a rule is broken.
 
-## 7. Security basics
+## 8. Security basics
 
 - **No secrets in the repo.** `.env` and `.env.*` are git-ignored; `apps/web/.env.example` (no values) is the only env file committed. Only publishable keys go in `NEXT_PUBLIC_*` variables. Everything else is read on the server and validated by `server/config.ts`.
 - **Errors do not leak internals.** An unexpected error is logged and returned as a generic 500 (`server/http/route.ts`). Tests check that the database URL does not appear in a response.
@@ -99,14 +111,14 @@ Rules that apply once the layers exist:
 - **Every write that matters is audited** through `recordAudit` in the same transaction (`server/audit/recordAudit.ts`).
 - **Children's data.** Phase 1 holds names, date of birth, household links and attendance. Collect only what the phase needs. Real children's data is not stored until every open item in [security.md](security.md) (section 6) is done. The repository holds mock data only.
 
-## 8. UI
+## 9. UI
 
 - **Colours come from the palette tokens** in `apps/web/styles/tokens.css` (`--accent`, `--ok`, `--warn`, `--crit`, `--agent`, `--f-*` for chart fills). Components do not hard-code a hex, rgb or hsl colour. The one exception is the black-and-white QR code on the badge (`features/badge/BadgeCard.tsx`), which scanners need. Some legacy CSS under `styles/layout/` still has hex values; do not add more.
 - **Meaning is fixed.** Brand is primary and in progress, ok is done, warn needs attention, crit is overdue or destructive, agent is anything an AI agent did. Text colours meet 4.5:1 on their surface.
 - **Touch targets are 44px.** `--control-h: 44px` is the one height for inputs, selects and buttons, and the minimum for any tap target.
 - **Phones.** The phone breakpoint is `max-width: 720px`. The page never scrolls sideways. Inputs use `font-size: 16px` so iOS does not zoom. Tables stack into labelled rows on a phone.
 
-## 9. Git
+## 10. Git
 
 - Branch and PR naming, commit messages and the release process are in [CONTRIBUTING.md](CONTRIBUTING.md).
 - Only source and docs are committed. Dependencies, build output, env files, local data and editor or OS files are ignored (`.gitignore`).
