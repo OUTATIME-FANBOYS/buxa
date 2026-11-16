@@ -32,7 +32,7 @@ export class FakeCookieStore {
 /** A person with an account and camps, made through the in-memory repositories. */
 export async function personWithCamps(store: InMemoryStore, sub: string, camps: string[]): Promise<{ memberships: Membership[] }> {
   const user = await store.upsertFromIdentity({ authId: sub, email: `${sub.slice(0, 8)}@camp.test`, name: 'Test Person' });
-  for (const name of camps) await store.createWithOwner({ name, slug: `${name.toLowerCase().replace(/\W+/g, '-')}-${sub.slice(0, 6)}` }, user.id);
+  for (const name of camps) await store.createWithOwner({ name, slug: `${name.toLowerCase().replace(/\W+/g, '-')}-${sub.slice(0, 6)}`, timezone: 'UTC' }, user.id);
   return { memberships: await store.membershipsOf(user.id) };
 }
 

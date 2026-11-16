@@ -1,0 +1,46 @@
+/* ---------- Attendance: check-in, on site, log ---------- */
+/* Touch targets: every control on these screens is at least 44px high. */
+.att-btn-lg, .name-result, .choice { min-height: 44px; }
+.att-btn-lg { height: 52px; font-size: 16px; }
+.checkin { display: grid; gap: var(--s5); grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: start; }
+.checkin-input, .checkin-result { display: grid; gap: var(--s4); align-content: start; min-width: 0; }
+@media (max-width: 760px) { .checkin { grid-template-columns: 1fr; } }
+
+.scan-panel { display: grid; gap: var(--s3); }
+.scan-panel input { height: 56px; font-size: 18px; }
+.camera-slot { border-radius: var(--r-3); overflow: hidden; border: 1px solid var(--line); background: var(--surface); }
+
+.name-search { display: grid; gap: var(--s2); }
+.name-results { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s1); }
+.name-result { display: flex; align-items: center; gap: var(--s3); width: 100%; text-align: left; padding: var(--s2) var(--s3);
+  border-radius: var(--r-1); background: var(--surface); border: 1px solid var(--line-strong); color: var(--text); flex-wrap: wrap; }
+.name-result:hover { background: var(--hover); }
+.name-result-name { font-weight: 600; flex: 1 1 160px; min-width: 0; }
+
+.result-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-3); padding: var(--s5); display: grid; gap: var(--s3); }
+.result-name { font-size: 28px; line-height: 1.2; margin: 0; overflow-wrap: anywhere; }
+.result-since { margin: 0; font-weight: 600; color: var(--text-2); }
+.result-action { display: grid; }
+.result-action .btn { width: 100%; }
+
+.notice { border-radius: var(--r-3); padding: var(--s3) var(--s4); display: grid; gap: var(--s1); background: var(--tone-soft); color: var(--tone-ink); border: 1px solid var(--tone); }
+.notice p { margin: 0; }
+.override-form { display: grid; gap: var(--s3); padding: var(--s4); border-radius: var(--r-3); border: 1px dashed var(--crit); }
+.override-form textarea { min-height: 88px; }
+
+.onsite-wrap:focus { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: var(--r-3); }
+.onsite-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s3); }
+.onsite-row { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-3); padding: var(--s4); display: grid; gap: var(--s3); }
+.onsite-head { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); flex-wrap: wrap; }
+.onsite-who { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; min-width: 0; }
+.onsite-name { font-weight: 600; font-size: 16px; }
+.checkout-panel { display: grid; gap: var(--s3); border-top: 1px solid var(--line); padding-top: var(--s3); }
+.pickup-choices { gap: var(--s2); }
+.choice { display: flex; align-items: center; gap: var(--s3); padding: var(--s2) var(--s3); border: 1px solid var(--line-strong); border-radius: var(--r-1); cursor: pointer; flex-wrap: wrap; }
+.choice input { width: 20px; height: 20px; }
+
+.log-filters { display: flex; gap: var(--s3); align-items: end; flex-wrap: wrap; }
+.log-filters .field { min-width: 160px; flex: 1 1 160px; }
+.log-filters .btn { min-width: 44px; }
+.log-table th[scope='row'] { font-weight: 600; text-align: left; }
+.num { font-variant-numeric: tabular-nums; white-space: nowrap; }

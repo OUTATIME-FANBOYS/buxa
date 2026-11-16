@@ -2,5 +2,6 @@
 export { CampFrame } from './screens/CampFrame';
 export { Overview } from './screens/Overview';
 export { Members } from './screens/Members';
+export { campContext, findCampContext, type CampContext } from './lib/campContext';
 export { Shell } from './components/Shell';
 export { navFor, CAMP_NAV, type NavItem } from './components/navItems';

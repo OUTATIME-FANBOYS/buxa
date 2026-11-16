@@ -1,6 +1,11 @@
 /* ---------- Tokens ---------- */
 /*
- * Colour system: cool neutrals plus five hues, each with four steps.
+ * Brand palette: five primary colours, each with derived steps for text, tints and chart fills.
+ *   Stormy Teal    #0F7173  accent (buttons, links, brand marks)
+ *   Vibrant Coral  #F05D5E  critical marks; text uses a darker or lighter derived step
+ *   Platinum       #E7ECEF  light background; dark-mode text
+ *   Shadow Grey    #272932  light-mode text; dark-mode surface
+ *   Midnight Violet #36213E hero and agent hue; dark-mode hero
  *   text step  (--accent, --ok, --warn, --crit, --agent): 4.5:1 or better on every surface
  *   soft + ink (--x-soft, --x-ink):                      tinted backgrounds for pills and icons, ink is 4.5:1 on soft
  *   fill       (--f-x):                                   chart marks and dots, 3:1 on surfaces, checked for colour-blind separation
@@ -8,21 +13,21 @@
  * agent = anything an AI agent did. The agent hue is never a chart series next to brand (they merge for some viewers).
  */
 :root {
-  --bg: #f4f5fa; --surface: #ffffff; --surface-2: #f8f9fc; --surface-3: #eceef5; --hover: #eef0f6;
-  --line: #e2e5ee; --line-strong: #cbd0dd; --control: #868da3;
-  --text: #141726; --text-2: #474d63; --text-3: #5f667d;
-  --accent: #4a43e0; --accent-soft: #ecebff; --accent-deep: #3730b8; --f-brand: #4f46e5;
+  --bg: #e7ecef; --surface: #ffffff; --surface-2: #f4f6f8; --surface-3: #dce3e8; --hover: #eef2f4;
+  --line: #d3dbe0; --line-strong: #b8c3ca; --control: #6b7480;
+  --text: #272932; --text-2: #4a4e5c; --text-3: #5a5f6e;
+  --accent: #0f7173; --accent-soft: #d3eaea; --accent-deep: #0a4f51; --f-brand: #0f7173;
   --ok: #0b7a55; --ok-soft: #def5ea; --ok-ink: #065f46; --f-ok: #0e9f6e;
   --warn: #a34a07; --warn-soft: #fdf0d5; --warn-ink: #8f3f0a; --f-warn: #d17a00;
-  --crit: #c62424; --crit-soft: #fde7e7; --crit-ink: #a81d1d; --f-crit: #e02d3c;
-  --agent: #7c3aed; --agent-soft: #f0e9ff; --agent-ink: #5b21b6; --f-agent: #8b4df0;
-  --f-neutral: #868da3; --neutral-soft: #eceef5; --neutral-ink: #474d63;
-  --accent-ink: #ffffff; --on-solid: #ffffff; --on-inverse-accent: #b3b7ff;
-  --hero-bg: #3f38cf; --hero-fg: #ffffff; --hero-fg-2: #dcdbff;
+  --crit: #a3282b; --crit-soft: #fbe4e4; --crit-ink: #7f1d20; --f-crit: #f05d5e;
+  --agent: #4f2d66; --agent-soft: #efe7f4; --agent-ink: #36213e; --f-agent: #7b5597;
+  --f-neutral: #6b7480; --neutral-soft: #dce3e8; --neutral-ink: #4a4e5c;
+  --accent-ink: #ffffff; --on-solid: #ffffff; --on-inverse-accent: #9fd6d7;
+  --hero-bg: #36213e; --hero-fg: #ffffff; --hero-fg-2: #c9b2d9;
   --p-low: var(--text-3); --p-medium: var(--accent); --p-high: var(--warn); --p-critical: var(--crit);
-  --track: #e4e7f0; --grid: #e9ebf2;
-  --shadow-1: 0 1px 2px rgba(20,23,38,.06);
-  --shadow: 0 1px 2px rgba(20,23,38,.06), 0 12px 32px rgba(20,23,38,.12);
+  --track: #d3dbe0; --grid: #dce3e8;
+  --shadow-1: 0 1px 2px rgba(39,41,50,.06);
+  --shadow: 0 1px 2px rgba(39,41,50,.06), 0 12px 32px rgba(39,41,50,.12);
   --r-1: 6px; --r-2: 8px; --r-3: 12px;
   --s1: .25rem; --s2: .5rem; --s3: .75rem; --s4: 1rem; --s5: 1.5rem; --s6: 2rem; --s7: 3rem;
   --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
@@ -32,18 +37,18 @@
   color-scheme: light;
 }
 [data-theme="dark"] {
-  --bg: #0e1017; --surface: #161922; --surface-2: #1b1f2a; --surface-3: #232836; --hover: #222736;
-  --line: #262b3a; --line-strong: #363c4f; --control: #6b7289;
-  --text: #e9ebf3; --text-2: #aab0c5; --text-3: #8d93aa;
-  --accent: #959bff; --accent-soft: #24264d; --accent-deep: #b3b7ff; --f-brand: #7a85f6;
+  --bg: #1e2026; --surface: #272932; --surface-2: #2e313b; --surface-3: #373a46; --hover: #31343f;
+  --line: #3a3e4b; --line-strong: #4d5263; --control: #8a90a0;
+  --text: #e7ecef; --text-2: #b9bec9; --text-3: #9ea4b0;
+  --accent: #5cc2c4; --accent-soft: #1d3c3d; --accent-deep: #a6dfe0; --f-brand: #2fa3a6;
   --ok: #3fcf8e; --ok-soft: #12342a; --ok-ink: #6fe0ae; --f-ok: #22ae80;
   --warn: #f2b045; --warn-soft: #3a2c12; --warn-ink: #f7c570; --f-warn: #bd8a10;
-  --crit: #ff7d74; --crit-soft: #40201f; --crit-ink: #ffa099; --f-crit: #d63a55;
-  --agent: #b596ff; --agent-soft: #2c2350; --agent-ink: #cbb5ff; --f-agent: #9d7bf0;
-  --f-neutral: #6b7289; --neutral-soft: #232836; --neutral-ink: #aab0c5;
-  --accent-ink: #0e1017; --on-solid: #0e1017; --on-inverse-accent: #3730b8;
-  --hero-bg: #1c1e45; --hero-fg: #e9ebf3; --hero-fg-2: #b3b7ff;
-  --track: #262b3a; --grid: #222634;
+  --crit: #ff8a8b; --crit-soft: #3d2227; --crit-ink: #ffb3b4; --f-crit: #f05d5e;
+  --agent: #c9b2d9; --agent-soft: #34263f; --agent-ink: #e0d0ee; --f-agent: #9b7bb8;
+  --f-neutral: #8a90a0; --neutral-soft: #373a46; --neutral-ink: #b9bec9;
+  --accent-ink: #1e2026; --on-solid: #1e2026; --on-inverse-accent: #0a4f51;
+  --hero-bg: #36213e; --hero-fg: #e7ecef; --hero-fg-2: #c9b2d9;
+  --track: #3a3e4b; --grid: #31343f;
   --shadow-1: 0 1px 2px rgba(0,0,0,.35);
   --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.5);
   color-scheme: dark;

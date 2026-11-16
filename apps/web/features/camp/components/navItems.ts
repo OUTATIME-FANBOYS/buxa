@@ -15,7 +15,11 @@ export interface NavItem {
 /** The camp area's navigation, defined once. */
 export const CAMP_NAV: readonly NavItem[] = [
   { href: ROUTES.camp, label: 'Overview', icon: 'dashboard', exact: true, requires: 'org:read' },
-  { href: ROUTES.members, label: 'Members', icon: 'users', requires: 'members:read' },
+  { href: ROUTES.checkIn, label: 'Check-in', icon: 'check', requires: 'attendance:record' },
+  { href: ROUTES.onSite, label: 'On site', icon: 'clock', requires: 'attendance:read' },
+  { href: ROUTES.people, label: 'People', icon: 'users', requires: 'people:read' },
+  { href: ROUTES.attendance, label: 'Attendance', icon: 'list', requires: 'attendance:read' },
+  { href: ROUTES.members, label: 'Team access', icon: 'user', requires: 'members:read' },
   { href: ROUTES.kanban, label: 'Staff board', icon: 'kanban' }, // the original kanban demo
 ];
 

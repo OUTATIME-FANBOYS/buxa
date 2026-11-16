@@ -5,7 +5,7 @@ import type { Actor } from '@buxa/domain';
 import { recordAudit } from '../audit/recordAudit';
 import { OrgNotFoundError, SlugTakenError, type OrgRepository } from './OrgRepository';
 
-interface OrgRow { id: string; name: string; slug: string; created_at: Date; member_count: number }
+interface OrgRow { id: string; name: string; slug: string; created_at: Date; member_count: number; timezone: string }
 
 export class PgOrgRepository implements OrgRepository {
   constructor(private readonly pool: Pool) {}
@@ -14,7 +14,7 @@ export class PgOrgRepository implements OrgRepository {
   async createWithOwner(input: NewOrgInput, ownerId: string): Promise<CreatedOrg> {
     try {
       return await transaction(this.pool, async db => {
-        const { rows } = await db.query<OrgSummary>('INSERT INTO orgs(name, slug) VALUES ($1, $2) RETURNING id, name, slug', [input.name, input.slug]);
+        const { rows } = await db.query<OrgSummary>('INSERT INTO orgs(name, slug, timezone) VALUES ($1, $2, $3) RETURNING id, name, slug', [input.name, input.slug, input.timezone]);
         const org = rows[0];
         await db.query(`INSERT INTO org_members(org_id, user_id, role) VALUES ($1, $2, 'owner')`, [org.id, ownerId]);
         await recordAudit(db, { actor: { userId: ownerId, orgId: org.id }, action: 'org.create', entity: 'org', entityId: org.id });
@@ -28,18 +28,18 @@ export class PgOrgRepository implements OrgRepository {
   get(orgId: string): Promise<Org> {
     return withOrg(this.pool, orgId, async db => {
       const { rows } = await db.query<OrgRow>(
-        `SELECT id, name, slug, created_at, (SELECT count(*)::int FROM org_members) AS member_count FROM orgs`);
+        `SELECT id, name, slug, timezone, created_at, (SELECT count(*)::int FROM org_members) AS member_count FROM orgs`);
       if (!rows[0]) throw new OrgNotFoundError();
       const row = rows[0];
-      return { id: row.id, name: row.name, slug: row.slug, createdAt: row.created_at.toISOString(), memberCount: row.member_count };
+      return { id: row.id, name: row.name, slug: row.slug, createdAt: row.created_at.toISOString(), memberCount: row.member_count, timezone: row.timezone };
     });
   }
 
   rename(actor: Actor, input: OrgPatchInput): Promise<OrgSummary> {
     return withOrg(this.pool, actor.orgId, async db => {
-      const { rows } = await db.query<OrgSummary>('UPDATE orgs SET name = $1 WHERE id = $2 RETURNING id, name, slug', [input.name, actor.orgId]);
+      const { rows } = await db.query<OrgSummary>('UPDATE orgs SET name = coalesce($1, name), timezone = coalesce($2, timezone) WHERE id = $3 RETURNING id, name, slug', [input.name ?? null, input.timezone ?? null, actor.orgId]);
       if (!rows[0]) throw new OrgNotFoundError();
-      await recordAudit(db, { actor, action: 'org.update', entity: 'org', entityId: actor.orgId, data: { name: input.name } });
+      await recordAudit(db, { actor, action: 'org.update', entity: 'org', entityId: actor.orgId, data: { ...(input.name !== undefined && { name: input.name }), ...(input.timezone !== undefined && { timezone: input.timezone }) } });
       return rows[0];
     });
   }

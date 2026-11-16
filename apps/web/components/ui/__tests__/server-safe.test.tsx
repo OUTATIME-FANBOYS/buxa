@@ -24,6 +24,13 @@ describe('server-safe components', () => {
     expect(renderToStaticMarkup(<Avatar user={{ name: 'Bot', agent: true }} />)).toContain('avatar avatar-agent');
     expect(renderToStaticMarkup(<Avatar />)).toContain('avatar-empty');
   });
+  it('PageHeader renders the title, the optional subtitle and actions', () => {
+    const { PageHeader } = ui;
+    expect(renderToStaticMarkup(<PageHeader title="On site" />)).toBe('<header class="page-head"><div class="page-title"><h1>On site</h1></div></header>');
+    expect(renderToStaticMarkup(<PageHeader title="Check-in" subtitle="Scan." actions={<b>Go</b>} />)).toBe(
+      '<header class="page-head"><div class="page-title"><h1>Check-in</h1><p class="muted">Scan.</p></div><div class="page-actions"><b>Go</b></div></header>',
+    );
+  });
   it('Empty, Field, Progress, Icon render', () => {
     const { Empty, Field, Progress, Icon } = ui;
     expect(renderToStaticMarkup(<Empty title="Nothing" body="b" />)).toContain('<strong>Nothing</strong><p>b</p>');

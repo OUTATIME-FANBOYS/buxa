@@ -5,8 +5,12 @@ import { decideStartup, readEmailConfirmation, type StartupDecision } from './au
 import { createVerifier, type Verifier } from './auth/verifier';
 import { loadConfig, type Config } from './config';
 import { createLogger, type Logger } from './log';
+import type { Clock } from './services';
 import { createPgRepositories, type Repositories } from './repositories';
-import { createOrgService, type OrgService } from './services/orgs';
+import {
+  createAttendanceService, createCredentialService, createMembershipService, createOrgService, createPeopleService, systemClock,
+  type AttendanceService, type CredentialService, type MembershipService, type OrgService, type PeopleService,
+} from './services';
 
 export interface Runtime {
   config: Config;
@@ -15,13 +19,15 @@ export interface Runtime {
   repositories: Repositories;
   /** Undefined when Supabase is not configured; every authenticated route then answers 503. */
   verifier?: Verifier;
-  services: { orgs: OrgService };
+  services: Services;
   /**
    * Resolves once the start-up safety check has run. 'refuse' means the app must not serve: Supabase auto-confirms sign-ups in
    * production, so anyone could register with an address they do not own.
    */
   startupCheck: Promise<StartupDecision>;
 }
+
+export interface Services { orgs: OrgService; people: PeopleService; memberships: MembershipService; credentials: CredentialService; attendance: AttendanceService }
 
 export interface RuntimeOptions {
   env?: Record<string, string | undefined>;
@@ -30,6 +36,8 @@ export interface RuntimeOptions {
   /** Replace the identity provider. `null` means none, even if the environment names one. */
   verifier?: Verifier | null;
   logSink?: (line: string) => void;
+  /** Replace the clock (tests control "now" and so the camp's local day). */
+  clock?: Clock;
 }
 
 /** Everything the server side needs, built from the environment. */
@@ -52,7 +60,19 @@ export function createRuntime(options: RuntimeOptions = {}): Runtime {
     return decision;
   })();
 
-  return { config, log, pool, repositories, verifier, services: { orgs: createOrgService(repositories.orgs) }, startupCheck };
+  return { config, log, pool, repositories, verifier, services: createServices(repositories, options.clock ?? systemClock), startupCheck };
+}
+
+/** Services are built from repositories and a clock only, so tests can assemble them without a runtime. */
+export function createServices(repositories: Repositories, clock: Clock): Services {
+  const { orgs, people, memberships, credentials, attendance } = repositories;
+  return {
+    orgs: createOrgService(orgs),
+    people: createPeopleService({ people, memberships, credentials, attendance, orgs, clock }),
+    memberships: createMembershipService({ memberships, people, orgs, clock }),
+    credentials: createCredentialService({ credentials, people, memberships, attendance, orgs, clock }),
+    attendance: createAttendanceService({ attendance, people, memberships, orgs, clock }),
+  };
 }
 
 // One runtime per server process. Kept on globalThis so Next.js hot reloading in development does not open a new pool every edit.
