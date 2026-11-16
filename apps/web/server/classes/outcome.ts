@@ -5,7 +5,7 @@ import { isClassError, isEnrolmentRefusal } from './errors';
 export type Outcome<T> = { ok: true; value: T } | { ok: false; failure: Failure };
 
 export type FailureReason =
-  | 'class_not_found' | 'session_not_found' | 'enrolment_not_found' | 'camper_not_found'
+  | 'class_not_found' | 'session_not_found' | 'enrolment_not_found' | 'camper_not_found' | 'instructor_not_found'
   | Refusal['reason'];
 
 export interface Failure {
@@ -18,11 +18,12 @@ export interface Failure {
 
 export const ok = <T>(value: T): Outcome<T> => ({ ok: true, value });
 
-const NOT_FOUND: Record<'class-not-found' | 'session-not-found' | 'enrolment-not-found' | 'camper-not-found', Failure> = {
+const NOT_FOUND: Record<'class-not-found' | 'session-not-found' | 'enrolment-not-found' | 'camper-not-found' | 'instructor-not-found', Failure> = {
   'class-not-found': { reason: 'class_not_found', message: 'That class no longer exists.' },
   'session-not-found': { reason: 'session_not_found', message: 'That session no longer exists.' },
   'enrolment-not-found': { reason: 'enrolment_not_found', message: 'That enrolment does not exist, or it is already cancelled.' },
   'camper-not-found': { reason: 'camper_not_found', message: 'That camper does not exist in this camp.' },
+  'instructor-not-found': { reason: 'instructor_not_found', message: 'One of the instructors does not exist in this camp.' },
 };
 
 /**
