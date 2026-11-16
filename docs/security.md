@@ -1,7 +1,6 @@
 # Security and data protection
 
-Status: **the app is not ready for real children's data.** Keep to mock data until the open items in
-section 6 are done and the privacy review is signed off. This page says what is built, what is planned, and what is missing.
+Status: **the app is not ready for real children's data.** Real data is stored only after phase 8 (`docs/phases/08-payments-go-live.md`, part B) is complete, including the open items in section 6 and a signed-off privacy review. This page says what is built, what is planned, and what is missing.
 
 ## 1. What we hold, and where
 
