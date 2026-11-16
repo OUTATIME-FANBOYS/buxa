@@ -2,9 +2,11 @@
 /* Touch targets: every control on these screens is at least 44px high. */
 .att-btn-lg, .name-result, .choice { min-height: 44px; }
 .att-btn-lg { height: 52px; font-size: 16px; }
-.checkin { display: grid; gap: var(--s5); grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: start; }
-.checkin-input, .checkin-result { display: grid; gap: var(--s4); align-content: start; min-width: 0; }
-@media (max-width: 760px) { .checkin { grid-template-columns: 1fr; } }
+/* Desktop: scan and find on the left, the result on the right. Phone: scan, result, then find, so the result is never below the name list. */
+.checkin { display: grid; gap: var(--s5); grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); grid-template-areas: 'input result' 'find result'; align-items: start; }
+.checkin-input { grid-area: input; } .checkin-find { grid-area: find; } .checkin-result { grid-area: result; }
+.checkin-input, .checkin-find, .checkin-result { display: grid; gap: var(--s4); align-content: start; min-width: 0; }
+@media (max-width: 760px) { .checkin { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'input' 'result' 'find'; gap: var(--s4); } }
 
 .scan-panel { display: grid; gap: var(--s3); }
 .scan-panel input { height: 56px; font-size: 18px; }
@@ -25,6 +27,7 @@
 
 .notice { border-radius: var(--r-3); padding: var(--s3) var(--s4); display: grid; gap: var(--s1); background: var(--tone-soft); color: var(--tone-ink); border: 1px solid var(--tone); }
 .notice p { margin: 0; }
+.notice-title { display: flex; align-items: center; gap: var(--s2); }
 .override-form { display: grid; gap: var(--s3); padding: var(--s4); border-radius: var(--r-3); border: 1px dashed var(--crit); }
 .override-form textarea { min-height: 88px; }
 
@@ -39,6 +42,26 @@
 .choice { display: flex; align-items: center; gap: var(--s3); padding: var(--s2) var(--s3); border: 1px solid var(--line-strong); border-radius: var(--r-1); cursor: pointer; flex-wrap: wrap; }
 .choice input { width: 20px; height: 20px; }
 
+/* Phone (390px wide): the check-in camera button is full width and primary; on-site rows stack, with the check-out button under the name. */
+@media (max-width: 720px) {
+  .checkin, .checkin-input, .checkin-result, .scan-panel, .onsite-row, .onsite-head, .onsite-who { min-width: 0; max-width: 100%; }
+  .scan-panel .btn-camera { width: 100%; min-height: var(--control-h); }
+  .scan-panel input { font-size: 16px; }
+  .result-card { padding: var(--s4); }
+  .result-name { font-size: 24px; }
+  .onsite-head { flex-direction: column; align-items: stretch; }
+  .onsite-head .btn, .checkout-panel .btn { width: 100%; }
+  .onsite-who { flex-wrap: wrap; overflow-wrap: anywhere; }
+  .notice-title { font-size: 18px; }
+  /* The log stacks: each visit is a block, with each cell's label in front of its value. */
+  .log-table thead { display: none; }
+  .log-table, .log-table tbody, .log-table tr, .log-table th, .log-table td { display: block; width: 100%; }
+  .log-table tr { padding: var(--s3) var(--s4); border-bottom: 1px solid var(--line); }
+  .log-table tr:last-child { border-bottom: 0; }
+  .log-table th, .log-table td { padding: 2px 0; border: 0; white-space: normal; position: static; background: none; }
+  .log-table th[scope='row'] { padding-bottom: var(--s1); }
+  .log-table td::before { content: attr(data-label); display: block; font-size: var(--fs-s); font-weight: 600; color: var(--text-2); }
+}
 .log-filters { margin: 0; }
 .log-export { margin-left: auto; }
 @media (max-width: 720px) { .log-export { margin-left: 0; } }
