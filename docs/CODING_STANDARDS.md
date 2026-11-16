@@ -11,7 +11,7 @@ apps/web            Next.js App Router app: app/ (routes), features/ (screens, a
 packages/domain     pure rules and permissions, no I/O
 packages/db         migrations, transactions, tenant isolation
 packages/contracts  zod schemas shared by the server and the browser
-docs/               roadmap, ADRs, security, phase specs, architecture diagrams
+docs/               roadmap, ADRs, security, auth, deploy, phase specs, audit
 ```
 
 - **Dependencies point inward.** `domain` imports nothing. `contracts` and `db` import only `domain`. `apps/*` may import the packages.
@@ -29,7 +29,7 @@ docs/               roadmap, ADRs, security, phase specs, architecture diagrams
 
 ## 3. Layers
 
-The **target** layout is the layer plan, which is pending the restructure. Today the code is organised as `features/<domain>/`, `components/ui/`, `server/`, `lib/` and `providers/`; the move to layers has not started. Until it does, the same import direction applies inside `features/`.
+The **target** layout is the layer plan below. The move to layers has not started. Today the code is organised as `features/<domain>/`, `components/ui/`, `server/`, `lib/` and `providers/`; the move to layers has not started. Until it does, the same import direction applies inside `features/`.
 
 | Layer | Folder (target) | What goes in | May import |
 |---|---|---|---|
@@ -77,7 +77,7 @@ Rules that apply once the layers exist:
 ## 5. Naming and files
 
 - **Names are human-readable.** Name a file, function or folder for what it is for (`exportResponse`, `checkInState`), not an abbreviation. Components are `PascalCase.tsx`; modules are `camelCase.ts`.
-- **One concern per file.** If a file needs a section comment to separate two jobs, split it. The aim is under about 120 lines per file and about 30 per function. This is guidance, not a lint rule: nine non-test files are longer today.
+- **One concern per file.** If a file needs a section comment to separate two jobs, split it. The aim is under about 120 lines per file and about 30 per function. This is guidance, not a lint rule: seven non-test files are longer today.
 - **A feature exposes an `index.ts`.** Code outside `features/<name>/` imports from `@/features/<name>`, not from a deep path. Several folders have one today (`features/attendance`, `features/camp`, `server/services`).
 - **Single source of truth.** A URL, permission, validation rule, theme key or piece of copy is defined once and imported everywhere. URLs come from `config/routes.ts`; permissions come from `packages/domain`; the theme storage key is in `config/theme.ts`. If you are about to write the same string a second time, move it first.
 
@@ -88,7 +88,7 @@ Rules that apply once the layers exist:
 - **New behaviour gets tests** when it is introduced. A rule gets a unit test at its seam. A permission gets a role × action test (`features/camp/lib/abilities.test.ts`). A new state machine gets a transition table test.
 - **Postgres tests run only with `DATABASE_URL`.** They are `*.pg.test.ts` files or sit in `__tests__/`, and they use `describe.skipIf(!url)`, so `npm test` still works without a database on a laptop. CI sets `DATABASE_URL` for the whole `verify` job (`.github/workflows/ci.yml`). `packages/db/test/ci-guard.test.ts` fails the build in CI if the URL is missing, so no Postgres test skips silently there.
 - **Prefer real signed tokens and a real database.** Use the in-memory repositories (`InMemory*Repository`) to test routes without one.
-- **Structure tests** check that the database tables have tenant columns and forced row-level security, and that the phone layout holds (`styles/mobile-layout.test.ts`). They fail the build when a rule is broken.
+- **Structure tests** check that the database tables have tenant columns and forced row-level security (`packages/db/test/audit-and-catalog.test.ts`, `packages/db/test/narrow-privileges.test.ts`). They fail the build when a rule is broken.
 
 ## 7. Security basics
 

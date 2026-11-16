@@ -8,7 +8,7 @@ section 6 are done and the privacy review is signed off. This page says what is 
 | Data | Examples | Stored in | Who can read it | Kept for |
 |---|---|---|---|---|
 | Sign-in credentials | email, password hash, sessions | Supabase Auth (never in our database) | the user only | while the account exists |
-| Camp settings | camp name, address key, time zone | Postgres | camp members | while the camp exists |
+| Camp settings | camp name, slug, time zone | Postgres | camp members | while the camp exists |
 | Staff access | role per camp | Postgres | camp admins and owners | while the membership exists |
 | People (children, guardians, instructors) | names, roles, household links, date of birth | Postgres, row-level security per camp | staff and above; viewers see names and roles only | **not yet defined** (open item) |
 | Contact details | email, phone | Postgres | staff and above (`people:read_contact`) | not yet defined |

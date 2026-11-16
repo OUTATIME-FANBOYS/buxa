@@ -1,6 +1,7 @@
 # ADR 0001: Backend stack
 
 Status: accepted (stack); data-access detail amended 2026-11-13. Date: 2026-11-13.
+Built so far: Postgres with row-level security, Supabase Auth, Next.js route handlers and the zod contracts, the audit log, and the Postgres rate limiter. Not built yet: the pg-boss job queue, Stripe Connect, Playwright tests and error tracking. Those stay decisions until they land.
 
 ## Context
 The prototype keeps whole-app state in the browser and a single JSON file on a local server. That cannot

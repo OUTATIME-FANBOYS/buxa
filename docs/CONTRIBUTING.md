@@ -53,12 +53,6 @@ Vitest is the unit test runner for the whole repo, including `apps/web`, `packag
 3. Merge it with a merge commit.
 4. Tag the `main` commit `vX.Y.Z` and push the tag.
 
-### Major releases (`vX.Y.0`)
-
-- Regenerate the flow diagrams in `docs/architecture/` with archify in the release PR. Re-export each diagram's PNG preview with the same base name (the PNG is Export > PNG of the interactive diagram).
-- Keep the Flows section of the root `README.md` in step. Each interactive link points at the `develop` htmlpreview form.
-- If a diagram disagrees with the code, the code wins: fix the diagram in the same PR as the change.
-
 ## Enforcement
 
 GitHub branch protection is not available on this plan (private repo, free org). Until it is, these rules are enforced by CI and by review. When the org moves to GitHub Team, require the PR and the `verify` check on `develop` and `main`, require `Branch flow` on `main`, and block force pushes and deletions on both.
