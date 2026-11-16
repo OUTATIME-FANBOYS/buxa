@@ -1,5 +1,4 @@
-/** Every id the demo data uses, in one place. Tests and the agent demo import these instead of repeating strings. */
-export const DEMO_PASSWORD = 'demo1234';
+/** Every id the seed data uses, in one place. Tests and the agent demo import these instead of repeating strings. */
 export const AGENT_ID = 'u-agent-triage';
 
 export const USER = {

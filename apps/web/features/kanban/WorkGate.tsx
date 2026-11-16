@@ -1,26 +1,22 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
-import { ROUTES } from '@/config/routes';
+import type { SessionIdentity } from './state/actions/auth';
 import { useStore } from './state/store';
 
 /**
- * Work pages need a demo account chosen in this browser. Without one: a person with a real session gets the first demo account,
- * and anyone else is sent to sign-in, where the demo accounts are offered.
+ * The work pages act as the signed-in person. Until the board has adopted that person as its current user, nothing renders.
+ * The server layout has already sent anyone without a session to sign-in, so there is no signed-out state here.
  */
-export function WorkGate({ realSession, children }: { realSession: boolean; children: ReactNode }) {
-  const router = useRouter();
+export function WorkGate({ user, children }: { user: SessionIdentity; children: ReactNode }) {
   const { s, actions } = useStore();
-  const userId = s.session.userId;
-  const firstDemo = s.users.find(u => s.accounts.some(a => a.userId === u.id && a.demo))?.id;
+  const { id, name, email } = user;
+  const ready = s.session.userId === id;
 
   useEffect(() => {
-    if (userId) return;
-    if (realSession && firstDemo) { actions.switchUser(firstDemo); return; }
-    if (!realSession) router.replace(ROUTES.signIn);
-  }, [userId, realSession, firstDemo, actions, router]);
+    if (!ready) actions.adoptSessionUser({ id, name, email });
+  }, [ready, id, name, email, actions]);
 
-  if (!userId) return <p className="muted" role="status" style={{ padding: 24 }}>Loading…</p>;
+  if (!ready) return <p className="muted" role="status" style={{ padding: 24 }}>Loading…</p>;
   return <>{children}</>;
 }
