@@ -30,6 +30,12 @@ const requireRelationship = (relationship: string | undefined): string => {
   return relationship;
 };
 
+/**
+ * Whether the actor sees custody information: memberships, guardian and pick-up flags, badge status. Staff and above only, the
+ * same line as people:read_contact. Viewers get names and roles.
+ */
+const seesCustody = (actor: Actor): boolean => can(actor, 'people:read_contact');
+
 /** Groups memberships by person. */
 function byPerson(records: readonly MembershipRecord[]): Map<string, MembershipRecord[]> {
   const groups = new Map<string, MembershipRecord[]>();
@@ -42,7 +48,10 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
 
   const todayFor = async (orgId: string): Promise<LocalDate> => campToday(clock, await campZone(orgs, orgId));
 
-  /** The full record as this actor may see it. Contact details and the minor flag are withheld from anyone without people:read_contact. */
+  /**
+   * The full record as this actor may see it. Contact details and the minor flag are withheld from anyone without people:read_contact.
+   * Memberships, pick-up flags and badge status are withheld from the same roles (see seesCustody).
+   */
   async function personView(actor: Actor, record: PersonRecord, today: LocalDate): Promise<Person> {
     const orgId = actor.orgId;
     const [ms, households, open, badge] = await Promise.all([
@@ -52,15 +61,16 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       credentials.activeFor(orgId, record.id),
     ]);
     const seeContact = can(actor, 'people:read_contact');
+    const custody = seesCustody(actor);
     return {
-      ...toSummary(record, ms, open !== null, today),
+      ...toSummary(record, ms, open !== null, today, custody),
       dateOfBirth: seeContact ? record.dateOfBirth : null,
       email: seeContact ? record.email : null,
       phone: seeContact ? record.phone : null,
       isMinor: seeContact ? isMinor(record, today) : null,
-      memberships: ms.map(m => toPersonMembership(m, today)),
-      households: await toHouseholds(people, orgId, households),
-      hasActiveBadge: badge !== null,
+      memberships: custody ? ms.map(m => toPersonMembership(m, today)) : null,
+      households: await toHouseholds(people, orgId, households, custody),
+      hasActiveBadge: custody ? badge !== null : null,
     };
   }
 
@@ -106,7 +116,8 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
         todayFor(orgId),
       ]);
       const groups = byPerson(ms);
-      return records.map(p => toSummary(p, groups.get(p.id) ?? [], onSite.has(p.id), today));
+      const custody = seesCustody(actor);
+      return records.map(p => toSummary(p, groups.get(p.id) ?? [], onSite.has(p.id), today, custody));
     },
 
     async get(actor, id) {
@@ -156,7 +167,7 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
     async createHousehold(actor, input) {
       assertAllowed(actor, 'people:create');
       const record = await guard(() => people.createHousehold(actor, input.name));
-      return (await toHouseholds(people, actor.orgId, [record]))[0];
+      return (await toHouseholds(people, actor.orgId, [record], seesCustody(actor)))[0];
     },
 
     async linkToHousehold(actor, input: HouseholdLinkInput) {
@@ -164,11 +175,15 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       if (input.canPickup && !input.isGuardian) throw badRequest(PICKUP_NEEDS_GUARDIAN);
       const orgId = actor.orgId;
       if (!(await people.get(orgId, input.personId))) throw notFound('Person not found');
+      // Authorising pickup is its own permission. It is needed whenever the flag is set, or cleared from a person who has it.
+      const household = await people.getHousehold(orgId, input.householdId);
+      const hadPickup = household?.members.find(m => m.personId === input.personId)?.canPickup ?? false;
+      if (input.canPickup || hadPickup) assertAllowed(actor, 'people:authorise_pickup');
       const record = await guard(() => people.link(actor, {
         householdId: input.householdId, personId: input.personId, relationship: input.relationship,
         isGuardian: input.isGuardian, canPickup: input.canPickup,
       }));
-      return (await toHouseholds(people, orgId, [record]))[0];
+      return (await toHouseholds(people, orgId, [record], seesCustody(actor)))[0];
     },
 
     async unlinkFromHousehold(actor, householdId, personId) {
@@ -188,19 +203,19 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
         }
       }
       const record = await guard(() => people.unlink(actor, householdId, personId));
-      return (await toHouseholds(people, orgId, [record]))[0];
+      return (await toHouseholds(people, orgId, [record], seesCustody(actor)))[0];
     },
 
     async getHousehold(actor, id) {
       assertAllowed(actor, 'people:read');
       const record = await people.getHousehold(actor.orgId, id);
       if (!record) throw notFound('Household not found');
-      return (await toHouseholds(people, actor.orgId, [record]))[0];
+      return (await toHouseholds(people, actor.orgId, [record], seesCustody(actor)))[0];
     },
 
     async listHouseholds(actor) {
       assertAllowed(actor, 'people:read');
-      return toHouseholds(people, actor.orgId, await people.listHouseholds(actor.orgId));
+      return toHouseholds(people, actor.orgId, await people.listHouseholds(actor.orgId), seesCustody(actor));
     },
   };
 }

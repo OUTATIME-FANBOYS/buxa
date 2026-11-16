@@ -5,6 +5,7 @@ import { decideStartup, readEmailConfirmation, type StartupDecision } from './au
 import { createVerifier, type Verifier } from './auth/verifier';
 import { loadConfig, type Config } from './config';
 import { createLogger, type Logger } from './log';
+import { createPgRateLimiter, type RateLimiter } from './rateLimit/limiter';
 import type { Clock } from './services';
 import { createPgRepositories, type Repositories } from './repositories';
 import {
@@ -20,6 +21,8 @@ export interface Runtime {
   /** Undefined when Supabase is not configured; every authenticated route then answers 503. */
   verifier?: Verifier;
   services: Services;
+  /** Shared request limits (see rateLimit/limiter.ts). Counted in Postgres, so every instance agrees. */
+  rateLimiter: RateLimiter;
   /**
    * Resolves once the start-up safety check has run. 'refuse' means the app must not serve: Supabase auto-confirms sign-ups in
    * production, so anyone could register with an address they do not own.
@@ -38,6 +41,8 @@ export interface RuntimeOptions {
   logSink?: (line: string) => void;
   /** Replace the clock (tests control "now" and so the camp's local day). */
   clock?: Clock;
+  /** Replace the request limiter (tests use the in-memory one). */
+  rateLimiter?: RateLimiter;
 }
 
 /** Everything the server side needs, built from the environment. */
@@ -46,6 +51,7 @@ export function createRuntime(options: RuntimeOptions = {}): Runtime {
   const log = createLogger(config.logLevel, options.logSink);
   const pool = new pg.Pool({ connectionString: config.databaseUrl, max: config.dbPoolMax, connectionTimeoutMillis: 5000 });
   const repositories = options.repositories ?? createPgRepositories(pool);
+  const rateLimiter = options.rateLimiter ?? createPgRateLimiter(pool);
   const base = config.supabaseUrl?.replace(/\/+$/, '');
 
   const verifier: Verifier | undefined = options.verifier === null ? undefined : options.verifier
@@ -60,7 +66,7 @@ export function createRuntime(options: RuntimeOptions = {}): Runtime {
     return decision;
   })();
 
-  return { config, log, pool, repositories, verifier, services: createServices(repositories, options.clock ?? systemClock), startupCheck };
+  return { config, log, pool, repositories, verifier, rateLimiter, services: createServices(repositories, options.clock ?? systemClock), startupCheck };
 }
 
 /** Services are built from repositories and a clock only, so tests can assemble them without a runtime. */

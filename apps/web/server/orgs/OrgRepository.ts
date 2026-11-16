@@ -15,6 +15,9 @@ export class OrgNotFoundError extends Error {
   constructor() { super('Organisation not found'); this.name = 'OrgNotFoundError'; }
 }
 
+/** True for an OrgNotFoundError from any copy of this module (see isHttpError for why not `instanceof`). */
+export const isOrgNotFound = (error: unknown): error is OrgNotFoundError => error instanceof Error && (error as { kind?: unknown }).kind === 'org-not-found';
+
 /**
  * Everything the API needs to know about organisations. Callers decide *whether* something may happen
  * (permissions, in @buxa/domain); implementations decide *how* it is stored.

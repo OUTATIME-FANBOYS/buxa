@@ -3,10 +3,9 @@ import { AUTH_CHALLENGE, authenticate } from '../auth/authenticate';
 import type { Session } from '../auth/session';
 import type { Logger } from '../log';
 import { getRuntime, type Runtime } from '../runtime';
-import { HttpError, errorBody, isHttpError } from './errors';
+import { HttpError, errorBody, isHttpError, payloadTooLarge } from './errors';
+import { MAX_BODY_BYTES } from './parse';
 import { generateRequestId } from './requestId';
-
-const MAX_BODY_BYTES = 1_048_576;
 
 export interface ApiContext { request: Request; requestId: string; log: Logger; runtime: Runtime }
 export interface AuthedContext extends ApiContext { session: Session }
@@ -21,6 +20,7 @@ function failure(error: unknown, requestId: string, log: Logger): Response {
   if (isHttpError(error)) {
     const response = Response.json(errorBody(error.statusCode, error.message, requestId), { status: error.statusCode });
     if (error.statusCode === 401) response.headers.set('www-authenticate', AUTH_CHALLENGE);
+    if (error.retryAfterSeconds !== undefined) response.headers.set('retry-after', String(error.retryAfterSeconds));
     return response;
   }
   log.error({ err: error }, 'unhandled error'); // never leak internals to the client
@@ -48,7 +48,8 @@ async function run(request: Request, work: (base: ApiContext) => Promise<Reply>)
   let response: Response;
   try {
     if ((await runtime.startupCheck) === 'refuse') throw new HttpError(503, 'Service unavailable');
-    if (Number(request.headers.get('content-length') ?? 0) > MAX_BODY_BYTES) throw new HttpError(413, 'Request body too large');
+    // Fast path only: a request with no Content-Length is measured while it is read (see readBody in parse.ts).
+    if (Number(request.headers.get('content-length') ?? 0) > MAX_BODY_BYTES) throw payloadTooLarge();
     const reply = await work({ request, requestId, log, runtime });
     response = reply instanceof Response ? reply : Response.json(reply);
   } catch (error) {

@@ -1,7 +1,7 @@
 import type { Actor } from '@buxa/domain';
 import { recordAudit } from '../audit/recordAudit';
 import type { Db } from '../people/pgRows';
-import type { CheckInRecord, NewCheckIn, NewCheckOut } from './AttendanceRepository';
+import { NotOnSiteError, type CheckInRecord, type NewCheckIn, type NewCheckOut } from './AttendanceRepository';
 
 /** Inserts a visit and its audit entries (one for the check-in, and one for an override). Returns the new id. */
 export async function insertCheckIn(db: Db, actor: Actor, input: NewCheckIn): Promise<string> {
@@ -17,14 +17,19 @@ export async function insertCheckIn(db: Db, actor: Actor, input: NewCheckIn): Pr
   return id;
 }
 
-/** Closes an open visit. Check-out fields are set; an override reason or note given now is added, not dropped. */
+/**
+ * Closes an open visit. Check-out fields are set; an override reason or note given now is added, not dropped.
+ * The update only matches a visit that is still open, so a concurrent check-out cannot overwrite the first collector.
+ * Throws NotOnSiteError when no row was closed (another check-out won, or the visit was already closed).
+ */
 export async function closeVisit(db: Db, actor: Actor, visit: CheckInRecord, input: NewCheckOut): Promise<void> {
-  await db.query(
+  const closed = await db.query(
     `UPDATE check_ins
         SET checked_out_at = $2::timestamptz, checked_out_by = $3, collected_by_person_id = $4,
             override_reason = COALESCE($5::text, override_reason), note = COALESCE($6::text, note)
-      WHERE id = $1`,
+      WHERE id = $1 AND checked_out_at IS NULL`,
     [visit.id, input.at, actor.userId, input.collectedByPersonId, input.overrideReason, input.note]);
+  if (closed.rowCount !== 1) throw new NotOnSiteError();
   await recordAudit(db, {
     actor,
     action: 'attendance.check_out',

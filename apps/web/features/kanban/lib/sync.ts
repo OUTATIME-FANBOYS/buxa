@@ -14,14 +14,20 @@ export type Updater = (s: AppState) => AppState;
 export interface Host { getState(): AppState; commit(s: AppState): void; pending: Updater[]; onStatus(s: SyncState, info?: { mcpUrl?: string }): void }
 
 const clientId = (globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)).slice(0, 36);
-const headers = { 'content-type': 'application/json', 'x-buxa-client': clientId };
+/** The local server's per-run secret (see legacy-server/index.ts). Set NEXT_PUBLIC_LEGACY_SECRET to the value it prints. */
+const runSecret = process.env.NEXT_PUBLIC_LEGACY_SECRET ?? '';
+const headers = { 'content-type': 'application/json', 'x-buxa-client': clientId, 'x-buxa-run-secret': runSecret };
 
 async function json(res: Response) {
   if (!(res.headers.get('content-type') ?? '').includes('json')) throw new Error('not the Buxa server'); // e.g. a static host answering with index.html
   return res.json();
 }
 export const serverApi = {
-  async health(): Promise<{ ok: boolean; mcpUrl: string }> { return json(await fetch('/api/health', { headers })); },
+  async health(): Promise<{ ok: boolean; mcpUrl: string }> {
+    const res = await fetch('/api/health', { headers });
+    if (!res.ok) throw new Error('the Buxa server refused the run secret'); // a refusal is JSON too, so check the status
+    return json(res);
+  },
   async getState(): Promise<{ version: number; empty?: boolean; data?: Data }> { return json(await fetch('/api/state', { headers })); },
   async putState(baseVersion: number, data: Data): Promise<{ status: number; version?: number }> {
     const r = await fetch('/api/state', { method: 'PUT', headers, body: JSON.stringify({ baseVersion, data }) }); const j = await r.json().catch(() => ({})); return { status: r.status, version: j.version };
@@ -66,7 +72,8 @@ export function createSync(h: Host) {
   function schedule(ms = 250) { if (!active) return; clearTimeout(timer); timer = setTimeout(() => { void queue(flushNow); }, ms); }
 
   function listen() {
-    events = new EventSource('/api/events');
+    // EventSource cannot send headers, so the secret travels as a query parameter on this one route.
+    events = new EventSource(`/api/events?run_secret=${encodeURIComponent(runSecret)}`);
     events.addEventListener('version', e => {
       const { version: v, origin } = JSON.parse((e as MessageEvent).data) as { version: number; origin: string };
       h.onStatus('synced');

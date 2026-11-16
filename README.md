@@ -1,6 +1,6 @@
 # Buxa
 
-Camp and membership management: people and households, sessions, registration, check-in, and a staff task board.
+Camp and membership management: people and households, memberships, check-in, and a staff task board. Classes, sessions and registration are planned (see the roadmap).
 Built phase by phase; see `docs/ROADMAP.md`. The repository is public, so it holds **mock data only** until the privacy work in `docs/deploy.md` is done.
 
 **Stack:** Next.js (App Router) · TypeScript · Postgres with row-level security · Supabase sign-in. See `docs/adr/`.
@@ -17,14 +17,14 @@ npm run dev                                   # http://localhost:5173  (the web 
 
 ## Layout
 ```
-apps/web          Next.js app: app/ (routes), features/ (auth, camp, kanban), components/ui (shared UI), providers/, styles/, config/ (single sources), server/ (API, sessions, services)
+apps/web          Next.js app: app/ (routes), features/ (attendance, auth, badge, camp, kanban, people, scanner), components/ui (shared UI), providers/, styles/, config/ (single sources), server/ (API, sessions, services)
 packages/domain   pure rules: roles, permissions, slugs, ids
 packages/db       migrations, transactions, tenant isolation
 packages/contracts  zod shapes shared by the API and the web app
-docs/             roadmap, ADRs, auth, deploy
+docs/             roadmap, ADRs, auth, deploy, security, seed data, phase specs, audit
 ```
-Rules for the code are in `CODING_STANDARDS.md`; how to contribute is in `CONTRIBUTING.md`.
+Rules for the code are in `docs/CODING_STANDARDS.md`; how to contribute is in `docs/CONTRIBUTING.md`.
 
 ## The staff task board
-The original kanban demo lives at `/kanban`. It is client-only and keeps its data in the browser. Demo accounts use the password `demo1234`.
+The original kanban demo lives at `/kanban`. It is client-only and keeps its data in the browser. It acts as the account you sign in with; there are no browser-only demo accounts. Sample accounts for each persona will come from a later seed step that creates real Supabase accounts.
 Its old single-user server (`npm run server`, with an MCP endpoint for agents) is optional: set `NEXT_PUBLIC_LEGACY_SYNC=true` to let the board sync with it.

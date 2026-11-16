@@ -20,7 +20,7 @@ Move to **Next.js (App Router)** and put the API in it too:
 1. Foundation: Next.js replaces Vite for the screens, workspaces, real URLs. *(done)*
 2. API into route handlers: services layer, `/v1` handlers, `proxy.ts` with a per-request-nonce CSP, tests ported, Fastify removed, Vercel build with migrations. *(done)*
 3. Server rendering: cookie sessions, Server Components for reads, Server Actions for mutations. *(done)*
-4. Front-end organisation: feature folders, shared UI split into one file per component, single-source barrels (routes, config, theme). *(done; see `docs/frontend-plan.md`)*
+4. Front-end organisation: feature folders, shared UI split into one file per component, single-source barrels (routes, config, theme). *(done; the layout rules are in `docs/CODING_STANDARDS.md`)*
 
 ## Consequences
 - Deployment becomes plain Vercel (native Next.js): the custom Build Output tooling is removed; migrations move to a build/CI step.

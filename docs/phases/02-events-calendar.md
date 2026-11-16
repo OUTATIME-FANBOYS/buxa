@@ -1,7 +1,7 @@
 # Phase 2: classes, sessions and enrolment
 
-Status: **spec for review. No code yet.** Roadmap row: "Events & calendar: programs to sessions, recurring events, capacity, public pages, iCal feed."
-This spec covers the camp-side part of that row: classes and their sessions, and who is enrolled. Public pages and iCal come after this.
+Status: **spec for review. No code yet** (no enrolment or class code is on `develop`). Roadmap row (phase 2, `docs/ROADMAP.md`): "Events & calendar: programs to sessions, recurring events, capacity, public pages, iCal feed."
+This spec covers the first slice of that row: classes (the roadmap's "programs") and their sessions, and who is enrolled. Recurring events, public pages and the iCal feed are still phase 2 work and come after this slice. Phase 2 is not done until its roadmap exit criteria pass, including the recurrence and public-page tests.
 
 ## Words we use
 
