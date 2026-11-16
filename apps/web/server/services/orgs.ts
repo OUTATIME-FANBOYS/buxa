@@ -3,6 +3,7 @@ import { can, type Actor } from '@buxa/domain';
 import { assertAllowed } from '../auth/authorize';
 import { conflict } from '../http/errors';
 import { isSlugTaken, type OrgRepository } from '../orgs/OrgRepository';
+import { guard } from './shared/errors';
 
 /**
  * What can be done with camps. Route handlers call it now and Server Actions will too, so the rules (who may do what, what a
@@ -24,11 +25,11 @@ export function createOrgService(orgs: OrgRepository): OrgService {
     },
     async getCamp(actor) {
       assertAllowed(actor, 'org:read');
-      return orgs.get(actor.orgId);
+      return guard(() => orgs.get(actor.orgId));
     },
     async renameCamp(actor, input) {
       assertAllowed(actor, 'org:update');
-      return orgs.rename(actor, input);
+      return guard(() => orgs.rename(actor, input));
     },
     async listMembers(actor) {
       assertAllowed(actor, 'members:read');

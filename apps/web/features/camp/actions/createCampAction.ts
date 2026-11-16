@@ -7,6 +7,7 @@ import { DEFAULT_TIMEZONE } from '@buxa/domain';
 import { ROUTES } from '@/config';
 import type { ActionState } from '@/lib/actions/state';
 import { getRuntime } from '@/server/runtime';
+import { RATE_RULES, enforceRateLimit } from '@/server/rateLimit/limiter';
 import { rememberCamp, requireSession } from '@/server/session';
 import { expectedFailure } from './failures';
 import { parseInput, text } from './input';
@@ -18,7 +19,11 @@ export async function createCampAction(_previous: ActionState, form: FormData): 
   if (!parsed.ok) return parsed.state;
 
   let created;
-  try { created = await getRuntime().services.orgs.createCamp(session.user.id, parsed.data); }
+  const runtime = getRuntime();
+  try {
+    await enforceRateLimit(runtime.rateLimiter, RATE_RULES.createCamp, session.user.id);
+    created = await runtime.services.orgs.createCamp(session.user.id, parsed.data);
+  }
   catch (error) { return expectedFailure(error, 'Could not create the camp.'); }
 
   await rememberCamp(created.id);

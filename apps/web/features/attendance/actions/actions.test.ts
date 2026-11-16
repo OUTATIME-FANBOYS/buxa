@@ -11,8 +11,9 @@ const mocks = vi.hoisted(() => ({
     credentials: { scan: vi.fn() },
     people: { list: vi.fn() },
   },
+  rateLimiter: { hit: vi.fn() },
 }));
-vi.mock('@/server/runtime', () => ({ getRuntime: () => ({ services: mocks.services }) }));
+vi.mock('@/server/runtime', () => ({ getRuntime: () => ({ services: mocks.services, rateLimiter: mocks.rateLimiter }) }));
 vi.mock('@/server/session', () => ({ requireSession: vi.fn(), getCurrentCamp: vi.fn(), toActor: vi.fn() }));
 vi.mock('../lib/campActor', () => ({ campActor: mocks.campActor }));
 
@@ -30,6 +31,22 @@ const ada: PersonSummary = { id: PERSON, givenName: 'Ada', familyName: 'Lovelace
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.campActor.mockResolvedValue(actor);
+  mocks.rateLimiter.hit.mockResolvedValue({ allowed: true, remaining: 119, retryAfterSeconds: 60 });
+});
+
+describe('scanCodeAction rate limit', () => {
+  it('refuses a scan past the limit with a message that says when to try again, and never reaches the service', async () => {
+    mocks.rateLimiter.hit.mockResolvedValue({ allowed: false, remaining: 0, retryAfterSeconds: 30 });
+    const outcome = await scanCodeAction({ raw: 'anything-at-all' });
+    expect(outcome).toEqual({ kind: 'invalid', message: 'Too many requests. Try again in 30 seconds.' });
+    expect(mocks.services.credentials.scan).not.toHaveBeenCalled();
+  });
+
+  it('counts each scan against the signed-in person', async () => {
+    mocks.services.credentials.scan.mockResolvedValue({ kind: 'unknown' });
+    await scanCodeAction({ raw: 'anything-at-all' });
+    expect(mocks.rateLimiter.hit).toHaveBeenCalledWith(expect.objectContaining({ name: 'attendance.scan', limit: 120, windowSeconds: 60 }), actor.userId);
+  });
 });
 
 describe('checkInAction', () => {

@@ -5,19 +5,20 @@ import path from 'node:path';
 import http from 'node:http';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { createApp } from '../app';
+import { createApp, hostProblem, newRunSecret } from '../app';
 import { AGENT_ID, CAMP_PROJECT_IDS, PROJECT, PROJECT_NAME, USER, buildSeed } from '../../features/kanban/lib/seed';
 import { pickData } from '../../features/kanban/lib/dataSlices';
 import * as A from '../../features/kanban/lib/agents';
 import type { AppState } from '../../features/kanban/types';
 
 let dir: string; let app: ReturnType<typeof createApp>; let base: string;
-const H = { 'content-type': 'application/json', 'x-buxa-client': 'test' };
+const SECRET = 'test-run-secret-0123456789';
+const H = { 'content-type': 'application/json', 'x-buxa-client': 'test', 'x-buxa-run-secret': SECRET };
 const api = async (method: string, p: string, b?: unknown, headers: Record<string, string> = H) => {
   const r = await fetch(base + p, { method, headers, body: b === undefined ? undefined : JSON.stringify(b) }); return { status: r.status, json: (await r.json().catch(() => null)) as any };
 };
 const seed = () => pickData(buildSeed());
-const start = async (d = dir) => { app = createApp({ dataDir: d, port: 0 }); base = `http://127.0.0.1:${await app.listen()}`; };
+const start = async (d = dir) => { app = createApp({ dataDir: d, port: 0, secret: SECRET }); base = `http://127.0.0.1:${await app.listen()}`; };
 async function connect(token: string) {
   const c = new Client({ name: 'test', version: '1' });
   await c.connect(new StreamableHTTPClientTransport(new URL(base + '/mcp'), { requestInit: { headers: { authorization: `Bearer ${token}` } } })); return c;
@@ -38,7 +39,30 @@ describe('network safety', () => {
   });
   it('refuses cross-site origins and writes without the client header', async () => {
     expect((await api('GET', '/api/health', undefined, { origin: 'https://evil.example' })).status).toBe(403);
-    expect((await api('PUT', '/api/state', { baseVersion: 0, data: seed() }, { 'content-type': 'application/json' })).status).toBe(400);
+    expect((await api('PUT', '/api/state', { baseVersion: 0, data: seed() }, { 'content-type': 'application/json', 'x-buxa-run-secret': SECRET })).status).toBe(400);
+  });
+  it('refuses every /api request without the run secret, or with a wrong one', async () => {
+    expect((await fetch(base + '/api/health')).status).toBe(401);
+    expect((await api('GET', '/api/state', undefined, { 'x-buxa-run-secret': 'guess' })).status).toBe(401);
+    expect((await api('POST', `/api/agents/${AGENT_ID}/token`, undefined, { 'x-buxa-client': 'test' })).status).toBe(401);
+    expect((await api('GET', '/api/health')).status).toBe(200);
+  });
+  it('lets the event stream take the secret as a query parameter, since EventSource cannot send headers', async () => {
+    expect((await fetch(base + '/api/events?run_secret=wrong')).status).toBe(401);
+    const ac = new AbortController(); const r = await fetch(base + `/api/events?run_secret=${SECRET}`, { signal: ac.signal });
+    expect(r.status).toBe(200); ac.abort();
+  });
+  it('generates a fresh run secret when none is given', () => {
+    expect(newRunSecret()).not.toBe(newRunSecret());
+    expect(newRunSecret().length).toBeGreaterThanOrEqual(32);
+  });
+  it('refuses to listen beyond loopback unless explicitly allowed', () => {
+    expect(hostProblem('127.0.0.1', undefined)).toBeNull();
+    expect(hostProblem('localhost', undefined)).toBeNull();
+    expect(hostProblem('::1', undefined)).toBeNull();
+    expect(hostProblem('0.0.0.0', undefined)).toMatch(/BUXA_ALLOW_REMOTE_HOST/);
+    expect(hostProblem('192.168.1.20', 'no')).toMatch(/expose/);
+    expect(hostProblem('0.0.0.0', 'yes')).toBeNull();
   });
 });
 
@@ -110,7 +134,7 @@ describe('MCP endpoint', () => {
 
   it('pushes a version event to the app when an agent writes', async () => {
     const events: string[] = []; const ac = new AbortController();
-    const r = await fetch(base + '/api/events', { signal: ac.signal }); const reader = r.body!.getReader(); const dec = new TextDecoder();
+    const r = await fetch(base + `/api/events?run_secret=${SECRET}`, { signal: ac.signal }); const reader = r.body!.getReader(); const dec = new TextDecoder();
     const pump = (async () => { try { for (;;) { const { value, done } = await reader.read(); if (done) break; events.push(dec.decode(value)); } } catch { /* aborted */ } })();
     const c = await connect(await token()); await call(c, 'add_comment', { taskId: 't-4', body: 'hello', reason: 'testing' });
     await new Promise(r => setTimeout(r, 150)); ac.abort(); await pump; await c.close();
