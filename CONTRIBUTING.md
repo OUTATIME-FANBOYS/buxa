@@ -24,8 +24,9 @@ GitHub branch protection is not available on this plan (private repo, free org).
 and convention. When the org moves to GitHub Team, apply: require PR + `verify` check on `develop` and `main`, require `Only from develop`
 on `main`, block force pushes and deletions, include administrators.
 
-## Pull request titles and descriptions
+## Branches, pull request titles and descriptions
 
-- **Title:** `<type>(<scope>): <short imperative summary>`, sentence case after the colon, no full stop, under 72 characters. Types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`. Example: `fix(security): block viewer access to attendance logs`.
+- **Branches:** `release/type/name`, for example `v0.2/feat/phase-2-classes` or `v0.1/fix/audit-s02-viewer-access`. The release is the version the work ships in (`v0.N`), the type is `feat`, `fix`, `docs`, `chore`, `refactor` or `test`, and the name is short kebab-case.
+- **Title:** `Buxa-<release>-<type>-<description>`, for example `Buxa-v0.2-feat-classes-enrolment` or `Buxa-v0.1-fix-viewer-access`. Keep the description in lower-case kebab-case, under 60 characters. Commit messages keep the conventional form `type(scope): summary`.
 - **Body:** use the template (`.github/pull_request_template.md`): What are we fixing, Why, How, How it was verified, Risks and follow-ups.
 - **Emojis:** the template's section headings carry them. Keep them; do not add more inside the text.
