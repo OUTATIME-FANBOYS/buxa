@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Actor } from '@buxa/domain';
-import { idle } from '@/lib/actions/state';
 import { createClassService } from '@/server/classes/ClassService';
 import { InMemoryClassRepository } from '@/server/classes/InMemoryClassRepository';
 import { InMemoryImportRepository } from '@/server/classes/import/InMemoryImportRepository';
