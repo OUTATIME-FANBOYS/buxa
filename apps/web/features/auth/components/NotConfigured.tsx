@@ -1,6 +1,5 @@
-import Link from 'next/link';
 import { Icon } from '@/components/ui';
-import { ROUTES } from '@/config';
+import { DemoSignIn } from './DemoSignIn';
 
 /** Shown on the sign-in page when the public Supabase settings are missing, instead of a form that cannot work. */
 export function NotConfigured() {
@@ -15,7 +14,7 @@ export function NotConfigured() {
         <li>Restart <code>npm run dev</code>.</li>
       </ol>
       <p className="muted small">Only the publishable key belongs here. Never add a secret or service_role key to the web app.</p>
-      <Link className="btn btn-block" href={ROUTES.kanban}>Open the staff board without signing in</Link>
+      <DemoSignIn />
     </div></main>
   );
 }

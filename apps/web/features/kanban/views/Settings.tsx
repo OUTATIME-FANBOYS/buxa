@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Field, Segmented, useUi } from '@/components/ui';
+import { ROUTES } from '@/config/routes';
 import { AgentDialog } from '../components/dialogs';
 import type { ThemePref } from '../types';
 
@@ -29,7 +30,7 @@ export function Settings() {
       <section className="panel"><h2>Agents</h2>
         <p className="muted">Let AI agents add and update tasks on your boards. Their changes can wait for your approval, and every one is recorded. Leave this off and Buxa is a plain Kanban board.</p>
         <label className="check-row"><input type="checkbox" checked={on} onChange={e => actions.setAgentsEnabled(e.target.checked)} /><span>Turn on agents</span></label>
-        {on && <div className="row"><button className="btn" onClick={() => setAddAgent(true)}>Add an agent</button>{hasAgents && <a className="btn btn-ghost" href="#/agents">Open Agents</a>}</div>}
+        {on && <div className="row"><button className="btn" onClick={() => setAddAgent(true)}>Add an agent</button>{hasAgents && <a className="btn btn-ghost" href={ROUTES.agents}>Open Agents</a>}</div>}
         {addAgent && <AgentDialog onClose={() => setAddAgent(false)} />}
       </section>
       <section className="panel"><h2>Your data</h2>

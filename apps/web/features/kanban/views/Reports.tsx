@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { boardPath } from '@/config/routes';
 import { useStore } from '../state/store';
 import { Empty, Progress, Segmented } from '@/components/ui';
 import { Bars, HBars, Legend, Ring } from '../components/charts';
@@ -48,7 +50,7 @@ export function Reports() {
         <section className="panel"><h2>Tasks completed over time</h2><Bars tone="ok" data={series} ariaLabel={`Tasks completed over the last ${range} days, ${total} in total`} unit={Number(range) > 30 ? 'tasks that week' : 'tasks'} /></section>
         <section className="panel"><h2>Project progress</h2>
           <ul className="proj-bars big">{projects.map(p => { const pr = progressOf(live.filter(x => x.projectId === p.id), kindOf); const h = healthOf(pr, p.deadline);
-            return <li key={p.id}><a href={'#/board/' + p.id}><span>{p.name}</span><span className="pb-meta"><Pill tone={HEALTH_TONE[h]}>{HEALTH_LABEL[h]}</Pill><span className="muted small">{pr.done}/{pr.total} · {Math.round(pr.pct)}%</span></span></a><Progress value={pr.pct} tone={HEALTH_TONE[h]} label={`${p.name} progress`} /></li>; })}</ul>
+            return <li key={p.id}><Link href={boardPath(p.id)}><span>{p.name}</span><span className="pb-meta"><Pill tone={HEALTH_TONE[h]}>{HEALTH_LABEL[h]}</Pill><span className="muted small">{pr.done}/{pr.total} · {Math.round(pr.pct)}%</span></span></Link><Progress value={pr.pct} tone={HEALTH_TONE[h]} label={`${p.name} progress`} /></li>; })}</ul>
         </section>
       </div>
       <div className="grid-3">

@@ -1,6 +1,7 @@
 import { useStore } from '../state/store';
 import { Ring, HBars, Legend } from './charts';
 import { Avatar } from '@/components/ui';
+import { ROUTES } from '@/config/routes';
 import { Icon } from '@/components/ui';
 import * as A from '../lib/agents';
 
@@ -13,7 +14,7 @@ export function AgentSummary({ detailed = false }: { detailed?: boolean }) {
   const st = A.agentStats(scoped);
   const rows = agents.map(a => { const x = A.agentStats(scoped, a.userId); return { a, x }; });
   return (
-    <section className="panel"><div className="panel-head"><h2><span className="h-icon tone-agent"><Icon name="agent" size={14} /></span>Agent work</h2><a className="link" href="#/agents">{st.pending ? `${st.pending} waiting for you` : 'Open agents'}</a></div>
+    <section className="panel"><div className="panel-head"><h2><span className="h-icon tone-agent"><Icon name="agent" size={14} /></span>Agent work</h2><a className="link" href={ROUTES.agents}>{st.pending ? `${st.pending} waiting for you` : 'Open agents'}</a></div>
       {st.total === 0 ? <p className="muted">No agent activity yet. Try a simulated run from the Agents page.</p> : (
         <div className={detailed ? 'agent-sum detailed' : 'agent-sum'}>
           <div className="agent-ring">

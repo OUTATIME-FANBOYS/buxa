@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { Membership } from '@buxa/contracts';
 import type { Actor } from '@buxa/domain';
-import { ROUTES } from '@/config';
+import { ROUTES, publicEnv } from '@/config';
 import type { Session } from '../auth/session';
 import { sessionFromToken } from '../auth/sessionFromToken';
 import { isHttpError } from '../http/errors';
@@ -51,6 +51,15 @@ async function loadSession(): Promise<Session | null> {
 
 /** The verified session for this request, or null when signed out. Cached for the duration of one request. */
 export const getSession: () => Promise<Session | null> = cache(loadSession);
+
+/**
+ * The session when there is one, or null. Unlike getSession, it never throws when Supabase is not configured:
+ * pages that work without a session (the browser demo) use this, so they still render in that case.
+ */
+export async function getOptionalSession(): Promise<Session | null> {
+  if (!publicEnv.supabaseUrl || !publicEnv.supabasePublishableKey) return null;
+  return getSession();
+}
 
 /** Like getSession, but a signed-out visitor is redirected to the sign-in page. Never returns null. */
 export async function requireSession(): Promise<Session> {

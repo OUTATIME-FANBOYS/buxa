@@ -10,10 +10,12 @@ import { ProjectDialog } from '../components/dialogs';
 import { emptyFilter, matchesFilter, sortTasks } from '../lib/tasks';
 import { diffDays, fmt, today } from '../lib/dates';
 import type { Filter, ViewKind } from '../types';
-import { navigate } from '../lib/router';
+import { useRouter } from 'next/navigation';
+import { ROUTES } from '@/config/routes';
 import { HEALTH_LABEL, HEALTH_TONE, healthOf, progressOf } from '../lib/stats';
 
 export function BoardPage({ projectId }: { projectId?: string }) {
+  const router = useRouter();
   const { s, actions, project, kindOf, readOnly, members } = useStore(); const { openTask } = useTaskDrawer();
   const [filter, setFilter] = useState<Filter>(emptyFilter); const [edit, setEdit] = useState(false);
   const target = projectId ? s.projects.find(p => p.id === projectId) : project;
@@ -25,8 +27,8 @@ export function BoardPage({ projectId }: { projectId?: string }) {
   const tags = useMemo(() => Array.from(new Set(all.flatMap(t => t.tags))).sort(), [all]);
   const visible = useMemo(() => sortTasks(all.filter(t => matchesFilter(t, filter, kindOf(t))), filter.sort), [all, filter, kindOf]); // eslint-disable-line
 
-  if (projectId && !target) return <Empty icon="alert" title="That project doesn’t exist" body="It may have been deleted." action={<button className="btn" onClick={() => navigate('/projects')}>Back to projects</button>} />;
-  if (!target) return <Empty icon="folder" title="No projects yet" body="Create a project to get your first board." action={<button className="btn btn-primary" onClick={() => navigate('/projects')}>Go to projects</button>} />;
+  if (projectId && !target) return <Empty icon="alert" title="That project doesn’t exist" body="It may have been deleted." action={<button className="btn" onClick={() => router.push(ROUTES.projects)}>Back to projects</button>} />;
+  if (!target) return <Empty icon="folder" title="No projects yet" body="Create a project to get your first board." action={<button className="btn btn-primary" onClick={() => router.push(ROUTES.projects)}>Go to projects</button>} />;
 
   const pr = progressOf(all, kindOf); const { done, total: liveCount, pct } = pr; const health = healthOf(pr, target.deadline);
   const view = s.ui.view;

@@ -71,19 +71,21 @@ describe('Members', () => {
   });
 });
 
+const labels = (groups: readonly { items: readonly { label: string }[] }[]) => groups.flatMap(g => g.items.map(i => i.label));
+
 describe('CampFrame', () => {
   const user = { id: 'u1', email: 'maya@example.com', name: 'Maya Chen' };
   const camp: Membership = { orgId: 'o1', role: 'owner', name: 'Sunrise', slug: 'sunrise' };
 
   it('shows the page inside the frame when there is a camp', () => {
     const frame = CampFrame({ user, camps: [camp], current: camp, children: 'THE-PAGE' });
-    expect(JSON.stringify(frame.props.nav.map((i: { label: string }) => i.label))).toBe('["Overview","Check-in","On site","People","Attendance","Team access","Staff board"]');
+    expect(labels(frame.props.nav)).toEqual(['Home', 'Check-in', 'On site', 'People', 'Attendance', 'My tasks', 'Projects', 'Boards', 'Calendar', 'Agents', 'Reports', 'Team access', 'Settings']);
     expect(frame.props.children).toBe('THE-PAGE');
   });
 
   it('shows first-run setup instead of the page when there is no camp', () => {
     const frame = CampFrame({ user, camps: [], current: null, children: 'THE-PAGE' });
     expect(frame.props.children.props).toEqual({ first: true });
-    expect(frame.props.nav.map((i: { label: string }) => i.label)).toEqual(['Staff board']);
+    expect(labels(frame.props.nav)).toEqual(['Home', 'My tasks', 'Projects', 'Boards', 'Calendar', 'Agents', 'Reports', 'Settings']);
   });
 });

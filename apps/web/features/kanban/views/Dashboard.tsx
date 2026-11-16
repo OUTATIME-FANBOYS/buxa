@@ -7,7 +7,8 @@ import { Avatar, Empty, Pill, Progress, type Tone } from '@/components/ui';
 import { Bars, Ring, StatusBar } from '../components/charts';
 import { DueChip } from '../components/board/DueChip';
 import { addDays, ago, diffDays, fmt, isoDay, today } from '../lib/dates';
-import { navigate } from '../lib/router';
+import Link from 'next/link';
+import { ROUTES, boardPath } from '@/config/routes';
 import { HEALTH_LABEL, HEALTH_TONE, healthOf, progressOf, summarize } from '../lib/stats';
 import { AgentSummary } from '../components/AgentSummary';
 
@@ -57,7 +58,7 @@ export function Dashboard() {
         <h1>{greet}, {me?.name.split(' ')[0]}</h1>
         <p className="muted">{mineAttention ? `${mineAttention} of your tasks need attention today.` : 'Nothing urgent on your plate. Nicely done.'} <span className="muted">{workspace.name}</span></p>
       </div></header>
-      {live.length === 0 ? <Empty icon="kanban" title="No tasks in this workspace yet" body="Create a project and add your first task." action={<button className="btn btn-primary" onClick={() => navigate('/projects')}>Go to projects</button>} /> : <>
+      {live.length === 0 ? <Empty icon="kanban" title="No tasks in this workspace yet" body="Create a project and add your first task." action={<Link className="btn btn-primary" href={ROUTES.projects}>Go to projects</Link>} /> : <>
         <div className="stats">
           <Stat label="Total tasks" value={live.length} note={`${projects.length} project${projects.length === 1 ? '' : 's'}`} tone="hero" icon="tasks" />
           <Stat label="In progress" value={prog.length} note="being worked on" tone="brand" icon="timeline" />
@@ -74,7 +75,7 @@ export function Dashboard() {
               <ul className="proj-bars">
                 {projects.map(p => {
                   const pr = progressOf(live.filter(x => x.projectId === p.id), kindOf); const h = healthOf(pr, p.deadline);
-                  return <li key={p.id}><a href={'#/board/' + p.id}><span>{p.name}</span><span className="pb-meta"><Pill tone={HEALTH_TONE[h]}>{HEALTH_LABEL[h]}</Pill><span className="muted small">{Math.round(pr.pct)}%</span></span></a><Progress value={pr.pct} tone={HEALTH_TONE[h]} label={`${p.name} completion`} /></li>;
+                  return <li key={p.id}><Link href={boardPath(p.id)}><span>{p.name}</span><span className="pb-meta"><Pill tone={HEALTH_TONE[h]}>{HEALTH_LABEL[h]}</Pill><span className="muted small">{Math.round(pr.pct)}%</span></span></Link><Progress value={pr.pct} tone={HEALTH_TONE[h]} label={`${p.name} completion`} /></li>;
                 })}
               </ul>
             </div>
@@ -84,7 +85,7 @@ export function Dashboard() {
           </section>
         </div>
         <div className="grid-2">
-          <section className="panel"><div className="panel-head"><h2>Upcoming deadlines</h2><a className="link" href="#/calendar">Calendar</a></div>
+          <section className="panel"><div className="panel-head"><h2>Upcoming deadlines</h2><Link className="link" href={ROUTES.calendar}>Calendar</Link></div>
             {upcoming.length === 0 ? <Empty icon="calendar" title="No upcoming deadlines" /> : (
               <ul className="rows">{upcoming.map(t => (
                 <li key={t.id}><button onClick={() => openTask(t.id)} className="row-btn"><PriorityMark priority={t.priority} /><span className="row-main">{t.title}<span className="muted small block">{projects.find(p => p.id === t.projectId)?.name}</span></span><DueChip due={t.due} kind={kindOf(t)} /><Avatar user={userById(t.assigneeId)} size={22} /></button></li>
