@@ -22,8 +22,6 @@ export const ROUTES = {
   agents: '/camp/agents',
   reports: '/camp/reports',
   settings: '/camp/settings',
-  // Help: how to export and import, in plain words. Anyone signed in to a camp may read it.
-  help: '/camp/help',
 } as const;
 
 export type RoutePath = (typeof ROUTES)[keyof typeof ROUTES];
