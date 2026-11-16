@@ -33,6 +33,6 @@ on `main`, block force pushes and deletions, include administrators.
 
 ## Release checklist
 
-- Every major release (`v0.N.0`) regenerates the flow diagrams in `docs/architecture/` with archify in its PR, and re-exports each diagram's PNG preview (same base name) with them. The PNG is the Export > PNG of the interactive diagram. Keep the Flows section in the root `README.md` in step: each interactive link must point at the `develop` htmlpreview form.
+- Every major release (`v0.N.0`) updates the flow diagrams in its PR, made with archify, and lists them in `apps/web/README.md`.
 - The release PR (`develop` to `main`) is a merge commit, then the tag `vX.Y.0` is pushed on the `main` commit.
 
