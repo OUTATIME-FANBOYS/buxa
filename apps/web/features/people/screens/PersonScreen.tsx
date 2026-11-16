@@ -25,7 +25,7 @@ export async function PersonScreen({ id, searchParams = {} }: { id: string; sear
   const person = await loadPerson(actor, id);
   if (!person) notFound();
 
-  const { canUpdate, canCreate, canManage, canBadge, canArchive, canSeeVisits } = permissionsFor(actor);
+  const { canUpdate, canCreate, canManage, canBadge, canArchive, canSeeVisits, canAuthorisePickup } = permissionsFor(actor);
   const { q } = readListParams(searchParams);
   const services = getRuntime().services;
   // The camp's own zone (orgs.timezone) is what every time on this page is shown in. Every role may read the camp.
@@ -51,10 +51,14 @@ export async function PersonScreen({ id, searchParams = {} }: { id: string; sear
           </div>
         </section>
         <HouseholdPanel personId={person.id} households={person.households} householdOptions={households.map(h => ({ id: h.id, name: h.name }))}
-          canUpdate={canUpdate} canCreate={canCreate} query={q} linkable={linkable} />
-        <MembershipsPanel personId={person.id} memberships={person.memberships} canManage={canManage} timeZone={camp.timezone} />
-        <BadgePanel personId={person.id} personName={`${person.givenName} ${person.familyName}`} roleLabel={roleLabel}
-          campName={camp.name} hasActiveBadge={person.hasActiveBadge} archived={person.archived} canManage={canBadge} />
+          canUpdate={canUpdate} canCreate={canCreate} canAuthorisePickup={canAuthorisePickup} query={q} linkable={linkable} />
+        {person.memberships !== null && (
+          <MembershipsPanel personId={person.id} memberships={person.memberships} canManage={canManage} timeZone={camp.timezone} />
+        )}
+        {person.hasActiveBadge !== null && (
+          <BadgePanel personId={person.id} personName={`${person.givenName} ${person.familyName}`} roleLabel={roleLabel}
+            campName={camp.name} hasActiveBadge={person.hasActiveBadge} archived={person.archived} canManage={canBadge} />
+        )}
       </div>
       {canSeeVisits && <AttendanceHistory entries={visits} timeZone={camp.timezone} />}
     </div>
@@ -70,5 +74,6 @@ function permissionsFor(actor: Actor) {
     canBadge: can(actor, 'credentials:manage'),
     canArchive: can(actor, 'people:delete'),
     canSeeVisits: can(actor, 'attendance:record'),
+    canAuthorisePickup: can(actor, 'people:authorise_pickup'),
   };
 }

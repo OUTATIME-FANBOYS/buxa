@@ -38,7 +38,8 @@ export function createCredentialService(deps: CredentialServiceDeps): Credential
     },
 
     async scan(actor, raw) {
-      assertAllowed(actor, 'attendance:read');
+      // A scan is a check-in step: the people who record attendance may scan, nobody else.
+      assertAllowed(actor, 'attendance:record');
       const orgId = actor.orgId;
       const token = parseCredentialPayload(raw);
       if (token === null) return UNKNOWN;
@@ -53,7 +54,7 @@ export function createCredentialService(deps: CredentialServiceDeps): Credential
         memberships.forPerson(orgId, personId),
         attendance.openFor(orgId, personId),
       ]);
-      return { kind: 'person', person: toSummary(person, ms, open !== null, today) };
+      return { kind: 'person', person: toSummary(person, ms, open !== null, today, true) };
     },
   };
 }

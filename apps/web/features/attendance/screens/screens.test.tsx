@@ -92,12 +92,14 @@ describe('OnSiteScreen', () => {
     expect(html).toContain('0 people on site now');
   });
 
-  it('hides check-out from a viewer, who can see the list only', async () => {
+  it('shows a viewer a cannot-see state, not the list (no names, no check-out)', async () => {
     session.role = 'viewer';
     services.attendance.onSite.mockResolvedValue([onSiteEntry(ada, '2026-11-13T08:12:00Z', true)]);
     const html = renderToStaticMarkup(await OnSiteScreen());
-    expect(html).toContain('Ada Lovelace');
+    expect(html).toContain('You cannot see who is on site');
+    expect(html).not.toContain('Ada Lovelace');
     expect(html).not.toContain('>Check out<');
+    expect(services.attendance.onSite).not.toHaveBeenCalled();
   });
 });
 
