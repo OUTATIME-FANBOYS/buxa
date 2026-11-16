@@ -23,7 +23,7 @@ packages/db       migrations, transactions, tenant isolation
 packages/contracts  zod shapes shared by the API and the web app
 docs/             roadmap, ADRs, auth, deploy
 ```
-Rules for the code are in `CODING_STANDARDS.md`; how to contribute is in `CONTRIBUTING.md`.
+Rules for the code are in `docs/CODING_STANDARDS.md`; how to contribute is in `docs/CONTRIBUTING.md`.
 
 ## Flows
 
@@ -63,7 +63,7 @@ Staff check a child out from the on-site screen. The attendance service loads th
 
 An admin sets or clears the pickup flag on a household link. The permission check runs first and fails closed: anyone who is not an admin or owner is refused and nothing is written. An admin's request then goes to the people service, which confirms the person is a guardian before saving the link and its audit entry together. Check-out reads that link later and accepts only a guardian with the pickup flag set.
 
-If a diagram disagrees with the code, the code wins. Fix the diagram in the same PR as the change, and re-export its PNG (see `CONTRIBUTING.md`).
+If a diagram disagrees with the code, the code wins. Fix the diagram in the same PR as the change, and re-export its PNG (see `docs/CONTRIBUTING.md`).
 
 ## The staff task board
 The original kanban demo lives at `/kanban`. It is client-only and keeps its data in the browser. It acts as the account you sign in with; there are no browser-only demo accounts. Sample accounts for each persona will come from a later seed step that creates real Supabase accounts.

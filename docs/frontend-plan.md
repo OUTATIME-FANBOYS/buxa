@@ -90,7 +90,7 @@ All six chunks start together; they own disjoint files. Merge order into the int
 
 ## Rules for every agent
 - Read `apps/web/AGENTS.md` and the **bundled Next.js docs** (`node_modules/next/dist/docs/01-app/`: `guides/authentication.md`, `guides/forms.md`, `guides/server-actions.md`, `guides/content-security-policy.md`, `api-reference/04-functions/cookies.md`) before writing Next code. This is Next 16 and differs from older versions (`proxy.ts`, async `cookies()`/`headers()`/`params`).
-- Follow `CODING_STANDARDS.md`: strict types, no `any`/`as unknown as`/`!`, no implicit state machines, one concern per file, single source of truth.
+- Follow `docs/CODING_STANDARDS.md`: strict types, no `any`/`as unknown as`/`!`, no implicit state machines, one concern per file, single source of truth.
 - Work in your own worktree and branch (`chunk/<id>-<name>`); run `npm ci` there first. Do not push to `develop` or `integration/steps-3-4`; open a PR into the latter. Conventional commit titles; end commit messages with the `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>` line. Use the repo-local git identity (GitHub no-reply email); never the personal address.
 - The shared local Postgres is `postgres://buxa:buxa@localhost:5433/buxa`. Do not reset it or delete other people's rows; tests use unique tags. Run any dev server on your own port (A1 5181, A2 5182, A3 5183, A4 5184, B1 5185, B2 5186).
 - No real credentials exist for you. Never ask for, write or commit secrets, `.env*` files, the Supabase address, or personal data. Do not use any password you find in the conversation or logs.
