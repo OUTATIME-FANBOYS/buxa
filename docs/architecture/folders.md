@@ -125,3 +125,15 @@ Source files are the non-test `.ts` and `.tsx` files under `components/`, `featu
 7. **Test rule.** 186 files need a test before they can move. Confirm whether to write them first, or accept indirect coverage for some layers.
 8. **Renames.** `features/kanban/pages.tsx` becomes `pages/kanban/RoutePages.tsx` so that the file name does not repeat the layer name. `features/camp/client.ts` is retired.
 9. **Test files** follow their subjects and are not rows in the map. Confirm.
+
+## Owner decisions (confirmed)
+
+1. **Hooks** live in `apps/web/hooks/`. Everything a component needs is exported through `apps/web/hooks/hooks.ts`. Hooks are not split across layers.
+2. **Providers** stay in `apps/web/providers/`, exported through `apps/web/providers/providers.ts`. They are not folded into the layers.
+3. **QR code** is split: pure helpers (rendering, format checks) in `logic/common`, and anything that touches the server (issuing, hashing with the secret, lookup) in `logic/composers`.
+4. **Tones** move to `logic/common/tones.ts`. They stay framework-independent.
+5. **Server-only code** is never re-exported through a client-accessible barrel. Each server-only module has an explicit server entry point (for example `server/index.server.ts`), and client barrels exclude it.
+6. **Test-first rule** applies only to files being changed or moved. Existing untested files are not required to get tests first. New behaviour gets tests when it is introduced.
+7. **Rename** `pages.tsx` to `RoutePages.tsx`.
+
+Human-readable names are preferred over short ones, so each folder reads as its purpose: `elements`, `components`, `pages`, `logic/common`, `logic/composers`, `hooks`, `providers`.
