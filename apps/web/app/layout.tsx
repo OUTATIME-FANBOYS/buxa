@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   // The home-screen icon on iPhone and iPad. Safari adds the manifest's icons itself on Android and desktop.
   icons: { apple: '/icons/apple-touch-icon.png' },
   appleWebApp: { capable: true, title: BRAND.name, statusBarStyle: 'default' },
+  // iOS Safari reads this name for standalone mode; Next's appleWebApp.capable emits only the newer mobile-web-app-capable name.
+  other: { 'apple-mobile-web-app-capable': 'yes' },
 };
 
 export const viewport: Viewport = {
