@@ -9,12 +9,15 @@ export const AccessStatusSchema = z.enum(['valid', 'not_started', 'expired', 're
 const Name = z.string().trim().min(1, 'Required.').max(80);
 const Optional = (max: number) => z.string().trim().max(max).transform(v => (v === '' ? undefined : v)).optional();
 
-/** A row in a list or search result. Safe for every role: names, roles and status only. */
+/**
+ * A row in a list or search result. Names, roles and archive state for every role. `status` and `onSite` are null for viewers:
+ * they come from memberships and attendance, which only staff see.
+ */
 export const PersonSummarySchema = z.object({
   id: z.string(), givenName: z.string(), familyName: z.string(), preferredName: z.string().nullable(),
-  roles: z.array(CampRoleSchema), status: AccessStatusSchema,
-  /** Checked in and not yet checked out. */
-  onSite: z.boolean(), archived: z.boolean(),
+  roles: z.array(CampRoleSchema), status: AccessStatusSchema.nullable(),
+  /** Checked in and not yet checked out. Null for viewers. */
+  onSite: z.boolean().nullable(), archived: z.boolean(),
 });
 export type PersonSummary = z.infer<typeof PersonSummarySchema>;
 
@@ -28,19 +31,23 @@ export type PersonMembership = z.infer<typeof PersonMembershipSchema>;
 
 export const HouseholdMemberSchema = z.object({
   personId: z.string(), givenName: z.string(), familyName: z.string(), roles: z.array(CampRoleSchema),
-  relationship: z.string(), isGuardian: z.boolean(), canPickup: z.boolean(),
+  /** Relationship and the guardian and pick-up flags are null for viewers (custody information). */
+  relationship: z.string().nullable(), isGuardian: z.boolean().nullable(), canPickup: z.boolean().nullable(),
 });
 export type HouseholdMember = z.infer<typeof HouseholdMemberSchema>;
 export const HouseholdSchema = z.object({ id: z.string(), name: z.string(), members: z.array(HouseholdMemberSchema) });
 export type Household = z.infer<typeof HouseholdSchema>;
 
-/** The full record. `dateOfBirth`, `email`, `phone` and `isMinor` are null for viewers: the server withholds them (people:read_contact). */
+/**
+ * The full record. `dateOfBirth`, `email`, `phone` and `isMinor` are null for roles without people:read_contact. `memberships`,
+ * `hasActiveBadge` and the custody fields in `households` are null or empty for viewers, as are `status` and `onSite` (see the summary).
+ */
 export const PersonSchema = PersonSummarySchema.extend({
   dateOfBirth: LocalDateSchema.nullable(), email: z.string().nullable(), phone: z.string().nullable(),
   /** Null for roles without people:read_contact: a minor flag is personal detail, like the date of birth it comes from. */
-  isMinor: z.boolean().nullable(), memberships: z.array(PersonMembershipSchema), households: z.array(HouseholdSchema),
-  /** Whether a badge is currently active. The token itself is never readable after issue. */
-  hasActiveBadge: z.boolean(),
+  isMinor: z.boolean().nullable(), memberships: z.array(PersonMembershipSchema).nullable(), households: z.array(HouseholdSchema),
+  /** Whether a badge is currently active. Null for viewers. The token itself is never readable after issue. */
+  hasActiveBadge: z.boolean().nullable(),
 });
 export type Person = z.infer<typeof PersonSchema>;
 

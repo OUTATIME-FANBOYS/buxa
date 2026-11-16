@@ -9,8 +9,11 @@ import { FormMessage } from './FormMessage';
 export interface PersonOption { id: string; name: string }
 export interface HouseholdOption { id: string; name: string }
 
-/** Link one of the matching people to a household. A child's collector must be a guardian (the form says so; the server enforces it). */
-export function LinkHouseholdForm({ households, people }: { households: readonly HouseholdOption[]; people: readonly PersonOption[] }) {
+/**
+ * Link one of the matching people to a household. A child's collector must be a guardian (the form says so; the server enforces it).
+ * The pick-up checkbox appears only for admins and above: the server refuses it from anyone else.
+ */
+export function LinkHouseholdForm({ households, people, canAuthorisePickup }: { households: readonly HouseholdOption[]; people: readonly PersonOption[]; canAuthorisePickup: boolean }) {
   const [state, formAction, pending] = useActionState(linkHouseholdAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
   useEffect(() => {
@@ -38,7 +41,7 @@ export function LinkHouseholdForm({ households, people }: { households: readonly
       </div>
       <div className="people-checks">
         <label className="people-check"><input type="checkbox" name="isGuardian" /> Parent or guardian</label>
-        <label className="people-check"><input type="checkbox" name="canPickup" /> May collect the child (guardians only)</label>
+        {canAuthorisePickup && <label className="people-check"><input type="checkbox" name="canPickup" /> May collect the child (guardians only)</label>}
       </div>
       {err('canPickup') && <p className="field-error" role="alert">{err('canPickup')}</p>}
       <FormMessage state={state} />
