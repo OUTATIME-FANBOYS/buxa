@@ -20,12 +20,13 @@ export const ACTIONS = [
   'memberships:manage', 'credentials:manage',
   'attendance:read', 'attendance:record', 'attendance:override', 'attendance:export',
   'events:read', 'events:create', 'events:update', 'events:delete',
+  'classes:manage',
   'tasks:read', 'tasks:create', 'tasks:update', 'tasks:move', 'tasks:comment', 'tasks:delete', 'tasks:manage_board',
 ] as const;
 export type Action = (typeof ACTIONS)[number];
 
 const VIEWER: Action[] = ['org:read', 'members:read', 'people:read', 'events:read', 'tasks:read', 'members:leave'];
-const STAFF: Action[] = [...VIEWER, 'people:read_contact', 'people:create', 'people:update', 'attendance:read', 'attendance:record', 'tasks:create', 'tasks:update', 'tasks:move', 'tasks:comment'];
+const STAFF: Action[] = [...VIEWER, 'people:read_contact', 'people:create', 'people:update', 'attendance:read', 'attendance:record', 'classes:manage', 'tasks:create', 'tasks:update', 'tasks:move', 'tasks:comment'];
 const ADMIN: Action[] = [
   ...STAFF, 'org:update', 'members:read_contact', 'members:invite', 'members:change_role', 'members:remove', 'audit:read',
   'people:delete', 'people:authorise_pickup', 'memberships:manage', 'credentials:manage', 'attendance:override', 'attendance:export', 'events:create', 'events:update', 'events:delete', 'tasks:delete', 'tasks:manage_board',

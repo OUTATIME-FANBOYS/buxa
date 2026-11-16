@@ -14,6 +14,7 @@ const MATRIX: Record<Action, string> = {
   'people:delete':           '..YY', 'people:authorise_pickup': '..YY', 'memberships:manage':      '..YY', 'credentials:manage':      '..YY',
   'attendance:read':         '.YYY', 'attendance:record':       '.YYY', 'attendance:override':     '..YY', 'attendance:export':      '..YY',
   'events:read':             'YYYY', 'events:create':           '..YY', 'events:update':           '..YY', 'events:delete':          '..YY',
+  'classes:manage':          '.YYY',
   'tasks:read':              'YYYY', 'tasks:create':            '.YYY', 'tasks:update':            '.YYY', 'tasks:move':             '.YYY',
   'tasks:comment':           '.YYY', 'tasks:delete':            '..YY', 'tasks:manage_board':      '..YY',
 };
