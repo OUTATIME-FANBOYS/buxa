@@ -15,7 +15,7 @@ body.dragging-card, body.dragging-card * { cursor: grabbing !important; -webkit-
 .card-top { display: flex; gap: var(--s2); align-items: flex-start; } .card-top h3 { flex: 1; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
 .card-menu { width: 26px; height: 26px; margin: -3px -4px 0 0; opacity: 0; } .card:hover .card-menu, .card:focus-within .card-menu, .card-menu[aria-expanded=true] { opacity: 1; }
 @media (hover: none) { .card-menu { opacity: 1; } }
-.tags { display: flex; gap: var(--s1); flex-wrap: wrap; } .card-meta { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; }
+.tags { display: flex; gap: var(--s1); flex-wrap: wrap; } .tag.hue-brand { background: var(--accent-soft); color: var(--accent-deep); } .tag.hue-ok { background: var(--ok-soft); color: var(--ok-ink); } .tag.hue-crit { background: var(--crit-soft); color: var(--crit-ink); } .tag.hue-agent { background: var(--agent-soft); color: var(--agent-ink); } .card-meta { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; }
 .drop-line { height: 3px; background: var(--accent); border-radius: 2px; margin: -1px 0 var(--s2); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); } .slot { display: grid; }
 .col-empty { border: 1px dashed var(--line-strong); border-radius: var(--r-2); padding: var(--s4); text-align: center; color: var(--text-3); font-size: var(--fs-s); }
 .col-add { display: flex; align-items: center; gap: 6px; padding: var(--s2) var(--s3); margin-top: var(--s1); border-radius: var(--r-1); color: var(--text-2); font-weight: 600; width: 100%; } .col-add:hover { background: var(--hover); color: var(--text); }

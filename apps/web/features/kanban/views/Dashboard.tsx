@@ -59,7 +59,7 @@ export function Dashboard() {
       </div></header>
       {live.length === 0 ? <Empty icon="kanban" title="No tasks in this workspace yet" body="Create a project and add your first task." action={<button className="btn btn-primary" onClick={() => navigate('/projects')}>Go to projects</button>} /> : <>
         <div className="stats">
-          <Stat label="Total tasks" value={live.length} note={`${projects.length} project${projects.length === 1 ? '' : 's'}`} icon="tasks" />
+          <Stat label="Total tasks" value={live.length} note={`${projects.length} project${projects.length === 1 ? '' : 's'}`} tone="hero" icon="tasks" />
           <Stat label="In progress" value={prog.length} note="being worked on" tone="brand" icon="timeline" />
           <Stat label="Completed" value={done.length} note={`${Math.round(pct)}% of all tasks`} tone="ok" icon="check" />
           <Stat label="Overdue" value={overdue.length} note={overdue.length ? 'past their due date' : 'all on schedule'} tone={overdue.length ? 'crit' : 'ok'} icon={overdue.length ? 'alert' : 'check'} strong={overdue.length > 0} />
