@@ -36,7 +36,7 @@ export interface ClassRepository {
   getClass(orgId: string, classId: string): Promise<Class | null>;
   /** Audits `class.create`. */
   createClass(actor: Actor, input: NewClassInput): Promise<Class>;
-  /** Audits `session.create`. Throws ClassNotFoundError. */
+  /** Audits `session.create`. Throws ClassNotFoundError, or InstructorNotFoundError for an instructor outside the camp. */
   addSession(actor: Actor, classId: string, input: NewSessionRecord): Promise<Session>;
   /** Throws ClassNotFoundError. */
   listSessions(orgId: string, classId: string): Promise<Session[]>;
