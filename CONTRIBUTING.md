@@ -27,6 +27,11 @@ on `main`, block force pushes and deletions, include administrators.
 ## Branches, pull request titles and descriptions
 
 - **Branches:** `release/type/name`, for example `v0.2/feat/phase-2-classes` or `v0.1/fix/audit-s02-viewer-access`. The release is the version the work ships in (`v0.N`), the type is `feat`, `fix`, `docs`, `chore`, `refactor` or `test`, and the name is short kebab-case.
-- **Title:** `Buxa-<release>-<Type>-<Phase or area>-<Description>`, with the type capitalised (`Feat`, `Fix`, `Docs`, `Chore`, `Refactor`, `Test`). Spaces are allowed in the description. Examples: `Buxa-v0.2-Docs-Phase2-Bulk Import`, `Buxa-v0.1-Fix-Security-Viewer Access`. Commit messages keep the conventional form `type(scope): summary`.
+- **Title:** `Buxa-<release>-<Type>-<Phase or area>-<Description>`. The type is one of four, capitalised:
+  - **Feature:** a new capability users did not have before.
+  - **Enhancement:** an improvement to something that already exists, including refactors, docs, tests and chores.
+  - **Defect:** something that works but could be better: a weakness, an audit hardening item, a rough edge.
+  - **Bug:** something that is broken.
+  Spaces are allowed in the description. Examples: `Buxa-v0.2-Feature-Phase2-Bulk Import`, `Buxa-v0.1.1-Bug-Security-Viewer Access`, `Buxa-v0.1.1-Defect-Auth-Warning logs`. Commit messages keep the conventional form `type(scope): summary`.
 - **Body:** use the template (`.github/pull_request_template.md`): What are we fixing, Why, How, How it was verified, Risks and follow-ups.
 - **Emojis:** the template's section headings carry them. Keep them; do not add more inside the text.
