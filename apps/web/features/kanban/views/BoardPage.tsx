@@ -20,12 +20,12 @@ export function BoardPage({ projectId }: { projectId?: string }) {
   const [filter, setFilter] = useState<Filter>(emptyFilter); const [edit, setEdit] = useState(false);
   const target = projectId ? s.projects.find(p => p.id === projectId) : project;
 
-  useEffect(() => { if (target && target.id !== s.ui.projectId) actions.selectProject(target.id); }, [target?.id]); // eslint-disable-line
+  useEffect(() => { if (target && target.id !== s.ui.projectId) actions.selectProject(target.id); }, [target?.id]); // eslint-disable-line react-hooks/exhaustive-deps -- select only when the project id changes; adding the store deps would re-select on every edit
   useEffect(() => { setFilter(emptyFilter); }, [target?.id]);
 
   const all = useMemo(() => s.tasks.filter(t => t.projectId === target?.id), [s.tasks, target?.id]);
   const tags = useMemo(() => Array.from(new Set(all.flatMap(t => t.tags))).sort(), [all]);
-  const visible = useMemo(() => sortTasks(all.filter(t => matchesFilter(t, filter, kindOf(t))), filter.sort), [all, filter, kindOf]); // eslint-disable-line
+  const visible = useMemo(() => sortTasks(all.filter(t => matchesFilter(t, filter, kindOf(t))), filter.sort), [all, filter, kindOf]);
 
   if (projectId && !target) return <Empty icon="alert" title="That project doesn’t exist" body="It may have been deleted." action={<button className="btn" onClick={() => router.push(ROUTES.projects)}>Back to projects</button>} />;
   if (!target) return <Empty icon="folder" title="No projects yet" body="Create a project to get your first board." action={<button className="btn btn-primary" onClick={() => router.push(ROUTES.projects)}>Go to projects</button>} />;

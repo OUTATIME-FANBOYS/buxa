@@ -44,6 +44,18 @@ packages/contracts  zod shapes shared by the server and the browser
 - Secrets never enter the repo or the web bundle. Only publishable keys go in `NEXT_PUBLIC_*` variables; everything else is server-only. Logs never contain headers, cookies, tokens or query strings.
 - Every write that matters records an audit entry through `recordAudit`.
 
+## Lint
+- Run `npm run lint` before pushing. CI runs it after typecheck and fails on any error. `npm run lint:fix` fixes what it can.
+- Config: `eslint.config.mjs` (flat config, ESLint 9). Errors that must not come back:
+  - `@typescript-eslint/no-explicit-any`: no `any`; use `unknown` and narrow it, or a real type.
+  - `@typescript-eslint/no-unused-vars`: remove what is not used.
+  - `react-hooks/rules-of-hooks` and `react-hooks/exhaustive-deps`: hooks at the top level, and dependency lists that are complete.
+  - `jsx-a11y/alt-text` and `jsx-a11y/label-has-associated-control`: every image has alt text; every form label is tied to its control.
+  - `no-console`: use `console.warn` or `console.error` in product code. Scripts, tests and CLI entry points may log.
+- Warnings are debt, not permission: `@typescript-eslint/no-non-null-assertion` and the typescript-eslint type-checked rules are warnings until the existing code is cleared. Do not add new ones.
+- Layer-direction rules (which folder may import which) are not enforced yet. They come after the `apps/web` restructure.
+- Do not disable a rule inline without a reason on the same line (`// eslint-disable-line rule -- reason`).
+
 ## Tests
 - A rule gets a unit test at its seam. A permission gets a role × action test. A new state machine gets a transition table test.
 - Database tests need `DATABASE_URL`; CI sets it and fails if it is missing, so they can never skip silently.
