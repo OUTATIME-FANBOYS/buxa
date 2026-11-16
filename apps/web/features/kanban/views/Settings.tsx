@@ -3,10 +3,11 @@ import { useStore } from '../state/store';
 import { Field, Segmented, useUi } from '@/components/ui';
 import { ROUTES } from '@/config/routes';
 import { AgentDialog } from '../components/dialogs';
+import { ResetDemoButton } from '../components/ResetDemoButton';
 import type { ThemePref } from '../types';
 
 export function Settings() {
-  const { s, actions, me } = useStore(); const { toast, confirm } = useUi();
+  const { s, actions, me } = useStore(); const { toast } = useUi();
   const [name, setName] = useState(me?.name ?? ''); const [title, setTitle] = useState(me?.title ?? ''); const [err, setErr] = useState<string | null>(null);
   const file = useRef<HTMLInputElement>(null); const [addAgent, setAddAgent] = useState(false);
   const on = s.ui.agentsEnabled; const hasAgents = s.agents.length > 0;
@@ -40,7 +41,7 @@ export function Settings() {
           <input ref={file} type="file" accept="application/json" hidden onChange={async e => {
             const f = e.target.files?.[0]; if (!f) return; const m = actions.importData(await f.text()); toast(m ?? 'Data imported', m ? { tone: 'error' } : undefined); e.target.value = '';
           }} />
-          <button className="btn btn-danger-ghost" onClick={async () => { if (await confirm({ title: 'Reset to demo data?', body: 'This replaces everything, including accounts you created, with the sample workspace.', confirmLabel: 'Reset', danger: true })) { actions.resetDemo(); toast('Demo data restored'); } }}>Reset demo data</button></div>
+          <ResetDemoButton /></div>
       </section>
       <section className="panel"><h2>Keyboard shortcuts</h2>
         <dl className="keys"><div><dt><kbd className="kbd">C</kbd></dt><dd>Create a task</dd></div><div><dt><kbd className="kbd">/</kbd> or <kbd className="kbd">⌘K</kbd></dt><dd>Search</dd></div>

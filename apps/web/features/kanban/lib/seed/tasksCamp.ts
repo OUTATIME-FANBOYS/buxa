@@ -59,13 +59,4 @@ const programme = (): TaskSpec[] => {
   ];
 };
 
-const offSeason = (): TaskSpec[] => {
-  const O = PROJECT.offSeason;
-  return [
-    spec(O, 1, 'Plan staff reunion weekend', 'medium', rosa, null, 10, ['events']),
-    spec(O, 2, 'Collect camp song book ideas', 'low', rosa, -2, 14, ['idea']),
-    doneSpec(O, 'Renew first-aid instructor certificate', 'low', rosa, -5, ['admin'], 7),
-  ];
-};
-
-export const campTasks = (): TaskSpec[] => [...facilities(), ...staffing(), ...comms(), ...programme(), ...offSeason()];
+export const campTasks = (): TaskSpec[] => [...facilities(), ...staffing(), ...comms(), ...programme()];

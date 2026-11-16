@@ -11,7 +11,7 @@ export const USER = {
 } as const;
 export type PersonId = (typeof USER)[keyof typeof USER];
 
-export const WORKSPACE = { camp: 'w-birchwood', personal: 'w-me' } as const;
+export const WORKSPACE = { camp: 'w-birchwood' } as const;
 
 export const PROJECT = {
   registration: 'p-registration',
@@ -19,11 +19,10 @@ export const PROJECT = {
   staffing: 'p-staffing',
   comms: 'p-comms',
   programme: 'p-programme',
-  offSeason: 'p-off-season',
 } as const;
 export type ProjectId = (typeof PROJECT)[keyof typeof PROJECT];
 
-/** The camp workspace's projects (everything except the personal one), in sidebar order. */
+/** The camp's projects, in sidebar order. */
 export const CAMP_PROJECT_IDS: readonly ProjectId[] = [
   PROJECT.registration, PROJECT.facilities, PROJECT.staffing, PROJECT.comms, PROJECT.programme,
 ];
@@ -34,7 +33,6 @@ export const PROJECT_NAME = {
   staffing: 'Staff Hiring & Training',
   comms: 'Parent Communications',
   programme: 'Activities & Programme',
-  offSeason: 'Off-season Planning',
 } as const;
 
 /** Titles other seed files refer to (activity feed, notices), so they are looked up rather than guessed by position. */

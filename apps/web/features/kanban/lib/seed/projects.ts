@@ -3,16 +3,16 @@ import { addDays, iso, today } from '../dates';
 import { uid } from '../tasks';
 import { PROJECT, PROJECT_NAME, WORKSPACE } from './ids';
 
-export const defaultColumns = (): Column[] => [
-  { id: uid(), name: 'Backlog', kind: 'open' },
-  { id: uid(), name: 'To Do', kind: 'open' },
-  { id: uid(), name: 'In Progress', kind: 'active' },
-  { id: uid(), name: 'In Review', kind: 'active' },
-  { id: uid(), name: 'Done', kind: 'done' },
+const COLUMN_SPEC: [name: string, kind: Column['kind']][] = [
+  ['Backlog', 'open'], ['To Do', 'open'], ['In Progress', 'active'], ['In Review', 'active'], ['Done', 'done'],
 ];
 
+/** The five default columns. The seed passes fixed ids so its output is the same on every run; the app uses random ids. */
+export const defaultColumns = (newId: (slot: number) => string = () => uid()): Column[] =>
+  COLUMN_SPEC.map(([name, kind], slot) => ({ id: newId(slot), name, kind }));
+
 const mk = (id: string, workspaceId: string, name: string, description: string, deadlineInDays: number): Project => ({
-  id, workspaceId, name, description, deadline: addDays(today(), deadlineInDays), columns: defaultColumns(), createdAt: iso(-45),
+  id, workspaceId, name, description, deadline: addDays(today(), deadlineInDays), columns: defaultColumns(slot => `${id}-col-${slot}`), createdAt: iso(-45),
 });
 
 export const buildProjects = (): Project[] => [
@@ -21,5 +21,4 @@ export const buildProjects = (): Project[] => [
   mk(PROJECT.staffing, WORKSPACE.camp, PROJECT_NAME.staffing, 'Recruit, certify and train counsellors, lifeguards and kitchen staff.', 15),
   mk(PROJECT.comms, WORKSPACE.camp, PROJECT_NAME.comms, 'Everything families hear from us before and during camp: emails, FAQs, packing lists and transport.', 40),
   mk(PROJECT.programme, WORKSPACE.camp, PROJECT_NAME.programme, 'Weekly activity schedules, supplies and instructors for arts, water sports, archery and evening events.', 60),
-  mk(PROJECT.offSeason, WORKSPACE.personal, PROJECT_NAME.offSeason, 'Ideas worth keeping for next year.', 90),
 ];
