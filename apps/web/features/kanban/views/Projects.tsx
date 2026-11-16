@@ -1,15 +1,18 @@
 import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useStore } from '../state/store';
 import { Avatar, Empty, Menu, Pill, Progress, useUi } from '@/components/ui';
 import { Icon } from '@/components/ui';
 import { ProjectDialog } from '../components/dialogs';
 import { diffDays, fmt, today } from '../lib/dates';
-import { navigate } from '../lib/router';
+import { boardPath } from '@/config/routes';
 import { HEALTH_LABEL, HEALTH_TONE, healthOf, progressOf } from '../lib/stats';
 import type { Project } from '../types';
 
 export function Projects() {
   const { s, actions, projects, workspace, wsTasks, kindOf, members, readOnly } = useStore(); const { confirm, toast } = useUi();
+  const router = useRouter();
   const [dlg, setDlg] = useState<{ project?: Project } | null>(null);
   const del = async (p: Project) => {
     if (await confirm({ title: `Delete “${p.name}”?`, body: 'The board and all of its tasks will be removed. This cannot be undone.', confirmLabel: 'Delete project', danger: true })) { actions.deleteProject(p.id); toast('Project deleted'); }
@@ -26,8 +29,8 @@ export function Projects() {
             const left = p.deadline ? diffDays(p.deadline, today()) : null;
             return (
               <article key={p.id} className={`project-card tone-${HEALTH_TONE[h]}`}>
-                <div className="pc-top"><h2><a href={'#/board/' + p.id} onClick={() => actions.selectProject(p.id)}>{p.name}</a></h2>
-                  {!readOnly && <Menu label={`Actions for ${p.name}`} trigger={<Icon name="more" />} items={[{ label: 'Open board', icon: 'kanban', onSelect: () => navigate('/board/' + p.id) }, { label: 'Edit details', icon: 'edit', onSelect: () => setDlg({ project: p }) }, { label: '', divider: true, onSelect() {} }, { label: 'Delete project', icon: 'trash', danger: true, onSelect: () => del(p) }]} />}</div>
+                <div className="pc-top"><h2><Link href={boardPath(p.id)} onClick={() => actions.selectProject(p.id)}>{p.name}</Link></h2>
+                  {!readOnly && <Menu label={`Actions for ${p.name}`} trigger={<Icon name="more" />} items={[{ label: 'Open board', icon: 'kanban', onSelect: () => router.push(boardPath(p.id)) }, { label: 'Edit details', icon: 'edit', onSelect: () => setDlg({ project: p }) }, { label: '', divider: true, onSelect() {} }, { label: 'Delete project', icon: 'trash', danger: true, onSelect: () => del(p) }]} />}</div>
                 <div><Pill tone={HEALTH_TONE[h]}>{HEALTH_LABEL[h]}</Pill></div>
                 <p className="muted clamp">{p.description || 'No description yet.'}</p>
                 <div><div className="pc-row small"><span>{d} of {total} done</span><strong>{Math.round(v)}%</strong></div><Progress value={v} tone={HEALTH_TONE[h]} label={`${p.name} completion`} /></div>
