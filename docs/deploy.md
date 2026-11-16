@@ -43,7 +43,7 @@ Paste secrets only into Vercel's form, never into the repo or a chat.
 4. After a deploy, check `<address>/ready` (expect `{"status":"ready"}`), then sign in.
 
 ## Setting it up (you do these; they need your accounts)
-1. **Supabase, email confirmation.** Authentication → Providers → Email: keep **Confirm email** ON. The server reads this setting on first use and **refuses to serve** (503) in production if sign-ups are auto-confirmed, so nobody can register with an address they do not own. If the check cannot run, it logs a warning and carries on.
+1. **Supabase, email confirmation.** Authentication → Providers → Email: keep **Confirm email** ON. The server reads this setting on first use. In production, if sign-ups are auto-confirmed, the **API answers 503** on every route and the **app shows a maintenance page** (no sign-in, sign-up or camp pages), so nobody can register with an address they do not own. If the check cannot run, it logs a warning and carries on.
 2. **Supabase, signing keys.** Project Settings → JWT Keys: an asymmetric (ECC/RSA) signing key must be current.
 3. **Vercel.** Add New → Project → import `OUTATIME-FANBOYS/buxa`. Set **Root Directory** to `apps/web` and keep **Include source files outside of the Root Directory** on (the shared packages live in `packages/`). `apps/web/vercel.json` does the rest. Add the environment variables above before the first build. Then Settings → Git → Production Branch: `develop`.
 4. **Region.** Settings → Functions → pick the region closest to your Supabase project, to keep database round trips short.
