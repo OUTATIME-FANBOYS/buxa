@@ -10,7 +10,7 @@ payments → seats & rosters → scheduling → comms & extras.** Scheduling is 
 
 1. **Spec first.** Write the phase's glossary terms and acceptance criteria in `docs/phases/NN-name.md` before code.
 2. **Tests before behaviour** for domain rules (tdd). A phase is not started until its exit tests are listed.
-3. **Small PRs** off `main`, squash-merged, each one passing CI. Conventional commit titles (`feat:`, `fix:`, `docs:`, `chore:`).
+3. **Small PRs** off `develop`, squash-merged into `develop`, each one passing CI. Conventional commit titles (`feat:`, `fix:`, `docs:`, `chore:`).
 4. **Exit gate.** A phase is done only when its exit criteria pass in CI *and* a person has used it end to end.
 5. **Tag a release** at each phase end (`v0.N.0`) so progress is visible on GitHub.
 
@@ -19,8 +19,8 @@ payments → seats & rosters → scheduling → comms & extras.** Scheduling is 
 | # | Phase | Deliverable | Exit criteria |
 |---|---|---|---|
 | 0 | Foundation | Monorepo, Postgres, migrations, managed auth, orgs (tenants), roles, audit log, CI | Two orgs cannot see each other's rows (tested); CI green; deploy to a staging URL |
-| 1 | Members & check-in (spec: `docs/phases/01-members-checkin.md`) | People & households, memberships (valid/expired), QR + name lookup, attendance log, staff mobile app (installable web app, see below) | Staff check in a member in under 5 seconds on a phone (iOS Safari and Android Chrome); attendance export; staff can install the app and sign in from a phone |
-| 2 | Events & calendar | Programs → sessions, recurring events, capacity, public pages, iCal feed | Recurrence rules tested incl. DST; public page works without login |
+| 1 | Members & check-in (spec: `docs/phases/01-members-checkin.md`) | People & households, memberships (valid/expired), QR + name lookup, attendance log, staff mobile app (installable web app, see below) | Staff check in a member in under 5 seconds on a phone (iOS Safari and Android Chrome); attendance export; staff can install the app and sign in from a phone. **Status:** released as v0.1.0 without the installable app; the app was reverted from `develop` for v0.1.1 and is not built yet |
+| 2 | Events & calendar (spec for classes and sessions: `docs/phases/02-events-calendar.md`) | Programs (called classes in the spec) → sessions, recurring events, capacity, public pages, iCal feed | Recurrence rules tested incl. DST; public page works without login. **Status:** not started (spec only) |
 | 3 | Registration & payments | Sign-up forms with custom fields, Stripe Connect, waitlist, refunds | Concurrent sign-ups never exceed capacity; payments reconcile with Stripe |
 | 4 | Seats & rosters | Groups, cabins, rooms, assign people, per-session check-in | Ratio rules enforced; assignments conflict-checked |
 | 5 | Scheduling | Conflict detection first, auto-schedule later | Conflicts for staff, rooms and gear reported with zero false negatives in tests |
@@ -33,6 +33,9 @@ Staff use a phone at the check-in desk, so phase 1 includes a mobile app. Decisi
 (PWA) built into the existing site, not a native app. One codebase, no app-store review, and the camera scanner
 works in the browser. A native app is revisited only if the PWA cannot meet the 5-second check-in target on real
 phones. Mobile check-in needs a connection; offline check-in is out of scope (see `docs/phases/01-members-checkin.md`).
+
+**Status:** not on `develop`. The installable app and the phone check-in layouts were reverted for v0.1.1: there is no
+web app manifest and no install prompt in the code. Re-landing it is a separate change.
 
 ## Decisions that must be made early (from the roadmap)
 

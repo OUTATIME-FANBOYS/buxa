@@ -44,23 +44,23 @@ There are no browser-only accounts and no shared demo password. Sample accounts 
 | `GET /v1/members` | member, `members:read` | Members of the selected organisation |
 
 ## Code map
-`apps/web/server`: `app/v1/*/route.ts` (thin) → `http/route.ts` (request id, authentication, error shape, logging) → `services/` (permissions, then storage)
-→ `orgs/` and `users/` (repository interface + Postgres adapter) → `@buxa/db`. Every response shape is defined once in `packages/contracts`.
-`GET /v1/org` returns `{ id, name, slug, createdAt, memberCount }`.
+`apps/web/app/v1/*/route.ts` (thin) → `apps/web/server/http/route.ts` (request id, authentication, error shape, logging) → `apps/web/server/services/` (permissions, then storage)
+→ `apps/web/server/orgs/` and `apps/web/server/users/` (repository interface + Postgres adapter) → `@buxa/db`. Every response shape is defined once in `packages/contracts`.
+`GET /v1/org` returns `{ id, name, slug, createdAt, memberCount, timezone }`.
 
 ## Known limits (to fix before release)
-- No rate limiting yet (sign-in is Supabase's; our endpoints need limits, especially `POST /v1/orgs`).
+- Rate limits cover starting a camp (`POST /v1/orgs` and the camp form, 10 an hour per person), badge scans and `/ready` (migration `0010`, `apps/web/server/rateLimit/limiter.ts`). Sign-in attempts are limited by Supabase. Other API routes have no limit yet (see `docs/security.md`, section 3).
 - The sign-in user row and membership lookup run as `SECURITY DEFINER` functions (`buxa_upsert_user`, `buxa_memberships_of`, migration `0009`), called as `buxa_app`. They do not need a login that bypasses row-level security. The runtime login itself is still to be set up as `docs/deploy.md` describes.
 - Email verification relies on Supabase's "Confirm email" setting, not on a claim in the token (`user_metadata` is user-editable, so `email_verified` there proves nothing). In production, if that setting is off, the API answers 503 on every route and the app shows a maintenance page instead of its pages and forms (checked on first use, not at process start). Revisit when invitations link people by email.
 - `org_members` is read-only for request handling (migration `0006`); the only write path is organisation creation, through the `buxa_create_org` function. Member-management routes must add narrow write policies, not widen the read one.
 - Multi-factor authentication for staff accounts that see children's data is not enforced yet.
 
 ## In the browser: cookie sessions
-The browser never holds a token. Sign-in, sign-up and sign-out are Server Actions (`features/auth`); Supabase's session lives in **HttpOnly cookies**
+The browser never holds a token. Sign-in, sign-up and sign-out are Server Actions (`apps/web/features/auth`); Supabase's session lives in **HttpOnly cookies**
 (`@supabase/ssr`, with HttpOnly forced on every cookie), so a script that got into the page cannot read it. `proxy.ts` refreshes the session on each request.
 Pages are Server Components: `server/session` (`getSession`, `requireSession`, `getCurrentCamp`) reads the access token from the cookie and verifies it with
 **our** verifier (the same one the bearer API uses; one definition in `server/auth/sessionFromToken.ts`), so a tampered or expired cookie means signed out.
 The selected camp is an HttpOnly `buxa-camp` cookie, checked against the person's memberships on every request. Changes go through Server Actions, which Next.js
 protects with an origin check. `/v1` stays bearer-token only (for non-browser clients), so cookies never authenticate the REST API and it has no CSRF surface.
-Tested in a real browser: every session cookie is HttpOnly and SameSite Lax, nothing is in local or session storage, a forged camp cookie is ignored, and tampered or garbage session cookies lead to sign-in.
+Tested in a real browser: every session cookie is HttpOnly and SameSite Lax, no Supabase session token is in local or session storage, a forged camp cookie is ignored, and tampered or garbage session cookies lead to sign-in.
 The page also ships a strict Content-Security-Policy (a fresh nonce per request, no inline scripts without it, no framing).

@@ -5,6 +5,35 @@
 - **Scope:** the camp management site (Next.js 16, Postgres with forced row-level security, Supabase Auth), read-only. No application code, tests or configuration were changed.
 - **Method:** source reading of the files listed under "Method" at the end, targeted grep, `npm ci`, `npm audit`, and one run of the test suite against the local database.
 
+This is a snapshot. The findings, line numbers and test counts below describe `a9dc389`. The status table shows what changed on `develop` after that, checked by reading the code on the `v0.1.1` docs branch. Re-check a row before relying on it.
+
+## Status on develop
+
+| ID | Status | Where it stands now |
+|---|---|---|
+| S-01 | Fixed | The check-out update has `AND checked_out_at IS NULL` (`apps/web/server/attendance/PgCheckInWrites.ts`). |
+| S-02 | Fixed | Viewers no longer hold `attendance:read` (`packages/domain/src/permissions.ts`). |
+| S-03 | Fixed | Custody fields (memberships, pickup flags, badge status) are shown only with `people:read_contact` (`createPeopleService.ts`). |
+| S-04 | Open | `people:authorise_pickup` exists in the matrix, but `linkToHousehold` in `createPeopleService.ts` does not check it. |
+| S-05 | Fixed | Pages and the sign-in action check the start-up decision (`isServiceRefused`, `/maintenance`). |
+| S-06 | Partly | Request handling runs as `buxa_app`, and the privileged paths are `SECURITY DEFINER` functions (migration `0009`). The separate runtime login is an operator step in `docs/deploy.md`, not yet done. |
+| S-07 | Fixed | Rate limits on camp creation, badge scans and `/ready`, kept in Postgres (migration `0010`). |
+| S-08 | Fixed | `listMembers` returns email only to actors with `members:read_contact` (`apps/web/server/services/orgs.ts`). |
+| S-09 | Open | The conflict message in `apps/web/server/users/UserRepository.ts` is unchanged. |
+| S-10 | Fixed | "Already registered" gets the same message as a new sign-up (`apps/web/features/auth/lib/messages.ts`). |
+| S-11 | Fixed | `readBody` counts bytes as they arrive (`apps/web/server/http/parse.ts`). |
+| S-12 | Fixed | Email and phone shapes are checked in `packages/contracts` (`contact.ts`). |
+| S-13 | Fixed | A failed rollback releases the connection with an error, so it is destroyed (`packages/db/src/tenant.ts`). |
+| S-14 | Partly | A non-loopback host is refused unless `BUXA_ALLOW_REMOTE_HOST=yes`, and `/api` needs a run secret (`X-Buxa-Run-Secret`). Dev server only. |
+| S-15 | Fixed | A unique violation on reissue becomes `BadgeConflictError` (`PgCredentialRepository.ts`). |
+| S-16 | Open | `OrgNotFoundError` is still not translated to a 404. |
+| S-17 | Fixed | `next.config.ts` sets `nosniff` on static files and the icon. |
+| S-18 | Fixed | The demo sign-in form and its password are no longer in the auth code. |
+| S-19 | Unchanged | No role-management routes exist yet. |
+| S-20 | Unchanged | Logging is as described in the body. |
+| S-21 | Unchanged | The CSV export is still a GET. |
+| Deps | Open | `vitest` is `^2.1.9` on `develop`; the section 3 upgrade has not been applied. |
+
 ## 1. Summary
 
 | Severity | Count | IDs |
