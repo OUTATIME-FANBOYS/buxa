@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect } from 'react';
+import type { CampHome } from '@/features/camp/client';
 import { ROUTES, boardPath } from '@/config/routes';
 import { Empty } from '@/components/ui';
 import { useStore } from './state/store';
@@ -15,9 +16,9 @@ import { Reports } from './views/Reports';
 import { Settings } from './views/Settings';
 import { WorkspaceCalendar } from './views/WorkspaceCalendar';
 
-/** Home: the camp's overview (when there is a camp) above the task dashboard. */
-export function HomePage({ overview }: { overview: ReactNode }) {
-  return <>{overview}<Dashboard /></>;
+/** Home: one page for the camp (when there is one) and its staff tasks. */
+export function HomePage({ camp }: { camp: CampHome | null }) {
+  return <Dashboard camp={camp} />;
 }
 
 export function TasksPage() { return <MyTasks />; }

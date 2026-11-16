@@ -20,13 +20,11 @@ vi.mock('@/server/session', () => ({
 }));
 vi.mock('@/features/camp/actions', () => ({ selectCampAction: async () => {} }));
 vi.mock('@/features/auth', () => ({ signOut: async () => {} }));
-vi.mock('../forms/RenameCampButton', () => ({ RenameCampButton: () => 'RENAME-BUTTON' }));
 vi.mock('../forms/NewCampForm', () => ({ NewCampForm: ({ first }: { first: boolean }) => `NEW-CAMP-${first ? 'FIRST' : 'EXTRA'}` }));
 
 // Vitest compiles JSX with the classic runtime, which needs React in scope.
 Object.assign(globalThis, { React });
 
-const { Overview } = await import('./Overview');
 const { Members } = await import('./Members');
 const { CampFrame } = await import('./CampFrame');
 
@@ -37,28 +35,6 @@ const as = (role: Role) => {
 };
 
 beforeEach(() => { vi.clearAllMocks(); });
-
-describe('Overview', () => {
-  it('reads the camp through the service as the actor and shows it', async () => {
-    as('owner');
-    const html = renderToStaticMarkup(await Overview());
-    expect(orgs.getCamp).toHaveBeenCalledWith({ userId: 'u1', orgId: 'o1', role: 'owner' });
-    expect(html).toContain('Sunrise');
-    expect(html).toContain('/sunrise');
-    expect(html).toContain('4 Mar 2026');
-  });
-
-  it.each([['owner', true], ['admin', true], ['staff', false], ['viewer', false]] as const)('%s sees the rename button: %s', async (role, shown) => {
-    as(role);
-    expect(renderToStaticMarkup(await Overview()).includes('RENAME-BUTTON')).toBe(shown);
-  });
-
-  it('answers not-found when there is no camp', async () => {
-    as('owner');
-    session.camp = null;
-    await expect(Overview()).rejects.toThrow('NEXT_NOT_FOUND');
-  });
-});
 
 describe('Members', () => {
   it('lists the members with their roles', async () => {

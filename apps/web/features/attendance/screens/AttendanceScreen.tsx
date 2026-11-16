@@ -38,13 +38,10 @@ export async function AttendanceScreen({ searchParams }: { searchParams: SearchP
   return (
     <div className="page">
       <PageHeader title="Attendance" subtitle="Who came in and out, in camp time." />
-      <LogFilters values={values} people={people} />
+      <LogFilters values={values} people={people}>
+        {parsed.ok && canExport && <a className="btn log-export" href={attendanceExportPath(parsed.filter)} download>Download CSV</a>}
+      </LogFilters>
       {!parsed.ok && <Notice tone="crit" title="Check the dates" body={parsed.message} />}
-      {parsed.ok && (
-        <div className="row-end">
-          {canExport && <a className="btn att-btn-lg" href={attendanceExportPath(parsed.filter)} download>Download CSV</a>}
-        </div>
-      )}
       {parsed.ok && entries.length === 0 && <Empty icon="list" title="No visits for these days" body="Try a wider range, or another person." />}
       {parsed.ok && entries.length > 0 && <LogTable entries={entries} timeZone={timeZone} />}
     </div>

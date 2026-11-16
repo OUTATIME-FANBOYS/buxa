@@ -8,7 +8,7 @@ export interface PersonFinderProps { personId: string; query: string }
  */
 export function PersonFinder({ personId, query }: PersonFinderProps) {
   return (
-    <form role="search" method="get" action={personPath(personId)} className="row">
+    <form role="search" method="get" action={personPath(personId)} className="form-row">
       <label className="field">
         <span className="field-label">Find someone by name</span>
         <input type="search" name="q" defaultValue={query} maxLength={80} autoComplete="off" />

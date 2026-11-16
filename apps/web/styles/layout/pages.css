@@ -13,6 +13,9 @@
 .panel-head { display: flex; justify-content: space-between; align-items: center; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s5); } .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s5); }
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s5); }
+/* Home: camp facts and task facts in one row; narrower screens wrap the cards, never the labels. */
+.stats.stats-home { grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: var(--s3); }
+.home-count { margin: 0; display: flex; align-items: baseline; gap: var(--s2); flex-wrap: wrap; }
 .stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-3); padding: var(--s4) var(--s5); display: grid; gap: 2px; }
 .stat-top { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s2); min-height: 32px; } .stat-icon, .h-icon { display: inline-grid; place-items: center; flex: none; background: var(--tone-soft); color: var(--tone-ink); }
 .stat-icon { width: 32px; height: 32px; border-radius: var(--r-2); } .h-icon { width: 22px; height: 22px; border-radius: var(--r-1); margin-right: var(--s2); }
