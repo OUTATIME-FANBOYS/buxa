@@ -1,6 +1,7 @@
 /** People, households, memberships and badges: what the camp's screens and services exchange. */
 import { z } from 'zod';
 import { CAMP_ROLES, isLocalDate } from '@buxa/domain';
+import { OptionalEmailSchema, OptionalPhoneSchema, PatchEmailSchema, PatchPhoneSchema } from './contact';
 
 export const CampRoleSchema = z.enum(CAMP_ROLES);
 export const LocalDateSchema = z.string().refine(isLocalDate, 'Use a real date (YYYY-MM-DD).');
@@ -46,7 +47,7 @@ export type Person = z.infer<typeof PersonSchema>;
 
 export const NewPersonInputSchema = z.object({
   givenName: Name, familyName: Name, preferredName: Optional(80),
-  dateOfBirth: LocalDateSchema.optional(), email: Optional(254), phone: Optional(32),
+  dateOfBirth: LocalDateSchema.optional(), email: OptionalEmailSchema, phone: OptionalPhoneSchema,
   roles: z.array(CampRoleSchema).min(1, 'Choose at least one role.'),
   /** Required when the person is a camper: a household that already has a guardian. */
   householdId: z.string().uuid().optional(),
@@ -59,7 +60,7 @@ export type NewPersonInput = z.infer<typeof NewPersonInputSchema>;
 
 export const PersonPatchInputSchema = z.object({
   givenName: Name.optional(), familyName: Name.optional(), preferredName: z.string().trim().max(80).nullable().optional(),
-  dateOfBirth: LocalDateSchema.nullable().optional(), email: z.string().trim().max(254).nullable().optional(), phone: z.string().trim().max(32).nullable().optional(),
+  dateOfBirth: LocalDateSchema.nullable().optional(), email: PatchEmailSchema.nullable().optional(), phone: PatchPhoneSchema.nullable().optional(),
   roles: z.array(CampRoleSchema).min(1, 'Choose at least one role.').optional(),
 });
 export type PersonPatchInput = z.infer<typeof PersonPatchInputSchema>;
