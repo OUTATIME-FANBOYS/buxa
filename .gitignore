@@ -29,3 +29,6 @@ dist-api
 next-env.d.ts
 out
 .claude/worktrees
+
+# Archify working folders (candidates and receipts)
+.archify/
