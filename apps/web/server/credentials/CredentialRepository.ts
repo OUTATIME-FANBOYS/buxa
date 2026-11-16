@@ -16,3 +16,12 @@ export interface CredentialRepository {
   /** Which of these people hold an active badge. */
   withActive(orgId: string, personIds: readonly string[]): Promise<Set<string>>;
 }
+
+/** Raised when a concurrent badge issue for the same person wins the race (the active-badge unique index rejects this one). */
+export class BadgeConflictError extends Error {
+  readonly kind = 'badge-conflict';
+  constructor() { super('A badge was issued at the same time. Refresh and try again.'); this.name = 'BadgeConflictError'; }
+}
+
+/** True for a BadgeConflictError from any copy of this module (see isHttpError for why not `instanceof`). */
+export const isBadgeConflict = (error: unknown): error is BadgeConflictError => error instanceof Error && (error as { kind?: unknown }).kind === 'badge-conflict';

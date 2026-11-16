@@ -7,7 +7,9 @@ import type { Actor } from '@buxa/domain';
 import { ROUTES, publicEnv } from '@/config';
 import type { Session } from '../auth/session';
 import { sessionFromToken } from '../auth/sessionFromToken';
+import { MAINTENANCE_PATH, isServiceRefused } from '../availability';
 import { isHttpError } from '../http/errors';
+import { errorName, type Logger } from '../log';
 import { getRuntime } from '../runtime';
 import { hardenCookie } from './cookies';
 import { requestSessionClient } from './nextClient';
@@ -24,14 +26,20 @@ export const CAMP_COOKIE = 'buxa-camp';
 
 const ONE_YEAR_SECONDS = 365 * 24 * 60 * 60;
 
-/** The access token in the session cookie, unchecked. Nothing may rely on it until `sessionFromToken` has verified it. */
-async function cookieToken(): Promise<string | null> {
+/**
+ * The access token in the session cookie, unchecked. Nothing may rely on it until `sessionFromToken` has verified it.
+ * A failure still means signed out for the person, but it is logged by name only (never the token or an email), so a broken
+ * identity provider shows up in the logs (audit S-20).
+ */
+async function cookieToken(log: Logger): Promise<string | null> {
   try {
     const client = await requestSessionClient();
     if (!client) return null;
-    const { data } = await client.auth.getSession();
+    const { data, error } = await client.auth.getSession();
+    if (error) log.warn({ reason: error.name }, 'could not read the session; treating the visitor as signed out');
     return data.session?.access_token ?? null;
-  } catch {
+  } catch (error) {
+    log.warn({ reason: errorName(error) }, 'could not read the session; treating the visitor as signed out');
     return null; // a corrupt or unreadable cookie is the same as no cookie
   }
 }
@@ -39,7 +47,7 @@ async function cookieToken(): Promise<string | null> {
 async function loadSession(): Promise<Session | null> {
   const runtime = getRuntime();
   if (!runtime.verifier) return null;
-  const token = await cookieToken();
+  const token = await cookieToken(runtime.log);
   if (!token) return null;
   try {
     return await sessionFromToken(token, { verifier: runtime.verifier, users: runtime.repositories.users }, runtime.log);
@@ -61,8 +69,12 @@ export async function getOptionalSession(): Promise<Session | null> {
   return getSession();
 }
 
-/** Like getSession, but a signed-out visitor is redirected to the sign-in page. Never returns null. */
+/**
+ * Like getSession, but a signed-out visitor is redirected to the sign-in page, and nobody is served while the start-up check
+ * refuses (audit S-05): they go to the maintenance page instead. Never returns null.
+ */
 export async function requireSession(): Promise<Session> {
+  if (await isServiceRefused()) redirect(MAINTENANCE_PATH);
   const session = await getSession();
   if (!session) redirect(ROUTES.signIn);
   return session;

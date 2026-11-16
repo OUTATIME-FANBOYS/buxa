@@ -90,7 +90,10 @@ export class PgPeopleRepository implements PeopleRepository {
       await requirePerson(db, link.personId);
       await requireHousehold(db, link.householdId);
       await upsertMember(db, actor.orgId, link);
-      await recordAudit(db, { actor, action: 'household.update', entity: 'household', entityId: link.householdId, data: { personId: link.personId } });
+      await recordAudit(db, {
+        actor, action: 'household.update', entity: 'household', entityId: link.householdId,
+        data: { personId: link.personId, isGuardian: link.isGuardian, canPickup: link.canPickup },
+      });
       return requireHousehold(db, link.householdId);
     });
   }

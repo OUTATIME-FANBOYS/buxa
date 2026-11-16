@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { randomBytes, timingSafeEqual } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { AddressInfo } from 'node:net';
@@ -8,8 +9,25 @@ import * as A from '../features/kanban/lib/agents';
 import { Store, Tokens } from './store';
 import { buildMcp } from './mcp';
 
-export interface AppOptions { dataDir: string; port?: number; host?: string; staticDir?: string }
+export interface AppOptions { dataDir: string; port?: number; host?: string; staticDir?: string; /** The per-run secret every /api request must send. Generated when not given. */ secret?: string }
 const LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])$/i;
+/** The addresses that only this machine can reach. Anything else needs BUXA_ALLOW_REMOTE_HOST=yes. */
+const LOOPBACK = /^(localhost|127\.0\.0\.1|::1|\[::1\])$/i;
+
+/** Null when the server may listen on `host`; otherwise the reason it may not. The check is on the listen address, not the Host header. */
+export function hostProblem(host: string, allowRemote: string | undefined): string | null {
+  if (LOOPBACK.test(host) || allowRemote === 'yes') return null;
+  return `HOST=${host} would expose this dev server to other machines. Use 127.0.0.1, or set BUXA_ALLOW_REMOTE_HOST=yes to accept that.`;
+}
+
+/** The header every /api request must carry. EventSource cannot set headers, so /api/events also accepts it as a query parameter. */
+export const SECRET_HEADER = 'x-buxa-run-secret';
+export const newRunSecret = (): string => randomBytes(24).toString('base64url');
+const sameSecret = (sent: string | undefined, expected: string): boolean => {
+  if (!sent) return false;
+  const a = Buffer.from(sent), b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+};
 const MIME: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png', '.ico': 'image/x-icon', '.woff2': 'font/woff2' };
 
 /** Read a request body, refusing anything larger than `limit` bytes. */
@@ -27,6 +45,7 @@ const send = (res: http.ServerResponse, status: number, value: unknown, headers:
 
 export function createApp(opts: AppOptions) {
   const store = new Store(opts.dataDir); const tokens = new Tokens(opts.dataDir);
+  const secret = opts.secret ?? newRunSecret();
   const sse = new Set<http.ServerResponse>();
   store.subscribe((version, origin) => { for (const r of sse) r.write(`event: version\ndata: ${JSON.stringify({ version, origin })}\n\n`); });
   const beat = setInterval(() => { for (const r of sse) r.write(': keep-alive\n\n'); }, 25_000); beat.unref();
@@ -41,7 +60,13 @@ export function createApp(opts: AppOptions) {
       if (origin) { try { if (!LOCAL.test(new URL(origin).hostname)) return send(res, 403, { error: 'Cross-site requests are not allowed.' }); } catch { return send(res, 403, { error: 'Bad origin.' }); } }
 
       if (url.pathname === '/mcp') return await mcp(req, res);
-      if (url.pathname.startsWith('/api/')) return await api(req, res, url);
+      if (url.pathname.startsWith('/api/')) {
+        // Anything on the network can reach a 0.0.0.0 listener, and the Host and Origin checks above do not stop a plain client.
+        const header = req.headers[SECRET_HEADER];
+        const sent = typeof header === 'string' ? header : url.pathname === '/api/events' ? (url.searchParams.get('run_secret') ?? undefined) : undefined;
+        if (!sameSecret(sent, secret)) return send(res, 401,{ error: `Missing or wrong ${SECRET_HEADER}. Use the secret printed when the server started.` });
+        return await api(req, res, url);
+      }
       return serveStatic(req, res, url);
     } catch (e) {
       const status = (e as { status?: number }).status ?? 500;
@@ -113,5 +138,5 @@ export function createApp(opts: AppOptions) {
   const port = () => (server.address() as AddressInfo | null)?.port ?? opts.port ?? 0;
   const listen = () => new Promise<number>(r => server.listen(opts.port ?? 0, opts.host ?? '127.0.0.1', () => r(port())));
   const close = async () => { clearInterval(beat); for (const r of sse) r.end(); store.flush(); tokens.flush(); await new Promise<void>(r => { server.close(() => r()); server.closeAllConnections(); }); };
-  return { server, store, tokens, listen, close, port };
+  return { server, store, tokens, listen, close, port, secret };
 }

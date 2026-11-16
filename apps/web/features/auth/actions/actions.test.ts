@@ -95,9 +95,9 @@ describe('signUp', () => {
     expect(await signUp(idle, form(fields))).toEqual(fresh);
 
     stubIdentityProvider({ '/auth/v1/signup': gotrue.error(422, 'user_already_exists', 'User already registered') });
-    const refused = await signUp(idle, form(fields));
-    expect(refused).toMatchObject({ status: 'error', message: 'Could not create the account. Please try again.' });
-    expect(JSON.stringify(refused)).not.toMatch(/already|registered|exists/i);
+    const existing = await signUp(idle, form(fields));
+    expect(existing).toEqual(fresh); // audit S-10: an existing address gets the same answer as a new one
+    expect(JSON.stringify(existing)).not.toMatch(/already|registered|exists/i);
   });
 
   it('maps a weak-password error', async () => {
