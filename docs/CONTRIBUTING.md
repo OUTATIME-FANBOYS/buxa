@@ -11,7 +11,13 @@ How work gets named, checked, merged and released. The rules for the code are in
 
 ## Pull requests
 
-- **Title:** `Buxa-<release>-<Type>-<Phase or area>-<Description>`, with the type capitalised (`Feat`, `Fix`, `Docs`, `Chore`, `Refactor`, `Test`). Spaces are allowed in the description. Examples: `Buxa-v0.2-Docs-Phase2-Bulk Import`, `Buxa-v0.1-Fix-Security-Viewer Access`.
+- **Title:** `Buxa-<release>-<Type>-<Phase or area>-<Description>`. The type is one of five, capitalised:
+  - **Feature:** a new capability users did not have before.
+  - **Enhancement:** an improvement to something that already exists.
+  - **Defect:** something that works but could be better: a weakness, an audit hardening item, a rough edge.
+  - **Bug:** something that is broken.
+  - **Chore:** a routine task: cleanup, upgrades, seeding, releases, tooling, docs and tests that do not change behaviour.
+  Spaces are allowed in the description. Examples: `Buxa-v0.2-Feature-Phase2-Bulk Import`, `Buxa-v0.1.1-Bug-Security-Viewer Access`, `Buxa-v0.1.1-Chore-Lint-Add ESLint`. Commit messages keep the conventional form `type(scope): summary`.
 - **Description:** use `.github/pull_request_template.md`. Its sections are What are we fixing, Why, How, How it was verified, and Risks and follow-ups. Keep the emoji headings the template gives. Do not add more emoji in the text.
 - **Base:** feature and fix PRs target `develop`. Release PRs target `main` and must come from `develop`; the `Branch flow` check enforces this.
 - **Commit messages** use the conventional form `type(scope): summary`, for example `feat(attendance): record check-out pickup`.
