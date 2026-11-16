@@ -27,6 +27,6 @@ on `main`, block force pushes and deletions, include administrators.
 ## Branches, pull request titles and descriptions
 
 - **Branches:** `release/type/name`, for example `v0.2/feat/phase-2-classes` or `v0.1/fix/audit-s02-viewer-access`. The release is the version the work ships in (`v0.N`), the type is `feat`, `fix`, `docs`, `chore`, `refactor` or `test`, and the name is short kebab-case.
-- **Title:** `Buxa-<release>-<type>-<description>`, for example `Buxa-v0.2-feat-classes-enrolment` or `Buxa-v0.1-fix-viewer-access`. Keep the description in lower-case kebab-case, under 60 characters. Commit messages keep the conventional form `type(scope): summary`.
+- **Title:** `Buxa-<release>-<Type>-<Phase or area>-<Description>`, with the type capitalised (`Feat`, `Fix`, `Docs`, `Chore`, `Refactor`, `Test`). Spaces are allowed in the description. Examples: `Buxa-v0.2-Docs-Phase2-Bulk Import`, `Buxa-v0.1-Fix-Security-Viewer Access`. Commit messages keep the conventional form `type(scope): summary`.
 - **Body:** use the template (`.github/pull_request_template.md`): What are we fixing, Why, How, How it was verified, Risks and follow-ups.
 - **Emojis:** the template's section headings carry them. Keep them; do not add more inside the text.
