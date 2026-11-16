@@ -55,8 +55,6 @@ export const CAMP_NAV_GROUPS: readonly NavGroup[] = [
     items: [
       { href: ROUTES.members, label: 'Team access', icon: 'user', requires: 'members:read' },
       { href: ROUTES.settings, label: 'Settings', icon: 'settings' },
-      // Help has no `requires`: anyone may read it.
-      { href: ROUTES.help, label: 'Help', icon: 'help' },
     ],
   },
 ];
