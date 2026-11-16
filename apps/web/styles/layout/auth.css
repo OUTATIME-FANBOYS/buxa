@@ -10,5 +10,4 @@
 .hero-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s3); max-width: 420px; align-items: start; }
 .hb-col { background: color-mix(in srgb, var(--hero-fg) 10%, transparent); border-radius: 10px; padding: 10px; display: grid; gap: 6px; } .hb-col b { height: 20px; border-radius: 6px; background: color-mix(in srgb, var(--hero-fg) 20%, transparent); }
 .auth-hero .kind-open { background: #c3c7da; } .auth-hero .kind-active { background: #5cc2c4; } .auth-hero .kind-done { background: #5ee0a8; }
-.auth-card h1 { font-size: 24px; letter-spacing: -.025em; } .auth form { display: grid; gap: var(--s4); } .auth-switch { text-align: center; } .auth-demo { display: grid; gap: var(--s2); border-top: 1px solid var(--line); padding-top: var(--s4); }
-.demo-btn { justify-content: flex-start; font-weight: 400; height: auto; min-height: var(--control-h); padding: var(--s2) var(--s3); white-space: normal; text-align: left; } .demo-btn small { margin-left: auto; }
+.auth-card h1 { font-size: 24px; letter-spacing: -.025em; } .auth form { display: grid; gap: var(--s4); } .auth-switch { text-align: center; }

@@ -7,7 +7,6 @@ export type ViewKind = 'board' | 'list' | 'calendar' | 'timeline';
 export type ThemePref = 'system' | 'light' | 'dark';
 
 export interface User { id: string; name: string; email: string; title?: string; pending?: boolean; agent?: boolean }
-export interface Account { email: string; hash: string; userId: string; demo?: boolean }
 export interface Member { userId: string; role: Role }
 export interface Workspace { id: string; name: string; members: Member[] }
 export interface Column { id: string; name: string; kind: ColumnKind }
@@ -48,7 +47,7 @@ export interface UiState {
 }
 export interface AppState {
   version: 1;
-  users: User[]; accounts: Account[]; workspaces: Workspace[]; projects: Project[];
+  users: User[]; workspaces: Workspace[]; projects: Project[];
   tasks: Task[]; activity: ActivityItem[]; notices: Notice[]; savedFilters: SavedFilter[];
   agents: Agent[]; runs: AgentRun[]; proposals: Proposal[];
   session: { userId: string | null }; ui: UiState;
