@@ -15,8 +15,8 @@ Built phase by phase; see `docs/ROADMAP.md`. The repository is public, so it hol
 - **Classes and sessions**, `/camp/classes`: classes with an age range and capacity, sessions with a time, location, instructors and capacity, enrolment (age, overlap, capacity and waitlist), and a CSV import with a preview before anything is saved. The model is in `docs/phases/02-events-calendar.md`.
 - **Camp settings**, `/camp/settings`: the camp's name and clock format (12-hour or 24-hour, default 24-hour). Admins change it.
 - **Team access**, `/camp/members`: the list of members. Inviting, changing roles and removing members are not built yet.
-- **Staff task board**, the Work group in the sidebar: see "The staff task board" below.
-- **Help**, `/camp/help`: how to export and import, in plain words.
+- **Staff task board**: My tasks, Projects, Boards, Calendar and Agents in the sidebar. See "The staff task board" below.
+- **Help**, `/camp/help`, from the account menu: how to export and import, in plain words.
 
 Who may do what is in `docs/auth.md` (roles and permissions).
 
@@ -87,6 +87,6 @@ docs/             roadmap, ADRs, auth, deploy, security, seed data, phase specs,
 Rules for the code are in `docs/CODING_STANDARDS.md`; how to contribute is in `docs/CONTRIBUTING.md`.
 
 ## The staff task board
-The staff board is the Work group in the sidebar: My tasks, Projects, Boards, Calendar, Agents and Reports. It runs in the browser and keeps its data in that browser's storage. It is not on the database yet (see the "Staff board" row in `docs/ROADMAP.md`). Its sample data and the reset are in `docs/seed.md`. The old address `/kanban` redirects to `/camp`.
+The staff board is the Work group in the sidebar: My tasks, Projects, Boards, Calendar and Agents. Reports and Help are in the account menu. It runs in the browser and keeps its data in that browser's storage. It is not on the database yet (see the "Staff board" row in `docs/ROADMAP.md`). Its sample data and the reset are in `docs/seed.md`. The old address `/kanban` redirects to `/camp`.
 
 The old single-user server (`npm run server`, code in `apps/server/src/agents`, with an MCP endpoint for agents) is optional. To let the board sync with it, set `NEXT_PUBLIC_LEGACY_SYNC=true` and `NEXT_PUBLIC_LEGACY_SECRET` (the same value as the server's `BUXA_LEGACY_SECRET`). See `docs/security.md`.

@@ -34,8 +34,8 @@ docs/               roadmap, ADRs, security, auth, deploy, phase specs, audit
 
   | Group (folder under `app/(app)/camp/`) | Sidebar group | What goes in it |
   |---|---|---|
-  | `(operations)` | Operations | The day-to-day camp operation: check-in, on site, people, attendance, classes and sessions (and the classes import page), help. |
-  | `(work)` | Work | The staff board: my tasks, projects, boards, calendar, agents, reports. Also Home (`/camp`), which stays in this group because it shares the work shell. |
+  | `(operations)` | Operations | The day-to-day camp operation: check-in, on site, people, attendance, classes and sessions (and the classes import page). Help is a page in this group, but it is reached from the account menu, not the sidebar. |
+  | `(work)` | Work | The staff board: my tasks, projects, boards, calendar, agents. Reports is a page in this group, reached from the account menu. Also Home (`/camp`), which stays in this group because it shares the work shell. |
   | `(admin)` | Admin | Team access and settings, and the new-camp page. |
   | `(parent)` | not shown yet | **Reserved** for the parent portal (phase 6). Do not create the folder or add routes to it before phase 6. |
 
