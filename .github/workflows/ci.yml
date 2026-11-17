@@ -4,78 +4,8 @@ on:
   pull_request:
   workflow_dispatch:
 
-# The checks run as ordered chunks. Each chunk has its own name, so a red check points at the cause:
-#   1. install      npm ci, once, into a cache that every later chunk restores
-#   2a. typecheck   2b. lint     run in parallel after install
-#   3. unit         packages and apps, no database
-#   4. database     migrations and the Postgres-backed tests, on two Postgres servers
-#   5. build        next build, only after 2 to 4 pass
-# "verify" is the umbrella job. Branch protection requires only "verify", and it fails if any chunk did not succeed.
 jobs:
-  install:
-    name: 1. install dependencies (npm ci, cached)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm }
-      - id: node-modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
-      - name: npm ci (skipped when the cache has this lockfile)
-        if: steps.node-modules.outputs.cache-hit != 'true'
-        run: npm ci
-
-  typecheck:
-    name: 2a. typecheck (tsc, next typegen, web tsc)
-    needs: install
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
-          fail-on-cache-miss: true
-      - run: npm run typecheck
-
-  lint:
-    name: 2b. lint (eslint)
-    needs: install
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
-          fail-on-cache-miss: true
-      - run: npm run lint
-
-  unit:
-    name: 3. unit tests (packages and apps, no database)
-    needs: [typecheck, lint]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
-          fail-on-cache-miss: true
-      - run: npm run test:unit
-
-  database:
-    name: 4. database tests (migrations, Postgres-backed tests)
-    needs: [unit]
+  verify:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -97,16 +27,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
-          fail-on-cache-miss: true
-      - name: Run migrations
-        run: npm run db:migrate
-      - name: Database-backed tests
-        run: npm run test:db
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
 
       # Managed Postgres (Supabase and others) does not give you a superuser. Run the database and API tests as a login that
       # can create roles and bypass row-level security, but is not a superuser, so a migration or query that only works for
@@ -118,36 +44,4 @@ jobs:
           psql -h localhost -p 5434 -U postgres -c "CREATE ROLE deployer LOGIN PASSWORD 'deployer' CREATEROLE BYPASSRLS NOSUPERUSER" -c "CREATE DATABASE buxa_managed OWNER deployer"
           export DATABASE_URL=postgres://deployer:deployer@localhost:5434/buxa_managed
           npm run db:migrate
-          npm run test:db
-
-  build:
-    name: 5. build (next build apps/web)
-    needs: [typecheck, lint, unit, database]
-    runs-on: ubuntu-latest
-    env:
-      DATABASE_URL: postgres://buxa:buxa@localhost:5433/buxa
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
-          fail-on-cache-miss: true
-      - run: npm run build
-
-  verify:
-    name: verify
-    # Runs even when a chunk failed, so the umbrella check reports red instead of being skipped (a skipped check can pass
-    # a required-check rule).
-    if: always()
-    needs: [install, typecheck, lint, unit, database, build]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Every chunk succeeded
-        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}
-        run: |
-          echo "::error::A chunk did not succeed. Open the failing job above; the chunk name says what it checks."
-          exit 1
-      - run: echo "All chunks passed."
+          npx vitest run packages apps/server apps/web/__tests__/integration

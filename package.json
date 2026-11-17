@@ -9,8 +9,6 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest run",
-    "test:unit": "vitest run --exclude '**/*.pg.test.ts' --exclude '**/limiter.test.ts' --exclude '**/PgOrgRepository.*.test.ts' --exclude 'packages/db/test/**' --exclude 'apps/web/__tests__/integration/**'",
-    "test:db": "vitest run pg.test limiter.test PgOrgRepository packages/db/test apps/web/__tests__/integration",
     "server": "tsx apps/server/src/agents/index.ts",
     "server:dev": "tsx watch apps/server/src/agents/index.ts",
     "start": "next start apps/web",
