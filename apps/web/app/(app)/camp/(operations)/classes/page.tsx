@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { ClassList } from '@/views';
+import { ClassList } from '@/components/views/classes/export';
 
 export const metadata: Metadata = { title: 'Classes' };
 

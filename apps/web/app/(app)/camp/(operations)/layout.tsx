@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { CampFrame } from '@/views';
+import { CampFrame } from '@/components/views/camp/export';
 import { getCurrentCamp, requireSession } from '@buxa/server/session/index';
 
 export default async function CampLayout({ children }: { children: ReactNode }) {

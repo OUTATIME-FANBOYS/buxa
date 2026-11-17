@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
-import { AccountMenu } from '@/components';
-import { CampSwitcher } from '@/components';
-import { WorkFrame } from '@/views';
-import { TaskTopBar } from '@/components';
-import { WorkArea } from '@/views';
+import { AccountMenu } from '@/components/components/camp/export';
+import { CampSwitcher } from '@/components/components/camp/export';
+import { WorkFrame } from '@/components/views/camp/export';
+import { TaskTopBar } from '@/components/components/kanban/topbar/export';
+import { WorkArea } from '@/components/views/kanban/export';
 import { getCurrentCamp, requireSession } from '@buxa/server/session/index';
 
 /**

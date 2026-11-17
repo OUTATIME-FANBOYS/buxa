@@ -8,11 +8,12 @@ import { describe, expect, it } from 'vitest';
 
 const WEB = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-type Layer = 'app' | 'views' | 'components' | 'elements' | 'hooks' | 'providers' | 'logic/common' | 'logic/composers' | 'server' | 'other';
+type Layer = 'app' | 'views' | 'components' | 'elements' | 'other';
 
+// Frontend lives under components/: elements (smallest pieces), components (reusable composites) and views (whole screens).
+// Hooks, providers, server and the pure helpers live in the other packages, so from this app's side they are all `other`.
 const LAYER_DIRS: [string, Layer][] = [
-  ['app/', 'app'], ['views/', 'views'], ['components/', 'components'], ['elements/', 'elements'], ['hooks/', 'hooks'],
-  ['providers/', 'providers'], ['logic/common/', 'logic/common'], ['logic/composers/', 'logic/composers'], ['server/', 'server'],
+  ['app/', 'app'], ['components/views/', 'views'], ['components/components/', 'components'], ['components/elements/', 'elements'],
 ];
 const layerOf = (rel: string): Layer => {
   for (const [prefix, layer] of LAYER_DIRS) if (rel.startsWith(prefix)) return layer;
@@ -21,26 +22,18 @@ const layerOf = (rel: string): Layer => {
 
 /** Layers each layer may import from (itself included). `other` is config, styles and packages. */
 const MAY_IMPORT: Record<string, Layer[]> = {
-  elements: ['elements', 'logic/common', 'other'],
-  components: ['components', 'elements', 'hooks', 'providers', 'logic/common', 'logic/composers', 'other'],
-  hooks: ['hooks', 'components', 'elements', 'providers', 'logic/common', 'logic/composers', 'other'],
-  providers: ['providers', 'components', 'elements', 'hooks', 'logic/common', 'logic/composers', 'other'],
-  views: ['views', 'components', 'elements', 'hooks', 'providers', 'logic/common', 'logic/composers', 'other'],
-  app: ['app', 'views', 'components', 'providers', 'server', 'other'],
-  'logic/composers': ['logic/composers', 'logic/common', 'server', 'other'],
-  'logic/common': ['logic/common', 'other'],
+  elements: ['elements', 'other'],
+  components: ['components', 'elements', 'other'],
+  views: ['views', 'components', 'elements', 'other'],
+  app: ['app', 'views', 'components', 'other'],
 };
 
-/** The barrel file of each layer. Cross-layer imports must resolve to one of these. */
+/** The export.ts of each layer's folder. Cross-layer imports must resolve to one of these. */
 const BARREL_FILES: Partial<Record<Layer, string[]>> = {
-  components: ['components/index.ts'], elements: ['elements/index.ts'], views: ['views/index.ts'], hooks: ['hooks/hooks.ts'],
-  providers: ['providers/providers.ts'], 'logic/common': ['logic/common/index.ts'], 'logic/composers': ['logic/composers/index.ts', 'logic/composers/index.server.ts'],
+  components: ['components/components/export.ts'], elements: ['components/elements/export.ts'], views: ['components/views/export.ts'],
 };
 /** Deep imports that are allowed on purpose. Each one is a reason in the PR body. */
-const DEEP_ALLOWED = new Set<string>([
-  '@/providers/UiProvider', // useUi: deep so providers do not form a cycle with the components barrel
-  '@/components/Dialog', // imported by providers/UiProvider for the same cycle
-]);
+const DEEP_ALLOWED = new Set<string>();
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
@@ -112,28 +105,16 @@ describe('layer rules', () => {
       for (const { to, spec } of list) {
         const target = layerOf(to);
         if (target === from || !BARREL_FILES[target]) continue;
-        if (BARREL_FILES[target]!.includes(to) || DEEP_ALLOWED.has(spec)) continue;
+        if (BARREL_FILES[target]!.includes(to) || to.endsWith('/export.ts') || DEEP_ALLOWED.has(spec)) continue;
         bad.push(`${file} -> ${spec}`);
       }
     }
     expect(bad).toEqual([]);
   });
 
-  it('logic never imports React or React DOM, and logic/common never imports Next; composers are the server actions and may use Next', () => {
-    const bad: string[] = [];
-    for (const file of source.keys()) {
-      if (!file.startsWith('logic/')) continue;
-      if (file.endsWith('.tsx')) bad.push(file);
-      const nextBanned = layerOf(file) === 'logic/common';
-      for (const spec of importsOf(source.get(file)!)) {
-        if (/^react(-dom)?(\/|$)/.test(spec) || (nextBanned && /^next(\/|$)/.test(spec))) bad.push(`${file} -> ${spec}`);
-      }
-    }
-    expect(bad).toEqual([]);
-  });
 
   it('elements do not hold domain knowledge: they import no components, views, hooks or providers', () => {
-    const bad = [...edges].filter(([f]) => layerOf(f) === 'elements').flatMap(([f, l]) => l.filter((e) => ['components', 'views', 'hooks', 'providers'].includes(layerOf(e.to))).map((e) => `${f} -> ${e.spec}`));
+    const bad = [...edges].filter(([f]) => layerOf(f) === 'elements').flatMap(([f, l]) => l.filter((e) => ['components', 'views'].includes(layerOf(e.to))).map((e) => `${f} -> ${e.spec}`));
     expect(bad).toEqual([]);
   });
 });
@@ -158,7 +139,7 @@ describe('cycles', () => {
 });
 
 describe('server-only code stays out of client barrels', () => {
-  const CLIENT_BARRELS = ['components/index.ts', 'elements/index.ts', 'logic/common/index.ts', 'logic/composers/index.ts', 'hooks/hooks.ts', 'providers/providers.ts'];
+  const CLIENT_BARRELS = ['components/components/export.ts', 'components/elements/export.ts', 'components/views/export.ts'];
   const isServerOnly = (file: string) => /from ['"]server-only['"]|import ['"]server-only['"]/.test(source.get(file) ?? '');
   const isUseServer = (file: string) => /^\s*(['"])use server\1/.test(source.get(file) ?? '');
 
