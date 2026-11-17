@@ -32,7 +32,7 @@
 .override-form textarea { min-height: 88px; }
 
 .onsite-wrap:focus { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: var(--r-3); }
-.onsite-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s3); }
+.onsite-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s4); grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 .onsite-row { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-3); padding: var(--s4); display: grid; gap: var(--s3); }
 .onsite-head { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); flex-wrap: wrap; }
 .onsite-who { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; min-width: 0; }
