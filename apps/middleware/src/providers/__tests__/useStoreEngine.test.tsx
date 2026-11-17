@@ -9,6 +9,9 @@ const h = vi.hoisted(() => ({ stop: vi.fn(), changed: vi.fn(), seed: null as nul
 vi.mock('../../store/persistence', () => ({ loadState: () => h.seed, storage: { save: () => undefined } }));
 vi.mock('../useAutosave', () => ({ useAutosave: () => 'saved' }));
 vi.mock('../useTheme', () => ({ useTheme: () => undefined }));
+vi.mock('@buxa/shared/kanban/sync', () => ({
+  createSync: () => ({ changed: h.changed, stop: h.stop }),
+}));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -31,9 +34,16 @@ describe('useStoreEngine', () => {
     expect(api!.state).toBe(h.seed);
     expect(api!.saveStatus).toBe('saved');
   });
-  it('applies an action to the state', () => {
+  it('applies an action to the state and tells the server when it is syncing', () => {
     act(() => root.render(<Probe />));
     act(() => api!.actions.setTheme('dark'));
     expect(api!.state.ui.theme).toBe('dark');
+    expect(h.changed).toHaveBeenCalled();
+  });
+  it('stops the sync when it unmounts', () => {
+    act(() => root.render(<Probe />));
+    act(() => root.unmount());
+    expect(h.stop).toHaveBeenCalled();
+    root = createRoot(document.body.appendChild(document.createElement('div')));
   });
 });

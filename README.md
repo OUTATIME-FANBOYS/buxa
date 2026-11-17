@@ -68,4 +68,4 @@ Rules for the code are in `docs/CODING_STANDARDS.md`; how to contribute is in `d
 
 ## The staff task board
 The original kanban demo lives at `/kanban`. It is client-only and keeps its data in the browser. It acts as the account you sign in with; there are no browser-only demo accounts. Sample accounts for each persona will come from a later seed step that creates real Supabase accounts.
-The board is kept in this browser only. Connecting agents is not available yet (it is parked on the roadmap).
+Its old single-user server (`npm run server`, with an MCP endpoint for agents) is optional: set `NEXT_PUBLIC_LEGACY_SYNC=true` to let the board sync with it.

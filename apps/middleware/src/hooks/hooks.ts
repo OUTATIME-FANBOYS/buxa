@@ -1,3 +1,4 @@
+export * from './useAgentConnection';
 export * from './useAttachmentUpload';
 export * from './useBoardDnd';
 export * from './useCheckIn';

@@ -27,7 +27,7 @@ function store(over: Record<string, unknown> = {}) {
     s: seed, actions: { setTheme() {}, setView() {}, selectProject() {}, setAgentsEnabled() {}, updateUser() {}, exportData: () => '{}', importData: () => null, simulateRun: () => 0 },
     me, workspace: seed.workspaces[0], project: seed.projects[0], projects: seed.projects, wsTasks: seed.tasks, kindOf: () => 'open',
     members: seed.workspaces[0].members.map((m) => ({ userId: m.userId, role: m.role, user: seed.users.find((u) => u.id === m.userId)! })),
-    myRole: 'owner', readOnly: false, userById: (id?: string) => seed.users.find((u) => u.id === id), saveStatus: 'saved',
+    myRole: 'owner', readOnly: false, userById: (id?: string) => seed.users.find((u) => u.id === id), saveStatus: 'saved', sync: 'local',
     ...over,
   };
 }

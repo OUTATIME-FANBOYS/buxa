@@ -43,6 +43,7 @@ section 6 are done and the privacy review is signed off. This page says what is 
 - **Request bodies:** capped at 1 MB by counting bytes as they are read. A request without a Content-Length is cut off at the same point.
 - **Input format:** email and phone are checked for shape in `packages/contracts` (`contact.ts`). A value the database refuses (check constraint, too long, wrong type) is a 400 with a generic message, never a 500 and never the database's own text.
 - **Static files:** `_next/static`, `_next/image` and `icon.svg` send `X-Content-Type-Options: nosniff` (from `next.config.ts`, because `proxy.ts` skips them).
+- **Local dev server** (`npm run server`, not part of the deployed app): it listens on loopback only unless `BUXA_ALLOW_REMOTE_HOST=yes` is set. Every `/api` request must send the run secret in `X-Buxa-Run-Secret`. The server prints a new secret each run, or uses `BUXA_LEGACY_SECRET` (at least 16 characters) if set. The browser reads the same value from `NEXT_PUBLIC_LEGACY_SECRET`. The event stream takes it as a `run_secret` query parameter, because the browser's EventSource cannot send headers.
 
 ## 3. Planned, not built
 

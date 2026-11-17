@@ -1,6 +1,9 @@
 import type { NextConfig } from 'next';
 import { fileURLToPath } from 'node:url';
 
+const dev = process.env.NODE_ENV !== 'production';
+const LEGACY = process.env.BUXA_SERVER ?? 'http://127.0.0.1:8787'; // the original kanban demo's optional local server
+
 /** The headers for files that proxy.ts does not see. */
 const STATIC_HEADERS = [
   { source: '/_next/static/:path*', headers: [{ key: 'X-Content-Type-Options', value: 'nosniff' }] },
@@ -25,6 +28,14 @@ const config: NextConfig = {
   // other security headers are for pages. Caching is left to Next.js, which sets Cache-Control on these files itself.
   async headers() {
     return STATIC_HEADERS;
+  },
+  // Development only: the kanban demo can talk to its own optional server (`npm run server`) through this address.
+  async rewrites() {
+    if (!dev) return [];
+    return [
+      { source: '/api/:path*', destination: `${LEGACY}/api/:path*` },
+      { source: '/mcp', destination: `${LEGACY}/mcp` },
+    ];
   },
 };
 

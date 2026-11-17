@@ -16,7 +16,7 @@ describe('kanban route pages', () => {
   beforeEach(() => {
     h.store = {
       s: { ...seed, ui: { ...seed.ui, agentsEnabled: true } }, actions: {}, workspace: null, project: null, projects: [], wsTasks: [], kindOf: () => 'open',
-      me: null, members: [], myRole: 'viewer', readOnly: true, userById: () => undefined, saveStatus: 'saved',actions_: undefined,
+      me: null, members: [], myRole: 'viewer', readOnly: true, userById: () => undefined, saveStatus: 'saved', sync: 'local', actions_: undefined,
     };
   });
 

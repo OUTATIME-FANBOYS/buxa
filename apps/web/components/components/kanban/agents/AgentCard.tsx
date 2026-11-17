@@ -1,16 +1,19 @@
 'use client';
 
+import { useState } from 'react';
 import { Avatar } from '@/components/elements/export';
+import { Icon } from '@/components/elements/export';
 import { Pill } from '@/components/elements/export';
 import { Segmented } from '@/components/elements/export';
 import { useStore } from '@buxa/middleware/providers/providers';
+import { ConnectAgentDialog } from '@/components/components/kanban/dialogs/export';
 import * as A from '@buxa/shared';
 import type { Agent, Trust } from '@buxa/shared';
 import { TRUST_LABEL, TRUST_TONE } from '@buxa/shared';
 import { StageRules } from './StageRules';
 
 export function AgentCard({ agent, canManage }: { agent: Agent; canManage: boolean }) {
-  const { s, actions, projects } = useStore(); const user = s.users.find(u => u.id === agent.userId); const st = A.agentStats(s, agent.userId);
+  const { s, actions, projects, sync } = useStore(); const user = s.users.find(u => u.id === agent.userId); const st = A.agentStats(s, agent.userId); const [connect, setConnect] = useState(false);
   const toggle = (id: string) => actions.updateAgent(agent.userId, { scope: agent.scope.includes(id) ? agent.scope.filter(x => x !== id) : [...agent.scope, id] });
   return (
     <section className="panel agent-card">
@@ -21,7 +24,10 @@ export function AgentCard({ agent, canManage }: { agent: Agent; canManage: boole
         {canManage && <button className="btn btn-sm" onClick={() => actions.updateAgent(agent.userId, { paused: !agent.paused })} aria-pressed={agent.paused}>{agent.paused ? 'Resume' : 'Pause'}</button>}
       </div>
       {agent.purpose && <p className="muted">{agent.purpose}</p>}
-      <p className="muted small">Connecting a real agent is not available yet. Until then only the simulated agent is available.</p>
+      {sync === 'synced'
+        ? <div className="row"><button className="btn btn-sm" onClick={() => setConnect(true)} disabled={!canManage}><Icon name="agent" size={15} />Connect to Claude</button></div>
+        : <p className="muted small">To connect a real agent, run <code>npm run server</code> and reload. {sync === 'offline' ? 'The server is not answering right now.' : 'Until then only the simulated agent is available.'}</p>}
+      {connect && user && <ConnectAgentDialog agentId={agent.userId} name={user.name} onClose={() => setConnect(false)} />}
       <dl className="agent-stats">
         <div><dt>Accepted</dt><dd>{st.acceptance === null ? '—' : `${Math.round(st.acceptance * 100)}%`}</dd></div>
         <div><dt>Waiting</dt><dd>{st.pending}</dd></div>
