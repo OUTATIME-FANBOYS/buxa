@@ -15,7 +15,7 @@ describe('the sidebar groups', () => {
     expect(CAMP_NAV_GROUPS.map(group => group.items.map(item => item.label))).toEqual([
       ['Home'],
       ['Check-in', 'On site', 'People', 'Attendance'],
-      ['My tasks', 'Projects', 'Boards', 'Calendar', 'Agents', 'Reports'],
+      ['My tasks', 'Projects', 'Boards', 'Classes', 'Calendar', 'Agents', 'Reports'],
       ['Team access', 'Settings', 'Help'],
     ]);
   });

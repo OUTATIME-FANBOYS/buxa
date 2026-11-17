@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import type { Membership, User } from '@buxa/contracts';
 import { ROUTES } from '@/config/routes';
-import { InstallHint } from '@/components';
 import { NewCampForm } from '@/components';
 import { AccountMenu } from '@/components';
 import { CampSwitcher } from '@/components';
@@ -16,7 +15,6 @@ export function CampFrame({ user, camps, current, children }: Props) {
     <Shell nav={navGroupsFor(current?.role ?? null)} brandHref={ROUTES.camp}
       topBarStart={<CampSwitcher camps={camps} current={current} />} topBarEnd={<AccountMenu user={user} />}>
       {current ? children : <NewCampForm first />}
-      <InstallHint />
     </Shell>
   );
 }

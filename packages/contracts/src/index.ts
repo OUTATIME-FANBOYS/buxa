@@ -44,3 +44,4 @@ export const ErrorBodySchema = z.object({ error: z.object({ code: z.string(), me
 
 export * from './people';
 export * from './attendance';
+export * from './classes';

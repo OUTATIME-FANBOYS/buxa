@@ -27,3 +27,8 @@ export * from './people/revokeBadgeAction';
 export * from './people/revokeMembershipAction';
 export * from './people/unlinkHouseholdAction';
 export * from './people/updatePersonAction';
+export * from './classes/addSessionAction';
+export * from './classes/cancelEnrolmentAction';
+export * from './classes/createClassAction';
+export * from './classes/enrolAction';
+export * from './classes/importClassesAction';

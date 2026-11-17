@@ -3,6 +3,7 @@ import type { CreatedOrg, Member, Membership, NewOrgInput, Org, OrgPatchInput, O
 import type { Role } from '@buxa/domain';
 import type { Identity } from '../auth/identity';
 import { InMemoryAttendanceRepository } from '../attendance/InMemoryAttendanceRepository';
+import { InMemoryClassRepository } from '../classes/InMemoryClassRepository';
 import { InMemoryCredentialRepository } from '../credentials/InMemoryCredentialRepository';
 import { InMemoryMembershipRepository } from '../memberships/InMemoryMembershipRepository';
 import { OrgNotFoundError, SlugTakenError, type OrgRepository } from '../orgs/OrgRepository';
@@ -70,6 +71,7 @@ export class InMemoryStore implements UserRepository, OrgRepository {
       memberships: new InMemoryMembershipRepository(db),
       credentials: new InMemoryCredentialRepository(db),
       attendance: new InMemoryAttendanceRepository(db),
+      classes: new InMemoryClassRepository(),
     };
   }
 }

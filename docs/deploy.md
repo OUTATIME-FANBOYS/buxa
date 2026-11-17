@@ -29,6 +29,7 @@ Paste secrets only into Vercel's form, never into the repo or a chat.
 
 ## Database requirements
 - Postgres 15 or newer. Row-level security is how tenants are kept apart, so it is not optional.
+- Migrations are the `.sql` files in `packages/db/migrations`, applied in filename order. On `develop` they are `0001` to `0007`, `0009` and `0010` (there is no `0008`). Do not add a migration under a number that is already used.
 There are two logins. They must be different.
 
 - **Migration login** (`MIGRATION_DATABASE_URL`; locally, `DATABASE_URL`). Applies migrations. It needs `CREATEROLE` and must be able to bypass row-level security (a superuser, or Supabase's `postgres` role). Migration `0004` lets it switch to `buxa_app`. The three privileged functions from migration `0009` run with its rights, so it keeps that ability.
@@ -77,7 +78,7 @@ The code path is covered by `apps/web/server/users/__tests__/runtimeLogin.pg.tes
 ## Before real users (this checklist gates the first release, not staging)
 - [ ] Backups enabled and one restore tested
 - [ ] A separate Supabase project and Vercel environment for real data; previews must never touch it
-- [ ] Rate limiting on sign-in-adjacent routes and `POST /v1/orgs`
+- [ ] Rate limits on the remaining API routes (camp creation, badge scans and `/ready` are limited by migration `0010`; see `docs/security.md`, section 2)
 - [ ] Privacy and compliance review for children's data (consent, retention, encryption, access logging)
 - [ ] Error tracking and uptime alerting
 - [ ] Multi-factor authentication for staff

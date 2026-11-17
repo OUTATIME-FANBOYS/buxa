@@ -7,10 +7,9 @@ describe('Notice', () => {
     expect(renderToStaticMarkup(<Notice tone="crit" title="Refused" body="Not today." />)).toContain('role="alert"');
     expect(renderToStaticMarkup(<Notice tone="ok" title="Checked in" />)).toContain('role="status"');
   });
-  it('shows the title, the body and an icon', () => {
+  it('shows the title and the body', () => {
     const html = renderToStaticMarkup(<Notice tone="ok" title="Checked in" body="At 09:00." />);
     expect(html).toContain('Checked in');
     expect(html).toContain('<p>At 09:00.</p>');
-    expect(html).toContain('<svg');
   });
 });

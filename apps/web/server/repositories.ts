@@ -1,6 +1,8 @@
 import type { Pool } from 'pg';
 import { PgAttendanceRepository } from './attendance/PgAttendanceRepository';
 import { type AttendanceRepository } from './attendance/AttendanceRepository';
+import type { ClassRepository } from './classes/ClassRepository';
+import { PgClassRepository } from './classes/PgClassRepository';
 import { PgCredentialRepository } from './credentials/PgCredentialRepository';
 import { type CredentialRepository } from './credentials/CredentialRepository';
 import { PgMembershipRepository } from './memberships/PgMembershipRepository';
@@ -20,6 +22,8 @@ export interface Repositories {
   memberships: MembershipRepository;
   credentials: CredentialRepository;
   attendance: AttendanceRepository;
+  /** Classes, sessions and enrolments (phase 2). The Postgres adapter in production; the in-memory one is for tests. */
+  classes: ClassRepository;
 }
 
 export const createPgRepositories = (pool: Pool): Repositories => ({
@@ -29,4 +33,5 @@ export const createPgRepositories = (pool: Pool): Repositories => ({
   memberships: new PgMembershipRepository(pool),
   credentials: new PgCredentialRepository(pool),
   attendance: new PgAttendanceRepository(pool),
+  classes: new PgClassRepository(pool),
 });

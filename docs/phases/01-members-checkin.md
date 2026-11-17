@@ -1,6 +1,6 @@
 # Phase 1: people, memberships and check-in
 
-Status: **spec for review. No code yet.** Roadmap row: "Members & check-in: QR scan + name lookup, valid / expired, attendance log."
+Status: **built and released as v0.1.0** (members, households, memberships, badges, check-in and check-out, attendance export). Roadmap row: "Members & check-in: QR scan + name lookup, valid / expired, attendance log." The staff mobile app in the roadmap was reverted from `develop` for v0.1.1 and is not in this release (see `docs/ROADMAP.md`). The sections below are kept as the reference for the rules and data model.
 Decided with the owner: members are **children with parents or guardians, adults who take part, organisers, instructors and admin people**; a membership is **a date range** (a season or a year); a check-in records **who, when, which staff member, and check-out too**.
 
 ## Goal and exit criteria
@@ -94,4 +94,4 @@ Contracts between chunks are frozen in Wave 0, ownership is exclusive, each chun
 8. Offline check-in (no signal at the door) is **not** in this phase; it is on the list for later.
 
 ## Done when
-Every exit criterion above passes in CI and in a real browser on the production build, a person has used it end to end, and the mock data scripts reset cleanly. Tag `v0.2.0`.
+Released as `v0.1.0`. The installable staff app is not part of this release, so the exit criteria that name it are open.

@@ -7,7 +7,7 @@
  *  - every task mutation leaves a history entry and an activity item
  *  - notifications are never sent to the acting user
  */
-import type { AppState, Attachment, Column, ColumnKind, Filter, Notice, Priority, Project, Role, Task, User } from './types';
+import type { AppState, Attachment, Column, ColumnKind, Filter, Notice, Project, Role, Task, User } from './types';
 import { defaultColumns } from './seed/projects';
 import { fmt } from '../dates';
 import { PRIORITY_LABEL, uid } from './tasks';

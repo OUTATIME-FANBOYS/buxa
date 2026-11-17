@@ -8,7 +8,7 @@ vi.mock('@/logic/composers/attendance/scanCode', () => ({ scanCodeAction: async 
 describe('CheckInConsole', () => {
   it('lays out the scan field, the result, the name search and the live announcement', () => {
     const html = renderToStaticMarkup(<CheckInConsole timeZone="Europe/London" canOverride={false} />);
-    expect(html).toContain('aria-label="Scan a badge"');
+    expect(html).toContain('Scan a badge, or type a code');
     expect(html).toContain('aria-label="Result"');
     expect(html).toContain('aria-label="Find a person"');
     expect(html).toContain('role="status"');

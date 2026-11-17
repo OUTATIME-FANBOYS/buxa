@@ -12,8 +12,8 @@ describe('LogTable', () => {
   it('shows one row per visit, with the person, the method and dashes for empty fields', () => {
     const html = renderToStaticMarkup(<LogTable entries={[entry]} timeZone="Europe/London" />);
     expect(html).toContain('<th scope="row">Mia Cole</th>');
-    expect(html).toContain('data-label="Method">Badge</td>');
-    expect(html).toContain('data-label="Override reason">—</td>');
+    expect(html).toContain('<td>Badge</td>');
+    expect(html).toContain('<td>—</td>');
   });
   it('marks a visit with no check-out as on site', () => {
     expect(renderToStaticMarkup(<LogTable entries={[entry]} timeZone="Europe/London" />)).toContain('>On site</td>');
@@ -22,6 +22,6 @@ describe('LogTable', () => {
     const out = { ...entry, checkedOutAt: '2027-07-03T11:30:00.000Z', checkedOutByName: 'Tom', collectedByName: 'Jo Cole' } as unknown as AttendanceEntry;
     const html = renderToStaticMarkup(<LogTable entries={[out]} timeZone="Europe/London" />);
     expect(html).not.toContain('On site');
-    expect(html).toContain('data-label="Collected by">Jo Cole</td>');
+    expect(html).toContain('<td>Jo Cole</td>');
   });
 });

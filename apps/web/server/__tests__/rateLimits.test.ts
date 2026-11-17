@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { InMemoryStore } from './fakes';
 import { call, startRuntime } from './harness';
 import { createTestIdentityProvider } from './tokens';
-import { createMemoryRateLimiter, RATE_RULES, type RateDecision, type RateLimiter, type RateRule } from '../rateLimit/limiter';
+import { createMemoryRateLimiter, RATE_RULES, type RateDecision, type RateLimiter } from '../rateLimit/limiter';
 import { GET as ready } from '../../app/ready/route';
 
 const idp = await createTestIdentityProvider();
@@ -10,7 +10,7 @@ let env: ReturnType<typeof startRuntime> | undefined;
 afterEach(async () => { await env?.stop(); env = undefined; vi.restoreAllMocks(); });
 
 /** A limiter that refuses everything: the client must see a 429 and no work may happen. */
-const refusing: RateLimiter = { async hit(_rule: RateRule): Promise<RateDecision> { return { allowed: false, remaining: 0, retryAfterSeconds: 42 }; } };
+const refusing: RateLimiter = { async hit(): Promise<RateDecision> { return { allowed: false, remaining: 0, retryAfterSeconds: 42 }; } };
 
 describe('POST /v1/orgs is rate limited per person', () => {
   it('lets the limit many camps through, refuses the next one with 429 and Retry-After, and does not write it', async () => {

@@ -5,7 +5,7 @@ import { ROUTES } from '@/config/routes';
 import { Empty } from '@/components';
 import { loadPeopleOrForbidden } from '@/logic/composers/index.server';
 import { currentActor } from '@/logic/composers/index.server';
-import { readListParams, toListQuery, type ListParams } from '@/logic/common';
+import { readListParams, type ListParams } from '@/logic/common';
 import { PeopleSearch } from '@/components';
 import { PeopleTable } from '@/components';
 import type { PersonSummary } from '@buxa/contracts';

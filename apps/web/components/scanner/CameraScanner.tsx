@@ -71,24 +71,12 @@ export function CameraScanner({ onScan, onClose }: CameraScannerProps) {
       ) : (
         <>
           {phase === 'scanning' && <video ref={video} className="camera-video" playsInline muted aria-label="Camera view for scanning a badge" />}
-          {(phase === 'idle' || phase === 'denied' || phase === 'failed') && (
-            <button type="button" className="btn btn-primary" onClick={() => void start()}>
-              {phase === 'idle' ? 'Start camera' : 'Try the camera again'}
-            </button>
-          )}
-          {(phase === 'denied' || phase === 'failed') && (
-            <p className="notice tone-crit" role="alert">
-              <strong>{phase === 'denied' ? 'Camera access is blocked.' : 'The camera could not start.'}</strong>
-              <span>
-                {phase === 'denied'
-                  ? 'Allow the camera for this site in your browser settings, then try again. You can still type the code or name above.'
-                  : 'Try again, or type the code or name above.'}
-              </span>
-            </p>
-          )}
+          {phase === 'idle' && <button type="button" className="btn btn-primary" onClick={() => void start()}>Start camera</button>}
           <p role="status" aria-live="polite">
             {phase === 'starting' && 'Starting the camera...'}
             {phase === 'scanning' && 'Point the camera at the badge.'}
+            {phase === 'denied' && 'Camera access was blocked. Allow it in your browser settings, or use the scanner field.'}
+            {phase === 'failed' && 'The camera could not be started. Use the scanner field instead.'}
           </p>
         </>
       )}

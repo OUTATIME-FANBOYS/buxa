@@ -4,6 +4,8 @@ import { beforeAll, describe, expect, it } from 'vitest';
 
 // The root vitest config compiles JSX with the classic runtime (needs `React` in scope); Next uses the automatic one.
 // Provide it here rather than editing the shared config, then load the components.
+// The loaded modules mix components and helpers, so the bag is loosely typed on purpose.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ui = Record<string, any>;
 let ui: Ui;
 beforeAll(async () => {

@@ -23,6 +23,7 @@
   "include": [
     "packages",
     "scripts",
+    "test",
     "vitest.config.ts"
   ],
   "exclude": [

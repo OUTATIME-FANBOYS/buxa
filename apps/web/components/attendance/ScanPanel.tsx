@@ -19,7 +19,7 @@ export function ScanPanel({ scanRef, disabled, onCode }: Props) {
   return (
     <div className="scan-panel">
       <ScanField ref={scanRef} label="Scan a badge, or type a code" disabled={disabled} onScan={onCode} />
-      <button ref={toggle} type="button" className="btn btn-primary btn-camera att-btn-lg" aria-expanded={camera} aria-controls="camera-scanner"
+      <button ref={toggle} type="button" className="btn att-btn-lg" aria-expanded={camera} aria-controls="camera-scanner"
         onClick={() => (camera ? closeCamera() : setCamera(true))}>
         {camera ? 'Close camera' : 'Scan with camera'}
       </button>
