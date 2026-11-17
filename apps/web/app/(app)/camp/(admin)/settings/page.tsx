@@ -10,9 +10,6 @@ export default async function Page() {
   const { actor, camp } = await campContext();
   const org = await loadCampProfile(actor);
   return (
-    <>
-      <CampClockPanel campId={camp.orgId} clockFormat={org.clockFormat} canChange={authorize(actor, 'org:update').allow} />
-      <SettingsPage />
-    </>
+    <SettingsPage leading={<CampClockPanel campId={camp.orgId} clockFormat={org.clockFormat} canChange={authorize(actor, 'org:update').allow} />} />
   );
 }

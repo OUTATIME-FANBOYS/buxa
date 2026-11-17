@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import type { CampHome } from '@buxa/shared/camp/campHomeTypes';
 import { ROUTES, boardPath } from '@/config/routes';
 import { Empty } from '@/components/components/export';
@@ -48,4 +48,4 @@ export function AgentsPage() {
 
 export function ReportsPage() { return <Reports />; }
 
-export function SettingsPage() { return <Settings />; }
+export function SettingsPage({ leading }: { leading?: ReactNode }) { return <Settings leading={leading} />; }

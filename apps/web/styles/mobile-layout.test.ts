@@ -62,3 +62,13 @@ describe('Add person form on a touch screen', () => {
     expect(read('./tokens.css')).toContain('--control-touch: 44px');
   });
 });
+
+describe('settings grid', () => {
+  it('is one column on a phone and widens in steps, with no fixed page width', () => {
+    const settings = read('./features/settings.css');
+    expect(settings).toContain('.settings-grid { display: grid; grid-template-columns: minmax(0, 1fr);');
+    expect(settings).toContain('@media (min-width: 900px) { .settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }');
+    expect(settings).toContain('@media (min-width: 1280px) { .settings-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }');
+    expect(settings).toContain('.page.settings-page { max-width: none; }');
+  });
+});
