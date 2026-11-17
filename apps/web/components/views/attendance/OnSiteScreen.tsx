@@ -4,7 +4,7 @@ import { Empty } from '@/components/components/export';
 import { PageHeader } from '@/components/components/export';
 import { loadOnSiteEntries } from '@buxa/server/composers/index.server';
 import { ON_SITE_LIST_ID, OnSiteRow } from '@/components/components/attendance/export';
-import { campActor, campZone } from '@buxa/server/composers/index.server';
+import { campActor, campClock } from '@buxa/server/composers/index.server';
 import { onSiteSummary, toOnSiteRow } from '@buxa/shared';
 
 /** Everyone on site now, oldest arrival first, with check-out for staff. */
@@ -19,8 +19,8 @@ export async function OnSiteScreen() {
       </div>
     );
   }
-  const [entries, timeZone] = await Promise.all([loadOnSiteEntries(actor), campZone(actor)]);
-  const rows = entries.map(entry => toOnSiteRow(entry, timeZone));
+  const [entries, { timeZone, clockFormat }] = await Promise.all([loadOnSiteEntries(actor), campClock(actor)]);
+  const rows = entries.map(entry => toOnSiteRow(entry, timeZone, clockFormat));
   const canRecord = authorize(actor, 'attendance:record').allow;
   const canOverride = authorize(actor, 'attendance:override').allow;
 

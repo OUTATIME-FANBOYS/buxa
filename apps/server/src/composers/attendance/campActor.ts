@@ -1,5 +1,5 @@
 import 'server-only';
-import type { Actor } from '@buxa/domain';
+import type { ClockFormat, Actor } from '@buxa/domain';
 import { getRuntime } from '../../runtime';
 import { findCampContext } from '../camp/campContext';
 
@@ -11,4 +11,10 @@ export async function campActor(): Promise<Actor | null> {
 /** The camp's IANA time zone. "Today" and every displayed time come from this, never from the server. */
 export async function campZone(actor: Actor): Promise<string> {
   return (await getRuntime().services.orgs.getCamp(actor)).timezone;
+}
+
+/** The camp's zone and its clock (12 or 24 hour), for a screen that shows times. One read of the camp record. */
+export async function campClock(actor: Actor): Promise<{ timeZone: string; clockFormat: ClockFormat }> {
+  const camp = await getRuntime().services.orgs.getCamp(actor);
+  return { timeZone: camp.timezone, clockFormat: camp.clockFormat };
 }

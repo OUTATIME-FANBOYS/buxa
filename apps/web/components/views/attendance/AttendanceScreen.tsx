@@ -6,7 +6,7 @@ import { loadLogEntries, loadPeopleOptions } from '@buxa/server/composers/index.
 import { Notice } from '@/components/components/export';
 import { LogFilters } from '@/components/components/attendance/export';
 import { LogTable } from '@/components/components/attendance/export';
-import { campActor, campZone } from '@buxa/server/composers/index.server';
+import { campActor, campClock } from '@buxa/server/composers/index.server';
 import { attendanceExportPath } from '@buxa/shared';
 import { parseLogFilter } from '@buxa/shared';
 import { HELP_LINK_LABEL, helpLink } from '@buxa/shared';
@@ -25,7 +25,7 @@ export async function AttendanceScreen({ searchParams }: { searchParams: SearchP
       </div>
     );
   }
-  const timeZone = await campZone(actor);
+  const { timeZone, clockFormat } = await campClock(actor);
   const parsed = parseLogFilter(searchParams, toLocalDate(new Date(), timeZone));
   const [people, entries] = await Promise.all([
     loadPeopleOptions(actor),
@@ -44,7 +44,7 @@ export async function AttendanceScreen({ searchParams }: { searchParams: SearchP
       </LogFilters>
       {!parsed.ok && <Notice tone="crit" title="Check the dates" body={parsed.message} />}
       {parsed.ok && entries.length === 0 && <Empty icon="list" title="No visits for these days" body="Try a wider range, or another person." />}
-      {parsed.ok && entries.length > 0 && <LogTable entries={entries} timeZone={timeZone} />}
+      {parsed.ok && entries.length > 0 && <LogTable entries={entries} timeZone={timeZone} clockFormat={clockFormat} />}
     </div>
   );
 }

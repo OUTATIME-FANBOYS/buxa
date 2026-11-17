@@ -54,14 +54,14 @@ export async function PersonScreen({ id, searchParams = {} }: { id: string; sear
         <HouseholdPanel personId={person.id} households={person.households} householdOptions={households.map(h => ({ id: h.id, name: h.name }))}
           canUpdate={canUpdate} canCreate={canCreate} canAuthorisePickup={canAuthorisePickup} query={q} linkable={linkable} />
         {person.memberships !== null && (
-          <MembershipsPanel personId={person.id} memberships={person.memberships} canManage={canManage} timeZone={camp.timezone} />
+          <MembershipsPanel personId={person.id} memberships={person.memberships} canManage={canManage} timeZone={camp.timezone} clockFormat={camp.clockFormat} />
         )}
         {person.hasActiveBadge !== null && (
           <BadgePanel personId={person.id} personName={`${person.givenName} ${person.familyName}`} roleLabel={roleLabel}
             campName={camp.name} hasActiveBadge={person.hasActiveBadge} archived={person.archived} canManage={canBadge} />
         )}
       </div>
-      {canSeeVisits && <AttendanceHistory entries={visits} timeZone={camp.timezone} />}
+      {canSeeVisits && <AttendanceHistory entries={visits} timeZone={camp.timezone} clockFormat={camp.clockFormat} />}
     </div>
   );
 }

@@ -9,11 +9,12 @@ import { ResultPanel } from './ResultPanel';
 import { ScanPanel } from './ScanPanel';
 import { useCheckIn } from '@buxa/middleware/hooks/hooks';
 import * as attendance from '@/actions/attendance';
+import type { ClockFormat } from '@buxa/domain';
 
-interface Props { timeZone: string; canOverride: boolean }
+interface Props { timeZone: string; clockFormat: ClockFormat; canOverride: boolean }
 
 /** The fast screen: one scan field and a name search on the left, the result on the right. Focus returns to the scan field after each person. */
-export function CheckInConsole({ timeZone, canOverride }: Props) {
+export function CheckInConsole({ timeZone, clockFormat, canOverride }: Props) {
   const { state, scanCode, pickPerson, checkIn, clear } = useCheckIn(attendance);
   const scanRef = useRef<ScanFieldHandle>(null);
   const busy = state.phase === 'submitting';
@@ -32,13 +33,13 @@ export function CheckInConsole({ timeZone, canOverride }: Props) {
       </section>
       {/* On a phone the result follows the scan field, above the name search, so it is visible without scrolling. */}
       <section className="checkin-result" aria-label="Result">
-        <ResultPanel state={state} timeZone={timeZone} canOverride={canOverride}
+        <ResultPanel state={state} timeZone={timeZone} clockFormat={clockFormat} canOverride={canOverride}
           onCheckIn={(card, method, reason) => { void checkIn(card, method, reason); }} onClear={clear} />
       </section>
       <section className="checkin-find" aria-label="Find a person">
         <NameSearch onPick={pickPerson} />
       </section>
-      <LiveRegion message={checkInAnnouncement(state, timeZone)} />
+      <LiveRegion message={checkInAnnouncement(state, timeZone, clockFormat)} />
     </div>
   );
 }

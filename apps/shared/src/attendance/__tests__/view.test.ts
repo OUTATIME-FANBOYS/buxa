@@ -50,13 +50,13 @@ describe('status words', () => {
 
 describe('check-in refusal copy', () => {
   it('shows the camp-local time of an earlier check-in', () => {
-    expect(checkInRefusalCopy({ ok: false, reason: 'already_on_site', since: '2026-11-13T20:30:00Z' }, 'Asia/Kolkata').body)
+    expect(checkInRefusalCopy({ ok: false, reason: 'already_on_site', since: '2026-11-13T20:30:00Z' }, 'Asia/Kolkata', '24h').body)
       .toBe('Checked in at 02:00. Nothing to do.');
   });
 
   it('offers an override only when the actor may give one', () => {
-    expect(checkInRefusalCopy({ ok: false, reason: 'not_valid', status: 'expired', canOverride: true }, 'UTC').body).toContain('An admin can');
-    expect(checkInRefusalCopy({ ok: false, reason: 'not_valid', status: 'expired', canOverride: false }, 'UTC').body).not.toContain('An admin can');
+    expect(checkInRefusalCopy({ ok: false, reason: 'not_valid', status: 'expired', canOverride: true }, 'UTC', '24h').body).toContain('An admin can');
+    expect(checkInRefusalCopy({ ok: false, reason: 'not_valid', status: 'expired', canOverride: false }, 'UTC', '24h').body).not.toContain('An admin can');
   });
 
   it.each([
@@ -65,12 +65,12 @@ describe('check-in refusal copy', () => {
     ['revoked', 'Revoked'],
     ['none', 'No membership'],
   ] as const)('titles a %s refusal "%s"', (status, title) => {
-    expect(checkInRefusalCopy({ ok: false, reason: 'not_valid', status, canOverride: false }, 'UTC').title).toBe(title);
+    expect(checkInRefusalCopy({ ok: false, reason: 'not_valid', status, canOverride: false }, 'UTC', '24h').title).toBe(title);
   });
 
   it('explains archived and reason-needed refusals', () => {
-    expect(checkInRefusalCopy({ ok: false, reason: 'archived' }, 'UTC').title).toBe('Archived');
-    expect(checkInRefusalCopy({ ok: false, reason: 'override_needs_reason' }, 'UTC').title).toBe('Write a reason');
+    expect(checkInRefusalCopy({ ok: false, reason: 'archived' }, 'UTC', '24h').title).toBe('Archived');
+    expect(checkInRefusalCopy({ ok: false, reason: 'override_needs_reason' }, 'UTC', '24h').title).toBe('Write a reason');
   });
 });
 
@@ -89,12 +89,12 @@ describe('check-out refusal copy', () => {
 
 describe('on-site view', () => {
   it('turns an on-site entry into camp-local words', () => {
-    const row = toOnSiteRow({ entry: entry('p-ada', '2026-11-13T20:30:00Z'), person: ada, isMinor: true, pickupOptions: [] } as OnSiteEntry, 'Asia/Kolkata');
+    const row = toOnSiteRow({ entry: entry('p-ada', '2026-11-13T20:30:00Z'), person: ada, isMinor: true, pickupOptions: [] } as OnSiteEntry, 'Asia/Kolkata', '24h');
     expect(row).toEqual({ personId: 'p-ada', name: 'Ada Lovelace', arrivedAt: '02:00', isMinor: true, pickupOptions: [] });
   });
 
   it('keeps an unknown minor status as unknown (null), not as an adult or a child', () => {
-    const row = toOnSiteRow({ entry: entry('p-ada', '2026-11-13T08:12:00Z'), person: ada, isMinor: null, pickupOptions: [] }, 'Asia/Kolkata');
+    const row = toOnSiteRow({ entry: entry('p-ada', '2026-11-13T08:12:00Z'), person: ada, isMinor: null, pickupOptions: [] }, 'Asia/Kolkata', '24h');
     expect(row.isMinor).toBeNull();
   });
 
@@ -109,15 +109,15 @@ describe('check-in announcements', () => {
   const card: PersonCard = { person: sam, onSiteSince: null };
 
   it('says nothing while idle and names the status in words when a person is ready', () => {
-    expect(checkInAnnouncement(CHECK_IN_IDLE, 'UTC')).toBe('');
-    expect(checkInAnnouncement({ phase: 'ready', card, method: 'qr' }, 'UTC')).toBe('Sammy Lee. Expired.');
+    expect(checkInAnnouncement(CHECK_IN_IDLE, 'UTC', '24h')).toBe('');
+    expect(checkInAnnouncement({ phase: 'ready', card, method: 'qr' }, 'UTC', '24h')).toBe('Sammy Lee. Expired.');
   });
 
   it('announces an unknown code, a check-in time in the camp zone, and a refusal', () => {
-    expect(checkInAnnouncement({ phase: 'unknown' }, 'UTC')).toBe('Code not recognised.');
-    expect(checkInAnnouncement({ phase: 'done', card, entry: entry('p-sam', '2026-11-13T20:30:00Z'), overridden: false }, 'Asia/Kolkata'))
+    expect(checkInAnnouncement({ phase: 'unknown' }, 'UTC', '24h')).toBe('Code not recognised.');
+    expect(checkInAnnouncement({ phase: 'done', card, entry: entry('p-sam', '2026-11-13T20:30:00Z'), overridden: false }, 'Asia/Kolkata', '24h'))
       .toBe('Sammy Lee checked in at 02:00.');
-    expect(checkInAnnouncement({ phase: 'refused', card, method: 'qr', refusal: { ok: false, reason: 'archived' } }, 'UTC'))
+    expect(checkInAnnouncement({ phase: 'refused', card, method: 'qr', refusal: { ok: false, reason: 'archived' } }, 'UTC', '24h'))
       .toContain('Archived.');
   });
 });

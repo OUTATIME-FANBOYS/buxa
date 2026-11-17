@@ -1,4 +1,5 @@
 export * from './AccountMenu';
+export * from './CampClockPanel';
 export * from './CampSwitcher';
 export * from './MembersTable';
 export * from './NewCampForm';
