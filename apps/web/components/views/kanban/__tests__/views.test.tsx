@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { buildSeed } from '@buxa/shared';
+import type { CampHome } from '@buxa/shared/camp/campHomeTypes';
 import { Settings } from '@/components/views/kanban/export';
 import { Projects } from '@/components/views/kanban/export';
 import { MyTasks } from '@/components/views/kanban/export';
@@ -20,6 +21,10 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push() {}, replace() {},
 const seed = buildSeed();
 const member = seed.workspaces[0].members[0];
 const me = seed.users.find((u) => u.id === member.userId)!;
+const camp: CampHome = {
+  campId: 'o1', name: 'Lake Camp', firstName: 'Priya', canRename: false,
+  people: 40, onSite: 12, checkedInToday: 20, validMemberships: 35, upcomingSessions: [],
+};
 
 /** A store as the views see it, for a signed-in editor with the seed camp selected. */
 function store(over: Record<string, unknown> = {}) {
@@ -49,10 +54,16 @@ describe('kanban views', () => {
     h.store = store({ wsTasks: [] });
     expect(page(<MyTasks />)).toContain('No tasks assigned to you');
   });
-  it('Home shows the workspace dashboard, and says so when there is no workspace', () => {
-    expect(page(<Dashboard camp={null} />)).toContain('class="page"');
-    h.store = store({ workspace: null });
-    expect(page(<Dashboard camp={null} />)).toContain('No workspace');
+  it('Home shows the camp dashboard, and never the kanban empty state', () => {
+    const html = page(<Dashboard camp={camp} />);
+    for (const heading of ['On site now', 'Upcoming classes', 'Your tasks']) expect(html).toContain(heading);
+    expect(html).not.toContain('No workspace');
+  });
+  it('Home offers its own sentence for each section that has no data', () => {
+    const html = page(<Dashboard camp={{ ...camp, onSite: null, upcomingSessions: null }} />);
+    expect(html).toContain('Attendance is not shown for your role.');
+    expect(html).toContain('Classes are not shown for your role.');
+    expect(page(<Dashboard camp={camp} />)).toContain('No upcoming classes are scheduled.');
   });
   it('the workspace calendar is titled Calendar', () => {
     expect(page(<WorkspaceCalendar />)).toContain('<h1>Calendar</h1>');

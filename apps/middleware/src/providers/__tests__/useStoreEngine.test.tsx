@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { buildSeed } from '@buxa/shared';
+import { THEME_EVENT } from '@buxa/shared/config/theme';
 import { useStoreEngine } from '../useStoreEngine';
 
 const h = vi.hoisted(() => ({ stop: vi.fn(), changed: vi.fn(), seed: null as null | ReturnType<typeof buildSeed> }));
@@ -39,6 +40,12 @@ describe('useStoreEngine', () => {
     act(() => api!.actions.setTheme('dark'));
     expect(api!.state.ui.theme).toBe('dark');
     expect(h.changed).toHaveBeenCalled();
+  });
+  it('follows a theme chosen outside the store, without syncing it as a data change', () => {
+    act(() => root.render(<Probe />));
+    act(() => { window.dispatchEvent(new CustomEvent(THEME_EVENT, { detail: 'light' })); });
+    expect(api!.state.ui.theme).toBe('light');
+    expect(h.changed).not.toHaveBeenCalled();
   });
   it('stops the sync when it unmounts', () => {
     act(() => root.render(<Probe />));
