@@ -1,5 +1,5 @@
 import type { Actor } from '@buxa/domain';
-import type { Services } from '../../apps/web/server/runtime';
+import type { Services } from '@buxa/server/runtime';
 import type { RosterIds } from './people';
 
 const MINUTE = 60_000;

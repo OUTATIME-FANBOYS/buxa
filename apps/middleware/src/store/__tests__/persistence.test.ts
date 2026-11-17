@@ -1,0 +1,42 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { THEME_KEY } from '@buxa/shared/config/theme';
+import { buildSeed } from '@buxa/shared';
+import { loadState, storage } from '../persistence';
+
+// Node has its own localStorage global; the store here is an in-memory stub for every test.
+const store = new Map<string, string>();
+const stub = {
+  getItem: (k: string) => store.get(k) ?? null,
+  setItem: (k: string, v: string) => { store.set(k, v); },
+  removeItem: (k: string) => { store.delete(k); },
+  clear: () => store.clear(),
+};
+
+describe('state persistence', () => {
+  beforeEach(() => { vi.stubGlobal('localStorage', stub); store.clear(); });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('loads the saved state, normalised, when the current version is stored', () => {
+    const seed = buildSeed();
+    store.set('buxa.state.v1', JSON.stringify(seed));
+    expect(loadState().tasks.map((t) => t.id)).toEqual(seed.tasks.map((t) => t.id));
+  });
+  it('reads the state saved under the app’s previous name', () => {
+    store.set('tessera.state.v1', JSON.stringify(buildSeed()));
+    expect(loadState().workspaces.length).toBeGreaterThan(0);
+  });
+  it('falls back to the demo for unreadable or unknown-version data', () => {
+    store.set('buxa.state.v1', '{not json');
+    expect(loadState().session.userId).toBeNull();
+    store.set('buxa.state.v1', JSON.stringify({ ...buildSeed(), version: 99 }));
+    expect(loadState().runs.length).toBeGreaterThan(0);
+  });
+  it('saves the state and the theme, and clears the previous name’s keys', () => {
+    store.set('tessera.state.v1', '{}');
+    const seed = buildSeed();
+    storage.save(seed);
+    expect(JSON.parse(store.get('buxa.state.v1')!).version).toBe(1);
+    expect(JSON.parse(store.get(THEME_KEY)!)).toBe(seed.ui.theme);
+    expect(store.has('tessera.state.v1')).toBe(false);
+  });
+});

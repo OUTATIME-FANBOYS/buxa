@@ -1,5 +1,5 @@
 'use client';
 
-import { ErrorState } from '@/features/camp/client';
+import { ErrorState } from '@/components/components/export';
 
 export default ErrorState;

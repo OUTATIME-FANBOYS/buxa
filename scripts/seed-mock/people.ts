@@ -1,5 +1,5 @@
 import type { Actor } from '@buxa/domain';
-import type { Services } from '../../apps/web/server/runtime';
+import type { Services } from '@buxa/server/runtime';
 import { ADULTS, families, type MembershipState, type RosterCamper, type RosterFamily, type RosterGuardian } from './roster';
 
 /** The ids the visit script needs, in roster order. */

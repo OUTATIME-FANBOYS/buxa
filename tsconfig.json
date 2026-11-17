@@ -18,10 +18,33 @@
     "types": [
       "node"
     ],
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "@buxa/shared": [
+        "./apps/shared/src/index.ts"
+      ],
+      "@buxa/shared/*": [
+        "./apps/shared/src/*"
+      ],
+      "@buxa/server": [
+        "./apps/server/src/index.ts"
+      ],
+      "@buxa/server/*": [
+        "./apps/server/src/*"
+      ],
+      "@buxa/middleware": [
+        "./apps/middleware/src/index.ts"
+      ],
+      "@buxa/middleware/*": [
+        "./apps/middleware/src/*"
+      ]
+    }
   },
   "include": [
     "packages",
+    "apps/shared",
+    "apps/server",
+    "apps/middleware",
     "scripts",
     "test",
     "vitest.config.ts"

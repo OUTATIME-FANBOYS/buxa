@@ -1,7 +1,7 @@
 import { NewOrgInputSchema } from '@buxa/contracts';
-import { parseBody, readJson } from '@/server/http/parse';
-import { authedRoute, created } from '@/server/http/route';
-import { RATE_RULES, enforceRateLimit } from '@/server/rateLimit/limiter';
+import { parseBody, readJson } from '@buxa/server/http/parse';
+import { authedRoute, created } from '@buxa/server/http/route';
+import { RATE_RULES, enforceRateLimit } from '@buxa/server/rateLimit/limiter';
 
 export const dynamic = 'force-dynamic';
 

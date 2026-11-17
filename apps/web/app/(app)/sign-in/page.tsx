@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { ROUTES, publicEnv } from '@/config';
-import { AuthHero, NotConfigured, SignInForm } from '@/features/auth';
-import { MAINTENANCE_PATH, isServiceRefused } from '@/server/availability';
-import { getSession } from '@/server/session';
+import { ROUTES } from '@/config/routes';
+import { publicEnv } from '@/config/env';
+import { AuthHero } from '@/components/components/auth/export';
+import { NotConfigured } from '@/components/components/auth/export';
+import { SignInForm } from '@/components/components/auth/export';
+import { MAINTENANCE_PATH, isServiceRefused } from '@buxa/server/availability';
+import { getSession } from '@buxa/server/session/index';
 
 export const metadata: Metadata = { title: 'Sign in' };
 

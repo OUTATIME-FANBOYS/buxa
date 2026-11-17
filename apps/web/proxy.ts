@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { publicEnv } from '@/config/env';
-import { SECURITY_HEADERS, buildContentSecurityPolicy } from '@/config/security';
-import { refreshSessionCookies } from '@/server/session/refresh';
+import { publicEnv } from './config/env';
+import { SECURITY_HEADERS, buildContentSecurityPolicy } from './config/security';
+import { refreshSessionCookies } from '@buxa/server/session/refresh';
 
 /**
  * Runs before every page and API request: gives it a fresh nonce for the Content-Security-Policy, adds the security headers,

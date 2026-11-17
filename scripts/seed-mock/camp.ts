@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 import type pg from 'pg';
 import type { Actor, Role } from '@buxa/domain';
-import type { Repositories } from '../../apps/web/server/repositories';
-import type { Services } from '../../apps/web/server/runtime';
+import type { Repositories } from '@buxa/server/repositories';
+import type { Services } from '@buxa/server/runtime';
 import { CAMP, STAFF_ACCOUNTS } from './roster';
 
 /**
