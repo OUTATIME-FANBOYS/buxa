@@ -23,6 +23,7 @@ export function MyTasks() {
     { name: 'No date', tasks: open.filter(t => !t.due) },
   ];
   void s;
+
   return (
     <div className="page">
       <header className="page-head"><div className="page-title"><h1>My tasks</h1><p className="muted">{open.length} open · {done.length} done</p></div>

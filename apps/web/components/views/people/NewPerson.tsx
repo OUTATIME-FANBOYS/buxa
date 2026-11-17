@@ -16,7 +16,9 @@ import { toHouseholdChoices } from '@buxa/shared';
  */
 export async function NewPerson({ householdId }: { householdId?: string }) {
   const actor = await currentActor();
-  if (!actor) notFound();
+  if (!actor) {
+    notFound();
+  }
   if (!can(actor, 'people:create')) {
     return (
       <div className="page">

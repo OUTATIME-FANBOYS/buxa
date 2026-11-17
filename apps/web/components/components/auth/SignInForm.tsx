@@ -8,6 +8,7 @@ import { AuthForm, type AuthMode } from './AuthForm';
 export function SignInForm() {
   const [mode, setMode] = useState<AuthMode>('in');
   const isSignIn = mode === 'in';
+
   return (
     <div className="auth-card">
       <div className="brand brand-lg auth-brand"><span className="logo logo-mark" aria-hidden="true"><BrandMark size={32} /></span> Buxa</div>

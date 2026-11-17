@@ -20,7 +20,9 @@ describe('ProjectDialog', () => {
     h.store = { actions: { createProject: vi.fn(() => 'p-new'), updateProject: vi.fn() }, workspace: seed.workspaces[0] };
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = '';
+  });
 
   it('titles a new project', () => {
     act(() => root.render(<UiProvider Dialog={ConfirmDialog}><ProjectDialog onClose={() => undefined} /></UiProvider>));
@@ -33,7 +35,9 @@ describe('ProjectDialog', () => {
   });
   it('refuses a blank name before creating anything', () => {
     act(() => root.render(<UiProvider Dialog={ConfirmDialog}><ProjectDialog onClose={() => undefined} /></UiProvider>));
-    act(() => { (document.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); });
+    act(() => {
+      (document.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
     expect(document.querySelector('.field-error')?.textContent).toBe('Give the project a name.');
     expect((h.store.actions as { createProject: ReturnType<typeof vi.fn> }).createProject).not.toHaveBeenCalled();
   });

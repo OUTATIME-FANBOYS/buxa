@@ -20,7 +20,9 @@ describe('ConnectAgentDialog', () => {
     h.store = { serverInfo: { mcpUrl: 'http://127.0.0.1:3100/mcp' } };
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = '';
+  });
 
   it('opens as a dialog and says a new token is not connected yet', () => {
     act(() => root.render(<UiProvider Dialog={ConfirmDialog}><ConnectAgentDialog agentId="u-agent-triage" name="Triage Agent" onClose={() => undefined} /></UiProvider>));

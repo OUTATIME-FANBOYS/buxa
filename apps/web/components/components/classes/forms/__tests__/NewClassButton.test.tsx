@@ -11,8 +11,12 @@ vi.mock('@buxa/server/composers/classes/createClassAction', () => ({ createClass
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 // The dialog's exit runs for 190ms before it unmounts; wait past it.
-const settle = () => act(async () => { await new Promise(r => setTimeout(r, 250)); });
-const flush = () => act(async () => { await new Promise(r => setTimeout(r, 0)); });
+const settle = () => act(async () => {
+  await new Promise(r => setTimeout(r, 250));
+});
+const flush = () => act(async () => {
+  await new Promise(r => setTimeout(r, 0));
+});
 
 describe('NewClassButton (the Classes page)', () => {
   let root: Root;
@@ -22,11 +26,15 @@ describe('NewClassButton (the Classes page)', () => {
     host = document.body.appendChild(document.createElement('div'));
     root = createRoot(host);
   });
-  afterEach(() => { act(() => root.unmount()); host.remove(); });
+  afterEach(() => {
+    act(() => root.unmount()); host.remove();
+  });
 
   const button = () => Array.from(host.querySelectorAll('button')).find(b => b.textContent === 'New class') as HTMLButtonElement;
   const dialog = () => document.querySelector<HTMLElement>('[role="dialog"]');
-  const open = async () => { button().focus(); act(() => button().click()); await flush(); };
+  const open = async () => {
+    button().focus(); act(() => button().click()); await flush();
+  };
 
   it('opens the create form in a dialog from the New class button', async () => {
     act(() => root.render(<NewClassButton />));

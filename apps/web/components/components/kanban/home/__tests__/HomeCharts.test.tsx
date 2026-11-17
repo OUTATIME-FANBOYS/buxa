@@ -12,8 +12,10 @@ function series(counts: Record<string, number>, complete = true): CheckInsByDay 
   const days = Array.from({ length: 30 }, (_, i) => {
     const d = new Date(Date.UTC(2026, 10, 17 - (29 - i)));
     const date = d.toISOString().slice(0, 10);
+
     return { date, count: counts[date] ?? 0 };
   });
+
   return { days, complete };
 }
 

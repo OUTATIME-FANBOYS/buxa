@@ -11,7 +11,14 @@ function TokenReveal({ name, token, url }: { name: string; token: string; url: s
   const { toast } = useUi();
   const cli = `claude mcp add --transport http buxa ${url} --header "Authorization: Bearer ${token}"`;
   const cfg = JSON.stringify({ mcpServers: { buxa: { type: 'http', url, headers: { Authorization: `Bearer ${token}` } } } }, null, 2);
-  const copy = async (text: string, what: string) => { try { await navigator.clipboard.writeText(text); toast(`${what} copied`); } catch { toast('Copy failed. Select the text and copy it by hand.', { tone: 'error' }); } };
+  const copy = async (text: string, what: string) => {
+    try {
+      await navigator.clipboard.writeText(text); toast(`${what} copied`);
+    } catch {
+      toast('Copy failed. Select the text and copy it by hand.', { tone: 'error' });
+    }
+  };
+
   return (<>
     <p className="notice-box" role="status">Copy this now. It is shown once, and anyone who holds it can act as {name}. Treat it like a password.</p>
     <Field label="Claude Code (run in a terminal)"><div className="copy-box"><code>{cli}</code><button type="button" className="btn btn-sm" onClick={() => copy(cli, 'Command')}>Copy</button></div></Field>
@@ -21,8 +28,11 @@ function TokenReveal({ name, token, url }: { name: string; token: string; url: s
 }
 
 function TokenStatus({ conn }: { conn: AgentConnection }) {
-  if (conn.phase !== 'ready' && conn.phase !== 'issuing') return null;
+  if (conn.phase !== 'ready' && conn.phase !== 'issuing') {
+    return null;
+  }
   const { info } = conn;
+
   return <p className="small"><strong>{info.exists ? 'A token exists' : 'Not connected yet'}</strong>{info.exists && info.createdAt && <span className="muted"> · created {new Date(info.createdAt).toLocaleDateString()}{info.lastSeen ? ` · last used ${new Date(info.lastSeen).toLocaleString()}` : ' · never used'}</span>}</p>;
 }
 
@@ -34,6 +44,7 @@ export function ConnectAgentDialog({ agentId, name, onClose }: { agentId: string
   const error = conn.phase === 'unreachable' ? UNREACHABLE : conn.phase === 'ready' ? conn.error : undefined;
   const issued = conn.phase === 'issued';
   const hasToken = (conn.phase === 'ready' || conn.phase === 'issuing') && conn.info.exists;
+
   return (
     <Dialog title={`Connect ${name}`} onClose={onClose} wide>
       <div className="stack">

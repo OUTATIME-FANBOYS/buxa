@@ -23,12 +23,17 @@ export function InstallHint() {
     setPlatform(found);
     setVisible(shouldShowInstallHint({ platform: found, phone, installed, dismissed }));
     // Android Chrome offers the install prompt once; keeping the event lets the hint's button show it.
-    const onPrompt = (event: Event) => { event.preventDefault(); setPrompt(event as InstallPromptEvent); };
+    const onPrompt = (event: Event) => {
+      event.preventDefault(); setPrompt(event as InstallPromptEvent);
+    };
     window.addEventListener('beforeinstallprompt', onPrompt);
+
     return () => window.removeEventListener('beforeinstallprompt', onPrompt);
   }, []);
 
-  if (!visible || platform === null) return null;
+  if (!visible || platform === null) {
+    return null;
+  }
 
   const dismiss = () => {
     // If the browser refuses storage, the hint stays hidden for this page view only.
@@ -37,7 +42,9 @@ export function InstallHint() {
   };
 
   const install = () => {
-    if (!prompt) return;
+    if (!prompt) {
+      return;
+    }
     void prompt.prompt();
     setPrompt(null);
   };

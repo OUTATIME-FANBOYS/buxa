@@ -15,6 +15,7 @@ import { StageRules } from './StageRules';
 export function AgentCard({ agent, canManage }: { agent: Agent; canManage: boolean }) {
   const { s, actions, projects, sync } = useStore(); const user = s.users.find(u => u.id === agent.userId); const st = A.agentStats(s, agent.userId); const [connect, setConnect] = useState(false);
   const toggle = (id: string) => actions.updateAgent(agent.userId, { scope: agent.scope.includes(id) ? agent.scope.filter(x => x !== id) : [...agent.scope, id] });
+
   return (
     <section className="panel agent-card">
       <div className="run-head">

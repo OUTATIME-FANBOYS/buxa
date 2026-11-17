@@ -7,6 +7,7 @@ import { UnlinkButton } from '@/components/components/people/forms/export';
 /** One member of a household, with the two facts that decide pick-up, as words. */
 export function HouseholdMemberRow({ member, householdId, canUpdate }: { member: HouseholdMember; householdId: string; canUpdate: boolean }) {
   const name = `${member.givenName} ${member.familyName}`;
+
   return (
     <li className="people-member">
       <div className="people-member-main">

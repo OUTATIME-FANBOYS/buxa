@@ -19,7 +19,9 @@ describe('AgentDialog', () => {
     h.store = { actions: { addAgent: vi.fn() }, workspace: seed.workspaces[0], projects: seed.projects };
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = '';
+  });
 
   it('asks for a name, what the agent is for, and which projects it may touch', () => {
     act(() => root.render(<UiProvider Dialog={ConfirmDialog}><AgentDialog onClose={() => undefined} /></UiProvider>));
@@ -31,7 +33,9 @@ describe('AgentDialog', () => {
   it('will not add an agent without a name', () => {
     act(() => root.render(<UiProvider Dialog={ConfirmDialog}><AgentDialog onClose={() => undefined} /></UiProvider>));
     const form = document.querySelector('form') as HTMLFormElement;
-    act(() => { form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); });
+    act(() => {
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
     expect(document.querySelector('.field-error')?.textContent).toBe('Give the agent a name.');
     expect(h.store.actions as { addAgent: ReturnType<typeof vi.fn> }).toBeTruthy();
     expect((h.store.actions as { addAgent: ReturnType<typeof vi.fn> }).addAgent).not.toHaveBeenCalled();

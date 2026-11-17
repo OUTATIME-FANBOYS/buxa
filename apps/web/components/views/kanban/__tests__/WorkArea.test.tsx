@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 vi.mock('next/dynamic', () => ({
   default: (_loader: unknown, options: { ssr: boolean; loading: () => unknown }) => {
     const Area = (props: Record<string, unknown>) => (props.user ? options.loading() : null);
+
     return Object.assign(Area, { ssrOptions: options.ssr });
   },
 }));

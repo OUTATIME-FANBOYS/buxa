@@ -35,7 +35,11 @@ export function CheckOutPanel(props: CheckOutPanelProps) {
   const noGuardianLine = row.isMinor === true && row.pickupOptions.length === 0 && !copy;
 
   return (
-    <form id={id} className="checkout-panel" onSubmit={event => { event.preventDefault(); if (submittable) onSubmit(); }}>
+    <form id={id} className="checkout-panel" onSubmit={event => {
+      event.preventDefault(); if (submittable) {
+        onSubmit();
+      }
+    }}>
       {showGuardians && (
         <PickupChoices name={radioName} options={row.pickupOptions} value={draft.collectedBy}
           onChange={collectedBy => onPatch({ collectedBy })} />

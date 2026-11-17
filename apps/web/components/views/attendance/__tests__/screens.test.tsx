@@ -4,7 +4,9 @@ import type { AttendanceEntry, PersonSummary } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
 import type { OnSiteEntry } from '@buxa/server/services/attendance/AttendanceService';
 
-const notFound = vi.hoisted(() => vi.fn(() => { throw new Error('NEXT_NOT_FOUND'); }));
+const notFound = vi.hoisted(() => vi.fn(() => {
+  throw new Error('NEXT_NOT_FOUND');
+}));
 const session = vi.hoisted(() => ({ camp: true as boolean, role: 'staff' as Role, timeZone: 'Asia/Kolkata' }));
 const services = vi.hoisted(() => ({
   orgs: { getCamp: vi.fn() },
@@ -48,7 +50,9 @@ beforeEach(() => {
   services.people.list.mockResolvedValue([ada, sam]);
 });
 
-afterEach(() => { vi.useRealTimers(); });
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe('CheckInScreen', () => {
   it('shows the console to someone who may record attendance', async () => {

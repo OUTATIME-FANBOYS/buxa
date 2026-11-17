@@ -21,9 +21,16 @@ export function NameSearch({ onPick }: { onPick: (card: PersonCard) => void }) {
   useEffect(() => {
     let current = true;
     const timer = window.setTimeout(() => {
-      void searchPeopleAction({ query: trimmed }).then(outcome => { if (current) setAnswer({ query: trimmed, outcome }); });
+      void searchPeopleAction({ query: trimmed }).then(outcome => {
+        if (current) {
+          setAnswer({ query: trimmed, outcome });
+        }
+      });
     }, DEBOUNCE_MS);
-    return () => { current = false; window.clearTimeout(timer); };
+
+    return () => {
+      current = false; window.clearTimeout(timer);
+    };
   }, [trimmed]);
 
   const current = answer?.query === trimmed ? answer.outcome : null;
@@ -52,9 +59,18 @@ export function NameSearch({ onPick }: { onPick: (card: PersonCard) => void }) {
 }
 
 function SearchStatus({ trimmed, current }: { trimmed: string; current: ActionOutcome<PersonCard[]> | null }) {
-  if (trimmed === '') return <p className="muted small" role="status">Type a name to find someone.</p>;
-  if (current === null) return <p className="muted small" role="status">Searching.</p>;
-  if (current.kind !== 'ok') return <p className="field-error" role="alert">{current.message}</p>;
-  if (current.value.length === 0) return <p className="muted small" role="status">No one matches “{trimmed}”.</p>;
+  if (trimmed === '') {
+    return <p className="muted small" role="status">Type a name to find someone.</p>;
+  }
+  if (current === null) {
+    return <p className="muted small" role="status">Searching.</p>;
+  }
+  if (current.kind !== 'ok') {
+    return <p className="field-error" role="alert">{current.message}</p>;
+  }
+  if (current.value.length === 0) {
+    return <p className="muted small" role="status">No one matches “{trimmed}”.</p>;
+  }
+
   return <p className="muted small" role="status">{current.value.length} found.</p>;
 }

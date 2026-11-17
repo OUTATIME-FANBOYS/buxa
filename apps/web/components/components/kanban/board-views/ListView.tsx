@@ -22,9 +22,12 @@ export function ListView({ tasks, projects, readOnly, showProject = false }: { t
   const [sort, setSort] = useState<Sort>(null);
   const colName = (t: Task) => projects.find(p => p.id === t.projectId)?.columns.find(c => c.id === t.columnId)?.name ?? '';
   const rows = useMemo(() => {
-    if (!sort) return tasks;
+    if (!sort) {
+      return tasks;
+    }
     const { key, dir } = sort;
     const val = (t: Task): string | number => key === 'title' ? t.title.toLowerCase() : key === 'status' ? colName(t) : key === 'priority' ? PRIORITY_RANK[t.priority] : key === 'assignee' ? userById(t.assigneeId)?.name ?? '~' : t.due ?? '9999';
+
     return [...tasks].sort((a, b) => (val(a) < val(b) ? -1 : val(a) > val(b) ? 1 : 0) * dir);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tasks, sort]);
@@ -34,7 +37,10 @@ export function ListView({ tasks, projects, readOnly, showProject = false }: { t
       <button onClick={() => toggleSort(k)}>{label}{sort?.key === k && <Icon name="down" size={12} className={sort.dir === 1 ? '' : 'flip'} />}</button>
     </th>
   );
-  if (!rows.length) return <Empty icon="search" title="No tasks to show" body="Try clearing a filter or add a new task." />;
+  if (!rows.length) {
+    return <Empty icon="search" title="No tasks to show" body="Try clearing a filter or add a new task." />;
+  }
+
   return (
     <div className="table-wrap">
       <table className="table">
@@ -42,12 +48,19 @@ export function ListView({ tasks, projects, readOnly, showProject = false }: { t
         <tbody>
           {rows.map(t => {
             const kind = kindOf(t); const proj = projects.find(p => p.id === t.projectId); const sp = subtaskProgress(t);
-            if (!proj) return null;
+            if (!proj) {
+              return null;
+            }
             const done = proj.columns.find(c => c.kind === 'done'); const first = proj.columns.find(c => c.kind === 'open') ?? proj.columns[0];
+
             return (
               <tr key={t.id} className={t.archived ? 'is-archived' : ''}>
                 <td className="c-check"><input type="checkbox" checked={kind === 'done'} disabled={readOnly || !done} aria-label={`Mark “${t.title}” ${kind === 'done' ? 'not done' : 'done'}`}
-                  onChange={() => { const to = kind === 'done' ? first : done; if (to) actions.moveTask(t.id, to.id, null); }} /></td>
+                  onChange={() => {
+                    const to = kind === 'done' ? first : done; if (to) {
+                      actions.moveTask(t.id, to.id, null);
+                    }
+                  }} /></td>
                 <td><button className="row-title" onClick={() => openTask(t.id)}>{t.title}</button>
                   <div className="row-sub">{showProject && <span className="muted small">{proj.name}</span>}{t.tags.slice(0, 3).map(g => <span key={g} className="tag">{g}</span>)}{sp.total > 0 && <span className="meta"><Icon name="check" size={12} />{sp.done}/{sp.total}</span>}</div></td>
                 <td className="c-status"><Pill tone={KIND_TONE[kind]}>{colName(t)}</Pill></td>

@@ -18,7 +18,9 @@ const base: BoardColumnProps = {
 };
 
 describe('BoardColumn', () => {
-  beforeEach(() => { h.store = { actions: {} }; });
+  beforeEach(() => {
+    h.store = { actions: {} };
+  });
 
   it('names the column and its count, and offers to add a task', () => {
     const html = renderToStaticMarkup(<BoardColumn {...base} />);

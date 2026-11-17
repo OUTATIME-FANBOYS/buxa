@@ -21,7 +21,7 @@ export function BadgePanel({ personId, personName, roleLabel, campName, hasActiv
       </div>
       {archived ? <p className="muted">Archived people cannot have a badge.</p>
         : canManage ? <BadgeActions personId={personId} hasActiveBadge={hasActiveBadge} personName={personName} roleLabel={roleLabel} campName={campName} />
-        : <p className="muted">Only admins can issue or revoke badges.</p>}
+          : <p className="muted">Only admins can issue or revoke badges.</p>}
     </section>
   );
 }

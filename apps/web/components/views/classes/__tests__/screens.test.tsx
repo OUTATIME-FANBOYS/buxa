@@ -7,7 +7,9 @@ import type { Role } from '@buxa/domain';
 import { UiProvider } from '@buxa/middleware/providers/providers';
 import { forbidden } from '@buxa/server/http/errors';
 
-const notFound = vi.hoisted(() => vi.fn(() => { throw new Error('NEXT_NOT_FOUND'); }));
+const notFound = vi.hoisted(() => vi.fn(() => {
+  throw new Error('NEXT_NOT_FOUND');
+}));
 const session = vi.hoisted(() => ({ role: 'staff' as Role | null }));
 const services = vi.hoisted(() => ({
   classes: { listClasses: vi.fn(), getClass: vi.fn(), listSessions: vi.fn(), listEnrolments: vi.fn() },
@@ -47,11 +49,15 @@ const enrolment: Enrolment = {
 };
 
 const render = (node: ReactNode) => renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}>{node}</UiProvider>);
-const asRole = (role: Role | null) => { session.role = role; };
+const asRole = (role: Role | null) => {
+  session.role = role;
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
-  notFound.mockImplementation(() => { throw new Error('NEXT_NOT_FOUND'); });
+  notFound.mockImplementation(() => {
+    throw new Error('NEXT_NOT_FOUND');
+  });
   asRole('staff');
   services.orgs.getCamp.mockResolvedValue({ timezone: 'Australia/Sydney' });
   services.classes.listClasses.mockResolvedValue({ ok: true, value: [cls] });

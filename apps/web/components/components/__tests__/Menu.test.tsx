@@ -8,8 +8,12 @@ import { Menu } from '@/components/components/export';
 
 describe('Menu', () => {
   let root: Root;
-  beforeEach(() => { root = createRoot(document.body.appendChild(document.createElement('div'))); });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+  beforeEach(() => {
+    root = createRoot(document.body.appendChild(document.createElement('div')));
+  });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = '';
+  });
 
   it('starts closed with its label on the trigger', () => {
     act(() => root.render(<Menu label="Task actions" trigger="⋯" items={[{ label: 'Rename', onSelect: () => undefined }]} />));

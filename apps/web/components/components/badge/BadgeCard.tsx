@@ -5,6 +5,7 @@ interface BadgeCardProps { personName: string; roleLabel: string; campName: stri
 
 export function BadgeCard({ personName, roleLabel, campName, payload }: BadgeCardProps) {
   const { size, d } = qrPath(payload);
+
   return (
     <section className="badge-card" aria-label={`Badge for ${personName}`}>
       <div className="badge-text">

@@ -26,6 +26,7 @@ export function SessionTable({ classId, sessions, timeZone, clockFormat, selecte
       <tbody>
         {sessions.map(session => {
           const selected = session.id === selectedId;
+
           return (
             <tr key={session.id}>
               <td>{formatCampDateTime(session.startsAt, timeZone, clockFormat)}</td>

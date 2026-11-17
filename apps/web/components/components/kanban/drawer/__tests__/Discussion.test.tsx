@@ -14,7 +14,9 @@ const userById = (id?: string) => seed.users.find((u) => u.id === id);
 const members = seed.users.map((u) => ({ id: u.id, name: u.name }));
 
 describe('Discussion', () => {
-  beforeEach(() => { h.store = { actions: {} }; });
+  beforeEach(() => {
+    h.store = { actions: {} };
+  });
 
   it('starts on the comments tab with an invitation when there are none', () => {
     const task = { ...seed.tasks[0], comments: [] } as Task;

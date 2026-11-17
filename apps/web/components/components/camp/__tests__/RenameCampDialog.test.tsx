@@ -12,8 +12,12 @@ vi.mock('@buxa/server/composers/camp/renameCampAction', () => ({ renameCampActio
 
 describe('RenameCampDialog', () => {
   let root: Root;
-  beforeEach(() => { root = createRoot(document.body.appendChild(document.createElement('div'))); });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+  beforeEach(() => {
+    root = createRoot(document.body.appendChild(document.createElement('div')));
+  });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = '';
+  });
 
   it('opens with the current name in the field and the camp id carried in the form', () => {
     const onClose = vi.fn();

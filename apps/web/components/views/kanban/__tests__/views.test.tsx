@@ -41,11 +41,15 @@ function store(over: Record<string, unknown> = {}) {
 const page = (node: React.ReactElement) => renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}>{node}</UiProvider>);
 
 describe('kanban views', () => {
-  beforeEach(() => { h.store = store(); });
+  beforeEach(() => {
+    h.store = store();
+  });
 
   it('Settings lists the profile, appearance, agents, data and shortcuts sections', () => {
     const html = page(<Settings />);
-    for (const heading of ['Profile', 'Appearance', 'Agents', 'Your data', 'Keyboard shortcuts']) expect(html).toContain(`<h2>${heading}</h2>`);
+    for (const heading of ['Profile', 'Appearance', 'Agents', 'Your data', 'Keyboard shortcuts']) {
+      expect(html).toContain(`<h2>${heading}</h2>`);
+    }
     expect(html).toContain('>Export JSON</button>');
   });
   it('Projects offers to start the first project when there are none', () => {
@@ -58,7 +62,9 @@ describe('kanban views', () => {
   });
   it('Home shows the camp dashboard, and never the kanban empty state', () => {
     const html = page(<Dashboard camp={camp} />);
-    for (const heading of ['On site now', 'Upcoming classes', 'Your tasks']) expect(html).toContain(heading);
+    for (const heading of ['On site now', 'Upcoming classes', 'Your tasks']) {
+      expect(html).toContain(heading);
+    }
     expect(html).not.toContain('No workspace');
   });
   it('Home offers its own sentence for each section that has no data', () => {

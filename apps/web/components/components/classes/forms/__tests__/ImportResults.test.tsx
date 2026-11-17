@@ -13,7 +13,10 @@ const FIXTURE = SEASON_CSV;
 
 function previewOf(text: string) {
   const read = readImportFile(text);
-  if (!read.ok) throw new Error(read.message);
+  if (!read.ok) {
+    throw new Error(read.message);
+  }
+
   return planImport({
     rows: read.rows,
     classes: [

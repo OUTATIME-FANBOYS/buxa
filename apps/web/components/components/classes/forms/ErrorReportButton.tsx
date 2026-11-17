@@ -5,7 +5,10 @@ import { ROUTES } from '@/config/routes';
  * report to download. The file text goes back to the server as a form post, so nothing is kept in the browser.
  */
 export function ErrorReportButton({ fileName, text, refused }: { fileName: string; text: string; refused: number }) {
-  if (refused === 0) return null;
+  if (refused === 0) {
+    return null;
+  }
+
   return (
     <form method="post" action={ROUTES.classImportErrorReport} className="classes-actions" aria-label="Download the error report">
       <input type="hidden" name="fileName" value={fileName} />

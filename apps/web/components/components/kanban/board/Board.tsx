@@ -17,7 +17,9 @@ export function BoardView({ project, tasks, readOnly, manual }: { project: Proje
 
   const removeColumn = async (col: Column) => {
     const others = project.columns.filter(c => c.id !== col.id);
-    if (!others.length) return toast('A board needs at least one column.', { tone: 'error' });
+    if (!others.length) {
+      return toast('A board needs at least one column.', { tone: 'error' });
+    }
     const n = tasks.filter(t => t.columnId === col.id).length;
     if (await confirm({ title: `Delete “${col.name}”?`, body: n ? `Its ${n} task${n === 1 ? '' : 's'} will move to “${others[0].name}”.` : 'This column is empty.', confirmLabel: 'Delete column', danger: true })) {
       actions.deleteColumn(project.id, col.id, others[0].id);

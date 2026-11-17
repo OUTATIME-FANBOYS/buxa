@@ -21,10 +21,13 @@ export function CampClockPanel({ campId, clockFormat, canChange }: { campId: str
   const [format, setFormat] = useState<ClockFormat>(clockFormat);
 
   useEffect(() => {
-    if (state.status === 'success') toast('Clock changed');
+    if (state.status === 'success') {
+      toast('Clock changed');
+    }
   }, [state, toast]);
 
   const current = OPTIONS.find(o => o.value === clockFormat) ?? OPTIONS[1];
+
   return (
     <section className="panel" aria-labelledby="camp-clock-title">
       <h2 id="camp-clock-title">Camp clock</h2>

@@ -33,7 +33,9 @@ describe('the settings grid', () => {
     };
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = '';
+  });
 
   const render = (leading?: ReactNode) => act(() => root.render(
     <UiProvider Dialog={ConfirmDialog}><SettingsPage leading={leading} /></UiProvider>,
@@ -70,7 +72,9 @@ describe('the settings grid', () => {
     render(<CampClockPanel campId="c-1" clockFormat="24h" canChange />);
     const clock = cards()[0];
     const twelve = Array.from(clock.querySelectorAll<HTMLButtonElement>('[role="radio"]')).find(b => b.textContent === '12-hour (9:05 AM)');
-    act(() => { twelve?.click(); });
+    act(() => {
+      twelve?.click();
+    });
     expect(clock.querySelector<HTMLInputElement>('input[name="clockFormat"]')?.value).toBe('12h');
     expect(twelve?.getAttribute('aria-checked')).toBe('true');
     expect(twelve?.getAttribute('type')).toBe('button');
@@ -81,7 +85,9 @@ describe('the settings grid', () => {
     const input = document.querySelector<HTMLInputElement>('input[maxlength="60"]');
     const form = document.querySelector<HTMLFormElement>('.settings-grid form');
     expect(form).not.toBeNull();
-    act(() => { form?.querySelector<HTMLButtonElement>('button')?.click(); });
+    act(() => {
+      form?.querySelector<HTMLButtonElement>('button')?.click();
+    });
     expect(updateProfile).toHaveBeenCalledWith({ name: 'Rosa Delgado', title: 'Coordinator' });
     expect(input?.value).toBe('Rosa Delgado');
   });

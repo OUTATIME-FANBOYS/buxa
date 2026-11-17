@@ -20,23 +20,40 @@ export function Menu({ label, trigger, items, align = 'end', className = 'icon-b
   const onKey = (e: KeyboardEvent) => {
     const els = Array.from(e.currentTarget.querySelectorAll<HTMLElement>('[role=menuitem]:not([disabled])'));
     const i = els.findIndex(el => el === document.activeElement);
-    if (e.key === 'ArrowDown') { e.preventDefault(); els[(i + 1) % els.length]?.focus(); }
-    if (e.key === 'ArrowUp') { e.preventDefault(); els[(i - 1 + els.length) % els.length]?.focus(); }
-    if (e.key === 'Home') { e.preventDefault(); els[0]?.focus(); }
-    if (e.key === 'End') { e.preventDefault(); els[els.length - 1]?.focus(); }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault(); els[(i + 1) % els.length]?.focus();
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault(); els[(i - 1 + els.length) % els.length]?.focus();
+    }
+    if (e.key === 'Home') {
+      e.preventDefault(); els[0]?.focus();
+    }
+    if (e.key === 'End') {
+      e.preventDefault(); els[els.length - 1]?.focus();
+    }
   };
+
   return (
     <>
       <button ref={btn} type="button" className={className} aria-label={label} aria-haspopup="menu" aria-expanded={open}
-        onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
-        onKeyDown={e => { if (e.key === 'ArrowDown' && !open) { e.preventDefault(); setOpen(true); } }}>
+        onClick={e => {
+          e.stopPropagation(); setOpen(o => !o);
+        }}
+        onKeyDown={e => {
+          if (e.key === 'ArrowDown' && !open) {
+            e.preventDefault(); setOpen(true);
+          }
+        }}>
         {trigger}
       </button>
       {open && (
         <Popover anchor={btn.current} onClose={close} align={align} label={label} className="menu">
           <div role="menu" aria-label={label} onKeyDown={onKey} onClick={e => e.stopPropagation()}>
             {list.map((it, i) => {
-              if (it.divider) return <hr key={i} />;
+              if (it.divider) {
+                return <hr key={i} />;
+              }
               const content = (
                 <>
                   {it.icon ? <Icon name={it.icon} size={15} /> : <span style={{ width: 15 }} />}
@@ -44,14 +61,21 @@ export function Menu({ label, trigger, items, align = 'end', className = 'icon-b
                   {it.checked && <Icon name="check" size={14} className="menu-check" />}
                 </>
               );
-              if (it.href) return (
-                <Link key={i} role="menuitem" href={it.href} className={it.danger ? 'danger' : ''} onClick={() => { close(); it.onSelect?.(); }}>
-                  {content}
-                </Link>
-              );
+              if (it.href) {
+                return (
+                  <Link key={i} role="menuitem" href={it.href} className={it.danger ? 'danger' : ''} onClick={() => {
+                    close(); it.onSelect?.();
+                  }}>
+                    {content}
+                  </Link>
+                );
+              }
+
               return (
                 <button key={i} role="menuitem" type="button" disabled={it.disabled} className={it.danger ? 'danger' : ''}
-                  onClick={() => { close(); btn.current?.focus(); it.onSelect?.(); }}>
+                  onClick={() => {
+                    close(); btn.current?.focus(); it.onSelect?.();
+                  }}>
                   {content}
                 </button>
               );

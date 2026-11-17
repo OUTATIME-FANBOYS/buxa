@@ -10,7 +10,9 @@ import { onSiteSummary, toOnSiteRow } from '@buxa/shared';
 /** Everyone on site now, oldest arrival first, with check-out for staff. */
 export async function OnSiteScreen() {
   const actor = await campActor();
-  if (!actor) notFound();
+  if (!actor) {
+    notFound();
+  }
   if (!authorize(actor, 'attendance:read').allow) {
     return (
       <div className="page">

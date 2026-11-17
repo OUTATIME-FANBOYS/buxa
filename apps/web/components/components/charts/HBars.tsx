@@ -4,10 +4,12 @@ interface HRow { label: ReactNode; segments: { value: number; className: string;
 
 export function HBars({ rows, max, ariaLabel }: { rows: HRow[]; max?: number; ariaLabel: string }) {
   const m = max ?? Math.max(1, ...rows.map(r => r.segments.reduce((a, s) => a + s.value, 0)));
+
   return (
     <ul className="hbars" aria-label={ariaLabel}>
       {rows.map((r, i) => {
         const sum = r.segments.reduce((a, s) => a + s.value, 0);
+
         return (
           <li key={i}>
             <span className="hb-label">{r.label}</span>

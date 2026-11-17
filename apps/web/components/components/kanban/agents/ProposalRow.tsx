@@ -11,6 +11,7 @@ export function ProposalRow({ p, actions: showActions }: { p: Proposal; actions:
   const { s, actions } = useStore(); const { toast } = useUi(); const { openTask } = useTaskDrawer();
   const d = A.describe(s, p.change, p.undo); const kind = A.policyKind(s, p.change); const t = p.taskId ? s.tasks.find(x => x.id === p.taskId) : 'taskId' in p.change ? s.tasks.find(x => x.id === (p.change as { taskId: string }).taskId) : undefined;
   const deciderUser = p.decidedBy ? s.users.find(u => u.id === p.decidedBy) : undefined; const decider = deciderUser ? `${deciderUser.name.split(' ')[0]}${deciderUser.agent ? ' (agent)' : ''}` : undefined;
+
   return (
     <li className={`prop prop-${p.status}`}>
       <span className="prop-icon" aria-hidden="true"><Icon name={KIND_ICON[kind]} size={15} /></span>
@@ -22,8 +23,10 @@ export function ProposalRow({ p, actions: showActions }: { p: Proposal; actions:
       </div>
       {p.status === 'pending' && showActions
         ? <div className="row prop-actions">
-            <button className="btn btn-sm" onClick={() => actions.decide(p.id, 'reject')} aria-label={`Reject: ${d.text}`}>Reject</button>
-            <button className="btn btn-sm btn-primary" onClick={() => { actions.decide(p.id, 'approve'); toast('Approved'); }} aria-label={`Approve: ${d.text}`}>Approve</button></div>
+          <button className="btn btn-sm" onClick={() => actions.decide(p.id, 'reject')} aria-label={`Reject: ${d.text}`}>Reject</button>
+          <button className="btn btn-sm btn-primary" onClick={() => {
+            actions.decide(p.id, 'approve'); toast('Approved');
+          }} aria-label={`Approve: ${d.text}`}>Approve</button></div>
         : <span className="outcome"><Pill tone={STATUS_TONE[p.status]}>{STATUS_LABEL[p.status]}{decider && p.status !== 'applied' ? ` by ${decider}` : ''}</Pill></span>}
     </li>
   );

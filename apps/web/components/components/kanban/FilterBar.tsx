@@ -14,6 +14,7 @@ import { PRIORITIES, emptyFilter, isFilterActive } from '@buxa/shared';
 function Chip({ label, count, children, width = 220 }: { label: string; count: number; children: ReactNode; width?: number }) {
   const [open, setOpen] = useState(false); const ref = useRef<HTMLButtonElement>(null);
   const close = useCallback(() => setOpen(false), []);
+
   return (
     <>
       <button ref={ref} className={`chip ${count ? 'on' : ''}`} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(o => !o)}>
@@ -26,7 +27,7 @@ function Chip({ label, count, children, width = 220 }: { label: string; count: n
 function Check({ checked, onChange, children }: { checked: boolean; onChange: () => void; children: ReactNode }) {
   return <label className="check-row"><input type="checkbox" checked={checked} onChange={onChange} /><span>{children}</span></label>;
 }
-const toggle = <T,>(arr: T[], v: T) => (arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]);
+const toggle = <T, >(arr: T[], v: T) => (arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]);
 
 const DUE: { v: DueFilter; l: string }[] = [{ v: 'any', l: 'Any time' }, { v: 'overdue', l: 'Overdue' }, { v: 'today', l: 'Due today' }, { v: 'week', l: 'Next 7 days' }, { v: 'none', l: 'No due date' }];
 const SORT: { v: Sort; l: string }[] = [{ v: 'manual', l: 'Manual order' }, { v: 'created', l: 'Newest first' }, { v: 'priority', l: 'Highest priority' }, { v: 'due', l: 'Soonest deadline' }];
@@ -37,6 +38,7 @@ export function FilterBar({ filter, setFilter, project, tags, showStatus = true 
   const saved = s.savedFilters.filter(f => f.projectId === project.id);
   const [naming, setNaming] = useState(false); const [name, setName] = useState('');
   const active = isFilterActive(filter);
+
   return (
     <div className="filters" role="group" aria-label="Filters and sorting">
       <div className="search-local"><Icon name="search" size={15} />
@@ -66,14 +68,24 @@ export function FilterBar({ filter, setFilter, project, tags, showStatus = true 
       {active && <button className="btn btn-ghost btn-sm" onClick={() => setFilter({ ...emptyFilter, sort: filter.sort })}>Clear</button>}
       <Menu label="Saved filters" className="chip" align="end" trigger={<><Icon name="bookmark" size={13} />Saved{saved.length > 0 && <span className="chip-count">{saved.length}</span>}</>}
         items={[
-          ...saved.map(f => ({ label: f.name, icon: 'filter', onSelect: () => { setFilter(f.filter); toast(`Applied “${f.name}”`); } })),
+          ...saved.map(f => ({ label: f.name, icon: 'filter', onSelect: () => {
+            setFilter(f.filter); toast(`Applied “${f.name}”`);
+          } })),
           saved.length ? { label: '', divider: true, onSelect() {} } : null,
           { label: 'Save current filters…', icon: 'plus', disabled: !active && filter.sort === 'manual', onSelect: () => setNaming(true) },
           ...saved.map(f => ({ label: `Delete “${f.name}”`, icon: 'trash', danger: true, onSelect: () => actions.deleteSavedFilter(f.id) })),
         ]} />
       {naming && (
-        <form className="save-filter" onSubmit={e => { e.preventDefault(); if (!name.trim()) return; actions.saveFilter(name.trim(), project.id, filter); setNaming(false); setName(''); toast('Filter saved'); }}>
-          <input autoFocus value={name} onChange={e => setName(e.target.value)} placeholder="Name this view" aria-label="Saved filter name" maxLength={40} onKeyDown={e => { if (e.key === 'Escape') setNaming(false); }} />
+        <form className="save-filter" onSubmit={e => {
+          e.preventDefault(); if (!name.trim()) {
+            return;
+          } actions.saveFilter(name.trim(), project.id, filter); setNaming(false); setName(''); toast('Filter saved');
+        }}>
+          <input autoFocus value={name} onChange={e => setName(e.target.value)} placeholder="Name this view" aria-label="Saved filter name" maxLength={40} onKeyDown={e => {
+            if (e.key === 'Escape') {
+              setNaming(false);
+            }
+          }} />
           <button className="btn btn-primary btn-sm" disabled={!name.trim()}>Save</button><button type="button" className="btn btn-sm" onClick={() => setNaming(false)}>Cancel</button>
         </form>
       )}

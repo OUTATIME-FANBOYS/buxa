@@ -28,15 +28,31 @@ export function Reports() {
 
   const series = useMemo(() => {
     const n = Number(range);
-    if (n <= 30) return Array.from({ length: n }, (_, i) => { const d = addDays(today(), i - n + 1); return { label: fmt(d), title: fmt(d, true), value: done.filter(t => t.completedAt && isoDay(t.completedAt) === d).length }; });
+    if (n <= 30) {
+      return Array.from({ length: n }, (_, i) => {
+        const d = addDays(today(), i - n + 1);
+
+        return { label: fmt(d), title: fmt(d, true), value: done.filter(t => t.completedAt && isoDay(t.completedAt) === d).length };
+      });
+    }
+
     return Array.from({ length: 13 }, (_, i) => {
       const end = addDays(today(), -(12 - i) * 7); const start = addDays(end, -6);
-      return { label: fmt(start), title: `${fmt(start)} – ${fmt(end)}`, value: done.filter(t => { if (!t.completedAt) return false; const c = isoDay(t.completedAt); return c >= start && c <= end; }).length };
+
+      return { label: fmt(start), title: `${fmt(start)} – ${fmt(end)}`, value: done.filter(t => {
+        if (!t.completedAt) {
+          return false;
+        } const c = isoDay(t.completedAt);
+
+        return c >= start && c <= end;
+      }).length };
     });
   }, [range, done]);
   const total = series.reduce((a, b) => a + b.value, 0);
 
-  if (!workspace || live.length === 0) return <div className="page"><header className="page-head"><div className="page-title"><h1>Reports</h1></div></header><Empty icon="chart" title="Nothing to report yet" body="Reports fill in as tasks are created and completed." /></div>;
+  if (!workspace || live.length === 0) {
+    return <div className="page"><header className="page-head"><div className="page-title"><h1>Reports</h1></div></header><Empty icon="chart" title="Nothing to report yet" body="Reports fill in as tasks are created and completed." /></div>;
+  }
 
   const prioRows = PRIORITIES.slice().reverse().map(p => ({ label: PRIORITY_LABEL[p], segments: [{ value: open.filter(t => t.priority === p).length, className: `seg-${p}`, name: 'open' }] }));
   const load = members.map(m => ({ m, on: open.filter(t => t.assigneeId === m.userId && !isOverdue(t, kindOf)).length, late: open.filter(t => t.assigneeId === m.userId && isOverdue(t, kindOf)).length }))
@@ -57,8 +73,11 @@ export function Reports() {
       <div className="grid-2">
         <section className="panel"><h2>Tasks completed over time</h2><Bars tone="ok" data={series} ariaLabel={`Tasks completed over the last ${range} days, ${total} in total`} unit={Number(range) > 30 ? 'tasks that week' : 'tasks'} /></section>
         <section className="panel"><h2>Project progress</h2>
-          <ul className="proj-bars big">{projects.map(p => { const pr = progressOf(live.filter(x => x.projectId === p.id), kindOf); const h = healthOf(pr, p.deadline);
-            return <li key={p.id}><Link href={boardPath(p.id)}><span>{p.name}</span><span className="pb-meta"><Pill tone={HEALTH_TONE[h]}>{HEALTH_LABEL[h]}</Pill><span className="muted small">{pr.done}/{pr.total} · {Math.round(pr.pct)}%</span></span></Link><Progress value={pr.pct} tone={HEALTH_TONE[h]} label={`${p.name} progress`} /></li>; })}</ul>
+          <ul className="proj-bars big">{projects.map(p => {
+            const pr = progressOf(live.filter(x => x.projectId === p.id), kindOf); const h = healthOf(pr, p.deadline);
+
+            return <li key={p.id}><Link href={boardPath(p.id)}><span>{p.name}</span><span className="pb-meta"><Pill tone={HEALTH_TONE[h]}>{HEALTH_LABEL[h]}</Pill><span className="muted small">{pr.done}/{pr.total} · {Math.round(pr.pct)}%</span></span></Link><Progress value={pr.pct} tone={HEALTH_TONE[h]} label={`${p.name} progress`} /></li>;
+          })}</ul>
         </section>
       </div>
       <div className="grid-3">

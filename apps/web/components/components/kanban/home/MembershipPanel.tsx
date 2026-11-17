@@ -21,6 +21,7 @@ export function MembershipPanel({ counts }: { counts: MembershipStatusCounts | n
   const summary = counts
     ? `Membership status for ${total} ${total === 1 ? 'person' : 'people'}: ${segments.map(s => `${s.count} ${s.label.toLowerCase()}`).join(', ') || 'none yet'}.`
     : '';
+
   return (
     <section className="panel" aria-labelledby="membership-title">
       <div className="panel-head"><h2 id="membership-title">Membership status</h2></div>

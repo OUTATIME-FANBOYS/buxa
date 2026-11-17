@@ -26,7 +26,9 @@ describe('TaskForm', () => {
     };
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = '';
+  });
 
   it('opens a new task as a drawer with a title box and a Create action', () => {
     act(() => root.render(<UiProvider Dialog={ConfirmDialog}><TaskForm task={null} project={project} onClose={() => undefined} /></UiProvider>));

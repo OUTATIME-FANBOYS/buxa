@@ -8,8 +8,12 @@ import { Popover } from '@/components/components/export';
 
 describe('Popover', () => {
   let root: Root;
-  beforeEach(() => { root = createRoot(document.body.appendChild(document.createElement('div'))); });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+  beforeEach(() => {
+    root = createRoot(document.body.appendChild(document.createElement('div')));
+  });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = '';
+  });
 
   it('portals its content to the body as a labelled dialog', () => {
     act(() => root.render(<Popover anchor={null} onClose={() => undefined} label="Filters" className="x"><p>Choose</p></Popover>));
@@ -24,7 +28,9 @@ describe('Popover', () => {
     const anchor = document.body.appendChild(document.createElement('button'));
     const onClose = vi.fn();
     act(() => root.render(<Popover anchor={anchor} onClose={onClose}><p>x</p></Popover>));
-    act(() => { document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })); });
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    });
     expect(onClose).toHaveBeenCalled();
   });
 
@@ -33,9 +39,13 @@ describe('Popover', () => {
     const outside = document.body.appendChild(document.createElement('span'));
     act(() => root.render(<Popover anchor={null} onClose={onClose}><button>inside</button></Popover>));
     const inside = document.querySelector('.popover button') as HTMLElement;
-    act(() => { inside.dispatchEvent(new MouseEvent('mousedown', { bubbles: true })); });
+    act(() => {
+      inside.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    });
     expect(onClose).not.toHaveBeenCalled();
-    act(() => { outside.dispatchEvent(new MouseEvent('mousedown', { bubbles: true })); });
+    act(() => {
+      outside.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    });
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

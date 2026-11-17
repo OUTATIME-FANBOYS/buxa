@@ -11,7 +11,9 @@ const seed = buildSeed();
 const agent = { ...seed.agents[0], scope: [seed.projects[0].id], moveRules: { [seed.projects[0].columns[0].id]: 'approve' } } as unknown as Agent;
 
 describe('StageRules', () => {
-  beforeEach(() => { h.store = { actions: {}, projects: seed.projects }; });
+  beforeEach(() => {
+    h.store = { actions: {}, projects: seed.projects };
+  });
 
   it('lists each stage of the agent’s project with its rule, editable for managers', () => {
     const html = renderToStaticMarkup(<StageRules agent={agent} canManage />);

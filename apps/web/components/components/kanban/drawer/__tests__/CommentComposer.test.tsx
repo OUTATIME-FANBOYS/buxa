@@ -8,7 +8,9 @@ const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 
 describe('CommentComposer', () => {
-  beforeEach(() => { h.store = { actions: { addComment: () => undefined } }; });
+  beforeEach(() => {
+    h.store = { actions: { addComment: () => undefined } };
+  });
 
   it('is a labelled comment box that hints at mentions and the send shortcut, and cannot send yet', () => {
     const html = renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}><CommentComposer taskId="t-1" members={[]} /></UiProvider>);

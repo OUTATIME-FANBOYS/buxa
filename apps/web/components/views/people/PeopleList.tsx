@@ -19,7 +19,9 @@ async function listFor(actor: Actor, params: ListParams): Promise<PersonSummary[
 /** The people list with search and role filter. Viewers see names, roles and status; only staff and above see the add button. */
 export async function PeopleList({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
   const actor = await currentActor();
-  if (!actor) notFound();
+  if (!actor) {
+    notFound();
+  }
   const params = readListParams(searchParams);
   const canAdd = can(actor, 'people:create');
   const people = await listFor(actor, params);
@@ -42,7 +44,7 @@ export async function PeopleList({ searchParams }: { searchParams: Record<string
             filtered
               ? <Empty icon="search" title="No one matches that search" body="Check the spelling, or try another role." />
               : <Empty icon="users" title="No people yet" body={canAdd ? 'Add the first child, parent or staff member to start the camp list.' : 'Nobody has been added to the camp yet.'}
-                  action={canAdd && <AddPersonButton households={households} />} />
+                action={canAdd && <AddPersonButton households={households} />} />
           ) : (
             <>
               <p className="muted">{countLine(people.length)}</p>

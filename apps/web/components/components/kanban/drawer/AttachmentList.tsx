@@ -7,6 +7,7 @@ import { useAttachmentUpload } from '@buxa/middleware/hooks/hooks';
 export function AttachmentList({ task, ro }: { task: Task; ro: boolean }) {
   const { actions } = useStore();
   const { busy, input, upload } = useAttachmentUpload(task.id);
+
   return (
     <section className="section">
       <div className="section-head"><h3>Attachments</h3>

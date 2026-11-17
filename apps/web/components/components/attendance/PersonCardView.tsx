@@ -12,6 +12,7 @@ interface Props { card: PersonCard; timeZone: string; clockFormat: ClockFormat; 
 export function PersonCardView({ card, timeZone, clockFormat, children }: Props) {
   const { person, onSiteSince } = card;
   const roles = person.roles.map(role => CAMP_ROLE_LABELS[role]).join(', ');
+
   return (
     <article className="result-card" aria-labelledby="result-name">
       <h2 id="result-name" className="result-name">{attendanceDisplayName(person)}</h2>

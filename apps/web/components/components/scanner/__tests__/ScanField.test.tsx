@@ -23,11 +23,14 @@ let root: Root;
 
 const field = () => host.querySelector('input') as HTMLInputElement;
 const form = () => host.querySelector('form') as HTMLFormElement;
-const flush = () => act(async () => { await new Promise(resolve => setTimeout(resolve, 0)); });
+const flush = () => act(async () => {
+  await new Promise(resolve => setTimeout(resolve, 0));
+});
 
 function render(props: Omit<HarnessProps, 'handle'> & { handle?: React.RefObject<ScanFieldHandle | null> }) {
   const handle = props.handle ?? createRef<ScanFieldHandle>();
   act(() => root.render(<Harness {...props} handle={handle} />));
+
   return handle;
 }
 
@@ -76,7 +79,9 @@ describe('ScanField focus', () => {
   it('after a scan: reports the code, clears the field and keeps focus in it', () => {
     const onScan = vi.fn();
     render({ onScan });
-    act(() => { field().value = '  bx1.abc  '; });
+    act(() => {
+      field().value = '  bx1.abc  ';
+    });
     act(() => form().requestSubmit());
     expect(onScan).toHaveBeenCalledWith('bx1.abc');
     expect(field().value).toBe('');

@@ -23,6 +23,7 @@ export function CheckInsPanel({ series }: { series: CheckInsByDay | null }) {
   const { total, busiest } = chartTotals(days);
   const first = days[0];
   const last = days[days.length - 1];
+
   return (
     <section className="panel home-chart" aria-labelledby="check-ins-title">
       <div className="panel-head home-chart-head">

@@ -8,9 +8,16 @@ import { Notifications } from './Notifications';
 
 function useSaveLabel() {
   const { saveStatus, sync } = useStore();
-  if (sync === 'offline') return 'Offline, retrying';
-  if (saveStatus === 'error') return 'Not saved, storage full';
-  if (sync === 'synced') return saveStatus === 'saving' ? 'Syncing…' : 'Synced';
+  if (sync === 'offline') {
+    return 'Offline, retrying';
+  }
+  if (saveStatus === 'error') {
+    return 'Not saved, storage full';
+  }
+  if (sync === 'synced') {
+    return saveStatus === 'saving' ? 'Syncing…' : 'Synced';
+  }
+
   return saveStatus === 'saving' ? 'Saving…' : 'Saved';
 }
 
@@ -23,6 +30,7 @@ export function TaskTopBar({ account }: { account: ReactNode }) {
   const searchRef = useRef<HTMLInputElement>(null);
   useGlobalShortcuts(searchRef, !!project);
   const label = useSaveLabel();
+
   return (
     <>
       <GlobalSearch inputRef={searchRef} />

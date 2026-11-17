@@ -11,10 +11,17 @@ import * as A from '@buxa/shared';
 export function AgentSummary({ detailed = false }: { detailed?: boolean }) {
   const { s, workspace } = useStore();
   const agents = s.agents.filter(a => a.workspaceId === workspace?.id);
-  if (!s.ui.agentsEnabled || !agents.length) return null;
+  if (!s.ui.agentsEnabled || !agents.length) {
+    return null;
+  }
   const scoped = { ...s, proposals: s.proposals.filter(p => agents.some(a => a.userId === p.agentId)), runs: s.runs.filter(r => agents.some(a => a.userId === r.agentId)) };
   const st = A.agentStats(scoped);
-  const rows = agents.map(a => { const x = A.agentStats(scoped, a.userId); return { a, x }; });
+  const rows = agents.map(a => {
+    const x = A.agentStats(scoped, a.userId);
+
+    return { a, x };
+  });
+
   return (
     <section className="panel"><div className="panel-head"><h2><span className="h-icon tone-agent"><Icon name="agent" size={14} /></span>Agent work</h2><a className="link" href={ROUTES.agents}>{st.pending ? `${st.pending} waiting for you` : 'Open agents'}</a></div>
       {st.total === 0 ? <p className="muted">No agent activity yet. Try a simulated run from the Agents page.</p> : (

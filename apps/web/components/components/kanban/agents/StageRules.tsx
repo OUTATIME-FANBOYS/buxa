@@ -12,8 +12,11 @@ export function StageRules({ agent, canManage }: { agent: Agent; canManage: bool
   const { actions, projects } = useStore();
   const scoped = projects.filter(p => agent.scope.includes(p.id));
   const [pid, setPid] = useState(''); const project = scoped.find(p => p.id === pid) ?? scoped[0];
-  if (!project) return null;
+  if (!project) {
+    return null;
+  }
   const label: Record<StageChoice, string> = { default: 'Default', auto: 'Allow', approve: 'Ask me', never: 'Block' };
+
   return (
     <div className="stack">
       <h3>Moving tasks between stages</h3>
@@ -22,8 +25,10 @@ export function StageRules({ agent, canManage }: { agent: Agent; canManage: bool
       <ul className="trust">{project.columns.map(c => (
         <li key={c.id}><span>{c.name}<i className={`kind-dot kind-${c.kind} stage-dot`} aria-hidden="true" /></span>
           {canManage
-            ? <select className="inline-select stage-select" aria-label={`Moving into ${c.name}`} value={agent.moveRules[c.id] ?? 'default'} onChange={e => { const v = e.target.value as StageChoice; actions.setMoveRule(agent.userId, c.id, v === 'default' ? null : v); }}>
-                {(['default', 'auto', 'approve', 'never'] as StageChoice[]).map(v => <option key={v} value={v}>{label[v]}</option>)}</select>
+            ? <select className="inline-select stage-select" aria-label={`Moving into ${c.name}`} value={agent.moveRules[c.id] ?? 'default'} onChange={e => {
+              const v = e.target.value as StageChoice; actions.setMoveRule(agent.userId, c.id, v === 'default' ? null : v);
+            }}>
+              {(['default', 'auto', 'approve', 'never'] as StageChoice[]).map(v => <option key={v} value={v}>{label[v]}</option>)}</select>
             : <Pill tone={agent.moveRules[c.id] ? TRUST_TONE[agent.moveRules[c.id]] : 'neutral'}>{label[agent.moveRules[c.id] ?? 'default']}</Pill>}</li>))}</ul>
     </div>
   );

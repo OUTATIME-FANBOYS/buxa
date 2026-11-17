@@ -23,10 +23,15 @@ export async function ClassPage({ classId, searchParams }: {
   classId: string; searchParams: Record<string, string | string[] | undefined>;
 }) {
   const actor = await currentActor();
-  if (!actor) notFound();
+  if (!actor) {
+    notFound();
+  }
   const loaded = await loadClassPage(actor, classId);
   if (!loaded.ok) {
-    if (loaded.reason === 'not-found') notFound();
+    if (loaded.reason === 'not-found') {
+      notFound();
+    }
+
     return (
       <div className="page"><Empty icon="alert" title="You cannot see this class" body={FORBIDDEN_READ} /></div>
     );

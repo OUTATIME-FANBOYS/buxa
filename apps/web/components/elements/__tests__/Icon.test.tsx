@@ -19,6 +19,8 @@ describe('Icon', () => {
 
 describe('ICON_PATHS', () => {
   it('has the glyphs the screens use', () => {
-    for (const name of ['plus', 'search', 'kanban', 'calendar', 'users']) expect(ICON_PATHS[name]).toBeTruthy();
+    for (const name of ['plus', 'search', 'kanban', 'calendar', 'users']) {
+      expect(ICON_PATHS[name]).toBeTruthy();
+    }
   });
 });

@@ -23,7 +23,9 @@ export function EditPersonForm({ person }: { person: EditablePerson }) {
 
   // A field error moves focus to the first invalid field, so the person can correct it without searching the page.
   useEffect(() => {
-    if (state.status === 'error' && state.fieldErrors) formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+    if (state.status === 'error' && state.fieldErrors) {
+      formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+    }
   }, [state]);
 
   const err = (name: string) => fieldError(state, name);

@@ -12,6 +12,7 @@ import { ROUTES } from '@/config/routes';
 export function AccountMenu({ user }: { user: User }) {
   const { dark, toggle } = useDarkMode();
   const form = useRef<HTMLFormElement>(null);
+
   return (
     <>
       <Menu label="Account" className="avatar-btn" trigger={<Avatar user={user} size={30} />}

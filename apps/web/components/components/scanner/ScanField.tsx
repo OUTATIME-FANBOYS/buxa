@@ -16,7 +16,11 @@ export interface ScanFieldHandle { focus: () => void }
 export const ScanField = forwardRef<ScanFieldHandle, ScanFieldProps>(function ScanField({ onScan, label, disabled, status }, handle) {
   const input = useRef<HTMLInputElement>(null);
   const [dedupe] = useState(() => createScanDeduper());
-  const focus = useCallback(() => { if (!disabled) input.current?.focus(); }, [disabled]);
+  const focus = useCallback(() => {
+    if (!disabled) {
+      input.current?.focus();
+    }
+  }, [disabled]);
   useImperativeHandle(handle, () => ({ focus }), [focus]);
 
   useEffect(() => {
@@ -24,19 +28,26 @@ export const ScanField = forwardRef<ScanFieldHandle, ScanFieldProps>(function Sc
     // A scanner only works while the field has focus: take it back when the user taps elsewhere on the page.
     const onFocusOut = (e: FocusEvent) => {
       const next = e.relatedTarget;
-      if (next instanceof HTMLElement && next.matches('input, textarea, select, button, a, [contenteditable]')) return;
+      if (next instanceof HTMLElement && next.matches('input, textarea, select, button, a, [contenteditable]')) {
+        return;
+      }
       setTimeout(focus, 0);
     };
     document.addEventListener('focusout', onFocusOut);
+
     return () => document.removeEventListener('focusout', onFocusOut);
   }, [focus]);
 
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const text = normalizeScan(input.current?.value ?? '');
-    if (input.current) input.current.value = '';
+    if (input.current) {
+      input.current.value = '';
+    }
     focus();
-    if (text !== null && dedupe.accept(text)) onScan(text);
+    if (text !== null && dedupe.accept(text)) {
+      onScan(text);
+    }
   }
 
   return (

@@ -12,6 +12,7 @@ import { NewPersonForm } from './NewPersonForm';
 export function AddPersonButton({ households }: { households: readonly HouseholdChoice[] }) {
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
+
   return (
     <>
       <button type="button" className="btn btn-primary" aria-haspopup="dialog" onClick={() => setOpen(true)}>Add person</button>

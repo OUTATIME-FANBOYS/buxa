@@ -15,12 +15,18 @@ const user = { id: 'u-1', name: 'Rosa Delgado', email: 'rosa@example.com' } as u
 
 describe('the account menu', () => {
   let root: Root;
-  beforeEach(() => { root = createRoot(document.body.appendChild(document.createElement('div'))); });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+  beforeEach(() => {
+    root = createRoot(document.body.appendChild(document.createElement('div')));
+  });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = '';
+  });
 
   it('lists Settings as a link to the settings page, after the account line', () => {
     act(() => root.render(<AccountMenu user={user} />));
-    act(() => { document.querySelector<HTMLButtonElement>('button[aria-label="Account"]')?.click(); });
+    act(() => {
+      document.querySelector<HTMLButtonElement>('button[aria-label="Account"]')?.click();
+    });
     const items = Array.from(document.querySelectorAll<HTMLElement>('[role=menu] [role=menuitem]'));
     const settings = items.find(item => item.textContent?.includes('Settings'));
     expect(settings?.tagName).toBe('A');

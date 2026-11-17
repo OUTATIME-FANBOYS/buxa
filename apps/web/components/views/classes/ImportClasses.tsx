@@ -13,7 +13,9 @@ import { ImportForm } from '@/components/components/classes/forms/export';
  */
 export async function ImportClasses() {
   const actor = await currentActor();
-  if (!actor) notFound();
+  if (!actor) {
+    notFound();
+  }
   if (!can(actor, 'classes:manage')) {
     return (
       <div className="page">

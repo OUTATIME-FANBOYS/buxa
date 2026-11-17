@@ -19,6 +19,7 @@ export function Dashboard({ camp }: { camp: CampHome }) {
   const { s, me, kindOf } = useStore();
   const mine = s.tasks.filter(t => !t.archived && t.assigneeId === me?.id && kindOf(t) !== 'done');
   const firstName = camp.firstName || me?.name.split(' ')[0] || '';
+
   return (
     <div className="page">
       <HomeHeader firstName={firstName} camp={camp} />

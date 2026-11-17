@@ -13,6 +13,7 @@ interface MembershipRowProps { membership: PersonMembership; personId: string; c
  */
 export function MembershipRow({ membership, personId, canManage, timeZone, clockFormat }: MembershipRowProps) {
   const revoked = membership.status === 'revoked';
+
   return (
     <li className="people-member">
       <div className="people-member-main">

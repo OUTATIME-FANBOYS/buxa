@@ -13,11 +13,14 @@ const seed = buildSeed();
 function saveLabel(saveStatus: string, sync: string): string {
   h.store = { s: seed, wsTasks: [], saveStatus, sync, project: seed.projects[0], userById: () => undefined, kindOf: () => 'open', me: null, actions: {} };
   const html = renderToStaticMarkup(<TaskTopBar account={<span>me</span>} />);
+
   return html.match(/class="save-state[^"]*" role="status">([^<]*)</)?.[1] ?? '';
 }
 
 describe('TaskTopBar', () => {
-  beforeEach(() => { h.store = {}; });
+  beforeEach(() => {
+    h.store = {};
+  });
 
   it('says what the save state is, in words', () => {
     expect(saveLabel('saved', 'synced')).toBe('Synced');
