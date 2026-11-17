@@ -51,7 +51,7 @@ export interface RowResult {
   problems: RowProblem[];
 }
 
-/** What a ready row writes. Instants are UTC ISO strings. Instructor names and ratios are carried for later; see the PR notes. */
+/** What a ready row writes. Instants are UTC ISO strings. Instructor names and ratios travel with the write, but the import does not store them yet. */
 export interface PlannedWrite {
   rowNumber: number;
   kind: 'create' | 'update';

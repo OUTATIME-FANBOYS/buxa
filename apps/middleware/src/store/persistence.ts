@@ -4,7 +4,7 @@ import { buildDemo } from '@buxa/shared';
 import { normalize } from '@buxa/shared';
 
 const KEY = 'buxa.state.v1';
-const LEGACY_KEY = 'tessera.state.v1'; // the app's previous name; read once so nobody loses their data
+const LEGACY_KEY = 'tessera.state.v1'; // the key from before the app was renamed; read so saved data is not lost
 
 export type SaveStatus = 'saved' | 'saving' | 'error';
 

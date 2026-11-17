@@ -1,6 +1,6 @@
 /**
- * A placeholder for something not built yet: every method throws a clear error naming what is missing. It keeps the application
- * typed and starting while work lands; nothing in a release may use it (the noPlaceholders test fails if any call remains).
+ * Stands in for a port that has no real implementation yet: every method throws a clear error naming what is missing. It keeps the
+ * application typed and starting. Nothing in a release may use it (the noPlaceholders test fails if any call remains).
  */
 export function unimplemented<T extends object>(name: string): T {
   return new Proxy({}, {

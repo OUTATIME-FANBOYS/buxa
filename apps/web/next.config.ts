@@ -16,7 +16,7 @@ const config: NextConfig = {
   transpilePackages: ['@buxa/domain', '@buxa/contracts', '@buxa/db', '@buxa/shared', '@buxa/server', '@buxa/middleware'],
   // Dependencies are hoisted to the repository root, so tell Turbopack where the workspace starts.
   turbopack: { root: fileURLToPath(new URL('../..', import.meta.url)) },
-  // The kanban demo used to live at /kanban. Its pages used #/ links, which never reach the server, so /kanban now redirects to /camp.
+  // /kanban redirects to /camp. Links with a #/ hash never reach the server, so this redirect only covers plain /kanban paths.
   // The destination is ROUTES.camp (config/routes.ts); written out here because Next loads this file without importing app modules.
   async redirects() {
     return [

@@ -32,7 +32,7 @@ export interface PersonAccess<M extends MembershipPeriod> {
   membership?: M;
 }
 
-/** Order used to pick the most informative membership when none is valid: what is coming, then what just ended, then revoked. */
+/** Which membership to show when none is currently valid: what is coming, then what just ended, then revoked. */
 const RELEVANCE: Record<Exclude<MembershipStatus, 'valid'>, number> = { not_started: 0, expired: 1, revoked: 2 };
 
 /**
