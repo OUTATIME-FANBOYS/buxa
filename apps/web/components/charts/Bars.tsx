@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import type { ChartTone } from '@/elements';
+import type { ChartTone } from '@/elements/export';
 
 export interface BarDatum { label: string; value: number; title?: string; tone?: ChartTone }
 

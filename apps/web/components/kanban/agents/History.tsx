@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Avatar } from '@/elements';
+import { Avatar } from '@/elements/export';
 import { Empty } from '../../Empty';
-import { Icon } from '@/elements';
+import { Icon } from '@/elements/export';
 import { Menu } from '../../Menu';
 import { useUi } from '@/providers/UiProvider';
 import { useStore } from '@/providers/providers';

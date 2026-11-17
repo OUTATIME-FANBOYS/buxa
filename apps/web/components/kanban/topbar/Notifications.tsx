@@ -4,7 +4,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { useStore } from '@/providers/providers';
 import { useTaskDrawer } from '@/providers/providers';
 import { Empty } from '../../Empty';
-import { Icon } from '@/elements';
+import { Icon } from '@/elements/export';
 import { Popover } from '../../Popover';
 import { ago, diffDays, today } from '@/logic/common';
 

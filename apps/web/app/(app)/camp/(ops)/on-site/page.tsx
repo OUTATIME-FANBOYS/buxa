@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { OnSiteScreen } from '@/views';
+import { OnSiteScreen } from '@/views/export';
 
 export const metadata: Metadata = { title: 'On site' };
 

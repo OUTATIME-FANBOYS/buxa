@@ -1,12 +1,12 @@
 'use client';
 
-import { PriorityMark } from '@/elements';
+import { PriorityMark } from '@/elements/export';
 import { memo } from 'react';
 import type { Project, Task } from '@/logic/common';
 import { useStore } from '@/providers/providers';
 import { useTaskDrawer } from '@/providers/providers';
-import { Avatar } from '@/elements';
-import { Icon } from '@/elements';
+import { Avatar } from '@/elements/export';
+import { Icon } from '@/elements/export';
 import { Menu } from '../../Menu';
 import { tagHue } from '@/logic/common';
 import { subtaskProgress } from '@/logic/common';

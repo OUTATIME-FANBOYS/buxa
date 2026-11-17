@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import { NewCampForm } from '@/components';
-import { HomePage } from '@/views';
-import { loadHomeCamp } from '@/views';
+import { NewCampForm } from '@/components/export';
+import { HomePage } from '@/views/export';
+import { loadHomeCamp } from '@/views/export';
 import { getCurrentCamp, getOptionalSession } from '@/server/session';
 
 export const metadata: Metadata = { title: 'Home' };

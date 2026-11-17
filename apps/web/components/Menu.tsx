@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
-import { Icon } from '@/elements';
+import { Icon } from '@/elements/export';
 import { Popover } from './Popover';
 
 export interface MenuItem { label: string; icon?: string; onSelect: () => void; danger?: boolean; divider?: boolean; disabled?: boolean; checked?: boolean }

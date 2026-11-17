@@ -2,10 +2,10 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
-import { Empty, PageHeader } from '@/components';
+import { Empty, PageHeader } from '@/components/export';
 import { currentActor } from '@/logic/composers/index.server';
 import { FORBIDDEN_MANAGE } from '@/logic/common';
-import { NewClassForm } from '@/components';
+import { NewClassForm } from '@/components/export';
 
 /** Create a class. Viewers get the forbidden state and no form. */
 export async function NewClass() {

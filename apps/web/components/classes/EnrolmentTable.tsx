@@ -1,5 +1,5 @@
 import type { Enrolment, EnrolmentStatus } from '@buxa/contracts';
-import { Pill } from '@/elements';
+import { Pill } from '@/elements/export';
 import type { Tone } from '@/logic/common';
 import { formatCampDateTime } from '@/logic/common';
 import { CancelEnrolmentButton } from './forms/CancelEnrolmentButton';

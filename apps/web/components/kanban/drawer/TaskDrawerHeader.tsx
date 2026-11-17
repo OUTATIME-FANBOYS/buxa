@@ -1,5 +1,5 @@
 import type { Project, Task } from '@/logic/common';
-import { Icon } from '@/elements';
+import { Icon } from '@/elements/export';
 import { Menu } from '../../Menu';
 import { useTaskDrawer } from '@/providers/providers';
 import { useTaskCommands } from '@/hooks/hooks';

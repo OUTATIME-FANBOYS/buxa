@@ -2,12 +2,12 @@
 
 import { useRef, useState } from 'react';
 import { useStore } from '@/providers/providers';
-import { Field } from '@/elements';
-import { Segmented } from '@/elements';
+import { Field } from '@/elements/export';
+import { Segmented } from '@/elements/export';
 import { useUi } from '@/providers/UiProvider';
 import { ROUTES } from '@/config/routes';
-import { AgentDialog } from '@/components';
-import { ResetDemoButton } from '@/components';
+import { AgentDialog } from '@/components/export';
+import { ResetDemoButton } from '@/components/export';
 import type { ThemePref } from '@/logic/common';
 
 export function Settings() {

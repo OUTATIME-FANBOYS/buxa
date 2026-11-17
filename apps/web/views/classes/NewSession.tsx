@@ -2,12 +2,12 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { classPath } from '@/config/routes';
-import { Empty, PageHeader } from '@/components';
+import { Empty, PageHeader } from '@/components/export';
 import { currentActor } from '@/logic/composers/index.server';
 import { campZone } from '@/logic/composers/index.server';
 import { FORBIDDEN_MANAGE } from '@/logic/common';
 import { loadClassPage, loadPeopleWithRole } from '@/logic/composers/index.server';
-import { NewSessionForm } from '@/components';
+import { NewSessionForm } from '@/components/export';
 
 /** Add a session to one class. Viewers get the forbidden state and no form; an unknown class is not found. */
 export async function NewSession({ classId }: { classId: string }) {

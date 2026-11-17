@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { NewCampForm } from '@/components';
+import { NewCampForm } from '@/components/export';
 
 export const metadata: Metadata = { title: 'New camp' };
 

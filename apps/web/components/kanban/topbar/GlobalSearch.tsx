@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '@/providers/providers';
 import { useTaskDrawer } from '@/providers/providers';
-import { Icon } from '@/elements';
+import { Icon } from '@/elements/export';
 
 export function GlobalSearch({ inputRef }: { inputRef: React.RefObject<HTMLInputElement | null> }) {
   const { wsTasks, userById, s } = useStore(); const { openTask } = useTaskDrawer();

@@ -1,4 +1,4 @@
-import { Icon } from '@/elements';
+import { Icon } from '@/elements/export';
 
 /** The brand panel beside the sign-in form. Decorative, so hidden from assistive technology. */
 export function AuthHero() {

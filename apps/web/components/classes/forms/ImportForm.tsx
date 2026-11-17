@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useRef } from 'react';
-import { Field } from '@/elements';
+import { Field } from '@/elements/export';
 import { IMPORT_IDLE } from '@/logic/common';
 import { importClassesAction } from '@/logic/composers';
 import { ImportResults } from '../ImportResults';

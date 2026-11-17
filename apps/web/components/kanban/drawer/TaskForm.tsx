@@ -1,7 +1,7 @@
 import type { Project, Task } from '@/logic/common';
 import { useStore } from '@/providers/providers';
 import { Dialog } from '../../Dialog';
-import { Field } from '@/elements';
+import { Field } from '@/elements/export';
 import { useUi } from '@/providers/UiProvider';
 import { useTaskCommands } from '@/hooks/hooks';
 import { useTaskDraft } from '@/hooks/hooks';

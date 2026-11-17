@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import type { CampHome } from '@/logic/composers/index.server';
 import { ROUTES, boardPath } from '@/config/routes';
-import { Empty } from '@/components';
+import { Empty } from '@/components/export';
 import { useStore } from '@/providers/providers';
 import { Agents } from './Agents';
 import { BoardPage } from './BoardPage';

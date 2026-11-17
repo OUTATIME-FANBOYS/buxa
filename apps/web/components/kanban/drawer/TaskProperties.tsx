@@ -1,11 +1,11 @@
 'use client';
 
-import { PriorityMark } from '@/elements';
+import { PriorityMark } from '@/elements/export';
 import { useMemo } from 'react';
 import type { Priority, Project, Task } from '@/logic/common';
 import { useStore } from '@/providers/providers';
 import type { TaskDraft } from '@/hooks/hooks';
-import { Field } from '@/elements';
+import { Field } from '@/elements/export';
 import { PRIORITIES, PRIORITY_LABEL } from '@/logic/common';
 import { TagInput } from './TagInput';
 

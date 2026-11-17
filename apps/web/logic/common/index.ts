@@ -27,6 +27,8 @@ export * from './help/imports';
 export * from './help/privacy';
 export * from './help/troubleshooting';
 export * from './help/types';
+export * from './install/dismissal';
+export * from './install/installRules';
 export * from './kanban/agentConnection';
 export * from './kanban/agentSim';
 export * from './kanban/agents';

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { CampFrame } from '@/views';
+import { CampFrame } from '@/views/export';
 import { getCurrentCamp, requireSession } from '@/server/session';
 
 export default async function CampLayout({ children }: { children: ReactNode }) {

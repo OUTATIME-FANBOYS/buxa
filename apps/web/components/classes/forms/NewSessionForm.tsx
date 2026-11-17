@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useActionState, useEffect, useRef } from 'react';
-import { Field } from '@/elements';
+import { Field } from '@/elements/export';
 import { classPath } from '@/config/routes';
 import { fieldError, idle } from '@/logic/common';
 import { addSessionAction } from '@/logic/composers';

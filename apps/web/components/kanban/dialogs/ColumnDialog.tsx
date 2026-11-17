@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Dialog } from '../../Dialog';
-import { Field } from '@/elements';
+import { Field } from '@/elements/export';
 import { useStore } from '@/providers/providers';
 import type { Column, ColumnKind } from '@/logic/common';
 

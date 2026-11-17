@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dialog } from '../../Dialog';
-import { Field } from '@/elements';
+import { Field } from '@/elements/export';
 import { useUi } from '@/providers/UiProvider';
 import { boardPath } from '@/config/routes';
 import { useStore } from '@/providers/providers';

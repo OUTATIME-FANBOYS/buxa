@@ -13,9 +13,9 @@ beforeAll(async () => {
   // Built from the files, not the retired barrel, so each module is one import.
   ui = {
     ...(await import('../Icon')), ...(await import('../Pill')), ...(await import('../Avatar')),
-    ...(await import('@/components')), ...(await import('@/components')), ...(await import('../Field')),
-    ...(await import('../Progress')), ...(await import('../Segmented')), ...(await import('@/components')),
-    ...(await import('@/components')), ...(await import('@/components')), ...(await import('@/components')),
+    ...(await import('@/components/export')), ...(await import('@/components/export')), ...(await import('../Field')),
+    ...(await import('../Progress')), ...(await import('../Segmented')), ...(await import('@/components/export')),
+    ...(await import('@/components/export')), ...(await import('@/components/export')), ...(await import('@/components/export')),
     ...(await import('@/logic/common')),
   };
 });

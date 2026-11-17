@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import type { ReactNode } from 'react';
-import { TaskDrawer } from '@/components';
+import { TaskDrawer } from '@/components/export';
 import type { SessionIdentity } from '@/logic/composers';
 
 // The task store reads and writes localStorage and is never server-rendered, so the whole work area is client-only.

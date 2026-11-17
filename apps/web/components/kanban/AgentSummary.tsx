@@ -1,10 +1,10 @@
 import { useStore } from '@/providers/providers';
-import { Ring } from '@/elements';
+import { Ring } from '@/elements/export';
 import { HBars } from '../charts/HBars';
-import { Legend } from '@/elements';
-import { Avatar } from '@/elements';
+import { Legend } from '@/elements/export';
+import { Avatar } from '@/elements/export';
 import { ROUTES } from '@/config/routes';
-import { Icon } from '@/elements';
+import { Icon } from '@/elements/export';
 import * as A from '@/logic/common';
 
 /** Agent work at a glance. Renders nothing unless agents are on and this workspace has one, so plain boards stay plain. */

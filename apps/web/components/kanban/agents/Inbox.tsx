@@ -1,4 +1,4 @@
-import { Avatar } from '@/elements';
+import { Avatar } from '@/elements/export';
 import { Empty } from '../../Empty';
 import { useUi } from '@/providers/UiProvider';
 import { useStore } from '@/providers/providers';

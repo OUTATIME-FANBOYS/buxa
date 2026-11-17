@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { isUuid } from '@buxa/domain';
-import { PersonScreen } from '@/views';
+import { PersonScreen } from '@/views/export';
 
 export const metadata: Metadata = { title: 'Person' };
 

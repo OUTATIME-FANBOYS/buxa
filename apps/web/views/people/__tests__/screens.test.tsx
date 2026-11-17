@@ -23,10 +23,10 @@ vi.mock('@/server/session', () => ({
   toActor: (_s: unknown, camp: Membership) => ({ userId: 'u1', orgId: camp.orgId, role: camp.role }),
 }));
 
-const { PeopleList } = await import('@/views');
-const { NewPerson } = await import('@/views');
-const { PersonScreen } = await import('@/views');
-const { EditPerson } = await import('@/views');
+const { PeopleList } = await import('@/views/export');
+const { NewPerson } = await import('@/views/export');
+const { PersonScreen } = await import('@/views/export');
+const { EditPerson } = await import('@/views/export');
 
 const ID = { ben: '22222222-2222-4222-8222-222222222222', anna: '55555555-5555-4555-8555-555555555555', household: '11111111-1111-4111-8111-111111111111', membership: '33333333-3333-4333-8333-333333333333' };
 

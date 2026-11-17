@@ -25,8 +25,8 @@ vi.mock('@/components/camp/NewCampForm', () => ({ NewCampForm: ({ first }: { fir
 // Vitest compiles JSX with the classic runtime, which needs React in scope.
 Object.assign(globalThis, { React });
 
-const { Members } = await import('@/views');
-const { CampFrame } = await import('@/views');
+const { Members } = await import('@/views/export');
+const { CampFrame } = await import('@/views/export');
 
 const as = (role: Role) => {
   const camp: Membership = { orgId: 'o1', role, name: 'Sunrise', slug: 'sunrise' };
@@ -56,12 +56,12 @@ describe('CampFrame', () => {
   it('shows the page inside the frame when there is a camp', () => {
     const frame = CampFrame({ user, camps: [camp], current: camp, children: 'THE-PAGE' });
     expect(labels(frame.props.nav)).toEqual(['Home', 'Check-in', 'On site', 'People', 'Attendance', 'My tasks', 'Projects', 'Boards', 'Classes', 'Calendar', 'Agents', 'Reports', 'Team access', 'Settings', 'Help']);
-    expect(frame.props.children).toBe('THE-PAGE');
+    expect(frame.props.children[0]).toBe('THE-PAGE');
   });
 
   it('shows first-run setup instead of the page when there is no camp', () => {
     const frame = CampFrame({ user, camps: [], current: null, children: 'THE-PAGE' });
-    expect(frame.props.children.props).toEqual({ first: true });
+    expect(frame.props.children[0].props).toEqual({ first: true });
     expect(labels(frame.props.nav)).toEqual(['Home', 'My tasks', 'Projects', 'Boards', 'Calendar', 'Agents', 'Reports', 'Settings', 'Help']);
   });
 });

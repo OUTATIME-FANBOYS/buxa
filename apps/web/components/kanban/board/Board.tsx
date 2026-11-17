@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { Column, Project, Task } from '@/logic/common';
 import { useStore } from '@/providers/providers';
-import { Icon } from '@/elements';
+import { Icon } from '@/elements/export';
 import { useUi } from '@/providers/UiProvider';
 import { useBoardDnd } from '@/hooks/hooks';
 import { ColumnDialog } from '../dialogs/ColumnDialog';

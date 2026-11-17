@@ -33,7 +33,7 @@ const MAY_IMPORT: Record<string, Layer[]> = {
 
 /** The barrel file of each layer. Cross-layer imports must resolve to one of these. */
 const BARREL_FILES: Partial<Record<Layer, string[]>> = {
-  components: ['components/index.ts'], elements: ['elements/index.ts'], views: ['views/index.ts'], hooks: ['hooks/hooks.ts'],
+  components: ['components/export.ts'], elements: ['elements/export.ts'], views: ['views/export.ts'], hooks: ['hooks/hooks.ts'],
   providers: ['providers/providers.ts'], 'logic/common': ['logic/common/index.ts'], 'logic/composers': ['logic/composers/index.ts', 'logic/composers/index.server.ts'],
 };
 /** Deep imports that are allowed on purpose. Each one is a reason in the PR body. */
@@ -158,7 +158,7 @@ describe('cycles', () => {
 });
 
 describe('server-only code stays out of client barrels', () => {
-  const CLIENT_BARRELS = ['components/index.ts', 'elements/index.ts', 'logic/common/index.ts', 'logic/composers/index.ts', 'hooks/hooks.ts', 'providers/providers.ts'];
+  const CLIENT_BARRELS = ['components/export.ts', 'elements/export.ts', 'logic/common/index.ts', 'logic/composers/index.ts', 'hooks/hooks.ts', 'providers/providers.ts'];
   const isServerOnly = (file: string) => /from ['"]server-only['"]|import ['"]server-only['"]/.test(source.get(file) ?? '');
   const isUseServer = (file: string) => /^\s*(['"])use server\1/.test(source.get(file) ?? '');
 

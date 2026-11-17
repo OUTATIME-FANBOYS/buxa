@@ -6,7 +6,7 @@ import { suggestSlug } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
 import { fieldError, idle } from '@/logic/common';
 import { createCampAction } from '@/logic/composers';
-import { TextField } from '@/elements';
+import { TextField } from '@/elements/export';
 
 /** Where the address came from: made from the name until the person types their own. */
 interface Draft { name: string; slug: string; slugSource: 'suggested' | 'typed' }

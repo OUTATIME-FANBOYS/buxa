@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import type { ScanFieldHandle } from '../scanner/ScanField';
 import { checkInAnnouncement } from '@/logic/common';
-import { LiveRegion } from '@/elements';
+import { LiveRegion } from '@/elements/export';
 import { NameSearch } from './NameSearch';
 import { ResultPanel } from './ResultPanel';
 import { ScanPanel } from './ScanPanel';
@@ -26,13 +26,16 @@ export function CheckInConsole({ timeZone, canOverride }: Props) {
 
   return (
     <div className="checkin">
-      <section className="checkin-input" aria-label="Find a person">
+      <section className="checkin-input" aria-label="Scan a badge">
         <ScanPanel scanRef={scanRef} disabled={busy} onCode={raw => { void scanCode(raw); }} />
-        <NameSearch onPick={pickPerson} />
       </section>
+      {/* On a phone the result follows the scan field, above the name search, so it is visible without scrolling. */}
       <section className="checkin-result" aria-label="Result">
         <ResultPanel state={state} timeZone={timeZone} canOverride={canOverride}
           onCheckIn={(card, method, reason) => { void checkIn(card, method, reason); }} onClear={clear} />
+      </section>
+      <section className="checkin-find" aria-label="Find a person">
+        <NameSearch onPick={pickPerson} />
       </section>
       <LiveRegion message={checkInAnnouncement(state, timeZone)} />
     </div>
