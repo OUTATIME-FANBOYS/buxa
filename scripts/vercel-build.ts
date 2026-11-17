@@ -7,7 +7,7 @@
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
-import { errorMessage, migrate } from '@buxa/db';
+import { errorMessage, migrate, poolConfigFor } from '@buxa/db';
 
 const webDir = fileURLToPath(new URL('../apps/web', import.meta.url));
 const env = (name: string) => process.env[name]?.trim() || undefined;
@@ -16,7 +16,7 @@ async function applyMigrations(): Promise<void> {
   if (env('VERCEL_ENV') !== 'production') { console.log('Migrations: skipped (only production builds change the database schema)'); return; }
   const url = env('MIGRATION_DATABASE_URL') ?? env('DATABASE_URL');
   if (!url) throw new Error('A production build needs MIGRATION_DATABASE_URL (or DATABASE_URL) to apply database migrations.');
-  const pool = new pg.Pool({ connectionString: url });
+  const pool = new pg.Pool(poolConfigFor(url));
   try {
     const applied = await migrate(pool);
     console.log(applied.length ? `Migrations applied: ${applied.join(', ')}` : 'Migrations: up to date');
