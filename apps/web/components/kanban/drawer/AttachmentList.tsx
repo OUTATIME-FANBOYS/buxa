@@ -1,5 +1,5 @@
 import type { Task } from '@/logic/common';
-import { useStore } from '../state/store';
+import { useStore } from '@/providers/providers';
 import { Icon } from '@/elements';
 import { fmtSize } from '@/logic/common';
 import { useAttachmentUpload } from '@/hooks/hooks';

@@ -77,8 +77,6 @@ export * from './kanban/home/HomeStats';
 export * from './kanban/home/OnSitePanel';
 export * from './kanban/home/StaffTasksPanel';
 export * from './kanban/home/StatCard';
-export * from './kanban/state/TaskDrawerContext';
-export * from './kanban/state/store';
 export * from './kanban/topbar/GlobalSearch';
 export * from './kanban/topbar/Notifications';
 export * from './kanban/topbar/TaskTopBar';

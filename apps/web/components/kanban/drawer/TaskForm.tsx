@@ -1,5 +1,5 @@
 import type { Project, Task } from '@/logic/common';
-import { useStore } from '../state/store';
+import { useStore } from '@/providers/providers';
 import { Dialog } from '../../Dialog';
 import { Field } from '@/elements';
 import { useUi } from '@/providers/UiProvider';

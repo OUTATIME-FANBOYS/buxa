@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { buildSeed } from '@/logic/common';
 import { TaskDrawerHeader } from '../TaskDrawerHeader';
 
-vi.mock('@/components/kanban/state/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
+vi.mock('@/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
 vi.mock('@/hooks/useTaskCommands', () => ({ useTaskCommands: () => ({ duplicate: () => 'x', toggleArchive() {} }) }));
 
 const seed = buildSeed();

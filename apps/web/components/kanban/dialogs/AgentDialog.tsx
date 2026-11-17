@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Dialog } from '../../Dialog';
 import { Field } from '@/elements';
 import { useUi } from '@/providers/UiProvider';
-import { useStore } from '../state/store';
+import { useStore } from '@/providers/providers';
 
 export function AgentDialog({ onClose }: { onClose: () => void }) {
   const { actions, workspace, projects } = useStore(); const { toast } = useUi();

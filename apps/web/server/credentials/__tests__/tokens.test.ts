@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CREDENTIAL_TOKEN_BYTES } from '@buxa/domain';
-import { generateCredentialToken, hashCredentialToken } from '../tokens';
+import { generateCredentialToken, hashCredentialToken } from '../qrTokens';
 
 describe('badge tokens', () => {
   it('generates url-safe base64 of the credential size, different each time', () => {

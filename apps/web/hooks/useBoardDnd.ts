@@ -1,10 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import type { Column, Project, Task } from '@/logic/common';
-import { useStore } from '@/components';
+import { useStore } from '@/providers/providers';
 import { boardDndReducer, idleDnd } from '@/logic/common';
-import { createDrag } from '@/features/kanban/lib/cardDrag';
+import { createDrag } from '@/logic/common';
 import { useUi } from '@/providers/UiProvider';
 
 /**
@@ -19,6 +20,7 @@ export function useBoardDnd(project: Project, tasks: Task[], manual: boolean) {
   const latest = useRef({ moveTask: actions.moveTask, tasks, manual, columns: project.columns, toast });
   latest.current = { moveTask: actions.moveTask, tasks, manual, columns: project.columns, toast };
   const [dragger] = useState(() => createDrag({
+    batch: flushSync,
     root: () => scroller.current,
     setDrag: d => dispatch(d?.kind === 'task' ? { type: 'taskGrabbed', id: d.id } : { type: 'cleared' }),
     setOver: over => dispatch({ type: 'taskOver', over }),

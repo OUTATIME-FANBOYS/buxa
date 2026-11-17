@@ -5,7 +5,7 @@ import { type Task } from '@/logic/common';
 import { SubtaskList } from '../SubtaskList';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/components/kanban/state/store', () => ({ useStore: () => h.store }));
+vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
 
 const task = { ...buildSeed().tasks[0], subtasks: [{ id: 's1', title: 'Book bus', done: true }, { id: 's2', title: 'Print lists', done: false }] } as unknown as Task;
 

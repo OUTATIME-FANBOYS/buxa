@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can, CAMP_ROLE_LABELS, type Actor, type CampRole } from '@buxa/domain';
 import { personEditPath } from '@/config/routes';
-import { getRuntime } from '@/server/runtime';
+import { loadCampProfile } from '@/logic/composers/index.server';
+import { loadHouseholdList, loadPersonMatches } from '@/logic/composers/index.server';
+import { loadVisitHistory } from '@/logic/composers/index.server';
 import { ArchivePersonButton } from '@/components';
 import { AttendanceHistory } from '@/components';
 import { BadgePanel } from '@/components';
@@ -27,13 +29,12 @@ export async function PersonScreen({ id, searchParams = {} }: { id: string; sear
 
   const { canUpdate, canCreate, canManage, canBadge, canArchive, canSeeVisits, canAuthorisePickup } = permissionsFor(actor);
   const { q } = readListParams(searchParams);
-  const services = getRuntime().services;
   // The camp's own zone (orgs.timezone) is what every time on this page is shown in. Every role may read the camp.
   const [visits, households, matches, camp] = await Promise.all([
-    canSeeVisits ? services.attendance.history(actor, person.id) : Promise.resolve([]),
-    canUpdate ? services.people.listHouseholds(actor) : Promise.resolve([]),
-    canUpdate && q !== '' ? services.people.list(actor, { query: q }) : Promise.resolve([]),
-    services.orgs.getCamp(actor),
+    canSeeVisits ? loadVisitHistory(actor, person.id) : Promise.resolve([]),
+    canUpdate ? loadHouseholdList(actor) : Promise.resolve([]),
+    canUpdate && q !== '' ? loadPersonMatches(actor, q) : Promise.resolve([]),
+    loadCampProfile(actor),
   ]);
   const roleLabel = person.roles.map((role: CampRole) => CAMP_ROLE_LABELS[role]).join(', ');
   const linkable = matches.filter(p => p.id !== person.id).map(p => ({ id: p.id, name: `${p.givenName} ${p.familyName}` }));

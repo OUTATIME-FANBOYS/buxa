@@ -5,8 +5,8 @@ import { buildSeed } from '@/logic/common';
 import { Inbox } from '../Inbox';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/components/kanban/state/store', () => ({ useStore: () => h.store }));
-vi.mock('@/components/kanban/state/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
+vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
+vi.mock('@/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
 
 describe('Inbox', () => {
   beforeEach(() => {

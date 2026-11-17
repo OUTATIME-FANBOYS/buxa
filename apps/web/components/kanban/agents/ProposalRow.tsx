@@ -1,8 +1,8 @@
 import { Icon } from '@/elements';
 import { Pill } from '@/elements';
 import { useUi } from '@/providers/UiProvider';
-import { useStore } from '../state/store';
-import { useTaskDrawer } from '../state/TaskDrawerContext';
+import { useStore } from '@/providers/providers';
+import { useTaskDrawer } from '@/providers/providers';
 import * as A from '@/logic/common';
 import type { Proposal } from '@/logic/common';
 import { KIND_ICON, STATUS_LABEL, STATUS_TONE } from '@/logic/common';

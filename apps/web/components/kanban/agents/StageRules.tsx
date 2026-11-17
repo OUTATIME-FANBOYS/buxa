@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useStore } from '../state/store';
+import { useStore } from '@/providers/providers';
 import { Pill } from '@/elements';
 import { TRUST_TONE } from '@/logic/common';
 import type { Agent, Trust } from '@/logic/common';

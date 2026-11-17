@@ -4,8 +4,8 @@ import { buildSeed } from '@/logic/common';
 import { TaskDrawer } from '../TaskDrawer';
 
 const h = vi.hoisted(() => ({ drawer: null as null | { id: string }, store: {} as Record<string, unknown> }));
-vi.mock('@/components/kanban/state/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ drawer: h.drawer, closeTask: () => undefined }) }));
-vi.mock('@/components/kanban/state/store', () => ({ useStore: () => h.store }));
+vi.mock('@/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ drawer: h.drawer, closeTask: () => undefined }) }));
+vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
 
 describe('TaskDrawer', () => {
   it('renders nothing while no task is open', () => {

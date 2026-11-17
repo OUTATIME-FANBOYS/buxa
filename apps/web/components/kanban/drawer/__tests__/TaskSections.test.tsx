@@ -4,7 +4,7 @@ import { buildSeed } from '@/logic/common';
 import { UiProvider } from '@/providers/UiProvider';
 import { TaskSections } from '../TaskSections';
 
-vi.mock('@/components/kanban/state/store', () => ({ useStore: () => ({ actions: {} }) }));
+vi.mock('@/providers/store', () => ({ useStore: () => ({ actions: {} }) }));
 vi.mock('@/hooks/useAttachmentUpload', () => ({ useAttachmentUpload: () => ({ busy: false, input: { current: null }, upload: () => undefined }) }));
 
 describe('TaskSections', () => {

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { NewCampForm } from '@/components';
-import { loadCampHome } from '@/logic/composers/index.server';
 import { HomePage } from '@/screens';
+import { loadHomeCamp } from '@/screens';
 import { getCurrentCamp, getOptionalSession } from '@/server/session';
 
 export const metadata: Metadata = { title: 'Home' };
@@ -11,5 +11,5 @@ export default async function Page() {
   const session = await getOptionalSession();
   const camp = session ? await getCurrentCamp(session) : null;
   if (session && !camp) return <NewCampForm first />;
-  return <HomePage camp={camp ? await loadCampHome() : null} />;
+  return <HomePage camp={camp ? await loadHomeCamp() : null} />;
 }

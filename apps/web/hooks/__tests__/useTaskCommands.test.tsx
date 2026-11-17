@@ -8,8 +8,8 @@ import { type Task } from '@/logic/common';
 import { useTaskCommands, type TaskCommands } from '../useTaskCommands';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown>, openTask: vi.fn() }));
-vi.mock('@/components/kanban/state/store', () => ({ useStore: () => h.store }));
-vi.mock('@/components/kanban/state/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: h.openTask }) }));
+vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
+vi.mock('@/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: h.openTask }) }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 

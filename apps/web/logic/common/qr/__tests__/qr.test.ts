@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import jsQR from 'jsqr';
 import { credentialPayload, isCredentialToken } from '@buxa/domain';
-import { generateCredentialToken, hashCredentialToken } from '../../logic/composers/index.server';
-import { qrPath, qrSvg } from '../../logic/common';
+import { generateCredentialToken, hashCredentialToken } from '@/server/credentials/qrTokens';
+import { qrPath, qrSvg } from '../svg';
 
 describe('credential tokens', () => {
   it('is 22 base64url characters and passes the domain check', () => {

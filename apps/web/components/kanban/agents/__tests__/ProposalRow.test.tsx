@@ -6,8 +6,8 @@ import { type Proposal } from '@/logic/common';
 import { ProposalRow } from '../ProposalRow';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/components/kanban/state/store', () => ({ useStore: () => h.store }));
-vi.mock('@/components/kanban/state/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
+vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
+vi.mock('@/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
 
 const demo = buildDemo();
 const proposal = (demo.proposals[0] ?? demo.proposals[0]) as Proposal;

@@ -4,7 +4,7 @@ import { buildSeed } from '@/logic/common';
 import { AgentSummary } from '../AgentSummary';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/components/kanban/state/store', () => ({ useStore: () => h.store }));
+vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
 
 describe('AgentSummary', () => {
   beforeEach(() => {

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { Task } from '@/logic/common';
-import { useStore } from '../state/store';
+import { useStore } from '@/providers/providers';
 import { Icon } from '@/elements';
 import { Progress } from '@/elements';
 import { subtaskProgress } from '@/logic/common';

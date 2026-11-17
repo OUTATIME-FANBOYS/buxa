@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import type { Priority, Project, Task } from '@/logic/common';
-import { useStore } from '@/components';
-import { useTaskDrawer } from '@/components';
+import { useStore } from '@/providers/providers';
+import { useTaskDrawer } from '@/providers/providers';
 import { datesError, titleError } from '@/logic/common';
 import { useUi } from '@/providers/UiProvider';
 

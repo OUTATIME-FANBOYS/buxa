@@ -6,7 +6,7 @@ import { Dialog } from '../../Dialog';
 import { Field } from '@/elements';
 import { useUi } from '@/providers/UiProvider';
 import { boardPath } from '@/config/routes';
-import { useStore } from '../state/store';
+import { useStore } from '@/providers/providers';
 import type { Project } from '@/logic/common';
 
 export function ProjectDialog({ project, onClose }: { project?: Project; onClose: () => void }) {

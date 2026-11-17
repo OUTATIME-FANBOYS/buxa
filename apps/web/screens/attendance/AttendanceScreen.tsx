@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { authorize, toLocalDate } from '@buxa/domain';
 import { Empty } from '@/components';
 import { PageHeader } from '@/components';
-import { getRuntime } from '@/server/runtime';
+import { loadLogEntries, loadPeopleOptions } from '@/logic/composers/index.server';
 import { Notice } from '@/components';
 import { LogFilters } from '@/components';
 import { LogTable } from '@/components';
@@ -25,12 +25,11 @@ export async function AttendanceScreen({ searchParams }: { searchParams: SearchP
       </div>
     );
   }
-  const { services } = getRuntime();
   const timeZone = await campZone(actor);
   const parsed = parseLogFilter(searchParams, toLocalDate(new Date(), timeZone));
   const [people, entries] = await Promise.all([
-    services.people.list(actor),
-    parsed.ok ? services.attendance.log(actor, parsed.filter) : Promise.resolve([]),
+    loadPeopleOptions(actor),
+    parsed.ok ? loadLogEntries(actor, parsed.filter) : Promise.resolve([]),
   ]);
   const canExport = authorize(actor, 'attendance:export').allow;
   const values = parsed.ok

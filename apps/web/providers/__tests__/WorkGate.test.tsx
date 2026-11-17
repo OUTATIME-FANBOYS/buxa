@@ -4,7 +4,7 @@ import { buildSeed } from '@/logic/common';
 import { WorkGate } from '../WorkGate';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/components/kanban/state/store', () => ({ useStore: () => h.store }));
+vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
 
 const user = { id: 'u-rosa', name: 'Rosa', email: 'rosa@example.com' };
 

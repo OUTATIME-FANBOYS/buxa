@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useStore } from '../state/store';
-import { useTaskDrawer } from '../state/TaskDrawerContext';
+import { useStore } from '@/providers/providers';
+import { useTaskDrawer } from '@/providers/providers';
 import { Empty } from '../../Empty';
 import { Icon } from '@/elements';
 import { Popover } from '../../Popover';

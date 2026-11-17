@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { deriveView } from '@/logic/common';
-import { useStoreEngine } from '@/hooks/hooks';
+import { useStoreEngine } from './useStoreEngine';
 
 type Engine = ReturnType<typeof useStoreEngine>;
 const Ctx = createContext<Engine | null>(null);

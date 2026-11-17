@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import type { CampHome } from '@/logic/composers/index.server';
 import { ROUTES, boardPath } from '@/config/routes';
 import { Empty } from '@/components';
-import { useStore } from '@/components';
+import { useStore } from '@/providers/providers';
 import { Agents } from './Agents';
 import { BoardPage } from './BoardPage';
 import { Dashboard } from './Dashboard';

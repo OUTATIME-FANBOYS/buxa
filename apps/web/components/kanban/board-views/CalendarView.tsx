@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import type { Task } from '@/logic/common';
-import { useStore } from '../state/store';
-import { useTaskDrawer } from '../state/TaskDrawerContext';
+import { useStore } from '@/providers/providers';
+import { useTaskDrawer } from '@/providers/providers';
 import { Icon } from '@/elements';
 import { fmt, parse, toISO, today } from '@/logic/common';
 

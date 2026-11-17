@@ -5,7 +5,7 @@ import { Empty } from '@/components';
 import { Icon } from '@/elements';
 import { Segmented } from '@/elements';
 import { useUi } from '@/providers/UiProvider';
-import { useStore } from '@/components';
+import { useStore } from '@/providers/providers';
 import { AgentDialog } from '@/components';
 import { AgentCard } from '@/components';
 import { History } from '@/components';

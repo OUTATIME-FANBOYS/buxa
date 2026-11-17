@@ -7,7 +7,7 @@ import { buildSeed } from '@/logic/common';
 import { ProjectDialog } from '../ProjectDialog';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown>, push: vi.fn() }));
-vi.mock('@/components/kanban/state/store', () => ({ useStore: () => h.store }));
+vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: h.push, refresh() {} }) }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;

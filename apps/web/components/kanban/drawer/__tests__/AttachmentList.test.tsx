@@ -5,7 +5,7 @@ import { type Task } from '@/logic/common';
 import { AttachmentList } from '../AttachmentList';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/components/kanban/state/store', () => ({ useStore: () => h.store }));
+vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
 vi.mock('@/hooks/useAttachmentUpload', () => ({ useAttachmentUpload: () => ({ busy: false, input: { current: null }, upload: () => undefined }) }));
 
 const task = { ...buildSeed().tasks[0], attachments: [{ id: 'a-1', name: 'form.pdf', size: 2048, type: 'application/pdf', at: '2027-07-01T00:00:00.000Z' }] } as unknown as Task;

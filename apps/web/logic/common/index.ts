@@ -33,6 +33,7 @@ export * from './kanban/agentConnection';
 export * from './kanban/agentSim';
 export * from './kanban/agents';
 export * from './kanban/boardDnd';
+export * from './kanban/cardDrag';
 export * from './kanban/dataSlices';
 export * from './kanban/demo';
 export * from './kanban/derive';

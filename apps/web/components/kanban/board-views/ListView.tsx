@@ -3,8 +3,8 @@
 import { PriorityMark } from '@/elements';
 import { useMemo, useState } from 'react';
 import type { Project, Task } from '@/logic/common';
-import { useStore } from '../state/store';
-import { useTaskDrawer } from '../state/TaskDrawerContext';
+import { useStore } from '@/providers/providers';
+import { useTaskDrawer } from '@/providers/providers';
 import { Avatar } from '@/elements';
 import { Empty } from '../../Empty';
 import { Icon } from '@/elements';

@@ -1,5 +1,5 @@
-import { useStore } from '../state/store';
-import { useTaskDrawer } from '../state/TaskDrawerContext';
+import { useStore } from '@/providers/providers';
+import { useTaskDrawer } from '@/providers/providers';
 import { TaskForm } from './TaskForm';
 
 /** Shows the drawer for whatever `useTaskDrawer()` says is open; renders nothing when it is closed or the task has gone. */

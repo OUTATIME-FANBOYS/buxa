@@ -5,7 +5,7 @@ import { type Agent } from '@/logic/common';
 import { AgentCard } from '../AgentCard';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/components/kanban/state/store', () => ({ useStore: () => h.store }));
+vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
 vi.mock('@/components/kanban/dialogs/ConnectAgentDialog', () => ({ ConnectAgentDialog: () => null }));
 
 describe('AgentCard', () => {

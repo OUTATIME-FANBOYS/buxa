@@ -7,7 +7,7 @@ import { type Filter } from '@/logic/common';
 import { FilterBar } from '../FilterBar';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/components/kanban/state/store', () => ({ useStore: () => h.store }));
+vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
 
 const seed = buildSeed();
 const project = seed.projects[0];

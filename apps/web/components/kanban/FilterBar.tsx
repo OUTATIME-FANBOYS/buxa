@@ -3,7 +3,7 @@
 import { PriorityMark } from '@/elements';
 import { useCallback, useRef, useState, type ReactNode } from 'react';
 import type { Filter, DueFilter, Project, Sort } from '@/logic/common';
-import { useStore } from './state/store';
+import { useStore } from '@/providers/providers';
 import { Icon } from '@/elements';
 import { Menu } from '../Menu';
 import { Popover } from '../Popover';

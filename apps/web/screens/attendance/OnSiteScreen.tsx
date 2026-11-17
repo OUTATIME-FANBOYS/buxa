@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { authorize } from '@buxa/domain';
 import { Empty } from '@/components';
 import { PageHeader } from '@/components';
-import { getRuntime } from '@/server/runtime';
+import { loadOnSiteEntries } from '@/logic/composers/index.server';
 import { ON_SITE_LIST_ID, OnSiteRow } from '@/components';
 import { campActor, campZone } from '@/logic/composers/index.server';
 import { onSiteSummary, toOnSiteRow } from '@/logic/common';
@@ -19,8 +19,7 @@ export async function OnSiteScreen() {
       </div>
     );
   }
-  const { services } = getRuntime();
-  const [entries, timeZone] = await Promise.all([services.attendance.onSite(actor), campZone(actor)]);
+  const [entries, timeZone] = await Promise.all([loadOnSiteEntries(actor), campZone(actor)]);
   const rows = entries.map(entry => toOnSiteRow(entry, timeZone));
   const canRecord = authorize(actor, 'attendance:record').allow;
   const canOverride = authorize(actor, 'attendance:override').allow;

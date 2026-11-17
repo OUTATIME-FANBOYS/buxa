@@ -6,7 +6,7 @@ import { UiProvider } from '@/providers/UiProvider';
 import { Discussion } from '../Discussion';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/components/kanban/state/store', () => ({ useStore: () => h.store }));
+vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
 
 const seed = buildSeed();
 const userById = (id?: string) => seed.users.find((u) => u.id === id);

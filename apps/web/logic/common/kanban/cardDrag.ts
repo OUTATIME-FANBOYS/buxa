@@ -2,9 +2,8 @@
  * Card drag: 1:1 pointer tracking with a lifted ghost, auto-scroll, velocity-carrying spring settle, interruptible.
  * Interface: createDrag(deps) → { grab(event, id), active(), destroy() }. All DOM work is hidden behind it.
  */
-import { flushSync } from 'react-dom';
-import type { Column, Task } from '../../../logic/common';
-import { haptic, reduceMotion, springAnimate, VelocityTracker } from '../../../logic/common';
+import type { Column, Task } from './types';
+import { haptic, reduceMotion, springAnimate, VelocityTracker } from '../motion';
 
 /* ---------- Pointer-driven card drag: 1:1 tracking, velocity handoff, interruptible ---------- */
 export type Drag = { kind: 'task' | 'column'; id: string } | null;
@@ -15,6 +14,8 @@ export const justDragged = () => Date.now() - lastDragEnd < 250;
 
 interface DragDeps {
   root: () => HTMLElement | null; setDrag: (d: Drag) => void; setOver: (o: Over | null) => void;
+  /** Runs the drop's state changes as one synchronous batch (the React layer passes flushSync). */
+  batch: (fn: () => void) => void;
   latest: () => { moveTask: (id: string, col: string, before: string | null) => void; tasks: Task[]; manual: boolean; columns: Column[]; toast: (t: string) => void };
 }
 interface DragState {
@@ -88,7 +89,7 @@ export function createDrag(d: DragDeps) {
     teardown(); if (!ghost) return;
     lastDragEnd = Date.now();
     const L = d.latest(); const task = L.tasks.find(t => t.id === cur.id);
-    flushSync(() => { if (commit && over) L.moveTask(cur.id, over.columnId, over.beforeId); d.setDrag(null); d.setOver(null); });
+    d.batch(() => { if (commit && over) L.moveTask(cur.id, over.columnId, over.beforeId); d.setDrag(null); d.setOver(null); });
     if (commit && over && task && task.columnId !== over.columnId) L.toast(`Moved to ${L.columns.find(c => c.id === over.columnId)?.name ?? 'column'}`);
     const target = d.root()?.querySelector<HTMLElement>(`[data-card-id="${cur.id}"]`);
     if (!target || reduceMotion()) { ghost.remove(); return; }

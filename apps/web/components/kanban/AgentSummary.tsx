@@ -1,4 +1,4 @@
-import { useStore } from './state/store';
+import { useStore } from '@/providers/providers';
 import { Ring } from '@/elements';
 import { HBars } from '../charts/HBars';
 import { Legend } from '@/elements';

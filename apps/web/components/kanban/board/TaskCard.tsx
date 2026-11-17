@@ -3,14 +3,14 @@
 import { PriorityMark } from '@/elements';
 import { memo } from 'react';
 import type { Project, Task } from '@/logic/common';
-import { useStore } from '../state/store';
-import { useTaskDrawer } from '../state/TaskDrawerContext';
+import { useStore } from '@/providers/providers';
+import { useTaskDrawer } from '@/providers/providers';
 import { Avatar } from '@/elements';
 import { Icon } from '@/elements';
 import { Menu } from '../../Menu';
 import { tagHue } from '@/logic/common';
 import { subtaskProgress } from '@/logic/common';
-import { justDragged } from '@/features/kanban/lib/cardDrag';
+import { justDragged } from '@/logic/common';
 import { useTaskCommands } from '@/hooks/hooks';
 import { DueChip } from './DueChip';
 import { taskMenuItems } from './taskMenuItems';

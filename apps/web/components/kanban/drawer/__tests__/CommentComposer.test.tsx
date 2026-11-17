@@ -4,7 +4,7 @@ import { UiProvider } from '@/providers/UiProvider';
 import { CommentComposer } from '../CommentComposer';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/components/kanban/state/store', () => ({ useStore: () => h.store }));
+vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
 
 describe('CommentComposer', () => {
   beforeEach(() => { h.store = { actions: { addComment: () => undefined } }; });

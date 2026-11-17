@@ -5,8 +5,8 @@ import { buildSeed } from '@/logic/common';
 import { BoardView } from '../Board';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/components/kanban/state/store', () => ({ useStore: () => h.store }));
-vi.mock('@/components/kanban/state/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
+vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
+vi.mock('@/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
 vi.mock('@/hooks/useTaskCommands', () => ({ useTaskCommands: () => ({ open() {}, duplicate() {}, moveTo() {}, toggleArchive() {}, remove() {} }) }));
 vi.mock('@/hooks/useBoardDnd', () => ({
   useBoardDnd: () => ({ dnd: { mode: null, over: null, id: null }, scroller: { current: null }, grab: () => undefined, columnDrag: { over: () => undefined, drop: () => undefined, leave: () => undefined, start: () => undefined, end: () => undefined } }),

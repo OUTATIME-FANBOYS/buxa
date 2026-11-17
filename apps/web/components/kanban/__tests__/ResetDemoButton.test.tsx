@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { UiProvider } from '@/providers/UiProvider';
 import { ResetDemoButton } from '../ResetDemoButton';
 
-vi.mock('@/components/kanban/state/store', () => ({ useStore: () => ({ actions: { resetDemo: () => undefined } }) }));
+vi.mock('@/providers/store', () => ({ useStore: () => ({ actions: { resetDemo: () => undefined } }) }));
 
 describe('ResetDemoButton', () => {
   it('is a danger-styled button to reset the browser demo, which asks before it acts', () => {

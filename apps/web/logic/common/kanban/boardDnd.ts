@@ -1,4 +1,4 @@
-import type { Over } from '../../../features/kanban/lib/cardDrag';
+import type { Over } from './cardDrag';
 
 /** Which side of a column a dragged column would land on. */
 export type ColumnOver = { id: string; side: 'l' | 'r' };

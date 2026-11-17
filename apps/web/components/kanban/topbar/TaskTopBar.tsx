@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, type ReactNode } from 'react';
-import { useStore } from '../state/store';
+import { useStore } from '@/providers/providers';
 import { useGlobalShortcuts } from '@/hooks/hooks';
 import { GlobalSearch } from './GlobalSearch';
 import { Notifications } from './Notifications';

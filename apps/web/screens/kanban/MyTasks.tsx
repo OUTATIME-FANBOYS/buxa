@@ -1,8 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useStore } from '@/components';
-import { useTaskDrawer } from '@/components';
+import { useStore } from '@/providers/providers';
+import { useTaskDrawer } from '@/providers/providers';
 import { Empty } from '@/components';
 import { Segmented } from '@/elements';
 import { ListView } from '@/components';

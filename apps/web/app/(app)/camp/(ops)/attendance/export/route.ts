@@ -1,6 +1,6 @@
-import { attendanceExportResponse } from '@/logic/composers/index.server';
+import { attendanceExportDownload } from '@/screens';
 
 /** GET the attendance log as CSV for the filter in the query string. Session and attendance:export are checked by the service. */
 export async function GET(request: Request): Promise<Response> {
-  return attendanceExportResponse(request.url);
+  return attendanceExportDownload(request.url);
 }

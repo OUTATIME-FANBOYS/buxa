@@ -1,4 +1,4 @@
-import { useStore } from './state/store';
+import { useStore } from '@/providers/providers';
 import { useUi } from '@/providers/UiProvider';
 
 /**

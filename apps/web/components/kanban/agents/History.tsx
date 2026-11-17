@@ -6,7 +6,7 @@ import { Empty } from '../../Empty';
 import { Icon } from '@/elements';
 import { Menu } from '../../Menu';
 import { useUi } from '@/providers/UiProvider';
-import { useStore } from '../state/store';
+import { useStore } from '@/providers/providers';
 import { ago } from '@/logic/common';
 import * as A from '@/logic/common';
 import type { Agent, Proposal, ProposalStatus } from '@/logic/common';

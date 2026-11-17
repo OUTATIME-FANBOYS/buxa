@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Dialog } from '../../Dialog';
 import { Field } from '@/elements';
-import { useStore } from '../state/store';
+import { useStore } from '@/providers/providers';
 import type { Column, ColumnKind } from '@/logic/common';
 
 export function ColumnDialog({ projectId, column, onClose }: { projectId: string; column?: Column; onClose: () => void }) {

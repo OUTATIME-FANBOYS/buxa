@@ -2,7 +2,7 @@
 
 import { Empty } from '@/components';
 import type { CampHome } from '@/logic/composers/index.server';
-import { useStore } from '@/components';
+import { useStore } from '@/providers/providers';
 import { taskCounts } from '@/logic/common';
 import { HomeHeader } from '@/components';
 import { HomeStats } from '@/components';

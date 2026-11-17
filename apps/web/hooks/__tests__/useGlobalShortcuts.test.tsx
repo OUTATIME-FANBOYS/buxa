@@ -5,7 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { useGlobalShortcuts } from '../useGlobalShortcuts';
 
 const h = vi.hoisted(() => ({ openTask: vi.fn() }));
-vi.mock('@/components/kanban/state/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: h.openTask }) }));
+vi.mock('@/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: h.openTask }) }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 

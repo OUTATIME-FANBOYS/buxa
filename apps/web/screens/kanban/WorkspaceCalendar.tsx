@@ -1,4 +1,4 @@
-import { useStore } from '@/components';
+import { useStore } from '@/providers/providers';
 import { CalendarView } from '@/components';
 
 export function WorkspaceCalendar() {

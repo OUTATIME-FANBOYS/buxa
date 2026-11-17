@@ -1,7 +1,7 @@
 import type { Project, Task } from '@/logic/common';
 import { Icon } from '@/elements';
 import { Menu } from '../../Menu';
-import { useTaskDrawer } from '../state/TaskDrawerContext';
+import { useTaskDrawer } from '@/providers/providers';
 import { useTaskCommands } from '@/hooks/hooks';
 
 export function TaskDrawerHeader({ task, project, readOnly, onClose, onDelete }: { task: Task | null; project: Project; readOnly: boolean; onClose: () => void; onDelete: () => void }) {

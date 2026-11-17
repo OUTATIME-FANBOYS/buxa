@@ -3,7 +3,7 @@
 import { PriorityMark } from '@/elements';
 import { useMemo } from 'react';
 import type { Priority, Project, Task } from '@/logic/common';
-import { useStore } from '../state/store';
+import { useStore } from '@/providers/providers';
 import type { TaskDraft } from '@/hooks/hooks';
 import { Field } from '@/elements';
 import { PRIORITIES, PRIORITY_LABEL } from '@/logic/common';

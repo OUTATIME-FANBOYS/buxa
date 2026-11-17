@@ -5,7 +5,7 @@ import { Avatar } from '@/elements';
 import { Icon } from '@/elements';
 import { Pill } from '@/elements';
 import { Segmented } from '@/elements';
-import { useStore } from '../state/store';
+import { useStore } from '@/providers/providers';
 import { ConnectAgentDialog } from '../dialogs/ConnectAgentDialog';
 import * as A from '@/logic/common';
 import type { Agent, Trust } from '@/logic/common';

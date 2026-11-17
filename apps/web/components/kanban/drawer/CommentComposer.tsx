@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useStore } from '../state/store';
+import { useStore } from '@/providers/providers';
 import { useUi } from '@/providers/UiProvider';
 
 /** A comment box with @mention suggestions drawn from the workspace members. */

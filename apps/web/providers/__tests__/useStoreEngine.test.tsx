@@ -7,8 +7,8 @@ import { useStoreEngine } from '../useStoreEngine';
 
 const h = vi.hoisted(() => ({ stop: vi.fn(), changed: vi.fn(), seed: null as null | ReturnType<typeof buildSeed> }));
 vi.mock('@/logic/composers/kanban/persistence', () => ({ loadState: () => h.seed, storage: { save: () => undefined } }));
-vi.mock('@/hooks/useAutosave', () => ({ useAutosave: () => 'saved' }));
-vi.mock('@/hooks/useTheme', () => ({ useTheme: () => undefined }));
+vi.mock('@/providers/useAutosave', () => ({ useAutosave: () => 'saved' }));
+vi.mock('@/providers/useTheme', () => ({ useTheme: () => undefined }));
 vi.mock('@/logic/common/kanban/sync', () => ({
   createSync: () => ({ changed: h.changed, stop: h.stop }),
 }));

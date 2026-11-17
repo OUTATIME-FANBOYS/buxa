@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { can, isUuid } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
 import { Empty } from '@/components';
-import { getRuntime } from '@/server/runtime';
+import { loadHouseholdList } from '@/logic/composers/index.server';
 import { PageHeader } from '@/components';
 import { NewPersonForm } from '@/components';
 import { currentActor } from '@/logic/composers/index.server';
@@ -26,7 +26,7 @@ export async function NewPerson({ householdId }: { householdId?: string }) {
     );
   }
   const household = isUuid(householdId) ? await loadHousehold(actor, householdId) : null;
-  const choices = household ? [] : toHouseholdChoices(await getRuntime().services.people.listHouseholds(actor));
+  const choices = household ? [] : toHouseholdChoices(await loadHouseholdList(actor));
 
   return (
     <div className="page narrow">

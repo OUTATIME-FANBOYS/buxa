@@ -3,8 +3,7 @@ import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
 import { Empty } from '@/components';
-import { isHttpError } from '@/server/http/errors';
-import { getRuntime } from '@/server/runtime';
+import { loadPeopleOrForbidden } from '@/logic/composers/index.server';
 import { currentActor } from '@/logic/composers/index.server';
 import { readListParams, toListQuery, type ListParams } from '@/logic/common';
 import { PeopleSearch } from '@/components';
@@ -15,11 +14,7 @@ import type { Actor } from '@buxa/domain';
 const countLine = (n: number) => (n === 1 ? '1 person' : `${n} people`);
 
 async function listFor(actor: Actor, params: ListParams): Promise<PersonSummary[] | 'forbidden'> {
-  try { return await getRuntime().services.people.list(actor, toListQuery(params)); }
-  catch (error) {
-    if (isHttpError(error) && error.statusCode === 403) return 'forbidden';
-    throw error; // anything else goes to the camp error boundary
-  }
+  return loadPeopleOrForbidden(actor, params);
 }
 
 /** The people list with search and role filter. Viewers see names, roles and status; only staff and above see the add button. */

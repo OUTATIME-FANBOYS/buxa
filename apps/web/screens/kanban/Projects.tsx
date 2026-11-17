@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useStore } from '@/components';
+import { useStore } from '@/providers/providers';
 import { Avatar } from '@/elements';
 import { Empty } from '@/components';
 import { Menu } from '@/components';

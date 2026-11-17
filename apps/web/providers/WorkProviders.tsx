@@ -1,20 +1,22 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { TaskDrawer } from '@/components';
 import { WorkGate } from './WorkGate';
 import type { SessionIdentity } from '@/logic/composers';
-import { StoreProvider } from '@/components';
-import { TaskDrawerProvider } from '@/components';
+import { StoreProvider } from './store';
+import { TaskDrawerProvider } from './TaskDrawerContext';
 
-/** The task store and drawer for every work page, acting as the signed-in person. The state lives in localStorage. */
-export function WorkProviders({ user, children }: { user: SessionIdentity; children: ReactNode }) {
+/**
+ * The task store and drawer for every work page, acting as the signed-in person. The state lives in localStorage.
+ * `drawer` is the task drawer; the screens layer passes it in so providers do not depend on components.
+ */
+export function WorkProviders({ user, children, drawer }: { user: SessionIdentity; children: ReactNode; drawer?: ReactNode }) {
   return (
     <StoreProvider>
       <TaskDrawerProvider>
         <WorkGate user={user}>
           {children}
-          <TaskDrawer />
+          {drawer}
         </WorkGate>
       </TaskDrawerProvider>
     </StoreProvider>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { useStore } from '@/components';
+import { useStore } from '@/providers/providers';
 import { Field } from '@/elements';
 import { Segmented } from '@/elements';
 import { useUi } from '@/providers/UiProvider';
