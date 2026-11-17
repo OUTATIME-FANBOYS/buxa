@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { Column, Project, Task } from '@/logic/common';
+import type { Column, Project, Task } from '@buxa/shared';
 import { useStore } from '@/providers/providers';
 import { Icon } from '@/elements';
 import { useUi } from '@/providers/UiProvider';

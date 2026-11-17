@@ -1,4 +1,4 @@
-import type { Task } from '@/logic/common';
+import type { Task } from '@buxa/shared';
 import { AttachmentList } from './AttachmentList';
 import { Discussion } from './Discussion';
 import { SubtaskList } from './SubtaskList';

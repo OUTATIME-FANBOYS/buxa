@@ -1,7 +1,7 @@
 import { PageHeader } from '../../PageHeader';
 import { RenameCampButton } from '../../camp/RenameCampButton';
 import type { CampHome } from '@/logic/composers/index.server';
-import { greetingFor } from '@/logic/common';
+import { greetingFor } from '@buxa/shared';
 
 /** The one header for Home: the greeting, the camp as context, and Rename for the roles allowed to rename (checked on the server). */
 export function HomeHeader({ firstName, camp }: { firstName: string; camp: CampHome | null }) {

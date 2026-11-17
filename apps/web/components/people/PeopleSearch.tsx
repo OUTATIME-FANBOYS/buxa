@@ -1,6 +1,6 @@
 import { CAMP_ROLES, CAMP_ROLE_LABELS } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
-import type { ListParams } from '@/logic/common';
+import type { ListParams } from '@buxa/shared';
 
 /** A plain GET form: works without JavaScript, and the search is bookmarkable (`?q=` and `?role=`). */
 export function PeopleSearch({ params }: { params: ListParams }) {

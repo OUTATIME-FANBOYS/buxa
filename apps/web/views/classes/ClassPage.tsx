@@ -5,7 +5,7 @@ import { ROUTES, classPath, newSessionPath } from '@/config/routes';
 import { Empty, PageHeader } from '@/components';
 import { campZone } from '@/logic/composers/index.server';
 import { currentActor } from '@/logic/composers/index.server';
-import { FORBIDDEN_ENROLMENTS, FORBIDDEN_READ } from '@/logic/common';
+import { FORBIDDEN_ENROLMENTS, FORBIDDEN_READ } from '@buxa/shared';
 import { loadClassPage, loadEnrolments, loadPeopleWithRole } from '@/logic/composers/index.server';
 import { EnrolmentTable } from '@/components';
 import { SessionTable } from '@/components';

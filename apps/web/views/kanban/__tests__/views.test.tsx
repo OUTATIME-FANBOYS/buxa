@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { UiProvider } from '@/providers/UiProvider';
-import { buildSeed } from '@/logic/common';
+import { buildSeed } from '@buxa/shared';
 import { Settings } from '../Settings';
 import { Projects } from '../Projects';
 import { MyTasks } from '../MyTasks';

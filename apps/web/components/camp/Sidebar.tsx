@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Icon } from '@/elements';
 import type { RoutePath } from '@/config/routes';
-import type { NavGroup } from '@/logic/common';
+import type { NavGroup } from '@buxa/shared';
 import { SidebarNav } from './SidebarNav';
 
 /** Brand and navigation. Takes its groups as data, so a layout decides what the person sees. */

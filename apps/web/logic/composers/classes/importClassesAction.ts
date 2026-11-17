@@ -6,8 +6,8 @@ import { ROUTES } from '@/config/routes';
 import { getRuntime } from '@/server/runtime';
 import { currentActor } from '@/logic/composers/people/camp';
 import { expectedFailure } from '@/logic/composers/people/failures';
-import { field } from '@/logic/common';
-import type { ImportState } from '@/logic/common';
+import { field } from '@buxa/shared';
+import type { ImportState } from '@buxa/shared';
 
 /**
  * The bulk import, in two steps on one page. "preview" reads the uploaded file and checks every row; nothing is written.

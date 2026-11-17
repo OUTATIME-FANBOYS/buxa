@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { buildSeed } from '@/logic/common';
+import { buildSeed } from '@buxa/shared';
 import { TaskDrawerHeader } from '../TaskDrawerHeader';
 
 vi.mock('@/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));

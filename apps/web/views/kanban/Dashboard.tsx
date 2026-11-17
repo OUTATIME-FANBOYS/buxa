@@ -3,7 +3,7 @@
 import { Empty } from '@/components';
 import type { CampHome } from '@/logic/composers/index.server';
 import { useStore } from '@/providers/providers';
-import { taskCounts } from '@/logic/common';
+import { taskCounts } from '@buxa/shared';
 import { HomeHeader } from '@/components';
 import { HomeStats } from '@/components';
 import { OnSitePanel } from '@/components';

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Icon } from '@/elements';
 import { ROUTES } from '@/config/routes';
-import { taskSummary, type TaskCounts } from '@/logic/common';
+import { taskSummary, type TaskCounts } from '@buxa/shared';
 
 /** A short summary of the task numbers, with the way into the boards. */
 export function StaffTasksPanel({ tasks }: { tasks: TaskCounts }) {

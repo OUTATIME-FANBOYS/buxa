@@ -10,7 +10,7 @@ vi.mock('next/headers', () => ({ cookies: async () => env.store }));
 vi.mock('next/navigation', () => ({ redirect: (url: string) => { throw new Error(`REDIRECT ${url}`); } }));
 
 import { ROUTES } from '../../../../config/routes';
-import { idle } from '../../../common';
+import { idle } from '@buxa/shared';
 import { InMemoryStore } from '../../../../server/__tests__/fakes';
 import { startRuntime } from '../../../../server/__tests__/harness';
 import { createTestIdentityProvider } from '../../../../server/__tests__/tokens';

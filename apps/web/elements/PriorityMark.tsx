@@ -1,5 +1,5 @@
-import type { Priority } from '@/logic/common';
-import { PRIORITIES, PRIORITY_LABEL } from '@/logic/common';
+import type { Priority } from '@buxa/shared';
+import { PRIORITIES, PRIORITY_LABEL } from '@buxa/shared';
 
 export function PriorityMark({ priority, label = false }: { priority: Priority; label?: boolean }) {
   const n = PRIORITIES.indexOf(priority) + 1;

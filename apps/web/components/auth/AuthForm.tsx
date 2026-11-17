@@ -2,7 +2,7 @@
 
 import { useActionState, useState, type ChangeEvent } from 'react';
 import { Field } from '@/elements';
-import { fieldError, idle, type ActionState } from '@/logic/common';
+import { fieldError, idle, type ActionState } from '@buxa/shared';
 import { signIn } from '@/logic/composers';
 import { signUp } from '@/logic/composers';
 

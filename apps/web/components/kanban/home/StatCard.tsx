@@ -1,5 +1,5 @@
 import { Icon } from '@/elements';
-import { type Tone } from '@/logic/common';
+import { type Tone } from '@buxa/shared';
 
 export interface StatCardProps { label: string; value: number | string; note?: string; tone?: Tone; icon?: string; strong?: boolean }
 

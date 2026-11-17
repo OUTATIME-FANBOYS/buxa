@@ -1,8 +1,8 @@
 'use client';
 
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { createScanDeduper } from '@/logic/common';
-import { normalizeScan } from '@/logic/common';
+import { createScanDeduper } from '@buxa/shared';
+import { normalizeScan } from '@buxa/shared';
 
 /**
  * One focused text input that accepts a handheld scanner (it types the code and presses Enter) or typing. Calls `onScan` with the raw

@@ -3,9 +3,9 @@ import { Pill } from '@/elements';
 import { useUi } from '@/providers/UiProvider';
 import { useStore } from '@/providers/providers';
 import { useTaskDrawer } from '@/providers/providers';
-import * as A from '@/logic/common';
-import type { Proposal } from '@/logic/common';
-import { KIND_ICON, STATUS_LABEL, STATUS_TONE } from '@/logic/common';
+import * as A from '@buxa/shared';
+import type { Proposal } from '@buxa/shared';
+import { KIND_ICON, STATUS_LABEL, STATUS_TONE } from '@buxa/shared';
 
 export function ProposalRow({ p, actions: showActions }: { p: Proposal; actions: boolean }) {
   const { s, actions } = useStore(); const { toast } = useUi(); const { openTask } = useTaskDrawer();

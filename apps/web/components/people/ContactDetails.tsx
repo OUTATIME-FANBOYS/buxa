@@ -1,5 +1,5 @@
 import type { Person } from '@buxa/contracts';
-import { formatLocalDate } from '@/logic/common';
+import { formatLocalDate } from '@buxa/shared';
 
 /**
  * Date of birth, email and phone. The server sends null for what this role may not see, and for what was never recorded: a null row

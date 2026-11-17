@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { AppState } from '@/logic/common';
-import { createSync, type SyncState, type Updater } from '@/logic/common';
+import type { AppState } from '@buxa/shared';
+import { createSync, type SyncState, type Updater } from '@buxa/shared';
 import { createActions } from '@/logic/composers';
 import { loadState } from '@/logic/composers';
 import { useAutosave } from './useAutosave';

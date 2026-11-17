@@ -3,9 +3,9 @@ import { toLocalDate } from '@buxa/domain';
 import { getRuntime } from '../../../server/runtime';
 import { isHttpError } from '../../../server/http/errors';
 import { campActor, campZone } from './campActor';
-import { parseLogFilter } from '../../common';
-import { attendanceFileName } from '../../common';
-import { BYTE_ORDER_MARK, csvHeaders, plainText as text } from '../../common';
+import { parseLogFilter } from '@buxa/shared';
+import { attendanceFileName } from '@buxa/shared';
+import { BYTE_ORDER_MARK, csvHeaders, plainText as text } from '@buxa/shared';
 
 /**
  * The CSV download for the attendance log. Permission is the service's: `exportCsv` needs attendance:export and answers 403 otherwise.

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { agentActions } from '../agents';
-import { AGENT_ID, PROJECT } from '../../../../common';
-import { buildSeed } from '../../../../common';
+import { AGENT_ID, PROJECT } from '@buxa/shared';
+import { buildSeed } from '@buxa/shared';
 import { fakeContext } from './fakeContext';
 
 describe('agent actions', () => {

@@ -1,4 +1,4 @@
-import type { IssuedBadge, PersonSummary } from '@buxa/contracts';
+import type { IssuedBadge } from '@buxa/contracts';
 import type { Actor } from '@buxa/domain';
 import type { AttendanceRepository } from '../../attendance/AttendanceRepository';
 import type { CredentialRepository } from '../../credentials/CredentialRepository';
@@ -8,7 +8,8 @@ import type { PeopleRepository } from '../../people/PeopleRepository';
 import type { Clock } from '../clock';
 
 /** The outcome of reading a code. `unknown` is the single neutral answer for unreadable, unknown and revoked codes alike. */
-export type ScanResult = { kind: 'unknown' } | { kind: 'person'; person: PersonSummary };
+import type { ScanResult } from '@buxa/shared/attendance/types';
+export type { ScanResult };
 
 /**
  * Badges. A token is 128 random bits from a CSPRNG, shown once, stored only as a SHA-256 hash (see `lib/qr`, chunk P5, for the

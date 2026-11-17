@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { CAMP_ROLE_LABELS } from '@buxa/domain';
-import type { PersonCard } from '@/logic/common';
-import { attendanceDisplayName } from '@/logic/common';
-import { formatCampTime } from '@/logic/common';
+import type { PersonCard } from '@buxa/shared';
+import { attendanceDisplayName } from '@buxa/shared';
+import { formatCampTime } from '@buxa/shared';
 import { StatusPill } from './StatusPill';
 
 interface Props { card: PersonCard; timeZone: string; children: ReactNode }

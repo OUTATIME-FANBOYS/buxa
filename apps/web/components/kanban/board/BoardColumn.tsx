@@ -1,5 +1,5 @@
-import type { Column, Project, Task } from '@/logic/common';
-import type { BoardDnd } from '@/logic/common';
+import type { Column, Project, Task } from '@buxa/shared';
+import type { BoardDnd } from '@buxa/shared';
 import { useStore } from '@/providers/providers';
 import { Icon } from '@/elements';
 import { Menu } from '../../Menu';

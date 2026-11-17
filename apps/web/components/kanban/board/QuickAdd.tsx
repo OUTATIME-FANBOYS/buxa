@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { Column, Project } from '@/logic/common';
+import type { Column, Project } from '@buxa/shared';
 import { useStore } from '@/providers/providers';
 
 export function QuickAdd({ project, column, onDone }: { project: Project; column: Column; onDone: () => void }) {

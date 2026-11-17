@@ -4,7 +4,7 @@ import { CheckInInputSchema } from '@buxa/contracts';
 import { getRuntime } from '../../../server/runtime';
 import type { CheckInResult } from '../../../server/services/attendance/AttendanceService';
 import { runAttendanceAction } from './runAction';
-import type { ActionOutcome } from '../../common';
+import type { ActionOutcome } from '@buxa/shared';
 
 /** Check a person in. Every refusal comes back as a result the screen can explain; an override needs a written reason. */
 export async function checkInAction(input: unknown): Promise<ActionOutcome<CheckInResult>> {

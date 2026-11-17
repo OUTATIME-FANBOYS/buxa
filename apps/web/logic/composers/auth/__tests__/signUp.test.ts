@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ROUTES } from '../../../../config/routes';
-import { CONFIRM_EMAIL_MESSAGE, MAINTENANCE_MESSAGE } from '../../../common';
+import { CONFIRM_EMAIL_MESSAGE, MAINTENANCE_MESSAGE } from '@buxa/shared';
 import { signUp } from '../signUp';
 
 const h = vi.hoisted(() => ({

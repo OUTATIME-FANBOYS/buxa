@@ -1,5 +1,5 @@
-import type { User } from '../../../common';
-import * as D from '../../../common';
+import type { User } from '@buxa/shared';
+import * as D from '@buxa/shared';
 import type { ActionContext } from './context';
 
 /** The signed-in person as the server knows them. The kanban only ever learns this from the verified session. */

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ROUTES } from '../../../../config/routes';
-import { idle } from '../../../common';
+import { idle } from '@buxa/shared';
 import { createCampAction } from '../createCampAction';
 import { formOf, startWorld } from './support';
 

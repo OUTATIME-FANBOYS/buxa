@@ -2,11 +2,11 @@
 
 import { redirect } from 'next/navigation';
 import { ROUTES } from '../../../config/routes';
-import { failure, success, type ActionState } from '../../common';
+import { failure, success, type ActionState } from '@buxa/shared';
 import { isServiceRefused } from '../../../server/availability';
 import { requestSessionClient } from '../../../server/session/nextClient';
-import { parseSignUp } from '../../common';
-import { CONFIRM_EMAIL_MESSAGE, MAINTENANCE_MESSAGE, describeSignUpError, isAlreadyRegistered } from '../../common';
+import { parseSignUp } from '@buxa/shared';
+import { CONFIRM_EMAIL_MESSAGE, MAINTENANCE_MESSAGE, describeSignUpError, isAlreadyRegistered } from '@buxa/shared';
 
 /**
  * Creates an account. When the address needs confirming the answer is the same for a new and an already-registered address,

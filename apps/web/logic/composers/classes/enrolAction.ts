@@ -3,12 +3,12 @@
 import { revalidatePath } from 'next/cache';
 import { isUuid } from '@buxa/domain';
 import { classPath } from '@/config/routes';
-import { failure, success, type ActionState } from '@/logic/common';
+import { failure, success, type ActionState } from '@buxa/shared';
 import { getRuntime } from '@/server/runtime';
 import { currentActor } from '@/logic/composers/people/camp';
 import { expectedFailure, NO_CAMP } from '@/logic/composers/people/failures';
-import { field } from '@/logic/common';
-import { enrolForm } from '@/logic/common';
+import { field } from '@buxa/shared';
+import { enrolForm } from '@buxa/shared';
 
 /**
  * Enrol a camper in a session, or put them on the waitlist when the session is full (intent "waitlist").

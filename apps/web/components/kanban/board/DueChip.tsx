@@ -1,5 +1,5 @@
 import { Icon } from '@/elements';
-import { dueInfo } from '@/logic/common';
+import { dueInfo } from '@buxa/shared';
 
 export const DueChip = ({ due, kind }: { due?: string; kind: 'open' | 'active' | 'done' }) => {
   const d = dueInfo(due, kind); if (!d) return null;

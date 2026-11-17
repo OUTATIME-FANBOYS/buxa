@@ -1,11 +1,11 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { Task } from '@/logic/common';
+import type { Task } from '@buxa/shared';
 import { useStore } from '@/providers/providers';
 import { useTaskDrawer } from '@/providers/providers';
 import { Icon } from '@/elements';
-import { fmt, parse, toISO, today } from '@/logic/common';
+import { fmt, parse, toISO, today } from '@buxa/shared';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const monthStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);

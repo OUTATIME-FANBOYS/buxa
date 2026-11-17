@@ -1,6 +1,6 @@
 import type { CampHome } from '@/logic/composers/index.server';
-import type { TaskCounts } from '@/logic/common';
-import { homeCards } from '@/logic/common';
+import type { TaskCounts } from '@buxa/shared';
+import { homeCards } from '@buxa/shared';
 import { StatCard } from './StatCard';
 
 /** One row for the whole Home: camp facts and task facts side by side. */

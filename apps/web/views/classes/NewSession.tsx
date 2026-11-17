@@ -5,7 +5,7 @@ import { classPath } from '@/config/routes';
 import { Empty, PageHeader } from '@/components';
 import { currentActor } from '@/logic/composers/index.server';
 import { campZone } from '@/logic/composers/index.server';
-import { FORBIDDEN_MANAGE } from '@/logic/common';
+import { FORBIDDEN_MANAGE } from '@buxa/shared';
 import { loadClassPage, loadPeopleWithRole } from '@/logic/composers/index.server';
 import { NewSessionForm } from '@/components';
 

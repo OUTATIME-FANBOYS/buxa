@@ -4,12 +4,12 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { NewPersonInputSchema, NewHouseholdInputSchema } from '@buxa/contracts';
 import { ROUTES, personPath } from '../../../config/routes';
-import { failure, type ActionState } from '../../common';
+import { failure, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../../server/runtime';
 import { currentActor } from './camp';
-import { CAMPER_NEEDS_HOUSEHOLD, CHOOSE_ONE_HOUSEHOLD, HOUSEHOLD_NAME_NEEDED, NEW_HOUSEHOLD_NO_GUARDIAN } from '../../common';
+import { CAMPER_NEEDS_HOUSEHOLD, CHOOSE_ONE_HOUSEHOLD, HOUSEHOLD_NAME_NEEDED, NEW_HOUSEHOLD_NO_GUARDIAN } from '@buxa/shared';
 import { expectedFailure, NO_CAMP } from './failures';
-import { dropBlank, field, fieldAll, parseWith } from '../../common';
+import { dropBlank, field, fieldAll, parseWith } from '@buxa/shared';
 
 const OPTIONAL = ['preferredName', 'dateOfBirth', 'email', 'phone', 'householdId', 'relationship'] as const;
 

@@ -4,11 +4,11 @@ import { revalidatePath } from 'next/cache';
 import { RevokeMembershipInputSchema } from '@buxa/contracts';
 import { isUuid } from '@buxa/domain';
 import { personPath } from '../../../config/routes';
-import { failure, success, type ActionState } from '../../common';
+import { failure, success, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../../server/runtime';
 import { currentActor } from './camp';
 import { expectedFailure, NO_CAMP } from './failures';
-import { field, parseWith } from '../../common';
+import { field, parseWith } from '@buxa/shared';
 
 /** Revoke a membership. The reason is required and recorded. Needs memberships:manage. */
 export async function revokeMembershipAction(_previous: ActionState, form: FormData): Promise<ActionState> {

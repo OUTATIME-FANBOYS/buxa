@@ -7,9 +7,9 @@ import { Pill } from '@/elements';
 import { Segmented } from '@/elements';
 import { useStore } from '@/providers/providers';
 import { ConnectAgentDialog } from '../dialogs/ConnectAgentDialog';
-import * as A from '@/logic/common';
-import type { Agent, Trust } from '@/logic/common';
-import { TRUST_LABEL, TRUST_TONE } from '@/logic/common';
+import * as A from '@buxa/shared';
+import type { Agent, Trust } from '@buxa/shared';
+import { TRUST_LABEL, TRUST_TONE } from '@buxa/shared';
 import { StageRules } from './StageRules';
 
 export function AgentCard({ agent, canManage }: { agent: Agent; canManage: boolean }) {

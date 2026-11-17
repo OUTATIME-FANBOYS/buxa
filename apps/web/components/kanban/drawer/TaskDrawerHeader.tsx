@@ -1,4 +1,4 @@
-import type { Project, Task } from '@/logic/common';
+import type { Project, Task } from '@buxa/shared';
 import { Icon } from '@/elements';
 import { Menu } from '../../Menu';
 import { useTaskDrawer } from '@/providers/providers';

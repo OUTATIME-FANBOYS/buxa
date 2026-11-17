@@ -2,7 +2,7 @@ import 'server-only';
 import { getRuntime } from '../../../server/runtime';
 import { isHttpError } from '../../../server/http/errors';
 import { currentActor } from '../people/camp';
-import { TEMPLATE_FILE_NAME } from '../../common';
+import { TEMPLATE_FILE_NAME } from '@buxa/shared';
 
 const PLAIN = { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' };
 

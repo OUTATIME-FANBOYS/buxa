@@ -6,11 +6,11 @@ import { Empty } from '../Empty';
 import { Notice } from '../Notice';
 import { PersonCardView } from './PersonCardView';
 import { OverrideForm } from './OverrideForm';
-import { checkInRefusalCopy } from '@/logic/common';
-import { formatCampTime } from '@/logic/common';
-import type { PersonCard } from '@/logic/common';
-import { attendanceDisplayName } from '@/logic/common';
-import type { CheckInState } from '@/logic/common';
+import { checkInRefusalCopy } from '@buxa/shared';
+import { formatCampTime } from '@buxa/shared';
+import type { PersonCard } from '@buxa/shared';
+import { attendanceDisplayName } from '@buxa/shared';
+import type { CheckInState } from '@buxa/shared';
 
 interface Props {
   state: CheckInState;

@@ -2,7 +2,7 @@
 
 import { useActionState, useRef } from 'react';
 import { Field } from '@/elements';
-import { IMPORT_IDLE } from '@/logic/common';
+import { IMPORT_IDLE } from '@buxa/shared';
 import { importClassesAction } from '@/logic/composers';
 import { ImportResults } from '../ImportResults';
 

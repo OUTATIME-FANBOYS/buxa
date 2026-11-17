@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { UiProvider } from '@/providers/UiProvider';
-import { buildSeed } from '@/logic/common';
-import { emptyFilter } from '@/logic/common';
-import { type Filter } from '@/logic/common';
+import { buildSeed } from '@buxa/shared';
+import { emptyFilter } from '@buxa/shared';
+import { type Filter } from '@buxa/shared';
 import { FilterBar } from '../FilterBar';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));

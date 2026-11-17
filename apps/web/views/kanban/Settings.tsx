@@ -8,7 +8,7 @@ import { useUi } from '@/providers/UiProvider';
 import { ROUTES } from '@/config/routes';
 import { AgentDialog } from '@/components';
 import { ResetDemoButton } from '@/components';
-import type { ThemePref } from '@/logic/common';
+import type { ThemePref } from '@buxa/shared';
 
 export function Settings() {
   const { s, actions, me } = useStore(); const { toast } = useUi();

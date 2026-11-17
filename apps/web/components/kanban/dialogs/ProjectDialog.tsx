@@ -7,7 +7,7 @@ import { Field } from '@/elements';
 import { useUi } from '@/providers/UiProvider';
 import { boardPath } from '@/config/routes';
 import { useStore } from '@/providers/providers';
-import type { Project } from '@/logic/common';
+import type { Project } from '@buxa/shared';
 
 export function ProjectDialog({ project, onClose }: { project?: Project; onClose: () => void }) {
   const router = useRouter();

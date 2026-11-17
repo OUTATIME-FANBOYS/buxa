@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { THEME_KEY } from '../../../../config/theme';
-import { buildSeed } from '../../../common';
+import { buildSeed } from '@buxa/shared';
 import { loadState, storage } from '../persistence';
 
 // Node has its own localStorage global; the store here is an in-memory stub for every test.

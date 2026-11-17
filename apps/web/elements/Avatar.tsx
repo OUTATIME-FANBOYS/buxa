@@ -1,6 +1,6 @@
-import { initials } from '@/logic/common';
+import { initials } from '@buxa/shared';
 import { Icon } from './Icon';
-import { avatarHue } from '@/logic/common';
+import { avatarHue } from '@buxa/shared';
 
 /** Anything with a name works; `agent` marks a non-human member. */
 export interface AvatarUser { name: string; agent?: boolean }

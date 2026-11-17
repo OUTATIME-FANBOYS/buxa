@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { buildSeed } from '@/logic/common';
+import { buildSeed } from '@buxa/shared';
 import { StoreProvider, useStore } from '../store';
 
 const seed = buildSeed();

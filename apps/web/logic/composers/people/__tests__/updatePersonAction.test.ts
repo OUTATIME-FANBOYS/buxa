@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { personPath } from '../../../../config/routes';
-import { idle } from '../../../common';
+import { idle } from '@buxa/shared';
 import { conflict, forbidden, badRequest, notFound } from '../../../../server/http/errors';
 import { updatePersonAction } from '../updatePersonAction';
 import { formOf, IDS } from './form';

@@ -1,6 +1,6 @@
 import type { AttendanceEntry } from '@buxa/contracts';
 import { OnSitePill } from './OnSitePill';
-import { formatCampDateTime } from '@/logic/common';
+import { formatCampDateTime } from '@buxa/shared';
 
 /** One person's visits, newest first. Staff are named, never shown as ids. Times are the camp's local time (`timeZone`). */
 export function AttendanceHistory({ entries, timeZone }: { entries: readonly AttendanceEntry[]; timeZone: string }) {

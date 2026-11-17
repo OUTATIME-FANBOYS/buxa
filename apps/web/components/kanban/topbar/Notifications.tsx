@@ -6,7 +6,7 @@ import { useTaskDrawer } from '@/providers/providers';
 import { Empty } from '../../Empty';
 import { Icon } from '@/elements';
 import { Popover } from '../../Popover';
-import { ago, diffDays, today } from '@/logic/common';
+import { ago, diffDays, today } from '@buxa/shared';
 
 const NOTICE_ICON: Record<string, string> = { mention: 'at', comment: 'message', complete: 'check', invite: 'users' };
 

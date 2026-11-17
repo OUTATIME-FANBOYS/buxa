@@ -2,10 +2,10 @@
 
 import { getRuntime } from '../../../server/runtime';
 import { RATE_RULES, enforceRateLimit } from '../../../server/rateLimit/limiter';
-import { lookupFor, type Lookup } from '../../common';
-import { ScanInputSchema } from '../../common';
+import { lookupFor, type Lookup } from '@buxa/shared';
+import { ScanInputSchema } from '@buxa/shared';
 import { runAttendanceAction } from './runAction';
-import type { ActionOutcome } from '../../common';
+import type { ActionOutcome } from '@buxa/shared';
 
 /** Read a code from the scanner or camera. One neutral `unknown` for every code that does not identify a person. */
 export async function scanCodeAction(input: unknown): Promise<ActionOutcome<Lookup>> {

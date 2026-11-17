@@ -12,10 +12,10 @@ import { Progress } from '@/elements';
 import { useUi } from '@/providers/UiProvider';
 import { Icon } from '@/elements';
 import { ProjectDialog } from '@/components';
-import { diffDays, fmt, today } from '@/logic/common';
+import { diffDays, fmt, today } from '@buxa/shared';
 import { boardPath } from '@/config/routes';
-import { HEALTH_LABEL, HEALTH_TONE, healthOf, progressOf } from '@/logic/common';
-import type { Project } from '@/logic/common';
+import { HEALTH_LABEL, HEALTH_TONE, healthOf, progressOf } from '@buxa/shared';
+import type { Project } from '@buxa/shared';
 
 export function Projects() {
   const { s, actions, projects, workspace, wsTasks, kindOf, members, readOnly } = useStore(); const { confirm, toast } = useUi();

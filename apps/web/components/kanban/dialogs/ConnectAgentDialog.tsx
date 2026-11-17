@@ -4,7 +4,7 @@ import { Dialog } from '../../Dialog';
 import { Field } from '@/elements';
 import { useUi } from '@/providers/UiProvider';
 import { useStore } from '@/providers/providers';
-import { UNREACHABLE, type AgentConnection } from '@/logic/common';
+import { UNREACHABLE, type AgentConnection } from '@buxa/shared';
 import { useAgentConnection } from '@/hooks/hooks';
 
 function TokenReveal({ name, token, url }: { name: string; token: string; url: string }) {

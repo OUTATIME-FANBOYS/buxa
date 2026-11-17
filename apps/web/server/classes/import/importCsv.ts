@@ -1,6 +1,6 @@
 import { IMPORT_COLUMNS, type RowResult } from '@buxa/domain';
 // Relative, not '@/': the root typecheck (scripts/seed-mock imports server/runtime) has no '@/' alias.
-import { encodeCsv } from '../../../logic/common';
+import { encodeCsv } from '@buxa/shared';
 
 /*
  * The CSV the owner downloads (the template) and the report of refused rows. Both go through the attendance export's encoder,

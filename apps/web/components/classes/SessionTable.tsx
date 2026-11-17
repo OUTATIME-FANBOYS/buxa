@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { Session } from '@buxa/contracts';
 import { classPath } from '@/config/routes';
-import { formatCampDateTime } from '@/logic/common';
+import { formatCampDateTime } from '@buxa/shared';
 import { SessionStatus } from './SessionStatus';
 
 /**

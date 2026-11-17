@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import type { PersonCard } from '@/logic/common';
+import type { PersonCard } from '@buxa/shared';
 import { useCheckIn } from '../useCheckIn';
 
 const h = vi.hoisted(() => ({ checkInAction: vi.fn(), scanCodeAction: vi.fn() }));

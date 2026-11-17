@@ -5,7 +5,7 @@ import { Legend } from '@/elements';
 import { Avatar } from '@/elements';
 import { ROUTES } from '@/config/routes';
 import { Icon } from '@/elements';
-import * as A from '@/logic/common';
+import * as A from '@buxa/shared';
 
 /** Agent work at a glance. Renders nothing unless agents are on and this workspace has one, so plain boards stay plain. */
 export function AgentSummary({ detailed = false }: { detailed?: boolean }) {

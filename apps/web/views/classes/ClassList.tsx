@@ -4,7 +4,7 @@ import { can } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
 import { Empty, PageHeader } from '@/components';
 import { currentActor } from '@/logic/composers/index.server';
-import { FORBIDDEN_READ } from '@/logic/common';
+import { FORBIDDEN_READ } from '@buxa/shared';
 import { loadClasses } from '@/logic/composers/index.server';
 import { ClassesTable } from '@/components';
 

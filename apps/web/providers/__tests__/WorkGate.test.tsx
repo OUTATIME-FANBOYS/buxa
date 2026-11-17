@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { buildSeed } from '@/logic/common';
+import { buildSeed } from '@buxa/shared';
 import { WorkGate } from '../WorkGate';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));

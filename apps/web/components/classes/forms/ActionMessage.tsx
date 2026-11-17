@@ -1,4 +1,4 @@
-import type { ActionState } from '@/logic/common';
+import type { ActionState } from '@buxa/shared';
 
 /**
  * A form-level result, announced to screen readers. Errors are assertive so they are not missed; a success is polite.

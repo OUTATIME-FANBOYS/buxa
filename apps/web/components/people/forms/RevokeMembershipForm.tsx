@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef } from 'react';
 import { Field } from '@/elements';
-import { fieldError, idle } from '@/logic/common';
+import { fieldError, idle } from '@buxa/shared';
 import { revokeMembershipAction } from '@/logic/composers';
 import { FormMessage } from './FormMessage';
 

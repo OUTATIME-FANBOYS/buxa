@@ -13,7 +13,7 @@ import { HouseholdPanel } from '@/components';
 import { MembershipsPanel } from '@/components';
 import { PersonHeader } from '@/components';
 import { currentActor } from '@/logic/composers/index.server';
-import { readListParams } from '@/logic/common';
+import { readListParams } from '@buxa/shared';
 import { loadPerson } from '@/logic/composers/index.server';
 
 /**

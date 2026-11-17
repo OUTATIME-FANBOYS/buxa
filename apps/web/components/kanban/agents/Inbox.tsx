@@ -2,10 +2,10 @@ import { Avatar } from '@/elements';
 import { Empty } from '../../Empty';
 import { useUi } from '@/providers/UiProvider';
 import { useStore } from '@/providers/providers';
-import { ago } from '@/logic/common';
-import * as A from '@/logic/common';
-import type { Proposal } from '@/logic/common';
-import { groupByRun } from '@/logic/common';
+import { ago } from '@buxa/shared';
+import * as A from '@buxa/shared';
+import type { Proposal } from '@buxa/shared';
+import { groupByRun } from '@buxa/shared';
 import { ProposalRow } from './ProposalRow';
 
 export function Inbox({ proposals }: { proposals: Proposal[] }) {

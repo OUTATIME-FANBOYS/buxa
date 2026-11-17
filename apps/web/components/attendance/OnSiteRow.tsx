@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Pill } from '@/elements';
-import type { OnSiteRowView } from '@/logic/common';
+import type { OnSiteRowView } from '@buxa/shared';
 import { useCheckOut } from '@/hooks/hooks';
 import { CheckOutPanel } from './CheckOutPanel';
 

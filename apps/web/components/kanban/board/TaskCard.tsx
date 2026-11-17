@@ -2,15 +2,15 @@
 
 import { PriorityMark } from '@/elements';
 import { memo } from 'react';
-import type { Project, Task } from '@/logic/common';
+import type { Project, Task } from '@buxa/shared';
 import { useStore } from '@/providers/providers';
 import { useTaskDrawer } from '@/providers/providers';
 import { Avatar } from '@/elements';
 import { Icon } from '@/elements';
 import { Menu } from '../../Menu';
-import { tagHue } from '@/logic/common';
-import { subtaskProgress } from '@/logic/common';
-import { justDragged } from '@/logic/common';
+import { tagHue } from '@buxa/shared';
+import { subtaskProgress } from '@buxa/shared';
+import { justDragged } from '@buxa/shared';
 import { useTaskCommands } from '@/hooks/hooks';
 import { DueChip } from './DueChip';
 import { taskMenuItems } from './taskMenuItems';

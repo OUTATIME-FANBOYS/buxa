@@ -3,10 +3,10 @@
 import { useActionState } from 'react';
 import { BadgeCard } from '../../badge/BadgeCard';
 import { PrintButton } from '@/elements';
-import { idle } from '@/logic/common';
+import { idle } from '@buxa/shared';
 import { issueBadgeAction } from '@/logic/composers';
 import { revokeBadgeAction } from '@/logic/composers';
-import type { BadgeState } from '@/logic/common';
+import type { BadgeState } from '@buxa/shared';
 import { FormMessage } from './FormMessage';
 
 export interface BadgeActionsProps {

@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import type { Priority, Project, Task } from '@/logic/common';
+import type { Priority, Project, Task } from '@buxa/shared';
 import { useStore } from '@/providers/providers';
 import { useTaskDrawer } from '@/providers/providers';
-import { datesError, titleError } from '@/logic/common';
+import { datesError, titleError } from '@buxa/shared';
 import { useUi } from '@/providers/UiProvider';
 
 type Errors = { title?: string; due?: string };

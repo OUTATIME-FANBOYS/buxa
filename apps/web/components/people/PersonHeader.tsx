@@ -3,7 +3,7 @@ import { Pill } from '@/elements';
 import { AccessPill } from './AccessPill';
 import { OnSitePill } from './OnSitePill';
 import { RolePills } from './RolePills';
-import { displayName } from '@/logic/common';
+import { displayName } from '@buxa/shared';
 
 /** Name, roles and the two status words that matter at the door: membership and on site. Archived people say so in words. */
 export function PersonHeader({ person }: { person: Person }) {

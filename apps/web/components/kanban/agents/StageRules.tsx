@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useStore } from '@/providers/providers';
 import { Pill } from '@/elements';
-import { TRUST_TONE } from '@/logic/common';
-import type { Agent, Trust } from '@/logic/common';
+import { TRUST_TONE } from '@buxa/shared';
+import type { Agent, Trust } from '@buxa/shared';
 
 /** Which stages this agent may move tasks into, one project at a time. "Default" falls back to its general move policy. */
 type StageChoice = 'default' | Trust;

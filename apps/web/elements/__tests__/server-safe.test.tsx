@@ -16,7 +16,7 @@ beforeAll(async () => {
     ...(await import('@/components')), ...(await import('@/components')), ...(await import('../Field')),
     ...(await import('../Progress')), ...(await import('../Segmented')), ...(await import('@/components')),
     ...(await import('@/components')), ...(await import('@/components')), ...(await import('@/components')),
-    ...(await import('@/logic/common')),
+    ...(await import('@buxa/shared')),
   };
 });
 

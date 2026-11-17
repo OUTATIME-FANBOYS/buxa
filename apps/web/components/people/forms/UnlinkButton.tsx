@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
-import { idle } from '@/logic/common';
+import { idle } from '@buxa/shared';
 import { unlinkHouseholdAction } from '@/logic/composers';
 import { FormMessage } from './FormMessage';
 

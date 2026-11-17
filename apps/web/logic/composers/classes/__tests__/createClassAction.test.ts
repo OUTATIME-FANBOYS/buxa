@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { classPath } from '@/config/routes';
-import { idle } from '@/logic/common';
+import { idle } from '@buxa/shared';
 import { forbidden } from '@/server/http/errors';
 import { createClassAction } from '../createClassAction';
 import { formOf } from './form';

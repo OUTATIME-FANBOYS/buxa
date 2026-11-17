@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Icon } from '@/elements';
-import { isActive, type NavGroup } from '@/logic/common';
+import { isActive, type NavGroup } from '@buxa/shared';
 
 /** The links in their groups, a client island only to mark the current page. */
 export function SidebarNav({ groups }: { groups: readonly NavGroup[] }) {

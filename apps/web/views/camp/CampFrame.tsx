@@ -4,7 +4,7 @@ import { ROUTES } from '@/config/routes';
 import { NewCampForm } from '@/components';
 import { AccountMenu } from '@/components';
 import { CampSwitcher } from '@/components';
-import { navGroupsFor } from '@/logic/common';
+import { navGroupsFor } from '@buxa/shared';
 import { Shell } from '@/components';
 
 interface Props { user: User; camps: readonly Membership[]; current: Membership | null; children: ReactNode }

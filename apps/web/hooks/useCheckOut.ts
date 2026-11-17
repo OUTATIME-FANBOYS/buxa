@@ -2,8 +2,8 @@
 
 import { useCallback, useReducer } from 'react';
 import { checkOutAction } from '@/logic/composers';
-import { checkOutInputFor } from '@/logic/common';
-import { CHECK_OUT_CLOSED, checkOutReducer, type CheckOutDraft } from '@/logic/common';
+import { checkOutInputFor } from '@buxa/shared';
+import { CHECK_OUT_CLOSED, checkOutReducer, type CheckOutDraft } from '@buxa/shared';
 
 /** One on-site row's check-out panel: its state and the three things a person does in it. */
 export function useCheckOut(personId: string) {

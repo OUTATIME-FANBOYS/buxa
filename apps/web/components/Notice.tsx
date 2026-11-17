@@ -1,4 +1,4 @@
-import type { Tone } from '@/logic/common';
+import type { Tone } from '@buxa/shared';
 
 interface Props { tone: Tone; title: string; body?: string }
 

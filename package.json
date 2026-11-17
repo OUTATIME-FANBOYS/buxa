@@ -47,6 +47,9 @@
     "vitest": "^2.1.9"
   },
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/shared",
+    "apps/server",
+    "apps/middleware"
   ]
 }

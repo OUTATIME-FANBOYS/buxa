@@ -2,10 +2,10 @@
 
 import { useId } from 'react';
 import { Notice } from '../Notice';
-import type { OnSiteRowView } from '@/logic/common';
-import { checkOutRefusalCopy, type CheckOutRefusal } from '@/logic/common';
-import { canSubmitCheckOut } from '@/logic/common';
-import type { CheckOutDraft } from '@/logic/common';
+import type { OnSiteRowView } from '@buxa/shared';
+import { checkOutRefusalCopy, type CheckOutRefusal } from '@buxa/shared';
+import { canSubmitCheckOut } from '@buxa/shared';
+import type { CheckOutDraft } from '@buxa/shared';
 import { PickupChoices } from './PickupChoices';
 
 export interface CheckOutPanelProps {

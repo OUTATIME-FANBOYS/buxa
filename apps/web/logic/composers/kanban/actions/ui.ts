@@ -1,4 +1,4 @@
-import type { ThemePref, UiState, ViewKind } from '../../../common';
+import type { ThemePref, UiState, ViewKind } from '@buxa/shared';
 import type { ActionContext } from './context';
 
 export function uiActions({ set }: ActionContext) {

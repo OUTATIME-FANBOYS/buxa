@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ROUTES } from '../../../../config/routes';
-import { MAINTENANCE_MESSAGE } from '../../../common';
+import { MAINTENANCE_MESSAGE } from '@buxa/shared';
 import { signIn } from '../signIn';
 
 // next/navigation's redirect throws; the stub throws a recognisable error so each test can see where it went.

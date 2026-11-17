@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { buildSeed } from '@/logic/common';
+import { buildSeed } from '@buxa/shared';
 import { TaskDrawer } from '../TaskDrawer';
 
 const h = vi.hoisted(() => ({ drawer: null as null | { id: string }, store: {} as Record<string, unknown> }));

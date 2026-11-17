@@ -1,6 +1,6 @@
-import type { ProposalKind, Trust } from '../../../common';
-import * as Ag from '../../../common';
-import { simulateRun } from '../../../common';
+import type { ProposalKind, Trust } from '@buxa/shared';
+import * as Ag from '@buxa/shared';
+import { simulateRun } from '@buxa/shared';
 import type { ActionContext } from './context';
 
 export function agentActions({ set, get }: ActionContext) {

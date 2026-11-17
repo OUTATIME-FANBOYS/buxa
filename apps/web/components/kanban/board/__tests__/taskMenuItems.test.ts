@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { buildSeed } from '@/logic/common';
+import { buildSeed } from '@buxa/shared';
 import { taskMenuItems } from '../taskMenuItems';
 
 const seed = buildSeed();

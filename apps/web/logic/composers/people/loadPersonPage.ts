@@ -3,7 +3,7 @@ import type { Actor } from '@buxa/domain';
 import { getRuntime } from '../../../server/runtime';
 import type { PersonSummary } from '@buxa/contracts';
 import { isHttpError } from '../../../server/http/errors';
-import { toListQuery, type ListParams } from '../../common';
+import { toListQuery, type ListParams } from '@buxa/shared';
 
 /** The households a staff member can link someone into. */
 export const loadHouseholdList = (actor: Actor) => getRuntime().services.people.listHouseholds(actor);

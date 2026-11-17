@@ -2,14 +2,14 @@
 
 import { PriorityMark } from '@/elements';
 import { useCallback, useRef, useState, type ReactNode } from 'react';
-import type { Filter, DueFilter, Project, Sort } from '@/logic/common';
+import type { Filter, DueFilter, Project, Sort } from '@buxa/shared';
 import { useStore } from '@/providers/providers';
 import { Icon } from '@/elements';
 import { Menu } from '../Menu';
 import { Popover } from '../Popover';
 import { Avatar } from '@/elements';
 import { useUi } from '@/providers/UiProvider';
-import { PRIORITIES, emptyFilter, isFilterActive } from '@/logic/common';
+import { PRIORITIES, emptyFilter, isFilterActive } from '@buxa/shared';
 
 function Chip({ label, count, children, width = 220 }: { label: string; count: number; children: ReactNode; width?: number }) {
   const [open, setOpen] = useState(false); const ref = useRef<HTMLButtonElement>(null);

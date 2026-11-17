@@ -1,7 +1,7 @@
 import type { ZodType } from 'zod';
 import type { Actor } from '@buxa/domain';
 import { isHttpError } from '../../../server/http/errors';
-import type { ActionOutcome } from '../../common';
+import type { ActionOutcome } from '@buxa/shared';
 import { campActor } from './campActor';
 
 /**

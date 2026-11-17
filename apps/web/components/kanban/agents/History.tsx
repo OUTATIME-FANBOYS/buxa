@@ -7,12 +7,12 @@ import { Icon } from '@/elements';
 import { Menu } from '../../Menu';
 import { useUi } from '@/providers/UiProvider';
 import { useStore } from '@/providers/providers';
-import { ago } from '@/logic/common';
-import * as A from '@/logic/common';
-import type { Agent, Proposal, ProposalStatus } from '@/logic/common';
-import { groupByRun } from '@/logic/common';
+import { ago } from '@buxa/shared';
+import * as A from '@buxa/shared';
+import type { Agent, Proposal, ProposalStatus } from '@buxa/shared';
+import { groupByRun } from '@buxa/shared';
 import { ProposalRow } from './ProposalRow';
-import { STATUS_LABEL } from '@/logic/common';
+import { STATUS_LABEL } from '@buxa/shared';
 
 /** The audit trail: every decided proposal, filterable, exportable, and revertible per run. */
 export function History({ proposals, agents }: { proposals: Proposal[]; agents: Agent[] }) {

@@ -4,7 +4,7 @@ import { can } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
 import { Empty, PageHeader } from '@/components';
 import { currentActor } from '@/logic/composers/index.server';
-import { FORBIDDEN_MANAGE } from '@/logic/common';
+import { FORBIDDEN_MANAGE } from '@buxa/shared';
 import { NewClassForm } from '@/components';
 
 /** Create a class. Viewers get the forbidden state and no form. */

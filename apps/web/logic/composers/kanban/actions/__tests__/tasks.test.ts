@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { taskActions } from '../tasks';
-import { PROJECT } from '../../../../common';
-import { buildSeed } from '../../../../common';
+import { PROJECT } from '@buxa/shared';
+import { buildSeed } from '@buxa/shared';
 import { fakeContext } from './fakeContext';
 
 describe('task actions', () => {

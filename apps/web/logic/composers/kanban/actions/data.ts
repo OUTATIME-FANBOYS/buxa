@@ -1,6 +1,6 @@
-import type { AppState } from '../../../common';
-import { buildDemo } from '../../../common';
-import { normalize } from '../../../common';
+import type { AppState } from '@buxa/shared';
+import { buildDemo } from '@buxa/shared';
+import { normalize } from '@buxa/shared';
 import type { ActionContext } from './context';
 
 export function dataActions({ get, replace }: ActionContext) {

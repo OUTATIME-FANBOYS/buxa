@@ -3,12 +3,12 @@
 import { revalidatePath } from 'next/cache';
 import { isUuid } from '@buxa/domain';
 import { classPath } from '@/config/routes';
-import { failure, success, type ActionState } from '@/logic/common';
+import { failure, success, type ActionState } from '@buxa/shared';
 import { getRuntime } from '@/server/runtime';
 import { currentActor } from '@/logic/composers/people/camp';
 import { expectedFailure, NO_CAMP } from '@/logic/composers/people/failures';
-import { field } from '@/logic/common';
-import { cancelForm } from '@/logic/common';
+import { field } from '@buxa/shared';
+import { cancelForm } from '@buxa/shared';
 
 /** Cancel an enrolment. This frees its seat and its time for another enrolment. */
 export async function cancelEnrolmentAction(_previous: ActionState, form: FormData): Promise<ActionState> {

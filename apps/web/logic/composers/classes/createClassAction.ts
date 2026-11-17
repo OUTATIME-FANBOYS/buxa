@@ -3,11 +3,11 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { ROUTES, classPath } from '@/config/routes';
-import { failure, type ActionState } from '@/logic/common';
+import { failure, type ActionState } from '@buxa/shared';
 import { getRuntime } from '@/server/runtime';
 import { currentActor } from '@/logic/composers/people/camp';
 import { expectedFailure, NO_CAMP } from '@/logic/composers/people/failures';
-import { classForm } from '@/logic/common';
+import { classForm } from '@buxa/shared';
 
 /**
  * Create a class. Success opens the class page; a refused or invalid form comes back as form state. The service checks the permission

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import type { ScanFieldHandle } from '../scanner/ScanField';
-import { checkInAnnouncement } from '@/logic/common';
+import { checkInAnnouncement } from '@buxa/shared';
 import { LiveRegion } from '@/elements';
 import { NameSearch } from './NameSearch';
 import { ResultPanel } from './ResultPanel';

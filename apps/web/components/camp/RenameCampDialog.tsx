@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useState } from 'react';
 import { Dialog } from '../Dialog';
 import { useUi } from '@/providers/UiProvider';
-import { fieldError, idle } from '@/logic/common';
+import { fieldError, idle } from '@buxa/shared';
 import { renameCampAction } from '@/logic/composers';
 import { TextField } from '@/elements';
 

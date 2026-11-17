@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { RoutePath } from '@/config/routes';
-import type { NavGroup } from '@/logic/common';
+import type { NavGroup } from '@buxa/shared';
 import { ShellFrame } from './ShellFrame';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { structureActions } from '../structure';
-import { USER } from '../../../../common';
-import { buildSeed } from '../../../../common';
+import { USER } from '@buxa/shared';
+import { buildSeed } from '@buxa/shared';
 import { fakeContext } from './fakeContext';
 
 describe('structure actions', () => {

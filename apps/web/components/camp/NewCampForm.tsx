@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useActionState, useEffect, useState } from 'react';
 import { suggestSlug } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
-import { fieldError, idle } from '@/logic/common';
+import { fieldError, idle } from '@buxa/shared';
 import { createCampAction } from '@/logic/composers';
 import { TextField } from '@/elements';
 

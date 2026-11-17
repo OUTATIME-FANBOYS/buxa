@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import type { AppState } from '../logic/common';
+import type { AppState } from '@buxa/shared';
 import * as G from '../logic/composers';
 import type { Store } from './store';
 

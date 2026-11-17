@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { buildSeed } from '@/logic/common';
-import { type Task } from '@/logic/common';
+import { buildSeed } from '@buxa/shared';
+import { type Task } from '@buxa/shared';
 import { SubtaskList } from '../SubtaskList';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));

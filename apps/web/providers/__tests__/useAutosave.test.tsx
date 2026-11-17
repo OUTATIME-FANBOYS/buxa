@@ -2,8 +2,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { buildSeed } from '@/logic/common';
-import { type AppState } from '@/logic/common';
+import { buildSeed } from '@buxa/shared';
+import { type AppState } from '@buxa/shared';
 import { useAutosave } from '../useAutosave';
 
 const h = vi.hoisted(() => ({ save: vi.fn() }));

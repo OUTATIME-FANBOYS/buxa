@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { idle } from '@/logic/common';
+import { idle } from '@buxa/shared';
 import { forbidden } from '@/server/http/errors';
 import { enrolAction } from '../enrolAction';
 import { formOf, IDS } from './form';

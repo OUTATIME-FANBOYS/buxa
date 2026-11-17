@@ -7,8 +7,8 @@ import { Empty } from '@/components';
 import { Segmented } from '@/elements';
 import { ListView } from '@/components';
 import { Icon } from '@/elements';
-import { diffDays, today } from '@/logic/common';
-import type { Task } from '@/logic/common';
+import { diffDays, today } from '@buxa/shared';
+import type { Task } from '@buxa/shared';
 
 export function MyTasks() {
   const { s, me, wsTasks, kindOf, projects, readOnly } = useStore(); const { openTask } = useTaskDrawer();

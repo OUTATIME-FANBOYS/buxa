@@ -1,7 +1,7 @@
 import type { Member } from '@buxa/contracts';
 import { Avatar } from '@/elements';
 import { Pill } from '@/elements';
-import { ROLE_LABEL } from '@/logic/common';
+import { ROLE_LABEL } from '@buxa/shared';
 
 /** Email is shown only where the reader may see it (admins and above); everyone else sees names and roles. */
 export function MembersTable({ members, showEmail }: { members: readonly Member[]; showEmail: boolean }) {

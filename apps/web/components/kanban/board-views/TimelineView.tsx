@@ -1,14 +1,14 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { Task } from '@/logic/common';
+import type { Task } from '@buxa/shared';
 import { useStore } from '@/providers/providers';
 import { useTaskDrawer } from '@/providers/providers';
 import { Avatar } from '@/elements';
 import { Empty } from '../../Empty';
 import { Icon } from '@/elements';
-import { subtaskProgress } from '@/logic/common';
-import { addDays, diffDays, fmt, parse, today } from '@/logic/common';
+import { subtaskProgress } from '@buxa/shared';
+import { addDays, diffDays, fmt, parse, today } from '@buxa/shared';
 
 const DAYS = 42; const DAYW = 28;
 

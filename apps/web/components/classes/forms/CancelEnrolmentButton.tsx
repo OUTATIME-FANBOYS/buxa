@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
-import { idle } from '@/logic/common';
+import { idle } from '@buxa/shared';
 import { cancelEnrolmentAction } from '@/logic/composers';
 import { ActionMessage } from './ActionMessage';
 

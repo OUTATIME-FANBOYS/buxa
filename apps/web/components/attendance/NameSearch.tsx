@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { ActionOutcome } from '@/logic/common';
+import type { ActionOutcome } from '@buxa/shared';
 import { searchPeopleAction } from '@/logic/composers';
-import type { PersonCard } from '@/logic/common';
+import type { PersonCard } from '@buxa/shared';
 import { StatusPill } from './StatusPill';
-import { attendanceDisplayName } from '@/logic/common';
+import { attendanceDisplayName } from '@buxa/shared';
 
 const DEBOUNCE_MS = 200;
 

@@ -11,10 +11,10 @@ vi.mock('next/headers', () => ({ cookies: async () => env.store }));
 vi.mock('next/navigation', () => ({ redirect: (url: string) => { throw new Error(`REDIRECT ${url}`); } }));
 
 import MaintenancePage from '../../app/maintenance/page';
-import { MAINTENANCE_MESSAGE } from '../../logic/common';
+import { MAINTENANCE_MESSAGE } from '@buxa/shared';
 import { signIn } from '../../logic/composers';
 import { signUp } from '../../logic/composers';
-import { idle } from '../../logic/common';
+import { idle } from '@buxa/shared';
 import { MAINTENANCE_PATH, isRefusing } from '../availability';
 import { installRuntime } from '../runtime';
 import { requireSession } from '../session';

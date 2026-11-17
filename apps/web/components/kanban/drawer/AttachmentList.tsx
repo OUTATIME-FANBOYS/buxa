@@ -1,7 +1,7 @@
-import type { Task } from '@/logic/common';
+import type { Task } from '@buxa/shared';
 import { useStore } from '@/providers/providers';
 import { Icon } from '@/elements';
-import { fmtSize } from '@/logic/common';
+import { fmtSize } from '@buxa/shared';
 import { useAttachmentUpload } from '@/hooks/hooks';
 
 export function AttachmentList({ task, ro }: { task: Task; ro: boolean }) {

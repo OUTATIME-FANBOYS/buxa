@@ -2,10 +2,10 @@
 
 import { MAX_SEARCH_RESULTS } from '@buxa/domain';
 import { getRuntime } from '../../../server/runtime';
-import { cardsFor, type PersonCard } from '../../common';
-import { SearchInputSchema } from '../../common';
+import { cardsFor, type PersonCard } from '@buxa/shared';
+import { SearchInputSchema } from '@buxa/shared';
 import { runAttendanceAction } from './runAction';
-import type { ActionOutcome } from '../../common';
+import type { ActionOutcome } from '@buxa/shared';
 
 /** Type-ahead name search for the check-in screen. At most MAX_SEARCH_RESULTS people; an empty query finds nobody. */
 export async function searchPeopleAction(input: unknown): Promise<ActionOutcome<PersonCard[]>> {

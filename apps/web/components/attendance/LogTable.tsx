@@ -1,6 +1,6 @@
 import type { AttendanceEntry } from '@buxa/contracts';
-import { METHOD_LABEL } from '@/logic/common';
-import { formatCampDateTime } from '@/logic/common';
+import { METHOD_LABEL } from '@buxa/shared';
+import { formatCampDateTime } from '@buxa/shared';
 
 interface Props { entries: readonly AttendanceEntry[]; timeZone: string }
 

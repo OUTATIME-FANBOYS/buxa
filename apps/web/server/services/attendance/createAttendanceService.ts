@@ -1,6 +1,6 @@
 import type { AttendanceEntry, AttendanceFilter, CheckInInput, CheckOutInput } from '@buxa/contracts';
 import { can, decideCheckIn, decideCheckOut, isMinor, personAccess, toLocalDate } from '@buxa/domain';
-import { encodeCsv, type CsvCell } from '../../../logic/common';
+import { encodeCsv, type CsvCell } from '@buxa/shared';
 import { assertAllowed } from '../../auth/authorize';
 import { badRequest, notFound } from '../../http/errors';
 import { isAlreadyCheckedIn, isNotOnSite, MAX_LOG_ROWS, type AttendanceQuery, type CheckInRecord } from '../../attendance/AttendanceRepository';

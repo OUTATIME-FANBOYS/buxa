@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
-import type { Column, Project, Task } from '@/logic/common';
+import type { Column, Project, Task } from '@buxa/shared';
 import { useStore } from '@/providers/providers';
-import { boardDndReducer, idleDnd } from '@/logic/common';
-import { createDrag } from '@/logic/common';
+import { boardDndReducer, idleDnd } from '@buxa/shared';
+import { createDrag } from '@buxa/shared';
 import { useUi } from '@/providers/UiProvider';
 
 /**

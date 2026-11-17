@@ -1,5 +1,5 @@
 import { isHttpError } from '../../../server/http/errors';
-import { failure, type ActionState } from '../../common';
+import { failure, type ActionState } from '@buxa/shared';
 
 export const NO_CAMP = 'Choose a camp first.';
 export const FORBIDDEN = 'Your role cannot do this.';

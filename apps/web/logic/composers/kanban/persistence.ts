@@ -1,7 +1,7 @@
 import { LEGACY_THEME_KEY, THEME_KEY } from '../../../config/theme';
-import type { AppState } from '../../common';
-import { buildDemo } from '../../common';
-import { normalize } from '../../common';
+import type { AppState } from '@buxa/shared';
+import { buildDemo } from '@buxa/shared';
+import { normalize } from '@buxa/shared';
 
 const KEY = 'buxa.state.v1';
 const LEGACY_KEY = 'tessera.state.v1'; // the app's previous name; read once so nobody loses their data

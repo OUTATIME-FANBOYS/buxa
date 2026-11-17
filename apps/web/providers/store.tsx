@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { deriveView } from '@/logic/common';
+import { deriveView } from '@buxa/shared';
 import { useStoreEngine } from './useStoreEngine';
 
 type Engine = ReturnType<typeof useStoreEngine>;
@@ -21,4 +21,4 @@ export function useStore() {
 
 export type { Actions } from '@/logic/composers';
 export type { SaveStatus } from '@/logic/composers';
-export { normalize } from '@/logic/common';
+export { normalize } from '@buxa/shared';

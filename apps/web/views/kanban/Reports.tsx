@@ -12,11 +12,11 @@ import { HBars } from '@/components';
 import { Legend } from '@/elements';
 import { Ring } from '@/elements';
 import { StatCard as Stat } from '@/components';
-import { addDays, diffDays, fmt, isoDay, today } from '@/logic/common';
-import { PRIORITIES, PRIORITY_LABEL } from '@/logic/common';
+import { addDays, diffDays, fmt, isoDay, today } from '@buxa/shared';
+import { PRIORITIES, PRIORITY_LABEL } from '@buxa/shared';
 import { Avatar } from '@/elements';
 import { Pill } from '@/elements';
-import { HEALTH_LABEL, HEALTH_TONE, healthOf, isOverdue, progressOf, summarize } from '@/logic/common';
+import { HEALTH_LABEL, HEALTH_TONE, healthOf, isOverdue, progressOf, summarize } from '@buxa/shared';
 import { AgentSummary } from '@/components';
 
 export function Reports() {

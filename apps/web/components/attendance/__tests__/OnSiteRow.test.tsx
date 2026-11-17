@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { OnSiteRowView } from '@/logic/common';
+import type { OnSiteRowView } from '@buxa/shared';
 import { OnSiteRow } from '../OnSiteRow';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh() {}, push() {} }) }));

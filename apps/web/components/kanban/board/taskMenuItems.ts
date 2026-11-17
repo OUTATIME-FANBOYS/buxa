@@ -1,4 +1,4 @@
-import type { Project, Task } from '@/logic/common';
+import type { Project, Task } from '@buxa/shared';
 import type { MenuItem } from '../../Menu';
 import type { TaskCommands } from '@/hooks/hooks';
 

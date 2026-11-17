@@ -1,4 +1,4 @@
-import type { Project, Task } from '@/logic/common';
+import type { Project, Task } from '@buxa/shared';
 import { useStore } from '@/providers/providers';
 import { Dialog } from '../../Dialog';
 import { Field } from '@/elements';

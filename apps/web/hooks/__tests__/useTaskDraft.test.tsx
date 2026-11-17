@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { UiProvider } from '@/providers/UiProvider';
-import { buildSeed } from '@/logic/common';
+import { buildSeed } from '@buxa/shared';
 import { useTaskDraft, type TaskDraft } from '../useTaskDraft';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown>, openTask: vi.fn() }));

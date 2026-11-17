@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildSeed } from '../../../../common';
-import type { AppState } from '../../../../common';
+import { buildSeed } from '@buxa/shared';
+import type { AppState } from '@buxa/shared';
 import { authActions, type SessionIdentity } from '../auth';
 
 function harness(initial: AppState) {

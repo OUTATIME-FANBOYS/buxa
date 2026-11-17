@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useActionState, useEffect, useRef } from 'react';
 import { Field } from '@/elements';
 import { classPath } from '@/config/routes';
-import { fieldError, idle } from '@/logic/common';
+import { fieldError, idle } from '@buxa/shared';
 import { addSessionAction } from '@/logic/composers';
 import { ActionMessage } from './ActionMessage';
 

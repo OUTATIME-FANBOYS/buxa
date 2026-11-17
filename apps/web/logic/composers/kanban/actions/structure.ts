@@ -1,6 +1,6 @@
-import type { Column, ColumnKind, Role } from '../../../common';
-import * as D from '../../../common';
-import { uid } from '../../../common';
+import type { Column, ColumnKind, Role } from '@buxa/shared';
+import * as D from '@buxa/shared';
+import { uid } from '@buxa/shared';
 import type { ActionContext } from './context';
 
 /** Columns, projects, workspaces and members. */

@@ -1,34 +1,13 @@
-import type { AttendanceEntry, AttendanceFilter, CheckInInput, CheckOutInput, PersonSummary } from '@buxa/contracts';
-import type { Actor, AccessStatus } from '@buxa/domain';
+import type { AttendanceEntry, AttendanceFilter, CheckInInput, CheckOutInput } from '@buxa/contracts';
+import type { Actor } from '@buxa/domain';
 import type { AttendanceRepository } from '../../attendance/AttendanceRepository';
 import type { MembershipRepository } from '../../memberships/MembershipRepository';
 import type { OrgRepository } from '../../orgs/OrgRepository';
 import type { PeopleRepository } from '../../people/PeopleRepository';
 import type { Clock } from '../clock';
 
-/** Expected outcomes are results, not exceptions, so a screen can render each one. Unexpected problems still throw. */
-export type CheckInResult =
-  | { ok: true; entry: AttendanceEntry; overridden: boolean }
-  | { ok: false; reason: 'already_on_site'; since: string }
-  | { ok: false; reason: 'not_valid'; status: Exclude<AccessStatus, 'valid'>; canOverride: boolean }
-  | { ok: false; reason: 'override_needs_reason' }
-  | { ok: false; reason: 'archived' };
-
-export type CheckOutResult =
-  | { ok: true; entry: AttendanceEntry; overridden: boolean }
-  | { ok: false; reason: 'not_on_site' }
-  | { ok: false; reason: 'pickup_required'; canOverride: boolean; guardians: PickupOption[] }
-  | { ok: false; reason: 'pickup_not_authorised'; canOverride: boolean; guardians: PickupOption[] }
-  | { ok: false; reason: 'override_needs_reason' };
-
-/** Someone who may collect a child (a guardian with can_pickup in one of the child's households). */
-export interface PickupOption { personId: string; name: string; relationship: string }
-
-/**
- * `isMinor` is null when the actor may not see contact-level status (no people:read_contact, i.e. viewers). Pickup options are
- * only given when the child is known to be a minor, so they are empty for those viewers too.
- */
-export interface OnSiteEntry { entry: AttendanceEntry; person: PersonSummary; isMinor: boolean | null; pickupOptions: PickupOption[] }
+import type { CheckInResult, CheckOutResult, OnSiteEntry, PickupOption } from '@buxa/shared/attendance/types';
+export type { CheckInResult, CheckOutResult, OnSiteEntry, PickupOption };
 
 /**
  * Check-in and check-out, applying decideCheckIn and decideCheckOut from @buxa/domain. "Today" is the camp's local day

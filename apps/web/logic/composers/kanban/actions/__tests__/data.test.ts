@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { AppState } from '../../../../common';
-import { buildSeed } from '../../../../common';
-import { WORKSPACE } from '../../../../common';
+import type { AppState } from '@buxa/shared';
+import { buildSeed } from '@buxa/shared';
+import { WORKSPACE } from '@buxa/shared';
 import { dataActions } from '../data';
 
 function harness() {

@@ -4,13 +4,13 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { isUuid } from '@buxa/domain';
 import { classPath } from '@/config/routes';
-import { failure, type ActionState } from '@/logic/common';
+import { failure, type ActionState } from '@buxa/shared';
 import { getRuntime } from '@/server/runtime';
 import { currentActor } from '@/logic/composers/people/camp';
 import { expectedFailure, NO_CAMP } from '@/logic/composers/people/failures';
-import { field } from '@/logic/common';
+import { field } from '@buxa/shared';
 import { campZone } from '@/logic/composers/attendance/campActor';
-import { sessionForm } from '@/logic/common';
+import { sessionForm } from '@buxa/shared';
 
 /**
  * Add a session to a class. The times are typed in the camp's clock and converted in the camp's zone. Success opens the class page.

@@ -2,16 +2,16 @@
 
 import { PriorityMark } from '@/elements';
 import { useMemo, useState } from 'react';
-import type { Project, Task } from '@/logic/common';
+import type { Project, Task } from '@buxa/shared';
 import { useStore } from '@/providers/providers';
 import { useTaskDrawer } from '@/providers/providers';
 import { Avatar } from '@/elements';
 import { Empty } from '../../Empty';
 import { Icon } from '@/elements';
-import { KIND_TONE } from '@/logic/common';
+import { KIND_TONE } from '@buxa/shared';
 import { Pill } from '@/elements';
 import { DueChip } from '../board/DueChip';
-import { PRIORITY_RANK, subtaskProgress } from '@/logic/common';
+import { PRIORITY_RANK, subtaskProgress } from '@buxa/shared';
 
 type SortKey = 'title' | 'status' | 'priority' | 'assignee' | 'due';
 /** No sort yet (`null`), or one column in one direction: the two can only be set together. */

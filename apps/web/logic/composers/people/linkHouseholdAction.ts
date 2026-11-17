@@ -3,11 +3,11 @@
 import { revalidatePath } from 'next/cache';
 import { HouseholdLinkInputSchema } from '@buxa/contracts';
 import { personPath } from '../../../config/routes';
-import { failure, success, type ActionState } from '../../common';
+import { failure, success, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../../server/runtime';
 import { currentActor } from './camp';
 import { expectedFailure, NO_CAMP } from './failures';
-import { checked, field, parseWith } from '../../common';
+import { checked, field, parseWith } from '@buxa/shared';
 
 /** Link a person to a household as a guardian (may collect a child) or as another relation. The page they came from is refreshed. */
 export async function linkHouseholdAction(_previous: ActionState, form: FormData): Promise<ActionState> {

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { PersonSummary } from '@buxa/contracts';
 import { ROUTES } from '@/config/routes';
-import { attendanceDisplayName } from '@/logic/common';
+import { attendanceDisplayName } from '@buxa/shared';
 
 export interface LogFilterValues { from: string; to: string; personId: string }
 

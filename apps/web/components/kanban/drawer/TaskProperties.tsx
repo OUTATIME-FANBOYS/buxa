@@ -2,11 +2,11 @@
 
 import { PriorityMark } from '@/elements';
 import { useMemo } from 'react';
-import type { Priority, Project, Task } from '@/logic/common';
+import type { Priority, Project, Task } from '@buxa/shared';
 import { useStore } from '@/providers/providers';
 import type { TaskDraft } from '@/hooks/hooks';
 import { Field } from '@/elements';
-import { PRIORITIES, PRIORITY_LABEL } from '@/logic/common';
+import { PRIORITIES, PRIORITY_LABEL } from '@buxa/shared';
 import { TagInput } from './TagInput';
 
 /** Status, priority, assignee, dates and tags. For a saved task each change is written straight through. */

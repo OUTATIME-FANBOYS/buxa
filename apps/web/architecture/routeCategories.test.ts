@@ -2,7 +2,7 @@ import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { CAMP_NAV_GROUPS } from '../logic/common/camp/navItems';
+import { CAMP_NAV_GROUPS } from '@buxa/shared/camp/navItems';
 
 // Every page under app/(app)/camp sits in one route group named for its category (docs/CODING_STANDARDS.md, section 2).
 // Route groups do not change URLs, so the folder tree and the sidebar must agree: a page is filed by what it is for.

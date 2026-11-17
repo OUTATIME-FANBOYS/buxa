@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import type { Task } from '@/logic/common';
+import type { Task } from '@buxa/shared';
 import { Avatar } from '@/elements';
 import { Icon } from '@/elements';
-import { ago, fmt } from '@/logic/common';
+import { ago, fmt } from '@buxa/shared';
 import { CommentComposer } from './CommentComposer';
 
 type Named = { name: string } | undefined;

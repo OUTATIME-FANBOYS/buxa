@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { isUuid } from '@buxa/domain';
 import { ROUTES } from '../../../config/routes';
-import { failure, type ActionState } from '../../common';
+import { failure, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../../server/runtime';
 import { currentActor } from './camp';
 import { expectedFailure, NO_CAMP } from './failures';

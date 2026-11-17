@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { createScanDeduper } from '@/logic/common';
+import { createScanDeduper } from '@buxa/shared';
 
 /** Reads a QR code with the phone camera and calls `onScan` once per distinct code. The camera starts only when asked. */
 export interface CameraScannerProps { onScan: (raw: string) => void; onClose: () => void }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { HELP_PAGE, HELP_SECTIONS } from '@/logic/common';
+import { HELP_PAGE, HELP_SECTIONS } from '@buxa/shared';
 import { HelpPage } from '../HelpPage';
 
 describe('HelpPage', () => {

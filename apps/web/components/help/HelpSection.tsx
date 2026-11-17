@@ -1,4 +1,4 @@
-import type { HelpSectionContent, HelpSubsection } from '@/logic/common';
+import type { HelpSectionContent, HelpSubsection } from '@buxa/shared';
 import { CodeBlock } from './CodeBlock';
 import { ExampleTable } from './ExampleTable';
 

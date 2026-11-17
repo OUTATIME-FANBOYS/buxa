@@ -1,4 +1,4 @@
-import type { AppState } from '../../../common';
+import type { AppState } from '@buxa/shared';
 
 /** What every group of actions needs: change state, read the latest state, or replace it wholesale. */
 export interface ActionContext {

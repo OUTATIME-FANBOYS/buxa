@@ -8,7 +8,7 @@ import { PageHeader } from '@/components';
 import { NewPersonForm } from '@/components';
 import { currentActor } from '@/logic/composers/index.server';
 import { loadHousehold } from '@/logic/composers/index.server';
-import { toHouseholdChoices } from '@/logic/common';
+import { toHouseholdChoices } from '@buxa/shared';
 
 /**
  * Add a person. `household` (a household id in the address) comes from a guardian's page, so adding a child to a family is one step.

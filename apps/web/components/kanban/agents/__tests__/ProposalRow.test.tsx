@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { UiProvider } from '@/providers/UiProvider';
-import { buildDemo } from '@/logic/common';
-import { type Proposal } from '@/logic/common';
+import { buildDemo } from '@buxa/shared';
+import { type Proposal } from '@buxa/shared';
 import { ProposalRow } from '../ProposalRow';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));

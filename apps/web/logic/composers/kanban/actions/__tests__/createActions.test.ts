@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildSeed } from '../../../../common';
+import { buildSeed } from '@buxa/shared';
 import { createActions } from '../createActions';
 import { fakeContext } from './fakeContext';
 

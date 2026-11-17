@@ -1,8 +1,8 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { HELP_SECTIONS } from '@/logic/common';
-import { IMPORTS_SECTION } from '@/logic/common';
-import { EXPORTS_SECTION } from '@/logic/common';
+import { HELP_SECTIONS } from '@buxa/shared';
+import { IMPORTS_SECTION } from '@buxa/shared';
+import { EXPORTS_SECTION } from '@buxa/shared';
 import { CodeBlock } from '@/components';
 import { ExampleTable } from '@/components';
 import { HelpPage } from '../HelpPage';

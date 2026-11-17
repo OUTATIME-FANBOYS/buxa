@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import type { Task } from '@/logic/common';
+import type { Task } from '@buxa/shared';
 import { useStore } from '@/providers/providers';
 import { Icon } from '@/elements';
 import { Progress } from '@/elements';
-import { subtaskProgress } from '@/logic/common';
+import { subtaskProgress } from '@buxa/shared';
 
 export function SubtaskList({ task, ro }: { task: Task; ro: boolean }) {
   const { actions } = useStore(); const [sub, setSub] = useState('');

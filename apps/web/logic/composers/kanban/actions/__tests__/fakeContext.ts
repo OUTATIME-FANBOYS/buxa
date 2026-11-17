@@ -1,4 +1,4 @@
-import type { AppState } from '../../../../common';
+import type { AppState } from '@buxa/shared';
 import type { ActionContext } from '../context';
 
 /** An in-memory ActionContext for testing the action groups without React. */

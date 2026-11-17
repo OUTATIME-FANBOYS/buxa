@@ -1,6 +1,6 @@
-import type { Attachment, Filter, Task } from '../../../common';
-import * as D from '../../../common';
-import { uid } from '../../../common';
+import type { Attachment, Filter, Task } from '@buxa/shared';
+import * as D from '@buxa/shared';
+import { uid } from '@buxa/shared';
 import type { ActionContext } from './context';
 
 /** Task commands: ids are minted here, rules live in the domain. */

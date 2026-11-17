@@ -1,6 +1,6 @@
 import type { ImportPlan, RowResult, RowStatus } from '@buxa/domain';
 import { Pill } from '@/elements';
-import type { Tone } from '@/logic/common';
+import type { Tone } from '@buxa/shared';
 
 const STATUS: Record<RowStatus, { label: string; tone: Tone }> = {
   create: { label: 'Ready: new', tone: 'ok' },

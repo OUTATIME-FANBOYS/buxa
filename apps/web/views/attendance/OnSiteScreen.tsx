@@ -5,7 +5,7 @@ import { PageHeader } from '@/components';
 import { loadOnSiteEntries } from '@/logic/composers/index.server';
 import { ON_SITE_LIST_ID, OnSiteRow } from '@/components';
 import { campActor, campZone } from '@/logic/composers/index.server';
-import { onSiteSummary, toOnSiteRow } from '@/logic/common';
+import { onSiteSummary, toOnSiteRow } from '@buxa/shared';
 
 /** Everyone on site now, oldest arrival first, with check-out for staff. */
 export async function OnSiteScreen() {

@@ -7,9 +7,9 @@ import { Notice } from '@/components';
 import { LogFilters } from '@/components';
 import { LogTable } from '@/components';
 import { campActor, campZone } from '@/logic/composers/index.server';
-import { attendanceExportPath } from '@/logic/common';
-import { parseLogFilter } from '@/logic/common';
-import { HELP_LINK_LABEL, helpLink } from '@/logic/common';
+import { attendanceExportPath } from '@buxa/shared';
+import { parseLogFilter } from '@buxa/shared';
+import { HELP_LINK_LABEL, helpLink } from '@buxa/shared';
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>;
 

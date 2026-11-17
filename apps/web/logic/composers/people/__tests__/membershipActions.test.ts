@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { personPath } from '../../../../config/routes';
-import { idle } from '../../../common';
+import { idle } from '@buxa/shared';
 import { forbidden } from '../../../../server/http/errors';
 import { addMembershipAction } from '../addMembershipAction';
 import { revokeMembershipAction } from '../revokeMembershipAction';

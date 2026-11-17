@@ -6,7 +6,7 @@ import type { Person } from '@buxa/contracts';
 import { CAMP_ROLES, CAMP_ROLE_LABELS } from '@buxa/domain';
 import { personPath } from '@/config/routes';
 import { Field } from '@/elements';
-import { fieldError, idle } from '@/logic/common';
+import { fieldError, idle } from '@buxa/shared';
 import { updatePersonAction } from '@/logic/composers';
 import { FormMessage } from './FormMessage';
 

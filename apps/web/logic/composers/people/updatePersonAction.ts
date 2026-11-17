@@ -5,11 +5,11 @@ import { redirect } from 'next/navigation';
 import { PersonPatchInputSchema } from '@buxa/contracts';
 import { isUuid } from '@buxa/domain';
 import { personPath } from '../../../config/routes';
-import { failure, type ActionState } from '../../common';
+import { failure, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../../server/runtime';
 import { currentActor } from './camp';
 import { expectedFailure, NO_CAMP } from './failures';
-import { field, fieldAll, parseWith } from '../../common';
+import { field, fieldAll, parseWith } from '@buxa/shared';
 
 /**
  * Change a person's details. The form posts every field, so the patch is the whole record: a blank date of birth means "none",

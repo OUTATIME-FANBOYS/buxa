@@ -1,7 +1,7 @@
 import type { Enrolment, EnrolmentStatus } from '@buxa/contracts';
 import { Pill } from '@/elements';
-import type { Tone } from '@/logic/common';
-import { formatCampDateTime } from '@/logic/common';
+import type { Tone } from '@buxa/shared';
+import { formatCampDateTime } from '@buxa/shared';
 import { CancelEnrolmentButton } from './forms/CancelEnrolmentButton';
 
 const STATUS: Record<EnrolmentStatus, { label: string; tone: Tone }> = {

@@ -5,10 +5,10 @@ import { useActionState, useEffect, useRef } from 'react';
 import { CAMP_ROLES, CAMP_ROLE_LABELS } from '@buxa/domain';
 import { Field } from '@/elements';
 import { ROUTES } from '@/config/routes';
-import { fieldError, idle } from '@/logic/common';
+import { fieldError, idle } from '@buxa/shared';
 import { createPersonAction } from '@/logic/composers';
-import { CAMPER_NEEDS_HOUSEHOLD } from '@/logic/common';
-import { householdChoiceLabel, type HouseholdChoice } from '@/logic/common';
+import { CAMPER_NEEDS_HOUSEHOLD } from '@buxa/shared';
+import { householdChoiceLabel, type HouseholdChoice } from '@buxa/shared';
 import { FormMessage } from './FormMessage';
 
 export interface HouseholdTarget { id: string; name: string }

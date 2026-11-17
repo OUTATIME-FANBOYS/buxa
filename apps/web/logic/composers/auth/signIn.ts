@@ -2,11 +2,11 @@
 
 import { redirect } from 'next/navigation';
 import { ROUTES } from '../../../config/routes';
-import { failure, type ActionState } from '../../common';
+import { failure, type ActionState } from '@buxa/shared';
 import { isServiceRefused } from '../../../server/availability';
 import { requestSessionClient } from '../../../server/session/nextClient';
-import { parseSignIn } from '../../common';
-import { MAINTENANCE_MESSAGE, describeSignInError } from '../../common';
+import { parseSignIn } from '@buxa/shared';
+import { MAINTENANCE_MESSAGE, describeSignInError } from '@buxa/shared';
 
 /** Signs in with email and password. The session lands in HttpOnly cookies; the browser never sees a token. */
 export async function signIn(_previous: ActionState, formData: FormData): Promise<ActionState> {

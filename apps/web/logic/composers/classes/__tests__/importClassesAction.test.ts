@@ -7,7 +7,7 @@ import { InMemoryImportRepository } from '@/server/classes/import/InMemoryImport
 import { createImportService } from '@/server/classes/import/ImportService';
 import { CAMP_TZ, ORG, as, painting, robotics } from '@/server/classes/__tests__/fixtures';
 import { importClassesAction } from '../importClassesAction';
-import { IMPORT_IDLE, type ImportState } from '@/logic/common';
+import { IMPORT_IDLE, type ImportState } from '@buxa/shared';
 
 const h = vi.hoisted(() => ({
   actor: null as null | Actor,

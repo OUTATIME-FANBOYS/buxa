@@ -3,11 +3,11 @@
 import { revalidatePath } from 'next/cache';
 import { isUuid } from '@buxa/domain';
 import { personPath } from '../../../config/routes';
-import { failure, success, type ActionState } from '../../common';
+import { failure, success, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../../server/runtime';
 import { currentActor } from './camp';
 import { expectedFailure, NO_CAMP } from './failures';
-import { field } from '../../common';
+import { field } from '@buxa/shared';
 
 /** Take a person out of a household. A camper's last guardian cannot be removed: the service answers 409 with the reason. */
 export async function unlinkHouseholdAction(_previous: ActionState, form: FormData): Promise<ActionState> {

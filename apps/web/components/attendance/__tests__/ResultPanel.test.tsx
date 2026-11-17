@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { CheckInState } from '@/logic/common';
-import type { PersonCard } from '@/logic/common';
+import type { CheckInState } from '@buxa/shared';
+import type { PersonCard } from '@buxa/shared';
 import { ResultPanel } from '../ResultPanel';
 
 vi.mock('@/logic/composers/attendance/checkIn', () => ({ checkInAction: async () => ({ kind: 'ok', value: { ok: false, reason: 'archived' } }) }));

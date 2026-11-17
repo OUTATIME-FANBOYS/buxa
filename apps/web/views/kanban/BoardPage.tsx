@@ -15,12 +15,12 @@ import { ListView } from '@/components';
 import { TimelineView } from '@/components';
 import { FilterBar } from '@/components';
 import { ProjectDialog } from '@/components';
-import { emptyFilter, matchesFilter, sortTasks } from '@/logic/common';
-import { diffDays, fmt, today } from '@/logic/common';
-import type { Filter, ViewKind } from '@/logic/common';
+import { emptyFilter, matchesFilter, sortTasks } from '@buxa/shared';
+import { diffDays, fmt, today } from '@buxa/shared';
+import type { Filter, ViewKind } from '@buxa/shared';
 import { useRouter } from 'next/navigation';
 import { ROUTES } from '@/config/routes';
-import { HEALTH_LABEL, HEALTH_TONE, healthOf, progressOf } from '@/logic/common';
+import { HEALTH_LABEL, HEALTH_TONE, healthOf, progressOf } from '@buxa/shared';
 
 export function BoardPage({ projectId }: { projectId?: string }) {
   const router = useRouter();
