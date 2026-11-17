@@ -28,13 +28,13 @@ export function LogTable({ entries, timeZone }: Props) {
           {entries.map(entry => (
             <tr key={entry.id}>
               <th scope="row">{entry.personName}</th>
-              <td className="num">{formatCampDateTime(entry.checkedInAt, timeZone)}</td>
-              <td className="num">{entry.checkedOutAt ? formatCampDateTime(entry.checkedOutAt, timeZone) : 'On site'}</td>
-              <td>{dash(entry.checkedInByName)}</td>
-              <td>{dash(entry.checkedOutByName)}</td>
-              <td>{dash(entry.collectedByName)}</td>
-              <td>{METHOD_LABEL[entry.method]}</td>
-              <td>{dash(entry.overrideReason)}</td>
+              <td className="num" data-label="In">{formatCampDateTime(entry.checkedInAt, timeZone)}</td>
+              <td className="num" data-label="Out">{entry.checkedOutAt ? formatCampDateTime(entry.checkedOutAt, timeZone) : 'On site'}</td>
+              <td data-label="Checked in by">{dash(entry.checkedInByName)}</td>
+              <td data-label="Checked out by">{dash(entry.checkedOutByName)}</td>
+              <td data-label="Collected by">{dash(entry.collectedByName)}</td>
+              <td data-label="Method">{METHOD_LABEL[entry.method]}</td>
+              <td data-label="Override reason">{dash(entry.overrideReason)}</td>
             </tr>
           ))}
         </tbody>

@@ -12,4 +12,9 @@ describe('Notice', () => {
     expect(html).toContain('Checked in');
     expect(html).toContain('<p>At 09:00.</p>');
   });
+  it('shows an icon with the title, so the tone is not carried by colour alone', () => {
+    const html = renderToStaticMarkup(<Notice tone="warn" title="Check the list" />);
+    expect(html).toContain('class="notice-title"');
+    expect(html).toContain('<svg');
+  });
 });

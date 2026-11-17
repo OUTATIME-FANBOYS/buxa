@@ -4,6 +4,7 @@ import { ROUTES } from '@/config/routes';
 import { NewCampForm } from '@/components/components/camp/export';
 import { AccountMenu } from '@/components/components/camp/export';
 import { CampSwitcher } from '@/components/components/camp/export';
+import { InstallHint } from '@/components/components/install/export';
 import { navGroupsFor } from '@buxa/shared';
 import { Shell } from '@/components/components/camp/export';
 
@@ -15,6 +16,7 @@ export function CampFrame({ user, camps, current, children }: Props) {
     <Shell nav={navGroupsFor(current?.role ?? null)} brandHref={ROUTES.camp}
       topBarStart={<CampSwitcher camps={camps} current={current} />} topBarEnd={<AccountMenu user={user} />}>
       {current ? children : <NewCampForm first />}
+      <InstallHint />
     </Shell>
   );
 }
