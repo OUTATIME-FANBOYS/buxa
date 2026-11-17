@@ -15,7 +15,7 @@
   input, select, textarea { font-size: 16px; } .stats { gap: var(--s3); } .stat { padding: var(--s3) var(--s4); } .stat-num { font-size: 24px; }
   .column { width: 82vw; } .board { scroll-snap-type: x mandatory; } .page-actions { width: 100%; } .seg-label { display: none; } .segmented button { padding: 0 var(--s3); }
   .props { grid-template-columns: 1fr; } .span-2 { grid-column: auto; } .search-local { width: 100%; }
-  .table .c-status, .table .c-who, .table .c-prio, .table .c-open, .table .c-done { display: none; } .cal-cell { min-height: 76px; padding: 3px; } .cal-title { display: none; } .cal-task { width: auto; padding: 4px; } .cal-cell { grid-template-columns: repeat(auto-fill, 14px); } .cal-num { grid-column: 1 / -1; }
+  .table .c-status, .table .c-who, .table .c-prio { display: none; } .cal-cell { min-height: 76px; padding: 3px; } .cal-title { display: none; } .cal-task { width: auto; padding: 4px; } .cal-cell { grid-template-columns: repeat(auto-fill, 14px); } .cal-num { grid-column: 1 / -1; }
   .cal-more { grid-column: 1 / -1; } .hbars li { grid-template-columns: 72px 1fr 24px; } .drawer { width: 100vw; } .toasts { bottom: var(--s3); }
   .proj-progress .progress { width: 80px; } .tl-label { width: 150px; }
 }
