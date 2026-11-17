@@ -46,7 +46,8 @@ describe('flow diagrams', () => {
     expect(offenders.map((file) => path.relative(root, file))).toEqual([]);
   });
 
-  it('the public flows folder is gone', () => {
+  it('the flows are not served by the public site (they live in docs/architecture)', () => {
     expect(existsSync(path.join(root, 'apps', 'web', 'public', 'flows'))).toBe(false);
+    expect(existsSync(path.join(root, 'docs', 'architecture', 'checkin-flow.html'))).toBe(true);
   });
 });
