@@ -3,7 +3,7 @@ import { AddMembershipForm } from '@/components/components/people/forms/export';
 import { MembershipRow } from './MembershipRow';
 import type { ClockFormat } from '@buxa/domain';
 
-export interface MembershipsPanelProps { personId: string; memberships: readonly PersonMembership[]; canManage: boolean; timeZone: string; clockFormat: ClockFormat }
+interface MembershipsPanelProps { personId: string; memberships: readonly PersonMembership[]; canManage: boolean; timeZone: string; clockFormat: ClockFormat }
 
 /** A person's memberships, newest first, each with its status in words. Only members of the camp who may manage memberships can change them. */
 export function MembershipsPanel({ personId, memberships, canManage, timeZone, clockFormat }: MembershipsPanelProps) {

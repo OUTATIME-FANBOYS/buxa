@@ -5,7 +5,7 @@ import { RevokeMembershipForm } from '@/components/components/people/forms/expor
 import { formatLocalDate } from '@buxa/shared';
 import type { ClockFormat } from '@buxa/domain';
 
-export interface MembershipRowProps { membership: PersonMembership; personId: string; canManage: boolean; timeZone: string; clockFormat: ClockFormat }
+interface MembershipRowProps { membership: PersonMembership; personId: string; canManage: boolean; timeZone: string; clockFormat: ClockFormat }
 
 /**
  * One membership: its plan, its dates and its status in words. Dates are camp days; the revoke time is an instant shown in the camp's

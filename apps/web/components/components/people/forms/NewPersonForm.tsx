@@ -11,7 +11,7 @@ import { CAMPER_NEEDS_HOUSEHOLD } from '@buxa/shared';
 import { householdChoiceLabel, type HouseholdChoice } from '@buxa/shared';
 import { FormMessage } from './FormMessage';
 
-export interface HouseholdTarget { id: string; name: string }
+interface HouseholdTarget { id: string; name: string }
 
 /**
  * Add a person. With `household` (from the guardian's page) the person joins that household. Otherwise the form offers the camp's

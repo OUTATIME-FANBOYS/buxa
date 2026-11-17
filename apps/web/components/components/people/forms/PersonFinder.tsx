@@ -1,6 +1,6 @@
 import { personPath } from '@/config/routes';
 
-export interface PersonFinderProps { personId: string; query: string }
+interface PersonFinderProps { personId: string; query: string }
 
 /**
  * A plain GET form that searches the camp by name for someone to link. Bookmarkable (`?q=`) and works without JavaScript.

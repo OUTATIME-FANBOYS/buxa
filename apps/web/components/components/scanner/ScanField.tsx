@@ -8,7 +8,7 @@ import { normalizeScan } from '@buxa/shared';
  * One focused text input that accepts a handheld scanner (it types the code and presses Enter) or typing. Calls `onScan` with the raw
  * text, then clears itself and takes focus back. `status` is an optional live region for the result of the last scan.
  */
-export interface ScanFieldProps { onScan: (raw: string) => void; label: string; disabled?: boolean; status?: ReactNode }
+interface ScanFieldProps { onScan: (raw: string) => void; label: string; disabled?: boolean; status?: ReactNode }
 
 /** Lets a parent put focus back in the field (for example after its screen clears for the next person). Does nothing while disabled. */
 export interface ScanFieldHandle { focus: () => void }

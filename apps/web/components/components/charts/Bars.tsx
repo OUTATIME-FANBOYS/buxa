@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { type ChartTone } from '@/components/elements/export';
 
-export interface BarDatum { label: string; value: number; title?: string; tone?: ChartTone }
+interface BarDatum { label: string; value: number; title?: string; tone?: ChartTone }
 
 /** Width of the element, tracked as it resizes (a floor keeps the plot readable). */
 function useWidth(ref: React.RefObject<HTMLDivElement | null>) {
