@@ -4,7 +4,7 @@ import { useActionState, useEffect, useState } from 'react';
 import { Dialog } from '@/components/components/export';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { fieldError, idle } from '@buxa/shared';
-import { renameCampAction } from '@buxa/server/composers/index';
+import { renameCampAction } from '@/actions/camp';
 import { TextField } from '@/components/elements/export';
 
 const FORM_ID = 'rename-camp';

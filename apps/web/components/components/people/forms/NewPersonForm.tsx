@@ -6,7 +6,7 @@ import { CAMP_ROLES, CAMP_ROLE_LABELS } from '@buxa/domain';
 import { Field } from '@/components/elements/export';
 import { ROUTES } from '@/config/routes';
 import { fieldError, idle } from '@buxa/shared';
-import { createPersonAction } from '@buxa/server/composers/index';
+import { createPersonAction } from '@/actions/people';
 import { CAMPER_NEEDS_HOUSEHOLD } from '@buxa/shared';
 import { householdChoiceLabel, type HouseholdChoice } from '@buxa/shared';
 import { FormMessage } from './FormMessage';

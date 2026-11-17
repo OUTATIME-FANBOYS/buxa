@@ -1,7 +1,7 @@
 'use client';
 
 import { Empty } from '@/components/components/export';
-import type { CampHome } from '@buxa/server/composers/index.server';
+import type { CampHome } from '@buxa/shared/camp/campHomeTypes';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { taskCounts } from '@buxa/shared';
 import { HomeHeader } from '@/components/components/kanban/home/export';

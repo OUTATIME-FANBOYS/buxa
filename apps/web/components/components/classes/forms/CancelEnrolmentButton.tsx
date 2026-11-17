@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { idle } from '@buxa/shared';
-import { cancelEnrolmentAction } from '@buxa/server/composers/index';
+import { cancelEnrolmentAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
 
 /** Cancels one enrolment. The label names the camper, so a screen reader user knows which row the button belongs to. */

@@ -4,8 +4,7 @@ import { useActionState } from 'react';
 import { BadgeCard } from '@/components/components/badge/export';
 import { PrintButton } from '@/components/elements/export';
 import { idle } from '@buxa/shared';
-import { issueBadgeAction } from '@buxa/server/composers/index';
-import { revokeBadgeAction } from '@buxa/server/composers/index';
+import { issueBadgeAction, revokeBadgeAction } from '@/actions/people';
 import type { BadgeState } from '@buxa/shared';
 import { FormMessage } from './FormMessage';
 

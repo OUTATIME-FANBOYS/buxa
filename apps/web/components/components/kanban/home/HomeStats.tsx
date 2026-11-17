@@ -1,4 +1,4 @@
-import type { CampHome } from '@buxa/server/composers/index.server';
+import type { CampHome } from '@buxa/shared/camp/campHomeTypes';
 import type { TaskCounts } from '@buxa/shared';
 import { homeCards } from '@buxa/shared';
 import { StatCard } from './StatCard';

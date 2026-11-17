@@ -3,8 +3,7 @@
 import { useActionState, useState, type ChangeEvent } from 'react';
 import { Field } from '@/components/elements/export';
 import { fieldError, idle, type ActionState } from '@buxa/shared';
-import { signIn } from '@buxa/server/composers/index';
-import { signUp } from '@buxa/server/composers/index';
+import { signIn, signUp } from '@/actions/auth';
 
 export type AuthMode = 'in' | 'up';
 

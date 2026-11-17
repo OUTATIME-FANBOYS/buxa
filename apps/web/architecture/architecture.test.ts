@@ -157,3 +157,33 @@ describe('server-only code stays out of client barrels', () => {
     expect(hits).toEqual([]);
   });
 });
+
+describe('components folders are used through their export.ts', () => {
+  // Every folder under components/ (elements, components, views and their subfolders) has an export.ts that re-exports its
+  // public items. A file outside a folder imports the folder's export.ts, never one of the files inside it.
+  const COMPONENTS = 'components/';
+  const folderOf = (file: string) => file.slice(0, file.lastIndexOf('/'));
+  const insideFolder = (file: string, folder: string) => file === folder || file.startsWith(`${folder}/`);
+
+  it('no file outside a components folder imports a file inside it (only its export.ts)', () => {
+    const bad: string[] = [];
+    for (const [file, list] of edges) {
+      if (!file.startsWith(COMPONENTS) && !file.startsWith('app/') && !file.startsWith('components/')) continue;
+      for (const { to, spec } of list) {
+        if (!to.startsWith(COMPONENTS) || to.endsWith('/export.ts')) continue;
+        const folder = folderOf(to);
+        if (insideFolder(file, folder)) continue;
+        bad.push(`${file} -> ${spec}`);
+      }
+    }
+    expect(bad).toEqual([]);
+  });
+
+  it('every folder under components/ that holds source files has an export.ts', () => {
+    const folders = new Set(
+      [...source.keys()].filter((f) => f.startsWith(COMPONENTS) && !/\/__tests__\/|\.test\.tsx?$/.test(f)).map(folderOf),
+    );
+    const missing = [...folders].filter((folder) => !source.has(`${folder}/export.ts`));
+    expect(missing).toEqual([]);
+  });
+});

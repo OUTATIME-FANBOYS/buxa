@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef } from 'react';
 import { Field } from '@/components/elements/export';
 import { fieldError, idle } from '@buxa/shared';
-import { revokeMembershipAction } from '@buxa/server/composers/index';
+import { revokeMembershipAction } from '@/actions/people';
 import { FormMessage } from './FormMessage';
 
 /** Revoke a membership. The reason is required: it is recorded with the revocation and in the audit log. */

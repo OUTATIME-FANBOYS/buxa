@@ -5,7 +5,7 @@ import type { Membership } from '@buxa/contracts';
 import { Icon } from '@/components/elements/export';
 import { Menu } from '@/components/components/export';
 import { ROUTES } from '@/config/routes';
-import { selectCampAction } from '@buxa/server/composers/index';
+import { selectCampAction } from '@/actions/camp';
 
 /** The camp name in the top bar; opens a menu to switch camp or start another. */
 export function CampSwitcher({ camps, current }: { camps: readonly Membership[]; current: Membership | null }) {

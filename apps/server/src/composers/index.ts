@@ -8,7 +8,6 @@ export * from './auth/signUp';
 export * from './camp/createCampAction';
 export * from './camp/renameCampAction';
 export * from './camp/selectCampAction';
-export * from '@buxa/middleware/store/persistence';
 export * from './people/addMembershipAction';
 export * from './people/archivePersonAction';
 export * from './people/createPersonAction';

@@ -5,7 +5,7 @@ import { useActionState, useEffect, useRef } from 'react';
 import { Field } from '@/components/elements/export';
 import { ROUTES } from '@/config/routes';
 import { fieldError, idle } from '@buxa/shared';
-import { createClassAction } from '@buxa/server/composers/index';
+import { createClassAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
 
 /** A new class: name, description, ages, default places, and an optional instructor ratio (stored, not enforced yet). */

@@ -5,7 +5,7 @@ import { useActionState, useEffect, useState } from 'react';
 import { suggestSlug } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
 import { fieldError, idle } from '@buxa/shared';
-import { createCampAction } from '@buxa/server/composers/index';
+import { createCampAction } from '@/actions/camp';
 import { TextField } from '@/components/elements/export';
 
 /** Where the address came from: made from the name until the person types their own. */

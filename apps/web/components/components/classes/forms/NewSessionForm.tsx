@@ -5,7 +5,7 @@ import { useActionState, useEffect, useRef } from 'react';
 import { Field } from '@/components/elements/export';
 import { classPath } from '@/config/routes';
 import { fieldError, idle } from '@buxa/shared';
-import { addSessionAction } from '@buxa/server/composers/index';
+import { addSessionAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
 
 export interface InstructorChoice { id: string; name: string }

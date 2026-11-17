@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import type { CampHome } from '@buxa/server/composers/index.server';
+import type { CampHome } from '@buxa/shared/camp/campHomeTypes';
 import { ROUTES, boardPath } from '@/config/routes';
 import { Empty } from '@/components/components/export';
 import { useStore } from '@buxa/middleware/providers/providers';

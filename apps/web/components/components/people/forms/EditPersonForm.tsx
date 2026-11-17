@@ -7,7 +7,7 @@ import { CAMP_ROLES, CAMP_ROLE_LABELS } from '@buxa/domain';
 import { personPath } from '@/config/routes';
 import { Field } from '@/components/elements/export';
 import { fieldError, idle } from '@buxa/shared';
-import { updatePersonAction } from '@buxa/server/composers/index';
+import { updatePersonAction } from '@/actions/people';
 import { FormMessage } from './FormMessage';
 
 /** The fields a person's details can change, as the form posts them. Contact fields and date of birth are only given to staff. */
