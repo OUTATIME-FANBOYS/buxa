@@ -3,7 +3,7 @@ import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-// Rules from docs/architecture/folders.md: imports flow downward, layers are used through their barrels,
+// Rules from docs/CODING_STANDARDS.md (section 3): imports flow downward, layers are used through their barrels,
 // logic never imports React, no cycles, and no client barrel reaches server-only code.
 
 const WEB = resolve(dirname(fileURLToPath(import.meta.url)), '..');
