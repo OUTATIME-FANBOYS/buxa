@@ -6,8 +6,9 @@ import { Avatar } from '@/components/elements/export';
 import { Menu } from '@/components/components/export';
 import { signOut } from '@/actions/auth';
 import { useDarkMode } from '@buxa/middleware/hooks/hooks';
+import { ROUTES } from '@/config/routes';
 
-/** The avatar menu: who you are, light/dark, sign out. Signing out is a Server Action submitted through a form. */
+/** The avatar menu: who you are, settings, light/dark, sign out. Signing out is a Server Action submitted through a form. */
 export function AccountMenu({ user }: { user: User }) {
   const { dark, toggle } = useDarkMode();
   const form = useRef<HTMLFormElement>(null);
@@ -16,6 +17,7 @@ export function AccountMenu({ user }: { user: User }) {
       <Menu label="Account" className="avatar-btn" trigger={<Avatar user={user} size={30} />}
         items={[
           { label: user.email, icon: 'user', onSelect() {} },
+          { label: 'Settings', icon: 'settings', href: ROUTES.settings },
           { label: dark ? 'Light mode' : 'Dark mode', icon: dark ? 'sun' : 'moon', onSelect: toggle },
           { label: '', divider: true, onSelect() {} },
           { label: 'Sign out', icon: 'logout', onSelect: () => form.current?.requestSubmit() },
