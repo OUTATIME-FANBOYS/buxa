@@ -91,6 +91,7 @@ export class InMemoryDatabase {
 
   inOrg<T extends OrgOwned>(rows: Map<string, T>, orgId: string, id: string): T | undefined {
     const row = rows.get(id);
+
     return row !== undefined && row.orgId === orgId ? row : undefined;
   }
 }

@@ -23,7 +23,9 @@ describe('addSessionAction', () => {
     vi.clearAllMocks();
     h.actor = { userId: 'u1', orgId: 'o1', role: 'staff' };
     h.orgs.getCamp.mockResolvedValue({ timezone: 'Australia/Sydney' });
-    h.redirect.mockImplementation((to: string) => { throw new Error(`NEXT_REDIRECT ${to}`); });
+    h.redirect.mockImplementation((to: string) => {
+      throw new Error(`NEXT_REDIRECT ${to}`);
+    });
     h.classes.addSession.mockResolvedValue({ ok: true, value: { id: IDS.session } });
   });
 

@@ -34,5 +34,6 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     throw new Error(`Invalid configuration:\n${lines.join('\n')}`);
   }
   const e = result.data;
+
   return { env: e.NODE_ENV, databaseUrl: e.DATABASE_URL, supabaseUrl: e.NEXT_PUBLIC_SUPABASE_URL, supabasePublishableKey: e.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, dbPoolMax: e.DB_POOL_MAX, logLevel: e.LOG_LEVEL };
 }

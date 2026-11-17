@@ -29,15 +29,21 @@ describe('translateRepositoryError', () => {
 
 describe('the camp service', () => {
   const repo = (get: OrgRepository['get']): OrgRepository => ({
-    createWithOwner: async () => { throw new Error('unused'); },
+    createWithOwner: async () => {
+      throw new Error('unused');
+    },
     get,
-    rename: async () => { throw new Error('unused'); },
+    rename: async () => {
+      throw new Error('unused');
+    },
     listMembers: async () => [],
   });
   const owner = { userId: '00000000-0000-4000-8000-000000000001', orgId: '00000000-0000-4000-8000-000000000002', role: 'owner' as const };
 
   it('answers 404 for a camp the caller cannot see, instead of an unhandled error', async () => {
-    const service = createOrgService(repo(async () => { throw new OrgNotFoundError(); }));
+    const service = createOrgService(repo(async () => {
+      throw new OrgNotFoundError();
+    }));
     const error = await service.getCamp(owner).catch(e => e);
     expect(error).toMatchObject({ statusCode: 404, message: 'Camp not found' });
   });

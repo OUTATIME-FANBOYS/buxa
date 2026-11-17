@@ -24,6 +24,7 @@ export function createVerifier(opts: { issuer: string; keys: JWTVerifyGetKey }):
     });
     const claims = ClaimsSchema.parse(payload);
     const given = (claims.user_metadata?.name ?? claims.user_metadata?.full_name ?? '').trim();
+
     return { authId: claims.sub, email: claims.email.toLowerCase(), name: (given || claims.email.split('@')[0]).slice(0, 120) };
   };
 }

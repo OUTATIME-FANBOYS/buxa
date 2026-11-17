@@ -11,7 +11,9 @@ export interface NewMembershipRecord { personId: string; plan: string; startsOn:
 
 export class MembershipNotFoundError extends Error {
   readonly kind = 'membership-not-found';
-  constructor() { super('Membership not found'); this.name = 'MembershipNotFoundError'; }
+  constructor() {
+    super('Membership not found'); this.name = 'MembershipNotFoundError';
+  }
 }
 export const isMembershipNotFound = (e: unknown): e is MembershipNotFoundError => e instanceof Error && (e as { kind?: unknown }).kind === 'membership-not-found';
 

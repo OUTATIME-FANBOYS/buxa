@@ -17,12 +17,18 @@ describe('reading the Supabase email-confirmation setting', () => {
     expect(await read(reply({}, 401))).toBe('unknown');
     expect(await read(reply({ other: 1 }))).toBe('unknown');
     expect(await read(reply('nope' as unknown))).toBe('unknown');
-    expect(await read(vi.fn(async () => { throw new TypeError('offline'); }) as unknown as typeof fetch)).toBe('unknown');
+    expect(await read(vi.fn(async () => {
+      throw new TypeError('offline');
+    }) as unknown as typeof fetch)).toBe('unknown');
   });
 });
 
 describe('startup decision', () => {
-  it('confirmation required: always fine', () => { for (const env of ['production', 'development', 'test']) expect(decideStartup('required', env)).toBe('ok'); });
+  it('confirmation required: always fine', () => {
+    for (const env of ['production', 'development', 'test']) {
+      expect(decideStartup('required', env)).toBe('ok');
+    }
+  });
   it('auto-confirm: refuse in production, warn elsewhere', () => {
     expect(decideStartup('not-required', 'production')).toBe('refuse');
     expect(decideStartup('not-required', 'development')).toBe('warn');

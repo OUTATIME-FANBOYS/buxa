@@ -21,6 +21,7 @@ const form = (csv: string, fileName = 'season.csv'): FormData => {
   const body = new FormData();
   body.append('fileName', fileName);
   body.append('csv', csv);
+
   return body;
 };
 

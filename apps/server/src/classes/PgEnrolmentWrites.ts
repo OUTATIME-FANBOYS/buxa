@@ -22,16 +22,23 @@ interface LockedSession {
 
 /** Locks the camper's row. Row-level security makes a camper of another camp look missing. */
 async function lockCamper(db: Db, camperId: string): Promise<LocalDate | null> {
-  if (!isUuid(camperId)) throw new CamperNotFoundError();
+  if (!isUuid(camperId)) {
+    throw new CamperNotFoundError();
+  }
   const { rows } = await db.query<{ date_of_birth: string | null }>(
     `SELECT to_char(date_of_birth, 'YYYY-MM-DD') AS date_of_birth FROM people WHERE id = $1 FOR UPDATE`, [camperId]);
-  if (rows.length === 0) throw new CamperNotFoundError();
+  if (rows.length === 0) {
+    throw new CamperNotFoundError();
+  }
+
   return rows[0].date_of_birth;
 }
 
 /** Locks the session's row and reads the facts the rule needs (the session and its class). */
 async function lockSession(db: Db, sessionId: string): Promise<LockedSession> {
-  if (!isUuid(sessionId)) throw new SessionNotFoundError();
+  if (!isUuid(sessionId)) {
+    throw new SessionNotFoundError();
+  }
   const { rows } = await db.query<{
     id: string; capacity: number; starts_at: Date; ends_at: Date; class_name: string; age_min: number | null; age_max: number | null;
   }>(
@@ -39,7 +46,10 @@ async function lockSession(db: Db, sessionId: string): Promise<LockedSession> {
        FROM sessions s JOIN classes c ON c.id = s.class_id
       WHERE s.id = $1 FOR UPDATE OF s`, [sessionId]);
   const row = rows[0];
-  if (!row) throw new SessionNotFoundError();
+  if (!row) {
+    throw new SessionNotFoundError();
+  }
+
   return {
     capacity: row.capacity,
     facts: {
@@ -56,6 +66,7 @@ async function lockSession(db: Db, sessionId: string): Promise<LockedSession> {
 async function countEnrolled(db: Db, sessionId: string): Promise<number> {
   const { rows } = await db.query<{ taken: number }>(
     `SELECT count(*)::int AS taken FROM enrolments WHERE session_id = $1 AND status = 'enrolled'`, [sessionId]);
+
   return rows[0].taken;
 }
 
@@ -70,7 +81,9 @@ export async function enrolInTransaction(db: Db, actor: Actor, request: EnrolReq
 
   // A second enrolment in the same session is never allowed, even as an override: the database keeps one active row per pair.
   const already = camperActive.find(e => e.sessionId === session.facts.sessionId);
-  if (already) throw refusalError({ kind: 'refuse', reason: 'overlap', clash: already });
+  if (already) {
+    throw refusalError({ kind: 'refuse', reason: 'overlap', clash: already });
+  }
 
   const facts: GatheredEnrolmentFacts = {
     session: session.facts,
@@ -79,9 +92,12 @@ export async function enrolInTransaction(db: Db, actor: Actor, request: EnrolReq
     camperActive,
   };
   const decision = rule(facts);
-  if (decision.kind === 'refuse') throw refusalError(decision);
+  if (decision.kind === 'refuse') {
+    throw refusalError(decision);
+  }
 
   const id = await insertEnrolment(db, actor, request, session, decision);
+
   return requireEnrolment(db, id);
 }
 
@@ -116,6 +132,7 @@ async function insertEnrolment(
       },
     });
   }
+
   return id;
 }
 
@@ -124,15 +141,20 @@ async function insertEnrolment(
  * camp's, or a malformed id) is not found.
  */
 export async function cancelInTransaction(db: Db, actor: Actor, enrolmentId: string, note: string | null): Promise<Enrolment> {
-  if (!isUuid(enrolmentId)) throw new EnrolmentNotFoundError();
+  if (!isUuid(enrolmentId)) {
+    throw new EnrolmentNotFoundError();
+  }
   const { rows } = await db.query<{ id: string; session_id: string; person_id: string }>(
     `UPDATE enrolments SET status = 'cancelled', cancelled_at = now()
       WHERE id = $1 AND status <> 'cancelled' RETURNING id, session_id, person_id`, [enrolmentId]);
   const row = rows[0];
-  if (!row) throw new EnrolmentNotFoundError();
+  if (!row) {
+    throw new EnrolmentNotFoundError();
+  }
   await recordAudit(db, {
     actor, action: 'enrolment.cancel', entity: 'enrolment', entityId: row.id,
     data: { sessionId: row.session_id, camperId: row.person_id, note },
   });
+
   return requireEnrolment(db, row.id);
 }

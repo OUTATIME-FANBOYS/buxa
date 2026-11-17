@@ -16,6 +16,7 @@ export async function toEntries(
   const personNames = new Map(named.map(p => [p.id, displayName(p)] as const));
   const staffNames = new Map(staff.map(m => [m.id, m.name] as const));
   const staffName = (id: string | null): string | null => (id === null ? null : staffNames.get(id) ?? null);
+
   return records.map(r => ({
     id: r.id,
     personId: r.personId,
@@ -44,6 +45,7 @@ export async function authorisedCollectors(people: PeopleRepository, orgId: stri
       }
     }
   }
+
   return found;
 }
 
@@ -51,6 +53,7 @@ export async function authorisedCollectors(people: PeopleRepository, orgId: stri
 export async function pickupOptionsFor(people: PeopleRepository, orgId: string, childId: string): Promise<PickupOption[]> {
   const collectors = await authorisedCollectors(people, orgId, childId);
   const named = await people.getMany(orgId, [...collectors.keys()]);
+
   return named
     .map(p => ({ personId: p.id, name: displayName(p), relationship: collectors.get(p.id) ?? '' }))
     .sort((a, b) => a.name.localeCompare(b.name));

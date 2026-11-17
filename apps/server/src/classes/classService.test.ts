@@ -25,7 +25,9 @@ describe('class service: permissions (role x method)', () => {
     const { service } = setup();
     const { sessionId } = await classWithSession(service);
     const enrolled = await service.enrol(as('staff'), { sessionId, camperId: CAMPER_ADA, waitlistIfFull: false });
-    if (!enrolled.ok) throw new Error('setup failed');
+    if (!enrolled.ok) {
+      throw new Error('setup failed');
+    }
     await expect403(service.cancelEnrolment(as('viewer'), { enrolmentId: enrolled.value.id }));
   });
 
@@ -34,13 +36,19 @@ describe('class service: permissions (role x method)', () => {
     const staff = as('staff');
     const created = await service.createClass(staff, robotics);
     expect(created.ok).toBe(true);
-    if (!created.ok) return;
+    if (!created.ok) {
+      return;
+    }
     const session = await service.addSession(staff, created.value.id, monday9to12);
     expect(session.ok).toBe(true);
-    if (!session.ok) return;
+    if (!session.ok) {
+      return;
+    }
     const enrolled = await service.enrol(staff, { sessionId: session.value.id, camperId: CAMPER_ADA, waitlistIfFull: false });
     expect(enrolled.ok).toBe(true);
-    if (!enrolled.ok) return;
+    if (!enrolled.ok) {
+      return;
+    }
     expect((await service.cancelEnrolment(staff, { enrolmentId: enrolled.value.id })).ok).toBe(true);
   });
 
@@ -58,7 +66,9 @@ describe('class service: catalogue', () => {
   it('stores the description, age range, default capacity and ratio, and returns them', async () => {
     const { service } = setup();
     const created = await service.createClass(as('admin'), robotics);
-    if (!created.ok) throw new Error('setup');
+    if (!created.ok) {
+      throw new Error('setup');
+    }
     expect(created.value).toMatchObject({ name: 'Robotics', description: 'Build and program small robots.', ageRange: { minAge: 8, maxAge: 12 }, capacity: 2, instructorRatio: { instructors: 1, campers: 8 } });
   });
 
@@ -80,7 +90,9 @@ describe('class service: catalogue', () => {
   it('a session shows its instructors by name, and the session write is audited with their ids', async () => {
     const { service, repo } = setup();
     const created = await service.createClass(as('admin'), robotics);
-    if (!created.ok) throw new Error(created.failure.message);
+    if (!created.ok) {
+      throw new Error(created.failure.message);
+    }
     const added = await service.addSession(as('admin'), created.value.id, { ...monday9to12, instructorIds: [CAMPER_ADA] });
     expect(added).toMatchObject({ ok: true, value: { instructorIds: [CAMPER_ADA], instructors: [{ id: CAMPER_ADA, name: 'Ada Lovelace' }] } });
     expect(repo.audit.filter(a => a.action === 'session.create')).toEqual([
@@ -103,7 +115,9 @@ describe('class service: catalogue', () => {
     const { sessionId } = await classWithSession(service);
     await service.enrol(as('staff'), { sessionId, camperId: CAMPER_ADA, waitlistIfFull: false });
     const listed = await service.listEnrolments(as('viewer'), sessionId);
-    if (!listed.ok) throw new Error('setup');
+    if (!listed.ok) {
+      throw new Error('setup');
+    }
     expect(listed.value).toHaveLength(1);
     expect(Object.keys(listed.value[0] ?? {}).sort()).toEqual(['camperId', 'camperName', 'classId', 'className', 'enrolledAt', 'id', 'overrideReason', 'sessionId', 'status']);
     expect(listed.value[0]?.camperName).toBe('Ada Lovelace');

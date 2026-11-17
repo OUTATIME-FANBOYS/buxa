@@ -22,8 +22,11 @@ export class PgAttendanceRepository implements AttendanceRepository {
   async checkIn(actor: Actor, input: NewCheckIn): Promise<CheckInRecord> {
     try {
       return await withOrg(this.pool, actor.orgId, async db => {
-        if (!(await personExists(db, input.personId))) throw new PersonNotFoundError();
+        if (!(await personExists(db, input.personId))) {
+          throw new PersonNotFoundError();
+        }
         const id = await insertCheckIn(db, actor, input);
+
         return requireCheckIn(db, id);
       });
     } catch (error) {
@@ -34,15 +37,23 @@ export class PgAttendanceRepository implements AttendanceRepository {
   checkOut(actor: Actor, input: NewCheckOut): Promise<CheckInRecord> {
     return withOrg(this.pool, actor.orgId, async db => {
       const visit = await openVisit(db, input.personId);
-      if (!visit) throw new NotOnSiteError();
-      if (input.collectedByPersonId !== null) await requirePerson(db, input.collectedByPersonId);
+      if (!visit) {
+        throw new NotOnSiteError();
+      }
+      if (input.collectedByPersonId !== null) {
+        await requirePerson(db, input.collectedByPersonId);
+      }
       await closeVisit(db, actor, visit, input);
+
       return requireCheckIn(db, visit.id);
     });
   }
 
   log(orgId: string, query: AttendanceQuery): Promise<CheckInRecord[]> {
-    if (query.personId !== undefined && !isUuid(query.personId)) return Promise.resolve([]);
+    if (query.personId !== undefined && !isUuid(query.personId)) {
+      return Promise.resolve([]);
+    }
+
     return withOrg(this.pool, orgId, db => queryCheckIns(
       db,
       `WHERE checked_in_at >= $1::timestamptz AND checked_in_at < $2::timestamptz

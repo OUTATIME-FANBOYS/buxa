@@ -55,6 +55,7 @@ describe.skipIf(!url)('check-in timing on Postgres', () => {
         const person = await services.people.create(actor, input);
         await services.memberships.add(actor, { personId: person.id, plan: 'Season pass', startsOn: '2020-01-01', endsOn: '2099-12-31' });
         const badge = await services.credentials.issue(actor, person.id);
+
         return { personId: person.id, payload: badge.payload };
       }));
       people.push(...batch);
@@ -74,11 +75,15 @@ describe.skipIf(!url)('check-in timing on Postgres', () => {
       const scan = await services.credentials.scan(actor, person.payload);
       await services.attendance.onSite(actor);
       const scanned = performance.now();
-      if (scan.kind !== 'person') throw new Error('A freshly issued badge did not scan as a person.');
+      if (scan.kind !== 'person') {
+        throw new Error('A freshly issued badge did not scan as a person.');
+      }
 
       const result = await services.attendance.checkIn(actor, { personId: person.personId, method: 'qr' });
       const checked = performance.now();
-      if (!result.ok) throw new Error(`Check-in refused in the timing run: ${result.reason}`);
+      if (!result.ok) {
+        throw new Error(`Check-in refused in the timing run: ${result.reason}`);
+      }
 
       scanMs.push(scanned - started);
       checkInMs.push(checked - scanned);

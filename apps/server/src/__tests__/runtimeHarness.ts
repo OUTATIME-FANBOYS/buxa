@@ -10,7 +10,12 @@ export const BASE_ENV = { DATABASE_URL: 'postgres://u:p@127.0.0.1:1/none', NODE_
 export function startRuntime(options: RuntimeOptions = {}): { runtime: Runtime; logs: string[]; stop(): Promise<void> } {
   const logs: string[] = [];
   // Tests share no counters: each runtime gets its own in-memory limiter unless a test supplies one.
-  const runtime = createRuntime({ rateLimiter: createMemoryRateLimiter(), ...options, env: { ...BASE_ENV, ...options.env }, logSink: line => { logs.push(line); } });
+  const runtime = createRuntime({ rateLimiter: createMemoryRateLimiter(), ...options, env: { ...BASE_ENV, ...options.env }, logSink: line => {
+    logs.push(line);
+  } });
   installRuntime(runtime);
-  return { runtime, logs, async stop() { installRuntime(undefined); await runtime.pool.end().catch(() => {}); } };
+
+  return { runtime, logs, async stop() {
+    installRuntime(undefined); await runtime.pool.end().catch(() => {});
+  } };
 }

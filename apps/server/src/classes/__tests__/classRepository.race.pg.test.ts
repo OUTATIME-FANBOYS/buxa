@@ -14,8 +14,12 @@ const settle = <T>(calls: [Promise<T>, Promise<T>]) => Promise.allSettled(calls)
 
 describe.skipIf(!url)('enrolment races on Postgres', () => {
   const pool = new pg.Pool({ connectionString: url, max: 10 });
-  beforeAll(async () => { await migrate(pool); });
-  afterAll(async () => { await pool.end(); });
+  beforeAll(async () => {
+    await migrate(pool);
+  });
+  afterAll(async () => {
+    await pool.end();
+  });
 
   it(`two parallel enrolments for the last place give exactly one success (${TRIALS} trials)`, async () => {
     const fx: ClassFixture = await createClassFixture(pool);

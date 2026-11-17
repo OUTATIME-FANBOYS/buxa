@@ -43,13 +43,17 @@ export type PersonHouseholdLink = {
 
 export class PersonNotFoundError extends Error {
   readonly kind = 'person-not-found';
-  constructor() { super('Person not found'); this.name = 'PersonNotFoundError'; }
+  constructor() {
+    super('Person not found'); this.name = 'PersonNotFoundError';
+  }
 }
 export const isPersonNotFound = (e: unknown): e is PersonNotFoundError => e instanceof Error && (e as { kind?: unknown }).kind === 'person-not-found';
 
 export class HouseholdNotFoundError extends Error {
   readonly kind = 'household-not-found';
-  constructor() { super('Household not found'); this.name = 'HouseholdNotFoundError'; }
+  constructor() {
+    super('Household not found'); this.name = 'HouseholdNotFoundError';
+  }
 }
 export const isHouseholdNotFound = (e: unknown): e is HouseholdNotFoundError => e instanceof Error && (e as { kind?: unknown }).kind === 'household-not-found';
 

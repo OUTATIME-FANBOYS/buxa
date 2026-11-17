@@ -14,6 +14,7 @@ export async function insertClass(db: Db, actor: Actor, input: NewClassInput): P
       input.instructorRatio?.campers ?? null, input.instructorRatio?.instructors ?? null]);
   const id = rows[0].id;
   await recordAudit(db, { actor, action: 'class.create', entity: 'class', entityId: id, data: { name: input.name } });
+
   return id;
 }
 
@@ -23,10 +24,17 @@ export async function insertClass(db: Db, actor: Actor, input: NewClassInput): P
  */
 export async function requireInstructors(db: Db, instructorIds: readonly string[]): Promise<string[]> {
   const unique = [...new Set(instructorIds)];
-  if (unique.length === 0) return unique;
-  if (!unique.every(isUuid)) throw new InstructorNotFoundError();
+  if (unique.length === 0) {
+    return unique;
+  }
+  if (!unique.every(isUuid)) {
+    throw new InstructorNotFoundError();
+  }
   const { rows } = await db.query<{ id: string }>('SELECT id FROM people WHERE id = ANY($1::uuid[])', [unique]);
-  if (rows.length !== unique.length) throw new InstructorNotFoundError();
+  if (rows.length !== unique.length) {
+    throw new InstructorNotFoundError();
+  }
+
   return unique;
 }
 
@@ -41,7 +49,9 @@ export async function insertSession(db: Db, actor: Actor, classId: string, input
        FROM classes c WHERE c.id = $2
      RETURNING id`,
     [actor.orgId, classId, input.startsAt, input.endsAt, input.location, input.capacity]);
-  if (rows.length === 0) throw new ClassNotFoundError();
+  if (rows.length === 0) {
+    throw new ClassNotFoundError();
+  }
   const id = rows[0].id;
   const instructors = await requireInstructors(db, input.instructorIds);
   if (instructors.length > 0) {
@@ -54,5 +64,6 @@ export async function insertSession(db: Db, actor: Actor, classId: string, input
     actor, action: 'session.create', entity: 'session', entityId: id,
     data: { classId, startsAt: input.startsAt, endsAt: input.endsAt, instructorIds: instructors },
   });
+
   return id;
 }

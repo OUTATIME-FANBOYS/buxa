@@ -17,6 +17,7 @@ export class PgUserRepository implements UserRepository {
       const { rows } = await withOrg(this.pool, null, db => db.query<User>(
         'SELECT user_id AS id, user_email AS email, user_name AS name FROM buxa_upsert_user($1, $2, $3)',
         [identity.authId, identity.email, identity.name]));
+
       return rows[0];
     } catch (error) {
       throw isUniqueViolation(error) ? new EmailInUseError() : error;
@@ -27,6 +28,7 @@ export class PgUserRepository implements UserRepository {
     return withOrg(this.pool, null, async db => {
       const { rows } = await db.query<Membership>(
         'SELECT member_org_id AS "orgId", member_role AS role, org_name AS name, org_slug AS slug FROM buxa_memberships_of($1)', [userId]);
+
       return rows;
     });
   }

@@ -15,7 +15,10 @@ export interface CookieStore {
  */
 export function createSessionClient(store: CookieStore): SupabaseClient | null {
   const { supabaseUrl, supabasePublishableKey } = publicEnv;
-  if (!supabaseUrl || !supabasePublishableKey) return null;
+  if (!supabaseUrl || !supabasePublishableKey) {
+    return null;
+  }
+
   return createServerClient(supabaseUrl, supabasePublishableKey, {
     cookies: { getAll: () => store.getAll(), setAll: (cookies, headers) => store.setAll(hardenAll(cookies), headers) },
   });

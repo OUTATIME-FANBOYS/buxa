@@ -25,7 +25,9 @@ describe('updatePersonAction', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     h.actor = { userId: 'u1', orgId: 'o1', role: 'staff' };
-    h.redirect.mockImplementation((to: string) => { throw new Error(`NEXT_REDIRECT ${to}`); });
+    h.redirect.mockImplementation((to: string) => {
+      throw new Error(`NEXT_REDIRECT ${to}`);
+    });
     h.people.update.mockResolvedValue({ id: IDS.person });
   });
 

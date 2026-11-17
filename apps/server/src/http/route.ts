@@ -19,18 +19,27 @@ export const created = (body: object): Response => Response.json(body, { status:
 function failure(error: unknown, requestId: string, log: Logger): Response {
   if (isHttpError(error)) {
     const response = Response.json(errorBody(error.statusCode, error.message, requestId), { status: error.statusCode });
-    if (error.statusCode === 401) response.headers.set('www-authenticate', AUTH_CHALLENGE);
-    if (error.retryAfterSeconds !== undefined) response.headers.set('retry-after', String(error.retryAfterSeconds));
+    if (error.statusCode === 401) {
+      response.headers.set('www-authenticate', AUTH_CHALLENGE);
+    }
+    if (error.retryAfterSeconds !== undefined) {
+      response.headers.set('retry-after', String(error.retryAfterSeconds));
+    }
+
     return response;
   }
   log.error({ err: error }, 'unhandled error'); // never leak internals to the client
+
   return Response.json(errorBody(500, 'Something went wrong', requestId), { status: 500 });
 }
 
 function finish(response: Response, requestId: string): Response {
   response.headers.set('x-request-id', requestId);
   response.headers.set('x-content-type-options', 'nosniff');
-  if (!response.headers.has('cache-control')) response.headers.set('cache-control', 'no-store'); // API answers are per person
+  if (!response.headers.has('cache-control')) {
+    response.headers.set('cache-control', 'no-store');
+  } // API answers are per person
+
   return response;
 }
 
@@ -38,18 +47,24 @@ async function run(request: Request, work: (base: ApiContext) => Promise<Reply>)
   const requestId = generateRequestId(request.headers);
   const started = performance.now();
   let runtime: Runtime;
-  try { runtime = getRuntime(); }
-  catch (error) { // configuration is invalid: say so in the server log, tell the client nothing
+  try {
+    runtime = getRuntime();
+  } catch (error) { // configuration is invalid: say so in the server log, tell the client nothing
     console.error(error instanceof Error ? error.message : error);
+
     return finish(Response.json(errorBody(500, 'Something went wrong', requestId), { status: 500 }), requestId);
   }
   const log = runtime.log.child({ reqId: requestId });
 
   let response: Response;
   try {
-    if ((await runtime.startupCheck) === 'refuse') throw new HttpError(503, 'Service unavailable');
+    if ((await runtime.startupCheck) === 'refuse') {
+      throw new HttpError(503, 'Service unavailable');
+    }
     // Fast path only: a request with no Content-Length is measured while it is read (see readBody in parse.ts).
-    if (Number(request.headers.get('content-length') ?? 0) > MAX_BODY_BYTES) throw payloadTooLarge();
+    if (Number(request.headers.get('content-length') ?? 0) > MAX_BODY_BYTES) {
+      throw payloadTooLarge();
+    }
     const reply = await work({ request, requestId, log, runtime });
     response = reply instanceof Response ? reply : Response.json(reply);
   } catch (error) {
@@ -58,6 +73,7 @@ async function run(request: Request, work: (base: ApiContext) => Promise<Reply>)
   finish(response, requestId);
   // Path only: query strings can carry tokens, so they are never logged.
   log.info({ method: request.method, path: new URL(request.url).pathname, status: response.status, ms: Math.round(performance.now() - started) }, 'request completed');
+
   return response;
 }
 

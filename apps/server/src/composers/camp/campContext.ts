@@ -13,6 +13,7 @@ export interface CampContext { session: Session; camp: Membership; actor: Actor 
 export async function findCampContext(): Promise<CampContext | null> {
   const session = await requireSession();
   const camp = await getCurrentCamp(session);
+
   return camp ? { session, camp, actor: toActor(session, camp) } : null;
 }
 
@@ -22,6 +23,9 @@ export async function findCampContext(): Promise<CampContext | null> {
  */
 export async function campContext(): Promise<CampContext> {
   const context = await findCampContext();
-  if (!context) notFound();
+  if (!context) {
+    notFound();
+  }
+
   return context;
 }

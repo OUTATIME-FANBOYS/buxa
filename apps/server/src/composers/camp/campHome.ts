@@ -37,6 +37,7 @@ export async function loadCampHome(): Promise<CampHome> {
     ? checkInsPerDay(visitEntries, today, org.timezone, visitEntries.length < MAX_LOG_ROWS)
     : null;
   const membershipStatus = membershipCounts(list);
+
   return {
     campId: org.id,
     name: org.name,
@@ -57,6 +58,7 @@ export async function loadCampHome(): Promise<CampHome> {
 /** The day `n` days before a camp-local day (a pure calendar step, no zone involved). */
 export function daysBefore(day: LocalDate, n: number): LocalDate {
   const [y, m, d] = day.split('-').map(Number);
+
   return new Date(Date.UTC(y, m - 1, d - n)).toISOString().slice(0, 10);
 }
 
@@ -76,28 +78,41 @@ export function checkInsPerDay(
   }
   const days = Array.from({ length: CHART_DAYS }, (_, i) => {
     const date = daysBefore(today, CHART_DAYS - 1 - i);
+
     return { date, count: byDay.get(date)?.size ?? 0 };
   });
+
   return { days, complete };
 }
 
 /** Adults and minors on site. Null when the minor flag is hidden from this viewer (it is null on every entry then). */
 export function onSiteAgeGroups(entries: readonly OnSiteEntry[]): { adults: number; minors: number } | null {
-  if (entries.some(entry => entry.isMinor === null)) return null;
+  if (entries.some(entry => entry.isMinor === null)) {
+    return null;
+  }
   const minors = entries.filter(entry => entry.isMinor === true).length;
+
   return { adults: entries.length - minors, minors };
 }
 
 /** Membership status across the camp list. Null when the list hides status from this viewer. `revoked` counts as none. */
 export function membershipCounts(list: readonly PersonSummary[] | null): MembershipStatusCounts | null {
-  if (!list || list.some(person => person.status === null)) return null;
+  if (!list || list.some(person => person.status === null)) {
+    return null;
+  }
   const counts: MembershipStatusCounts = { valid: 0, notStarted: 0, expired: 0, none: 0 };
   for (const person of list) {
-    if (person.status === 'valid') counts.valid += 1;
-    else if (person.status === 'not_started') counts.notStarted += 1;
-    else if (person.status === 'expired') counts.expired += 1;
-    else counts.none += 1;
+    if (person.status === 'valid') {
+      counts.valid += 1;
+    } else if (person.status === 'not_started') {
+      counts.notStarted += 1;
+    } else if (person.status === 'expired') {
+      counts.expired += 1;
+    } else {
+      counts.none += 1;
+    }
   }
+
   return counts;
 }
 
@@ -105,12 +120,16 @@ export function membershipCounts(list: readonly PersonSummary[] | null): Members
 async function upcomingSessions(actor: Actor): Promise<UpcomingSession[]> {
   const { classes } = getRuntime().services;
   const listed = await classes.listClasses(actor);
-  if (!listed.ok) return [];
+  if (!listed.ok) {
+    return [];
+  }
   const now = Date.now();
   const perClass = await Promise.all(listed.value.map(async cls => {
     const sessions = await classes.listSessions(actor, cls.id);
+
     return sessions.ok ? sessions.value : [];
   }));
+
   return perClass.flat()
     .filter((s: Session) => Date.parse(s.startsAt) >= now)
     .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt))

@@ -18,7 +18,9 @@ export class InMemoryMembershipRepository implements MembershipRepository {
   constructor(private readonly db: InMemoryDatabase) {}
 
   async add(actor: Actor, input: NewMembershipRecord): Promise<MembershipRecord> {
-    if (!this.db.inOrg(this.db.people, actor.orgId, input.personId)) throw new PersonNotFoundError();
+    if (!this.db.inOrg(this.db.people, actor.orgId, input.personId)) {
+      throw new PersonNotFoundError();
+    }
     const membership: StoredMembership = {
       id: newId(),
       orgId: actor.orgId,
@@ -31,17 +33,21 @@ export class InMemoryMembershipRepository implements MembershipRepository {
     };
     this.db.memberships.set(membership.id, membership);
     this.db.record(actor, 'membership.create', 'membership', membership.id, { personId: input.personId });
+
     return toRecord(membership);
   }
 
   async revoke(actor: Actor, id: string, reason: string, at: string): Promise<MembershipRecord> {
     const membership = this.db.inOrg(this.db.memberships, actor.orgId, id);
-    if (!membership) throw new MembershipNotFoundError();
+    if (!membership) {
+      throw new MembershipNotFoundError();
+    }
     if (membership.revokedAt === null) {
       membership.revokedAt = instant(at);
       membership.revokedReason = reason;
       this.db.record(actor, 'membership.revoke', 'membership', id, { reason });
     }
+
     return toRecord(membership);
   }
 

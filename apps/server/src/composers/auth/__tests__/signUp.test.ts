@@ -4,7 +4,9 @@ import { CONFIRM_EMAIL_MESSAGE, MAINTENANCE_MESSAGE } from '@buxa/shared';
 import { signUp } from '../signUp';
 
 const h = vi.hoisted(() => ({
-  redirect: vi.fn((url: string) => { throw new Error(`REDIRECT ${url}`); }),
+  redirect: vi.fn((url: string) => {
+    throw new Error(`REDIRECT ${url}`);
+  }),
   isServiceRefused: vi.fn(),
   requestSessionClient: vi.fn(),
   signUp: vi.fn(),
@@ -15,7 +17,10 @@ vi.mock('../../../session/nextClient', () => ({ requestSessionClient: h.requestS
 
 const form = (values: Record<string, string>) => {
   const data = new FormData();
-  for (const [k, v] of Object.entries(values)) data.set(k, v);
+  for (const [k, v] of Object.entries(values)) {
+    data.set(k, v);
+  }
+
   return data;
 };
 const valid = { name: 'Ada', email: 'ada@x.io', password: 'longenough' };

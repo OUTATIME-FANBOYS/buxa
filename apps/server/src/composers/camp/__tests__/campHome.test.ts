@@ -3,7 +3,9 @@ import type { Membership, PersonSummary, Session } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
 import { MAX_LOG_ROWS } from '../../../attendance/AttendanceRepository';
 
-const notFound = vi.hoisted(() => vi.fn(() => { throw new Error('NEXT_NOT_FOUND'); }));
+const notFound = vi.hoisted(() => vi.fn(() => {
+  throw new Error('NEXT_NOT_FOUND');
+}));
 const session = vi.hoisted(() => ({ current: null as null | { user: { id: string; email: string; name: string }; memberships: Membership[] }, camp: null as Membership | null }));
 const services = vi.hoisted(() => ({
   orgs: { getCamp: vi.fn(async () => ({ id: 'o1', name: 'Lake Camp', slug: 'lake', createdAt: '2026-03-04T10:00:00Z', memberCount: 3, timezone: 'UTC' })) },

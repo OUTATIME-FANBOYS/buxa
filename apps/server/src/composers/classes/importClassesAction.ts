@@ -16,7 +16,9 @@ import type { ImportState } from '@buxa/shared';
  */
 export async function importClassesAction(_previous: ImportState, form: FormData): Promise<ImportState> {
   const actor = await currentActor();
-  if (!actor) return { status: 'error', message: 'Choose a camp first.' };
+  if (!actor) {
+    return { status: 'error', message: 'Choose a camp first.' };
+  }
 
   const confirm = field(form, 'intent') === 'confirm';
   let fileName: string;
@@ -24,11 +26,17 @@ export async function importClassesAction(_previous: ImportState, form: FormData
   if (confirm) {
     fileName = field(form, 'fileName');
     text = field(form, 'csv');
-    if (text === '') return { status: 'error', message: 'Upload the file again, then confirm.' };
+    if (text === '') {
+      return { status: 'error', message: 'Upload the file again, then confirm.' };
+    }
   } else {
     const file = form.get('file');
-    if (!(file instanceof File) || file.size === 0) return { status: 'error', message: 'Choose a CSV file to upload.' };
-    if (file.size > MAX_IMPORT_BYTES) return { status: 'error', message: 'That file is larger than 1 MB. Split it into smaller files.' };
+    if (!(file instanceof File) || file.size === 0) {
+      return { status: 'error', message: 'Choose a CSV file to upload.' };
+    }
+    if (file.size > MAX_IMPORT_BYTES) {
+      return { status: 'error', message: 'That file is larger than 1 MB. Split it into smaller files.' };
+    }
     fileName = file.name;
     text = await file.text();
   }
@@ -41,9 +49,11 @@ export async function importClassesAction(_previous: ImportState, form: FormData
     }
     const done = await services.confirm(actor, preview);
     revalidatePath(ROUTES.classes);
+
     return { status: 'done', fileName: done.fileName, counts: done.counts, written: done.written, changedSincePreview: done.changedSincePreview };
   } catch (error) {
     const state = expectedFailure(error, 'Could not read that file.');
+
     return { status: 'error', message: state.status === 'error' ? state.message : 'Could not read that file.' };
   }
 }

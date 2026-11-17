@@ -15,17 +15,21 @@ export const ACCOUNT_CONFLICT_MESSAGE = 'This account cannot be used. Contact yo
  */
 export async function sessionFromToken(token: string, deps: { verifier: Verifier; users: UserRepository }, log: Logger): Promise<Session> {
   let identity;
-  try { identity = await deps.verifier(token); }
-  catch (error) {
+  try {
+    identity = await deps.verifier(token);
+  } catch (error) {
     log.info({ reason: error instanceof Error ? error.name : 'unknown' }, 'token rejected');
     throw unauthorized('Invalid or expired token');
   }
 
   try {
     const user = await deps.users.upsertFromIdentity(identity);
+
     return { user, memberships: await deps.users.membershipsOf(user.id) };
   } catch (error) {
-    if (!isEmailInUse(error)) throw error;
+    if (!isEmailInUse(error)) {
+      throw error;
+    }
     // The detail says which account owns the address, so it stays on the server. The client gets the same generic answer for every conflict.
     log.warn({ reason: 'email-in-use', detail: error.message }, 'sign-in refused: the identity conflicts with an existing account');
     throw conflict(ACCOUNT_CONFLICT_MESSAGE);

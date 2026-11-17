@@ -20,15 +20,20 @@ export function createOrgService(orgs: OrgRepository): OrgService {
   return {
     async createCamp(ownerId, input) {
       // Any signed-in person may start a camp; they become its owner.
-      try { return await orgs.createWithOwner(input, ownerId); }
-      catch (error) { throw isSlugTaken(error) ? conflict(error.message) : error; }
+      try {
+        return await orgs.createWithOwner(input, ownerId);
+      } catch (error) {
+        throw isSlugTaken(error) ? conflict(error.message) : error;
+      }
     },
     async getCamp(actor) {
       assertAllowed(actor, 'org:read');
+
       return guard(() => orgs.get(actor.orgId));
     },
     async renameCamp(actor, input) {
       assertAllowed(actor, 'org:update');
+
       return guard(() => orgs.rename(actor, input));
     },
     async listMembers(actor) {
@@ -36,6 +41,7 @@ export function createOrgService(orgs: OrgRepository): OrgService {
       const members = await orgs.listMembers(actor.orgId);
       // Staff email addresses are for admins and above. Everyone else gets names and roles.
       const seeEmail = can(actor, 'members:read_contact');
+
       return { members: members.map(m => ({ ...m, email: seeEmail ? m.email : null })) };
     },
   };

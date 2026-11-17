@@ -41,30 +41,43 @@ async function queryPeople(db: Db, where: string, params: unknown[], limit?: num
   const values = limit === undefined ? params : [...params, limit];
   const limitClause = limit === undefined ? '' : `LIMIT $${values.length}`;
   const { rows } = await db.query<PersonRow>(`${SELECT_PEOPLE} ${where} ${ORDER_PEOPLE} ${limitClause}`, values);
+
   return rows.map(toRecord);
 }
 
 export async function getPerson(db: Db, id: string): Promise<PersonRecord | null> {
-  if (!isUuid(id)) return null;
+  if (!isUuid(id)) {
+    return null;
+  }
   const found = await queryPeople(db, 'WHERE p.id = $1', [id]);
+
   return found[0] ?? null;
 }
 
 export async function requirePerson(db: Db, id: string): Promise<PersonRecord> {
   const person = await getPerson(db, id);
-  if (!person) throw new PersonNotFoundError();
+  if (!person) {
+    throw new PersonNotFoundError();
+  }
+
   return person;
 }
 
 export async function personExists(db: Db, id: string): Promise<boolean> {
-  if (!isUuid(id)) return false;
+  if (!isUuid(id)) {
+    return false;
+  }
   const { rowCount } = await db.query('SELECT 1 FROM people WHERE id = $1', [id]);
+
   return rowCount === 1;
 }
 
 export function getPeople(db: Db, ids: readonly string[]): Promise<PersonRecord[]> {
   const valid = ids.filter(isUuid);
-  if (valid.length === 0) return Promise.resolve([]);
+  if (valid.length === 0) {
+    return Promise.resolve([]);
+  }
+
   return queryPeople(db, 'WHERE p.id = ANY($1::uuid[])', [valid]);
 }
 
@@ -81,7 +94,10 @@ export function listPeople(db: Db, filter: PersonFilter): Promise<PersonRecord[]
 export function searchPeople(db: Db, query: string, limit: number): Promise<PersonRecord[]> {
   const words = normalizeForSearch(query).split(' ').filter(Boolean);
   const max = Math.min(Math.max(0, Math.floor(limit)), MAX_SEARCH_RESULTS);
-  if (words.length === 0 || max === 0) return Promise.resolve([]);
+  if (words.length === 0 || max === 0) {
+    return Promise.resolve([]);
+  }
+
   return queryPeople(
     db,
     `WHERE p.archived_at IS NULL

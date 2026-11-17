@@ -34,11 +34,13 @@ export function enrolRule(options: Partial<EnrolmentOptions> = {}): EnrolmentRul
 async function insertCamp(pool: Pool, slug: string): Promise<string> {
   const { rows } = await pool.query<{ id: string }>(
     `INSERT INTO orgs (name, slug, timezone) VALUES ('Class test camp', $1, 'Australia/Sydney') RETURNING id`, [slug]);
+
   return rows[0].id;
 }
 
 async function insertUser(pool: Pool, email: string): Promise<string> {
   const { rows } = await pool.query<{ id: string }>(`INSERT INTO users (email, name) VALUES ($1, 'Class test staff') RETURNING id`, [email]);
+
   return rows[0].id;
 }
 
@@ -52,6 +54,7 @@ export async function createClassFixture(pool: Pool): Promise<ClassFixture> {
   const orgB = await insertCamp(pool, `classes-b-${tag}`);
   const userA = await insertUser(pool, `owner-a-${tag}@example.test`);
   const userB = await insertUser(pool, `owner-b-${tag}@example.test`);
+
   return {
     pool,
     repo: new PgClassRepository(pool),
@@ -88,6 +91,7 @@ export function makeClass(repo: PgClassRepository, actor: Actor, overrides: {
 /** A session on Monday 5 July 2027 between two camp-local hours (Sydney, UTC+10). */
 export function sessionInput(fromHour: number, toHour: number, extra: { capacity?: number; instructorIds?: string[] } = {}) {
   const at = (h: number) => `2027-07-05T${String(h).padStart(2, '0')}:00:00+10:00`;
+
   return { startsAt: at(fromHour), endsAt: at(toHour), location: 'Lab 1', instructorIds: extra.instructorIds ?? [], capacity: extra.capacity ?? 5 };
 }
 

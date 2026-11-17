@@ -26,6 +26,7 @@ export class PgPeopleRepository implements PeopleRepository {
         await upsertMember(db, actor.orgId, { householdId, personId: id, relationship: household.relationship, isGuardian: household.isGuardian, canPickup: household.canPickup });
         await recordAudit(db, { actor, action: 'household.update', entity: 'household', entityId: householdId, data: { personId: id } });
       }
+
       return requirePerson(db, id);
     });
   }
@@ -35,6 +36,7 @@ export class PgPeopleRepository implements PeopleRepository {
       await requirePerson(db, id);
       const fields = await updatePerson(db, actor.orgId, id, patch);
       await recordAudit(db, { actor, action: 'person.update', entity: 'person', entityId: id, data: { fields } });
+
       return requirePerson(db, id);
     });
   }
@@ -42,9 +44,12 @@ export class PgPeopleRepository implements PeopleRepository {
   archive(actor: Actor, id: string, at: string): Promise<PersonRecord> {
     return withOrg(this.pool, actor.orgId, async db => {
       const person = await requirePerson(db, id);
-      if (person.archivedAt !== null) return person;
+      if (person.archivedAt !== null) {
+        return person;
+      }
       await db.query('UPDATE people SET archived_at = $2::timestamptz WHERE id = $1', [id, at]);
       await recordAudit(db, { actor, action: 'person.archive', entity: 'person', entityId: id });
+
       return requirePerson(db, id);
     });
   }
@@ -69,6 +74,7 @@ export class PgPeopleRepository implements PeopleRepository {
     return withOrg(this.pool, actor.orgId, async db => {
       const id = await insertHousehold(db, actor.orgId, name);
       await recordAudit(db, { actor, action: 'household.create', entity: 'household', entityId: id });
+
       return requireHousehold(db, id);
     });
   }
@@ -94,6 +100,7 @@ export class PgPeopleRepository implements PeopleRepository {
         actor, action: 'household.update', entity: 'household', entityId: link.householdId,
         data: { personId: link.personId, isGuardian: link.isGuardian, canPickup: link.canPickup },
       });
+
       return requireHousehold(db, link.householdId);
     });
   }
@@ -102,7 +109,10 @@ export class PgPeopleRepository implements PeopleRepository {
     return withOrg(this.pool, actor.orgId, async db => {
       await requireHousehold(db, householdId);
       const removed = isUuid(personId) && (await deleteMember(db, householdId, personId));
-      if (removed) await recordAudit(db, { actor, action: 'household.update', entity: 'household', entityId: householdId, data: { personId } });
+      if (removed) {
+        await recordAudit(db, { actor, action: 'household.update', entity: 'household', entityId: householdId, data: { personId } });
+      }
+
       return requireHousehold(db, householdId);
     });
   }

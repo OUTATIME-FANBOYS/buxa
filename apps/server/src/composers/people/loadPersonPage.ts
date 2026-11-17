@@ -16,9 +16,12 @@ export const loadPeople = (actor: Actor, params: ListParams) => getRuntime().ser
 
 /** The people list, or 'forbidden' when the role may not list people (403). Other failures are thrown for the error boundary. */
 export async function loadPeopleOrForbidden(actor: Actor, params: ListParams): Promise<PersonSummary[] | 'forbidden'> {
-  try { return await loadPeople(actor, params); }
-  catch (error) {
-    if (isHttpError(error) && error.statusCode === 403) return 'forbidden';
+  try {
+    return await loadPeople(actor, params);
+  } catch (error) {
+    if (isHttpError(error) && error.statusCode === 403) {
+      return 'forbidden';
+    }
     throw error;
   }
 }

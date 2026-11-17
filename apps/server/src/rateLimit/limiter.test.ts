@@ -12,7 +12,9 @@ describe('rate limiter (in memory)', () => {
     let now = 1_000_000;
     const limiter = createMemoryRateLimiter(() => now);
     const r = rule(10, 3600);
-    for (let i = 1; i <= 10; i++) expect((await limiter.hit(r, 'user-a')).allowed).toBe(true);
+    for (let i = 1; i <= 10; i++) {
+      expect((await limiter.hit(r, 'user-a')).allowed).toBe(true);
+    }
     const refused = await limiter.hit(r, 'user-a');
     expect(refused.allowed).toBe(false);
     expect(refused.remaining).toBe(0);
@@ -78,7 +80,9 @@ describe.skipIf(!url)('rate limiter (Postgres, migration 0010)', () => {
     const r = { name: `pg.test.${randomBytes(4).toString('hex')}`, limit: 3, windowSeconds: 1 };
     const identity = randomBytes(8).toString('hex');
     const results = [];
-    for (let i = 0; i < 4; i++) results.push(await limiter.hit(r, identity));
+    for (let i = 0; i < 4; i++) {
+      results.push(await limiter.hit(r, identity));
+    }
     expect(results.map(x => x.allowed)).toEqual([true, true, true, false]);
     expect(results[2].remaining).toBe(0);
     expect(results[3].retryAfterSeconds).toBeGreaterThanOrEqual(1);

@@ -11,8 +11,12 @@ export async function untilBlocked(pool: Pool, applicationName: string, timeoutM
     const { rows } = await pool.query<{ n: number }>(
       `SELECT count(*)::int AS n FROM pg_stat_activity
         WHERE wait_event_type = 'Lock' AND datname = current_database() AND application_name = $1`, [applicationName]);
-    if (rows[0].n > 0) return;
-    if (Date.now() > deadline) throw new Error('no session started waiting on a lock');
+    if (rows[0].n > 0) {
+      return;
+    }
+    if (Date.now() > deadline) {
+      throw new Error('no session started waiting on a lock');
+    }
     await new Promise(resolve => setTimeout(resolve, 20));
   }
 }

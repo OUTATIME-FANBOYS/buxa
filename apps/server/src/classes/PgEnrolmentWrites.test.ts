@@ -24,7 +24,10 @@ describe('enrolInTransaction guards and lock order', () => {
 
   it('locks the camper row first, then the session row, before any rule runs', async () => {
     const { client, seen } = fakeDb((sql) => {
-      if (sql.includes('FROM people')) return [{ date_of_birth: '2016-03-01' }];
+      if (sql.includes('FROM people')) {
+        return [{ date_of_birth: '2016-03-01' }];
+      }
+
       return [];
     });
     await expect(enrolInTransaction(client as never, actor, { sessionId, camperId }, rule))
@@ -39,6 +42,7 @@ describe('enrolInTransaction guards and lock order', () => {
     let called = false;
     await expect(enrolInTransaction(client as never, actor, { sessionId: 'x', camperId }, () => {
       called = true;
+
       return rule();
     })).rejects.toBeInstanceOf(SessionNotFoundError);
     expect(called).toBe(false);

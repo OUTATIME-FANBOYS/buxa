@@ -14,10 +14,12 @@ export async function createTestIdentityProvider() {
 
   async function token(options: TokenOptions = {}): Promise<string> {
     const sub = options.sub ?? crypto.randomUUID();
+
     return new SignJWT({ email: options.email ?? `${sub.slice(0, 8)}@camp.test`, user_metadata: { name: 'Test Person' } })
       .setProtectedHeader({ alg: 'ES256', kid: 'k1' }).setSubject(sub).setIssuer(options.issuer ?? ISSUER)
       .setAudience(options.audience ?? 'authenticated').setIssuedAt().setExpirationTime(options.expiresIn ?? '1h')
       .sign(options.signWith ?? privateKey);
   }
+
   return { verifier, token, strangerKey };
 }

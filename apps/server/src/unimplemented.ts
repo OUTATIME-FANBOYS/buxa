@@ -4,6 +4,8 @@
  */
 export function unimplemented<T extends object>(name: string): T {
   return new Proxy({}, {
-    get: (_target, method) => () => { throw new Error(`${name}.${String(method)} is not implemented yet`); },
+    get: (_target, method) => () => {
+      throw new Error(`${name}.${String(method)} is not implemented yet`);
+    },
   }) as T;
 }

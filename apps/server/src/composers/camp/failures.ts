@@ -14,8 +14,15 @@ export const membershipOf = (session: Session, orgId: string): Membership | null
  * error boundary. 409 is a taken address, 403 is a role that may not do this.
  */
 export function expectedCampFailure(error: unknown, fallback: string): ActionState {
-  if (!isHttpError(error)) throw error;
-  if (error.statusCode === 409) return failure(SLUG_TAKEN, { slug: SLUG_TAKEN });
-  if (error.statusCode === 403) return failure('Your role cannot do this.');
+  if (!isHttpError(error)) {
+    throw error;
+  }
+  if (error.statusCode === 409) {
+    return failure(SLUG_TAKEN, { slug: SLUG_TAKEN });
+  }
+  if (error.statusCode === 403) {
+    return failure('Your role cannot do this.');
+  }
+
   return failure(fallback);
 }

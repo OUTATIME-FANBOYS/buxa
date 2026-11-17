@@ -4,7 +4,9 @@ import type { Identity } from '../auth/identity';
 /** Raised when a different identity already owns this email address. */
 export class EmailInUseError extends Error {
   readonly kind = 'email-in-use';
-  constructor() { super('This email address is already linked to a different account'); this.name = 'EmailInUseError'; }
+  constructor() {
+    super('This email address is already linked to a different account'); this.name = 'EmailInUseError';
+  }
 }
 
 /** True for an EmailInUseError from any copy of this module (see isHttpError for why not `instanceof`). */

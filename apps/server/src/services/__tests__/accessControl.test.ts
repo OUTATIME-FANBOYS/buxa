@@ -15,6 +15,7 @@ async function family() {
   const gus = await camp.people.create(admin, { givenName: 'Gus', familyName: 'Stone', roles: ['guardian'], newHouseholdName: 'Stone family', relationship: 'Father' });
   await camp.memberships.add(admin, { personId: ana.id, plan: 'Summer', startsOn: '2027-07-01', endsOn: '2027-08-31' });
   await camp.credentials.issue(admin, ana.id);
+
   return { camp, admin, ana, kim, gus, householdId };
 }
 
@@ -34,7 +35,9 @@ describe('viewers do not get custody information (S-03)', () => {
     expect(row).toMatchObject({ givenName: 'Ana', roles: ['guardian'], status: null, onSite: null });
     const [household] = await camp.people.listHouseholds(viewer);
     expect(household.id).toBe(householdId);
-    for (const member of household.members) expect(member).toMatchObject({ relationship: null, isGuardian: null, canPickup: null });
+    for (const member of household.members) {
+      expect(member).toMatchObject({ relationship: null, isGuardian: null, canPickup: null });
+    }
     const single = await camp.people.getHousehold(viewer, householdId);
     expect(single.members.every(m => m.relationship === null && m.canPickup === null)).toBe(true);
   });

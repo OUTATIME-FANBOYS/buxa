@@ -13,15 +13,22 @@ import { BYTE_ORDER_MARK, csvHeaders, plainText as text } from '@buxa/shared';
  */
 export async function attendanceExportResponse(url: string): Promise<Response> {
   const actor = await campActor();
-  if (!actor) return text('Choose a camp first.', 404);
+  if (!actor) {
+    return text('Choose a camp first.', 404);
+  }
   const timeZone = await campZone(actor);
   const query = parseLogFilter(Object.fromEntries(new URL(url).searchParams), toLocalDate(new Date(), timeZone));
-  if (!query.ok) return text(query.message, 400);
+  if (!query.ok) {
+    return text(query.message, 400);
+  }
   try {
     const csv = await getRuntime().services.attendance.exportCsv(actor, query.filter);
+
     return new Response(`${BYTE_ORDER_MARK}${csv}`, { status: 200, headers: csvHeaders(attendanceFileName(query.filter)) });
   } catch (error) {
-    if (isHttpError(error)) return text(error.message, error.statusCode);
+    if (isHttpError(error)) {
+      return text(error.message, error.statusCode);
+    }
     throw error;
   }
 }

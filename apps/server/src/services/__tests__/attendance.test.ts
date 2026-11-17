@@ -21,6 +21,7 @@ async function build(timeZone = 'UTC') {
   for (const person of [ana, gus, kim, ben]) {
     await camp.memberships.add(admin, { personId: person.id, plan: 'Summer', startsOn: '2027-07-01', endsOn: '2027-08-31' });
   }
+
   return { camp, admin, staff: camp.actor('staff'), viewer: camp.actor('viewer'), ids: { ana: ana.id, gus: gus.id, kim: kim.id, ben: ben.id, zed: zed.id } };
 }
 
@@ -64,7 +65,9 @@ describe('AttendanceService check-in', () => {
   it('refuses a second check-in while on site, with the arrival time', async () => {
     const { camp, staff, ids } = await build();
     const first = await camp.attendance.checkIn(staff, { personId: ids.ben, method: 'qr' });
-    if (!first.ok) throw new Error('expected a check-in');
+    if (!first.ok) {
+      throw new Error('expected a check-in');
+    }
     camp.at('2027-07-10T10:00:00Z');
     expect(await camp.attendance.checkIn(staff, { personId: ids.ben, method: 'qr' })).toEqual({ ok: false, reason: 'already_on_site', since: first.entry.checkedInAt });
   });

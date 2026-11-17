@@ -3,19 +3,25 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 const env = vi.hoisted(() => {
   process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://127.0.0.1:1';
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'test-publishable-key';
+
   return { store: undefined as unknown };
 });
 
 vi.mock('next/headers', () => ({ cookies: async () => env.store }));
-vi.mock('next/navigation', () => ({ redirect: (url: string) => { throw new Error(`REDIRECT ${url}`); } }));
+vi.mock('next/navigation', () => ({ redirect: (url: string) => {
+  throw new Error(`REDIRECT ${url}`);
+} }));
 // The Supabase client itself fails on request: a real throwing cookie store would also fail in the client's background load.
 const broken = vi.hoisted(() => ({ on: false }));
 vi.mock('@buxa/server/session/supabaseClient', async importOriginal => {
   const actual = await importOriginal<typeof import('@buxa/server/session/supabaseClient')>();
+
   return {
     ...actual,
     createSessionClient: (store: Parameters<typeof actual.createSessionClient>[0]) => (broken.on
-      ? { auth: { getSession: async () => { throw Object.assign(new Error(`cannot decode ${TOKEN} for ${EMAIL}`), { name: 'CookieDecodeError' }); } } }
+      ? { auth: { getSession: async () => {
+        throw Object.assign(new Error(`cannot decode ${TOKEN} for ${EMAIL}`), { name: 'CookieDecodeError' });
+      } } }
       : actual.createSessionClient(store)) as unknown as ReturnType<typeof actual.createSessionClient>,
   };
 });
@@ -31,7 +37,9 @@ const EMAIL = 'maya.camp@example.test';
 const TOKEN = 'eyJhbGciOiJFUzI1NiJ9.secret-payload';
 let runtime: ReturnType<typeof startRuntime> | undefined;
 
-afterEach(async () => { await runtime?.stop(); runtime = undefined; installRuntime(undefined); vi.unstubAllEnvs(); });
+afterEach(async () => {
+  await runtime?.stop(); runtime = undefined; installRuntime(undefined); vi.unstubAllEnvs();
+});
 
 describe('the session reader warns when it cannot read the session (audit S-20)', () => {
   it('a failing cookie read still means signed out, and logs the error name only', async () => {

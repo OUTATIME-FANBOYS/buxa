@@ -36,14 +36,20 @@ export function setup() {
   repo.seedCamper(ORG, CAMPER_ADA, 'Ada Lovelace', '2016-03-01');   // 11 in July 2027
   repo.seedCamper(ORG, CAMPER_BEN, 'Ben Carter', '2016-03-01');
   repo.seedCamper(ORG, CAMPER_CY, 'Cy Dunn', '2016-03-01');
+
   return { repo, service };
 }
 
 /** Creates a class and a session as an admin, returning their ids. */
 export async function classWithSession(service: ReturnType<typeof createClassService>, cls: NewClassInput = robotics, session: NewSessionInput = monday9to12) {
   const created = await service.createClass(as('admin'), cls);
-  if (!created.ok) throw new Error(created.failure.message);
+  if (!created.ok) {
+    throw new Error(created.failure.message);
+  }
   const added = await service.addSession(as('admin'), created.value.id, session);
-  if (!added.ok) throw new Error(added.failure.message);
+  if (!added.ok) {
+    throw new Error(added.failure.message);
+  }
+
   return { classId: created.value.id, sessionId: added.value.id };
 }

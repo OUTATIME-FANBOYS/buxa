@@ -8,8 +8,12 @@ const url = process.env.DATABASE_URL;
 
 describe.skipIf(!url)('classes on Postgres: request role and camp isolation', () => {
   const pool = new pg.Pool({ connectionString: url });
-  beforeAll(async () => { await migrate(pool); });
-  afterAll(async () => { await pool.end(); });
+  beforeAll(async () => {
+    await migrate(pool);
+  });
+  afterAll(async () => {
+    await pool.end();
+  });
 
   let fx: ClassFixture;
   let classId: string;
@@ -25,7 +29,9 @@ describe.skipIf(!url)('classes on Postgres: request role and camp isolation', ()
     const camper = await fx.addPerson(fx.orgA, '2016-03-01', 'Ada');
     enrolmentId = (await fx.repo.enrol(fx.actor, { sessionId, camperId: camper }, enrolRule())).id;
   });
-  afterEach(async () => { await fx.close(); });
+  afterEach(async () => {
+    await fx.close();
+  });
 
   /** Runs one statement as the request role, in camp A. Returns the rejection, so a test can check its SQLSTATE. */
   const asCampA = (sql: string, params: unknown[]) => withOrg(pool, fx.orgA, db => db.query(sql, params));

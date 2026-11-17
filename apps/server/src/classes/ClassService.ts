@@ -33,28 +33,38 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
   return {
     async listClasses(actor) {
       assertAllowed(actor, 'events:read');
+
       return ok(await repo.listClasses(actor.orgId));
     },
 
     async getClass(actor, classId) {
       assertAllowed(actor, 'events:read');
+
       return attempt(async () => {
         const found = await repo.getClass(actor.orgId, classId);
-        if (!found) throw new ClassNotFoundError();
+        if (!found) {
+          throw new ClassNotFoundError();
+        }
+
         return found;
       }, await timezoneOf(actor.orgId));
     },
 
     async createClass(actor, input) {
       assertAllowed(actor, 'classes:manage');
+
       return attempt(() => repo.createClass(actor, input), await timezoneOf(actor.orgId));
     },
 
     async addSession(actor, classId, input) {
       assertAllowed(actor, 'classes:manage');
+
       return attempt(async () => {
         const cls = await repo.getClass(actor.orgId, classId);
-        if (!cls) throw new ClassNotFoundError();
+        if (!cls) {
+          throw new ClassNotFoundError();
+        }
+
         return repo.addSession(actor, classId, {
           startsAt: input.startsAt, endsAt: input.endsAt, location: input.location, instructorIds: input.instructorIds,
           capacity: input.capacity ?? cls.capacity,
@@ -64,12 +74,14 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
 
     async listSessions(actor, classId) {
       assertAllowed(actor, 'events:read');
+
       return attempt(() => repo.listSessions(actor.orgId, classId), await timezoneOf(actor.orgId));
     },
 
     async listEnrolments(actor, sessionId) {
       // Viewers see who is enrolled, by name. Contact details are not part of an enrolment at all.
       assertAllowed(actor, 'people:read');
+
       return attempt(() => repo.listEnrolments(actor.orgId, sessionId), await timezoneOf(actor.orgId));
     },
 

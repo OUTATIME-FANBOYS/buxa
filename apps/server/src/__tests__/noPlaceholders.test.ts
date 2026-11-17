@@ -15,9 +15,14 @@ const DEFINITION = 'apps/server/src/unimplemented.ts';
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap(name => {
-    if (SKIPPED_DIRS.has(name)) return [];
+    if (SKIPPED_DIRS.has(name)) {
+      return [];
+    }
     const path = join(dir, name);
-    if (statSync(path).isDirectory()) return sourceFiles(path);
+    if (statSync(path).isDirectory()) {
+      return sourceFiles(path);
+    }
+
     return /\.(ts|tsx|mjs|js)$/.test(name) ? [path] : [];
   });
 }

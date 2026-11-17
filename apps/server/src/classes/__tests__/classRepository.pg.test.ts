@@ -9,12 +9,20 @@ const url = process.env.DATABASE_URL;
 
 describe.skipIf(!url)('ClassRepository on Postgres', () => {
   const pool = new pg.Pool({ connectionString: url });
-  beforeAll(async () => { await migrate(pool); });
-  afterAll(async () => { await pool.end(); });
+  beforeAll(async () => {
+    await migrate(pool);
+  });
+  afterAll(async () => {
+    await pool.end();
+  });
 
   let fx: ClassFixture;
-  beforeEach(async () => { fx = await createClassFixture(pool); });
-  afterEach(async () => { await fx.close(); });
+  beforeEach(async () => {
+    fx = await createClassFixture(pool);
+  });
+  afterEach(async () => {
+    await fx.close();
+  });
 
   describe('classes', () => {
     it('stores a class and reads back exactly what it created', async () => {

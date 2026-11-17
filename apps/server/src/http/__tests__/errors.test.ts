@@ -29,7 +29,9 @@ describe('errors survive being loaded twice', () => {
     const { startRuntime } = await import('@buxa/server/__tests__/runtimeHarness');
     const { publicRoute } = await import('@buxa/server/http/route');
     const env = startRuntime();
-    const response = await publicRoute(async () => { throw new Other(403, 'Your role cannot do this'); })(new Request('http://localhost/x'));
+    const response = await publicRoute(async () => {
+      throw new Other(403, 'Your role cannot do this');
+    })(new Request('http://localhost/x'));
     expect(response.status).toBe(403);
     await env.stop();
   });

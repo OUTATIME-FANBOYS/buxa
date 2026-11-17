@@ -50,10 +50,15 @@ export async function createCamp(timeZone = 'UTC', start = '2027-07-10T12:00:00Z
     memberships: createMembershipService({ memberships: repos.memberships, people: repos.people, orgs: repos.orgs, clock }),
     credentials: createCredentialService({ credentials: repos.credentials, people: repos.people, memberships: repos.memberships, attendance: repos.attendance, orgs: repos.orgs, clock }),
     attendance: createAttendanceService({ attendance: repos.attendance, people: repos.people, memberships: repos.memberships, orgs: repos.orgs, clock }),
-    at(iso) { now = new Date(iso); },
+    at(iso) {
+      now = new Date(iso);
+    },
     actor(role) {
       const userId = users.get(role);
-      if (!userId) throw new Error(`no ${role} user`);
+      if (!userId) {
+        throw new Error(`no ${role} user`);
+      }
+
       return { userId, orgId: org.id, role };
     },
     audit: () => store.audit,
@@ -62,8 +67,12 @@ export async function createCamp(timeZone = 'UTC', start = '2027-07-10T12:00:00Z
 
 /** Runs `work` and returns the error it threw, or fails the test if it did not throw. */
 export async function thrown(work: () => Promise<unknown>): Promise<{ statusCode?: number; message: string }> {
-  try { await work(); } catch (error) {
-    if (error instanceof Error) return { statusCode: (error as { statusCode?: number }).statusCode, message: error.message };
+  try {
+    await work();
+  } catch (error) {
+    if (error instanceof Error) {
+      return { statusCode: (error as { statusCode?: number }).statusCode, message: error.message };
+    }
     throw error;
   }
   throw new Error('expected an error, none was thrown');

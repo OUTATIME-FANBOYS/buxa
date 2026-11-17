@@ -20,7 +20,9 @@ export interface CredentialRepository {
 /** Raised when a concurrent badge issue for the same person wins the race (the active-badge unique index rejects this one). */
 export class BadgeConflictError extends Error {
   readonly kind = 'badge-conflict';
-  constructor() { super('A badge was issued at the same time. Refresh and try again.'); this.name = 'BadgeConflictError'; }
+  constructor() {
+    super('A badge was issued at the same time. Refresh and try again.'); this.name = 'BadgeConflictError';
+  }
 }
 
 /** True for a BadgeConflictError from any copy of this module (see isHttpError for why not `instanceof`). */

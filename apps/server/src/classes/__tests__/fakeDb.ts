@@ -18,6 +18,7 @@ export function fakeDb(answer: Answer = () => undefined) {
   const query = async (sql: string, params: unknown[] = []) => {
     seen.push({ sql, params });
     const rows = answer(sql, params) ?? [];
+
     return { rows, rowCount: rows.length };
   };
   const client = { query } as unknown as Pick<PoolClient, 'query'>;
@@ -25,5 +26,6 @@ export function fakeDb(answer: Answer = () => undefined) {
     connect: async () => ({ query, release: () => undefined }) as unknown as PoolClient,
     query,
   } as unknown as Pool;
+
   return { client, pool, seen };
 }

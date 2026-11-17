@@ -5,7 +5,9 @@ import { signIn } from '../signIn';
 
 // next/navigation's redirect throws; the stub throws a recognisable error so each test can see where it went.
 const h = vi.hoisted(() => ({
-  redirect: vi.fn((url: string) => { throw new Error(`REDIRECT ${url}`); }),
+  redirect: vi.fn((url: string) => {
+    throw new Error(`REDIRECT ${url}`);
+  }),
   isServiceRefused: vi.fn(),
   requestSessionClient: vi.fn(),
   signInWithPassword: vi.fn(),
@@ -18,6 +20,7 @@ const form = (email: string, password: string) => {
   const data = new FormData();
   data.set('email', email);
   data.set('password', password);
+
   return data;
 };
 const idle = { status: 'idle' } as const;

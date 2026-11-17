@@ -10,12 +10,25 @@ import { isOrgNotFound } from '../../orgs/OrgRepository';
  * own text names constraints and columns, so it is never shown. Anything else is left alone and becomes a 500.
  */
 export function translateRepositoryError(error: unknown): unknown {
-  if (isBadgeConflict(error)) return conflict(error.message);
-  if (isPersonNotFound(error)) return notFound('Person not found');
-  if (isHouseholdNotFound(error)) return notFound('Household not found');
-  if (isMembershipNotFound(error)) return notFound('Membership not found');
-  if (isOrgNotFound(error)) return notFound('Camp not found');
-  if (isRejectedValue(error)) return badRequest('One of the details is not allowed. Check the form and try again.');
+  if (isBadgeConflict(error)) {
+    return conflict(error.message);
+  }
+  if (isPersonNotFound(error)) {
+    return notFound('Person not found');
+  }
+  if (isHouseholdNotFound(error)) {
+    return notFound('Household not found');
+  }
+  if (isMembershipNotFound(error)) {
+    return notFound('Membership not found');
+  }
+  if (isOrgNotFound(error)) {
+    return notFound('Camp not found');
+  }
+  if (isRejectedValue(error)) {
+    return badRequest('One of the details is not allowed. Check the form and try again.');
+  }
+
   return error;
 }
 
@@ -26,5 +39,9 @@ export const isRejectedValue = (error: unknown): boolean =>
 
 /** Runs a repository call and translates its expected errors. */
 export async function guard<T>(work: () => Promise<T>): Promise<T> {
-  try { return await work(); } catch (error) { throw translateRepositoryError(error); }
+  try {
+    return await work();
+  } catch (error) {
+    throw translateRepositoryError(error);
+  }
 }

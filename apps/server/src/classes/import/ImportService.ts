@@ -56,33 +56,43 @@ export function createImportService({ classes, imports, timezoneOf }: ImportServ
   async function planFor(orgId: string, rows: readonly ImportRow[]): Promise<ImportPlan> {
     const classRefs: ClassRef[] = (await classes.listClasses(orgId)).map(c => ({ id: c.id, name: c.name, ageRange: c.ageRange, capacity: c.capacity }));
     const sessions = await imports.listCampSessions(orgId);
+
     return planImport({ rows: [...rows], classes: classRefs, sessions, timeZone: await timezoneOf(orgId) });
   }
 
   return {
     async template(actor) {
       assertAllowed(actor, 'classes:manage');
+
       return importTemplateCsv();
     },
 
     async preview(actor, file) {
       assertAllowed(actor, 'classes:manage');
       const fileName = file.fileName.trim();
-      if (fileName === '' || fileName.length > MAX_FILE_NAME) throw badRequest(`Give the file a name of ${MAX_FILE_NAME} characters or fewer.`);
+      if (fileName === '' || fileName.length > MAX_FILE_NAME) {
+        throw badRequest(`Give the file a name of ${MAX_FILE_NAME} characters or fewer.`);
+      }
       const read = readImportFile(file.text);
-      if (!read.ok) throw badRequest(read.message);
+      if (!read.ok) {
+        throw badRequest(read.message);
+      }
       const plan = await planFor(actor.orgId, read.rows);
+
       return { fileName, counts: plan.counts, results: plan.results, input: read.rows };
     },
 
     async confirm(actor, preview) {
       assertAllowed(actor, 'classes:manage');
-      if (preview.input.length > MAX_IMPORT_ROWS) throw badRequest(`Import at most ${MAX_IMPORT_ROWS} rows at a time.`);
+      if (preview.input.length > MAX_IMPORT_ROWS) {
+        throw badRequest(`Import at most ${MAX_IMPORT_ROWS} rows at a time.`);
+      }
       // The camp's data may have changed since the preview, so the rows are checked again and only the fresh result is written.
       const fresh = await planFor(actor.orgId, preview.input);
       await imports.applyImport(actor, {
         fileName: preview.fileName, rows: preview.input.length, created: fresh.counts.create, updated: fresh.counts.update, refused: fresh.counts.refused,
       }, fresh.writes);
+
       return {
         fileName: preview.fileName, counts: fresh.counts, results: fresh.results, written: fresh.writes.length,
         changedSincePreview: outcomeOf(preview.results) !== outcomeOf(fresh.results),
@@ -91,6 +101,7 @@ export function createImportService({ classes, imports, timezoneOf }: ImportServ
 
     async errorReport(actor, preview) {
       assertAllowed(actor, 'classes:manage');
+
       return importErrorReportCsv(preview.results);
     },
   };

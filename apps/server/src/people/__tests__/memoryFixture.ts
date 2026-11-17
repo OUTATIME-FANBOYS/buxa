@@ -8,6 +8,7 @@ export async function createMemoryFixture(): Promise<RepositoryFixture> {
   const repos = createInMemoryRepositories();
   const actor: Actor = { userId: randomUUID(), orgId: randomUUID(), role: 'owner' };
   const otherActor: Actor = { userId: randomUUID(), orgId: randomUUID(), role: 'owner' };
+
   return {
     repos,
     actor,

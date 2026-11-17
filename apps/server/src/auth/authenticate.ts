@@ -12,9 +12,14 @@ const bearerToken = (header: string | null): string => (header?.startsWith('Bear
  * Failures say only "invalid or expired": never why, and never the token.
  */
 export async function authenticate(headers: Headers, deps: { verifier?: Verifier; users: UserRepository }, log: Logger): Promise<Session> {
-  if (!deps.verifier) throw new HttpError(503, 'Sign-in is not configured');
+  if (!deps.verifier) {
+    throw new HttpError(503, 'Sign-in is not configured');
+  }
   const token = bearerToken(headers.get('authorization'));
-  if (!token) throw unauthorized();
+  if (!token) {
+    throw unauthorized();
+  }
+
   return sessionFromToken(token, { verifier: deps.verifier, users: deps.users }, log);
 }
 

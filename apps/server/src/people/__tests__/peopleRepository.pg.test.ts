@@ -8,7 +8,11 @@ const url = process.env.DATABASE_URL;
 
 describe.skipIf(!url)('PeopleRepository on Postgres', () => {
   const pool = new pg.Pool({ connectionString: url });
-  beforeAll(async () => { await migrate(pool); });
-  afterAll(async () => { await pool.end(); });
+  beforeAll(async () => {
+    await migrate(pool);
+  });
+  afterAll(async () => {
+    await pool.end();
+  });
   peopleRepositoryContract(() => createPgFixture(pool));
 });

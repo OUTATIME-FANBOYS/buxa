@@ -19,11 +19,30 @@ export function buildMcp(store: Store, agentId: string): McpServer {
   const server = new McpServer({ name: 'buxa', version: '1.0.0' }, { instructions: INSTRUCTIONS });
   const text = (v: unknown) => ({ content: [{ type: 'text' as const, text: typeof v === 'string' ? v : JSON.stringify(v, null, 2) }] });
   const err = (m: string) => ({ isError: true as const, content: [{ type: 'text' as const, text: m }] });
-  const read = <T,>(fn: (s: AppState) => T | G.Out<T>) => { const s = store.snapshot; if (!s) return err('Buxa has no data yet. Open the app once to create the workspace.'); return text(fn(s)); };
-  const readOut = (fn: (s: AppState) => G.Out<unknown>) => { const s = store.snapshot; if (!s) return err('Buxa has no data yet. Open the app once to create the workspace.'); const r = fn(s); return r.error ? err(r.error) : text(r.value); };
+  const read = <T, >(fn: (s: AppState) => T | G.Out<T>) => {
+    const s = store.snapshot; if (!s) {
+      return err('Buxa has no data yet. Open the app once to create the workspace.');
+    }
+
+    return text(fn(s));
+  };
+  const readOut = (fn: (s: AppState) => G.Out<unknown>) => {
+    const s = store.snapshot; if (!s) {
+      return err('Buxa has no data yet. Open the app once to create the workspace.');
+    } const r = fn(s);
+
+    return r.error ? err(r.error) : text(r.value);
+  };
   const write = (fn: (s: AppState) => G.Out<unknown>) => {
-    if (!store.snapshot) return err('Buxa has no data yet. Open the app once to create the workspace.');
-    let r: G.Out<unknown> | undefined; store.mutate(s => { r = fn(s); return r.error ? s : r.state; }, 'agent:' + agentId);
+    if (!store.snapshot) {
+      return err('Buxa has no data yet. Open the app once to create the workspace.');
+    }
+    let r: G.Out<unknown> | undefined; store.mutate(s => {
+      r = fn(s);
+
+      return r.error ? s : r.state;
+    }, 'agent:' + agentId);
+
     return r!.error ? err(r!.error) : text(r!.value);
   };
 

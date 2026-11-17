@@ -15,18 +15,36 @@ const blankToNull = (value: string | null): string | null => (value === null || 
 
 function toPatchRecord(patch: PersonPatchInput): PersonPatchRecord {
   const out: PersonPatchRecord = {};
-  if (patch.givenName !== undefined) out.givenName = patch.givenName;
-  if (patch.familyName !== undefined) out.familyName = patch.familyName;
-  if (patch.preferredName !== undefined) out.preferredName = blankToNull(patch.preferredName);
-  if (patch.dateOfBirth !== undefined) out.dateOfBirth = patch.dateOfBirth;
-  if (patch.email !== undefined) out.email = blankToNull(patch.email);
-  if (patch.phone !== undefined) out.phone = blankToNull(patch.phone);
-  if (patch.roles !== undefined) out.roles = patch.roles;
+  if (patch.givenName !== undefined) {
+    out.givenName = patch.givenName;
+  }
+  if (patch.familyName !== undefined) {
+    out.familyName = patch.familyName;
+  }
+  if (patch.preferredName !== undefined) {
+    out.preferredName = blankToNull(patch.preferredName);
+  }
+  if (patch.dateOfBirth !== undefined) {
+    out.dateOfBirth = patch.dateOfBirth;
+  }
+  if (patch.email !== undefined) {
+    out.email = blankToNull(patch.email);
+  }
+  if (patch.phone !== undefined) {
+    out.phone = blankToNull(patch.phone);
+  }
+  if (patch.roles !== undefined) {
+    out.roles = patch.roles;
+  }
+
   return out;
 }
 
 const requireRelationship = (relationship: string | undefined): string => {
-  if (relationship === undefined || relationship.trim() === '') throw badRequest(RELATIONSHIP_NEEDED);
+  if (relationship === undefined || relationship.trim() === '') {
+    throw badRequest(RELATIONSHIP_NEEDED);
+  }
+
   return relationship;
 };
 
@@ -39,7 +57,10 @@ const seesCustody = (actor: Actor): boolean => can(actor, 'people:read_contact')
 /** Groups memberships by person. */
 function byPerson(records: readonly MembershipRecord[]): Map<string, MembershipRecord[]> {
   const groups = new Map<string, MembershipRecord[]>();
-  for (const record of records) groups.set(record.personId, [...(groups.get(record.personId) ?? []), record]);
+  for (const record of records) {
+    groups.set(record.personId, [...(groups.get(record.personId) ?? []), record]);
+  }
+
   return groups;
 }
 
@@ -62,6 +83,7 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
     ]);
     const seeContact = can(actor, 'people:read_contact');
     const custody = seesCustody(actor);
+
     return {
       ...toSummary(record, ms, open !== null, today, custody),
       dateOfBirth: seeContact ? record.dateOfBirth : null,
@@ -77,6 +99,7 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
   /** Whether the person is in some household that has a guardian other than themselves. */
   async function hasGuardianHousehold(orgId: string, personId: string): Promise<boolean> {
     const households = await people.householdsOf(orgId, personId);
+
     return households.some(h => h.members.some(m => m.personId !== personId && m.isGuardian));
   }
 
@@ -89,15 +112,26 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
     const isGuardian = isGuardianRole(input.roles);
     if (input.householdId !== undefined) {
       const household = await people.getHousehold(orgId, input.householdId);
-      if (!household) throw badRequest('That household does not exist.');
-      if (camper && !household.members.some(m => m.isGuardian)) throw badRequest(CAMPER_NEEDS_GUARDIAN);
+      if (!household) {
+        throw badRequest('That household does not exist.');
+      }
+      if (camper && !household.members.some(m => m.isGuardian)) {
+        throw badRequest(CAMPER_NEEDS_GUARDIAN);
+      }
+
       return { householdId: input.householdId, relationship: requireRelationship(input.relationship), isGuardian, canPickup: false };
     }
     if (input.newHouseholdName !== undefined) {
-      if (camper) throw badRequest(CAMPER_NEEDS_GUARDIAN);
+      if (camper) {
+        throw badRequest(CAMPER_NEEDS_GUARDIAN);
+      }
+
       return { newHouseholdName: input.newHouseholdName, relationship: requireRelationship(input.relationship), isGuardian, canPickup: false };
     }
-    if (camper) throw badRequest(CAMPER_NEEDS_GUARDIAN);
+    if (camper) {
+      throw badRequest(CAMPER_NEEDS_GUARDIAN);
+    }
+
     return undefined;
   }
 
@@ -117,20 +151,26 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       ]);
       const groups = byPerson(ms);
       const custody = seesCustody(actor);
+
       return records.map(p => toSummary(p, groups.get(p.id) ?? [], onSite.has(p.id), today, custody));
     },
 
     async get(actor, id) {
       assertAllowed(actor, 'people:read');
       const record = await people.get(actor.orgId, id);
-      if (!record) throw notFound('Person not found');
+      if (!record) {
+        throw notFound('Person not found');
+      }
+
       return personView(actor, record, await todayFor(actor.orgId));
     },
 
     async create(actor, input) {
       assertAllowed(actor, 'people:create');
       const orgId = actor.orgId;
-      if (input.roles.length === 0) throw badRequest(CHOOSE_ROLE);
+      if (input.roles.length === 0) {
+        throw badRequest(CHOOSE_ROLE);
+      }
       if (input.householdId !== undefined && input.newHouseholdName !== undefined) {
         throw badRequest('Choose an existing household or name a new one, not both.');
       }
@@ -140,24 +180,36 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
         dateOfBirth: input.dateOfBirth ?? null, email: blankToNull(input.email ?? null), phone: blankToNull(input.phone ?? null),
         roles: input.roles,
       }, link));
+
       return personView(actor, record, await todayFor(orgId));
     },
 
     async update(actor, id, patch) {
       assertAllowed(actor, 'people:update');
       const orgId = actor.orgId;
-      if (patch.roles !== undefined && patch.roles.length === 0) throw badRequest(CHOOSE_ROLE);
-      if (!(await people.get(orgId, id))) throw notFound('Person not found');
-      if (patch.roles?.includes('camper') && !(await hasGuardianHousehold(orgId, id))) throw badRequest(CAMPER_NEEDS_GUARDIAN);
+      if (patch.roles !== undefined && patch.roles.length === 0) {
+        throw badRequest(CHOOSE_ROLE);
+      }
+      if (!(await people.get(orgId, id))) {
+        throw notFound('Person not found');
+      }
+      if (patch.roles?.includes('camper') && !(await hasGuardianHousehold(orgId, id))) {
+        throw badRequest(CAMPER_NEEDS_GUARDIAN);
+      }
       const record = await guard(() => people.update(actor, id, toPatchRecord(patch)));
+
       return personView(actor, record, await todayFor(orgId));
     },
 
     async archive(actor, id) {
       assertAllowed(actor, 'people:delete');
       const orgId = actor.orgId;
-      if (!(await people.get(orgId, id))) throw notFound('Person not found');
-      if (await attendance.openFor(orgId, id)) throw conflict('Check them out before archiving.');
+      if (!(await people.get(orgId, id))) {
+        throw notFound('Person not found');
+      }
+      if (await attendance.openFor(orgId, id)) {
+        throw conflict('Check them out before archiving.');
+      }
       // Archive first: if the badge revoke then fails, scans still refuse an archived person.
       const at = clock().toISOString();
       await guard(() => people.archive(actor, id, at));
@@ -167,22 +219,30 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
     async createHousehold(actor, input) {
       assertAllowed(actor, 'people:create');
       const record = await guard(() => people.createHousehold(actor, input.name));
+
       return (await toHouseholds(people, actor.orgId, [record], seesCustody(actor)))[0];
     },
 
     async linkToHousehold(actor, input: HouseholdLinkInput) {
       assertAllowed(actor, 'people:update');
-      if (input.canPickup && !input.isGuardian) throw badRequest(PICKUP_NEEDS_GUARDIAN);
+      if (input.canPickup && !input.isGuardian) {
+        throw badRequest(PICKUP_NEEDS_GUARDIAN);
+      }
       const orgId = actor.orgId;
-      if (!(await people.get(orgId, input.personId))) throw notFound('Person not found');
+      if (!(await people.get(orgId, input.personId))) {
+        throw notFound('Person not found');
+      }
       // Authorising pickup is its own permission. It is needed whenever the flag is set, or cleared from a person who has it.
       const household = await people.getHousehold(orgId, input.householdId);
       const hadPickup = household?.members.find(m => m.personId === input.personId)?.canPickup ?? false;
-      if (input.canPickup || hadPickup) assertAllowed(actor, 'people:authorise_pickup');
+      if (input.canPickup || hadPickup) {
+        assertAllowed(actor, 'people:authorise_pickup');
+      }
       const record = await guard(() => people.link(actor, {
         householdId: input.householdId, personId: input.personId, relationship: input.relationship,
         isGuardian: input.isGuardian, canPickup: input.canPickup,
       }));
+
       return (await toHouseholds(people, orgId, [record], seesCustody(actor)))[0];
     },
 
@@ -190,7 +250,9 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       assertAllowed(actor, 'people:update');
       const orgId = actor.orgId;
       const household = await people.getHousehold(orgId, householdId);
-      if (!household) throw notFound('Household not found');
+      if (!household) {
+        throw notFound('Household not found');
+      }
       const removed = household.members.find(m => m.personId === personId);
       if (removed?.isGuardian) {
         const others = household.members.filter(m => m.personId !== personId);
@@ -203,18 +265,23 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
         }
       }
       const record = await guard(() => people.unlink(actor, householdId, personId));
+
       return (await toHouseholds(people, orgId, [record], seesCustody(actor)))[0];
     },
 
     async getHousehold(actor, id) {
       assertAllowed(actor, 'people:read');
       const record = await people.getHousehold(actor.orgId, id);
-      if (!record) throw notFound('Household not found');
+      if (!record) {
+        throw notFound('Household not found');
+      }
+
       return (await toHouseholds(people, actor.orgId, [record], seesCustody(actor)))[0];
     },
 
     async listHouseholds(actor) {
       assertAllowed(actor, 'people:read');
+
       return toHouseholds(people, actor.orgId, await people.listHouseholds(actor.orgId), seesCustody(actor));
     },
   };

@@ -15,11 +15,18 @@ import { expectedFailure, NO_CAMP } from './failures';
  */
 export async function archivePersonAction(personId: string): Promise<ActionState> {
   const actor = await currentActor();
-  if (!actor) return failure(NO_CAMP);
-  if (!isUuid(personId)) return failure('That person is not valid.');
+  if (!actor) {
+    return failure(NO_CAMP);
+  }
+  if (!isUuid(personId)) {
+    return failure('That person is not valid.');
+  }
 
-  try { await getRuntime().services.people.archive(actor, personId); }
-  catch (error) { return expectedFailure(error, 'Could not archive this person.'); }
+  try {
+    await getRuntime().services.people.archive(actor, personId);
+  } catch (error) {
+    return expectedFailure(error, 'Could not archive this person.');
+  }
 
   revalidatePath(ROUTES.people);
   redirect(ROUTES.people); // throws; kept outside the try

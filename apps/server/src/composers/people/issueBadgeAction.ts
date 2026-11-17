@@ -16,14 +16,22 @@ import { field } from '@buxa/shared';
  */
 export async function issueBadgeAction(_previous: BadgeState, form: FormData): Promise<BadgeState> {
   const actor = await currentActor();
-  if (!actor) return failure(NO_CAMP);
+  if (!actor) {
+    return failure(NO_CAMP);
+  }
   const personId = field(form, 'personId');
-  if (!isUuid(personId)) return failure('That person is not valid.');
+  if (!isUuid(personId)) {
+    return failure('That person is not valid.');
+  }
 
   let badge;
-  try { badge = await getRuntime().services.credentials.issue(actor, personId); }
-  catch (error) { return expectedFailure(error, 'Could not issue the badge.'); }
+  try {
+    badge = await getRuntime().services.credentials.issue(actor, personId);
+  } catch (error) {
+    return expectedFailure(error, 'Could not issue the badge.');
+  }
 
   revalidatePath(personPath(personId));
+
   return { status: 'issued', payload: badge.payload };
 }

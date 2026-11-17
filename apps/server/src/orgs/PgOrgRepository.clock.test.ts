@@ -18,7 +18,9 @@ describe.skipIf(!url)('PgOrgRepository clock format', () => {
     const { rows } = await pool.query<{ id: string }>(`INSERT INTO users (email, name) VALUES ($1, 'Clock owner') RETURNING id`, [`clock-${tag}@example.test`]);
     ownerId = rows[0].id;
   });
-  afterAll(async () => { await pool.end(); });
+  afterAll(async () => {
+    await pool.end();
+  });
 
   it('defaults to 24-hour for a new camp', async () => {
     const created = await repo.createWithOwner({ name: 'Clock default', slug: `clock-default-${tag}`, timezone: 'Europe/London' }, ownerId);

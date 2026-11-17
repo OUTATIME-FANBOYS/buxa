@@ -40,6 +40,7 @@ export class InMemoryClassRepository implements ClassRepository {
 
   async getClass(orgId: string, classId: string): Promise<Class | null> {
     const found = this.classIn(orgId, classId);
+
     return found ? toClass(found) : null;
   }
 
@@ -50,25 +51,34 @@ export class InMemoryClassRepository implements ClassRepository {
     };
     this.classes.set(row.id, row);
     this.record(actor, 'class.create', 'class', row.id, { name: row.name });
+
     return toClass(row);
   }
 
   async addSession(actor: Actor, classId: string, input: NewSessionRecord): Promise<Session> {
     const cls = this.classIn(actor.orgId, classId);
-    if (!cls) throw new ClassNotFoundError();
+    if (!cls) {
+      throw new ClassNotFoundError();
+    }
     // As in Postgres: every instructor must be a person in this camp.
-    if (input.instructorIds.some(id => !this.camperIn(actor.orgId, id))) throw new InstructorNotFoundError();
+    if (input.instructorIds.some(id => !this.camperIn(actor.orgId, id))) {
+      throw new InstructorNotFoundError();
+    }
     const row: StoredSession = { ...input, id: randomUUID(), orgId: actor.orgId, classId };
     this.sessions.set(row.id, row);
     this.record(actor, 'session.create', 'session', row.id, {
       classId, startsAt: row.startsAt, endsAt: row.endsAt, instructorIds: [...new Set(input.instructorIds)],
     });
+
     return this.toSession(row, cls);
   }
 
   async listSessions(orgId: string, classId: string): Promise<Session[]> {
     const cls = this.classIn(orgId, classId);
-    if (!cls) throw new ClassNotFoundError();
+    if (!cls) {
+      throw new ClassNotFoundError();
+    }
+
     return [...this.sessions.values()]
       .filter(s => s.orgId === orgId && s.classId === classId)
       .sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.id.localeCompare(b.id))
@@ -77,7 +87,10 @@ export class InMemoryClassRepository implements ClassRepository {
 
   async listEnrolments(orgId: string, sessionId: string): Promise<Enrolment[]> {
     const session = this.sessionIn(orgId, sessionId);
-    if (!session) throw new SessionNotFoundError();
+    if (!session) {
+      throw new SessionNotFoundError();
+    }
+
     return [...this.enrolments.values()]
       .filter(e => e.orgId === orgId && e.sessionId === sessionId)
       .sort((a, b) => a.enrolledAt.localeCompare(b.enrolledAt) || a.id.localeCompare(b.id))
@@ -87,11 +100,17 @@ export class InMemoryClassRepository implements ClassRepository {
   async enrol(actor: Actor, request: EnrolRequest, rule: EnrolmentRule): Promise<Enrolment> {
     return this.exclusive(request.sessionId, async () => {
       const session = this.sessionIn(actor.orgId, request.sessionId);
-      if (!session) throw new SessionNotFoundError();
+      if (!session) {
+        throw new SessionNotFoundError();
+      }
       const cls = this.classIn(actor.orgId, session.classId);
-      if (!cls) throw new ClassNotFoundError();
+      if (!cls) {
+        throw new ClassNotFoundError();
+      }
       const camper = this.camperIn(actor.orgId, request.camperId);
-      if (!camper) throw new CamperNotFoundError();
+      if (!camper) {
+        throw new CamperNotFoundError();
+      }
       const facts: GatheredEnrolmentFacts = {
         session: { sessionId: session.id, className: cls.name, startsAt: session.startsAt, endsAt: session.endsAt, capacity: session.capacity, ageRange: cls.ageRange },
         seatsTaken: this.countWhere(session.id, 'enrolled'),
@@ -101,7 +120,9 @@ export class InMemoryClassRepository implements ClassRepository {
       // The facts are read now and the write happens after the round trip, as in Postgres. Only the lock keeps them current.
       await yieldToDatabase();
       const decision = rule(facts);
-      if (decision.kind === 'refuse') throw refusalError(decision);
+      if (decision.kind === 'refuse') {
+        throw refusalError(decision);
+      }
 
       const row: StoredEnrolment = {
         id: randomUUID(), orgId: actor.orgId, sessionId: session.id, camperId: camper.id, status: decision.status,
@@ -114,18 +135,25 @@ export class InMemoryClassRepository implements ClassRepository {
           sessionId: session.id, camperId: camper.id, reason: decision.overrode.reason, clashSessionId: decision.overrode.clash.sessionId,
         });
       }
+
       return this.toEnrolment(row);
     });
   }
 
   async cancelEnrolment(actor: Actor, enrolmentId: string, note: string | null): Promise<Enrolment> {
     const existing = this.enrolments.get(enrolmentId);
-    if (!existing || existing.orgId !== actor.orgId || existing.status === 'cancelled') throw new EnrolmentNotFoundError();
+    if (!existing || existing.orgId !== actor.orgId || existing.status === 'cancelled') {
+      throw new EnrolmentNotFoundError();
+    }
+
     return this.exclusive(existing.sessionId, async () => {
       const row = this.enrolments.get(enrolmentId);
-      if (!row || row.orgId !== actor.orgId || row.status === 'cancelled') throw new EnrolmentNotFoundError();
+      if (!row || row.orgId !== actor.orgId || row.status === 'cancelled') {
+        throw new EnrolmentNotFoundError();
+      }
       row.status = 'cancelled';
       this.record(actor, 'enrolment.cancel', 'enrolment', row.id, { sessionId: row.sessionId, camperId: row.camperId, note });
+
       return this.toEnrolment(row);
     });
   }
@@ -134,6 +162,7 @@ export class InMemoryClassRepository implements ClassRepository {
     const previous = this.locks.get(key) ?? Promise.resolve();
     const run = previous.then(work);
     this.locks.set(key, run.then(() => undefined, () => undefined));
+
     return run;
   }
 
@@ -143,16 +172,19 @@ export class InMemoryClassRepository implements ClassRepository {
 
   private classIn(orgId: string, id: string): StoredClass | undefined {
     const c = this.classes.get(id);
+
     return c && c.orgId === orgId ? c : undefined;
   }
 
   private sessionIn(orgId: string, id: string): StoredSession | undefined {
     const s = this.sessions.get(id);
+
     return s && s.orgId === orgId ? s : undefined;
   }
 
   private camperIn(orgId: string, id: string): StoredCamper | undefined {
     const c = this.campers.get(id);
+
     return c && c.orgId === orgId ? c : undefined;
   }
 
@@ -164,11 +196,16 @@ export class InMemoryClassRepository implements ClassRepository {
   private activeFor(orgId: string, camperId: string): ActiveEnrolmentFacts[] {
     const out: ActiveEnrolmentFacts[] = [];
     for (const e of this.enrolments.values()) {
-      if (e.orgId !== orgId || e.camperId !== camperId || e.status === 'cancelled') continue;
+      if (e.orgId !== orgId || e.camperId !== camperId || e.status === 'cancelled') {
+        continue;
+      }
       const s = this.sessions.get(e.sessionId);
       const c = s ? this.classes.get(s.classId) : undefined;
-      if (s && c) out.push({ sessionId: s.id, className: c.name, startsAt: s.startsAt, endsAt: s.endsAt });
+      if (s && c) {
+        out.push({ sessionId: s.id, className: c.name, startsAt: s.startsAt, endsAt: s.endsAt });
+      }
     }
+
     return out;
   }
 
@@ -186,6 +223,7 @@ export class InMemoryClassRepository implements ClassRepository {
     const s = this.sessions.get(e.sessionId);
     const c = s ? this.classes.get(s.classId) : undefined;
     const camper = this.campers.get(e.camperId);
+
     return {
       id: e.id, sessionId: e.sessionId, classId: c?.id ?? '', className: c?.name ?? '', camperId: e.camperId,
       camperName: camper?.name ?? '', status: e.status, enrolledAt: e.enrolledAt, overrideReason: e.overrideReason,
