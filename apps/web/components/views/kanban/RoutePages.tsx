@@ -17,7 +17,7 @@ import { Settings } from './Settings';
 import { WorkspaceCalendar } from './WorkspaceCalendar';
 
 /** Home: one page for the camp (when there is one) and its staff tasks. */
-export function HomePage({ camp }: { camp: CampHome | null }) {
+export function HomePage({ camp }: { camp: CampHome }) {
   return <Dashboard camp={camp} />;
 }
 
