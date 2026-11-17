@@ -8,7 +8,7 @@ import { fieldError, idle } from '@buxa/shared';
 import { addSessionAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
 
-export interface InstructorChoice { id: string; name: string }
+interface InstructorChoice { id: string; name: string }
 
 /**
  * One session of a class. Times are typed in the camp's clock (the zone is shown above the fields). Instructors are chosen from the

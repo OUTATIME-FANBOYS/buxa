@@ -6,7 +6,7 @@ import { fieldError, idle } from '@buxa/shared';
 import { enrolAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
 
-export interface CamperChoice { id: string; name: string }
+interface CamperChoice { id: string; name: string }
 
 /**
  * Enrol one camper in one session. When the session is full only the waitlist button is offered: a full session never takes a

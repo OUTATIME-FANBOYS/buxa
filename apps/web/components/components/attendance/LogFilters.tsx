@@ -3,7 +3,7 @@ import type { PersonSummary } from '@buxa/contracts';
 import { ROUTES } from '@/config/routes';
 import { attendanceDisplayName } from '@buxa/shared';
 
-export interface LogFilterValues { from: string; to: string; personId: string }
+interface LogFilterValues { from: string; to: string; personId: string }
 
 /** The log's date range and person filter. A plain GET form, so it works without scripts and the address is shareable. */
 export function LogFilters({ values, people, children }: { values: LogFilterValues; people: readonly PersonSummary[]; children?: ReactNode }) {

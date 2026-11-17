@@ -8,7 +8,7 @@ import { issueBadgeAction, revokeBadgeAction } from '@/actions/people';
 import type { BadgeState } from '@buxa/shared';
 import { FormMessage } from './FormMessage';
 
-export interface BadgeActionsProps {
+interface BadgeActionsProps {
   personId: string;
   hasActiveBadge: boolean;
   personName: string;

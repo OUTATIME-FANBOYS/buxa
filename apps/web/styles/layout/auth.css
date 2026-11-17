@@ -8,7 +8,4 @@
 .auth-hero .logo.logo-mark { background: none; }
 .hero-copy { display: grid; gap: var(--s5); } .hero-title { font-size: clamp(1.75rem, 3.2vw, 2.5rem); font-weight: 650; letter-spacing: -.03em; line-height: 1.08; max-width: 16ch; text-wrap: balance; }
 .hero-copy ul { display: grid; gap: var(--s3); color: var(--hero-fg-2); font-weight: 500; } .hero-copy li { display: flex; align-items: center; gap: var(--s3); }
-.hero-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s3); max-width: 420px; align-items: start; }
-.hb-col { background: color-mix(in srgb, var(--hero-fg) 10%, transparent); border-radius: 10px; padding: 10px; display: grid; gap: 6px; } .hb-col b { height: 20px; border-radius: 6px; background: color-mix(in srgb, var(--hero-fg) 20%, transparent); }
-.auth-hero .kind-open { background: #c3c7da; } .auth-hero .kind-active { background: #5cc2c4; } .auth-hero .kind-done { background: #5ee0a8; }
 .auth-card h1 { font-size: 24px; letter-spacing: -.025em; } .auth form { display: grid; gap: var(--s4); } .auth-switch { text-align: center; }

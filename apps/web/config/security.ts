@@ -3,7 +3,7 @@
  * Scripts must be same-origin or carry this request's nonce, so an injected `<script>` cannot run.
  */
 
-export interface PolicyOptions {
+interface PolicyOptions {
   /** A fresh random value for this request. Next.js stamps it on its own inline scripts. */
   nonce: string;
   /** Development needs `eval` for React's tooling and the hot-reload socket; production never does. */

@@ -1,7 +1,7 @@
 import { Icon } from '@/components/elements/export';
 import { type Tone } from '@buxa/shared';
 
-export interface StatCardProps { label: string; value: number | string; note?: string; tone?: Tone; icon?: string; strong?: boolean }
+interface StatCardProps { label: string; value: number | string; note?: string; tone?: Tone; icon?: string; strong?: boolean }
 
 /** One number in the stats row, in one palette tone. */
 export function StatCard({ label, value, note, tone = 'neutral', icon, strong }: StatCardProps) {

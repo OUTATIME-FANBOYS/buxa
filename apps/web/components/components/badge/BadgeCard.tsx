@@ -1,7 +1,7 @@
 import { qrPath } from '@buxa/shared';
 
 /** A printable badge with a QR code of `payload` (what `credentialPayload(token)` returns). Server-renderable; the code is inline SVG. */
-export interface BadgeCardProps { personName: string; roleLabel: string; campName: string; payload: string }
+interface BadgeCardProps { personName: string; roleLabel: string; campName: string; payload: string }
 
 export function BadgeCard({ personName, roleLabel, campName, payload }: BadgeCardProps) {
   const { size, d } = qrPath(payload);
