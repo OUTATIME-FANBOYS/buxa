@@ -39,7 +39,7 @@ docs/               roadmap, ADRs, security, auth, deploy, phase specs, audit
   | `(admin)` | Admin | Team access and settings, and the new-camp page. |
   | `(parent)` | not shown yet | **Reserved** for the parent portal (phase 6). Do not create the folder or add routes to it before phase 6. |
 
-  Each group has a `layout.tsx`. A page directly in a group folder is allowed only for Home. `apps/web/architecture/routeCategories.test.ts` fails when a page sits outside the listed groups, when two pages share a URL, when the parent group exists early, or when a sidebar link is filed in the wrong folder.
+  Each group has a `layout.tsx`. A page directly in a group folder is allowed only for Home. `test/architecture/routeCategories.test.ts` fails when a page sits outside the listed groups, when two pages share a URL, when the parent group exists early, or when a sidebar link is filed in the wrong folder.
 
 ## 3. Layers and packages
 
@@ -61,7 +61,7 @@ apps/web  ->  apps/server      ->  apps/shared
 | server: `src/` | Services, repositories, auth, http, session, rate limiting, runtime, composers. Server-only | `@buxa/shared`, `@buxa/domain`, `@buxa/contracts`, `@buxa/db` |
 | shared: `src/` | Pure helpers: dates, CSV, tones, validation, ids, sorting, routes, theme, QR rendering | `@buxa/domain`, `@buxa/contracts` |
 
-The rules below are enforced by `apps/web/architecture/architecture.test.ts` and `packages.test.ts`:
+The rules below are enforced by `test/architecture/architecture.test.ts` and `packages.test.ts`:
 
 1. **Packages point one way.** `shared` and `server` never import `web` or `middleware`. `shared` imports neither React nor the database.
 2. **Client code never reaches `@buxa/server`.** Client components call server actions through `apps/web/actions/`. Only server components, route handlers and `'use server'` files import `@buxa/server`. The test follows every module that client code can reach.
@@ -100,7 +100,7 @@ The rules below are enforced by `apps/web/architecture/architecture.test.ts` and
   - `jsx-a11y/alt-text` and `jsx-a11y/label-has-associated-control`: every image has alt text; every form label is tied to its control.
   - `no-console`: use `console.warn` or `console.error` in product code. Scripts, tests and CLI entry points may log.
 - Warnings are debt, not permission: `@typescript-eslint/no-non-null-assertion` and the typescript-eslint type-checked rules are warnings until the existing code is cleared. Do not add new ones.
-- Layer and package rules (section 3) are enforced by the architecture tests in `apps/web/architecture/`.
+- Layer and package rules (section 3) are enforced by the architecture tests in `test/architecture/`.
 - Do not disable a rule inline without a reason on the same line (`// eslint-disable-line rule -- reason`).
 
 ## 7. Tests
