@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { attendanceExportDownload } from '@/screens/attendance/exportDownload';
+import { attendanceExportDownload } from '@/views/attendance/exportDownload';
 
 const h = vi.hoisted(() => ({ respond: vi.fn(async () => new Response('csv')) }));
 vi.mock('@/logic/composers/index.server', () => ({ attendanceExportResponse: h.respond }));

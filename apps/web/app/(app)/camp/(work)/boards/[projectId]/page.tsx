@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { BoardRoutePage } from '@/screens';
+import { BoardRoutePage } from '@/views';
 
 export const metadata: Metadata = { title: 'Board' };
 

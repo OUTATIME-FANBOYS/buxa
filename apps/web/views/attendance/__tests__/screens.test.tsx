@@ -30,9 +30,9 @@ vi.mock('@/logic/composers/attendance/searchPeople', () => ({ searchPeopleAction
 vi.mock('@/logic/composers/attendance/checkIn', () => ({ checkInAction: async () => ({ kind: 'ok', value: { ok: false, reason: 'archived' } }) }));
 vi.mock('@/logic/composers/attendance/checkOut', () => ({ checkOutAction: async () => ({ kind: 'ok', value: { ok: false, reason: 'not_on_site' } }) }));
 
-const { CheckInScreen } = await import('@/screens');
-const { OnSiteScreen } = await import('@/screens');
-const { AttendanceScreen } = await import('@/screens');
+const { CheckInScreen } = await import('@/views');
+const { OnSiteScreen } = await import('@/views');
+const { AttendanceScreen } = await import('@/views');
 
 const ada: PersonSummary = { id: '6f1c2b8e-9a3d-4c5e-8f70-1a2b3c4d5e6f', givenName: 'Ada', familyName: 'Lovelace', preferredName: null, roles: ['camper'], status: 'valid', onSite: true, archived: false };
 const sam: PersonSummary = { ...ada, id: '0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d', givenName: 'Sam', familyName: 'Lee', roles: ['guardian'] };

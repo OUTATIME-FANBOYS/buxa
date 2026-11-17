@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { TasksPage } from '@/screens';
+import { TasksPage } from '@/views';
 
 export const metadata: Metadata = { title: 'My tasks' };
 

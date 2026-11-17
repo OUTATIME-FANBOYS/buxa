@@ -8,10 +8,10 @@ import { describe, expect, it } from 'vitest';
 
 const WEB = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-type Layer = 'app' | 'screens' | 'components' | 'elements' | 'hooks' | 'providers' | 'logic/common' | 'logic/composers' | 'server' | 'other';
+type Layer = 'app' | 'views' | 'components' | 'elements' | 'hooks' | 'providers' | 'logic/common' | 'logic/composers' | 'server' | 'other';
 
 const LAYER_DIRS: [string, Layer][] = [
-  ['app/', 'app'], ['screens/', 'screens'], ['components/', 'components'], ['elements/', 'elements'], ['hooks/', 'hooks'],
+  ['app/', 'app'], ['views/', 'views'], ['components/', 'components'], ['elements/', 'elements'], ['hooks/', 'hooks'],
   ['providers/', 'providers'], ['logic/common/', 'logic/common'], ['logic/composers/', 'logic/composers'], ['server/', 'server'],
 ];
 const layerOf = (rel: string): Layer => {
@@ -25,15 +25,15 @@ const MAY_IMPORT: Record<string, Layer[]> = {
   components: ['components', 'elements', 'hooks', 'providers', 'logic/common', 'logic/composers', 'other'],
   hooks: ['hooks', 'components', 'elements', 'providers', 'logic/common', 'logic/composers', 'other'],
   providers: ['providers', 'components', 'elements', 'hooks', 'logic/common', 'logic/composers', 'other'],
-  screens: ['screens', 'components', 'elements', 'hooks', 'providers', 'logic/common', 'logic/composers', 'other'],
-  app: ['app', 'screens', 'components', 'providers', 'server', 'other'],
+  views: ['views', 'components', 'elements', 'hooks', 'providers', 'logic/common', 'logic/composers', 'other'],
+  app: ['app', 'views', 'components', 'providers', 'server', 'other'],
   'logic/composers': ['logic/composers', 'logic/common', 'server', 'other'],
   'logic/common': ['logic/common', 'other'],
 };
 
 /** The barrel file of each layer. Cross-layer imports must resolve to one of these. */
 const BARREL_FILES: Partial<Record<Layer, string[]>> = {
-  components: ['components/index.ts'], elements: ['elements/index.ts'], screens: ['screens/index.ts'], hooks: ['hooks/hooks.ts'],
+  components: ['components/index.ts'], elements: ['elements/index.ts'], views: ['views/index.ts'], hooks: ['hooks/hooks.ts'],
   providers: ['providers/providers.ts'], 'logic/common': ['logic/common/index.ts'], 'logic/composers': ['logic/composers/index.ts', 'logic/composers/index.server.ts'],
 };
 /** Deep imports that are allowed on purpose. Each one is a reason in the PR body. */
@@ -132,8 +132,8 @@ describe('layer rules', () => {
     expect(bad).toEqual([]);
   });
 
-  it('elements do not hold domain knowledge: they import no components, screens, hooks or providers', () => {
-    const bad = [...edges].filter(([f]) => layerOf(f) === 'elements').flatMap(([f, l]) => l.filter((e) => ['components', 'screens', 'hooks', 'providers'].includes(layerOf(e.to))).map((e) => `${f} -> ${e.spec}`));
+  it('elements do not hold domain knowledge: they import no components, views, hooks or providers', () => {
+    const bad = [...edges].filter(([f]) => layerOf(f) === 'elements').flatMap(([f, l]) => l.filter((e) => ['components', 'views', 'hooks', 'providers'].includes(layerOf(e.to))).map((e) => `${f} -> ${e.spec}`));
     expect(bad).toEqual([]);
   });
 });

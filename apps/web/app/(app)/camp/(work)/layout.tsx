@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
 import { AccountMenu } from '@/components';
 import { CampSwitcher } from '@/components';
-import { WorkFrame } from '@/screens';
+import { WorkFrame } from '@/views';
 import { TaskTopBar } from '@/components';
-import { WorkArea } from '@/screens';
+import { WorkArea } from '@/views';
 import { getCurrentCamp, requireSession } from '@/server/session';
 
 /**

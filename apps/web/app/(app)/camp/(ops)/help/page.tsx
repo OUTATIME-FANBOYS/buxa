@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { HelpPage } from '@/screens';
+import { HelpPage } from '@/views';
 
 export const metadata: Metadata = { title: 'Help' };
 
