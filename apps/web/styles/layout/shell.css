@@ -29,3 +29,5 @@
 .avatars { display: inline-flex; } .avatars .avatar { margin-left: -4px; box-shadow: 0 0 0 2px var(--bg); } .avatars .avatar:first-child { margin-left: 0; }
 .main { flex: 1; min-height: 0; overflow: auto; padding: calc(56px + var(--s5)) var(--s5) var(--s5); scroll-padding-top: 72px; }
 .only-mobile { display: none; } .nav-scrim { display: none; }
+.logo.logo-mark { background: none; width: auto; height: auto; border-radius: 8px; }
+.logo-mark .brand-mark { display: block; }

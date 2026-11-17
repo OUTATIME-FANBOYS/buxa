@@ -51,3 +51,24 @@ describe('phone layout for check-in, on site and the log', () => {
     expect(read('./tokens.css')).toContain('--control-h: 44px');
   });
 });
+
+// Added with the Add person dialog: the form keeps 44px controls and 16px inputs on a touch screen, and its own compact height elsewhere.
+describe('Add person form on a touch screen', () => {
+  const people = read('./features/people.css');
+  it('uses the touch target height and 16px inputs on a coarse pointer', () => {
+    expect(people).toContain('@media (pointer: coarse) {\n  /* Touch');
+    expect(people).toContain('form.person-form { --control-h: var(--control-touch); }');
+    expect(people).toMatch(/\.person-form input:not\(\[type=checkbox\]\), \.person-form select \{ font-size: 16px; \}/);
+    expect(read('./tokens.css')).toContain('--control-touch: 44px');
+  });
+});
+
+describe('settings grid', () => {
+  it('is one column on a phone and widens in steps, with no fixed page width', () => {
+    const settings = read('./features/settings.css');
+    expect(settings).toContain('.settings-grid { display: grid; grid-template-columns: minmax(0, 1fr);');
+    expect(settings).toContain('@media (min-width: 900px) { .settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }');
+    expect(settings).toContain('@media (min-width: 1280px) { .settings-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }');
+    expect(settings).toContain('.page.settings-page { max-width: none; }');
+  });
+});

@@ -1,10 +1,10 @@
-import { Icon } from '@/components/elements/export';
+import { BrandMark } from '@/components/elements/export';
 
 /** Shown on the sign-in page when the public Supabase settings are missing, instead of a form that cannot work. */
 export function NotConfigured() {
   return (
     <main className="auth"><div className="auth-card">
-      <div className="brand brand-lg auth-brand"><span className="logo" aria-hidden="true"><Icon name="kanban" size={18} /></span> Buxa</div>
+      <div className="brand brand-lg auth-brand"><span className="logo logo-mark" aria-hidden="true"><BrandMark size={32} /></span> Buxa</div>
       <h1>Connect Supabase</h1>
       <p className="muted">This app needs two public settings before people can sign in.</p>
       <ol className="steps">

@@ -16,10 +16,15 @@ export interface HouseholdTarget { id: string; name: string }
 /**
  * Add a person. With `household` (from the guardian's page) the person joins that household. Otherwise the form offers the camp's
  * existing households, or a new one for a parent or guardian. Works without JavaScript as a plain POST.
+ * `variant` says where it renders: on its own page (a panel, with a Cancel link back to People) or in the People page's dialog
+ * (no panel, with a Cancel button that closes the dialog through `onCancel`). The fields, validation and action are the same.
  */
-export function NewPersonForm({ household, households }: { household: HouseholdTarget | null; households: readonly HouseholdChoice[] }) {
+export function NewPersonForm({ household, households, variant = 'page', onCancel }: {
+  household: HouseholdTarget | null; households: readonly HouseholdChoice[]; variant?: 'page' | 'dialog'; onCancel?: () => void;
+}) {
   const [state, formAction, pending] = useActionState(createPersonAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
+  const inDialog = variant === 'dialog';
 
   // A field error moves focus to the first invalid field, so the person can correct it without searching the page.
   useEffect(() => {
@@ -30,14 +35,14 @@ export function NewPersonForm({ household, households }: { household: HouseholdT
   const invalid = (name: string) => (err(name) ? true : undefined);
 
   return (
-    <form ref={formRef} action={formAction} className="panel stack people-form" aria-describedby="people-form-help">
-      <p id="people-form-help" className="muted">Fields marked with an asterisk are required.</p>
+    <form ref={formRef} action={formAction} className={`${inDialog ? '' : 'panel '}people-form person-form`} aria-describedby="people-form-help">
+      <p id="people-form-help" className="person-helper">Fields marked with an asterisk are required.</p>
 
-      <fieldset className="plain">
-        <legend className="field-label">Name</legend>
+      <fieldset className="plain person-section">
+        <legend className="person-legend">Name</legend>
         <div className="people-form-grid">
           <Field label="First name *" error={err('givenName')}>
-            <input name="givenName" autoComplete="off" maxLength={80} aria-invalid={invalid('givenName')} autoFocus />
+            <input name="givenName" autoComplete="off" maxLength={80} aria-invalid={invalid('givenName')} data-autofocus autoFocus={!inDialog} />
           </Field>
           <Field label="Family name *" error={err('familyName')}>
             <input name="familyName" autoComplete="off" maxLength={80} aria-invalid={invalid('familyName')} />
@@ -48,9 +53,9 @@ export function NewPersonForm({ household, households }: { household: HouseholdT
         </div>
       </fieldset>
 
-      <fieldset className="plain">
-        <legend className="field-label">Roles *</legend>
-        <p className="field-hint">Choose everything that applies. Someone can be a parent and an instructor.</p>
+      <fieldset className="plain person-section">
+        <legend className="person-legend">Roles *</legend>
+        <p className="person-helper">Choose everything that applies. Someone can be a parent and an instructor.</p>
         <div className="people-checks">
           {CAMP_ROLES.map(role => (
             <label key={role} className="people-check">
@@ -61,8 +66,8 @@ export function NewPersonForm({ household, households }: { household: HouseholdT
         {err('roles') && <p className="field-error" role="alert">{err('roles')}</p>}
       </fieldset>
 
-      <fieldset className="plain">
-        <legend className="field-label">Household</legend>
+      <fieldset className="plain person-section">
+        <legend className="person-legend">Household</legend>
         {household ? (
           <>
             <input type="hidden" name="householdId" value={household.id} />
@@ -90,8 +95,8 @@ export function NewPersonForm({ household, households }: { household: HouseholdT
         {household && err('householdId') && <p className="field-error" role="alert">{err('householdId')}</p>}
       </fieldset>
 
-      <fieldset className="plain">
-        <legend className="field-label">Contact and age</legend>
+      <fieldset className="plain person-section">
+        <legend className="person-legend">Contact and age</legend>
         <div className="people-form-grid">
           <Field label="Date of birth" error={err('dateOfBirth')} hint="Only used to tell whether someone is under 18.">
             <input type="date" name="dateOfBirth" aria-invalid={invalid('dateOfBirth')} />
@@ -106,9 +111,11 @@ export function NewPersonForm({ household, households }: { household: HouseholdT
       </fieldset>
 
       <FormMessage state={state} />
-      <div className="row">
+      <div className="person-actions">
+        {inDialog
+          ? <button type="button" className="btn" onClick={onCancel}>Cancel</button>
+          : <Link className="btn" href={ROUTES.people}>Cancel</Link>}
         <button className="btn btn-primary" disabled={pending}>{pending ? 'Adding…' : 'Add person'}</button>
-        <Link className="btn" href={ROUTES.people}>Cancel</Link>
       </div>
     </form>
   );

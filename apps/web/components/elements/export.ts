@@ -13,3 +13,4 @@ export * from './StatusBar';
 export * from './TextField';
 export * from './chartTone';
 export * from './icons';
+export * from './BrandMark';

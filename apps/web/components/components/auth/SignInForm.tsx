@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Icon } from '@/components/elements/export';
+import { BrandMark } from '@/components/elements/export';
 import { AuthForm, type AuthMode } from './AuthForm';
 
 /** The sign-in card: switches between signing in and creating an account. The page around it is rendered on the server. */
@@ -10,7 +10,7 @@ export function SignInForm() {
   const isSignIn = mode === 'in';
   return (
     <div className="auth-card">
-      <div className="brand brand-lg auth-brand"><span className="logo" aria-hidden="true"><Icon name="kanban" size={18} /></span> Buxa</div>
+      <div className="brand brand-lg auth-brand"><span className="logo logo-mark" aria-hidden="true"><BrandMark size={32} /></span> Buxa</div>
       <h1>{isSignIn ? 'Welcome back' : 'Create your account'}</h1>
       <p className="muted">{isSignIn ? 'Sign in to manage your camp.' : 'Then set up your first camp.'}</p>
       <AuthForm key={mode} mode={mode} />
