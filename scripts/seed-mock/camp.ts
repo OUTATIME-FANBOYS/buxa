@@ -8,7 +8,7 @@ import { CAMP, STAFF_ACCOUNTS } from './roster';
 /**
  * Camp-level setup. The seed uses the privileged pool for three things the app has no path for, because they happen outside a
  * signed-in request: finding the camp by its slug (row-level security hides a camp from anyone not in it), adding the
- * fictional staff accounts as members (phase 1 has no invite flow), and clearing a camp's rows on --reset. Creating the camp
+ * fictional staff accounts as members (the seed has no invite flow), and clearing a camp's rows on --reset. Creating the camp
  * and the accounts still goes through the services and repositories, so the audit rows the app writes are written here too.
  */
 
@@ -59,7 +59,7 @@ export async function createCamp(pool: pg.Pool, services: Services, repos: Repos
   ];
   for (const [role, email, fictional] of others) {
     const userId = await accountFor(pool, repos, email, fictional);
-    // Direct insert: phase 1 has no invite flow, so membership is added here, outside any request. Not audited.
+    // Direct insert: the seed has no invite flow, so membership is added here, outside any request. Not audited.
     await pool.query('INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING', [camp.id, userId, role]);
   }
 
