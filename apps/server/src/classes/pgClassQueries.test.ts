@@ -39,16 +39,21 @@ describe('toSession', () => {
   const row: SessionRow = {
     id: 's1', class_id: 'c1', class_name: 'Robotics', starts_at: new Date('2027-07-04T23:00:00.000Z'),
     ends_at: new Date('2027-07-05T02:00:00.000Z'), location: 'Lab 1', capacity: 5, seats_taken: 2, waitlisted: 1,
-    instructor_ids: ['p1', 'p2'],
+    instructors: [{ id: 'p1', name: 'Ada Test' }, { id: 'p2', name: 'Ben Test' }],
   };
 
-  it('maps instants to ISO strings and copies the instructor list', () => {
+  it('maps instants to ISO strings, with the instructors and their names', () => {
     const mapped = toSession(row);
     expect(mapped).toEqual({
       id: 's1', classId: 'c1', className: 'Robotics', startsAt: '2027-07-04T23:00:00.000Z', endsAt: '2027-07-05T02:00:00.000Z',
-      location: 'Lab 1', instructorIds: ['p1', 'p2'], capacity: 5, seatsTaken: 2, waitlisted: 1,
+      location: 'Lab 1', instructorIds: ['p1', 'p2'], instructors: [{ id: 'p1', name: 'Ada Test' }, { id: 'p2', name: 'Ben Test' }],
+      capacity: 5, seatsTaken: 2, waitlisted: 1,
     });
-    expect(mapped.instructorIds).not.toBe(row.instructor_ids);
+    expect(mapped.instructors).not.toBe(row.instructors);
+  });
+
+  it('a session with no instructors maps to empty lists', () => {
+    expect(toSession({ ...row, instructors: [] })).toMatchObject({ instructorIds: [], instructors: [] });
   });
 });
 

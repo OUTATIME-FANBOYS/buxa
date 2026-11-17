@@ -30,6 +30,7 @@ const { ImportClasses } = await import('@/components/views/classes/export');
 const CLASS_ID = '11111111-1111-4111-8111-111111111111';
 const SESSION_ID = '22222222-2222-4222-8222-222222222222';
 const ADA = '33333333-3333-4333-8333-333333333333';
+const INSTRUCTOR_ID = '66666666-6666-4666-8666-666666666666';
 
 const cls: Class = {
   id: CLASS_ID, name: 'Robotics', description: 'Build and program small robots.', ageRange: { minAge: 8, maxAge: 12 },
@@ -38,7 +39,7 @@ const cls: Class = {
 // Full: two places, both taken, and one on the waitlist. Monday 5 July 2027, 09:00 to 12:00 in Sydney.
 const full: Session = {
   id: SESSION_ID, classId: CLASS_ID, className: 'Robotics', startsAt: '2027-07-04T23:00:00.000Z', endsAt: '2027-07-05T02:00:00.000Z',
-  location: 'Lab 1', instructorIds: [], capacity: 2, seatsTaken: 2, waitlisted: 1,
+  location: 'Lab 1', instructorIds: [INSTRUCTOR_ID], instructors: [{ id: INSTRUCTOR_ID, name: 'Ivy Chen' }], capacity: 2, seatsTaken: 2, waitlisted: 1,
 };
 const enrolment: Enrolment = {
   id: '44444444-4444-4444-8444-444444444444', sessionId: SESSION_ID, classId: CLASS_ID, className: 'Robotics', camperId: ADA,
@@ -130,6 +131,15 @@ describe('ClassPage', () => {
   it('ignores a session id that is not one of this class\'s sessions', async () => {
     const html = render(await ClassPage({ classId: CLASS_ID, searchParams: { session: '99999999-9999-4999-8999-999999999999' } }));
     expect(html).not.toContain('id="enrolments"');
+  });
+});
+
+describe('ClassPage session instructors', () => {
+  it('shows the selected session\'s instructors by name, in the session details', async () => {
+    const html = render(await ClassPage({ classId: CLASS_ID, searchParams: { session: SESSION_ID } }));
+    expect(html).toContain('aria-label="Session details"');
+    expect(html).toContain('<dt>Instructors</dt><dd>Ivy Chen</dd>');
+    expect(html).toContain('<th scope="col">Instructors</th>');
   });
 });
 

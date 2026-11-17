@@ -8,7 +8,8 @@ import { currentActor } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_ENROLMENTS, FORBIDDEN_READ } from '@buxa/shared';
 import { loadClassPage, loadEnrolments, loadPeopleWithRole } from '@buxa/server/composers/index.server';
 import { EnrolmentTable } from '@/components/components/classes/export';
-import { SessionTable } from '@/components/components/classes/export';
+import { SessionTable, instructorNames } from '@/components/components/classes/export';
+import { formatCampDateTime } from '@buxa/shared';
 import { EnrolForm } from '@/components/components/classes/forms/export';
 
 const pick = (value: string | string[] | undefined): string | null => (typeof value === 'string' && isUuid(value) ? value : null);
@@ -70,6 +71,12 @@ export async function ClassPage({ classId, searchParams }: {
       {selected && (
         <section id="enrolments" aria-labelledby="enrolments-heading" className="stack classes-enrolments">
           <h2 id="enrolments-heading" className="people-subheading">Enrolments</h2>
+          <dl className="people-facts classes-facts" aria-label="Session details">
+            <dt>Starts</dt><dd>{formatCampDateTime(selected.startsAt, timeZone)}</dd>
+            <dt>Ends</dt><dd>{formatCampDateTime(selected.endsAt, timeZone)}</dd>
+            <dt>Location</dt><dd>{selected.location}</dd>
+            <dt>Instructors</dt><dd>{instructorNames(selected)}</dd>
+          </dl>
           <p aria-live="polite" className="muted">
             {selected.seatsTaken} of {selected.capacity} places taken, {selected.waitlisted} on the waitlist.
           </p>

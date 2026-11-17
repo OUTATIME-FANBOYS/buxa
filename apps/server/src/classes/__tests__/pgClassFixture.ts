@@ -95,3 +95,9 @@ export function sessionInput(fromHour: number, toHour: number, extra: { capacity
 export function auditActions(pool: Pool, orgId: string): Promise<string[]> {
   return withOrg(pool, orgId, async db => (await db.query<{ action: string }>('SELECT action FROM audit_log ORDER BY id')).rows.map(r => r.action));
 }
+
+/** The data of the newest `session.create` entry in the camp. */
+export function sessionAuditData(pool: Pool, orgId: string): Promise<Record<string, unknown> | undefined> {
+  return withOrg(pool, orgId, async db => (await db.query<{ data: Record<string, unknown> }>(
+    `SELECT data FROM audit_log WHERE action = 'session.create' ORDER BY id DESC LIMIT 1`)).rows[0]?.data);
+}

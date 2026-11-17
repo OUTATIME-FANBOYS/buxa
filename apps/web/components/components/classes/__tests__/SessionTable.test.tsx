@@ -10,7 +10,7 @@ const session = (over: Partial<Session> = {}): Session => ({
   id: SESSION_ID, classId: CLASS_ID, className: 'Robotics',
   // 09:00 to 12:00 on Monday 5 July 2027 in Sydney (UTC+10).
   startsAt: '2027-07-04T23:00:00.000Z', endsAt: '2027-07-05T02:00:00.000Z',
-  location: 'Lab 1', instructorIds: [], capacity: 8, seatsTaken: 5, waitlisted: 0, ...over,
+  location: 'Lab 1', instructorIds: [], instructors: [], capacity: 8, seatsTaken: 5, waitlisted: 0, ...over,
 });
 
 describe('SessionTable', () => {
@@ -27,6 +27,13 @@ describe('SessionTable', () => {
       expect(html).toContain(`<th scope="col">${header}</th>`);
     }
     expect(html).toContain('3 places left');
+  });
+
+  it('shows the instructor names, comma separated, or says none are set yet', () => {
+    const named = session({ instructorIds: ['a', 'b'], instructors: [{ id: 'a', name: 'Ana Ruiz' }, { id: 'b', name: 'Bo Chen' }] });
+    const html = renderToStaticMarkup(<SessionTable classId={CLASS_ID} sessions={[named, session({ id: 'x' })]} timeZone="Australia/Sydney" selectedId={null} />);
+    expect(html).toContain('<td>Ana Ruiz, Bo Chen</td>');
+    expect(html).toContain('<td>None yet</td>');
   });
 
   it('links each session to its enrolments on the same page, and marks the one shown', () => {

@@ -77,6 +77,19 @@ describe('class service: catalogue', () => {
     expect(r).toMatchObject({ ok: false, failure: { reason: 'class_not_found' } });
   });
 
+  it('a session shows its instructors by name, and the session write is audited with their ids', async () => {
+    const { service, repo } = setup();
+    const created = await service.createClass(as('admin'), robotics);
+    if (!created.ok) throw new Error(created.failure.message);
+    const added = await service.addSession(as('admin'), created.value.id, { ...monday9to12, instructorIds: [CAMPER_ADA] });
+    expect(added).toMatchObject({ ok: true, value: { instructorIds: [CAMPER_ADA], instructors: [{ id: CAMPER_ADA, name: 'Ada Lovelace' }] } });
+    expect(repo.audit.filter(a => a.action === 'session.create')).toEqual([
+      expect.objectContaining({ actorId: 'user-admin', data: expect.objectContaining({ instructorIds: [CAMPER_ADA] }) }),
+    ]);
+    const listed = await service.listSessions(as('viewer'), created.value.id);
+    expect(listed).toMatchObject({ ok: true, value: [{ instructors: [{ id: CAMPER_ADA, name: 'Ada Lovelace' }] }] });
+  });
+
   it('a session is shown with its class name, location and seat counts', async () => {
     const { service } = setup();
     const { classId, sessionId } = await classWithSession(service);
