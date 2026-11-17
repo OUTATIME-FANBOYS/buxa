@@ -31,12 +31,15 @@ export const CAMP_NAV_GROUPS: readonly NavGroup[] = [
     ],
   },
   {
-    label: 'Camp operations',
+    label: 'Operations',
     items: [
       { href: ROUTES.checkIn, label: 'Check-in', icon: 'check', requires: 'attendance:record' },
       { href: ROUTES.onSite, label: 'On site', icon: 'clock', requires: 'attendance:read' },
       { href: ROUTES.people, label: 'People', icon: 'users', requires: 'people:read' },
       { href: ROUTES.attendance, label: 'Attendance', icon: 'list', requires: 'attendance:read' },
+      { href: ROUTES.classes, label: 'Classes', icon: 'calendar', requires: 'events:read' },
+      // Help has no `requires`: anyone may read it.
+      { href: ROUTES.help, label: 'Help', icon: 'help' },
     ],
   },
   {
@@ -45,7 +48,6 @@ export const CAMP_NAV_GROUPS: readonly NavGroup[] = [
       { href: ROUTES.tasks, label: 'My tasks', icon: 'tasks' },
       { href: ROUTES.projects, label: 'Projects', icon: 'folder' },
       { href: ROUTES.boards, label: 'Boards', icon: 'kanban' },
-      { href: ROUTES.classes, label: 'Classes', icon: 'calendar', requires: 'events:read' },
       { href: ROUTES.calendar, label: 'Calendar', icon: 'calendar' },
       { href: ROUTES.agents, label: 'Agents', icon: 'agent' },
       { href: ROUTES.reports, label: 'Reports', icon: 'chart' },
@@ -56,8 +58,6 @@ export const CAMP_NAV_GROUPS: readonly NavGroup[] = [
     items: [
       { href: ROUTES.members, label: 'Team access', icon: 'user', requires: 'members:read' },
       { href: ROUTES.settings, label: 'Settings', icon: 'settings' },
-      // Help has no `requires`: anyone may read it.
-      { href: ROUTES.help, label: 'Help', icon: 'help' },
     ],
   },
 ];

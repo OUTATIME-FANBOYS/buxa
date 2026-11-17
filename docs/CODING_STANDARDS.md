@@ -26,6 +26,16 @@ docs/               roadmap, ADRs, security, auth, deploy, phase specs, audit
 - **Server-only code is marked.** A module that holds secrets, reads the database or runs a service imports `'server-only'`. Twelve modules do so today.
 - **Target: explicit server entry points.** A server-only module is exported only through a server entry point (for example `server/index.server.ts`), never through a barrel that a Client Component can import. There are no `*.server.ts` entry points yet.
 - **Client components import only client-safe modules.** Today `features/camp/client.ts` is the client-safe subset of the camp feature, and `features/camp/index.ts` (which pulls in server code) is for Server Components and routes only. Keep it that way: a server-only module is never re-exported through a client barrel.
+- **Route categories.** Every camp page sits in a route group named for its category, so the folder tree matches the sidebar. Route groups do not change URLs. A new page goes in the group for what it is for:
+
+  | Group (folder under `app/(app)/camp/`) | Sidebar group | What goes in it |
+  |---|---|---|
+  | `(operations)` | Operations | The day-to-day camp operation: check-in, on site, people, attendance, classes and sessions (and the classes import page), help. |
+  | `(work)` | Work | The staff board: my tasks, projects, boards, calendar, agents, reports. Also Home (`/camp`), which stays in this group because it shares the work shell. |
+  | `(admin)` | Admin | Team access and settings, and the new-camp page. |
+  | `(parent)` | not shown yet | **Reserved** for the parent portal (phase 6). Do not create the folder or add routes to it before phase 6. |
+
+  Each group has a `layout.tsx`. A page directly in a group folder is allowed only for Home. `apps/web/architecture/routeCategories.test.ts` fails when a page sits outside the listed groups, when two pages share a URL, when the parent group exists early, or when a sidebar link is filed in the wrong folder.
 
 ## 3. Layers
 
