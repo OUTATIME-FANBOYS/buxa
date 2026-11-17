@@ -8,7 +8,7 @@ Each rule describes the code on `develop` today. Where the rule is a **target** 
 
 ```
 apps/web            Next.js app: app/ (routes only), actions/ (server action wrappers for client code), config/, styles/, proxy.ts,
-                    components/ (all frontend: elements/, components/, views/; each folder has an export.ts)
+                    components/ (all frontend: elements/, components/, views/; each component folder has an export.ts)
 apps/middleware     client-side React: hooks/ and providers/. No server code.
 apps/server         the backend: services, repositories, auth, http, session, rate limiting, runtime and the composers
 apps/shared         pure helpers: dates, CSV, tones, validation, ids, sorting, routes, theme, QR rendering. No React, no database
@@ -24,11 +24,11 @@ docs/               roadmap, ADRs, security, auth, deploy, phase specs, audit
 
 ## 2. Next.js App Router
 
-- **Routes stay thin.** `app/**/page.tsx`, `layout.tsx` and `route.ts` only wire things together. A route handler parses the request, finds the actor, calls a service and returns the result. The `authedRoute` wrapper in `server/http/route.ts` does this for `/v1` (see `app/v1/members/route.ts`).
-- **Server Actions** are `'use server'` files. Composers live in `apps/server/src/composers/`, and client components call them through the wrappers in `apps/web/actions/`. They validate input with a zod schema and call a service through `getRuntime()` (see `features/attendance/actions/checkIn.ts`).
-- **Target: pages and components do not fetch data.** They receive data from a composer in `logic/composers/` (see the layers in section 3). Today some screens and routes still call the server directly: `app/(app)/camp/(work)/page.tsx` calls `loadCampHome`, `features/attendance/screens/AttendanceScreen.tsx` calls `getRuntime`, and `app/ready/route.ts` runs a query. New code does not add more of these.
-- **Server-only code is marked.** A module that holds secrets, reads the database or runs a service imports `'server-only'`. Twelve modules do so today.
-- **Target: explicit server entry points.** A server-only module is exported only through a server entry point (for example `server/index.server.ts`), never through a barrel that a Client Component can import. There are no `*.server.ts` entry points yet.
+- **Routes stay thin.** `app/**/page.tsx`, `layout.tsx` and `route.ts` only wire things together. A route handler parses the request, finds the actor, calls a service and returns the result. The `authedRoute` wrapper in `apps/server/src/http/route.ts` does this for `/v1` (see `app/v1/members/route.ts`).
+- **Server Actions** are `'use server'` files. Composers live in `apps/server/src/composers/`, and client components call them through the wrappers in `apps/web/actions/` (see `apps/web/actions/attendance.ts` and `apps/server/src/composers/attendance/checkIn.ts`). They validate input with a zod schema and call a service through the runtime (`getRuntime()`).
+- **Target: pages and components do not fetch data.** They receive data from a composer in `apps/server/src/composers/` (see the layers in section 3). Today the readiness route (`app/ready/route.ts`) still runs its own database check. New code does not add more of these.
+- **Server-only code is marked.** A module that holds secrets, reads the database or runs a service imports `'server-only'`.
+- **Target: explicit server entry points.** A server-only module is exported only through a server entry point (for example `apps/server/src/composers/index.server.ts`), never through a barrel that a Client Component can import. Few exist yet.
 - **Client components import only client-safe modules.** `@buxa/server` (its entry point, `apps/server/src/index.ts`) pulls in server code, so it is for Server Components, route handlers and `'use server'` files only. Keep it that way: a server-only module is never re-exported through a client barrel.
 - **Route categories.** Every camp page sits in a route group named for its category, so the folder tree matches the sidebar. Route groups do not change URLs. A new page goes in the group for what it is for:
 
@@ -75,28 +75,28 @@ The rules below are enforced by `test/architecture/architecture.test.ts` and `pa
 ## 4. TypeScript
 
 - **`strict` is on.** The root `tsconfig.json` sets `strict: true`, and `apps/web/tsconfig.json` extends it.
-- **No `any`, no `as unknown as`.** A few uses remain in non-test code (for example `features/kanban/lib/agents.ts`). Do not add more; restructure the types instead.
-- **No non-null assertions (`!`).** Some remain in non-test code, mostly in the kanban demo (`components/components/kanban/`). Do not copy them. If a type cannot prove a value, return a non-null type from a function that checks it, or pass the value as a prop.
-- **Validate at every boundary; do not cast.** Request bodies, Server Action inputs, environment variables (`server/config.ts`) and stored data are parsed with zod. Shared request and response shapes live in `packages/contracts`. Database rows are typed with `query<Row>`.
+- **No `any`, no `as unknown as`.** A few uses remain in non-test code (for example `apps/shared/src/kanban/agents.ts`). Do not add more; restructure the types instead.
+- **No non-null assertions (`!`).** Some remain in non-test code, mostly in the kanban demo (`apps/web/components/components/kanban/`). Do not copy them. If a type cannot prove a value, return a non-null type from a function that checks it, or pass the value as a prop.
+- **Validate at every boundary; do not cast.** Request bodies, Server Action inputs, environment variables (`apps/server/src/config.ts`) and stored data are parsed with zod. Shared request and response shapes live in `packages/contracts`. Database rows are typed with `query<Row>`.
 - **Closed sets are unions or `as const` arrays** (for example `Role` and `Action` in `packages/domain`). They are never loose strings.
 - **Shared business rules are written once,** in `packages/domain` (for example `authorize`, `isUuid`, `isSlug`), and imported by the API and the web app.
-- **Errors are recognised by a marker, not `instanceof`.** Next.js can load one server module more than once, so `instanceof` fails across copies. `HttpError` carries `kind = 'http-error'` and is checked with `isHttpError` (`server/http/errors.ts`). Other error classes follow the same pattern.
+- **Errors are recognised by a marker, not `instanceof`.** Next.js can load one server module more than once, so `instanceof` fails across copies. `HttpError` carries `kind = 'http-error'` and is checked with `isHttpError` (`apps/server/src/http/errors.ts`). Other error classes follow the same pattern.
 - **Domain errors, not driver errors.** Repository adapters translate database errors into domain errors. HTTP code maps domain errors to statuses.
-- **No implicit state machines.** Two or more values that together say where a flow is (`busy` + `error` + `done`) are a discriminated union with a reducer, and the transitions are tested (`features/attendance/checkIn/checkInState.ts`, `checkOutState.ts`). Independent values such as a text field or an open menu may use `useState`.
+- **No implicit state machines.** Two or more values that together say where a flow is (`busy` + `error` + `done`) are a discriminated union with a reducer, and the transitions are tested (`apps/shared/src/attendance/checkInState.ts`, `checkOutState.ts`). Independent values such as a text field or an open menu may use `useState`.
 
 ## 5. Naming and files
 
 - **Names are human-readable.** Name a file, function or folder for what it is for (`exportResponse`, `checkInState`), not an abbreviation. Components are `PascalCase.tsx`; modules are `camelCase.ts`.
-- **One concern per file.** If a file needs a section comment to separate two jobs, split it. The aim is under about 120 lines per file and about 30 per function. This is guidance, not a lint rule: seven non-test files are longer today.
+- **One concern per file.** If a file needs a section comment to separate two jobs, split it. The aim is under about 120 lines per file and about 30 per function. This is guidance, not a lint rule: some non-test files are longer than that today.
 - **Barrels: the file name says which kind.** These are the barrels in the code today, and a new one follows the same pattern:
-  - `export.ts` in every folder under `apps/web/components/` (`elements/`, `components/`, `views/`, and their subfolders). Code outside the folder imports the `export.ts`, never a file inside it (rule 3 in section 3).
-  - `index.ts` for each package entry point (`apps/shared`, `apps/server`, `apps/middleware`, `apps/web/config`, `packages/domain`, `packages/contracts`, `packages/db`) and for the server and domain subfolders that group related code (for example `apps/server/src/session/index.ts`, `apps/server/src/services/index.ts`, `packages/domain/src/people/index.ts`).
+  - `export.ts` in every component folder under `apps/web/components/` (for example `elements/`, `components/attendance/` and `views/attendance/`). The two top-level folders, `components/` and `views/`, have none. Code outside a folder imports its `export.ts`, never a file inside it (rule 3 in section 3).
+  - `index.ts` for each package entry point (`apps/shared`, `apps/server`, `apps/middleware`, `packages/domain`, `packages/contracts`, `packages/db`) and for the server and domain subfolders that group related code (for example `apps/server/src/session/index.ts`, `apps/server/src/services/index.ts`, `packages/domain/src/people/index.ts`).
   - `hooks/hooks.ts` and `providers/providers.ts` in `apps/middleware`, named for their folder. The app imports `@buxa/middleware/hooks/hooks` and `@buxa/middleware/providers/providers`.
   - There is no `logic/` or `common/` barrel in the code. Do not add one to match a pattern you read elsewhere; add the barrel the folder needs.
 - **Single source of truth.** A URL, permission, validation rule, theme key or piece of copy is defined once and imported everywhere. URLs come from `config/routes.ts`; permissions come from `packages/domain`; the theme storage key is in `config/theme.ts`. If you are about to write the same string a second time, move it first.
 
 ## 6. Lint
-- Run `npm run lint` before pushing. CI runs it after typecheck and fails on any error. `npm run lint:fix` fixes what it can.
+- Run `npm run lint` before pushing. CI runs it in chunk 2b, alongside the typecheck (2a), and fails on any error. `npm run lint:fix` fixes what it can.
 - Config: `eslint.config.mjs` (flat config, ESLint 9). Errors that must not come back:
   - `@typescript-eslint/no-explicit-any`: no `any`; use `unknown` and narrow it, or a real type.
   - `@typescript-eslint/no-unused-vars`: remove what is not used.
@@ -111,18 +111,18 @@ The rules below are enforced by `test/architecture/architecture.test.ts` and `pa
 
 - **Vitest is the unit test runner** for the whole repo (`npm test` runs `vitest run`). Unit tests sit next to the file (`x.test.ts`) or in a `__tests__/` folder beside it. A test counts only if it imports the file directly.
 - **Test first for files being changed or moved.** Before a file is changed or moved, a test for its current behaviour is written (or confirmed) and is green. Tests move with their subject and their imports are updated in the same commit. Existing untested files need no test before an unrelated change.
-- **New behaviour gets tests** when it is introduced. A rule gets a unit test at its seam. A permission gets a role × action test (`features/camp/lib/abilities.test.ts`). A new state machine gets a transition table test.
+- **New behaviour gets tests** when it is introduced. A rule gets a unit test at its seam. A permission gets a role × action test (`apps/shared/src/camp/__tests__/abilities.test.ts`). A new state machine gets a transition table test.
 - **Postgres tests run only with `DATABASE_URL`.** They are `*.pg.test.ts` files or sit in `__tests__/`, and they use `describe.skipIf(!url)`, so `npm test` still works without a database on a laptop. CI runs them in the `database` chunk (`npm run test:db`) with `DATABASE_URL` set, and the unit chunk (`npm run test:unit`) leaves them out (`.github/workflows/ci.yml`). A new Postgres test file must match the `test:db` filter in `package.json`, or it runs in the unit chunk and skips there. `packages/db/test/ci-guard.test.ts` fails the build in CI if the URL is missing, so no Postgres test skips silently there.
 - **Prefer real signed tokens and a real database.** Use the in-memory repositories (`InMemory*Repository`) to test routes without one.
 - **Structure tests** check that the database tables have tenant columns and forced row-level security (`packages/db/test/audit-and-catalog.test.ts`, `packages/db/test/narrow-privileges.test.ts`). They fail the build when a rule is broken.
 
 ## 8. Security basics
 
-- **No secrets in the repo.** `.env` and `.env.*` are git-ignored; `apps/web/.env.example` (no values) is the only env file committed. Only publishable keys go in `NEXT_PUBLIC_*` variables. Everything else is read on the server and validated by `server/config.ts`.
-- **Errors do not leak internals.** An unexpected error is logged and returned as a generic 500 (`server/http/route.ts`). Tests check that the database URL does not appear in a response.
-- **Permission checks run in services.** A service calls `assertAllowed(actor, action, resource)` (`server/auth/authorize.ts`) before any read or write. The matrix is in `packages/domain`. The UI hides controls for convenience only; the server enforces the same rules.
-- **Tenant data goes through `withOrg()`.** Tenant tables have `org_id` and forced row-level security. Cross-tenant lookups are listed in [auth.md](auth.md).
-- **Every write that matters is audited** through `recordAudit` in the same transaction (`server/audit/recordAudit.ts`).
+- **No secrets in the repo.** `.env` and `.env.*` are git-ignored; `apps/web/.env.example` (no values) is the only env file committed. Only publishable keys go in `NEXT_PUBLIC_*` variables. Everything else is read on the server and validated by `apps/server/src/config.ts`.
+- **Errors do not leak internals.** An unexpected error is logged and returned as a generic 500 (`apps/server/src/http/route.ts`). Tests check that the database URL does not appear in a response.
+- **Permission checks run in services.** A service calls `assertAllowed(actor, action, resource)` (`apps/server/src/auth/authorize.ts`) before any read or write. The matrix is in `packages/domain`. The UI hides controls for convenience only; the server enforces the same rules.
+- **Tenant data goes through `withOrg()`** (`packages/db/src/tenant.ts`). Tenant tables have `org_id` and forced row-level security. Cross-tenant lookups are listed in [auth.md](auth.md).
+- **Every write that matters is audited** through `recordAudit` in the same transaction (`apps/server/src/audit/recordAudit.ts`).
 - **Children's data.** Phase 1 holds names, date of birth, household links and attendance. Collect only what the phase needs. Real children's data is not stored until every open item in [security.md](security.md) (section 6) is done. The repository holds mock data only.
 
 ## 9. UI
