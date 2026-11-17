@@ -12,8 +12,8 @@ export const useDialogClose = () => useContext(CloseCtx);
 
 interface Swipe { id: number; x0: number; x: number; on: boolean; vel: VelocityTracker; cancel?: () => void }
 
-export function Dialog({ title, onClose, children, footer, drawer = false, wide = false, labelledBy }: {
-  title?: string; onClose: () => void; children: ReactNode | ((close: () => void) => ReactNode); footer?: ReactNode; drawer?: boolean; wide?: boolean; labelledBy?: string;
+export function Dialog({ title, onClose, children, footer, drawer = false, wide = false, labelledBy, className = '' }: {
+  title?: string; onClose: () => void; children: ReactNode | ((close: () => void) => ReactNode); footer?: ReactNode; drawer?: boolean; wide?: boolean; labelledBy?: string; className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null); const scrim = useRef<HTMLDivElement>(null);
   const [leaving, setLeaving] = useState(false);
@@ -77,7 +77,7 @@ export function Dialog({ title, onClose, children, footer, drawer = false, wide 
     <CloseCtx.Provider value={close}>
       <div ref={scrim} className={`scrim ${drawer ? 'scrim-drawer' : ''} ${leaving ? 'leaving' : ''}`} onMouseDown={e => { if (e.target === e.currentTarget) close(); }}>
         <div ref={ref} role="dialog" aria-modal="true" aria-label={labelledBy ? undefined : title} aria-labelledby={labelledBy}
-          className={`${drawer ? 'drawer' : 'dialog'} ${wide ? 'dialog-wide' : ''} ${leaving ? 'leaving' : ''}`} onKeyDown={onKey}
+          className={`${drawer ? 'drawer' : 'dialog'} ${wide ? 'dialog-wide' : ''} ${className} ${leaving ? 'leaving' : ''}`} onKeyDown={onKey}
           onPointerDown={onPD} onPointerMove={onPM} onPointerUp={onPU} onPointerCancel={onPU}>
           {title && !drawer && <header className="dialog-head"><h2>{title}</h2><button className="icon-btn" onClick={close} aria-label="Close"><Icon name="x" /></button></header>}
           <div className={drawer ? 'drawer-body' : 'dialog-body'}>{typeof children === 'function' ? children(close) : children}</div>
