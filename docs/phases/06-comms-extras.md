@@ -46,3 +46,13 @@ Two-way messaging, SMS, mobile push notifications, payments from the portal (pha
 - Whether the parent portal is needed earlier, after phase 3, because families will ask for it when they pay.
 - Which reports camps need on day one.
 - Whether waivers are a fixed template per camp or can be uploaded as a PDF.
+
+## Staff mobile app (moved here from phase 1)
+
+The installable staff app moves here, with the parent portal, because the web app must run properly on the production
+build first. Scope: a PWA built into the existing site, with the camera scanner, the install prompt and check-in on
+a phone.
+
+- **Starts when:** the web app runs properly on the production build, and the phase 2 owner checks are done.
+- **Exit:** staff check in a member in under 5 seconds on a real iPhone (Safari) and Android (Chrome), and can install the app and sign in from a phone. The procedure is in `docs/phases/01-check-in-timing.md`.
+- **Not in scope:** offline check-in, and a native app (revisited only if the PWA misses the 5-second target).

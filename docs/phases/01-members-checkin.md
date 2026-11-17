@@ -97,3 +97,5 @@ Contracts between chunks are frozen in Wave 0, ownership is exclusive, each chun
 Released as `v0.1.0`. The installable staff app is not part of this release, so the exit criteria that name it are open.
 
 > **Closed.** The code for this phase is done. The owner's open checks moved to phase 2: see "Carried over from phase 1" in `docs/phases/02-events-calendar.md`.
+
+> **Mobile app moved.** The installable staff app is part of phase 6 now (see `docs/phases/06-comms-extras.md`), not phase 1.
