@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { ICON_PATHS } from '@/components/elements/export';
+import { ICONS } from '@/components/elements/export';
 
-describe('icon glyph set', () => {
-  it('has a glyph for every name the app asks for', () => {
-    const names = Object.keys(ICON_PATHS);
+describe('icon set', () => {
+  it('has a lucide glyph for every name the app asks for', () => {
+    const names = Object.keys(ICONS);
     expect(names.length).toBeGreaterThan(10);
-    for (const name of ['user', 'agent', 'check', 'message', 'edit', 'arrowRight', 'plus']) {
+    for (const name of ['user', 'agent', 'check', 'message', 'edit', 'arrowRight', 'plus', 'help', 'settings']) {
       expect(names).toContain(name);
     }
   });
