@@ -125,7 +125,7 @@ export function createSync(h: Host) {
     // EventSource cannot send headers, so the secret travels as a query parameter on this one route.
     events = new EventSource(`/api/events?run_secret=${encodeURIComponent(runSecret)}`);
     events.addEventListener('version', e => {
-      const { version: v, origin } = JSON.parse((e as MessageEvent).data) as { version: number; origin: string };
+      const { version: v, origin } = JSON.parse(e.data) as { version: number; origin: string };
       h.onStatus('synced');
       if (origin === clientId || v === version) {
         return;

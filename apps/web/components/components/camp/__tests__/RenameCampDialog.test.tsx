@@ -22,12 +22,12 @@ describe('RenameCampDialog', () => {
   it('opens with the current name in the field and the camp id carried in the form', () => {
     const onClose = vi.fn();
     act(() => root.render(<UiProvider Dialog={ConfirmDialog}><RenameCampDialog campId="o-1" currentName="Camp Birchwood" onClose={onClose} /></UiProvider>));
-    const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
+    const dialog = document.querySelector('[role="dialog"]')!;
     expect(dialog.getAttribute('aria-label')).toBe('Rename camp');
     const input = dialog.querySelector<HTMLInputElement>('input[name="name"]')!;
     expect(input.value).toBe('Camp Birchwood');
     expect(dialog.querySelector<HTMLInputElement>('input[name="campId"]')!.value).toBe('o-1');
-    const cancel = Array.from(dialog.querySelectorAll('button')).find((b) => b.textContent === 'Cancel') as HTMLButtonElement;
+    const cancel = Array.from(dialog.querySelectorAll('button')).find((b) => b.textContent === 'Cancel')!;
     act(() => cancel.click());
     expect(onClose).toHaveBeenCalledTimes(1);
   });

@@ -48,10 +48,10 @@ describe('UiProvider', () => {
         answer = b;
       });
     });
-    const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
+    const dialog = document.querySelector('[role="dialog"]')!;
     expect(dialog.getAttribute('aria-label')).toBe('Delete task?');
     expect(dialog.textContent).toContain('This cannot be undone.');
-    const confirm = Array.from(dialog.querySelectorAll('button')).find((b) => b.textContent === 'Delete') as HTMLButtonElement;
+    const confirm = Array.from(dialog.querySelectorAll('button')).find((b) => b.textContent === 'Delete')!;
     expect(confirm.className).toContain('btn-danger');
     await act(async () => {
       confirm.click();
@@ -65,7 +65,7 @@ describe('UiProvider', () => {
         answer = b;
       });
     });
-    const cancel = Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Cancel') as HTMLButtonElement;
+    const cancel = Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Cancel')!;
     await act(async () => {
       cancel.click();
     });

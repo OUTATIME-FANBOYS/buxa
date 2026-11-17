@@ -6,7 +6,7 @@ const task = (over: Partial<Task> = {}): Task => ({
   id: 't', projectId: 'p', columnId: 'c', title: 'Write the form', description: 'Family questions', priority: 'medium',
   tags: ['family'], subtasks: [{ id: 's1', title: 'a', done: true }, { id: 's2', title: 'b', done: false }], comments: [], attachments: [],
   history: [], archived: false, createdAt: '2027-07-01T00:00:00.000Z', createdBy: 'u', ...over,
-} as Task);
+});
 
 describe('task priorities', () => {
   it('lists the priorities low to critical with labels and ranks', () => {
@@ -73,9 +73,9 @@ describe('filter state and sorting', () => {
     expect(isFilterActive({ ...emptyFilter, due: 'week' })).toBe(true);
   });
   it('sorts by created, priority and due, and keeps manual order', () => {
-    const a = task({ id: 'a', createdAt: '2027-07-01', priority: 'low', due: '2027-07-20' } as Partial<Task>);
-    const b = task({ id: 'b', createdAt: '2027-07-05', priority: 'critical', due: '2027-07-02' } as Partial<Task>);
-    const c = task({ id: 'c', createdAt: '2027-07-03', priority: 'high', due: undefined } as Partial<Task>);
+    const a = task({ id: 'a', createdAt: '2027-07-01', priority: 'low', due: '2027-07-20' });
+    const b = task({ id: 'b', createdAt: '2027-07-05', priority: 'critical', due: '2027-07-02' });
+    const c = task({ id: 'c', createdAt: '2027-07-03', priority: 'high', due: undefined });
     expect(sortTasks([a, b, c], 'manual')).toEqual([a, b, c]);
     expect(sortTasks([a, b, c], 'created').map((t) => t.id)).toEqual(['b', 'c', 'a']);
     expect(sortTasks([a, b, c], 'priority').map((t) => t.id)).toEqual(['b', 'c', 'a']);

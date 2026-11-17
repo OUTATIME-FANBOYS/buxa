@@ -5,7 +5,7 @@ import { InMemoryClassRepository } from '../../../classes/InMemoryClassRepositor
 import { InMemoryImportRepository } from '../../../classes/import/InMemoryImportRepository';
 import { CAMP_TZ, ORG } from '../../../classes/__tests__/fixtures';
 
-const h = vi.hoisted(() => ({ actor: null as null | Actor, services: {} as Record<string, unknown> }));
+const h = vi.hoisted(() => ({ actor: null as null | Actor, services: {} }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: h.services }) }));
 vi.mock('../../people/camp', () => ({ currentActor: async () => h.actor }));
 

@@ -6,6 +6,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { UiProvider } from '../../providers/UiProvider';
 import { useAttachmentUpload } from '../useAttachmentUpload';
 
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Kept: the compiler needs this assertion to type the value; removing it fails typecheck.
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
 vi.mock('../../providers/store', () => ({ useStore: () => h.store }));
 

@@ -7,6 +7,7 @@ import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { buildSeed } from '@buxa/shared';
 import { AgentDialog } from '@/components/components/kanban/dialogs/export';
 
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Kept: the compiler needs this assertion to type the value; removing it fails typecheck.
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 
@@ -25,6 +26,7 @@ describe('AgentDialog', () => {
 
   it('asks for a name, what the agent is for, and which projects it may touch', () => {
     act(() => root.render(<UiProvider Dialog={ConfirmDialog}><AgentDialog onClose={() => undefined} /></UiProvider>));
+    // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
     const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
     expect(dialog.getAttribute('aria-label')).toBe('Add an agent');
     expect(dialog.querySelectorAll('input[type="checkbox"]')).toHaveLength(seed.projects.length);
@@ -32,6 +34,7 @@ describe('AgentDialog', () => {
   });
   it('will not add an agent without a name', () => {
     act(() => root.render(<UiProvider Dialog={ConfirmDialog}><AgentDialog onClose={() => undefined} /></UiProvider>));
+    // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
     const form = document.querySelector('form') as HTMLFormElement;
     act(() => {
       form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));

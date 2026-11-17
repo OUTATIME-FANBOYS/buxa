@@ -7,7 +7,7 @@ import { UiProvider } from '../../providers/UiProvider';
 import { buildSeed } from '@buxa/shared';
 import { useBoardDnd } from '../useBoardDnd';
 
-const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
+const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('../../providers/store', () => ({ useStore: () => h.store }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;

@@ -17,6 +17,7 @@ describe('Menu', () => {
 
   it('starts closed with its label on the trigger', () => {
     act(() => root.render(<Menu label="Task actions" trigger="⋯" items={[{ label: 'Rename', onSelect: () => undefined }]} />));
+    // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
     const trigger = document.querySelector('button[aria-label="Task actions"]') as HTMLButtonElement;
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
     expect(document.querySelector('[role="menu"]')).toBeNull();
@@ -25,6 +26,7 @@ describe('Menu', () => {
   it('opens on click, lists the items, and runs the chosen one', () => {
     const onRename = vi.fn();
     act(() => root.render(<Menu label="Task actions" trigger="⋯" items={[{ label: 'Rename', onSelect: onRename }, false, { label: 'Delete', danger: true, onSelect: () => undefined }]} />));
+    // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
     const trigger = document.querySelector('button[aria-label="Task actions"]') as HTMLButtonElement;
     act(() => trigger.click());
     expect(trigger.getAttribute('aria-expanded')).toBe('true');

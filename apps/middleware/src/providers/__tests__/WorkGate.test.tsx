@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { buildSeed } from '@buxa/shared';
 import { WorkGate } from '../WorkGate';
 
-const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
+const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('../store', () => ({ useStore: () => h.store }));
 
 const user = { id: 'u-rosa', name: 'Rosa', email: 'rosa@example.com' };

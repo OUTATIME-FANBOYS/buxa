@@ -11,7 +11,7 @@ import { IMPORT_IDLE, type ImportState } from '@buxa/shared';
 
 const h = vi.hoisted(() => ({
   actor: null as null | Actor,
-  services: {} as Record<string, unknown>,
+  services: {},
 }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: h.services }) }));
 vi.mock('../../people/camp', () => ({ currentActor: async () => h.actor }));

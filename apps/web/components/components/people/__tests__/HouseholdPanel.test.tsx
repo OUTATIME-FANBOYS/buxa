@@ -21,7 +21,7 @@ describe('HouseholdPanel', () => {
     expect(html).toContain('household=h-1');
   });
   it('offers the link form only to people who can update, when there is a household to link to', () => {
-    expect(renderToStaticMarkup(<HouseholdPanel {...base} canUpdate householdOptions={[{ id: 'h-1', name: 'The Coles' } as never]} />)).toContain('Link someone to a household');
-    expect(renderToStaticMarkup(<HouseholdPanel {...base} canUpdate={false} householdOptions={[{ id: 'h-1', name: 'The Coles' } as never]} />)).not.toContain('Link someone');
+    expect(renderToStaticMarkup(<HouseholdPanel {...base} canUpdate householdOptions={[{ id: 'h-1', name: 'The Coles' }]} />)).toContain('Link someone to a household');
+    expect(renderToStaticMarkup(<HouseholdPanel {...base} canUpdate={false} householdOptions={[{ id: 'h-1', name: 'The Coles' }]} />)).not.toContain('Link someone');
   });
 });

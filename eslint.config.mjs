@@ -46,7 +46,12 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
     },
-    rules: typedDebtAsWarnings,
+    rules: {
+      ...typedDebtAsWarnings,
+      // Type assertions must be needed, and written in the non-null form where that applies. These need type information.
+      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+      '@typescript-eslint/non-nullable-type-assertion-style': 'error',
+    },
   },
 
   // Plain JS and MJS files are not in any TypeScript project, so they get the untyped rules only.

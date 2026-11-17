@@ -7,7 +7,7 @@ import type { OnSiteEntry } from '@buxa/server/services/attendance/AttendanceSer
 const notFound = vi.hoisted(() => vi.fn(() => {
   throw new Error('NEXT_NOT_FOUND');
 }));
-const session = vi.hoisted(() => ({ camp: true as boolean, role: 'staff' as Role, timeZone: 'Asia/Kolkata' }));
+const session = vi.hoisted(() => ({ camp: true, role: 'staff', timeZone: 'Asia/Kolkata' }));
 const services = vi.hoisted(() => ({
   orgs: { getCamp: vi.fn() },
   attendance: { onSite: vi.fn(), log: vi.fn(), checkIn: vi.fn(), checkOut: vi.fn(), exportCsv: vi.fn() },

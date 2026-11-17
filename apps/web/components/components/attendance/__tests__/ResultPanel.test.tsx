@@ -12,20 +12,20 @@ const render = (state: CheckInState, extra: Partial<typeof props> = {}) => rende
 
 describe('ResultPanel', () => {
   it('waits for the next person when idle', () => {
-    expect(render({ phase: 'idle' } as CheckInState)).toContain('Ready for the next person');
+    expect(render({ phase: 'idle' })).toContain('Ready for the next person');
   });
   it('says a code was not recognised, and shows a lookup error', () => {
-    expect(render({ phase: 'unknown' } as CheckInState)).toContain('Code not recognised');
-    expect(render({ phase: 'error', message: 'Service is down.' } as CheckInState)).toContain('Service is down.');
+    expect(render({ phase: 'unknown' })).toContain('Code not recognised');
+    expect(render({ phase: 'error', message: 'Service is down.' })).toContain('Service is down.');
   });
   it('shows the person with an enabled check-in when they can be checked in', () => {
-    const html = render({ phase: 'ready', card, method: 'qr' } as CheckInState);
+    const html = render({ phase: 'ready', card, method: 'qr' });
     expect(html).toContain('Ada Lee');
     expect(html).toContain('>Check in</button>');
     expect(html).not.toContain('disabled=""');
   });
   it('disables the action while the check-in is being sent', () => {
-    expect(render({ phase: 'submitting', card, method: 'qr' } as CheckInState)).toContain('Checking in…');
+    expect(render({ phase: 'submitting', card, method: 'qr' })).toContain('Checking in…');
   });
   it('shows a refusal with a way to clear for the next person', () => {
     const html = render({ phase: 'refused', card, method: 'qr', refusal: { reason: 'archived' } } as unknown as CheckInState);

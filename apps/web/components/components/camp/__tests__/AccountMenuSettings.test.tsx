@@ -2,7 +2,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import type { User } from '@buxa/contracts';
 import { AccountMenu } from '@/components/components/camp/export';
 import { ROUTES } from '@/config/routes';
 
@@ -11,7 +10,7 @@ import { ROUTES } from '@/config/routes';
 vi.mock('@/actions/auth', () => ({ signOut: async () => undefined }));
 vi.mock('@buxa/server/composers/auth/signOut', () => ({ signOut: async () => undefined }));
 
-const user = { id: 'u-1', name: 'Rosa Delgado', email: 'rosa@example.com' } as unknown as User;
+const user = { id: 'u-1', name: 'Rosa Delgado', email: 'rosa@example.com' };
 
 describe('the account menu', () => {
   let root: Root;

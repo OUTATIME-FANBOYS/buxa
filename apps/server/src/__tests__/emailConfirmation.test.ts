@@ -16,7 +16,7 @@ describe('reading the Supabase email-confirmation setting', () => {
   it('unknown when Supabase refuses, sends something unexpected, or cannot be reached', async () => {
     expect(await read(reply({}, 401))).toBe('unknown');
     expect(await read(reply({ other: 1 }))).toBe('unknown');
-    expect(await read(reply('nope' as unknown))).toBe('unknown');
+    expect(await read(reply('nope'))).toBe('unknown');
     expect(await read(vi.fn(async () => {
       throw new TypeError('offline');
     }) as unknown as typeof fetch)).toBe('unknown');

@@ -135,7 +135,7 @@ describe('layer rules', () => {
         if (target === from || !BARREL_FILES[target]) {
           continue;
         }
-        if (BARREL_FILES[target]!.includes(to) || to.endsWith('/export.ts') || DEEP_ALLOWED.has(spec)) {
+        if (BARREL_FILES[target].includes(to) || to.endsWith('/export.ts') || DEEP_ALLOWED.has(spec)) {
           continue;
         }
         bad.push(`${file} -> ${spec}`);

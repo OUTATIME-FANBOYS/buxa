@@ -17,7 +17,7 @@ describe('Popover', () => {
 
   it('portals its content to the body as a labelled dialog', () => {
     act(() => root.render(<Popover anchor={null} onClose={() => undefined} label="Filters" className="x"><p>Choose</p></Popover>));
-    const pop = document.querySelector('.popover') as HTMLElement;
+    const pop = document.querySelector('.popover')!;
     expect(pop.getAttribute('aria-label')).toBe('Filters');
     expect(pop.classList.contains('x')).toBe(true);
     expect(pop.textContent).toBe('Choose');
@@ -38,7 +38,7 @@ describe('Popover', () => {
     const onClose = vi.fn();
     const outside = document.body.appendChild(document.createElement('span'));
     act(() => root.render(<Popover anchor={null} onClose={onClose}><button>inside</button></Popover>));
-    const inside = document.querySelector('.popover button') as HTMLElement;
+    const inside = document.querySelector('.popover button')!;
     act(() => {
       inside.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
     });

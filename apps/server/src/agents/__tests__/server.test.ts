@@ -18,6 +18,7 @@ const H = { 'content-type': 'application/json', 'x-buxa-client': 'test', 'x-buxa
 const api = async (method: string, p: string, b?: unknown, headers: Record<string, string> = H) => {
   const r = await fetch(base + p, { method, headers, body: b === undefined ? undefined : JSON.stringify(b) });
 
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Kept: the compiler needs this assertion to type the value; removing it fails typecheck.
   return { status: r.status, json: (await r.json().catch(() => null)) as any };
 };
 const seed = () => pickData(buildSeed());

@@ -238,7 +238,7 @@ export function invite(s: AppState, workspaceId: string, email: string, role: Ro
   if (!user) {
     user = { id: 'u-' + clock.id(), name: e.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), email: e, pending: true }; users = [...users, user];
   }
-  const n = { ...s, users, workspaces: s.workspaces.map(w => (w.id === workspaceId ? { ...w, members: [...w.members, { userId: user!.id, role }] } : w)) };
+  const n = { ...s, users, workspaces: s.workspaces.map(w => (w.id === workspaceId ? { ...w, members: [...w.members, { userId: user.id, role }] } : w)) };
 
   return { state: notify(n, user.id, 'invite', `${nameOf(s, s.session.userId)} added you to ${ws.name}`), error: null };
 }

@@ -31,7 +31,7 @@ export function parseCsvRecords(input: string): CsvParse {
   };
 
   for (let i = 0; i < text.length; i++) {
-    const c = text[i] as string;
+    const c = text[i];
     if (inQuotes) {
       if (c === '"') {
         if (text[i + 1] === '"') {

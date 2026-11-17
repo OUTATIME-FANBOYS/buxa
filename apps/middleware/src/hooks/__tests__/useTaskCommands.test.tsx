@@ -8,6 +8,7 @@ import { buildSeed } from '@buxa/shared';
 import { type Task } from '@buxa/shared';
 import { useTaskCommands, type TaskCommands } from '../useTaskCommands';
 
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Kept: the compiler needs this assertion to type the value; removing it fails typecheck.
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown>, openTask: vi.fn() }));
 vi.mock('../../providers/store', () => ({ useStore: () => h.store }));
 vi.mock('../../providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: h.openTask }) }));
@@ -25,6 +26,7 @@ function Probe() {
 describe('useTaskCommands', () => {
   let root: Root;
   const seed = buildSeed();
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Kept: the compiler needs this assertion to type the value; removing it fails typecheck.
   const task = seed.tasks[0] as Task;
   beforeEach(() => {
     cmd = undefined;
@@ -40,6 +42,7 @@ describe('useTaskCommands', () => {
     act(() => cmd!.remove(task));
     expect((h.store.actions as { deleteTask: ReturnType<typeof vi.fn> }).deleteTask).toHaveBeenCalledWith(task.id);
     expect(document.querySelector('.toast')?.textContent).toContain('Task deleted');
+    // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
     act(() => (document.querySelector('.toast button') as HTMLButtonElement).click());
     expect((h.store.actions as { restoreTask: ReturnType<typeof vi.fn> }).restoreTask).toHaveBeenCalledWith(task);
   });

@@ -30,7 +30,7 @@ describe('reads are limited to the agent’s scope', () => {
   it('finds tasks by column name and text', () => {
     const rows = G.listTasks(s, AGENT_ID, { project: PROJECT_NAME.registration, column: 'in progress' }).value as { column: string }[];
     expect(rows.length).toBeGreaterThan(0); expect(rows.every(r => r.column === 'In Progress')).toBe(true);
-    expect((G.listTasks(s, AGENT_ID, { project: PROJECT.registration, query: 'deposit' }).value as unknown[]).length).toBeGreaterThan(0);
+    expect((G.listTasks(s, AGENT_ID, { project: PROJECT.registration, query: 'deposit' }).value!).length).toBeGreaterThan(0);
   });
   it('describes the agent’s own permissions', () => {
     const w = G.whoami(s, AGENT_ID)!;
@@ -107,8 +107,8 @@ describe('tasks created with only the required fields', () => {
     const o = call(G.createTask(s, AGENT_ID, { project: PROJECT.registration, title: 'Bare minimum', reason: 'r' }));
     const t = s.tasks.find(x => x.id === o.taskId)!;
     expect(t).toMatchObject({ description: '', priority: 'medium', tags: [], subtasks: [], comments: [], archived: false });
-    expect((G.listTasks(s, AGENT_ID, { project: PROJECT.registration, query: 'minimum' }).value as unknown[]).length).toBe(1);
-    expect((G.listTasks(s, AGENT_ID, { project: PROJECT.registration, query: 'no-such-text' }).value as unknown[]).length).toBe(0);
+    expect((G.listTasks(s, AGENT_ID, { project: PROJECT.registration, query: 'minimum' }).value!).length).toBe(1);
+    expect((G.listTasks(s, AGENT_ID, { project: PROJECT.registration, query: 'no-such-text' }).value!).length).toBe(0);
   });
   it('are repaired when old data lacking defaults is loaded', async () => {
     const { repairData } = await import('../..');
@@ -116,6 +116,6 @@ describe('tasks created with only the required fields', () => {
     const fixed = repairData(broken);
     expect(fixed.tasks[0]).toMatchObject({ description: '', priority: 'medium' }); expect(fixed.tasks[1]).toBe(s.tasks[1]);
     expect(repairData(s)).toBe(s); // untouched data keeps its identity
-    expect((G.listTasks({ ...broken, ...fixed } as AppState, AGENT_ID, { project: PROJECT.registration, query: 'x' }).error)).toBeUndefined();
+    expect((G.listTasks({ ...broken, ...fixed }, AGENT_ID, { project: PROJECT.registration, query: 'x' }).error)).toBeUndefined();
   });
 });

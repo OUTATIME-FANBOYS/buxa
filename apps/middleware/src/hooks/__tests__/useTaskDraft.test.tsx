@@ -7,6 +7,7 @@ import { UiProvider } from '../../providers/UiProvider';
 import { buildSeed } from '@buxa/shared';
 import { useTaskDraft, type TaskDraft } from '../useTaskDraft';
 
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Kept: the compiler needs this assertion to type the value; removing it fails typecheck.
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown>, openTask: vi.fn() }));
 vi.mock('../../providers/store', () => ({ useStore: () => h.store }));
 vi.mock('../../providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: h.openTask }) }));

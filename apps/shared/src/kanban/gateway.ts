@@ -59,7 +59,7 @@ const proposalView = (s: AppState, p: Proposal) => {
   return { id: p.id, run: s.runs.find(r => r.id === p.runId)?.label, action: d.text, reason: p.reason, status: p.status, note: p.note ?? null,
     proposedAt: p.at, decidedBy: nameOf(s, p.decidedBy) ?? null, decidedAt: p.decidedAt ?? null, taskId: p.taskId ?? null };
 };
-const outcome = (s: AppState, p: Proposal) => ({ proposalId: p.id, status: p.status as ProposalStatus, note: p.note ?? null, taskId: p.taskId ?? null,
+const outcome = (s: AppState, p: Proposal) => ({ proposalId: p.id, status: p.status, note: p.note ?? null, taskId: p.taskId ?? null,
   meaning: p.status === 'applied' ? 'Done. The change was applied immediately.' : p.status === 'pending' ? 'Waiting for a person (or an agent with review rights) to approve it. Do not repeat it.' : p.status === 'blocked' ? 'Refused by this agent’s permissions. Do not retry the same change.' : p.status });
 
 /* ---------- reads ---------- */
@@ -206,7 +206,7 @@ export function updateTask(s: AppState, agentId: string, i: TaskEdits): Out<Retu
     return bad(s, `Priority must be one of ${PRIORITIES.join(', ')}.`);
   }
   for (const k of ['start', 'due'] as const) {
-    if (i[k] && !DAY.test(i[k]!)) {
+    if (i[k] && !DAY.test(i[k])) {
       return bad(s, 'Dates use YYYY-MM-DD.');
     }
   }

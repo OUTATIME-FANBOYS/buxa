@@ -76,7 +76,7 @@ describe('loadCampHome', () => {
     const home = await loadCampHome();
     expect(home.checkedInToday).toBe(2);
     expect(home.checkInsByDay?.days[CHART_DAYS - 1]).toEqual({ date: today, count: 2 });
-    const filter = services.attendance.log.mock.calls[0]?.[1] as { from: string; to: string };
+    const filter = services.attendance.log.mock.calls[0]?.[1];
     expect(filter.to).toBe(today);
     expect(filter.from).toBe(dayOf(CHART_DAYS - 1));
   });

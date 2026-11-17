@@ -65,13 +65,13 @@ export function classForm(form: FormData): PersonParsed<NewClassInput> {
   }
 
   // The contract reports the age-range refinement under `ageRange`; the form shows it on the oldest-age field.
-  return withProblems(problems, () => parseWith(NewClassInputSchema, {
+  return withProblems(problems, () => parseWith<NewClassInput>(NewClassInputSchema, {
     name: field(form, 'name'),
     description: field(form, 'description'),
     ageRange: { minAge, maxAge },
     capacity,
     instructorRatio: ratioSet && instructors !== undefined && campers !== undefined ? { instructors, campers } : null,
-  }) as PersonParsed<NewClassInput>, { ageRange: 'maxAge' });
+  }), { ageRange: 'maxAge' });
 }
 
 /** A session. Times are typed in the camp's own clock and converted to instants here, so the contract always gets an offset. */
@@ -87,13 +87,13 @@ export function sessionForm(form: FormData, timeZone: string): PersonParsed<NewS
   }
   const capacity = numberField(form, 'capacity', problems);
 
-  return withProblems(problems, () => parseWith(NewSessionInputSchema, {
+  return withProblems(problems, () => parseWith<NewSessionInput>(NewSessionInputSchema, {
     startsAt: starts.ok ? starts.instant : undefined,
     endsAt: ends.ok ? ends.instant : undefined,
     location: field(form, 'location'),
     instructorIds: fieldAll(form, 'instructorIds'),
     capacity,
-  }) as PersonParsed<NewSessionInput>);
+  }));
 }
 
 /** An enrolment. The button pressed decides the waitlist: "waitlist" puts a camper on the list when the session is full. */
@@ -104,19 +104,19 @@ export function enrolForm(form: FormData): PersonParsed<EnrolInput> {
   }
   const reason = field(form, 'overrideReason').trim();
 
-  return withProblems(problems, () => parseWith(EnrolInputSchema, {
+  return withProblems(problems, () => parseWith<EnrolInput>(EnrolInputSchema, {
     sessionId: field(form, 'sessionId'),
     camperId: field(form, 'camperId'),
     waitlistIfFull: field(form, 'intent') === 'waitlist',
     ...(reason ? { override: { reason } } : {}),
-  }) as PersonParsed<EnrolInput>);
+  }));
 }
 
 export function cancelForm(form: FormData): PersonParsed<CancelEnrolmentInput> {
   const note = field(form, 'note').trim();
 
-  return parseWith(CancelEnrolmentInputSchema, {
+  return parseWith<CancelEnrolmentInput>(CancelEnrolmentInputSchema, {
     enrolmentId: field(form, 'enrolmentId'),
     ...(note ? { note } : {}),
-  }) as PersonParsed<CancelEnrolmentInput>;
+  });
 }

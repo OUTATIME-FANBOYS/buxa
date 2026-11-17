@@ -35,9 +35,9 @@ describe('requireInstructors', () => {
 describe('insertClass', () => {
   it('writes the class and its class.create audit entry in the same transaction, scoped to the actor camp', async () => {
     const { client, seen } = fakeDb(sql => (sql.startsWith('INSERT INTO classes') ? [{ id: classId }] : undefined));
-    const id = await insertClass(client as never, actor, {
+    const id = await insertClass(client, actor, {
       name: 'Robotics', description: '', ageRange: { minAge: 8, maxAge: 12 }, capacity: 10, instructorRatio: null,
-    } as never);
+    });
     expect(id).toBe(classId);
     expect(seen).toHaveLength(2);
     expect(seen[0].sql).toMatch(/^INSERT INTO classes/);
@@ -59,7 +59,7 @@ describe('insertSession', () => {
 
   it('skips the instructor link when there are no instructors', async () => {
     const { client, seen } = fakeDb(sql => (sql.includes('INSERT INTO sessions') ? [{ id: classId }] : undefined));
-    await insertSession(client as never, actor, classId, input);
+    await insertSession(client, actor, classId, input);
     expect(seen.some(s => s.sql.includes('session_instructors'))).toBe(false);
     expect(seen.at(-1)?.sql).toMatch(/audit_log/);
   });

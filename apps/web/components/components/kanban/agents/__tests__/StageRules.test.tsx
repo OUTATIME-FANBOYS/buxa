@@ -4,7 +4,7 @@ import { buildSeed } from '@buxa/shared';
 import { type Agent } from '@buxa/shared';
 import { StageRules } from '@/components/components/kanban/agents/export';
 
-const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
+const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 
 const seed = buildSeed();
@@ -28,6 +28,6 @@ describe('StageRules', () => {
     expect(html).not.toContain('<select');
   });
   it('shows nothing for an agent with no projects it may touch', () => {
-    expect(renderToStaticMarkup(<StageRules agent={{ ...agent, scope: [] } as never} canManage />)).toBe('');
+    expect(renderToStaticMarkup(<StageRules agent={{ ...agent, scope: [] }} canManage />)).toBe('');
   });
 });

@@ -30,7 +30,7 @@ describe('AddPersonButton (the People page)', () => {
     act(() => root.unmount()); host.remove();
   });
 
-  const button = () => Array.from(host.querySelectorAll('button')).find(b => b.textContent === 'Add person') as HTMLButtonElement;
+  const button = () => Array.from(host.querySelectorAll('button')).find(b => b.textContent === 'Add person')!;
   const dialog = () => document.querySelector<HTMLElement>('[role="dialog"]');
   const open = async () => {
     button().focus(); act(() => button().click()); await flush();
@@ -58,7 +58,7 @@ describe('AddPersonButton (the People page)', () => {
   it('closes from its Cancel button', async () => {
     act(() => root.render(<AddPersonButton households={[]} />));
     await open();
-    const cancel = Array.from(dialog()!.querySelectorAll('button')).find(b => b.textContent === 'Cancel') as HTMLButtonElement;
+    const cancel = Array.from(dialog()!.querySelectorAll('button')).find(b => b.textContent === 'Cancel')!;
     act(() => cancel.click());
     await settle();
     expect(dialog()).toBeNull();
@@ -68,7 +68,7 @@ describe('AddPersonButton (the People page)', () => {
     createPerson.mockResolvedValue(failure('Check the highlighted fields.', { givenName: 'Enter a first name.', roles: 'Choose at least one role.' }));
     act(() => root.render(<AddPersonButton households={[]} />));
     await open();
-    const form = dialog()!.querySelector('form') as HTMLFormElement;
+    const form = dialog()!.querySelector('form')!;
     act(() => form.requestSubmit());
     await flush();
     expect(createPerson).toHaveBeenCalledTimes(1);
@@ -85,7 +85,7 @@ describe('AddPersonButton (the People page)', () => {
     const family = dialog()!.querySelector<HTMLInputElement>('input[name="familyName"]')!;
     given.value = 'Ada';
     family.value = 'Lovelace';
-    act(() => (dialog()!.querySelector('form') as HTMLFormElement).requestSubmit());
+    act(() => (dialog()!.querySelector('form')!).requestSubmit());
     await flush();
     const data = createPerson.mock.calls[0]?.[1] as FormData;
     expect(data.get('givenName')).toBe('Ada');

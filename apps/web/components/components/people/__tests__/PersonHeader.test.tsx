@@ -13,7 +13,7 @@ describe('PersonHeader', () => {
     expect(html).not.toContain('Archived');
   });
   it('says so when the person is archived, and shows on-site only when they are on site', () => {
-    const html = renderToStaticMarkup(<PersonHeader person={{ ...person, archived: true, onSite: true } as unknown as Person} />);
+    const html = renderToStaticMarkup(<PersonHeader person={{ ...person, archived: true, onSite: true }} />);
     expect(html).toContain('Archived');
     expect(html).toContain('On site');
   });

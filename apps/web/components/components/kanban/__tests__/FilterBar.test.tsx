@@ -7,7 +7,7 @@ import { emptyFilter } from '@buxa/shared';
 import { type Filter } from '@buxa/shared';
 import { FilterBar } from '@/components/components/kanban/export';
 
-const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
+const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 
 const seed = buildSeed();
