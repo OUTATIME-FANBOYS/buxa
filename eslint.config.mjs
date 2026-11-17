@@ -12,7 +12,6 @@ const consoleAllowed = [
   'test/**',
   '**/*.test.{ts,tsx,mts}',
   '**/__tests__/**',
-  'apps/web/legacy-server/index.ts', // the local server's start-up banner, printed for the operator
   'packages/db/src/cli.ts', // the migration command's output
 ];
 
@@ -83,11 +82,5 @@ export default tseslint.config(
   {
     files: consoleAllowed,
     rules: { 'no-console': 'off' },
-  },
-
-  // Debt: the legacy server's test file types its JSON bodies as `any` (8 places). Warning until the test gets real types.
-  {
-    files: ['apps/web/legacy-server/__tests__/**'],
-    rules: { '@typescript-eslint/no-explicit-any': 'warn' },
   },
 );

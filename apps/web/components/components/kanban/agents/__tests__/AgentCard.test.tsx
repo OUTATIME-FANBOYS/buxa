@@ -6,12 +6,11 @@ import { AgentCard } from '@/components/components/kanban/agents/export';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
-vi.mock('@/components/components/kanban/dialogs/ConnectAgentDialog', () => ({ ConnectAgentDialog: () => null }));
 
 describe('AgentCard', () => {
   beforeEach(() => {
     const seed = buildSeed();
-    h.store = { s: seed, actions: { updateAgent: vi.fn() }, projects: seed.projects, sync: 'local' };
+    h.store = { s: seed, actions: { updateAgent: vi.fn() }, projects: seed.projects };
   });
 
   it('shows the agent with its model, its purpose and whether it is active', () => {

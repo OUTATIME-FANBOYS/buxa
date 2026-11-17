@@ -8,7 +8,7 @@ import { StoreProvider, useStore } from '../store';
 const seed = buildSeed();
 const actions = { setTheme: vi.fn() };
 vi.mock('../useStoreEngine', () => ({
-  useStoreEngine: () => ({ state: seed, saveStatus: 'saved', sync: 'local', serverInfo: {}, actions }),
+  useStoreEngine: () => ({ state: seed, saveStatus: 'saved', actions }),
 }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -27,7 +27,6 @@ describe('StoreProvider and useStore', () => {
     expect(api!.s).toBe(seed);
     expect(api!.actions).toBe(actions);
     expect(api!.saveStatus).toBe('saved');
-    expect(api!.sync).toBe('local');
     expect(api!.myRole).toBe('viewer');
   });
   it('refuses to be used outside its provider', () => {

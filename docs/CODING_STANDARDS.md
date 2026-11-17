@@ -76,7 +76,7 @@ The rules below are enforced by `apps/web/architecture/architecture.test.ts` and
 
 - **`strict` is on.** The root `tsconfig.json` sets `strict: true`, and `apps/web/tsconfig.json` extends it.
 - **No `any`, no `as unknown as`.** A few uses remain in non-test code (for example `features/kanban/lib/agents.ts`). Do not add more; restructure the types instead.
-- **No non-null assertions (`!`).** Some remain in non-test code, mostly in `legacy-server/` and `features/kanban/` (the demo). Do not copy them. If a type cannot prove a value, return a non-null type from a function that checks it, or pass the value as a prop.
+- **No non-null assertions (`!`).** Some remain in non-test code, mostly in the kanban demo (`components/components/kanban/`). Do not copy them. If a type cannot prove a value, return a non-null type from a function that checks it, or pass the value as a prop.
 - **Validate at every boundary; do not cast.** Request bodies, Server Action inputs, environment variables (`server/config.ts`) and stored data are parsed with zod. Shared request and response shapes live in `packages/contracts`. Database rows are typed with `query<Row>`.
 - **Closed sets are unions or `as const` arrays** (for example `Role` and `Action` in `packages/domain`). They are never loose strings.
 - **Shared business rules are written once,** in `packages/domain` (for example `authorize`, `isUuid`, `isSlug`), and imported by the API and the web app.

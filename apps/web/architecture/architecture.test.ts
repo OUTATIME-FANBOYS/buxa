@@ -46,7 +46,7 @@ function walk(dir: string, out: string[] = []): string[] {
 }
 
 const rel = (abs: string) => relative(WEB, abs).split(sep).join('/');
-const files = walk(WEB).filter((f) => !rel(f).startsWith('.next') && !rel(f).startsWith('legacy-server') && !rel(f).startsWith('architecture/'));
+const files = walk(WEB).filter((f) => !rel(f).startsWith('.next') &&!rel(f).startsWith('architecture/'));
 const source = new Map(files.map((f) => [rel(f), readFileSync(f, 'utf8')]));
 
 /** Runtime (non-type) static imports of a file, with the alias or relative specifier as written. */

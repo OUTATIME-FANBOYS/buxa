@@ -15,8 +15,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 /** The state (`s`), the actions, and everything derived from them. Memoised on the pieces that can change it. */
 export function useStore() {
   const v = useContext(Ctx); if (!v) throw new Error('StoreProvider missing');
-  const { state: s, actions, saveStatus, sync, serverInfo } = v;
-  return useMemo(() => ({ s, actions, saveStatus, sync, serverInfo, ...deriveView(s) }), [s, actions, saveStatus, sync, serverInfo]);
+  const { state: s, actions, saveStatus } = v;
+  return useMemo(() => ({ s, actions, saveStatus, ...deriveView(s) }), [s, actions, saveStatus]);
 }
 
 export type { Actions } from '@buxa/shared/kanban/actions/createActions';

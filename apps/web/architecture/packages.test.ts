@@ -38,7 +38,7 @@ const pkgOf = (rel: string): Pkg => {
 };
 
 const SRC_ROOTS = ['apps/web', 'apps/middleware/src', 'apps/shared/src', 'apps/server/src', 'packages'];
-const SKIP = new Set(['node_modules', '.next', '.git', 'legacy-server']);
+const SKIP = new Set(['node_modules', '.next', '.git']);
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
