@@ -25,10 +25,11 @@ describe('phone layout for check-in, on site and the log', () => {
     expect(phoneBlock).toMatch(/\.scan-panel input \{ font-size: 16px; \}/);
   });
 
-  it('on site rows stack and the check-out button takes the full width', () => {
-    expect(phoneBlock).toContain('.onsite-head { flex-direction: column; align-items: stretch; }');
-    expect(phoneBlock).toMatch(/\.onsite-head \.btn, \.checkout-panel \.btn \{ width: 100%; \}/);
-    expect(tsx('attendance/OnSiteRow.tsx')).toContain('att-btn-lg');
+  it('on site cards keep the name and the compact check-out button in one row, and the dialog buttons share a row', () => {
+    expect(phoneBlock).not.toContain('.onsite-head { flex-direction: column; align-items: stretch; }');
+    expect(phoneBlock).toContain('.checkout-actions .btn { flex: 1 1 0; }');
+    expect(tsx('attendance/OnSiteRow.tsx')).toContain('onsite-btn');
+    expect(tsx('attendance/CheckOutPanel.tsx')).toContain('className="checkout-actions"');
   });
 
   it('the log stacks each visit, with a label in front of each value', () => {

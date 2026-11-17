@@ -80,8 +80,8 @@ describe('OnSiteScreen', () => {
     const html = renderToStaticMarkup(await OnSiteScreen());
     expect(html).toContain('2 people on site now');
     expect(html).toContain('Ada Lovelace');
-    expect(html).toContain('Arrived 02:00');
-    expect(html).toContain('Arrived 13:42');
+    expect(html).toContain('Checked in: 02:00');
+    expect(html).toContain('Checked in: 13:42');
     expect(html).toContain('Minor');
     expect(html.indexOf('Ada Lovelace')).toBeLessThan(html.indexOf('Sam Lee'));
     expect(html).toContain('>Check out<');

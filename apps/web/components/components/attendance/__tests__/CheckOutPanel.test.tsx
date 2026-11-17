@@ -47,4 +47,14 @@ describe('CheckOutPanel guardian wording', () => {
     const html = panel({ row: row({ isMinor: false }) });
     expect(html).not.toMatch(/<button type="submit"[^>]*disabled[^>]*>/);
   });
+
+  it('puts Cancel and Check out in one row, Cancel first', () => {
+    const html = panel({ row: row({ isMinor: false }), onCancel: () => {} });
+    expect(html).toMatch(/<div class="checkout-actions"><button type="button" class="btn onsite-btn">Cancel<\/button><button type="submit"[^>]*>Check out<\/button><\/div>/);
+  });
+
+  it('has no Cancel button when no cancel handler is given', () => {
+    const html = panel({ row: row({ isMinor: false }) });
+    expect(html).not.toContain('>Cancel<');
+  });
 });
