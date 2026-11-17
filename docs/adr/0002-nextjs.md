@@ -13,7 +13,7 @@ Move to **Next.js (App Router)** and put the API in it too:
 - Routes, Server Actions and Route Handlers all call one **services** layer, which calls repositories. Permissions (`authorize`) and row-level security are unchanged.
 - `proxy.ts` (Next 16's middleware) refreshes the session and sets the Content-Security-Policy.
 - Sessions move from a token in `localStorage` to cookies (`@supabase/ssr`), so server rendering can see who is signed in.
-- Real URLs (`/camp`, `/camp/members`); the original kanban demo is a client-only section at `/kanban`.
+- Real URLs (`/camp`, `/camp/members`); the original kanban demo was a client-only section at `/kanban`. (Amended 2026-11-17: it now lives under `/camp`, for example `/camp/tasks`, and `/kanban` redirects to `/camp`.)
 - `packages/*` become npm workspaces. A single `config/routes.ts` (and later siblings) is the source of truth for anything used in more than one place.
 
 ## Order of work (each its own PR, tested end to end)
