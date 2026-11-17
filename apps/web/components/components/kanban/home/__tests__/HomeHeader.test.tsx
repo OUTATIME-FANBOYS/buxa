@@ -8,7 +8,7 @@ vi.mock('@/components/components/camp/RenameCampButton', () => ({ RenameCampButt
 Object.assign(globalThis, { React });
 const { HomeHeader } = await import('@/components/components/kanban/home/export');
 
-const camp = (canRename: boolean): CampHome => ({ campId: 'o1', name: 'Lake Camp', firstName: 'Priya', canRename, people: 1, onSite: 0, checkedInToday: 0, validMemberships: 1, upcomingSessions: [] });
+const camp = (canRename: boolean): CampHome => ({ campId: 'o1', name: 'Lake Camp', firstName: 'Priya', canRename, people: 1, onSite: 0, checkedInToday: 0, validMemberships: 1, upcomingSessions: [], checkInsByDay: null, onSiteByAge: null, membershipStatus: null });
 
 describe('HomeHeader', () => {
   it('greets the person by name with the camp as context', () => {
