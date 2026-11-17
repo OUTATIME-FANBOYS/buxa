@@ -41,17 +41,17 @@ export function OnSiteRow({ row, canRecord, canOverride }: Props) {
           <span className="onsite-name">{row.name}</span>
           {row.isMinor === true && <Pill tone="warn" dot={false}>Minor</Pill>}
         </div>
-        {canRecord && (
-          <button ref={toggle} type="button" className="btn btn-primary onsite-btn" aria-haspopup="dialog" aria-expanded={panelOpen}
-            aria-controls={panelOpen ? panelId : undefined} onClick={open}>
-            Check out
-          </button>
-        )}
       </div>
       <div className="onsite-times">
         <p>Checked in: {row.arrivedAt}</p>
         <p>Checked out: —</p>
       </div>
+      {canRecord && (
+        <button ref={toggle} type="button" className="btn btn-primary onsite-btn" aria-haspopup="dialog" aria-expanded={panelOpen}
+          aria-controls={panelOpen ? panelId : undefined} onClick={open}>
+          Check out
+        </button>
+      )}
       {state.phase === 'done' && <p role="status" className="ok-ink">Checked out.</p>}
       {panelOpen && (
         <Dialog title={`Check out ${row.name}`} onClose={cancel}>
