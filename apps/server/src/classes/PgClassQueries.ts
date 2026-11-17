@@ -30,7 +30,8 @@ export interface SessionRow {
   capacity: number;
   seats_taken: number;
   waitlisted: number;
-  instructor_ids: string[];
+  /** Each instructor's person id and display name, as json from the same statement. */
+  instructors: { id: string; name: string }[];
 }
 
 export interface EnrolmentRow {
@@ -74,7 +75,8 @@ export function toSession(row: SessionRow): Session {
     startsAt: toIso(row.starts_at),
     endsAt: toIso(row.ends_at),
     location: row.location,
-    instructorIds: [...row.instructor_ids],
+    instructorIds: row.instructors.map(i => i.id),
+    instructors: row.instructors.map(i => ({ id: i.id, name: i.name })),
     capacity: row.capacity,
     seatsTaken: row.seats_taken,
     waitlisted: row.waitlisted,
@@ -107,8 +109,10 @@ const CLASS_COLUMNS = `c.id, c.name, c.description, c.age_min, c.age_max, c.defa
 const SESSION_COLUMNS = `s.id, s.class_id, c.name AS class_name, s.starts_at, s.ends_at, s.location, s.capacity,
   (SELECT count(*)::int FROM enrolments e WHERE e.session_id = s.id AND e.status = 'enrolled') AS seats_taken,
   (SELECT count(*)::int FROM enrolments e WHERE e.session_id = s.id AND e.status = 'waitlisted') AS waitlisted,
-  COALESCE((SELECT array_agg(si.person_id::text ORDER BY si.person_id) FROM session_instructors si
-             WHERE si.session_id = s.id), '{}') AS instructor_ids`;
+  COALESCE((SELECT json_agg(json_build_object('id', p.id::text, 'name', trim(p.given_name || ' ' || p.family_name))
+                             ORDER BY p.family_name, p.given_name, p.id)
+              FROM session_instructors si JOIN people p ON p.id = si.person_id
+             WHERE si.session_id = s.id), '[]'::json) AS instructors`;
 
 const ENROLMENT_COLUMNS = `e.id, e.session_id, c.id AS class_id, c.name AS class_name, e.person_id AS camper_id,
   trim(p.given_name || ' ' || p.family_name) AS camper_name, e.status, e.created_at, e.override_reason`;
