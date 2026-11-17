@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import type { ReactNode } from 'react';
+import type { Role } from '@buxa/domain';
 import { TaskDrawer } from '@/components/components/kanban/drawer/export';
 import type { SessionIdentity } from '@buxa/shared/kanban/actions/auth';
 
@@ -9,8 +10,8 @@ import type { SessionIdentity } from '@buxa/shared/kanban/actions/auth';
 // The task drawer is composed here, in the screens layer, so the providers do not import components.
 export const WorkArea = dynamic(
   () => import('@buxa/middleware/providers/providers').then((m) => ({
-    default: ({ user, children }: { user: SessionIdentity; children: ReactNode }) => (
-      <m.WorkProviders user={user} drawer={<TaskDrawer />}>{children}</m.WorkProviders>
+    default: ({ user, campRole, children }: { user: SessionIdentity; campRole?: Role | null; children: ReactNode }) => (
+      <m.WorkProviders user={user} campRole={campRole} drawer={<TaskDrawer />}>{children}</m.WorkProviders>
     ),
   })),
   {

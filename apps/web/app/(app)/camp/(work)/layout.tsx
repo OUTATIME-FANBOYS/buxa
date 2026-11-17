@@ -17,7 +17,7 @@ export default async function WorkLayout({ children }: { children: ReactNode }) 
   const user = { id: session.user.id, name: session.user.name, email: session.user.email };
 
   return (
-    <WorkArea user={user}>
+    <WorkArea user={user} campRole={camp?.role ?? null}>
       <WorkFrame
         role={camp?.role ?? null}
         topBarStart={<CampSwitcher camps={session.memberships} current={camp} />}
