@@ -14,7 +14,7 @@ export type Updater = (s: AppState) => AppState;
 export interface Host { getState(): AppState; commit(s: AppState): void; pending: Updater[]; onStatus(s: SyncState, info?: { mcpUrl?: string }): void }
 
 const clientId = (globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)).slice(0, 36);
-/** The local server's per-run secret (see legacy-server/index.ts). Set NEXT_PUBLIC_LEGACY_SECRET to the value it prints. */
+/** The local server's per-run secret (see apps/server/src/agents/index.ts). Set NEXT_PUBLIC_LEGACY_SECRET to the value it prints. */
 const runSecret = process.env.NEXT_PUBLIC_LEGACY_SECRET ?? '';
 const headers = { 'content-type': 'application/json', 'x-buxa-client': clientId, 'x-buxa-run-secret': runSecret };
 

@@ -7,7 +7,7 @@ import { CAMP_NAV_GROUPS } from '@buxa/shared/camp/navItems';
 // Every page under app/(app)/camp sits in one route group named for its category (docs/CODING_STANDARDS.md, section 2).
 // Route groups do not change URLs, so the folder tree and the sidebar must agree: a page is filed by what it is for.
 
-const CAMP = join(dirname(fileURLToPath(import.meta.url)), '..', 'app', '(app)', 'camp');
+const CAMP = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'apps', 'web', 'app', '(app)', 'camp');
 
 /** The categories that exist now. Each is a route group folder directly under camp. */
 const CATEGORIES = ['(operations)', '(work)', '(admin)'] as const;

@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 // Rules from docs/CODING_STANDARDS.md (section 3): imports flow downward, layers are used through their barrels,
 // logic never imports React, no cycles, and no client barrel reaches server-only code.
 
-const WEB = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const WEB = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', 'apps', 'web');
 
 type Layer = 'app' | 'views' | 'components' | 'elements' | 'other';
 
@@ -46,7 +46,7 @@ function walk(dir: string, out: string[] = []): string[] {
 }
 
 const rel = (abs: string) => relative(WEB, abs).split(sep).join('/');
-const files = walk(WEB).filter((f) => !rel(f).startsWith('.next') && !rel(f).startsWith('legacy-server') && !rel(f).startsWith('architecture/'));
+const files = walk(WEB).filter((f) => !rel(f).startsWith('.next'));
 const source = new Map(files.map((f) => [rel(f), readFileSync(f, 'utf8')]));
 
 /** Runtime (non-type) static imports of a file, with the alias or relative specifier as written. */
