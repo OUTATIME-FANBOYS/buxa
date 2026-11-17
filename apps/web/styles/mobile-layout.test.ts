@@ -51,3 +51,14 @@ describe('phone layout for check-in, on site and the log', () => {
     expect(read('./tokens.css')).toContain('--control-h: 44px');
   });
 });
+
+// Added with the Add person dialog: the form keeps 44px controls and 16px inputs on a touch screen, and its own compact height elsewhere.
+describe('Add person form on a touch screen', () => {
+  const people = read('./features/people.css');
+  it('uses the touch target height and 16px inputs on a coarse pointer', () => {
+    expect(people).toContain('@media (pointer: coarse) {\n  /* Touch');
+    expect(people).toContain('form.person-form { --control-h: var(--control-touch); }');
+    expect(people).toMatch(/\.person-form input:not\(\[type=checkbox\]\), \.person-form select \{ font-size: 16px; \}/);
+    expect(read('./tokens.css')).toContain('--control-touch: 44px');
+  });
+});
