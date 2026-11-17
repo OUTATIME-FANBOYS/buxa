@@ -11,6 +11,9 @@ export default async function Page({ params, searchParams }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id } = await params;
-  if (!isUuid(id)) notFound();
+  if (!isUuid(id)) {
+    notFound();
+  }
+
   return <PersonScreen id={id} searchParams={await searchParams} />;
 }

@@ -21,12 +21,14 @@ describe.skipIf(!url)('authentication and organisation access', () => {
   async function token(over: Override = {}) {
     const sub = over.sub ?? uid();
     const options: TokenOptions = { sub, email: over.email ?? `${sub.slice(0, 8)}-${tag}@camp.test`, issuer: over.iss, audience: over.aud, expiresIn: over.exp, signWith: over.key };
+
     return idp.token(options);
   }
   /** Calls the real route handler and reads the answer into the shape these tests use. */
   async function call(t: string | null, o: { method?: string; url: string; org?: string; payload?: unknown }) {
     const res = await callRoute(o.method ?? 'GET', o.url, { token: t, org: o.org, body: o.payload });
     const text = await res.text();
+
     return { statusCode: res.status, headers: Object.fromEntries(res.headers) as Record<string, string>, body: text, json: () => JSON.parse(text) };
   }
 
@@ -44,7 +46,9 @@ describe.skipIf(!url)('authentication and organisation access', () => {
 
   async function makeOrg(t: string, slug: string) {
     const r = await call(t, { method: 'POST', url: '/v1/orgs', payload: { name: slug, slug: `${slug}-${tag}` } });
-    expect(r.statusCode).toBe(201); made.orgs.push(r.json().id); return r.json().id as string;
+    expect(r.statusCode).toBe(201); made.orgs.push(r.json().id);
+
+    return r.json().id as string;
   }
   async function addMember(orgId: string, userEmailTag: string, role: string) {
     const u = await pool.query(`SELECT id FROM users WHERE email LIKE $1`, [`${userEmailTag}%`]);
@@ -57,11 +61,21 @@ describe.skipIf(!url)('authentication and organisation access', () => {
       expect(r.statusCode).toBe(401); expect(r.headers['www-authenticate']).toBe('Bearer');
       expect(r.json().error.code).toBe('unauthorized');
     });
-    it('garbage → 401', async () => { expect((await call('not.a.jwt', { url: '/v1/me' })).statusCode).toBe(401); });
-    it('signed by someone else’s key → 401', async () => { expect((await call(await token({ key: other }), { url: '/v1/me' })).statusCode).toBe(401); });
-    it('expired → 401', async () => { expect((await call(await token({ exp: '-1h' }), { url: '/v1/me' })).statusCode).toBe(401); });
-    it('wrong issuer → 401', async () => { expect((await call(await token({ iss: 'https://evil.supabase.co/auth/v1' }), { url: '/v1/me' })).statusCode).toBe(401); });
-    it('wrong audience → 401', async () => { expect((await call(await token({ aud: 'anon' }), { url: '/v1/me' })).statusCode).toBe(401); });
+    it('garbage → 401', async () => {
+      expect((await call('not.a.jwt', { url: '/v1/me' })).statusCode).toBe(401);
+    });
+    it('signed by someone else’s key → 401', async () => {
+      expect((await call(await token({ key: other }), { url: '/v1/me' })).statusCode).toBe(401);
+    });
+    it('expired → 401', async () => {
+      expect((await call(await token({ exp: '-1h' }), { url: '/v1/me' })).statusCode).toBe(401);
+    });
+    it('wrong issuer → 401', async () => {
+      expect((await call(await token({ iss: 'https://evil.supabase.co/auth/v1' }), { url: '/v1/me' })).statusCode).toBe(401);
+    });
+    it('wrong audience → 401', async () => {
+      expect((await call(await token({ aud: 'anon' }), { url: '/v1/me' })).statusCode).toBe(401);
+    });
     it('alg "none" → 401', async () => {
       const b = (o: object) => Buffer.from(JSON.stringify(o)).toString('base64url');
       const forged = `${b({ alg: 'none', typ: 'JWT' })}.${b({ sub: uid(), email: 'a@b.test', iss: ISS, aud: 'authenticated', exp: 9999999999 })}.`;
@@ -138,7 +152,9 @@ describe.skipIf(!url)('authentication and organisation access', () => {
     it('viewer reads, staff cannot rename, admin can, and renaming is audited', async () => {
       const owner = await token(); const org = await makeOrg(owner, 'roles');
       const v = await token(), s = await token(), a = await token();
-      for (const t of [v, s, a]) await call(t, { url: '/v1/me' });
+      for (const t of [v, s, a]) {
+        await call(t, { url: '/v1/me' });
+      }
       for (const [t, role] of [[v, 'viewer'], [s, 'staff'], [a, 'admin']] as const) {
         const email = (await call(t, { url: '/v1/me' })).json().user.email as string;
         await addMember(org, email.slice(0, 12), role);

@@ -23,9 +23,13 @@ describe('Content-Security-Policy', () => {
   });
   it('forbids framing, plugins, base tag changes and cross-site form posts', () => {
     const p = policy();
-    for (const d of ["frame-ancestors 'none'", "object-src 'none'", "base-uri 'self'", "form-action 'self'", "default-src 'self'"]) expect(p).toContain(d);
+    for (const d of ["frame-ancestors 'none'", "object-src 'none'", "base-uri 'self'", "form-action 'self'", "default-src 'self'"]) {
+      expect(p).toContain(d);
+    }
   });
-  it('a different nonce makes a different policy', () => { expect(policy({ nonce: 'x' })).not.toBe(policy({ nonce: 'y' })); });
+  it('a different nonce makes a different policy', () => {
+    expect(policy({ nonce: 'x' })).not.toBe(policy({ nonce: 'y' }));
+  });
 });
 
 describe('security headers', () => {

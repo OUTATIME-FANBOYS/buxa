@@ -31,7 +31,10 @@ const config: NextConfig = {
   },
   // Development only: the kanban demo can talk to its own optional server (`npm run server`) through this address.
   async rewrites() {
-    if (!dev) return [];
+    if (!dev) {
+      return [];
+    }
+
     return [
       { source: '/api/:path*', destination: `${LEGACY}/api/:path*` },
       { source: '/mcp', destination: `${LEGACY}/mcp` },

@@ -8,6 +8,9 @@ export const metadata: Metadata = { title: 'Edit person' };
 /** Change a person's details. Like the person's page, a non-UUID id is simply not found. */
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (!isUuid(id)) notFound();
+  if (!isUuid(id)) {
+    notFound();
+  }
+
   return <EditPerson id={id} />;
 }

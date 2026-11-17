@@ -5,5 +5,6 @@ import { getCurrentCamp, requireSession } from '@buxa/server/session/index';
 export default async function CampLayout({ children }: { children: ReactNode }) {
   const session = await requireSession();
   const camp = await getCurrentCamp(session);
+
   return <CampFrame user={session.user} camps={session.memberships} current={camp}>{children}</CampFrame>;
 }

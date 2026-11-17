@@ -14,7 +14,9 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 
   // New tokens go on the request too, so the page being rendered sees them, and on the response, so the browser keeps them.
   const refreshed = await refreshSessionCookies(request);
-  for (const { name, value } of refreshed?.cookies ?? []) request.cookies.set(name, value);
+  for (const { name, value } of refreshed?.cookies ?? []) {
+    request.cookies.set(name, value);
+  }
 
   // The policy goes on the request too, so Next.js can find the nonce and stamp it on the scripts it renders.
   const headers = new Headers(request.headers);
@@ -23,9 +25,16 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 
   const response = NextResponse.next({ request: { headers } });
   response.headers.set('content-security-policy', policy);
-  for (const [name, value] of Object.entries(SECURITY_HEADERS)) response.headers.set(name, value);
-  for (const { name, value, options } of refreshed?.cookies ?? []) response.cookies.set(name, value, options);
-  for (const [name, value] of Object.entries(refreshed?.headers ?? {})) response.headers.set(name, value);
+  for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+    response.headers.set(name, value);
+  }
+  for (const { name, value, options } of refreshed?.cookies ?? []) {
+    response.cookies.set(name, value, options);
+  }
+  for (const [name, value] of Object.entries(refreshed?.headers ?? {})) {
+    response.headers.set(name, value);
+  }
+
   return response;
 }
 

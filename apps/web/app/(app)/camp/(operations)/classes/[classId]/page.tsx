@@ -11,6 +11,9 @@ export default async function Page({ params, searchParams }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { classId } = await params;
-  if (!isUuid(classId)) notFound();
+  if (!isUuid(classId)) {
+    notFound();
+  }
+
   return <ClassPage classId={classId} searchParams={await searchParams} />;
 }
