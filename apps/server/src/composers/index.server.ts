@@ -31,4 +31,5 @@ export * from './people/revokeMembershipAction';
 export * from './people/unlinkHouseholdAction';
 export * from './people/updatePersonAction';
 export * from './classes/load';
+export * from './classes/errorReportResponse';
 export * from './classes/templateResponse';

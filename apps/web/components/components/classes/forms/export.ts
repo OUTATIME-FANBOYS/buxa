@@ -1,6 +1,7 @@
 export * from './ActionMessage';
 export * from './CancelEnrolmentButton';
 export * from './EnrolForm';
+export * from './ErrorReportButton';
 export * from './ImportForm';
 export * from './ImportResults';
 export * from './NewClassForm';
