@@ -24,4 +24,12 @@ describe('NewClassForm', () => {
     expect(html).toContain('Create class');
     expect(html).toContain('href="/camp/classes"');
   });
+
+  it('in the dialog it has no panel and a Cancel button in place of the link back to the list', () => {
+    const dialogHtml = renderToStaticMarkup(<NewClassForm variant="dialog" onCancel={() => {}} />);
+    expect(dialogHtml).not.toContain('panel');
+    expect(dialogHtml).toContain('Create class');
+    expect(dialogHtml).toContain('>Cancel</button>');
+    expect(dialogHtml).not.toContain('href="/camp/classes"');
+  });
 });

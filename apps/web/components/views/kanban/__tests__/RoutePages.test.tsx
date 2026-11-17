@@ -21,7 +21,7 @@ describe('kanban route pages', () => {
   });
 
   it('the home page renders the dashboard for the camp', () => {
-    const home = renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}><HomePage camp={{ campId: 'o1', name: 'Lake Camp', firstName: 'Priya', canRename: false, people: 1, onSite: 0, checkedInToday: 0, validMemberships: 1, upcomingSessions: [] }} /></UiProvider>);
+    const home = renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}><HomePage camp={{ campId: 'o1', name: 'Lake Camp', firstName: 'Priya', canRename: false, people: 1, onSite: 0, checkedInToday: 0, validMemberships: 1, upcomingSessions: [], checkInsByDay: null, onSiteByAge: null, membershipStatus: null }} /></UiProvider>);
     expect(home).toContain('On site now');
     expect(home).not.toContain('No workspace');
   });
