@@ -8,6 +8,11 @@ import { createLogger, type Logger } from './log';
 import { createPgRateLimiter, type RateLimiter } from './rateLimit/limiter';
 import type { Clock } from './services';
 import { createPgRepositories, type Repositories } from './repositories';
+import { createClassService, type ClassService } from './classes/ClassService';
+import type { ClassRepository } from './classes/ClassRepository';
+import { createImportService, type ImportService } from './classes/import/ImportService';
+import type { ImportRepository } from './classes/import/ImportRepository';
+import { unimplemented } from './unimplemented';
 import {
   createAttendanceService, createCredentialService, createMembershipService, createOrgService, createPeopleService, systemClock,
   type AttendanceService, type CredentialService, type MembershipService, type OrgService, type PeopleService,
@@ -30,7 +35,15 @@ export interface Runtime {
   startupCheck: Promise<StartupDecision>;
 }
 
-export interface Services { orgs: OrgService; people: PeopleService; memberships: MembershipService; credentials: CredentialService; attendance: AttendanceService }
+export interface Services {
+  orgs: OrgService;
+  people: PeopleService;
+  memberships: MembershipService;
+  credentials: CredentialService;
+  attendance: AttendanceService;
+  classes: ClassService;
+  imports: ImportService;
+}
 
 export interface RuntimeOptions {
   env?: Record<string, string | undefined>;
@@ -78,6 +91,22 @@ export function createServices(repositories: Repositories, clock: Clock): Servic
     memberships: createMembershipService({ memberships, people, orgs, clock }),
     credentials: createCredentialService({ credentials, people, memberships, attendance, orgs, clock }),
     attendance: createAttendanceService({ attendance, people, memberships, orgs, clock }),
+    ...createClassServices(repositories),
+  };
+}
+
+/**
+ * Classes, sessions, enrolments and the bulk import. There is no class storage in `Repositories` on this branch yet, so the storage
+ * ports are placeholders that throw a clear "not implemented" error. The Postgres adapter replaces them here; screens and actions
+ * already call these services.
+ */
+function createClassServices(repositories: Repositories): Pick<Services, 'classes' | 'imports'> {
+  const timezoneOf = async (orgId: string): Promise<string> => (await repositories.orgs.get(orgId)).timezone;
+  const classes = unimplemented<ClassRepository>('ClassRepository');
+  const imports = unimplemented<ImportRepository>('ImportRepository');
+  return {
+    classes: createClassService({ repo: classes, timezoneOf }),
+    imports: createImportService({ classes, imports, timezoneOf }),
   };
 }
 

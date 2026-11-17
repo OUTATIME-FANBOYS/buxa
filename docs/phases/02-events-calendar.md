@@ -43,3 +43,36 @@ Public class pages, iCal feed, payments, waitlist promotion, automatic ratio enf
 
 - Whether a camper can be waitlisted automatically, or staff add them by hand.
 - Whether check-in per session is needed in phase 2 or phase 4 (seats and rosters).
+
+## Bulk import of classes and sessions
+
+A camp season can have dozens of camps and many sessions a day, so staff create them in bulk from a spreadsheet.
+
+### Decisions
+1. **CSV template, not PDF.** The app provides a downloadable template (opens in Excel or Google Sheets). A printed or scanned PDF is not parsed. A fillable PDF with the same fields may come later.
+2. **Preview before save.** An upload is checked row by row and saved only when the owner confirms. Nothing is written during preview.
+3. **Each row gets its own result:** ready, or an exact error naming the row, the field and the clash (for example "Robotics 9:00-12:00 overlaps Art 10:00-12:00 for the same camper group").
+4. **Rules are the same as manual entry.** Overlaps, age ranges, capacity and the override rule from this spec apply to every row. An import cannot bypass them.
+5. **External key.** Each row has an optional external key. A re-upload with the same key updates the matching session instead of creating a duplicate. Rows without a key are created once; re-uploading them is reported as a duplicate, not created again.
+6. **Atomic confirm per file.** The confirmed rows are written in one transaction. If any write fails, none of the file is saved and the owner gets the reason.
+7. **Audit.** One audit entry for the upload (who, when, file name, row counts) and one per saved session.
+
+### Template columns
+`external_key`, `class_name`, `starts_at`, `ends_at` (camp local time, ISO format), `location`, `age_min`, `age_max`, `capacity`, `instructor_names` (semicolon separated), `ratio_campers`, `ratio_instructors`.
+
+### Acceptance criteria
+- Staff with `classes:manage` can download the template, upload a filled file, see a preview with every row's result, and confirm.
+- A file with 300 rows previews in under 5 seconds and saves in one transaction.
+- Re-uploading the same file with keys creates no new sessions.
+- A row that clashes with an existing session, or with another row in the same file, is refused with the clashing row named.
+- A failed confirm saves nothing.
+
+### Exit tests (added to this phase's list)
+- Preview refuses overlaps within the file and against existing sessions (table-driven, including sessions that touch and cross midnight).
+- Re-upload with the same external keys is idempotent.
+- Confirm is atomic: a database error mid-file leaves zero new rows.
+- Formula neutralisation applies to the template download and to any exported error report.
+- A viewer cannot upload (403).
+
+### Not in this feature
+Room and instructor double-booking across the whole day (phase 5), PDF parsing, and images of schedules.

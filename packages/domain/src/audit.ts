@@ -6,5 +6,7 @@ export const AUDIT_ACTIONS = [
   'membership.create', 'membership.revoke',
   'credential.issue', 'credential.revoke',
   'attendance.check_in', 'attendance.check_out', 'attendance.override',
+  'class.create', 'class.update', 'session.create', 'session.update', 'import.upload',
+  'enrolment.create', 'enrolment.cancel', 'enrolment.override',
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
