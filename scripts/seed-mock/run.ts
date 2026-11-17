@@ -1,6 +1,6 @@
 import type pg from 'pg';
-import { createPgRepositories } from '../../apps/web/server/repositories';
-import { createServices } from '../../apps/web/server/runtime';
+import { createPgRepositories } from '@buxa/server/repositories';
+import { createServices } from '@buxa/server/runtime';
 import { actorsFor, createCamp, findCampId, resetCamp, type AccountChoice } from './camp';
 import { seedRoster, type RosterCounts } from './people';
 import { seedVisits } from './visits';

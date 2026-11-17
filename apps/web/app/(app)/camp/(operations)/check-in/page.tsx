@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { CheckInScreen } from '@/views';
+import { CheckInScreen } from '@/components/views/attendance/export';
 
 export const metadata: Metadata = { title: 'Check-in' };
 

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { HelpPage } from '@/views';
+import { HelpPage } from '@/components/views/help/export';
 
 export const metadata: Metadata = { title: 'Help' };
 

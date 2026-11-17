@@ -1,5 +1,5 @@
 import type { Me } from '@buxa/contracts';
-import { authedRoute } from '@/server/http/route';
+import { authedRoute } from '@buxa/server/http/route';
 
 export const dynamic = 'force-dynamic';
 

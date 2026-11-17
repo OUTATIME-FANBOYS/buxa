@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
-import type { AppState } from '../logic/common';
-import { isData, pickData, repairData, type Data } from '../logic/common';
+import type { AppState } from '@buxa/shared';
+import { isData, pickData, repairData, type Data } from '@buxa/shared';
 
 /** Atomic, debounced JSON file writer: a crash mid-write can never leave a half-written file. */
 class JsonFile<T> {
