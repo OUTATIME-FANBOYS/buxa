@@ -29,7 +29,7 @@ Paste secrets only into Vercel's form, never into the repo or a chat.
 
 ## Database requirements
 - Postgres 15 or newer. Row-level security is how tenants are kept apart, so it is not optional.
-- Migrations are the `.sql` files in `packages/db/migrations`, applied in filename order. On `develop` they are `0001` to `0007`, `0009` and `0010` (there is no `0008`). Do not add a migration under a number that is already used.
+- Migrations are the `.sql` files in `packages/db/migrations`, applied in filename order. The current set is `0001` to `0012`. Do not add a migration under a number that is already used.
 There are two logins. They must be different.
 
 - **Migration login** (`MIGRATION_DATABASE_URL`; locally, `DATABASE_URL`). Applies migrations. It needs `CREATEROLE` and must be able to bypass row-level security (a superuser, or Supabase's `postgres` role). Migration `0004` lets it switch to `buxa_app`. The three privileged functions from migration `0009` run with its rights, so it keeps that ability.
@@ -46,16 +46,19 @@ SELECT rolsuper, rolbypassrls, rolcreaterole FROM pg_roles WHERE rolname = 'buxa
 ```
 After the change, `/ready` must still answer `{"status":"ready"}`. Until this step is done, `DATABASE_URL` is still the migration login, which bypasses row-level security. The code no longer relies on that bypass, but the defence in depth only exists once the runtime login is separate.
 
-The code path is covered by `apps/web/server/users/__tests__/runtimeLogin.pg.test.ts`, which runs the sign-in and organisation repositories through a login with these attributes.
+The code path is covered by `apps/server/src/users/__tests__/runtimeLogin.pg.test.ts`, which runs the sign-in and organisation repositories through a login with these attributes.
 - Use Supabase's **Session pooler** connection string (Project Settings → Database → Connection string). Vercel connects over IPv4, and the direct
   connection is IPv6-only on the free plan; session mode also supports the advisory lock migrations use.
+- **URL form:** `postgresql://<user>:<password>@<pooler host>:<port>/<database>` (`postgres://` works too). The app refuses any other scheme. Never paste the URL into the repo, a chat or a log.
+- **TLS:** a database on any host other than `localhost`, `127.0.0.1` or `::1` is always connected with TLS. The server certificate is checked against the Supabase root CA in `packages/db/src/supabaseRootCa.ts`. The same certificate is in `packages/db/certs/supabase-root-2021-ca.crt`, and a test keeps the two equal. Any `sslmode` in the URL is removed, so it cannot weaken that check. Local databases use no TLS.
 - CI runs the database and server tests as a non-superuser to catch anything that only works for a superuser.
 
 ## How a deploy works
-1. Push or merge to the production branch (set it to `develop` while this is staging). Vercel runs the build command.
-2. A **production** build applies pending migrations first (each migration is one transaction, so nothing is half-applied), then builds the app.
-3. Pull requests get a **preview** deployment at their own address, against the same database but never migrating it: a PR that adds a migration will not see its new tables in the preview until it is merged. Test those locally.
-4. After a deploy, check `<address>/ready` (expect `{"status":"ready"}`), then sign in.
+1. Push or merge to `develop` (staging) or `main`. CI runs first (`.github/workflows/ci.yml`). After **Verify build** passes on a push, the **Deploy to Vercel** job calls the Vercel deploy hook for that branch. The hooks are the repository secrets `VERCEL_DEVELOP_DEPLOY` and `VERCEL_MAIN_DEPLOY`; a missing secret fails the job. Pull requests do not call the hook.
+2. Vercel builds `apps/web` (the Root Directory) with `scripts/vercel-build.ts`. The repository sets no ignored build step (`apps/web/vercel.json` has no `ignoreCommand`). Any rule that skips builds would have to be set in the Vercel project, and none is set in the repository.
+3. A **production** build applies pending migrations first (each migration is one transaction, so nothing is half-applied), then builds the app. Preview and other builds never touch the schema.
+4. Pull requests get a **preview** deployment at their own address, against the same database but never migrating it: a PR that adds a migration will not see its new tables in the preview until it is merged. Test those locally.
+5. After a deploy, check `<address>/ready` (expect `{"status":"ready"}`), then sign in.
 
 ## Setting it up (you do these; they need your accounts)
 1. **Supabase, email confirmation.** Authentication → Providers → Email: keep **Confirm email** ON. The server reads this setting on first use. In production, if sign-ups are auto-confirmed, the **API answers 503** on every route and the **app shows a maintenance page** (no sign-in, sign-up or camp pages), so nobody can register with an address they do not own. If the check cannot run, it logs a warning and carries on.
@@ -64,6 +67,7 @@ The code path is covered by `apps/web/server/users/__tests__/runtimeLogin.pg.tes
 4. **Region.** Settings → Functions → pick the region closest to your Supabase project, to keep database round trips short.
 5. **Supabase, sign-in links.** Authentication → URL Configuration: set **Site URL** to the Vercel address, and add `https://*.vercel.app/**` (or your team's preview pattern) to Redirect URLs so preview sign-ups work.
 6. **Optional hardening.** Supabase → Settings → Data API: turn it off. Migration `0005` already removes its access to our tables.
+7. **Deploy hooks.** In the Vercel project, Settings → Git → Deploy Hooks: create one hook for `develop` and one for `main`. Save the two URLs as the GitHub repository secrets `VERCEL_DEVELOP_DEPLOY` and `VERCEL_MAIN_DEPLOY`. The URLs are secrets: paste them only into GitHub's form.
 
 **Not yet verified on Vercel itself:** the Root Directory and outside-source settings above, and the build command. Tested locally: all three build modes (preview skips migrations, production applies them first, production without a credential fails before building) and the production server with the full browser flows. The first deploy is the real check.
 
