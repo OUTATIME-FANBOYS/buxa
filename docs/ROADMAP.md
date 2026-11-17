@@ -25,7 +25,7 @@ scheduling → comms & extras → licensing & plans → payments & go-live.** Pa
 | 4 | Seats & rosters | Groups, cabins, rooms, assign people, per-session check-in | Ratio rules enforced; assignments conflict-checked |
 | 5 | Scheduling | Conflict detection first, auto-schedule later | Conflicts for staff, rooms and gear reported with zero false negatives in tests |
 | 6 | Comms & extras | Reminders, waivers, parent portal, reports | Waiver stored with timestamp and version; reminders idempotent |
-| ops | Staff board (existing kanban) | Move onto the new backend, scoped per org | Existing 60 tests ported or replaced |
+| ops | Staff board (existing kanban) | Move onto the new backend, scoped per org. Help and Reports moved out of the sidebar into the account menu. | Existing 60 tests ported or replaced |
 | 8 | Licensing & plans (spec: `docs/phases/08-licensing-plans.md`) | Plans per camp, feature entitlements enforced on the server, trials, manual plan assignment | Every feature with an entitlement is refused without it, on every route and action (tested). **Status:** spec only, no code yet |
 | 9 | Payments & go-live (spec: `docs/phases/09-payments-go-live.md`) | Stripe Connect payments and refunds, and every item needed before real children's data | Webhooks processed once; the go-live checklist in the spec is done. **Status:** spec only, no Stripe code yet |
 

@@ -131,6 +131,9 @@ The rules below are enforced by `test/architecture/architecture.test.ts` and `pa
 - **Meaning is fixed.** Brand is primary and in progress, ok is done, warn needs attention, crit is overdue or destructive, agent is anything an AI agent did. Text colours meet 4.5:1 on their surface.
 - **Touch targets are 44px.** `--control-h: 44px` is the one height for inputs, selects and buttons, and the minimum for any tap target.
 - **Phones.** The phone breakpoint is `max-width: 720px`. The page never scrolls sideways. Inputs use `font-size: 16px` so iOS does not zoom. Tables stack into labelled rows on a phone.
+- **Icons come from lucide-react through the `Icon` element.** `components/elements/Icon.tsx` renders a name from the map in `components/elements/icons.tsx`, which points each name at its closest lucide glyph. Call sites write `<Icon name="..."/>`. Nobody hand-draws icon SVG: to add an icon, add a name to the map. The brand mark (`BrandMark`) is the one drawn mark, and it is not an icon.
+- **A segmented control fits its container.** Its options share the width of the card they sit in and wrap their labels, so it never runs past the border at any width (`.settings-page .segmented` in `styles/features/settings.css`).
+- **The sign-in backgrounds are tokens.** The light and dark hero and dot-grid colours are `--hero-bg`, `--hero-fg`, `--hero-fg-2`, `--auth-glow`, `--auth-stars` and `--auth-dots` in `styles/tokens.css`, defined for `:root` and for `[data-theme="dark"]`. `styles/layout/auth.css` reads them, and the text on them meets 4.5:1.
 
 ## 10. Git
 
