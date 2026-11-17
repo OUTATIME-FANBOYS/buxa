@@ -57,8 +57,23 @@ describe('the settings grid', () => {
     const clock = cards()[0];
     expect(clock.querySelector('h2')?.textContent).toBe('Camp clock');
     expect(clock.querySelector('form')).not.toBeNull();
-    expect(clock.querySelector<HTMLInputElement>('input[name="clockFormat"][value="24h"]')?.checked).toBe(true);
-    expect(clock.querySelector('button')?.textContent).toBe('Save clock');
+    const group = clock.querySelector('[role="radiogroup"][aria-label="Clock"]');
+    expect(group).not.toBeNull();
+    expect(clock.querySelector('fieldset')).toBeNull();
+    expect(clock.querySelector<HTMLInputElement>('input[name="clockFormat"]')?.value).toBe('24h');
+    const checked = Array.from(group?.querySelectorAll('[role="radio"]') ?? []).find(b => b.getAttribute('aria-checked') === 'true');
+    expect(checked?.textContent).toBe('24-hour (09:05)');
+    expect(Array.from(clock.querySelectorAll('button')).find(b => b.textContent === 'Save clock')).toBeDefined();
+  });
+
+  it('switches the clock format on the segmented control without submitting the form', () => {
+    render(<CampClockPanel campId="c-1" clockFormat="24h" canChange />);
+    const clock = cards()[0];
+    const twelve = Array.from(clock.querySelectorAll<HTMLButtonElement>('[role="radio"]')).find(b => b.textContent === '12-hour (9:05 AM)');
+    act(() => { twelve?.click(); });
+    expect(clock.querySelector<HTMLInputElement>('input[name="clockFormat"]')?.value).toBe('12h');
+    expect(twelve?.getAttribute('aria-checked')).toBe('true');
+    expect(twelve?.getAttribute('type')).toBe('button');
   });
 
   it('saves the profile: submitting the form sends the name and role', () => {
