@@ -151,3 +151,17 @@ jobs:
           echo "::error::A chunk did not succeed. Open the failing job above; the chunk name says what it checks."
           exit 1
       - run: echo "All chunks passed."
+
+  # Vercel builds only after "Verify build" passes on a push. The hook for each branch is a repository secret.
+  deploy:
+    name: Deploy to Vercel
+    if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop')
+    needs: [verify]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger the Vercel deploy hook for this branch
+        env:
+          HOOK_URL: ${{ github.ref_name == 'main' && secrets.VERCEL_MAIN_DEPLOY || secrets.VERCEL_DEVELOP_DEPLOY }}
+        run: |
+          if [ -z "$HOOK_URL" ]; then echo "::error::No Vercel deploy hook secret for ${GITHUB_REF_NAME}"; exit 1; fi
+          curl -fsS -X POST "$HOOK_URL" -o /dev/null && echo "Vercel deploy started for ${GITHUB_REF_NAME}"
