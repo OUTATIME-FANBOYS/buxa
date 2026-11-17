@@ -35,7 +35,7 @@ Depends on: phase 2 (sessions and enrolments).
 
 ## Not in this phase
 
-Card payments, refunds, Stripe Connect, instalments, sponsorship funds (all phase 8). Multi-currency.
+Card payments, refunds, Stripe Connect, instalments, sponsorship funds (all phase 9). Multi-currency.
 
 ## Open for review
 
