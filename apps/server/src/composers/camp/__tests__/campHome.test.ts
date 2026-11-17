@@ -21,7 +21,10 @@ const services = vi.hoisted(() => ({
 }));
 
 vi.mock('next/navigation', () => ({ notFound }));
-vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services }) }));
+const repositories = vi.hoisted(() => ({
+  people: { getMany: vi.fn(async (): Promise<{ id: string; dateOfBirth: string | null; roles: string[] }[]> => []) },
+}));
+vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services, repositories }) }));
 vi.mock('../../../session', () => ({
   requireSession: async () => session.current,
   getCurrentCamp: async () => session.camp,
@@ -75,7 +78,7 @@ describe('loadCampHome', () => {
     services.attendance.log.mockResolvedValue([visit('a', today), visit('a', today), visit('b', today)]);
     const home = await loadCampHome();
     expect(home.checkedInToday).toBe(2);
-    expect(home.checkInsByDay?.days[CHART_DAYS - 1]).toEqual({ date: today, count: 2 });
+    expect(home.checkInsByDay?.days[CHART_DAYS - 1]).toEqual({ date: today, count: 2, minors: 0 });
     const filter = services.attendance.log.mock.calls[0]?.[1];
     expect(filter.to).toBe(today);
     expect(filter.from).toBe(dayOf(CHART_DAYS - 1));
@@ -122,25 +125,48 @@ describe('loadCampHome', () => {
 
 describe('checkInsPerDay', () => {
   it('returns one day per entry of the window, oldest first, ending on today, with zeros for quiet days', () => {
-    const series = checkInsPerDay([], '2026-11-17', 'UTC', true);
+    const series = checkInsPerDay([], '2026-11-17', 'UTC', true, null);
     expect(series.days).toHaveLength(CHART_DAYS);
-    expect(series.days[0].date).toBe('2026-10-19');
-    expect(series.days[CHART_DAYS - 1]).toEqual({ date: '2026-11-17', count: 0 });
+    expect(series.days[0].date).toBe(daysBefore('2026-11-17', CHART_DAYS - 1));
+    expect(series.days[CHART_DAYS - 1]).toEqual({ date: '2026-11-17', count: 0, minors: null });
     expect(series.complete).toBe(true);
   });
 
   it('buckets each visit by its camp-local day, not the UTC day', () => {
     // 23:30 UTC on 16 Nov is already 17 Nov in Auckland (UTC+13 in November).
     const visits = [{ personId: 'a', checkedInAt: '2026-11-16T23:30:00.000Z' }, { personId: 'b', checkedInAt: '2026-11-17T01:00:00.000Z' }];
-    const series = checkInsPerDay(visits, '2026-11-17', 'Pacific/Auckland', true);
-    expect(series.days.at(-1)).toEqual({ date: '2026-11-17', count: 2 });
+    const series = checkInsPerDay(visits, '2026-11-17', 'Pacific/Auckland', true, null);
+    expect(series.days.at(-1)).toEqual({ date: '2026-11-17', count: 2, minors: null });
     expect(series.days.at(-2)?.count).toBe(0);
   });
 
   it('counts a person once per day and keeps the complete flag it was given', () => {
     const visits = [{ personId: 'a', checkedInAt: '2026-11-17T08:00:00Z' }, { personId: 'a', checkedInAt: '2026-11-17T09:00:00Z' }];
-    expect(checkInsPerDay(visits, '2026-11-17', 'UTC', false)).toMatchObject({ complete: false });
-    expect(checkInsPerDay(visits, '2026-11-17', 'UTC', true).days.at(-1)?.count).toBe(1);
+    expect(checkInsPerDay(visits, '2026-11-17', 'UTC', false, null)).toMatchObject({ complete: false });
+    expect(checkInsPerDay(visits, '2026-11-17', 'UTC', true, null).days.at(-1)?.count).toBe(1);
+  });
+
+  it('splits each day into students (minors) and the rest, counting a person once', () => {
+    const visits = [
+      { personId: 'kid', checkedInAt: '2026-11-17T08:00:00Z' }, { personId: 'kid', checkedInAt: '2026-11-17T10:00:00Z' },
+      { personId: 'parent', checkedInAt: '2026-11-17T09:00:00Z' }, { personId: 'kid2', checkedInAt: '2026-11-16T09:00:00Z' },
+    ];
+    const series = checkInsPerDay(visits, '2026-11-17', 'UTC', true, new Set(['kid', 'kid2']));
+    expect(series.days.at(-1)).toEqual({ date: '2026-11-17', count: 2, minors: 1 });
+    expect(series.days.at(-2)).toEqual({ date: '2026-11-16', count: 1, minors: 1 });
+  });
+});
+
+describe('loadCampHome age split on the chart', () => {
+  it('reads the visitors from the people repository and marks the students, for a role that may see contact details', async () => {
+    as('staff');
+    const today = dayOf(0);
+    services.attendance.log.mockResolvedValue([visit('kid', today), visit('a', today)]);
+    repositories.people.getMany.mockResolvedValue([
+      { id: 'kid', dateOfBirth: '2016-01-01', roles: ['camper'] }, { id: 'a', dateOfBirth: '1980-01-01', roles: ['staff'] },
+    ]);
+    const home = await loadCampHome();
+    expect(home.checkInsByDay?.days.at(-1)).toEqual({ date: today, count: 2, minors: 1 });
   });
 });
 

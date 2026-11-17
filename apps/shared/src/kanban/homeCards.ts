@@ -21,6 +21,32 @@ export function dayChange(series: CheckInsByDay | null): HomeCardChange | null {
 }
 
 /**
+ * The chart's range against the same number of days before it: check-ins over the last `range` days, against the `range` days
+ * before them. Null when the read was cut off (the older days may be short) or there is no earlier period in the series.
+ */
+export function periodChange(series: CheckInsByDay | null, range: number): HomeCardChange | null {
+  if (!series || !series.complete || series.days.length < range * 2) {
+    return null;
+  }
+  const sum = (days: CheckInsByDay['days']): number => days.reduce((total, day) => total + day.count, 0);
+  const now = sum(series.days.slice(-range));
+  const before = sum(series.days.slice(-range * 2, -range));
+  const word = `vs previous ${range} days`;
+  if (now === before) {
+    return { text: `Same ${word}`, tone: 'neutral' };
+  }
+  if (before === 0) {
+    return { text: `+${now} ${word}`, tone: 'ok' };
+  }
+  const percent = Math.round(((now - before) / before) * 100);
+  if (percent === 0) {
+    return { text: `Same ${word}`, tone: 'neutral' };
+  }
+
+  return percent > 0 ? { text: `+${percent}% ${word}`, tone: 'ok' } : { text: `${percent}% ${word}`, tone: 'warn' };
+}
+
+/**
  * The three cards on Home's stats row: the camp facts the viewer may see. A fact the viewer may not read (null) gets no card.
  * Pure, so the values and chips are tested without rendering.
  */

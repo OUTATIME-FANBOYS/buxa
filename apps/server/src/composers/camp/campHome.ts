@@ -1,4 +1,4 @@
-import { authorize, can, toLocalDate } from '@buxa/domain';
+import { authorize, can, isMinor, toLocalDate } from '@buxa/domain';
 import type { Actor, LocalDate } from '@buxa/domain';
 import type { PersonSummary, Session } from '@buxa/contracts';
 import type { OnSiteEntry } from '@buxa/shared/attendance/types';
@@ -12,8 +12,11 @@ export type { CampHome, UpcomingSession };
 const firstNameOf = (name: string): string => name.trim().split(/\s+/)[0] ?? '';
 /** How many upcoming sessions the Home page lists. */
 const UPCOMING_LIMIT = 5;
-/** How many camp-local days the check-in chart covers, ending today. The page offers 7, 14 and 30 of them. */
-export const CHART_DAYS = 30;
+/**
+ * How many camp-local days the check-in chart reads, ending today. The page offers 7, 14 and 30 days, and compares each with the
+ * same number of days before it, so the window is twice the longest range.
+ */
+export const CHART_DAYS = 60;
 
 /** Camp facts for the Home page, read through the same services the camp's own pages use. A fact the viewer may not read is null. */
 export async function loadCampHome(): Promise<CampHome> {
@@ -33,8 +36,12 @@ export async function loadCampHome(): Promise<CampHome> {
   const upcoming: Promise<UpcomingSession[] | null> = canEvents ? upcomingSessions(actor) : Promise.resolve(null);
 
   const [list, onSiteEntries, visitEntries, sessions] = await Promise.all([people, onSite, visits, upcoming]);
+  // The minor flag is contact-level: only roles that may read contact details get the split. Everyone else gets the totals alone.
+  const minors = visitEntries && can(actor, 'people:read_contact')
+    ? await minorsAmong(actor.orgId, visitEntries.map(v => v.personId), today)
+    : null;
   const checkInsByDay = visitEntries
-    ? checkInsPerDay(visitEntries, today, org.timezone, visitEntries.length < MAX_LOG_ROWS)
+    ? checkInsPerDay(visitEntries, today, org.timezone, visitEntries.length < MAX_LOG_ROWS, minors)
     : null;
   const membershipStatus = membershipCounts(list);
 
@@ -62,12 +69,21 @@ export function daysBefore(day: LocalDate, n: number): LocalDate {
   return new Date(Date.UTC(y, m - 1, d - n)).toISOString().slice(0, 10);
 }
 
+/** The ids among `personIds` who are students (minors) today. Reads the people directly, as the age split needs their dates of birth. */
+async function minorsAmong(orgId: string, personIds: readonly string[], today: LocalDate): Promise<Set<string>> {
+  const records = await getRuntime().repositories.people.getMany(orgId, [...new Set(personIds)]);
+
+  return new Set(records.filter(person => isMinor(person, today)).map(person => person.id));
+}
+
 /**
  * People checked in per camp-local day, for the CHART_DAYS days ending `today`, oldest first. A person who checked in twice on a
- * day counts once. `complete` is passed in: false when the read hit its row limit.
+ * day counts once. `complete` is passed in: false when the read hit its row limit. `minorIds` is the students among the visitors,
+ * or null when the viewer may not see the minor flag (then every day's `minors` is null).
  */
 export function checkInsPerDay(
   visits: readonly { personId: string; checkedInAt: string }[], today: LocalDate, timeZone: string, complete: boolean,
+  minorIds: ReadonlySet<string> | null,
 ): CheckInsByDay {
   const byDay = new Map<LocalDate, Set<string>>();
   for (const visit of visits) {
@@ -78,8 +94,10 @@ export function checkInsPerDay(
   }
   const days = Array.from({ length: CHART_DAYS }, (_, i) => {
     const date = daysBefore(today, CHART_DAYS - 1 - i);
+    const people = byDay.get(date) ?? new Set<string>();
+    const minors = minorIds === null ? null : [...people].filter(id => minorIds.has(id)).length;
 
-    return { date, count: byDay.get(date)?.size ?? 0 };
+    return { date, count: people.size, minors };
   });
 
   return { days, complete };

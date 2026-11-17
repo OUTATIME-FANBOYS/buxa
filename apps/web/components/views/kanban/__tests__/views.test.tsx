@@ -24,7 +24,7 @@ const me = seed.users.find((u) => u.id === member.userId)!;
 const camp: CampHome = {
   campId: 'o1', name: 'Lake Camp', firstName: 'Priya', canRename: false,
   people: 40, onSite: 12, checkedInToday: 20, validMemberships: 35, upcomingSessions: [],
-  checkInsByDay: { days: [{ date: '2026-11-17', count: 20 }], complete: true }, onSiteByAge: { adults: 11, minors: 1 },
+  checkInsByDay: { days: [{ date: '2026-11-17', count: 20, minors: 1 }], complete: true }, onSiteByAge: { adults: 11, minors: 1 },
   membershipStatus: { valid: 35, notStarted: 0, expired: 3, none: 2 },
 };
 
