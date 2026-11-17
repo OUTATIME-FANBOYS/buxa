@@ -9,7 +9,7 @@ const env = vi.hoisted(() => {
 vi.mock('next/headers', () => ({ cookies: async () => env.store }));
 vi.mock('next/navigation', () => ({ redirect: (url: string) => { throw new Error(`REDIRECT ${url}`); } }));
 
-import { ROUTES } from '@/config';
+import { ROUTES } from '../../../config/routes';
 import { installRuntime } from '../../runtime';
 import { InMemoryStore } from '../../__tests__/fakes';
 import { ISSUER, createTestIdentityProvider } from '../../__tests__/tokens';

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { ProjectsPage } from '@/features/kanban';
+import { ProjectsPage } from '@/views';
 
 export const metadata: Metadata = { title: 'Projects' };
 

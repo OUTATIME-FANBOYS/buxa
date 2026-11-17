@@ -3,7 +3,7 @@ import { InMemoryStore } from './fakes';
 import { call, startRuntime } from './harness';
 import { createTestIdentityProvider } from './tokens';
 import { createMemoryRateLimiter, RATE_RULES, type RateDecision, type RateLimiter } from '../rateLimit/limiter';
-import { GET as ready } from '@/app/ready/route';
+import { GET as ready } from '../../app/ready/route';
 
 const idp = await createTestIdentityProvider();
 let env: ReturnType<typeof startRuntime> | undefined;

@@ -6,17 +6,23 @@ import { createVerifier, type Verifier } from './auth/verifier';
 import { loadConfig, type Config } from './config';
 import { createLogger, type Logger } from './log';
 import { createPgRateLimiter, type RateLimiter } from './rateLimit/limiter';
-import type { Clock } from './services';
+import type { Clock } from './services/clock';
 import { createPgRepositories, type Repositories } from './repositories';
+import { createAttendanceService } from './services/attendance/createAttendanceService';
 import { createClassService, type ClassService } from './classes/ClassService';
-import type { ClassRepository } from './classes/ClassRepository';
+import { createCredentialService } from './services/credentials/createCredentialService';
 import { createImportService, type ImportService } from './classes/import/ImportService';
 import type { ImportRepository } from './classes/import/ImportRepository';
+import { createMembershipService } from './services/memberships/createMembershipService';
+import { createOrgService, type OrgService } from './services/orgs';
+import { createPeopleService } from './services/people/createPeopleService';
+import { systemClock } from './services/clock';
+import { type AttendanceService } from './services/attendance/AttendanceService';
+import { type CredentialService } from './services/credentials/CredentialService';
+import { type MembershipService } from './services/memberships/MembershipService';
+import { type PeopleService } from './services/people/PeopleService';
+import type { ClassRepository } from './classes/ClassRepository';
 import { unimplemented } from './unimplemented';
-import {
-  createAttendanceService, createCredentialService, createMembershipService, createOrgService, createPeopleService, systemClock,
-  type AttendanceService, type CredentialService, type MembershipService, type OrgService, type PeopleService,
-} from './services';
 
 export interface Runtime {
   config: Config;

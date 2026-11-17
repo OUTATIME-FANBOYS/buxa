@@ -6,10 +6,11 @@ import http from 'node:http';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { createApp, hostProblem, newRunSecret } from '../app';
-import { AGENT_ID, CAMP_PROJECT_IDS, PROJECT, PROJECT_NAME, USER, buildSeed } from '../../features/kanban/lib/seed';
-import { pickData } from '../../features/kanban/lib/dataSlices';
-import * as A from '../../features/kanban/lib/agents';
-import type { AppState } from '../../features/kanban/types';
+import { AGENT_ID, CAMP_PROJECT_IDS, PROJECT, PROJECT_NAME, USER } from '../../logic/common';
+import { buildSeed } from '../../logic/common';
+import { pickData } from '../../logic/common';
+import * as A from '../../logic/common';
+import type { AppState } from '../../logic/common';
 
 let dir: string; let app: ReturnType<typeof createApp>; let base: string;
 const SECRET = 'test-run-secret-0123456789';

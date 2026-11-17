@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { isUuid } from '@buxa/domain';
-import { NewSession } from '@/features/classes';
+import { NewSession } from '@/views';
 
 export const metadata: Metadata = { title: 'Add session' };
 

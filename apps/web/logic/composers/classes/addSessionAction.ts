@@ -1,0 +1,35 @@
+'use server';
+
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import { isUuid } from '@buxa/domain';
+import { classPath } from '@/config/routes';
+import { failure, type ActionState } from '@/logic/common';
+import { getRuntime } from '@/server/runtime';
+import { currentActor } from '@/logic/composers/people/camp';
+import { expectedFailure, NO_CAMP } from '@/logic/composers/people/failures';
+import { field } from '@/logic/common';
+import { campZone } from '@/logic/composers/attendance/campActor';
+import { sessionForm } from '@/logic/common';
+
+/**
+ * Add a session to a class. The times are typed in the camp's clock and converted in the camp's zone. Success opens the class page.
+ * The class's id comes from the form; the service checks that it is in the actor's camp.
+ */
+export async function addSessionAction(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const actor = await currentActor();
+  if (!actor) return failure(NO_CAMP);
+
+  const classId = field(form, 'classId');
+  if (!isUuid(classId)) return failure('That class no longer exists.');
+
+  try {
+    const parsed = sessionForm(form, await campZone(actor));
+    if (!parsed.ok) return parsed.state;
+    const outcome = await getRuntime().services.classes.addSession(actor, classId, parsed.data);
+    if (!outcome.ok) return failure(outcome.failure.message);
+  } catch (error) { return expectedFailure(error, 'Could not add the session.'); }
+
+  revalidatePath(classPath(classId));
+  redirect(classPath(classId)); // throws; kept outside the try
+}

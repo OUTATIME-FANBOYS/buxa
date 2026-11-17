@@ -1,6 +1,6 @@
 import { createServerClient, type SetAllCookies } from '@supabase/ssr';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { publicEnv } from '@/config';
+import { publicEnv } from '../../config/env';
 import { hardenAll } from './cookies';
 
 export interface CookieStore {

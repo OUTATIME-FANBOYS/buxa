@@ -2,12 +2,13 @@ import { randomUUID } from 'node:crypto';
 import type { CreatedOrg, Member, Membership, NewOrgInput, Org, OrgPatchInput, OrgSummary, User } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
 import type { Identity } from '../auth/identity';
-import { InMemoryAttendanceRepository } from '../attendance';
+import { InMemoryAttendanceRepository } from '../attendance/InMemoryAttendanceRepository';
 import { InMemoryClassRepository } from '../classes/InMemoryClassRepository';
-import { InMemoryCredentialRepository } from '../credentials';
-import { InMemoryMembershipRepository } from '../memberships';
+import { InMemoryCredentialRepository } from '../credentials/InMemoryCredentialRepository';
+import { InMemoryMembershipRepository } from '../memberships/InMemoryMembershipRepository';
 import { OrgNotFoundError, SlugTakenError, type OrgRepository } from '../orgs/OrgRepository';
-import { InMemoryPeopleRepository, InMemoryDatabase, type AuditRecord } from '../people';
+import { InMemoryPeopleRepository } from '../people/InMemoryPeopleRepository';
+import { InMemoryDatabase, type AuditRecord } from '../people/InMemoryDatabase';
 import type { Repositories } from '../repositories';
 import { EmailInUseError, type UserRepository } from '../users/UserRepository';
 

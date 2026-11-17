@@ -1,11 +1,11 @@
 import { installRuntime, createRuntime, type Runtime, type RuntimeOptions } from '../runtime';
 import { createMemoryRateLimiter } from '../rateLimit/limiter';
-import { GET as health } from '@/app/health/route';
-import { GET as ready } from '@/app/ready/route';
-import { GET as me } from '@/app/v1/me/route';
-import { GET as members } from '@/app/v1/members/route';
-import { GET as getOrg, PATCH as patchOrg } from '@/app/v1/org/route';
-import { POST as createOrg } from '@/app/v1/orgs/route';
+import { GET as health } from '../../app/health/route';
+import { GET as ready } from '../../app/ready/route';
+import { GET as me } from '../../app/v1/me/route';
+import { GET as members } from '../../app/v1/members/route';
+import { GET as getOrg, PATCH as patchOrg } from '../../app/v1/org/route';
+import { POST as createOrg } from '../../app/v1/orgs/route';
 
 type Handler = (request: Request) => Response | Promise<Response>;
 

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { NewClass } from '@/features/classes';
+import { NewClass } from '@/views';
 
 export const metadata: Metadata = { title: 'New class' };
 

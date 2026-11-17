@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { IMPORT_COLUMNS, readImportFile, type RowResult } from '@buxa/domain';
-import { encodeCsv } from '@/features/attendance/lib/csv';
+import { encodeCsv } from '@/logic/common';
 import { importErrorReportCsv, importTemplateCsv } from './importCsv';
 
 describe('importTemplateCsv', () => {

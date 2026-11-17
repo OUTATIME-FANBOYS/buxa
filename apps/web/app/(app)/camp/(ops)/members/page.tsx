@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Members } from '@/features/camp';
+import { Members } from '@/views';
 
 export const metadata: Metadata = { title: 'Team access' };
 

@@ -1,12 +1,16 @@
 import type { Pool } from 'pg';
-import { PgAttendanceRepository, type AttendanceRepository } from './attendance';
+import { PgAttendanceRepository } from './attendance/PgAttendanceRepository';
+import { type AttendanceRepository } from './attendance/AttendanceRepository';
 import type { ClassRepository } from './classes/ClassRepository';
 import { PgClassRepository } from './classes/PgClassRepository';
-import { PgCredentialRepository, type CredentialRepository } from './credentials';
-import { PgMembershipRepository, type MembershipRepository } from './memberships';
+import { PgCredentialRepository } from './credentials/PgCredentialRepository';
+import { type CredentialRepository } from './credentials/CredentialRepository';
+import { PgMembershipRepository } from './memberships/PgMembershipRepository';
+import { type MembershipRepository } from './memberships/MembershipRepository';
 import { PgOrgRepository } from './orgs/PgOrgRepository';
 import type { OrgRepository } from './orgs/OrgRepository';
-import { PgPeopleRepository, type PeopleRepository } from './people';
+import { PgPeopleRepository } from './people/PgPeopleRepository';
+import { type PeopleRepository } from './people/PeopleRepository';
 import { PgUserRepository } from './users/PgUserRepository';
 import type { UserRepository } from './users/UserRepository';
 
