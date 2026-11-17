@@ -1,5 +1,7 @@
 # 2026 security and code audit
 
+> **A dated record.** This audit describes the code at commit `a9dc389` on 2026-11-16, and it is kept as written. Some paths in it (for example `apps/web/server/...` and `features/...`) have since moved, and later work has changed several findings. For the current state, read [security.md](../security.md), [auth.md](../auth.md), [deploy.md](../deploy.md) and [ROADMAP.md](../ROADMAP.md).
+
 - **Audited commit:** `a9dc389` (origin/develop at the time of the audit)
 - **Date:** 2026-11-16
 - **Scope:** the camp management site (Next.js 16, Postgres with forced row-level security, Supabase Auth), read-only. No application code, tests or configuration were changed.
