@@ -7,6 +7,7 @@ import { currentActor } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_READ } from '@buxa/shared';
 import { loadClasses } from '@buxa/server/composers/index.server';
 import { ClassesTable } from '@/components/components/classes/export';
+import { NewClassButton } from '@/components/components/classes/forms/export';
 
 /** The camp's classes. Anyone who can read classes sees them; only staff with classes:manage see the create and import buttons. */
 export async function ClassList() {
@@ -18,7 +19,7 @@ export async function ClassList() {
   const actions = canManage ? (
     <>
       <Link className="btn classes-target" href={ROUTES.classImport}>Import classes</Link>
-      <Link className="btn btn-primary classes-target" href={ROUTES.newClass}>New class</Link>
+      <NewClassButton />
     </>
   ) : undefined;
 
@@ -30,7 +31,7 @@ export async function ClassList() {
       ) : loaded.value.length === 0 ? (
         <Empty icon="calendar" title="No classes yet"
           body={canManage ? 'Create the first class, then add its sessions.' : 'Nobody has created a class yet.'}
-          action={canManage && <Link className="btn btn-primary classes-target" href={ROUTES.newClass}>New class</Link>} />
+          action={canManage && <NewClassButton />} />
       ) : (
         <ClassesTable classes={loaded.value} />
       )}

@@ -4,5 +4,6 @@ export * from './EnrolForm';
 export * from './ErrorReportButton';
 export * from './ImportForm';
 export * from './ImportResults';
+export * from './NewClassButton';
 export * from './NewClassForm';
 export * from './NewSessionForm';

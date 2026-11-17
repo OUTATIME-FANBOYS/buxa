@@ -67,7 +67,8 @@ describe('ClassList', () => {
   it('shows the classes and, for staff, the create and import buttons', async () => {
     const html = render(await ClassList());
     expect(html).toContain('Robotics');
-    expect(html).toContain('href="/camp/classes/new"');
+    expect(html).toContain('>New class</button>');
+    expect(html).not.toContain('href="/camp/classes/new"');
     expect(html).toContain('href="/camp/classes/import"');
   });
 
@@ -75,7 +76,7 @@ describe('ClassList', () => {
     asRole('viewer');
     const html = render(await ClassList());
     expect(html).toContain('Robotics');
-    expect(html).not.toContain('href="/camp/classes/new"');
+    expect(html).not.toContain('New class');
     expect(html).not.toContain('href="/camp/classes/import"');
   });
 
