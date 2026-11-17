@@ -25,6 +25,7 @@ export function History({ proposals, agents }: { proposals: Proposal[]; agents: 
     const url = URL.createObjectURL(new Blob([JSON.stringify(rows, null, 2)], { type: 'application/json' }));
     const a = document.createElement('a'); a.href = url; a.download = `agent-audit-${new Date().toISOString().slice(0, 10)}.json`; a.click(); URL.revokeObjectURL(url);
   };
+
   return (
     <div className="stack">
       <div className="row filters">
@@ -36,13 +37,16 @@ export function History({ proposals, agents }: { proposals: Proposal[]; agents: 
       {!groups.length ? <Empty icon="inbox" title="No history yet" body="Everything an agent does, and every decision you make, is recorded here." /> : (
         <div className="run-list">{groups.map(g => {
           const run = s.runs.find(r => r.id === g.runId); const agentId = g.items[0].agentId; const revertable = g.items.filter(p => (p.status === 'applied' || p.status === 'approved') && p.undo).length;
+
           return (
             <section key={g.runId} className="panel run">
               <div className="run-head">
                 <Avatar user={s.users.find(u => u.id === agentId)} size={32} />
                 <div className="grow"><strong>{run?.label ?? 'Agent run'}</strong><span className="muted small block">{s.users.find(u => u.id === agentId)?.name} · {ago(g.at)}{run?.simulated ? ' · simulated' : ''}{run?.costUsd ? ` · $${run.costUsd.toFixed(2)}` : ''}</span></div>
                 {revertable > 0 && A.canDecide(s, me?.id, agentId) && <Menu label="Run actions" trigger={<Icon name="more" />} items={[{ label: `Revert ${revertable} change${revertable === 1 ? '' : 's'}`, icon: 'undo', danger: true, onSelect: async () => {
-                  if (!await confirm({ title: 'Revert this run?', body: 'Its changes are undone where nobody has worked on them since. Anything a person has touched is left as it is.', confirmLabel: 'Revert', danger: true })) return;
+                  if (!await confirm({ title: 'Revert this run?', body: 'Its changes are undone where nobody has worked on them since. Anything a person has touched is left as it is.', confirmLabel: 'Revert', danger: true })) {
+                    return;
+                  }
                   const r = actions.revertRun(g.runId); toast(`Reverted ${r.reverted}${r.skipped ? `, left ${r.skipped} that people have changed` : ''}`);
                 } }]} />}
               </div>

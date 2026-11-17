@@ -7,12 +7,43 @@ export interface HomeCard { label: string; value: number; info: string; icon: st
 
 /** Today against yesterday, from the chart's days. Only when both days are complete, so the comparison is not against a short count. */
 export function dayChange(series: CheckInsByDay | null): HomeCardChange | null {
-  if (!series || !series.complete || series.days.length < 2) return null;
+  if (!series || !series.complete || series.days.length < 2) {
+    return null;
+  }
   const today = series.days[series.days.length - 1].count;
   const yesterday = series.days[series.days.length - 2].count;
   const diff = today - yesterday;
-  if (diff === 0) return { text: 'Same as yesterday', tone: 'neutral' };
+  if (diff === 0) {
+    return { text: 'Same as yesterday', tone: 'neutral' };
+  }
+
   return diff > 0 ? { text: `+${diff} vs yesterday`, tone: 'ok' } : { text: `${diff} vs yesterday`, tone: 'warn' };
+}
+
+/**
+ * The chart's range against the same number of days before it: check-ins over the last `range` days, against the `range` days
+ * before them. Null when the read was cut off (the older days may be short) or there is no earlier period in the series.
+ */
+export function periodChange(series: CheckInsByDay | null, range: number): HomeCardChange | null {
+  if (!series || !series.complete || series.days.length < range * 2) {
+    return null;
+  }
+  const sum = (days: CheckInsByDay['days']): number => days.reduce((total, day) => total + day.count, 0);
+  const now = sum(series.days.slice(-range));
+  const before = sum(series.days.slice(-range * 2, -range));
+  const word = `vs previous ${range} days`;
+  if (now === before) {
+    return { text: `Same ${word}`, tone: 'neutral' };
+  }
+  if (before === 0) {
+    return { text: `+${now} ${word}`, tone: 'ok' };
+  }
+  const percent = Math.round(((now - before) / before) * 100);
+  if (percent === 0) {
+    return { text: `Same ${word}`, tone: 'neutral' };
+  }
+
+  return percent > 0 ? { text: `+${percent}% ${word}`, tone: 'ok' } : { text: `${percent}% ${word}`, tone: 'warn' };
 }
 
 /**
@@ -23,6 +54,7 @@ export function homeCards(camp: CampHome): HomeCard[] {
   const share: HomeCardChange | null = camp.validMemberships !== null && camp.people
     ? { text: `${Math.round((camp.validMemberships / camp.people) * 100)}% of people`, tone: 'neutral' }
     : null;
+
   return [
     ...(camp.onSite === null ? [] : [{
       label: 'On site now', value: camp.onSite, icon: 'clock', tone: 'ok' as const,

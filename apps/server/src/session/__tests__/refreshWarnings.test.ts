@@ -14,7 +14,9 @@ const TOKEN = 'eyJhbGciOiJFUzI1NiJ9.secret-payload';
 const request = { cookies: { getAll: () => [{ name: 'sb-127-auth-token', value: `base64-${TOKEN}` }] } } as unknown as NextRequest;
 
 let lines: string[];
-beforeEach(() => { lines = []; });
+beforeEach(() => {
+  lines = [];
+});
 const log = () => createLogger('warn', line => lines.push(line));
 
 describe('the refresh path warns when the identity provider fails (audit S-20)', () => {
@@ -28,7 +30,9 @@ describe('the refresh path warns when the identity provider fails (audit S-20)',
   });
 
   it('a thrown error is logged by name only, and the page is still served', async () => {
-    outcome.next = async () => { throw Object.assign(new TypeError(`fetch failed ${EMAIL} ${TOKEN}`), {}); };
+    outcome.next = async () => {
+      throw Object.assign(new TypeError(`fetch failed ${EMAIL} ${TOKEN}`), {});
+    };
     expect(await refreshSessionCookies(request, 1000, log())).toBeNull();
     const text = lines.join('\n');
     expect(text).toContain('"reason":"TypeError"');

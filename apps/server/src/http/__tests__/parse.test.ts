@@ -11,11 +11,16 @@ function chunkedBody(chunks: number) {
   const state = { pulled: 0 };
   const stream = new ReadableStream<Uint8Array>({
     pull(controller) {
-      if (state.pulled >= chunks) { controller.close(); return; }
+      if (state.pulled >= chunks) {
+        controller.close();
+
+        return;
+      }
       state.pulled += 1;
       controller.enqueue(new TextEncoder().encode(' '.repeat(CHUNK))); // whitespace is valid JSON around the value
     },
   });
+
   return { stream, state };
 }
 
@@ -64,7 +69,9 @@ describe('request body limit', () => {
   });
 
   it('treats an empty body as no body', async () => {
-    const stream = new ReadableStream<Uint8Array>({ start(c) { c.close(); } });
+    const stream = new ReadableStream<Uint8Array>({ start(c) {
+      c.close();
+    } });
     expect(await readJson(request(stream))).toBeUndefined();
   });
 });

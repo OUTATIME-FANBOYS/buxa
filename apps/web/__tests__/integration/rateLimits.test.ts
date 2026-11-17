@@ -7,10 +7,14 @@ import { GET as ready } from '../../app/ready/route';
 
 const idp = await createTestIdentityProvider();
 let env: ReturnType<typeof startRuntime> | undefined;
-afterEach(async () => { await env?.stop(); env = undefined; vi.restoreAllMocks(); });
+afterEach(async () => {
+  await env?.stop(); env = undefined; vi.restoreAllMocks();
+});
 
 /** A limiter that refuses everything: the client must see a 429 and no work may happen. */
-const refusing: RateLimiter = { async hit(): Promise<RateDecision> { return { allowed: false, remaining: 0, retryAfterSeconds: 42 }; } };
+const refusing: RateLimiter = { async hit(): Promise<RateDecision> {
+  return { allowed: false, remaining: 0, retryAfterSeconds: 42 };
+} };
 
 describe('POST /v1/orgs is rate limited per person', () => {
   it('lets the limit many camps through, refuses the next one with 429 and Retry-After, and does not write it', async () => {
@@ -56,7 +60,9 @@ describe('/ready', () => {
   });
 
   it('answers 503 when the limiter and the database are both unreachable, without leaking details', async () => {
-    const broken: RateLimiter = { async hit() { throw new Error('connection refused 10.0.0.5'); } };
+    const broken: RateLimiter = { async hit() {
+      throw new Error('connection refused 10.0.0.5');
+    } };
     env = startRuntime({ verifier: idp.verifier, rateLimiter: broken });
     const r = await ready(new Request('http://localhost/ready'));
     expect(r.status).toBe(503);

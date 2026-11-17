@@ -6,7 +6,9 @@ import { ErrorBoundary } from '@/components/components/export';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-function Broken(): never { throw new Error('board exploded'); }
+function Broken(): never {
+  throw new Error('board exploded');
+}
 
 describe('ErrorBoundary', () => {
   let root: Root;
@@ -14,7 +16,9 @@ describe('ErrorBoundary', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; vi.restoreAllMocks(); });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = ''; vi.restoreAllMocks();
+  });
 
   it('renders its children when nothing goes wrong', () => {
     act(() => root.render(<ErrorBoundary><p>board</p></ErrorBoundary>));

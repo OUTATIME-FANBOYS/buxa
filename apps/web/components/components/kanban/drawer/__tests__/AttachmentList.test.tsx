@@ -4,7 +4,7 @@ import { buildSeed } from '@buxa/shared';
 import { type Task } from '@buxa/shared';
 import { AttachmentList } from '@/components/components/kanban/drawer/export';
 
-const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
+const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 vi.mock('@buxa/middleware/hooks/useAttachmentUpload', () => ({ useAttachmentUpload: () => ({ busy: false, input: { current: null }, upload: () => undefined }) }));
 

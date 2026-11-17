@@ -25,6 +25,7 @@ export function checkInRefusalCopy(refusal: CheckInRefusal, timeZone: string, cl
         revoked: 'Their membership was revoked.',
         none: 'They have no membership for this camp.',
       };
+
       return { title: label, body: refusal.canOverride ? `${why[refusal.status]} ${OVERRIDE_HINT}` : why[refusal.status] };
     }
     case 'override_needs_reason':

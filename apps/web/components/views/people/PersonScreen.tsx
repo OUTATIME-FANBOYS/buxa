@@ -23,9 +23,13 @@ import { loadPerson } from '@buxa/server/composers/index.server';
  */
 export async function PersonScreen({ id, searchParams = {} }: { id: string; searchParams?: Record<string, string | string[] | undefined> }) {
   const actor = await currentActor();
-  if (!actor) notFound();
+  if (!actor) {
+    notFound();
+  }
   const person = await loadPerson(actor, id);
-  if (!person) notFound();
+  if (!person) {
+    notFound();
+  }
 
   const { canUpdate, canCreate, canManage, canBadge, canArchive, canSeeVisits, canAuthorisePickup } = permissionsFor(actor);
   const { q } = readListParams(searchParams);

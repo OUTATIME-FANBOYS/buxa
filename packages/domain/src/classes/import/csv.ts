@@ -22,19 +22,27 @@ export function parseCsvRecords(input: string): CsvParse {
   const endRecord = (): void => {
     cells.push(field);
     const blank = cells.length === 1 && cells[0]?.trim() === '' && !quotedThisRecord;
-    if (!blank) records.push({ line: recordLine, cells });
+    if (!blank) {
+      records.push({ line: recordLine, cells });
+    }
     cells = [];
     field = '';
     quotedThisRecord = false;
   };
 
   for (let i = 0; i < text.length; i++) {
-    const c = text[i] as string;
+    const c = text[i];
     if (inQuotes) {
       if (c === '"') {
-        if (text[i + 1] === '"') { field += '"'; i++; } else { inQuotes = false; }
+        if (text[i + 1] === '"') {
+          field += '"'; i++;
+        } else {
+          inQuotes = false;
+        }
       } else {
-        if (c === '\n') line++;
+        if (c === '\n') {
+          line++;
+        }
         field += c;
       }
       continue;
@@ -57,7 +65,12 @@ export function parseCsvRecords(input: string): CsvParse {
     }
   }
 
-  if (inQuotes) return { ok: false, line: quotedLine, message: `A quote opened on line ${quotedLine} is never closed.` };
-  if (cells.length > 0 || field !== '') endRecord();
+  if (inQuotes) {
+    return { ok: false, line: quotedLine, message: `A quote opened on line ${quotedLine} is never closed.` };
+  }
+  if (cells.length > 0 || field !== '') {
+    endRecord();
+  }
+
   return { ok: true, records };
 }

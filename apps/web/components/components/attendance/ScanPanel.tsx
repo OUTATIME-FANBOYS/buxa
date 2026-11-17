@@ -25,7 +25,9 @@ export function ScanPanel({ scanRef, disabled, onCode }: Props) {
       </button>
       {camera && (
         <div id="camera-scanner" className="camera-slot">
-          <CameraScanner onScan={raw => { onCode(raw); closeCamera(); }} onClose={closeCamera} />
+          <CameraScanner onScan={raw => {
+            onCode(raw); closeCamera();
+          }} onClose={closeCamera} />
         </div>
       )}
     </div>

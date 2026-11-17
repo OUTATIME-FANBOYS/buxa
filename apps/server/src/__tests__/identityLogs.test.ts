@@ -10,6 +10,7 @@ const identity = (authId: string, email = EMAIL): Identity => ({ authId, email, 
 
 function capture() {
   const lines: string[] = [];
+
   return { lines, log: createLogger('info', line => lines.push(line)), text: () => lines.join('\n') };
 }
 
@@ -37,7 +38,9 @@ describe('a conflicting identity (audit S-09)', () => {
   it('a rejected token is logged by error name only, without the token text', async () => {
     const store = new InMemoryStore();
     const { log, text } = capture();
-    const verifier = async () => { throw Object.assign(new Error(`bad signature for ${EMAIL} token eyJsecret`), { name: 'JWTExpired' }); };
+    const verifier = async () => {
+      throw Object.assign(new Error(`bad signature for ${EMAIL} token eyJsecret`), { name: 'JWTExpired' });
+    };
     await expect(sessionFromToken('eyJsecret', { verifier, users: store.asRepositories().users }, log)).rejects.toMatchObject({ statusCode: 401 });
     expect(text()).toContain('JWTExpired');
     expect(text()).not.toContain(EMAIL);

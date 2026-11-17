@@ -7,6 +7,7 @@ export const campToday = (clock: Clock, timeZone: string): LocalDate => toLocalD
 /** The day after `day` (a pure calendar step, no zone involved). */
 export function nextLocalDay(day: LocalDate): LocalDate {
   const [y, m, d] = day.split('-').map(Number);
+
   return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
 }
 
@@ -17,6 +18,7 @@ function zoneOffsetMs(ms: number, timeZone: string): number {
   }).formatToParts(new Date(ms));
   const value = (type: string): number => Number(parts.find(p => p.type === type)?.value);
   const wall = Date.UTC(value('year'), value('month') - 1, value('day'), value('hour'), value('minute'), value('second'));
+
   return wall - Math.floor(ms / 1000) * 1000;
 }
 
@@ -24,10 +26,13 @@ function zoneOffsetMs(ms: number, timeZone: string): number {
  * The instant (ISO) at which camp-local `day` starts in `timeZone`. Two passes settle daylight-saving changes at midnight.
  */
 export function localDayStart(day: LocalDate, timeZone: string): string {
-  if (!isLocalDate(day)) throw new Error(`Not a local date: ${day}`);
+  if (!isLocalDate(day)) {
+    throw new Error(`Not a local date: ${day}`);
+  }
   const [y, m, d] = day.split('-').map(Number);
   const wall = Date.UTC(y, m - 1, d);
   const first = wall - zoneOffsetMs(wall, timeZone);
+
   return new Date(wall - zoneOffsetMs(first, timeZone)).toISOString();
 }
 

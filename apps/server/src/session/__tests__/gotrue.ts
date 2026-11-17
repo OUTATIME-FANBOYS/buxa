@@ -21,10 +21,16 @@ export function stubIdentityProvider(replies: Record<string, Reply>): Call[] {
     const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url);
     const call = { method: init?.method ?? 'GET', path: url.pathname };
     calls.push(call);
-    if (url.origin !== TEST_SUPABASE_URL) throw new Error(`unexpected request to ${url.origin}`);
+    if (url.origin !== TEST_SUPABASE_URL) {
+      throw new Error(`unexpected request to ${url.origin}`);
+    }
     const reply = replies[url.pathname];
-    if (!reply) throw new Error(`unexpected request ${call.method} ${call.path}`);
+    if (!reply) {
+      throw new Error(`unexpected request ${call.method} ${call.path}`);
+    }
+
     return new Response(reply.status === 204 ? null : JSON.stringify(reply.body ?? {}), { status: reply.status ?? 200, headers: { 'content-type': 'application/json' } });
   });
+
   return calls;
 }

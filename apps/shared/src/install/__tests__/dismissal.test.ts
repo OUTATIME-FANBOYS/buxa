@@ -4,13 +4,20 @@ import { INSTALL_HINT_KEY, readDismissed, writeDismissed, type KeyValueStore } f
 /** A store that keeps values in a Map, like localStorage does for strings. */
 function memoryStore(): KeyValueStore & { data: Map<string, string> } {
   const data = new Map<string, string>();
-  return { data, getItem: key => data.get(key) ?? null, setItem: (key, value) => { data.set(key, value); } };
+
+  return { data, getItem: key => data.get(key) ?? null, setItem: (key, value) => {
+    data.set(key, value);
+  } };
 }
 
 /** A store that throws on every access, as a private window or blocked site data does. */
 const throwingStore: KeyValueStore = {
-  getItem: () => { throw new DOMException('blocked', 'SecurityError'); },
-  setItem: () => { throw new DOMException('quota', 'QuotaExceededError'); },
+  getItem: () => {
+    throw new DOMException('blocked', 'SecurityError');
+  },
+  setItem: () => {
+    throw new DOMException('quota', 'QuotaExceededError');
+  },
 };
 
 describe('install hint dismissal', () => {

@@ -26,6 +26,7 @@ export async function transaction<T>(pool: Pool, work: (db: PoolClient) => Promi
     throw error;
   }
   db.release();
+
   return result;
 }
 
@@ -34,10 +35,14 @@ export async function transaction<T>(pool: Pool, work: (db: PoolClient) => Promi
  * organisation fixed, so row-level security decides what is visible. With no org (null) every tenant table reads as empty.
  */
 export function withOrg<T>(pool: Pool, orgId: string | null, work: (db: PoolClient) => Promise<T>): Promise<T> {
-  if (orgId !== null && !isUuid(orgId)) return Promise.reject(new Error('Invalid organisation id'));
+  if (orgId !== null && !isUuid(orgId)) {
+    return Promise.reject(new Error('Invalid organisation id'));
+  }
+
   return transaction(pool, async db => {
     await db.query('SET LOCAL ROLE buxa_app');
     await db.query("SELECT set_config('app.org_id', $1, true)", [orgId ?? '']);
+
     return work(db);
   });
 }

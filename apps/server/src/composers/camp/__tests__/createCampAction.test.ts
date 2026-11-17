@@ -15,7 +15,9 @@ describe('createCampAction', () => {
   let userId: string;
   beforeEach(async () => {
     vi.clearAllMocks();
-    mocks.redirect.mockImplementation((to: string) => { throw new Error(`NEXT_REDIRECT ${to}`); });
+    mocks.redirect.mockImplementation((to: string) => {
+      throw new Error(`NEXT_REDIRECT ${to}`);
+    });
     world = startWorld();
     userId = await world.person();
     mocks.requireSession.mockImplementation(() => world.sessionOf(userId));

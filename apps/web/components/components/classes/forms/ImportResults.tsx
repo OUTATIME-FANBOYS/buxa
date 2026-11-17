@@ -13,6 +13,7 @@ export function countsLine(counts: ImportPlan['counts']): string {
   const ready = counts.create + counts.update;
   const readyText = ready === 1 ? '1 row is ready' : `${ready} rows are ready`;
   const refusedText = counts.refused === 1 ? '1 row is refused' : `${counts.refused} rows are refused`;
+
   return `${readyText}, ${refusedText}.`;
 }
 
@@ -34,6 +35,7 @@ export function ImportResults({ results, counts }: { results: readonly RowResult
         <tbody>
           {results.map(row => {
             const status = STATUS[row.status];
+
             return (
               <tr key={row.rowNumber}>
                 <td>{row.rowNumber}</td>

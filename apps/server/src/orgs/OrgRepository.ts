@@ -4,7 +4,9 @@ import type { Actor } from '@buxa/domain';
 /** Raised when another organisation already uses the requested address. */
 export class SlugTakenError extends Error {
   readonly kind = 'slug-taken';
-  constructor() { super('That address is already taken'); this.name = 'SlugTakenError'; }
+  constructor() {
+    super('That address is already taken'); this.name = 'SlugTakenError';
+  }
 }
 
 /** True for a SlugTakenError from any copy of this module (see isHttpError for why not `instanceof`). */
@@ -12,7 +14,9 @@ export const isSlugTaken = (error: unknown): error is SlugTakenError => error in
 /** Raised when an organisation is not visible to the caller (it does not exist, or row-level security hides it). */
 export class OrgNotFoundError extends Error {
   readonly kind = 'org-not-found';
-  constructor() { super('Organisation not found'); this.name = 'OrgNotFoundError'; }
+  constructor() {
+    super('Organisation not found'); this.name = 'OrgNotFoundError';
+  }
 }
 
 /** True for an OrgNotFoundError from any copy of this module (see isHttpError for why not `instanceof`). */

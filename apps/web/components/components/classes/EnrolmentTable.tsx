@@ -29,6 +29,7 @@ export function EnrolmentTable({ classId, enrolments, canManage, timeZone, clock
         {enrolments.map(enrolment => {
           const status = STATUS[enrolment.status];
           const live = enrolment.status !== 'cancelled';
+
           return (
             <tr key={enrolment.id}>
               <td>{enrolment.camperName}</td>

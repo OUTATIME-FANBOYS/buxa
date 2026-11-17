@@ -1,6 +1,6 @@
 # Phase 6: communications, parent and instructor portals, waivers and reports
 
-Status: **spec for review. No code yet.** Roadmap row: "Comms & extras: reminders, waivers, parent portal, reports."
+Status: **spec for review. Not started**, except the PWA manifest and install hint (see "Staff mobile app" below). Roadmap row: "Comms & extras: reminders, waivers, parent portal, reports."
 Depends on: phases 3 and 4. The parent portal is the largest part and needs the privacy review before real data (see `docs/security.md`).
 
 ## Words we use

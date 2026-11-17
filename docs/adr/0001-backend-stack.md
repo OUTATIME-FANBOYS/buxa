@@ -18,7 +18,7 @@ support multiple orgs, payments, concurrency-safe seat counts, or children's dat
   Authorization is ours: a shared `can(actor, action, resource)` used by API and UI.
 - **Payments:** Stripe Connect (Standard accounts). Webhooks are idempotent and verified.
 - **Jobs:** Postgres-backed queue (pg-boss) for reminders and webhooks. No extra infrastructure at first.
-- **Repo:** npm workspaces: `apps/web`, `packages/domain`, `packages/db`, `packages/contracts`.
+- **Repo:** npm workspaces: `apps/web`, `packages/domain`, `packages/db`, `packages/contracts`. (Amended 2026-11-17: the repository also has `apps/server`, `apps/shared` and `apps/middleware`; see the README layout.)
 - **Observability:** structured logs, error tracking, request ids, audit log table.
 
 ## Why not

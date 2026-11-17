@@ -16,7 +16,9 @@ type SearchParams = Readonly<Record<string, string | string[] | undefined>>;
 /** The attendance log for the chosen camp days (default: today, camp time), with an optional person and the CSV download. */
 export async function AttendanceScreen({ searchParams }: { searchParams: SearchParams }) {
   const actor = await campActor();
-  if (!actor) notFound();
+  if (!actor) {
+    notFound();
+  }
   if (!authorize(actor, 'attendance:read').allow) {
     return (
       <div className="page">
@@ -51,5 +53,6 @@ export async function AttendanceScreen({ searchParams }: { searchParams: SearchP
 
 const readValue = (params: SearchParams, name: string): string => {
   const value = params[name];
+
   return typeof value === 'string' ? value : '';
 };

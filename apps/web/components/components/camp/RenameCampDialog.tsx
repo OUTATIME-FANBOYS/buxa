@@ -17,12 +17,15 @@ export function RenameCampDialog({ campId, currentName, onClose }: { campId: str
   const done = state.status === 'success';
 
   useEffect(() => {
-    if (!done) return;
+    if (!done) {
+      return;
+    }
     toast('Camp renamed');
     onClose();
   }, [done, toast, onClose]);
 
   const formMessage = state.status === 'error' && !state.fieldErrors ? state.message : undefined;
+
   return (
     <Dialog title="Rename camp" onClose={onClose}
       footer={<><button type="button" className="btn" onClick={onClose}>Cancel</button><button className="btn btn-primary" form={FORM_ID} disabled={pending}>{pending ? 'Saving…' : 'Save'}</button></>}>

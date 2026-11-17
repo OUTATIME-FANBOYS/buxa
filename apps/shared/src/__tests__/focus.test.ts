@@ -6,6 +6,7 @@ import { FOCUSABLE } from '../focus';
 describe('FOCUSABLE', () => {
   const matches = (html: string) => {
     const doc = new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html');
+
     return doc.body.querySelectorAll(FOCUSABLE).length;
   };
   it('matches links, enabled controls and positive tabindex', () => {

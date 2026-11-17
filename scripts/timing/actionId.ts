@@ -5,5 +5,6 @@
  */
 export function findScanActionId(bundleSource: string): string | null {
   const match = /"([0-9a-f]{40,})"[^"]{0,160}"scanCodeAction"/.exec(bundleSource);
+
   return match ? match[1] : null;
 }

@@ -39,8 +39,12 @@ describe('OnSiteRow card', () => {
 
 describe('OnSiteRow check-out dialog', () => {
   let root: Root;
-  beforeEach(() => { root = createRoot(document.body.appendChild(document.createElement('div'))); });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; document.body.style.overflow = ''; vi.useRealTimers(); });
+  beforeEach(() => {
+    root = createRoot(document.body.appendChild(document.createElement('div')));
+  });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = ''; document.body.style.overflow = ''; vi.useRealTimers();
+  });
 
   it('opens the panel in a dialog from Check out, and Escape closes it and returns focus to Check out', () => {
     vi.useFakeTimers();
@@ -48,7 +52,9 @@ describe('OnSiteRow check-out dialog', () => {
     const trigger = document.querySelector<HTMLButtonElement>('button.onsite-btn')!;
     expect(document.querySelector('[role="dialog"]')).toBeNull();
 
-    act(() => { trigger.click(); });
+    act(() => {
+      trigger.click();
+    });
     const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
     expect(dialog).not.toBeNull();
     expect(dialog!.querySelector('h2')?.textContent).toBe('Check out Mia Cole');
@@ -56,17 +62,25 @@ describe('OnSiteRow check-out dialog', () => {
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
     expect(dialog!.querySelector('.checkout-actions')?.textContent).toContain('CancelCheck out');
 
-    act(() => { dialog!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); });
-    act(() => { vi.advanceTimersByTime(200); });
+    act(() => {
+ dialog!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    });
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
     expect(document.querySelector('[role="dialog"]')).toBeNull();
     expect(document.activeElement).toBe(trigger);
   });
 
   it('Cancel inside the dialog closes it at once', () => {
     act(() => root.render(<OnSiteRow row={row} canRecord canOverride={false} />));
-    act(() => { document.querySelector<HTMLButtonElement>('button.onsite-btn')!.click(); });
+    act(() => {
+ document.querySelector<HTMLButtonElement>('button.onsite-btn')!.click();
+    });
     const cancel = [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find(b => b.textContent === 'Cancel')!;
-    act(() => { cancel.click(); });
+    act(() => {
+      cancel.click();
+    });
     expect(document.querySelector('[role="dialog"]')).toBeNull();
   });
 });

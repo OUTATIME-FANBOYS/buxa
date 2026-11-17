@@ -28,13 +28,28 @@ const toRecord = (p: StoredPerson): PersonRecord => ({
 /** Applies the present fields and returns their names in the same fixed order the Postgres adapter reports them. */
 function applyPatch(person: StoredPerson, patch: PersonPatchRecord): string[] {
   const changed: string[] = [];
-  if (patch.givenName !== undefined) { person.givenName = patch.givenName; changed.push('givenName'); }
-  if (patch.familyName !== undefined) { person.familyName = patch.familyName; changed.push('familyName'); }
-  if (patch.preferredName !== undefined) { person.preferredName = patch.preferredName; changed.push('preferredName'); }
-  if (patch.dateOfBirth !== undefined) { person.dateOfBirth = patch.dateOfBirth; changed.push('dateOfBirth'); }
-  if (patch.email !== undefined) { person.email = patch.email; changed.push('email'); }
-  if (patch.phone !== undefined) { person.phone = patch.phone; changed.push('phone'); }
-  if (patch.roles !== undefined) { person.roles = sortRoles(patch.roles); changed.push('roles'); }
+  if (patch.givenName !== undefined) {
+    person.givenName = patch.givenName; changed.push('givenName');
+  }
+  if (patch.familyName !== undefined) {
+    person.familyName = patch.familyName; changed.push('familyName');
+  }
+  if (patch.preferredName !== undefined) {
+    person.preferredName = patch.preferredName; changed.push('preferredName');
+  }
+  if (patch.dateOfBirth !== undefined) {
+    person.dateOfBirth = patch.dateOfBirth; changed.push('dateOfBirth');
+  }
+  if (patch.email !== undefined) {
+    person.email = patch.email; changed.push('email');
+  }
+  if (patch.phone !== undefined) {
+    person.phone = patch.phone; changed.push('phone');
+  }
+  if (patch.roles !== undefined) {
+    person.roles = sortRoles(patch.roles); changed.push('roles');
+  }
+
   return changed;
 }
 
@@ -66,6 +81,7 @@ export class InMemoryPeopleRepository implements PeopleRepository {
       const householdId = household.householdId !== undefined ? household.householdId : this.households.create(actor, household.newHouseholdName).id;
       this.households.link(actor, { householdId, personId: person.id, relationship: household.relationship, isGuardian: household.isGuardian, canPickup: household.canPickup });
     }
+
     return toRecord(person);
   }
 
@@ -73,6 +89,7 @@ export class InMemoryPeopleRepository implements PeopleRepository {
     const person = this.require(actor.orgId, id);
     const fields = applyPatch(person, patch);
     this.db.record(actor, 'person.update', 'person', id, { fields });
+
     return toRecord(person);
   }
 
@@ -82,11 +99,13 @@ export class InMemoryPeopleRepository implements PeopleRepository {
       person.archivedAt = instant(at);
       this.db.record(actor, 'person.archive', 'person', id);
     }
+
     return toRecord(person);
   }
 
   async get(orgId: string, id: string): Promise<PersonRecord | null> {
     const person = this.db.inOrg(this.db.people, orgId, id);
+
     return person ? toRecord(person) : null;
   }
 
@@ -101,8 +120,11 @@ export class InMemoryPeopleRepository implements PeopleRepository {
 
   async search(orgId: string, query: string, limit: number): Promise<PersonRecord[]> {
     const max = Math.min(Math.max(0, Math.floor(limit)), MAX_SEARCH_RESULTS);
-    if (normalizeForSearch(query) === '' || max === 0) return [];
+    if (normalizeForSearch(query) === '' || max === 0) {
+      return [];
+    }
     const found = this.visible(orgId, p => p.archivedAt === null && matchesName(p, query));
+
     return found.slice(0, max);
   }
 
@@ -132,7 +154,10 @@ export class InMemoryPeopleRepository implements PeopleRepository {
 
   private require(orgId: string, id: string): StoredPerson {
     const person = this.db.inOrg(this.db.people, orgId, id);
-    if (!person) throw new PersonNotFoundError();
+    if (!person) {
+      throw new PersonNotFoundError();
+    }
+
     return person;
   }
 

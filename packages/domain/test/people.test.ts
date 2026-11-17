@@ -41,7 +41,9 @@ describe('personAccess', () => {
 describe('local dates', () => {
   it('validates real calendar days', () => {
     expect(isLocalDate('2028-02-29')).toBe(true);
-    for (const bad of ['2027-02-29', '2027-13-01', '2027-1-1', '', 'x', 20270101, null]) expect(isLocalDate(bad)).toBe(false);
+    for (const bad of ['2027-02-29', '2027-13-01', '2027-1-1', '', 'x', 20270101, null]) {
+      expect(isLocalDate(bad)).toBe(false);
+    }
   });
   it('the same instant is different days in different zones (time-zone midnight)', () => {
     const instant = new Date('2027-07-01T03:30:00Z');
@@ -49,7 +51,9 @@ describe('local dates', () => {
     expect(toLocalDate(instant, 'Asia/Kolkata')).toBe('2027-07-01');
     expect(toLocalDate(instant, 'UTC')).toBe('2027-07-01');
   });
-  it('recognises zone names', () => { expect(isTimeZone('Europe/Paris')).toBe(true); expect(isTimeZone('Mars/Base')).toBe(false); expect(isTimeZone('')).toBe(false); });
+  it('recognises zone names', () => {
+    expect(isTimeZone('Europe/Paris')).toBe(true); expect(isTimeZone('Mars/Base')).toBe(false); expect(isTimeZone('')).toBe(false);
+  });
 });
 
 describe('minor rule', () => {
@@ -119,7 +123,11 @@ describe('credential payload', () => {
     expect(parseCredentialPayload(`${credentialPayload(token)}\r\n`)).toBe(token);
   });
   it('rejects anything else with the same null', () => {
-    for (const raw of ['', token, 'bx1.short', `bx1.${'A'.repeat(23)}`, `other.${token}`, `bx1.${'!'.repeat(22)}`]) expect(parseCredentialPayload(raw)).toBeNull();
+    for (const raw of ['', token, 'bx1.short', `bx1.${'A'.repeat(23)}`, `other.${token}`, `bx1.${'!'.repeat(22)}`]) {
+      expect(parseCredentialPayload(raw)).toBeNull();
+    }
   });
-  it('token shape', () => { expect(isCredentialToken(token)).toBe(true); expect(isCredentialToken('a'.repeat(21))).toBe(false); });
+  it('token shape', () => {
+    expect(isCredentialToken(token)).toBe(true); expect(isCredentialToken('a'.repeat(21))).toBe(false);
+  });
 });

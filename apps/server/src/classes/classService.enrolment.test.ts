@@ -13,7 +13,9 @@ describe('enrolment: age range (inclusive, checked on the camp-local day)', () =
     const { sessionId } = await classWithSession(service);
     const r = await service.enrol(as('staff'), enrolInput(sessionId, CAMPER_DAN));
     expect(r).toMatchObject({ ok: false, failure: { reason: 'age_out_of_range', refusal: { age: 7, range: { minAge: 8, maxAge: 12 } } } });
-    if (r.ok) return;
+    if (r.ok) {
+      return;
+    }
     expect(r.failure.message).toContain('ages 8 to 12');
     expect(r.failure.message).toContain('7');
   });
@@ -71,14 +73,20 @@ describe('enrolment: overlap across the camp', () => {
     const { service } = setup();
     const { sessionId: robo } = await classWithSession(service);
     const created = await service.createClass(as('admin'), painting);
-    if (!created.ok) throw new Error('setup');
+    if (!created.ok) {
+      throw new Error('setup');
+    }
     const paint = await service.addSession(as('admin'), created.value.id, monday11to13);
-    if (!paint.ok) throw new Error('setup');
+    if (!paint.ok) {
+      throw new Error('setup');
+    }
     expect((await service.enrol(as('staff'), enrolInput(robo, CAMPER_ADA))).ok).toBe(true);
 
     const r = await service.enrol(as('staff'), enrolInput(paint.value.id, CAMPER_ADA));
     expect(r).toMatchObject({ ok: false, failure: { reason: 'overlap', refusal: { clash: { className: 'Robotics' } } } });
-    if (r.ok) return;
+    if (r.ok) {
+      return;
+    }
     expect(r.failure.message).toContain('Robotics');
     expect(r.failure.message).toContain('09:00-12:00');
   });
@@ -87,9 +95,13 @@ describe('enrolment: overlap across the camp', () => {
     const { service } = setup();
     const { sessionId: robo } = await classWithSession(service);
     const created = await service.createClass(as('admin'), painting);
-    if (!created.ok) throw new Error('setup');
+    if (!created.ok) {
+      throw new Error('setup');
+    }
     const after = await service.addSession(as('admin'), created.value.id, { ...monday11to13, startsAt: '2027-07-05T12:00:00+10:00', endsAt: '2027-07-05T13:00:00+10:00' });
-    if (!after.ok) throw new Error('setup');
+    if (!after.ok) {
+      throw new Error('setup');
+    }
     expect((await service.enrol(as('staff'), enrolInput(robo, CAMPER_ADA))).ok).toBe(true);
     expect((await service.enrol(as('staff'), enrolInput(after.value.id, CAMPER_ADA))).ok).toBe(true);
   });
@@ -98,9 +110,13 @@ describe('enrolment: overlap across the camp', () => {
     const { service } = setup();
     const { sessionId: robo } = await classWithSession(service);
     const created = await service.createClass(as('admin'), painting);
-    if (!created.ok) throw new Error('setup');
+    if (!created.ok) {
+      throw new Error('setup');
+    }
     const inner = await service.addSession(as('admin'), created.value.id, { ...monday9to12, startsAt: '2027-07-05T10:00:00+10:00', endsAt: '2027-07-05T11:00:00+10:00' });
-    if (!inner.ok) throw new Error('setup');
+    if (!inner.ok) {
+      throw new Error('setup');
+    }
     expect((await service.enrol(as('staff'), enrolInput(robo, CAMPER_ADA))).ok).toBe(true);
     expect(await service.enrol(as('staff'), enrolInput(inner.value.id, CAMPER_ADA)))
       .toMatchObject({ ok: false, failure: { reason: 'overlap', refusal: { clash: { className: 'Robotics' } } } });
@@ -110,11 +126,17 @@ describe('enrolment: overlap across the camp', () => {
     const { service } = setup();
     const { classId } = await classWithSession(service);
     const late = await service.addSession(as('admin'), classId, { ...monday9to12, startsAt: '2027-07-05T23:00:00+10:00', endsAt: '2027-07-06T01:00:00+10:00' });
-    if (!late.ok) throw new Error('setup');
+    if (!late.ok) {
+      throw new Error('setup');
+    }
     const created = await service.createClass(as('admin'), painting);
-    if (!created.ok) throw new Error('setup');
+    if (!created.ok) {
+      throw new Error('setup');
+    }
     const early = await service.addSession(as('admin'), created.value.id, { ...monday9to12, startsAt: '2027-07-06T00:30:00+10:00', endsAt: '2027-07-06T02:00:00+10:00' });
-    if (!early.ok) throw new Error('setup');
+    if (!early.ok) {
+      throw new Error('setup');
+    }
     expect((await service.enrol(as('staff'), enrolInput(late.value.id, CAMPER_ADA))).ok).toBe(true);
     expect(await service.enrol(as('staff'), enrolInput(early.value.id, CAMPER_ADA)))
       .toMatchObject({ ok: false, failure: { reason: 'overlap', refusal: { clash: { sessionId: late.value.id } } } });
@@ -124,9 +146,13 @@ describe('enrolment: overlap across the camp', () => {
     const { service, repo } = setup();
     const { sessionId: robo } = await classWithSession(service);
     const created = await service.createClass(as('admin'), painting);
-    if (!created.ok) throw new Error('setup');
+    if (!created.ok) {
+      throw new Error('setup');
+    }
     const paint = await service.addSession(as('admin'), created.value.id, monday11to13);
-    if (!paint.ok) throw new Error('setup');
+    if (!paint.ok) {
+      throw new Error('setup');
+    }
     await service.enrol(as('staff'), enrolInput(robo, CAMPER_ADA));
 
     const r = await service.enrol(as('admin'), enrolInput(paint.value.id, CAMPER_ADA, { override: { reason: 'Parent agreed to the clash' } }));
@@ -150,9 +176,13 @@ describe('enrolment: overlap across the camp', () => {
     const { service, repo } = setup();
     const { sessionId: robo } = await classWithSession(service);
     const created = await service.createClass(as('admin'), painting);
-    if (!created.ok) throw new Error('setup');
+    if (!created.ok) {
+      throw new Error('setup');
+    }
     const paint = await service.addSession(as('admin'), created.value.id, monday11to13);
-    if (!paint.ok) throw new Error('setup');
+    if (!paint.ok) {
+      throw new Error('setup');
+    }
     await service.enrol(as('staff'), enrolInput(robo, CAMPER_ADA));
     const r = await service.enrol(as('staff'), enrolInput(paint.value.id, CAMPER_ADA, { override: { reason: 'Please' } }));
     expect(r).toMatchObject({ ok: false, failure: { reason: 'override_not_allowed' } });
@@ -168,7 +198,9 @@ describe('enrolment: capacity (hard limit)', () => {
     await service.enrol(as('staff'), enrolInput(sessionId, CAMPER_BEN));
     const r = await service.enrol(as('staff'), enrolInput(sessionId, CAMPER_CY));
     expect(r).toMatchObject({ ok: false, failure: { reason: 'session_full' } });
-    if (!r.ok) expect(r.failure.message).toContain('waitlist');
+    if (!r.ok) {
+      expect(r.failure.message).toContain('waitlist');
+    }
   });
 
   it('waitlists instead when asked, without taking a seat', async () => {
@@ -187,7 +219,9 @@ describe('enrolment: capacity (hard limit)', () => {
     const { sessionId } = await classWithSession(service);
     const ada = await service.enrol(as('staff'), enrolInput(sessionId, CAMPER_ADA));
     await service.enrol(as('staff'), enrolInput(sessionId, CAMPER_BEN));
-    if (!ada.ok) throw new Error('setup');
+    if (!ada.ok) {
+      throw new Error('setup');
+    }
     expect((await service.enrol(as('staff'), enrolInput(sessionId, CAMPER_CY))).ok).toBe(false);
     expect((await service.cancelEnrolment(as('staff'), { enrolmentId: ada.value.id })).ok).toBe(true);
     expect((await service.enrol(as('staff'), enrolInput(sessionId, CAMPER_CY))).ok).toBe(true);
@@ -197,11 +231,17 @@ describe('enrolment: capacity (hard limit)', () => {
     const { service } = setup();
     const { sessionId: robo } = await classWithSession(service);
     const created = await service.createClass(as('admin'), painting);
-    if (!created.ok) throw new Error('setup');
+    if (!created.ok) {
+      throw new Error('setup');
+    }
     const paint = await service.addSession(as('admin'), created.value.id, monday11to13);
-    if (!paint.ok) throw new Error('setup');
+    if (!paint.ok) {
+      throw new Error('setup');
+    }
     const ada = await service.enrol(as('staff'), enrolInput(robo, CAMPER_ADA));
-    if (!ada.ok) throw new Error('setup');
+    if (!ada.ok) {
+      throw new Error('setup');
+    }
     expect((await service.enrol(as('staff'), enrolInput(paint.value.id, CAMPER_ADA))).ok).toBe(false);
     expect((await service.cancelEnrolment(as('staff'), { enrolmentId: ada.value.id, note: 'Moved' })).ok).toBe(true);
     expect((await service.enrol(as('staff'), enrolInput(paint.value.id, CAMPER_ADA))).ok).toBe(true);
@@ -249,7 +289,9 @@ describe('enrolment: audit covers every write, once', () => {
     const { service, repo } = setup();
     const { sessionId } = await classWithSession(service);
     const ada = await service.enrol(as('staff'), enrolInput(sessionId, CAMPER_ADA));
-    if (!ada.ok) throw new Error('setup');
+    if (!ada.ok) {
+      throw new Error('setup');
+    }
     await service.cancelEnrolment(as('staff'), { enrolmentId: ada.value.id, note: 'Sick' });
     expect(repo.audit.slice(-2).map(a => a.action)).toEqual(['enrolment.create', 'enrolment.cancel']);
     expect(repo.audit.at(-1)).toMatchObject({ data: { note: 'Sick' } });

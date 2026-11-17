@@ -21,13 +21,16 @@ export function CampClockPanel({ campId, clockFormat, canChange }: { campId: str
   const [format, setFormat] = useState<ClockFormat>(clockFormat);
 
   useEffect(() => {
-    if (state.status === 'success') toast('Clock changed');
+    if (state.status === 'success') {
+      toast('Clock changed');
+    }
   }, [state, toast]);
 
   const current = OPTIONS.find(o => o.value === clockFormat) ?? OPTIONS[1];
+
   return (
-    <section className="panel" aria-labelledby="camp-clock-title">
-      <h2 id="camp-clock-title">Camp clock</h2>
+    <div aria-labelledby="camp-clock-title">
+      <h3 id="camp-clock-title">Camp clock</h3>
       <p className="muted">Every time in the camp is shown on this clock.</p>
       {canChange ? (
         <form action={formAction} className="stack">
@@ -40,6 +43,6 @@ export function CampClockPanel({ campId, clockFormat, canChange }: { campId: str
       ) : (
         <p>{current.label} ({current.example}). Ask an admin to change it.</p>
       )}
-    </section>
+    </div>
   );
 }

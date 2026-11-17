@@ -20,11 +20,15 @@ export function ArchivePersonButton({ personId, personName }: { personId: string
       confirmLabel: 'Archive',
       danger: true,
     });
-    if (!ok) return;
+    if (!ok) {
+      return;
+    }
     startTransition(async () => {
       setError(null);
       const state = await archivePersonAction(personId);
-      if (state.status === 'error') setError(state.message);
+      if (state.status === 'error') {
+        setError(state.message);
+      }
     });
   };
 

@@ -52,23 +52,38 @@ export type EnrolmentDecision =
  */
 export function decideEnrolment(f: EnrolmentFacts, o: EnrolmentOptions): EnrolmentDecision {
   if (o.override !== null) {
-    if (!o.actorCanOverride) return { kind: 'refuse', reason: 'override_not_allowed' };
-    if (o.override.reason.trim() === '') return { kind: 'refuse', reason: 'override_needs_reason' };
+    if (!o.actorCanOverride) {
+      return { kind: 'refuse', reason: 'override_not_allowed' };
+    }
+    if (o.override.reason.trim() === '') {
+      return { kind: 'refuse', reason: 'override_needs_reason' };
+    }
   }
 
-  if (f.camperDateOfBirth === null) return { kind: 'refuse', reason: 'age_unknown' };
+  if (f.camperDateOfBirth === null) {
+    return { kind: 'refuse', reason: 'age_unknown' };
+  }
   const age = checkAge(f.camperDateOfBirth, f.sessionDay, f.session.ageRange);
-  if (!age.ok) return { kind: 'refuse', reason: 'age_out_of_range', age: age.age, range: age.range };
+  if (!age.ok) {
+    return { kind: 'refuse', reason: 'age_out_of_range', age: age.age, range: age.range };
+  }
 
   const clash = findClash(f.session, f.camperActive);
   let overrode: { reason: string; clash: ActiveEnrolmentFacts } | null = null;
   if (clash !== null) {
-    if (o.override === null || !o.actorCanOverride) return { kind: 'refuse', reason: 'overlap', clash };
+    if (o.override === null || !o.actorCanOverride) {
+      return { kind: 'refuse', reason: 'overlap', clash };
+    }
     overrode = { reason: o.override.reason.trim(), clash };
   }
 
   const seat = seatFor(f.session.capacity, f.seatsTaken);
-  if (seat.kind === 'seat') return { kind: 'allow', status: 'enrolled', overrode };
-  if (o.waitlistIfFull) return { kind: 'allow', status: 'waitlisted', overrode };
+  if (seat.kind === 'seat') {
+    return { kind: 'allow', status: 'enrolled', overrode };
+  }
+  if (o.waitlistIfFull) {
+    return { kind: 'allow', status: 'waitlisted', overrode };
+  }
+
   return { kind: 'refuse', reason: 'session_full', capacity: seat.capacity };
 }

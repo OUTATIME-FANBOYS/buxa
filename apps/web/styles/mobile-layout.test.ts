@@ -71,4 +71,11 @@ describe('settings grid', () => {
     expect(settings).toContain('@media (min-width: 1280px) { .settings-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }');
     expect(settings).toContain('.page.settings-page { max-width: none; }');
   });
+
+  it('keeps the segmented controls (theme, clock) inside their card at every width', () => {
+    const settings = read('./features/settings.css');
+    expect(settings).toContain('.settings-page .segmented { display: flex; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }');
+    expect(settings).toContain('.settings-page .segmented button { flex: 1 1 0; min-width: 0;');
+    expect(settings).toContain('overflow-wrap: anywhere;');
+  });
 });

@@ -22,13 +22,17 @@ export interface AttendanceQuery { from: string; to: string; personId?: string; 
 
 export class AlreadyCheckedInError extends Error {
   readonly kind = 'already-checked-in';
-  constructor() { super('Already checked in'); this.name = 'AlreadyCheckedInError'; }
+  constructor() {
+    super('Already checked in'); this.name = 'AlreadyCheckedInError';
+  }
 }
 export const isAlreadyCheckedIn = (e: unknown): e is AlreadyCheckedInError => e instanceof Error && (e as { kind?: unknown }).kind === 'already-checked-in';
 
 export class NotOnSiteError extends Error {
   readonly kind = 'not-on-site';
-  constructor() { super('Not on site'); this.name = 'NotOnSiteError'; }
+  constructor() {
+    super('Not on site'); this.name = 'NotOnSiteError';
+  }
 }
 export const isNotOnSite = (e: unknown): e is NotOnSiteError => e instanceof Error && (e as { kind?: unknown }).kind === 'not-on-site';
 

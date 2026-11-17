@@ -11,6 +11,7 @@ type SearchParams = Readonly<Record<string, string | string[] | undefined>>;
 export function parseLogFilter(params: SearchParams, today: string): LogQuery {
   const read = (name: string): string => {
     const value = params[name];
+
     return typeof value === 'string' ? value.trim() : '';
   };
   const personId = read('personId');
@@ -19,6 +20,9 @@ export function parseLogFilter(params: SearchParams, today: string): LogQuery {
     to: read('to') || today,
     ...(personId ? { personId } : {}),
   });
-  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? 'Check the dates.' };
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? 'Check the dates.' };
+  }
+
   return { ok: true, filter: parsed.data };
 }

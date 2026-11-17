@@ -19,7 +19,9 @@ describe('assertLocalDatabase', () => {
 
   it('never echoes the password in its message', () => {
     expect(() => assertLocalDatabase('postgres://u:hunter2@db.example.com/app')).toThrow(/db\.example\.com/);
-    try { assertLocalDatabase('postgres://u:hunter2@db.example.com/app'); } catch (error) {
+    try {
+      assertLocalDatabase('postgres://u:hunter2@db.example.com/app');
+    } catch (error) {
       expect(String(error)).not.toMatch(/hunter2/);
     }
   });

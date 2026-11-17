@@ -16,6 +16,7 @@ const row = (over: Partial<Record<(typeof IMPORT_COLUMNS)[number], string>> = {}
     external_key: '', class_name: 'Robotics', starts_at: '2027-07-05T13:00', ends_at: '2027-07-05T15:00', location: 'Lab 2',
     age_min: '8', age_max: '12', capacity: '2', instructor_names: 'Ana;Ben', ratio_campers: '', ratio_instructors: '', ...over,
   };
+
   return IMPORT_COLUMNS.map(c => cells[c]).join(',');
 };
 const file = (...rows: string[]) => ({ fileName: 'season.csv', text: [HEADER, ...rows].join('\r\n') + '\r\n' });
@@ -26,6 +27,7 @@ function world(failOnWrite?: number): World {
   const classes = new InMemoryClassRepository(() => new Date('2027-07-01T00:00:00Z'));
   const imports = new InMemoryImportRepository(classes, { failOnWrite });
   const service = createImportService({ classes, imports, timezoneOf: async () => CAMP_TZ });
+
   return { service, classes, imports };
 }
 

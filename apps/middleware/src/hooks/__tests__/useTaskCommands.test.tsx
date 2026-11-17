@@ -8,6 +8,7 @@ import { buildSeed } from '@buxa/shared';
 import { type Task } from '@buxa/shared';
 import { useTaskCommands, type TaskCommands } from '../useTaskCommands';
 
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Kept: the compiler needs this assertion to type the value; removing it fails typecheck.
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown>, openTask: vi.fn() }));
 vi.mock('../../providers/store', () => ({ useStore: () => h.store }));
 vi.mock('../../providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: h.openTask }) }));
@@ -15,11 +16,17 @@ vi.mock('../../providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ op
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 let cmd: TaskCommands | undefined;
-function Probe() { cmd = useTaskCommands(); return null; }
+
+function Probe() {
+  cmd = useTaskCommands();
+
+  return null;
+}
 
 describe('useTaskCommands', () => {
   let root: Root;
   const seed = buildSeed();
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Kept: the compiler needs this assertion to type the value; removing it fails typecheck.
   const task = seed.tasks[0] as Task;
   beforeEach(() => {
     cmd = undefined;
@@ -27,12 +34,15 @@ describe('useTaskCommands', () => {
     root = createRoot(document.body.appendChild(document.createElement('div')));
     act(() => root.render(<UiProvider Dialog={StubDialog}><Probe /></UiProvider>));
   });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = '';
+  });
 
   it('deletes a task and offers to undo', () => {
     act(() => cmd!.remove(task));
     expect((h.store.actions as { deleteTask: ReturnType<typeof vi.fn> }).deleteTask).toHaveBeenCalledWith(task.id);
     expect(document.querySelector('.toast')?.textContent).toContain('Task deleted');
+    // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
     act(() => (document.querySelector('.toast button') as HTMLButtonElement).click());
     expect((h.store.actions as { restoreTask: ReturnType<typeof vi.fn> }).restoreTask).toHaveBeenCalledWith(task);
   });
@@ -43,7 +53,9 @@ describe('useTaskCommands', () => {
   });
   it('duplicates a task and returns the copy’s id', () => {
     let copy: string | undefined;
-    act(() => { copy = cmd!.duplicate(task); });
+    act(() => {
+      copy = cmd!.duplicate(task);
+    });
     expect(copy).toBe('t-copy');
   });
   it('moves a task to another column', () => {

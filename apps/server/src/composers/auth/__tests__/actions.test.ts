@@ -3,11 +3,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const env = vi.hoisted(() => {
   process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://127.0.0.1:1';
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'test-publishable-key';
+
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Kept: the compiler needs this assertion to type the value; removing it fails typecheck.
   return { store: undefined as unknown };
 });
 
 vi.mock('next/headers', () => ({ cookies: async () => env.store }));
-vi.mock('next/navigation', () => ({ redirect: (url: string) => { throw new Error(`REDIRECT ${url}`); } }));
+vi.mock('next/navigation', () => ({ redirect: (url: string) => {
+  throw new Error(`REDIRECT ${url}`);
+} }));
 
 import { ROUTES } from '@buxa/shared/config/routes';
 import { idle } from '@buxa/shared';
@@ -21,7 +25,13 @@ import { signIn } from '../signIn';
 import { signOut } from '../signOut';
 import { signUp } from '../signUp';
 
-const form = (fields: Record<string, string>): FormData => { const data = new FormData(); for (const [k, v] of Object.entries(fields)) data.set(k, v); return data; };
+const form = (fields: Record<string, string>): FormData => {
+  const data = new FormData(); for (const [k, v] of Object.entries(fields)) {
+    data.set(k, v);
+  }
+
+  return data;
+};
 const sub = crypto.randomUUID();
 let store: FakeCookieStore;
 let runtime: ReturnType<typeof startRuntime>;
@@ -34,7 +44,9 @@ beforeEach(async () => {
   runtime = startRuntime({ verifier: idp.verifier, repositories: data.asRepositories() });
   store = new FakeCookieStore(); env.store = store;
 });
-afterEach(async () => { await runtime.stop(); vi.unstubAllGlobals(); });
+afterEach(async () => {
+  await runtime.stop(); vi.unstubAllGlobals();
+});
 
 describe('signIn', () => {
   it('refuses empty fields without calling the identity provider', async () => {
@@ -62,7 +74,9 @@ describe('signIn', () => {
     await expect(signIn(idle, form({ email: 'a@camp.test', password: 'secret-pass' }))).rejects.toThrow(`REDIRECT ${ROUTES.camp}`);
 
     expect(store.writes.length).toBeGreaterThan(0);
-    for (const write of store.writes) expect(write.options).toMatchObject({ httpOnly: true, sameSite: 'lax', path: '/' });
+    for (const write of store.writes) {
+      expect(write.options).toMatchObject({ httpOnly: true, sameSite: 'lax', path: '/' });
+    }
     expect(store.get(SESSION_COOKIE)).toBeDefined();
     expect((await getSession())?.memberships.map(m => m.name)).toEqual(['Pine Lake']);
   });
@@ -79,7 +93,9 @@ describe('signUp', () => {
   it('asks the person to confirm their email when no session comes back', async () => {
     stubIdentityProvider({ '/auth/v1/signup': { body: gotrue.unconfirmedUser(sub) } });
     expect(await signUp(idle, form(fields))).toEqual({ status: 'success', message: 'Check your email for a confirmation link, then sign in.' });
-    for (const write of store.writes) expect(write.options).toMatchObject({ httpOnly: true }); // e.g. the sign-up verifier cookie
+    for (const write of store.writes) {
+      expect(write.options).toMatchObject({ httpOnly: true });
+    } // e.g. the sign-up verifier cookie
     expect(store.get(SESSION_COOKIE)).toBeUndefined();
     expect(await getSession()).toBeNull();
   });
@@ -87,7 +103,9 @@ describe('signUp', () => {
   it('signs in straight away when the provider returns a session', async () => {
     stubIdentityProvider({ '/auth/v1/signup': { body: gotrue.session(await idp.token({ sub }), sub) } });
     await expect(signUp(idle, form(fields))).rejects.toThrow(`REDIRECT ${ROUTES.camp}`);
-    for (const write of store.writes) expect(write.options).toMatchObject({ httpOnly: true });
+    for (const write of store.writes) {
+      expect(write.options).toMatchObject({ httpOnly: true });
+    }
   });
 
   it('gives a new and an already-registered address the same answer, and never says an account exists', async () => {
@@ -116,7 +134,9 @@ describe('signOut', () => {
     await expect(signOut()).rejects.toThrow(`REDIRECT ${ROUTES.signIn}`);
     expect(store.deleted).toContain(CAMP_COOKIE);
     expect(store.get(SESSION_COOKIE)?.value ?? '').toBe('');
-    for (const write of store.writes) expect(write.options).toMatchObject({ httpOnly: true, maxAge: 0 });
+    for (const write of store.writes) {
+      expect(write.options).toMatchObject({ httpOnly: true, maxAge: 0 });
+    }
     expect(await getSession()).toBeNull();
   });
 });

@@ -27,7 +27,11 @@ export function ResultPanel({ state, timeZone, clockFormat, canOverride, onCheck
   const primary = useRef<HTMLButtonElement>(null);
   // Picking a name by mouse or keyboard puts focus on the action; a scan keeps focus in the scan field for the next badge.
   const pickedBySearch = state.phase === 'ready' && state.method === 'search';
-  useEffect(() => { if (pickedBySearch) primary.current?.focus(); }, [pickedBySearch, state.phase]);
+  useEffect(() => {
+    if (pickedBySearch) {
+      primary.current?.focus();
+    }
+  }, [pickedBySearch, state.phase]);
 
   switch (state.phase) {
     case 'idle': return <Empty icon="inbox" title="Ready for the next person" body="Scan a badge, or find a name on the left." />;
@@ -48,6 +52,7 @@ export function ResultPanel({ state, timeZone, clockFormat, canOverride, onCheck
       const refusal = state.phase === 'refused' ? state.refusal : null;
       const copy = refusal ? checkInRefusalCopy(refusal, timeZone, clockFormat) : null;
       const offerOverride = canOverride && (refusal?.reason === 'not_valid' || refusal?.reason === 'override_needs_reason');
+
       return (
         <div className="stack">
           <PersonCardView card={card} timeZone={timeZone} clockFormat={clockFormat}>

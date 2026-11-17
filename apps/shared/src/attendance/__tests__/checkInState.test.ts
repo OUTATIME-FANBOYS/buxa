@@ -44,15 +44,15 @@ describe('checkInReducer: selecting and resetting', () => {
 describe('checkInReducer: submitting', () => {
   it.each([
     ['ready', ready],
-    ['refused', { phase: 'refused', card, method: 'qr', refusal: { ok: false, reason: 'archived' } } as CheckInState],
-    ['failed', { phase: 'failed', card, method: 'qr', message: 'x' } as CheckInState],
+    ['refused', { phase: 'refused', card, method: 'qr', refusal: { ok: false, reason: 'archived' } }],
+    ['failed', { phase: 'failed', card, method: 'qr', message: 'x' }],
   ] as const)('submits from %s', (_name, from) => {
     expect(checkInReducer(from, { type: 'submitted' })).toEqual(submitting);
   });
 
   it.each([
     ['idle', CHECK_IN_IDLE],
-    ['unknown', { phase: 'unknown' } as CheckInState],
+    ['unknown', { phase: 'unknown' }],
   ] as const)('does not submit from %s', (_name, from) => {
     expect(checkInReducer(from, { type: 'submitted' })).toBe(from);
   });

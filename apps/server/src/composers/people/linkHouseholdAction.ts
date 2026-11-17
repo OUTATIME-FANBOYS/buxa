@@ -12,16 +12,24 @@ import { checked, field, parseWith } from '@buxa/shared';
 /** Link a person to a household as a guardian (may collect a child) or as another relation. The page they came from is refreshed. */
 export async function linkHouseholdAction(_previous: ActionState, form: FormData): Promise<ActionState> {
   const actor = await currentActor();
-  if (!actor) return failure(NO_CAMP);
+  if (!actor) {
+    return failure(NO_CAMP);
+  }
   const parsed = parseWith(HouseholdLinkInputSchema, {
     householdId: field(form, 'householdId'), personId: field(form, 'personId'), relationship: field(form, 'relationship'),
     isGuardian: checked(form, 'isGuardian'), canPickup: checked(form, 'canPickup'),
   });
-  if (!parsed.ok) return parsed.state;
+  if (!parsed.ok) {
+    return parsed.state;
+  }
 
-  try { await getRuntime().services.people.linkToHousehold(actor, parsed.data); }
-  catch (error) { return expectedFailure(error, 'Could not link them to the household.'); }
+  try {
+    await getRuntime().services.people.linkToHousehold(actor, parsed.data);
+  } catch (error) {
+    return expectedFailure(error, 'Could not link them to the household.');
+  }
 
   revalidatePath(personPath(parsed.data.personId));
+
   return success('Household updated.');
 }

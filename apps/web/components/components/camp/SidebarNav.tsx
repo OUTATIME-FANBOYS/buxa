@@ -8,6 +8,7 @@ import { isActive, type NavGroup } from '@buxa/shared';
 /** The links in their groups, a client island only to mark the current page. */
 export function SidebarNav({ groups }: { groups: readonly NavGroup[] }) {
   const pathname = usePathname();
+
   return (
     <nav>
       {groups.map(group => (
@@ -16,6 +17,7 @@ export function SidebarNav({ groups }: { groups: readonly NavGroup[] }) {
           <ul>
             {group.items.map(item => {
               const active = isActive(pathname ?? "", item);
+
               return (
                 <li key={item.href}>
                   <Link href={item.href} className={active ? 'active' : ''} aria-current={active ? 'page' : undefined}>

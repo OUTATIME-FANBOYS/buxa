@@ -10,7 +10,7 @@ Object.assign(globalThis, { React });
 const camp: CampHome = {
   campId: 'o1', name: 'Lake Camp', firstName: 'Priya', canRename: false,
   people: 40, onSite: 12, checkedInToday: 20, validMemberships: 30, upcomingSessions: [],
-  checkInsByDay: { days: [{ date: '2026-11-16', count: 5 }, { date: '2026-11-17', count: 20 }], complete: true },
+  checkInsByDay: { days: [{ date: '2026-11-16', count: 5, minors: 1 }, { date: '2026-11-17', count: 20, minors: 2 }], complete: true },
   onSiteByAge: { adults: 10, minors: 2 }, membershipStatus: { valid: 30, notStarted: 0, expired: 6, none: 4 },
 };
 const task = (id: string, title: string): Task => ({
@@ -19,10 +19,13 @@ const task = (id: string, title: string): Task => ({
 });
 
 describe('OnSiteAgePanel', () => {
-  it('shows adults and minors on site, with their numbers as text', () => {
+  it('shows parents and guardians, and students, on site, with their numbers as text', () => {
     const html = renderToStaticMarkup(<OnSiteAgePanel counts={{ adults: 10, minors: 2 }} />);
-    expect(html).toContain('On site by age group');
-    expect(html).toContain('Adults');
+    expect(html).toContain('On site: Parent/Guardians and Students');
+    expect(html).toContain('Parent/Guardians');
+    expect(html).toContain('Students');
+    expect(html).not.toContain('Adults');
+    expect(html).not.toContain('Minors');
     expect(html).toContain('<span class="stat-num home-age-num">10</span>');
     expect(html).toContain('<span class="stat-num home-age-num">2</span>');
     expect(html).toContain('href="/camp/on-site"');

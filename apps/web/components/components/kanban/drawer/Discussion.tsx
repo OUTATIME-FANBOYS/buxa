@@ -15,6 +15,7 @@ const mentions = (b: string) => b.split(/(@[\p{L}]+)/gu).map((p, i) => (p.starts
 /** Comments and activity, as two tabs. */
 export function Discussion({ task, ro, members, userById }: DiscussionProps) {
   const [tab, setTab] = useState<'comments' | 'activity'>('comments');
+
   return (
     <section className="section">
       <div className="tabs" role="tablist">

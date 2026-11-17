@@ -2,14 +2,17 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { buildSeed } from '../seed/buildSeed';
 import { createSync, serverApi, type Host, type SyncState } from '../sync';
 
-// Sync only talks to the local server when NEXT_PUBLIC_LEGACY_SYNC=true. Without it the board stays local and never calls out.
+// Sync talks to the local server only when NEXT_PUBLIC_LEGACY_SYNC=true. Without it the board stays local and makes no requests.
 const host = (statuses: SyncState[]): Host => {
   const state = buildSeed();
+
   return {
     getState: () => state,
     commit: () => undefined,
     pending: [],
-    onStatus: (s) => { statuses.push(s); },
+    onStatus: (s) => {
+      statuses.push(s);
+    },
   };
 };
 

@@ -7,7 +7,7 @@ import { emptyFilter } from '@buxa/shared';
 import { type Filter } from '@buxa/shared';
 import { FilterBar } from '@/components/components/kanban/export';
 
-const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
+const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 
 const seed = buildSeed();
@@ -22,7 +22,9 @@ describe('FilterBar', () => {
   it('offers the search and the filter chips, with the sort and saved views', () => {
     const html = renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}><FilterBar filter={emptyFilter} setFilter={setFilter} project={project} tags={[]} /></UiProvider>);
     expect(html).toContain('aria-label="Filter tasks by title or description"');
-    for (const label of ['Priority', 'Assignee', 'Status', 'Due', 'Tags']) expect(html).toContain(`>${label}`);
+    for (const label of ['Priority', 'Assignee', 'Status', 'Due', 'Tags']) {
+      expect(html).toContain(`>${label}`);
+    }
     expect(html).toContain('Manual order');
     expect(html).toContain('>Saved');
   });

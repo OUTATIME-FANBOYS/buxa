@@ -7,7 +7,9 @@ import type { Role } from '@buxa/domain';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { forbidden, notFound as notFoundError } from '@buxa/server/http/errors';
 
-const notFound = vi.hoisted(() => vi.fn(() => { throw new Error('NEXT_NOT_FOUND'); }));
+const notFound = vi.hoisted(() => vi.fn(() => {
+  throw new Error('NEXT_NOT_FOUND');
+}));
 const session = vi.hoisted(() => ({ camp: null as Membership | null }));
 const services = vi.hoisted(() => ({
   people: { list: vi.fn(), get: vi.fn(), getHousehold: vi.fn(), listHouseholds: vi.fn() },
@@ -31,7 +33,9 @@ const { EditPerson } = await import('@/components/views/people/export');
 
 const ID = { ben: '22222222-2222-4222-8222-222222222222', anna: '55555555-5555-4555-8555-555555555555', household: '11111111-1111-4111-8111-111111111111', membership: '33333333-3333-4333-8333-333333333333' };
 
-const as = (role: Role) => { session.camp = { orgId: 'o1', role, name: 'Sunrise', slug: 'sunrise' }; };
+const as = (role: Role) => {
+  session.camp = { orgId: 'o1', role, name: 'Sunrise', slug: 'sunrise' };
+};
 const render = (node: ReactNode) =>renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}>{node}</UiProvider>);
 
 const summary = (over: Partial<PersonSummary> = {}): PersonSummary => ({
@@ -54,7 +58,9 @@ const person = (over: Partial<Person> = {}): Person => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  notFound.mockImplementation(() => { throw new Error('NEXT_NOT_FOUND'); });
+  notFound.mockImplementation(() => {
+    throw new Error('NEXT_NOT_FOUND');
+  });
   services.people.list.mockResolvedValue([summary(), summary({ id: ID.anna, givenName: 'Anna', roles: ['guardian'], status: 'none', onSite: false })]);
   services.people.get.mockResolvedValue(person());
   services.people.getHousehold.mockResolvedValue(household);

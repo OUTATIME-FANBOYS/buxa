@@ -9,9 +9,15 @@ export function dataActions({ get, replace }: ActionContext) {
     importData(json: string): string | null {
       try {
         const d = JSON.parse(json) as AppState;
-        if (d.version !== 1 || !Array.isArray(d.tasks) || !Array.isArray(d.projects) || !Array.isArray(d.users)) return 'This file is not a Buxa export.';
-        replace(normalize(d)); return null;
-      } catch { return 'This file could not be read as JSON.'; }
+        if (d.version !== 1 || !Array.isArray(d.tasks) || !Array.isArray(d.projects) || !Array.isArray(d.users)) {
+          return 'This file is not a Buxa export.';
+        }
+        replace(normalize(d));
+
+        return null;
+      } catch {
+        return 'This file could not be read as JSON.';
+      }
     },
     resetDemo: () => replace(buildDemo()),
   };

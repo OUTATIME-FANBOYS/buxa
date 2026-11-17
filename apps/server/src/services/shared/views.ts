@@ -40,11 +40,13 @@ export function toSummary(person: PersonRecord, memberships: readonly Membership
 export async function toHouseholds(people: PeopleRepository, orgId: string, records: readonly HouseholdRecord[], staffView: boolean): Promise<Household[]> {
   const ids = [...new Set(records.flatMap(h => h.members.map(m => m.personId)))];
   const byId = new Map((await people.getMany(orgId, ids)).map(p => [p.id, p] as const));
+
   return records.map(h => ({
     id: h.id,
     name: h.name,
     members: h.members.flatMap(m => {
       const p = byId.get(m.personId);
+
       return p ? [{
         personId: m.personId, givenName: p.givenName, familyName: p.familyName, roles: [...p.roles],
         relationship: staffView ? m.relationship : null, isGuardian: staffView ? m.isGuardian : null, canPickup: staffView ? m.canPickup : null,

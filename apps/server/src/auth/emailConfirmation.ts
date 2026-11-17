@@ -12,11 +12,18 @@ export async function readEmailConfirmation(opts: { supabaseUrl: string; publish
   const doFetch = opts.fetch ?? fetch;
   try {
     const response = await doFetch(`${opts.supabaseUrl.replace(/\/+$/, '')}/auth/v1/settings`, { headers: { apikey: opts.publishableKey }, signal: AbortSignal.timeout(5000) });
-    if (!response.ok) return 'unknown';
+    if (!response.ok) {
+      return 'unknown';
+    }
     const settings: unknown = await response.json();
     const autoconfirm = (settings as { mailer_autoconfirm?: unknown } | null)?.mailer_autoconfirm;
-    if (autoconfirm === true) return 'not-required';
-    if (autoconfirm === false) return 'required';
+    if (autoconfirm === true) {
+      return 'not-required';
+    }
+    if (autoconfirm === false) {
+      return 'required';
+    }
+
     return 'unknown';
   } catch {
     return 'unknown';
@@ -25,7 +32,12 @@ export async function readEmailConfirmation(opts: { supabaseUrl: string; publish
 
 /** Fail closed where it matters: production must not auto-confirm. A check that could not run only warns, so an outage at Supabase cannot take the API down. */
 export function decideStartup(result: EmailConfirmation, nodeEnv: string): StartupDecision {
-  if (result === 'required') return 'ok';
-  if (result === 'not-required') return nodeEnv === 'production' ? 'refuse' : 'warn';
+  if (result === 'required') {
+    return 'ok';
+  }
+  if (result === 'not-required') {
+    return nodeEnv === 'production' ? 'refuse' : 'warn';
+  }
+
   return 'warn';
 }

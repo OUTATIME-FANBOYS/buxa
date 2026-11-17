@@ -36,6 +36,7 @@ export class InMemoryImportRepository implements ImportRepository {
       .map(s => {
         const copy: Partial<typeof s> = { ...s };
         delete copy.orgId;
+
         return copy as Omit<typeof s, 'orgId'>;
       });
   }
@@ -47,9 +48,13 @@ export class InMemoryImportRepository implements ImportRepository {
 
     for (const w of writes) {
       attempted += 1;
-      if (attempted === this.options.failOnWrite) throw new Error(`Injected failure on write ${attempted}`);
+      if (attempted === this.options.failOnWrite) {
+        throw new Error(`Injected failure on write ${attempted}`);
+      }
       const cls = await this.classes.getClass(actor.orgId, w.classId);
-      if (!cls) throw new ClassNotFoundError();
+      if (!cls) {
+        throw new ClassNotFoundError();
+      }
 
       if (w.kind === 'create') {
         const id = randomUUID();
@@ -60,7 +65,9 @@ export class InMemoryImportRepository implements ImportRepository {
         entries.push({ orgId: actor.orgId, actorId: actor.userId, action: 'session.create', entity: 'session', entityId: id, data: { classId: w.classId, startsAt: w.startsAt, endsAt: w.endsAt, externalKey: w.externalKey, importFile: upload.fileName } });
       } else {
         const existing = w.sessionId === null ? undefined : staged.get(w.sessionId);
-        if (!existing || existing.orgId !== actor.orgId) throw new SessionNotFoundError();
+        if (!existing || existing.orgId !== actor.orgId) {
+          throw new SessionNotFoundError();
+        }
         staged.set(existing.id, {
           ...existing, classId: w.classId, className: cls.name, startsAt: w.startsAt, endsAt: w.endsAt, location: w.location,
           capacity: w.capacity, externalKey: w.externalKey,

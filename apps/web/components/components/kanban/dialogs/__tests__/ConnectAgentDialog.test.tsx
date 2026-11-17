@@ -6,7 +6,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { ConnectAgentDialog } from '@/components/components/kanban/dialogs/export';
 
-const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
+const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 vi.mock('@buxa/middleware/hooks/useAgentConnection', () => ({
   useAgentConnection: () => ({ conn: { phase: 'ready', info: { exists: false, createdAt: null, lastSeen: null } }, issue() {}, revoke() {} }),
@@ -20,11 +20,13 @@ describe('ConnectAgentDialog', () => {
     h.store = { serverInfo: { mcpUrl: 'http://127.0.0.1:3100/mcp' } };
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = '';
+  });
 
   it('opens as a dialog and says a new token is not connected yet', () => {
     act(() => root.render(<UiProvider Dialog={ConfirmDialog}><ConnectAgentDialog agentId="u-agent-triage" name="Triage Agent" onClose={() => undefined} /></UiProvider>));
-    const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
+    const dialog = document.querySelector('[role="dialog"]')!;
     expect(dialog).not.toBeNull();
     expect(dialog.textContent).toContain('Not connected yet');
   });

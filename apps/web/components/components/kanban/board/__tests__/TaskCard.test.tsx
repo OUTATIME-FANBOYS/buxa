@@ -4,7 +4,7 @@ import { buildSeed } from '@buxa/shared';
 import { type Task } from '@buxa/shared';
 import { TaskCard } from '@/components/components/kanban/board/export';
 
-const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
+const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
 vi.mock('@buxa/middleware/hooks/useTaskCommands', () => ({ useTaskCommands: () => ({ open() {}, duplicate() {}, moveTo() {}, toggleArchive() {}, remove() {} }) }));

@@ -17,7 +17,10 @@ export const credentialPayload = (token: string): string => `${CREDENTIAL_PREFIX
  */
 export function parseCredentialPayload(raw: string): string | null {
   const text = raw.trim();
-  if (!text.startsWith(CREDENTIAL_PREFIX)) return null;
+  if (!text.startsWith(CREDENTIAL_PREFIX)) {
+    return null;
+  }
   const token = text.slice(CREDENTIAL_PREFIX.length);
+
   return isCredentialToken(token) ? token : null;
 }

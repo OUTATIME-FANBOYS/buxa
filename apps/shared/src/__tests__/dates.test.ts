@@ -21,7 +21,9 @@ describe('dates', () => {
     expect(fmt('2027-07-03', true)).toContain('2027');
   });
   describe('ago', () => {
-    beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date(2027, 6, 10, 12)); });
+    beforeEach(() => {
+      vi.useFakeTimers(); vi.setSystemTime(new Date(2027, 6, 10, 12));
+    });
     afterEach(() => vi.useRealTimers());
     it('describes the age in the largest sensible unit', () => {
       const at = (ms: number) => new Date(Date.now() - ms).toISOString();

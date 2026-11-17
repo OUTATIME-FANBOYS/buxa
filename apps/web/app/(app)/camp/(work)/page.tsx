@@ -10,6 +10,9 @@ export const metadata: Metadata = { title: 'Home' };
 export default async function Page() {
   const session = await requireSession();
   const camp = await getCurrentCamp(session);
-  if (!camp) return <NewCampForm first />;
+  if (!camp) {
+    return <NewCampForm first />;
+  }
+
   return <HomePage camp={await loadHomeCamp()} />;
 }

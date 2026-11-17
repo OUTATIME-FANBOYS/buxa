@@ -8,7 +8,9 @@ import { campActor, campClock } from '@buxa/server/composers/index.server';
 /** The check-in page. Without attendance:record the person gets a friendly answer, not an error. */
 export async function CheckInScreen() {
   const actor = await campActor();
-  if (!actor) notFound();
+  if (!actor) {
+    notFound();
+  }
   if (!authorize(actor, 'attendance:record').allow) {
     return (
       <div className="page">
@@ -19,6 +21,7 @@ export async function CheckInScreen() {
   }
   const { timeZone, clockFormat } = await campClock(actor);
   const canOverride = authorize(actor, 'attendance:override').allow;
+
   return (
     <div className="page">
       <PageHeader title="Check-in" subtitle="Scan a badge or find a name." />

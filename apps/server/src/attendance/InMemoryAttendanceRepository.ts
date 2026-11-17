@@ -22,6 +22,7 @@ export class InMemoryAttendanceRepository implements AttendanceRepository {
 
   async openFor(orgId: string, personId: string): Promise<CheckInRecord | null> {
     const visit = this.openVisit(orgId, personId);
+
     return visit ? toRecord(visit) : null;
   }
 
@@ -33,8 +34,12 @@ export class InMemoryAttendanceRepository implements AttendanceRepository {
   }
 
   async checkIn(actor: Actor, input: NewCheckIn): Promise<CheckInRecord> {
-    if (!this.db.inOrg(this.db.people, actor.orgId, input.personId)) throw new PersonNotFoundError();
-    if (this.openVisit(actor.orgId, input.personId)) throw new AlreadyCheckedInError();
+    if (!this.db.inOrg(this.db.people, actor.orgId, input.personId)) {
+      throw new PersonNotFoundError();
+    }
+    if (this.openVisit(actor.orgId, input.personId)) {
+      throw new AlreadyCheckedInError();
+    }
     const visit: StoredCheckIn = {
       id: newId(),
       orgId: actor.orgId,
@@ -53,17 +58,22 @@ export class InMemoryAttendanceRepository implements AttendanceRepository {
     if (input.overrideReason !== null) {
       this.db.record(actor, 'attendance.override', 'check_in', visit.id, { personId: input.personId, phase: 'check_in', reason: input.overrideReason });
     }
+
     return toRecord(visit);
   }
 
   async checkOut(actor: Actor, input: NewCheckOut): Promise<CheckInRecord> {
     const visit = this.openVisit(actor.orgId, input.personId);
-    if (!visit) throw new NotOnSiteError();
+    if (!visit) {
+      throw new NotOnSiteError();
+    }
     if (input.collectedByPersonId !== null && !this.db.inOrg(this.db.people, actor.orgId, input.collectedByPersonId)) {
       throw new PersonNotFoundError();
     }
     const at = instant(input.at);
-    if (at < visit.checkedInAt) throw new Error('check-out is before check-in');
+    if (at < visit.checkedInAt) {
+      throw new Error('check-out is before check-in');
+    }
     visit.checkedOutAt = at;
     visit.checkedOutBy = actor.userId;
     visit.collectedByPersonId = input.collectedByPersonId;
@@ -73,12 +83,14 @@ export class InMemoryAttendanceRepository implements AttendanceRepository {
     if (input.overrideReason !== null) {
       this.db.record(actor, 'attendance.override', 'check_in', visit.id, { personId: input.personId, phase: 'check_out', reason: input.overrideReason });
     }
+
     return toRecord(visit);
   }
 
   async log(orgId: string, query: AttendanceQuery): Promise<CheckInRecord[]> {
     const from = instant(query.from);
     const to = instant(query.to);
+
     return [...this.db.checkIns.values()]
       .filter(v => v.orgId === orgId
         && v.checkedInAt >= from && v.checkedInAt < to

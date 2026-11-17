@@ -8,8 +8,12 @@ import { expectRejection, ISO_INSTANT, LOCAL_DATE, samplePerson, type Repository
 export function membershipRepositoryContract(factory: RepositoryFactory): void {
   describe('MembershipRepository contract', () => {
     let fx: RepositoryFixture;
-    beforeEach(async () => { fx = await factory(); });
-    afterEach(async () => { await fx.close(); });
+    beforeEach(async () => {
+      fx = await factory();
+    });
+    afterEach(async () => {
+      await fx.close();
+    });
 
     const newPerson = async (): Promise<string> => (await fx.repos.people.create(fx.actor, samplePerson())).id;
     const summer = (personId: string) => ({ personId, plan: 'Summer 2027', startsOn: '2027-06-01', endsOn: '2027-08-31' });

@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { buildSeed } from '@buxa/shared';
 import { TaskProperties } from '@/components/components/kanban/drawer/export';
 
-const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
+const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 
 const seed = buildSeed();
@@ -20,7 +20,9 @@ describe('TaskProperties', () => {
 
   it('shows status, priority, assignee, dates and tags for a new task from the draft', () => {
     const html = renderToStaticMarkup(<TaskProperties task={null} project={project} d={draft as never} />);
-    for (const label of ['Status', 'Priority', 'Assignee', 'Start date', 'Due date', 'Tags']) expect(html).toContain(`>${label}</span>`);
+    for (const label of ['Status', 'Priority', 'Assignee', 'Start date', 'Due date', 'Tags']) {
+      expect(html).toContain(`>${label}</span>`);
+    }
     expect(html).toContain('value="2027-07-10"');
     expect(html).toContain('>Unassigned</option>');
   });

@@ -5,7 +5,12 @@ import { authActions, type SessionIdentity } from '../auth';
 
 function harness(initial: AppState) {
   let s = initial;
-  const actions = authActions({ set: fn => { s = fn(s); }, get: () => s, replace: next => { s = next; } });
+  const actions = authActions({ set: fn => {
+    s = fn(s);
+  }, get: () => s, replace: next => {
+    s = next;
+  } });
+
   return { actions, get: () => s };
 }
 

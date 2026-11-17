@@ -7,8 +7,12 @@ import { expectRejection, ISO_INSTANT, samplePerson, tokenHash, type RepositoryF
 export function credentialRepositoryContract(factory: RepositoryFactory): void {
   describe('CredentialRepository contract', () => {
     let fx: RepositoryFixture;
-    beforeEach(async () => { fx = await factory(); });
-    afterEach(async () => { await fx.close(); });
+    beforeEach(async () => {
+      fx = await factory();
+    });
+    afterEach(async () => {
+      await fx.close();
+    });
 
     const newPerson = async (): Promise<string> => (await fx.repos.people.create(fx.actor, samplePerson())).id;
 

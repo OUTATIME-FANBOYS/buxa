@@ -7,7 +7,10 @@ import type { Role } from '@buxa/domain';
 import { UiProvider } from '@buxa/middleware/providers/providers';
 import { forbidden } from '@buxa/server/http/errors';
 
-const notFound = vi.hoisted(() => vi.fn(() => { throw new Error('NEXT_NOT_FOUND'); }));
+const notFound = vi.hoisted(() => vi.fn(() => {
+  throw new Error('NEXT_NOT_FOUND');
+}));
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Kept: the compiler needs this assertion to type the value; removing it fails typecheck.
 const session = vi.hoisted(() => ({ role: 'staff' as Role | null }));
 const services = vi.hoisted(() => ({
   classes: { listClasses: vi.fn(), getClass: vi.fn(), listSessions: vi.fn(), listEnrolments: vi.fn() },
@@ -47,17 +50,22 @@ const enrolment: Enrolment = {
 };
 
 const render = (node: ReactNode) => renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}>{node}</UiProvider>);
-const asRole = (role: Role | null) => { session.role = role; };
+const asRole = (role: Role | null) => {
+  session.role = role;
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
-  notFound.mockImplementation(() => { throw new Error('NEXT_NOT_FOUND'); });
+  notFound.mockImplementation(() => {
+    throw new Error('NEXT_NOT_FOUND');
+  });
   asRole('staff');
   services.orgs.getCamp.mockResolvedValue({ timezone: 'Australia/Sydney' });
   services.classes.listClasses.mockResolvedValue({ ok: true, value: [cls] });
   services.classes.getClass.mockResolvedValue({ ok: true, value: cls });
   services.classes.listSessions.mockResolvedValue({ ok: true, value: [full] });
   services.classes.listEnrolments.mockResolvedValue({ ok: true, value: [enrolment] });
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Kept: the compiler needs this assertion to type the value; removing it fails typecheck.
   services.people.list.mockResolvedValue([
     { id: ADA, givenName: 'Ada', familyName: 'Lovelace', roles: ['camper'] },
   ] as unknown as PersonSummary[]);

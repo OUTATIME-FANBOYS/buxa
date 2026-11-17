@@ -18,7 +18,9 @@ describe.skipIf(!url)('PgOrgRepository timezone', () => {
     const { rows } = await pool.query<{ id: string }>(`INSERT INTO users (email, name) VALUES ($1, 'Owner') RETURNING id`, [`owner-${tag}@example.test`]);
     ownerId = rows[0].id;
   });
-  afterAll(async () => { await pool.end(); });
+  afterAll(async () => {
+    await pool.end();
+  });
 
   it('stores the timezone given at creation and returns it from get', async () => {
     const created = await repo.createWithOwner({ name: 'Tz camp', slug: `tz-${tag}`, timezone: 'Europe/London' }, ownerId);

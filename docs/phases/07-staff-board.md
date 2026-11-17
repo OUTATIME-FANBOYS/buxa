@@ -1,6 +1,6 @@
 # Staff board: tasks and projects per camp
 
-Status: **spec for review. No code yet.** Roadmap row: "ops, staff board (existing kanban): move onto the new backend, scoped per org; existing tests ported or replaced."
+Status: **spec for review.** The board is built in the browser (`apps/shared/src/kanban`, the Work pages under `/camp`). Moving it to Postgres has not started: there is no tasks table yet. Roadmap row: "ops, staff board (existing kanban): move onto the new backend, scoped per org; existing tests ported or replaced."
 Depends on: phase 1 (one app, camp shell). Runs alongside phases 2 to 6, not in sequence.
 
 ## Words we use

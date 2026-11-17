@@ -26,13 +26,17 @@ export function OnSiteRow({ row, canRecord, canOverride }: Props) {
   const panelId = `checkout-${row.personId}`;
 
   useEffect(() => {
-    if (state.phase !== 'done') return;
+    if (state.phase !== 'done') {
+      return;
+    }
     router.refresh();
     document.getElementById(ON_SITE_LIST_ID)?.focus();
   }, [state.phase, router]);
 
   // Cancel, Escape and the close button all come here: close the form, then give focus back to the trigger.
-  const cancel = () => { close(); toggle.current?.focus(); };
+  const cancel = () => {
+    close(); toggle.current?.focus();
+  };
 
   return (
     <li className="onsite-row">
@@ -62,7 +66,11 @@ export function OnSiteRow({ row, canRecord, canOverride }: Props) {
             failure={state.phase === 'failed' ? state.message : null}
             onPatch={patch}
             onCancel={cancel}
-            onSubmit={() => { if ('draft' in state) void submit(state.draft); }} />
+            onSubmit={() => {
+              if ('draft' in state) {
+                void submit(state.draft);
+              }
+            }} />
         </Dialog>
       )}
     </li>

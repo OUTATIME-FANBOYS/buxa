@@ -3,7 +3,7 @@ import type { CampHome, CheckInsByDay } from '../../camp/campHomeTypes';
 import { dayChange, homeCards } from '../homeCards';
 
 const series = (counts: number[], complete = true): CheckInsByDay => ({
-  days: counts.map((count, i) => ({ date: `2026-11-${String(i + 1).padStart(2, '0')}`, count })), complete,
+  days: counts.map((count, i) => ({ date: `2026-11-${String(i + 1).padStart(2, '0')}`, count, minors: null })), complete,
 });
 
 const camp: CampHome = {

@@ -3,6 +3,7 @@ import { PRIORITIES, PRIORITY_LABEL } from '@buxa/shared';
 
 export function PriorityMark({ priority, label = false }: { priority: Priority; label?: boolean }) {
   const n = PRIORITIES.indexOf(priority) + 1;
+
   return (
     <span className={`prio prio-${priority}`} title={`${PRIORITY_LABEL[priority]} priority`}>
       <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">

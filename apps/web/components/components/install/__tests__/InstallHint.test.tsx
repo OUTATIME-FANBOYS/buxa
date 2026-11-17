@@ -19,7 +19,9 @@ function fakeLocalStorage() {
   values = new Map();
   const store = {
     getItem: (key: string) => values.get(key) ?? null,
-    setItem: (key: string, value: string) => { values.set(key, String(value)); },
+    setItem: (key: string, value: string) => {
+      values.set(key, String(value));
+    },
     clear: () => values.clear(),
   };
   Object.defineProperty(window, 'localStorage', { configurable: true, value: store });
@@ -33,7 +35,9 @@ function setDevice({ userAgent, phone }: { userAgent: string; phone: boolean }) 
 }
 
 function render() {
-  act(() => { root.render(<InstallHint />); });
+  act(() => {
+    root.render(<InstallHint />);
+  });
 }
 
 beforeEach(() => {

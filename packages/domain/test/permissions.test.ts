@@ -7,16 +7,16 @@ const as = (role: Role, userId = 'me'): Actor => ({ userId, orgId: ORG, role });
 // The matrix, written out so a reviewer can read it. Y = allowed, . = denied.
 //                          viewer staff admin owner
 const MATRIX: Record<Action, string> = {
-  'org:read':                'YYYY', 'org:update':              '..YY', 'org:delete':              '...Y', 'org:transfer_ownership': '...Y',
-  'members:read':            'YYYY', 'members:read_contact':    '..YY', 'members:invite':          '..YY', 'members:change_role':     '..YY', 'members:remove':         '..YY', 'members:leave': 'YYYY',
-  'audit:read':              '..YY', 'data:export':             '...Y', 'data:erase':              '...Y',
-  'people:read':             'YYYY', 'people:read_contact':     '.YYY', 'people:create':           '.YYY', 'people:update':          '.YYY',
-  'people:delete':           '..YY', 'people:authorise_pickup': '..YY', 'memberships:manage':      '..YY', 'credentials:manage':      '..YY',
-  'attendance:read':         '.YYY', 'attendance:record':       '.YYY', 'attendance:override':     '..YY', 'attendance:export':      '..YY',
-  'events:read':             'YYYY', 'events:create':           '..YY', 'events:update':           '..YY', 'events:delete':          '..YY',
-  'classes:manage':          '.YYY',
-  'tasks:read':              'YYYY', 'tasks:create':            '.YYY', 'tasks:update':            '.YYY', 'tasks:move':             '.YYY',
-  'tasks:comment':           '.YYY', 'tasks:delete':            '..YY', 'tasks:manage_board':      '..YY',
+  'org:read': 'YYYY', 'org:update': '..YY', 'org:delete': '...Y', 'org:transfer_ownership': '...Y',
+  'members:read': 'YYYY', 'members:read_contact': '..YY', 'members:invite': '..YY', 'members:change_role': '..YY', 'members:remove': '..YY', 'members:leave': 'YYYY',
+  'audit:read': '..YY', 'data:export': '...Y', 'data:erase': '...Y',
+  'people:read': 'YYYY', 'people:read_contact': '.YYY', 'people:create': '.YYY', 'people:update': '.YYY',
+  'people:delete': '..YY', 'people:authorise_pickup': '..YY', 'memberships:manage': '..YY', 'credentials:manage': '..YY',
+  'attendance:read': '.YYY', 'attendance:record': '.YYY', 'attendance:override': '..YY', 'attendance:export': '..YY',
+  'events:read': 'YYYY', 'events:create': '..YY', 'events:update': '..YY', 'events:delete': '..YY',
+  'classes:manage': '.YYY',
+  'tasks:read': 'YYYY', 'tasks:create': '.YYY', 'tasks:update': '.YYY', 'tasks:move': '.YYY',
+  'tasks:comment': '.YYY', 'tasks:delete': '..YY', 'tasks:manage_board': '..YY',
 };
 
 describe('role grants', () => {
@@ -32,13 +32,21 @@ describe('role grants', () => {
   }
 
   it('a higher role never has fewer grants than a lower one', () => {
-    for (let i = 1; i < ROLES.length; i++) for (const a of GRANTS[ROLES[i - 1]]) expect(GRANTS[ROLES[i]].has(a)).toBe(true);
+    for (let i = 1; i < ROLES.length; i++) {
+      for (const a of GRANTS[ROLES[i - 1]]) {
+        expect(GRANTS[ROLES[i]].has(a)).toBe(true);
+      }
+    }
   });
 });
 
 describe('fail closed', () => {
   it('denies every action for another organisation', () => {
-    for (const r of ROLES) for (const a of ACTIONS) expect(authorize(as(r), a, { orgId: 'org-2' })).toEqual({ allow: false, reason: 'other_org' });
+    for (const r of ROLES) {
+      for (const a of ACTIONS) {
+        expect(authorize(as(r), a, { orgId: 'org-2' })).toEqual({ allow: false, reason: 'other_org' });
+      }
+    }
   });
   it('denies an unknown role', () => {
     expect(authorize({ userId: 'x', orgId: ORG, role: 'god' as Role }, 'org:read')).toEqual({ allow: false, reason: 'unknown_role' });
@@ -68,7 +76,9 @@ describe('changing roles and removing people', () => {
   const t = (role: Role, userId = 'them') => ({ userId, role });
 
   it('nobody changes their own role', () => {
-    for (const r of ['admin', 'owner'] as Role[]) expect(authorize(as(r), 'members:change_role', { target: t(r, 'me'), newRole: 'viewer' })).toEqual({ allow: false, reason: 'self_change' });
+    for (const r of ['admin', 'owner'] as Role[]) {
+      expect(authorize(as(r), 'members:change_role', { target: t(r, 'me'), newRole: 'viewer' })).toEqual({ allow: false, reason: 'self_change' });
+    }
   });
   it('admins manage only people below them', () => {
     expect(can(as('admin'), 'members:change_role', { target: t('staff'), newRole: 'admin' })).toBe(true);
@@ -90,7 +100,11 @@ describe('changing roles and removing people', () => {
 });
 
 describe('leaving', () => {
-  it('anyone below owner can leave', () => { for (const r of ['viewer', 'staff', 'admin'] as Role[]) expect(can(as(r), 'members:leave')).toBe(true); });
+  it('anyone below owner can leave', () => {
+    for (const r of ['viewer', 'staff', 'admin'] as Role[]) {
+      expect(can(as(r), 'members:leave')).toBe(true);
+    }
+  });
   it('the last owner cannot leave', () => {
     expect(authorize(as('owner'), 'members:leave', { ownerCount: 1 })).toEqual({ allow: false, reason: 'last_owner' });
     expect(can(as('owner'), 'members:leave', { ownerCount: 2 })).toBe(true);
@@ -106,5 +120,7 @@ describe('transferring ownership', () => {
 });
 
 describe('ranks', () => {
-  it('are strictly ordered', () => { expect(ROLES.map(rank)).toEqual([0, 1, 2, 3]); });
+  it('are strictly ordered', () => {
+    expect(ROLES.map(rank)).toEqual([0, 1, 2, 3]);
+  });
 });

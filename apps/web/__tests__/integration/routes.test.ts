@@ -10,7 +10,9 @@ const idp = await createTestIdentityProvider();
 describe('routes (in-memory repositories)', () => {
   let store: InMemoryStore;
   let env: ReturnType<typeof startRuntime>;
-  beforeEach(() => { store = new InMemoryStore(); env = startRuntime({ repositories: store.asRepositories(), verifier: idp.verifier }); });
+  beforeEach(() => {
+    store = new InMemoryStore(); env = startRuntime({ repositories: store.asRepositories(), verifier: idp.verifier });
+  });
   afterEach(() => env.stop());
 
   const makeOrg = async (token: string, slug = 'sunrise-lake') => (await (await call('POST', '/v1/orgs', { token, body: { name: 'Sunrise Lake', slug } })).json()).id as string;
@@ -26,8 +28,9 @@ describe('routes (in-memory repositories)', () => {
 
   it('every error response matches the error contract', async () => {
     const t = await idp.token();
-    for (const r of [await call('GET', '/v1/me'), await call('GET', '/v1/org', { token: t }), await call('POST', '/v1/orgs', { token: t, body: { name: '', slug: 'x' } })])
+    for (const r of [await call('GET', '/v1/me'), await call('GET', '/v1/org', { token: t }), await call('POST', '/v1/orgs', { token: t, body: { name: '', slug: 'x' } })]) {
       ErrorBodySchema.parse(await r.json());
+    }
   });
 
   it('refuses a bad body before anything is stored, naming the field', async () => {

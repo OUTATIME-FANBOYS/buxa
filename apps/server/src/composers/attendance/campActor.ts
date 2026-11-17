@@ -16,5 +16,6 @@ export async function campZone(actor: Actor): Promise<string> {
 /** The camp's zone and its clock (12 or 24 hour), for a screen that shows times. One read of the camp record. */
 export async function campClock(actor: Actor): Promise<{ timeZone: string; clockFormat: ClockFormat }> {
   const camp = await getRuntime().services.orgs.getCamp(actor);
+
   return { timeZone: camp.timezone, clockFormat: camp.clockFormat };
 }

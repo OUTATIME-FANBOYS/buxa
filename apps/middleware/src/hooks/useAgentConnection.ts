@@ -14,21 +14,30 @@ export function useAgentConnection(agentId: string, name: string) {
   }, [agentId]);
 
   const issue = async () => {
-    if (conn.phase !== 'ready') return;
-    if (conn.info.exists && !await confirm({ title: 'Replace the token?', body: `The current token for ${name} stops working straight away. Anything still using it will be disconnected.`, confirmLabel: 'Replace token', danger: true })) return;
+    if (conn.phase !== 'ready') {
+      return;
+    }
+    if (conn.info.exists && !await confirm({ title: 'Replace the token?', body: `The current token for ${name} stops working straight away. Anything still using it will be disconnected.`, confirmLabel: 'Replace token', danger: true })) {
+      return;
+    }
     dispatch({ type: 'issueStarted' });
     try {
       const r = await serverApi.issueToken(agentId);
       dispatch({ type: 'issued', token: r.token });
       dispatch({ type: 'infoRefreshed', info: await serverApi.tokenInfo(agentId) });
-    } catch { dispatch({ type: 'issueFailed' }); }
+    } catch {
+      dispatch({ type: 'issueFailed' });
+    }
   };
 
   const revoke = async () => {
-    if (!await confirm({ title: 'Disconnect this agent?', body: 'Its token stops working. You can create a new one at any time.', confirmLabel: 'Disconnect', danger: true })) return;
+    if (!await confirm({ title: 'Disconnect this agent?', body: 'Its token stops working. You can create a new one at any time.', confirmLabel: 'Disconnect', danger: true })) {
+      return;
+    }
     await serverApi.revokeToken(agentId);
     dispatch({ type: 'revoked', info: await serverApi.tokenInfo(agentId) });
     toast('Disconnected');
   };
+
   return { conn, issue, revoke };
 }

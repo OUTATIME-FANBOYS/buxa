@@ -11,7 +11,9 @@ export function RevokeMembershipForm({ membershipId, personId }: { membershipId:
   const [state, formAction, pending] = useActionState(revokeMembershipAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
   useEffect(() => {
-    if (state.status === 'error' && state.fieldErrors) formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+    if (state.status === 'error' && state.fieldErrors) {
+      formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+    }
   }, [state]);
   const reasonError = fieldError(state, 'reason');
 

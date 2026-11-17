@@ -2,7 +2,7 @@ import type { NextConfig } from 'next';
 import { fileURLToPath } from 'node:url';
 
 const dev = process.env.NODE_ENV !== 'production';
-const LEGACY = process.env.BUXA_SERVER ?? 'http://127.0.0.1:8787'; // the original kanban demo's optional local server
+const LOCAL_SERVER = process.env.BUXA_SERVER ?? 'http://127.0.0.1:8787'; // the local agent server (`npm run server`)
 
 /** The headers for files that proxy.ts does not see. */
 const STATIC_HEADERS = [
@@ -16,7 +16,7 @@ const config: NextConfig = {
   transpilePackages: ['@buxa/domain', '@buxa/contracts', '@buxa/db', '@buxa/shared', '@buxa/server', '@buxa/middleware'],
   // Dependencies are hoisted to the repository root, so tell Turbopack where the workspace starts.
   turbopack: { root: fileURLToPath(new URL('../..', import.meta.url)) },
-  // The original kanban demo lived at /kanban (its pages used #/ links, which never reach the server). It now lives under /camp.
+  // /kanban redirects to /camp. Links with a #/ hash never reach the server, so this redirect only covers plain /kanban paths.
   // The destination is ROUTES.camp (config/routes.ts); written out here because Next loads this file without importing app modules.
   async redirects() {
     return [
@@ -29,12 +29,15 @@ const config: NextConfig = {
   async headers() {
     return STATIC_HEADERS;
   },
-  // Development only: the kanban demo can talk to its own optional server (`npm run server`) through this address.
+  // Development only: the browser reaches the local agent server (`npm run server`) through this /api rewrite.
   async rewrites() {
-    if (!dev) return [];
+    if (!dev) {
+      return [];
+    }
+
     return [
-      { source: '/api/:path*', destination: `${LEGACY}/api/:path*` },
-      { source: '/mcp', destination: `${LEGACY}/mcp` },
+      { source: '/api/:path*', destination: `${LOCAL_SERVER}/api/:path*` },
+      { source: '/mcp', destination: `${LOCAL_SERVER}/mcp` },
     ];
   },
 };

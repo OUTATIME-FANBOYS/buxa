@@ -13,13 +13,19 @@ export function qrPath(payload: string): QrPath {
   const count = qr.getModuleCount();
   let d = '';
   for (let y = 0; y < count; y++) {
-    for (let x = 0; x < count; x++) if (qr.isDark(y, x)) d += `M${x + QUIET} ${y + QUIET}h1v1h-1z`;
+    for (let x = 0; x < count; x++) {
+      if (qr.isDark(y, x)) {
+        d += `M${x + QUIET} ${y + QUIET}h1v1h-1z`;
+      }
+    }
   }
+
   return { size: count + QUIET * 2, d };
 }
 
 /** A standalone SVG document string (no scripts, no external references). */
 export function qrSvg(payload: string): string {
   const { size, d } = qrPath(payload);
+
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges"><rect width="${size}" height="${size}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
 }

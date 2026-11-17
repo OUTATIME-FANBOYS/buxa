@@ -12,6 +12,7 @@ type Phase = 'idle' | 'starting' | 'scanning' | 'denied' | 'failed';
 
 const detectorCtor = (): DetectorCtor | null => {
   const ctor: unknown = Reflect.get(globalThis, 'BarcodeDetector');
+
   return typeof ctor === 'function' ? (ctor as DetectorCtor) : null;
 };
 
@@ -23,16 +24,24 @@ export function CameraScanner({ onScan, onClose }: CameraScannerProps) {
   const [phase, setPhase] = useState<Phase>('idle');
   const [supported, setSupported] = useState(true);
 
-  useEffect(() => { setSupported(detectorCtor() !== null && !!navigator.mediaDevices?.getUserMedia); }, []);
+  useEffect(() => {
+    setSupported(detectorCtor() !== null && !!navigator.mediaDevices?.getUserMedia);
+  }, []);
 
-  const stop = () => { stream.current?.getTracks().forEach(t => t.stop()); stream.current = null; };
+  const stop = () => {
+    stream.current?.getTracks().forEach(t => t.stop()); stream.current = null;
+  };
   useEffect(() => stop, []);
 
   useEffect(() => {
-    if (phase !== 'scanning') return;
+    if (phase !== 'scanning') {
+      return;
+    }
     const Ctor = detectorCtor();
     const el = video.current;
-    if (!Ctor || !el || !stream.current) return;
+    if (!Ctor || !el || !stream.current) {
+      return;
+    }
     const detector = new Ctor({ formats: ['qr_code'] });
     const dedupe = createScanDeduper(Infinity);
     let live = true;
@@ -43,13 +52,18 @@ export function CameraScanner({ onScan, onClose }: CameraScannerProps) {
         try {
           const found = await detector.detect(el);
           const code = found[0]?.rawValue;
-          if (code && dedupe.accept(code)) onScanRef.current(code);
+          if (code && dedupe.accept(code)) {
+            onScanRef.current(code);
+          }
         } catch { /* a frame that cannot be read is skipped */ }
         await new Promise(r => setTimeout(r, 250));
       }
     };
     void tick();
-    return () => { live = false; };
+
+    return () => {
+      live = false;
+    };
   }, [phase]);
 
   async function start() {
@@ -62,7 +76,10 @@ export function CameraScanner({ onScan, onClose }: CameraScannerProps) {
       setPhase(name === 'NotAllowedError' || name === 'SecurityError' ? 'denied' : 'failed');
     }
   }
-  function close() { stop(); onClose(); }
+
+  function close() {
+    stop(); onClose();
+  }
 
   return (
     <div className="camera-scanner">

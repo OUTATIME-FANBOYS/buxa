@@ -17,23 +17,34 @@ import { enrolForm } from '@buxa/shared';
  */
 export async function enrolAction(_previous: ActionState, form: FormData): Promise<ActionState> {
   const actor = await currentActor();
-  if (!actor) return failure(NO_CAMP);
+  if (!actor) {
+    return failure(NO_CAMP);
+  }
 
   const classId = field(form, 'classId');
-  if (!isUuid(classId)) return failure('That class no longer exists.');
+  if (!isUuid(classId)) {
+    return failure('That class no longer exists.');
+  }
 
   const parsed = enrolForm(form);
-  if (!parsed.ok) return parsed.state;
+  if (!parsed.ok) {
+    return parsed.state;
+  }
 
   let message: string;
   try {
     const outcome = await getRuntime().services.classes.enrol(actor, parsed.data);
-    if (!outcome.ok) return failure(outcome.failure.message);
+    if (!outcome.ok) {
+      return failure(outcome.failure.message);
+    }
     message = outcome.value.status === 'waitlisted'
       ? `${outcome.value.camperName} is on the waitlist for this session.`
       : `${outcome.value.camperName} is enrolled.`;
-  } catch (error) { return expectedFailure(error, 'Could not enrol the camper.'); }
+  } catch (error) {
+    return expectedFailure(error, 'Could not enrol the camper.');
+  }
 
   revalidatePath(classPath(classId));
+
   return success(message);
 }

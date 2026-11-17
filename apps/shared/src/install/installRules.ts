@@ -6,8 +6,13 @@ export type InstallPlatform = 'ios' | 'android';
 /** Which phone browser this is, or null when the install hint does not apply (desktop, or a browser we give no steps for). */
 export function installPlatform(userAgent: string, maxTouchPoints: number): InstallPlatform | null {
   // iPadOS 13+ reports a desktop Mac user agent, so a Mac with touch points is an iPad.
-  if (/iPhone|iPod|iPad/.test(userAgent) || (/Macintosh/.test(userAgent) && maxTouchPoints > 1)) return 'ios';
-  if (/Android/.test(userAgent)) return 'android';
+  if (/iPhone|iPod|iPad/.test(userAgent) || (/Macintosh/.test(userAgent) && maxTouchPoints > 1)) {
+    return 'ios';
+  }
+  if (/Android/.test(userAgent)) {
+    return 'android';
+  }
+
   return null;
 }
 

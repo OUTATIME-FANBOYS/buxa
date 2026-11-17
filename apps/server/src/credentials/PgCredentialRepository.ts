@@ -26,8 +26,11 @@ const toRecord = (row: CredentialRow): CredentialRecord => ({
 });
 
 async function activeOf(db: Db, personId: string): Promise<CredentialRecord | null> {
-  if (!isUuid(personId)) return null;
+  if (!isUuid(personId)) {
+    return null;
+  }
   const { rows } = await db.query<CredentialRow>(`SELECT ${COLUMNS} FROM credentials WHERE person_id = $1 AND revoked_at IS NULL`, [personId]);
+
   return rows[0] ? toRecord(rows[0]) : null;
 }
 
@@ -46,7 +49,9 @@ export class PgCredentialRepository implements CredentialRepository {
 
   private issueOnce(actor: Actor, personId: string, tokenHash: Buffer, at: string): Promise<CredentialRecord> {
     return withOrg(this.pool, actor.orgId, async db => {
-      if (!(await personExists(db, personId))) throw new PersonNotFoundError();
+      if (!(await personExists(db, personId))) {
+        throw new PersonNotFoundError();
+      }
       const revoked = await db.query<{ id: string }>(
         'UPDATE credentials SET revoked_at = $2::timestamptz WHERE person_id = $1 AND revoked_at IS NULL RETURNING id',
         [personId, at]);
@@ -62,19 +67,26 @@ export class PgCredentialRepository implements CredentialRepository {
         entityId: credential.id,
         data: { personId, replaces: revoked.rows[0]?.id ?? null },
       });
+
       return credential;
     });
   }
 
   revoke(actor: Actor, personId: string, at: string): Promise<CredentialRecord | null> {
-    if (!isUuid(personId)) return Promise.resolve(null);
+    if (!isUuid(personId)) {
+      return Promise.resolve(null);
+    }
+
     return withOrg(this.pool, actor.orgId, async db => {
       const { rows } = await db.query<CredentialRow>(
         `UPDATE credentials SET revoked_at = $2::timestamptz WHERE person_id = $1 AND revoked_at IS NULL RETURNING ${COLUMNS}`,
         [personId, at]);
       const row = rows[0];
-      if (!row) return null;
+      if (!row) {
+        return null;
+      }
       await recordAudit(db, { actor, action: 'credential.revoke', entity: 'credential', entityId: row.id, data: { personId } });
+
       return toRecord(row);
     });
   }
@@ -87,16 +99,21 @@ export class PgCredentialRepository implements CredentialRepository {
     return withOrg(this.pool, orgId, async db => {
       const { rows } = await db.query<{ person_id: string }>(
         'SELECT person_id FROM credentials WHERE token_hash = $1 AND revoked_at IS NULL', [tokenHash]);
+
       return rows[0]?.person_id ?? null;
     });
   }
 
   withActive(orgId: string, personIds: readonly string[]): Promise<Set<string>> {
     const valid = personIds.filter(isUuid);
-    if (valid.length === 0) return Promise.resolve(new Set());
+    if (valid.length === 0) {
+      return Promise.resolve(new Set());
+    }
+
     return withOrg(this.pool, orgId, async db => {
       const { rows } = await db.query<{ person_id: string }>(
         'SELECT DISTINCT person_id FROM credentials WHERE person_id = ANY($1::uuid[]) AND revoked_at IS NULL', [valid]);
+
       return new Set(rows.map(r => r.person_id));
     });
   }

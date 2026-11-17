@@ -7,50 +7,68 @@ import type { Refusal } from '@buxa/domain';
 
 export class ClassNotFoundError extends Error {
   readonly kind = 'class-not-found';
-  constructor() { super('Class not found'); this.name = 'ClassNotFoundError'; }
+  constructor() {
+    super('Class not found'); this.name = 'ClassNotFoundError';
+  }
 }
 
 export class SessionNotFoundError extends Error {
   readonly kind = 'session-not-found';
-  constructor() { super('Session not found'); this.name = 'SessionNotFoundError'; }
+  constructor() {
+    super('Session not found'); this.name = 'SessionNotFoundError';
+  }
 }
 
 export class EnrolmentNotFoundError extends Error {
   readonly kind = 'enrolment-not-found';
-  constructor() { super('Enrolment not found'); this.name = 'EnrolmentNotFoundError'; }
+  constructor() {
+    super('Enrolment not found'); this.name = 'EnrolmentNotFoundError';
+  }
 }
 
 export class CamperNotFoundError extends Error {
   readonly kind = 'camper-not-found';
-  constructor() { super('Camper not found'); this.name = 'CamperNotFoundError'; }
+  constructor() {
+    super('Camper not found'); this.name = 'CamperNotFoundError';
+  }
 }
 
 /** A session names an instructor who is not a person in this camp. */
 export class InstructorNotFoundError extends Error {
   readonly kind = 'instructor-not-found';
-  constructor() { super('Instructor not found'); this.name = 'InstructorNotFoundError'; }
+  constructor() {
+    super('Instructor not found'); this.name = 'InstructorNotFoundError';
+  }
 }
 
 /** The refusals an adapter throws from inside the enrolment transaction, so nothing is written. Each carries the domain refusal. */
 export class SessionFullError extends Error {
   readonly kind = 'session-full';
-  constructor(readonly refusal: Extract<Refusal, { reason: 'session_full' }>) { super('Session is full'); this.name = 'SessionFullError'; }
+  constructor(readonly refusal: Extract<Refusal, { reason: 'session_full' }>) {
+    super('Session is full'); this.name = 'SessionFullError';
+  }
 }
 
 export class AgeOutOfRangeError extends Error {
   readonly kind = 'age-out-of-range';
-  constructor(readonly refusal: Extract<Refusal, { reason: 'age_out_of_range' }>) { super('Camper is outside the age range'); this.name = 'AgeOutOfRangeError'; }
+  constructor(readonly refusal: Extract<Refusal, { reason: 'age_out_of_range' }>) {
+    super('Camper is outside the age range'); this.name = 'AgeOutOfRangeError';
+  }
 }
 
 export class OverlapError extends Error {
   readonly kind = 'overlap';
-  constructor(readonly refusal: Extract<Refusal, { reason: 'overlap' }>) { super('Camper has an overlapping enrolment'); this.name = 'OverlapError'; }
+  constructor(readonly refusal: Extract<Refusal, { reason: 'overlap' }>) {
+    super('Camper has an overlapping enrolment'); this.name = 'OverlapError';
+  }
 }
 
 /** Any other refusal (unknown age, override without a reason, override by a non-admin). */
 export class EnrolmentRefusedError extends Error {
   readonly kind = 'enrolment-refused';
-  constructor(readonly refusal: Refusal) { super(`Enrolment refused: ${refusal.reason}`); this.name = 'EnrolmentRefusedError'; }
+  constructor(readonly refusal: Refusal) {
+    super(`Enrolment refused: ${refusal.reason}`); this.name = 'EnrolmentRefusedError';
+  }
 }
 
 export type EnrolmentRefusalError = SessionFullError | AgeOutOfRangeError | OverlapError | EnrolmentRefusedError;

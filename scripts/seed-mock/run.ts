@@ -16,6 +16,7 @@ export type SeedResult =
 /** How many people the camp has. A camp with none is treated as not seeded, so a failed run can simply be run again. */
 async function peopleCount(pool: pg.Pool, orgId: string): Promise<number> {
   const { rows } = await pool.query<{ n: number }>('SELECT count(*)::int AS n FROM people WHERE org_id = $1', [orgId]);
+
   return rows[0].n;
 }
 
@@ -29,7 +30,9 @@ export async function seedMock(pool: pg.Pool, options: SeedOptions, now: Date = 
   if (existing !== null && ACCOUNT_KEYS.some(key => options[key] !== undefined)) {
     throw new Error('The account options only apply when the camp is first created. Drop them, or drop the camp to choose new accounts.');
   }
-  if (existing !== null && !options.reset && await peopleCount(pool, existing) > 0) return { status: 'already-seeded' };
+  if (existing !== null && !options.reset && await peopleCount(pool, existing) > 0) {
+    return { status: 'already-seeded' };
+  }
 
   let at = now;
   const repos = createPgRepositories(pool);
@@ -39,7 +42,10 @@ export async function seedMock(pool: pg.Pool, options: SeedOptions, now: Date = 
     await resetCamp(pool, orgId);
     const actors = await actorsFor(pool, orgId);
     const { ids, counts } = await seedRoster(services, actors.owner, now.getUTCFullYear());
-    const checkIns = await seedVisits(services, actors.staff, ids, now, time => { at = time; });
+    const checkIns = await seedVisits(services, actors.staff, ids, now, time => {
+      at = time;
+    });
+
     return { status: 'seeded', counts: { ...counts, checkIns } };
   } catch (error) {
     await resetCamp(pool, orgId).catch(() => undefined);

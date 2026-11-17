@@ -31,17 +31,24 @@ const toRecord = (row: MembershipRow): MembershipRecord => ({
 
 export async function queryMemberships(db: Db, where: string, params: unknown[]): Promise<MembershipRecord[]> {
   const { rows } = await db.query<MembershipRow>(`${SELECT_MEMBERSHIPS} ${where} ORDER BY starts_on, id`, params);
+
   return rows.map(toRecord);
 }
 
 export async function getMembership(db: Db, id: string): Promise<MembershipRecord | null> {
-  if (!isUuid(id)) return null;
+  if (!isUuid(id)) {
+    return null;
+  }
   const found = await queryMemberships(db, 'WHERE id = $1', [id]);
+
   return found[0] ?? null;
 }
 
 export async function requireMembership(db: Db, id: string): Promise<MembershipRecord> {
   const membership = await getMembership(db, id);
-  if (!membership) throw new MembershipNotFoundError();
+  if (!membership) {
+    throw new MembershipNotFoundError();
+  }
+
   return membership;
 }

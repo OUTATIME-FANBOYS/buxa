@@ -14,6 +14,7 @@ const files = [
 /** Relative links in a Markdown file, as written (`](target)`), without the anchor. Web and mail links are not checked. */
 function relativeLinks(file: string): string[] {
   const text = readFileSync(file, 'utf8');
+
   return [...text.matchAll(/\]\(([^)\s]+)\)/g)]
     .map((match) => match[1])
     .filter((target) => !/^(https?:|mailto:|#)/.test(target))

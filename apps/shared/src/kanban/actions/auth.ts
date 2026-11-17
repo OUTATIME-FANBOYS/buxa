@@ -15,6 +15,7 @@ export function authActions({ set }: ActionContext) {
       const known = s.users.some(u => u.id === who.id);
       const users: User[] = known ? s.users : [...s.users, { id: who.id, name: who.name, email: who.email }];
       const next = { ...s, users, session: { userId: who.id } };
+
       return { ...next, ui: D.uiFor(next, who.id) };
     }),
     updateProfile: (patch: Partial<Pick<User, 'name' | 'title'>>) => set(s => ({ ...s, users: s.users.map(u => (u.id === s.session.userId ? { ...u, ...patch } : u)) })),

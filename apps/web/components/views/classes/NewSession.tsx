@@ -12,7 +12,9 @@ import { NewSessionForm } from '@/components/components/classes/forms/export';
 /** Add a session to one class. Viewers get the forbidden state and no form; an unknown class is not found. */
 export async function NewSession({ classId }: { classId: string }) {
   const actor = await currentActor();
-  if (!actor) notFound();
+  if (!actor) {
+    notFound();
+  }
   if (!can(actor, 'classes:manage')) {
     return (
       <div className="page">
@@ -23,7 +25,9 @@ export async function NewSession({ classId }: { classId: string }) {
   }
 
   const loaded = await loadClassPage(actor, classId);
-  if (!loaded.ok) notFound();
+  if (!loaded.ok) {
+    notFound();
+  }
   const { cls } = loaded.value;
   const timeZone = await campZone(actor);
   const instructors = await loadPeopleWithRole(actor, 'instructor');

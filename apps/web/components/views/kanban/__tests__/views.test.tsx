@@ -13,7 +13,7 @@ import { BoardPage } from '@/components/views/kanban/export';
 import { Agents } from '@/components/views/kanban/export';
 import { Reports } from '@/components/views/kanban/export';
 
-const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
+const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push() {}, replace() {}, refresh() {} }), usePathname: () => '/camp/boards' }));
@@ -24,7 +24,7 @@ const me = seed.users.find((u) => u.id === member.userId)!;
 const camp: CampHome = {
   campId: 'o1', name: 'Lake Camp', firstName: 'Priya', canRename: false,
   people: 40, onSite: 12, checkedInToday: 20, validMemberships: 35, upcomingSessions: [],
-  checkInsByDay: { days: [{ date: '2026-11-17', count: 20 }], complete: true }, onSiteByAge: { adults: 11, minors: 1 },
+  checkInsByDay: { days: [{ date: '2026-11-17', count: 20, minors: 1 }], complete: true }, onSiteByAge: { adults: 11, minors: 1 },
   membershipStatus: { valid: 35, notStarted: 0, expired: 3, none: 2 },
 };
 
@@ -41,11 +41,15 @@ function store(over: Record<string, unknown> = {}) {
 const page = (node: React.ReactElement) => renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}>{node}</UiProvider>);
 
 describe('kanban views', () => {
-  beforeEach(() => { h.store = store(); });
+  beforeEach(() => {
+    h.store = store();
+  });
 
   it('Settings lists the profile, appearance, agents, data and shortcuts sections', () => {
     const html = page(<Settings />);
-    for (const heading of ['Profile', 'Appearance', 'Agents', 'Your data', 'Keyboard shortcuts']) expect(html).toContain(`<h2>${heading}</h2>`);
+    for (const heading of ['Profile', 'Appearance', 'Agents', 'Your data', 'Keyboard shortcuts']) {
+      expect(html).toContain(`<h2>${heading}</h2>`);
+    }
     expect(html).toContain('>Export JSON</button>');
   });
   it('Projects offers to start the first project when there are none', () => {
@@ -58,7 +62,9 @@ describe('kanban views', () => {
   });
   it('Home shows the camp dashboard, and never the kanban empty state', () => {
     const html = page(<Dashboard camp={camp} />);
-    for (const heading of ['On site now', 'Upcoming classes', 'Your tasks']) expect(html).toContain(heading);
+    for (const heading of ['On site now', 'Upcoming classes', 'Your tasks']) {
+      expect(html).toContain(heading);
+    }
     expect(html).not.toContain('No workspace');
   });
   it('Home offers its own sentence for each section that has no data', () => {

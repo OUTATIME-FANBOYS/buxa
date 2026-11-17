@@ -15,7 +15,9 @@ describe('POST /camp/classes/import/error-report', () => {
 
     expect(await POST(request)).toBe(response);
     const [form] = classErrorReportResponse.mock.calls[0] ?? [];
-    if (!form) throw new Error('the composer was not called');
+    if (!form) {
+      throw new Error('the composer was not called');
+    }
     expect(form.get('fileName')).toBe('season.csv');
     expect(form.get('csv')).toBe('row');
   });

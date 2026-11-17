@@ -15,11 +15,13 @@ export function createEnrolmentMethods({ repo, timezoneOf }: ClassServiceDeps): 
       assertAllowed(actor, 'classes:manage');
       const timeZone = await timezoneOf(actor.orgId);
       const rule = enrolmentRule({ actor, input, timeZone });
+
       return attempt(() => repo.enrol(actor, { sessionId: input.sessionId, camperId: input.camperId }, rule), timeZone);
     },
 
     async cancelEnrolment(actor, input) {
       assertAllowed(actor, 'classes:manage');
+
       return attempt(() => repo.cancelEnrolment(actor, input.enrolmentId, input.note ?? null), await timezoneOf(actor.orgId));
     },
   };

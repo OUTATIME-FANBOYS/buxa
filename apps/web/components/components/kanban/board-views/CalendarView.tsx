@@ -14,17 +14,31 @@ const monthStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
 function gridDays(cursor: Date): string[] {
   const startOffset = (cursor.getDay() + 6) % 7;
   const gridStart = new Date(cursor); gridStart.setDate(1 - startOffset);
-  return Array.from({ length: 42 }, (_, i) => { const d = new Date(gridStart); d.setDate(gridStart.getDate() + i); return toISO(d); });
+
+  return Array.from({ length: 42 }, (_, i) => {
+    const d = new Date(gridStart); d.setDate(gridStart.getDate() + i);
+
+    return toISO(d);
+  });
 }
 
 export function CalendarView({ tasks, canCreate, projectId }: { tasks: Task[]; canCreate: boolean; projectId?: string }) {
   const { kindOf } = useStore(); const { openTask } = useTaskDrawer();
   const [cursor, setCursor] = useState(() => monthStart(new Date()));
   const days = gridDays(cursor);
-  const byDay = useMemo(() => { const m = new Map<string, Task[]>(); tasks.forEach(t => { if (t.due) m.set(t.due, [...(m.get(t.due) ?? []), t]); }); return m; }, [tasks]);
+  const byDay = useMemo(() => {
+    const m = new Map<string, Task[]>(); tasks.forEach(t => {
+      if (t.due) {
+        m.set(t.due, [...(m.get(t.due) ?? []), t]);
+      }
+    });
+
+    return m;
+  }, [tasks]);
   const t0 = today(); const month = cursor.getMonth();
   const [more, setMore] = useState<string | null>(null);
   const noDate = tasks.filter(t => !t.due && kindOf(t) !== 'done').length;
+
   return (
     <div className="calendar">
       <div className="cal-head">
@@ -38,6 +52,7 @@ export function CalendarView({ tasks, canCreate, projectId }: { tasks: Task[]; c
         {WEEKDAYS.map(d => <div key={d} className="cal-dow" role="columnheader">{d}</div>)}
         {days.map(day => {
           const list = byDay.get(day) ?? []; const d = parse(day); const shown = more === day ? list : list.slice(0, 3);
+
           return (
             <div key={day} role="gridcell" className={`cal-cell ${d.getMonth() !== month ? 'out' : ''} ${day === t0 ? 'today' : ''}`}>
               <div className="cal-num"><span>{d.getDate()}</span>

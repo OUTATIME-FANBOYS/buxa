@@ -32,6 +32,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   // Render per request: the Content-Security-Policy uses a fresh nonce each time, so pages cannot be built ahead of time.
   await connection();
   const nonce = (await headers()).get('x-nonce') ?? undefined;
+
   return (
     // suppressHydrationWarning: the theme script sets data-theme before React hydrates, on purpose.
     <html lang="en" suppressHydrationWarning>

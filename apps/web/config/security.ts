@@ -13,7 +13,11 @@ interface PolicyOptions {
 }
 
 const supabaseOrigin = (url?: string): string => {
-  try { return url ? new URL(url).origin : 'https://*.supabase.co'; } catch { return 'https://*.supabase.co'; }
+  try {
+    return url ? new URL(url).origin : 'https://*.supabase.co';
+  } catch {
+    return 'https://*.supabase.co';
+  }
 };
 
 export function buildContentSecurityPolicy({ nonce, dev, supabaseUrl }: PolicyOptions): string {

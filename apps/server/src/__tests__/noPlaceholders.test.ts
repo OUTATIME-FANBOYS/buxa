@@ -3,7 +3,7 @@ import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 /**
- * Phase 1 is done when no service is still a placeholder. The `unimplemented` helper builds one; a call to it may appear only in
+ * No service may still be a placeholder. The `unimplemented` helper builds one; a call to it may appear only in
  * its own definition. Any other call means a factory still returns something that throws on every method.
  */
 const ROOT = join(__dirname, '..', '..', '..', '..');
@@ -15,9 +15,14 @@ const DEFINITION = 'apps/server/src/unimplemented.ts';
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap(name => {
-    if (SKIPPED_DIRS.has(name)) return [];
+    if (SKIPPED_DIRS.has(name)) {
+      return [];
+    }
     const path = join(dir, name);
-    if (statSync(path).isDirectory()) return sourceFiles(path);
+    if (statSync(path).isDirectory()) {
+      return sourceFiles(path);
+    }
+
     return /\.(ts|tsx|mjs|js)$/.test(name) ? [path] : [];
   });
 }

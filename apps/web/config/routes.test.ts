@@ -8,7 +8,9 @@ describe('ROUTES', () => {
   });
 
   it('puts every work page and camp operations page under /camp', () => {
-    for (const path of Object.values(ROUTES).filter(p => p !== ROUTES.home && p !== ROUTES.signIn)) expect(isCampPath(path)).toBe(true);
+    for (const path of Object.values(ROUTES).filter(p => p !== ROUTES.home && p !== ROUTES.signIn)) {
+      expect(isCampPath(path)).toBe(true);
+    }
   });
 
   it('gives the task pages their /camp addresses', () => {

@@ -9,7 +9,12 @@ export const FORBIDDEN = 'Your role cannot do this.';
  * wrote to be shown. Anything else (a bug, the database being down) is rethrown for the error boundary.
  */
 export function expectedFailure(error: unknown, fallback: string): ActionState {
-  if (!isHttpError(error) || error.statusCode >= 500) throw error;
-  if (error.statusCode === 403) return failure(FORBIDDEN);
+  if (!isHttpError(error) || error.statusCode >= 500) {
+    throw error;
+  }
+  if (error.statusCode === 403) {
+    return failure(FORBIDDEN);
+  }
+
   return failure(error.message || fallback);
 }

@@ -8,7 +8,12 @@ import { TaskDrawerProvider, useTaskDrawer } from '../TaskDrawerContext';
 
 type Api = ReturnType<typeof useTaskDrawer>;
 let api: Api | undefined;
-function Probe() { api = useTaskDrawer(); return null; }
+
+function Probe() {
+  api = useTaskDrawer();
+
+  return null;
+}
 
 describe('TaskDrawerContext', () => {
   let root: Root;
@@ -17,7 +22,9 @@ describe('TaskDrawerContext', () => {
     root = createRoot(document.body.appendChild(document.createElement('div')));
     act(() => root.render(<TaskDrawerProvider><Probe /></TaskDrawerProvider>));
   });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = '';
+  });
 
   it('starts with no task open', () => {
     expect(api!.drawer).toBeNull();
@@ -31,6 +38,12 @@ describe('TaskDrawerContext', () => {
     expect(api!.drawer).toBeNull();
   });
   it('refuses to be used outside its provider', () => {
-    expect(() => { function Bare() { useTaskDrawer(); return null; } act(() => createRoot(document.createElement('div')).render(<Bare />)); }).toThrow();
+    expect(() => {
+      function Bare() {
+        useTaskDrawer();
+
+        return null;
+      } act(() => createRoot(document.createElement('div')).render(<Bare />));
+    }).toThrow();
   });
 });

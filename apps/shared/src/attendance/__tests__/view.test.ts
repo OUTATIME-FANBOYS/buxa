@@ -89,7 +89,7 @@ describe('check-out refusal copy', () => {
 
 describe('on-site view', () => {
   it('turns an on-site entry into camp-local words', () => {
-    const row = toOnSiteRow({ entry: entry('p-ada', '2026-11-13T20:30:00Z'), person: ada, isMinor: true, pickupOptions: [] } as OnSiteEntry, 'Asia/Kolkata', '24h');
+    const row = toOnSiteRow({ entry: entry('p-ada', '2026-11-13T20:30:00Z'), person: ada, isMinor: true, pickupOptions: [] }, 'Asia/Kolkata', '24h');
     expect(row).toEqual({ personId: 'p-ada', name: 'Ada Lovelace', arrivedAt: '02:00', isMinor: true, pickupOptions: [] });
   });
 

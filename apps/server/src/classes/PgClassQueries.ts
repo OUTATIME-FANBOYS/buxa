@@ -56,6 +56,7 @@ export function toClass(row: ClassRow): Class {
   const ratio = row.ratio_campers !== null && row.ratio_instructors !== null
     ? { instructors: row.ratio_instructors, campers: row.ratio_campers }
     : null;
+
   return {
     id: row.id,
     name: row.name,
@@ -124,25 +125,35 @@ const ENROLMENT_FROM = `FROM enrolments e
 
 export async function listClassRows(db: Db): Promise<Class[]> {
   const { rows } = await db.query<ClassRow>(`SELECT ${CLASS_COLUMNS} FROM classes c ORDER BY c.created_at, c.id`);
+
   return rows.map(toClass);
 }
 
 export async function getClass(db: Db, id: string): Promise<Class | null> {
-  if (!isUuid(id)) return null;
+  if (!isUuid(id)) {
+    return null;
+  }
   const { rows } = await db.query<ClassRow>(`SELECT ${CLASS_COLUMNS} FROM classes c WHERE c.id = $1`, [id]);
+
   return rows[0] ? toClass(rows[0]) : null;
 }
 
 export async function requireClass(db: Db, id: string): Promise<Class> {
   const found = await getClass(db, id);
-  if (!found) throw new ClassNotFoundError();
+  if (!found) {
+    throw new ClassNotFoundError();
+  }
+
   return found;
 }
 
 export async function getSession(db: Db, id: string): Promise<Session | null> {
-  if (!isUuid(id)) return null;
+  if (!isUuid(id)) {
+    return null;
+  }
   const { rows } = await db.query<SessionRow>(
     `SELECT ${SESSION_COLUMNS} FROM sessions s JOIN classes c ON c.id = s.class_id WHERE s.id = $1`, [id]);
+
   return rows[0] ? toSession(rows[0]) : null;
 }
 
@@ -150,24 +161,33 @@ export async function listSessionRows(db: Db, classId: string): Promise<Session[
   const { rows } = await db.query<SessionRow>(
     `SELECT ${SESSION_COLUMNS} FROM sessions s JOIN classes c ON c.id = s.class_id
       WHERE s.class_id = $1 ORDER BY s.starts_at, s.id`, [classId]);
+
   return rows.map(toSession);
 }
 
 export async function requireSessionExists(db: Db, id: string): Promise<void> {
-  if (!isUuid(id)) throw new SessionNotFoundError();
+  if (!isUuid(id)) {
+    throw new SessionNotFoundError();
+  }
   const { rows } = await db.query<{ id: string }>('SELECT id FROM sessions WHERE id = $1', [id]);
-  if (rows.length === 0) throw new SessionNotFoundError();
+  if (rows.length === 0) {
+    throw new SessionNotFoundError();
+  }
 }
 
 export async function listEnrolmentRows(db: Db, sessionId: string): Promise<Enrolment[]> {
   const { rows } = await db.query<EnrolmentRow>(
     `SELECT ${ENROLMENT_COLUMNS} ${ENROLMENT_FROM} WHERE e.session_id = $1 ORDER BY e.created_at, e.id`, [sessionId]);
+
   return rows.map(toEnrolment);
 }
 
 export async function requireEnrolment(db: Db, id: string): Promise<Enrolment> {
   const { rows } = await db.query<EnrolmentRow>(`SELECT ${ENROLMENT_COLUMNS} ${ENROLMENT_FROM} WHERE e.id = $1`, [id]);
-  if (!rows[0]) throw new EnrolmentNotFoundError();
+  if (!rows[0]) {
+    throw new EnrolmentNotFoundError();
+  }
+
   return toEnrolment(rows[0]);
 }
 
@@ -180,5 +200,6 @@ export async function activeFactsFor(db: Db, camperId: string): Promise<ActiveEn
        JOIN classes c ON c.id = s.class_id
       WHERE e.person_id = $1 AND e.status IN ('enrolled', 'waitlisted')
       ORDER BY s.starts_at, e.session_id`, [camperId]);
+
   return rows.map(toActiveFacts);
 }

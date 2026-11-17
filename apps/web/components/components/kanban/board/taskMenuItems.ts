@@ -4,7 +4,10 @@ import type { TaskCommands } from '@buxa/middleware/hooks/hooks';
 
 /** The ⋯ menu for a task card. Read-only members only get "Open". */
 export function taskMenuItems(t: Task, project: Project, readOnly: boolean, cmd: TaskCommands): (MenuItem | false)[] {
-  if (readOnly) return [{ label: 'Open', icon: 'edit', onSelect: () => cmd.open(t) }];
+  if (readOnly) {
+    return [{ label: 'Open', icon: 'edit', onSelect: () => cmd.open(t) }];
+  }
+
   return [
     { label: 'Open', icon: 'edit', onSelect: () => cmd.open(t) },
     { label: 'Duplicate', icon: 'copy', onSelect: () => cmd.duplicate(t) },

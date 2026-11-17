@@ -46,7 +46,12 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
     },
-    rules: typedDebtAsWarnings,
+    rules: {
+      ...typedDebtAsWarnings,
+      // Type assertions must be needed, and written in the non-null form where that applies. These need type information.
+      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+      '@typescript-eslint/non-nullable-type-assertion-style': 'error',
+    },
   },
 
   // Plain JS and MJS files are not in any TypeScript project, so they get the untyped rules only.
@@ -76,6 +81,22 @@ export default tseslint.config(
       '@typescript-eslint/no-non-null-assertion': 'warn',
       '@typescript-eslint/no-unused-vars': 'error',
       'no-console': ['error', { allow: ['warn', 'error'] }],
+    },
+  },
+
+  // Layout and brace rules from ESLint core. Every conditional and loop body is a block, braces are never on one line,
+  // a return after other statements gets a blank line above it, and runs of blank lines collapse to one.
+  {
+    rules: {
+      curly: ['error', 'all'],
+      'brace-style': ['error', '1tbs', { allowSingleLine: false }],
+      'padding-line-between-statements': [
+        'error',
+        { blankLine: 'always', prev: '*', next: 'return' },
+        // Function and class declarations (top-level or nested) start after a blank line.
+        { blankLine: 'always', prev: '*', next: ['function', 'class'] },
+      ],
+      'no-multiple-empty-lines': ['error', { max: 1 }],
     },
   },
 

@@ -13,13 +13,21 @@ import { parseInput, text } from '@buxa/shared';
 export async function updateCampClockAction(_previous: ActionState, form: FormData): Promise<ActionState> {
   const session = await requireSession();
   const camp = membershipOf(session, text(form, 'campId'));
-  if (!camp) return failure('You are not a member of that camp.');
+  if (!camp) {
+    return failure('You are not a member of that camp.');
+  }
   const parsed = parseInput(OrgPatchInputSchema, { clockFormat: text(form, 'clockFormat') });
-  if (!parsed.ok) return parsed.state;
+  if (!parsed.ok) {
+    return parsed.state;
+  }
 
-  try { await getRuntime().services.orgs.renameCamp(toActor(session, camp), parsed.data); }
-  catch (error) { return expectedCampFailure(error, 'Could not change the clock.'); }
+  try {
+    await getRuntime().services.orgs.renameCamp(toActor(session, camp), parsed.data);
+  } catch (error) {
+    return expectedCampFailure(error, 'Could not change the clock.');
+  }
 
   revalidatePath(ROUTES.camp, 'layout');
+
   return success('Clock changed');
 }

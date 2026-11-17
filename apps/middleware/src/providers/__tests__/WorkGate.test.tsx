@@ -3,13 +3,15 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { buildSeed } from '@buxa/shared';
 import { WorkGate } from '../WorkGate';
 
-const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
+const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('../store', () => ({ useStore: () => h.store }));
 
 const user = { id: 'u-rosa', name: 'Rosa', email: 'rosa@example.com' };
 
 describe('WorkGate', () => {
-  beforeEach(() => { h.store = { s: buildSeed(), actions: { adoptSessionUser: vi.fn() } }; });
+  beforeEach(() => {
+    h.store = { s: buildSeed(), actions: { adoptSessionUser: vi.fn() } };
+  });
 
   it('renders nothing of the work area until the board has adopted the signed-in person', () => {
     expect(renderToStaticMarkup(<WorkGate user={user}><p>board</p></WorkGate>)).toContain('Loading…');

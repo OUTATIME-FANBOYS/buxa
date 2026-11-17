@@ -77,11 +77,18 @@ export function createRuntime(options: RuntimeOptions = {}): Runtime {
     ?? (base ? createVerifier({ issuer: `${base}/auth/v1`, keys: createRemoteJWKSet(new URL(`${base}/auth/v1/.well-known/jwks.json`)) }) : undefined);
 
   const startupCheck = (async (): Promise<StartupDecision> => {
-    if (!base || options.verifier !== undefined) return 'ok';
+    if (!base || options.verifier !== undefined) {
+      return 'ok';
+    }
     const confirmation = config.supabasePublishableKey ? await readEmailConfirmation({ supabaseUrl: base, publishableKey: config.supabasePublishableKey }) : 'unknown';
     const decision = decideStartup(confirmation, config.env);
-    if (decision === 'refuse') log.fatal('Supabase is set to auto-confirm sign-ups. Turn on "Confirm email" (Authentication > Providers > Email) before running in production.');
-    if (decision === 'warn') log.warn({ confirmation }, 'could not verify that Supabase requires email confirmation; check Authentication > Providers > Email');
+    if (decision === 'refuse') {
+      log.fatal('Supabase is set to auto-confirm sign-ups. Turn on "Confirm email" (Authentication > Providers > Email) before running in production.');
+    }
+    if (decision === 'warn') {
+      log.warn({ confirmation }, 'could not verify that Supabase requires email confirmation; check Authentication > Providers > Email');
+    }
+
     return decision;
   })();
 
@@ -91,6 +98,7 @@ export function createRuntime(options: RuntimeOptions = {}): Runtime {
 /** Services are built from repositories and a clock only, so tests can assemble them without a runtime. */
 export function createServices(repositories: Repositories, clock: Clock): Services {
   const { orgs, people, memberships, credentials, attendance } = repositories;
+
   return {
     orgs: createOrgService(orgs),
     people: createPeopleService({ people, memberships, credentials, attendance, orgs, clock }),
@@ -109,6 +117,7 @@ function createClassServices(repositories: Repositories): Pick<Services, 'classe
   const timezoneOf = async (orgId: string): Promise<string> => (await repositories.orgs.get(orgId)).timezone;
   const classes = repositories.classes;
   const imports = unimplemented<ImportRepository>('ImportRepository');
+
   return {
     classes: createClassService({ repo: classes, timezoneOf }),
     imports: createImportService({ classes, imports, timezoneOf }),
@@ -121,6 +130,7 @@ type Holder = { [SLOT]?: Runtime };
 
 export function getRuntime(): Runtime {
   const holder = globalThis as Holder;
+
   return (holder[SLOT] ??= createRuntime());
 }
 

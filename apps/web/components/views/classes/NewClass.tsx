@@ -10,8 +10,11 @@ import { NewClassForm } from '@/components/components/classes/forms/export';
 /** Create a class. Viewers get the forbidden state and no form. */
 export async function NewClass() {
   const actor = await currentActor();
-  if (!actor) notFound();
+  if (!actor) {
+    notFound();
+  }
   const allowed = can(actor, 'classes:manage');
+
   return (
     <div className="page">
       <PageHeader title="New class" subtitle="A class is a program. Its sessions are added after it is saved." />

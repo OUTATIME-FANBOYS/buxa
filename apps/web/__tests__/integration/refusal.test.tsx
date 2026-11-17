@@ -4,11 +4,15 @@ import { renderToStaticMarkup } from 'react-dom/server';
 const env = vi.hoisted(() => {
   process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://127.0.0.1:1';
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'test-publishable-key';
+
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Kept: the compiler needs this assertion to type the value; removing it fails typecheck.
   return { store: undefined as unknown };
 });
 
 vi.mock('next/headers', () => ({ cookies: async () => env.store }));
-vi.mock('next/navigation', () => ({ redirect: (url: string) => { throw new Error(`REDIRECT ${url}`); } }));
+vi.mock('next/navigation', () => ({ redirect: (url: string) => {
+  throw new Error(`REDIRECT ${url}`);
+} }));
 
 import MaintenancePage from '../../app/maintenance/page';
 import { MAINTENANCE_MESSAGE } from '@buxa/shared';
@@ -24,11 +28,21 @@ import { startRuntime } from './harness';
 
 // Production with Supabase set up: the start-up check reads Supabase's settings, so the test decides what it finds there.
 const PRODUCTION = { NODE_ENV: 'production', NEXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:1', NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'test-publishable-key' };
-const form = (fields: Record<string, string>): FormData => { const data = new FormData(); for (const [k, v] of Object.entries(fields)) data.set(k, v); return data; };
+const form = (fields: Record<string, string>): FormData => {
+  const data = new FormData(); for (const [k, v] of Object.entries(fields)) {
+    data.set(k, v);
+  }
+
+  return data;
+};
 
 let runtime: ReturnType<typeof startRuntime> | undefined;
-beforeEach(() => { env.store = new FakeCookieStore(); });
-afterEach(async () => { await runtime?.stop(); runtime = undefined; installRuntime(undefined); vi.unstubAllGlobals(); });
+beforeEach(() => {
+  env.store = new FakeCookieStore();
+});
+afterEach(async () => {
+  await runtime?.stop(); runtime = undefined; installRuntime(undefined); vi.unstubAllGlobals();
+});
 
 /** Starts a production runtime whose start-up check sees `mailer_autoconfirm` as given. */
 function startProduction(mailerAutoconfirm: boolean): void {

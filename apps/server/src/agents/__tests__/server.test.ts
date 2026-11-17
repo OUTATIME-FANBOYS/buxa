@@ -16,26 +16,46 @@ let dir: string; let app: ReturnType<typeof createApp>; let base: string;
 const SECRET = 'test-run-secret-0123456789';
 const H = { 'content-type': 'application/json', 'x-buxa-client': 'test', 'x-buxa-run-secret': SECRET };
 const api = async (method: string, p: string, b?: unknown, headers: Record<string, string> = H) => {
-  const r = await fetch(base + p, { method, headers, body: b === undefined ? undefined : JSON.stringify(b) }); return { status: r.status, json: (await r.json().catch(() => null)) as any };
+  const r = await fetch(base + p, { method, headers, body: b === undefined ? undefined : JSON.stringify(b) });
+
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Kept: the compiler needs this assertion to type the value; removing it fails typecheck.
+  return { status: r.status, json: (await r.json().catch(() => null)) as any };
 };
 const seed = () => pickData(buildSeed());
-const start = async (d = dir) => { app = createApp({ dataDir: d, port: 0, secret: SECRET }); base = `http://127.0.0.1:${await app.listen()}`; };
+const start = async (d = dir) => {
+  app = createApp({ dataDir: d, port: 0, secret: SECRET }); base = `http://127.0.0.1:${await app.listen()}`;
+};
+
 async function connect(token: string) {
   const c = new Client({ name: 'test', version: '1' });
-  await c.connect(new StreamableHTTPClientTransport(new URL(base + '/mcp'), { requestInit: { headers: { authorization: `Bearer ${token}` } } })); return c;
+  await c.connect(new StreamableHTTPClientTransport(new URL(base + '/mcp'), { requestInit: { headers: { authorization: `Bearer ${token}` } } }));
+
+  return c;
 }
 const call = async (c: Client, name: string, args: Record<string, unknown> = {}) => {
   const r = (await c.callTool({ name, arguments: args })) as { isError?: boolean; content: { text: string }[] };
-  const text = r.content[0].text; let json: any; try { json = JSON.parse(text); } catch { json = text; } return { error: !!r.isError, json, text };
+  const text = r.content[0].text; let json: any; try {
+    json = JSON.parse(text);
+  } catch {
+    json = text;
+  }
+
+  return { error: !!r.isError, json, text };
 };
 const token = async () => (await api('POST', `/api/agents/${AGENT_ID}/token`)).json.token as string;
 
-beforeEach(async () => { dir = fs.mkdtempSync(path.join(os.tmpdir(), 'buxa-')); await start(); });
-afterEach(async () => { await app.close(); fs.rmSync(dir, { recursive: true, force: true }); });
+beforeEach(async () => {
+  dir = fs.mkdtempSync(path.join(os.tmpdir(), 'buxa-')); await start();
+});
+afterEach(async () => {
+  await app.close(); fs.rmSync(dir, { recursive: true, force: true });
+});
 
 describe('network safety', () => {
   it('refuses requests addressed to any host other than localhost', async () => {
-    const status = await new Promise<number>(res => { const r = http.request({ host: '127.0.0.1', port: new URL(base).port, path: '/api/health', headers: { host: 'evil.example' } }, x => res(x.statusCode!)); r.end(); });
+    const status = await new Promise<number>(res => {
+      const r = http.request({ host: '127.0.0.1', port: new URL(base).port, path: '/api/health', headers: { host: 'evil.example' } }, x => res(x.statusCode!)); r.end();
+    });
     expect(status).toBe(403);
   });
   it('refuses cross-site origins and writes without the client header', async () => {
@@ -84,7 +104,9 @@ describe('state sync', () => {
 });
 
 describe('MCP endpoint', () => {
-  beforeEach(async () => { await api('PUT', '/api/state', { baseVersion: 0, data: seed() }); });
+  beforeEach(async () => {
+    await api('PUT', '/api/state', { baseVersion: 0, data: seed() });
+  });
 
   it('requires a valid token, and a revoked token stops working', async () => {
     const bare = await fetch(base + '/mcp', { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream' }, body: '{}' });
@@ -136,7 +158,15 @@ describe('MCP endpoint', () => {
   it('pushes a version event to the app when an agent writes', async () => {
     const events: string[] = []; const ac = new AbortController();
     const r = await fetch(base + `/api/events?run_secret=${SECRET}`, { signal: ac.signal }); const reader = r.body!.getReader(); const dec = new TextDecoder();
-    const pump = (async () => { try { for (;;) { const { value, done } = await reader.read(); if (done) break; events.push(dec.decode(value)); } } catch { /* aborted */ } })();
+    const pump = (async () => {
+      try {
+        for (;;) {
+          const { value, done } = await reader.read(); if (done) {
+            break;
+          } events.push(dec.decode(value));
+        }
+      } catch { /* aborted */ }
+    })();
     const c = await connect(await token()); await call(c, 'add_comment', { taskId: 't-4', body: 'hello', reason: 'testing' });
     await new Promise(r => setTimeout(r, 150)); ac.abort(); await pump; await c.close();
     expect(events.join('')).toMatch(/origin":"agent:u-agent-triage/);
@@ -144,4 +174,6 @@ describe('MCP endpoint', () => {
 });
 
 /** Rebuild a full AppState from synced data, as the app does. */
-function buildStateFrom(data: any): AppState { return { ...buildSeed(), ...data }; }
+function buildStateFrom(data: any): AppState {
+  return { ...buildSeed(), ...data };
+}

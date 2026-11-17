@@ -22,9 +22,12 @@ export function Projects() {
   const router = useRouter();
   const [dlg, setDlg] = useState<{ project?: Project } | null>(null);
   const del = async (p: Project) => {
-    if (await confirm({ title: `Delete “${p.name}”?`, body: 'The board and all of its tasks will be removed. This cannot be undone.', confirmLabel: 'Delete project', danger: true })) { actions.deleteProject(p.id); toast('Project deleted'); }
+    if (await confirm({ title: `Delete “${p.name}”?`, body: 'The board and all of its tasks will be removed. This cannot be undone.', confirmLabel: 'Delete project', danger: true })) {
+      actions.deleteProject(p.id); toast('Project deleted');
+    }
   };
   void s;
+
   return (
     <div className="page">
       <header className="page-head"><div className="page-title"><h1>Projects</h1><p className="muted">{workspace?.name} · {projects.length} project{projects.length === 1 ? '' : 's'}</p></div>
@@ -34,6 +37,7 @@ export function Projects() {
           {projects.map(p => {
             const pr = progressOf(wsTasks.filter(x => x.projectId === p.id), kindOf); const { done: d, total, pct: v } = pr; const h = healthOf(pr, p.deadline);
             const left = p.deadline ? diffDays(p.deadline, today()) : null;
+
             return (
               <article key={p.id} className={`project-card tone-${HEALTH_TONE[h]}`}>
                 <div className="pc-top"><h2><Link href={boardPath(p.id)} onClick={() => actions.selectProject(p.id)}>{p.name}</Link></h2>

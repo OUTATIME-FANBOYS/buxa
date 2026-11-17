@@ -3,7 +3,10 @@ import { parseCsvRecords } from './csv';
 
 const cells = (text: string) => {
   const r = parseCsvRecords(text);
-  if (!r.ok) throw new Error(r.message);
+  if (!r.ok) {
+    throw new Error(r.message);
+  }
+
   return r.records.map(x => x.cells);
 };
 
@@ -31,7 +34,9 @@ describe('parseCsvRecords', () => {
 
   it('ignores empty lines and reports the physical line of each record', () => {
     const r = parseCsvRecords('a,b\n\n\nc,d\n\n');
-    if (!r.ok) throw new Error(r.message);
+    if (!r.ok) {
+      throw new Error(r.message);
+    }
     expect(r.records).toEqual([{ line: 1, cells: ['a', 'b'] }, { line: 4, cells: ['c', 'd'] }]);
   });
 

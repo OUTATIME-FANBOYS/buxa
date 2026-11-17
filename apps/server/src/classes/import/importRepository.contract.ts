@@ -16,13 +16,18 @@ export interface ImportFixture {
 export function importRepositoryContract(factory: () => Promise<ImportFixture>): void {
   describe('ImportRepository contract', () => {
     let fx: ImportFixture;
-    beforeEach(async () => { fx = await factory(); });
-    afterEach(async () => { await fx.close(); });
+    beforeEach(async () => {
+      fx = await factory();
+    });
+    afterEach(async () => {
+      await fx.close();
+    });
 
     const createClass = async (name: string): Promise<string> => {
       const cls = await fx.classes.createClass(fx.actor, {
         name, description: '', ageRange: { minAge: 6, maxAge: 14 }, capacity: 10, instructorRatio: null,
       });
+
       return cls.id;
     };
 
@@ -47,7 +52,9 @@ export function importRepositoryContract(factory: () => Promise<ImportFixture>):
       const classId = await createClass('Art');
       await fx.repo.applyImport(fx.actor, upload, [create(classId, { externalKey: 'ART-1' })]);
       const [before] = await fx.repo.listCampSessions(fx.actor.orgId);
-      if (!before) throw new Error('setup failed');
+      if (!before) {
+        throw new Error('setup failed');
+      }
       await fx.repo.applyImport(fx.actor, upload, [{
         ...create(classId, { externalKey: 'ART-1', location: 'Studio' }), kind: 'update', sessionId: before.id,
         startsAt: '2027-07-05T06:00:00.000Z', endsAt: '2027-07-05T08:00:00.000Z',

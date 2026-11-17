@@ -9,13 +9,19 @@ export interface ScanDeduper { accept(code: string): boolean; reset(): void }
  */
 export function createScanDeduper(windowMs: number = DUPLICATE_WINDOW_MS, now: () => number = Date.now): ScanDeduper {
   let last: { code: string; at: number } | null = null;
+
   return {
     accept(code) {
       const at = now();
-      if (last && last.code === code && at - last.at < windowMs) return false;
+      if (last && last.code === code && at - last.at < windowMs) {
+        return false;
+      }
       last = { code, at };
+
       return true;
     },
-    reset() { last = null; },
+    reset() {
+      last = null;
+    },
   };
 }

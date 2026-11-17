@@ -4,7 +4,9 @@ export class HttpError extends Error {
   readonly kind = 'http-error';
   /** Set on 429: whole seconds until the client may try again. */
   retryAfterSeconds?: number;
-  constructor(readonly statusCode: number, message: string) { super(message); this.name = 'HttpError'; }
+  constructor(readonly statusCode: number, message: string) {
+    super(message); this.name = 'HttpError';
+  }
 }
 
 /** True for an HttpError from any copy of this module. Use this, never `instanceof HttpError`. */
@@ -21,6 +23,7 @@ export const payloadTooLarge = (message = 'Request body too large') => new HttpE
 export function tooManyRequests(retryAfterSeconds: number, message: string): HttpError {
   const error = new HttpError(429, message);
   error.retryAfterSeconds = retryAfterSeconds;
+
   return error;
 }
 

@@ -55,9 +55,15 @@ const ok: Decision = { allow: true };
 const no = (reason: Reason): Decision => ({ allow: false, reason });
 
 export function authorize(actor: Actor, action: Action, res: Resource = {}): Decision {
-  if (!(actor.role in RANK)) return no('unknown_role');
-  if (res.orgId !== undefined && res.orgId !== actor.orgId) return no('other_org');
-  if (!GRANTS[actor.role].has(action)) return no('role_not_allowed');
+  if (!(actor.role in RANK)) {
+    return no('unknown_role');
+  }
+  if (res.orgId !== undefined && res.orgId !== actor.orgId) {
+    return no('other_org');
+  }
+  if (!GRANTS[actor.role].has(action)) {
+    return no('role_not_allowed');
+  }
 
   const mine = rank(actor.role);
   // An owner may manage anyone; anyone else only people strictly below them.
@@ -65,27 +71,50 @@ export function authorize(actor: Actor, action: Action, res: Resource = {}): Dec
 
   switch (action) {
     case 'members:invite': {
-      if (!res.newRole) return no('missing_context');
+      if (!res.newRole) {
+        return no('missing_context');
+      }
+
       return rank(res.newRole) <= mine ? ok : no('cannot_grant_above_self');
     }
     case 'members:change_role': {
-      if (!res.target || !res.newRole) return no('missing_context');
-      if (res.target.userId === actor.userId) return no('self_change');
-      if (!above(res.target.role)) return no('not_above_target');
+      if (!res.target || !res.newRole) {
+        return no('missing_context');
+      }
+      if (res.target.userId === actor.userId) {
+        return no('self_change');
+      }
+      if (!above(res.target.role)) {
+        return no('not_above_target');
+      }
+
       return rank(res.newRole) <= mine ? ok : no('cannot_grant_above_self');
     }
     case 'members:remove': {
-      if (!res.target) return no('missing_context');
-      if (res.target.userId === actor.userId) return no('self_change'); // leaving uses members:leave
+      if (!res.target) {
+        return no('missing_context');
+      }
+      if (res.target.userId === actor.userId) {
+        return no('self_change');
+      } // leaving uses members:leave
+
       return above(res.target.role) ? ok : no('not_above_target');
     }
     case 'members:leave': {
-      if (actor.role !== 'owner') return ok;
-      if (res.ownerCount === undefined) return no('missing_context');
+      if (actor.role !== 'owner') {
+        return ok;
+      }
+      if (res.ownerCount === undefined) {
+        return no('missing_context');
+      }
+
       return res.ownerCount > 1 ? ok : no('last_owner');
     }
     case 'org:transfer_ownership': {
-      if (!res.target) return no('missing_context');
+      if (!res.target) {
+        return no('missing_context');
+      }
+
       return res.target.userId === actor.userId ? no('self_change') : ok;
     }
     default: return ok;

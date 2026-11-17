@@ -24,7 +24,10 @@ async function getText(url: URL, cookie: string | null): Promise<string> {
     headers: cookie ? { Cookie: cookie } : {},
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
-  if (!response.ok) throw new Error(`Could not load ${url.pathname}: HTTP ${response.status}.`);
+  if (!response.ok) {
+    throw new Error(`Could not load ${url.pathname}: HTTP ${response.status}.`);
+  }
+
   return response.text();
 }
 
@@ -37,7 +40,9 @@ async function discoverActionId(options: MeasureOptions): Promise<string> {
     .filter(src => src.origin === page.origin);
   for (const src of sources) {
     const id = findScanActionId(await getText(src, options.sessionCookie));
-    if (id !== null) return id;
+    if (id !== null) {
+      return id;
+    }
   }
   throw new Error('Could not find the scan action in the check-in page. Pass --action-id with the id from the build, or see the procedure.');
 }
@@ -58,6 +63,7 @@ async function scanOnce(options: MeasureOptions, actionId: string): Promise<{ el
   });
   const body = await response.text();
   const elapsedMs = performance.now() - started;
+
   // The action answers with the person's card when the badge is valid; a refusal or a sign-in problem does not contain it.
   return { elapsedMs, ok: response.status === 200 && body.includes('"kind":"person"'), status: response.status };
 }
@@ -76,7 +82,9 @@ async function main(): Promise<void> {
   const samples: number[] = [];
   for (let run = 1; run <= options.runs; run++) {
     const result = await scanOnce(options, actionId);
-    if (!result.ok) throw new Error(`Scan ${run} failed (HTTP ${result.status}). The run is stopped so the numbers are not misleading.`);
+    if (!result.ok) {
+      throw new Error(`Scan ${run} failed (HTTP ${result.status}). The run is stopped so the numbers are not misleading.`);
+    }
     samples.push(result.elapsedMs);
   }
 

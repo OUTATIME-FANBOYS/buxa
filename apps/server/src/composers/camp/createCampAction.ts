@@ -16,15 +16,18 @@ import { parseInput, text } from '@buxa/shared';
 export async function createCampAction(_previous: ActionState, form: FormData): Promise<ActionState> {
   const session = await requireSession();
   const parsed = parseInput(NewOrgInputSchema, { name: text(form, 'name'), slug: text(form, 'slug'), timezone: text(form, 'timezone') || DEFAULT_TIMEZONE });
-  if (!parsed.ok) return parsed.state;
+  if (!parsed.ok) {
+    return parsed.state;
+  }
 
   let created;
   const runtime = getRuntime();
   try {
     await enforceRateLimit(runtime.rateLimiter, RATE_RULES.createCamp, session.user.id);
     created = await runtime.services.orgs.createCamp(session.user.id, parsed.data);
+  } catch (error) {
+    return expectedCampFailure(error, 'Could not create the camp.');
   }
-  catch (error) { return expectedCampFailure(error, 'Could not create the camp.'); }
 
   await rememberCamp(created.id);
   revalidatePath(ROUTES.camp, 'layout');

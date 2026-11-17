@@ -12,7 +12,9 @@ interface CountRow { people: number; households: number; memberships: number; ba
  */
 export async function planReset(pool: pg.Pool): Promise<ResetPlan | null> {
   const orgId = await findCampId(pool);
-  if (orgId === null) return null;
+  if (orgId === null) {
+    return null;
+  }
   const { rows } = await pool.query<CountRow>(
     `SELECT (SELECT count(*) FROM people WHERE org_id = $1)::int AS people,
             (SELECT count(*) FROM households WHERE org_id = $1)::int AS households,
@@ -21,6 +23,9 @@ export async function planReset(pool: pg.Pool): Promise<ResetPlan | null> {
             (SELECT count(*) FROM check_ins WHERE org_id = $1)::int AS check_ins`,
     [orgId]);
   const row = rows[0];
-  if (!row) throw new Error('Could not count the camp rows.');
+  if (!row) {
+    throw new Error('Could not count the camp rows.');
+  }
+
   return { people: row.people, households: row.households, memberships: row.memberships, badges: row.badges, checkIns: row.check_ins };
 }

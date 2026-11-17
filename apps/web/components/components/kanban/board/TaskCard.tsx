@@ -24,16 +24,37 @@ export const TaskCard = memo(function TaskCard({ task, project, readOnly, draggi
   const { userById, kindOf } = useStore(); const { openTask } = useTaskDrawer(); const cmd = useTaskCommands();
   const kind = kindOf(task); const sp = subtaskProgress(task); const user = userById(task.assigneeId);
   const idx = project.columns.findIndex(c => c.id === task.columnId);
-  const move = (to: number) => { const c = project.columns[to]; if (c && !readOnly) cmd.moveTo(task, c); };
+  const move = (to: number) => {
+    const c = project.columns[to]; if (c && !readOnly) {
+      cmd.moveTo(task, c);
+    }
+  };
+
   return (
     <article className={`card ${dragging ? 'is-dragging' : ''} ${task.archived ? 'is-archived' : ''}`} data-card-id={task.id} tabIndex={0}
-      onPointerDown={e => { if (readOnly || (e.target as HTMLElement).closest('button,a,input,select,textarea')) return; onGrab(e, task.id); }}
-      onClick={() => { if (!justDragged()) openTask(task.id); }}
+      onPointerDown={e => {
+        if (readOnly || (e.target as HTMLElement).closest('button,a,input,select,textarea')) {
+          return;
+        } onGrab(e, task.id);
+      }}
+      onClick={() => {
+        if (!justDragged()) {
+          openTask(task.id);
+        }
+      }}
       onKeyDown={e => {
-        if (e.target !== e.currentTarget) return;
-        if (e.key === 'Enter') openTask(task.id);
-        if (e.altKey && e.key === 'ArrowLeft') { e.preventDefault(); move(idx - 1); }
-        if (e.altKey && e.key === 'ArrowRight') { e.preventDefault(); move(idx + 1); }
+        if (e.target !== e.currentTarget) {
+          return;
+        }
+        if (e.key === 'Enter') {
+          openTask(task.id);
+        }
+        if (e.altKey && e.key === 'ArrowLeft') {
+          e.preventDefault(); move(idx - 1);
+        }
+        if (e.altKey && e.key === 'ArrowRight') {
+          e.preventDefault(); move(idx + 1);
+        }
       }}
       aria-label={`${task.title}. ${project.columns[idx]?.name}. ${task.priority} priority.${user ? ' Assigned to ' + user.name + '.' : ''}`}>
       <div className="card-top">

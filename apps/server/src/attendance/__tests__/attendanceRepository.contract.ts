@@ -12,8 +12,12 @@ const NEXT_DAY = '2027-07-02T09:00:00.000Z';
 export function attendanceRepositoryContract(factory: RepositoryFactory): void {
   describe('AttendanceRepository contract', () => {
     let fx: RepositoryFixture;
-    beforeEach(async () => { fx = await factory(); });
-    afterEach(async () => { await fx.close(); });
+    beforeEach(async () => {
+      fx = await factory();
+    });
+    afterEach(async () => {
+      await fx.close();
+    });
 
     const newPerson = async (): Promise<string> => (await fx.repos.people.create(fx.actor, samplePerson())).id;
     const arrive = (personId: string, at = MORNING, overrideReason: string | null = null) =>

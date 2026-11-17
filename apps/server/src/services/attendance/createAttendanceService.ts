@@ -23,6 +23,7 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
   /** Records for the filter's camp-local days, newest first. */
   async function recordsFor(orgId: string, filter: AttendanceFilter, timeZone: string): Promise<CheckInRecord[]> {
     const query: AttendanceQuery = { ...localDaysWindow(filter.from, filter.to, timeZone), personId: filter.personId, onSiteOnly: filter.onSiteOnly };
+
     return attendance.log(orgId, query);
   }
 
@@ -31,8 +32,12 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       assertAllowed(actor, 'attendance:record');
       const orgId = actor.orgId;
       const person = await people.get(orgId, input.personId);
-      if (!person) throw notFound('Person not found');
-      if (person.archivedAt !== null) return { ok: false, reason: 'archived' };
+      if (!person) {
+        throw notFound('Person not found');
+      }
+      if (person.archivedAt !== null) {
+        return { ok: false, reason: 'archived' };
+      }
 
       const timeZone = await campZone(orgs, orgId);
       const now = clock();
@@ -45,8 +50,13 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       });
 
       if (decision.kind === 'refuse') {
-        if (decision.reason === 'already_on_site') return { ok: false, reason: 'already_on_site', since: decision.since };
-        if (decision.reason === 'not_valid') return { ok: false, reason: 'not_valid', status: decision.status, canOverride: decision.canOverride };
+        if (decision.reason === 'already_on_site') {
+          return { ok: false, reason: 'already_on_site', since: decision.since };
+        }
+        if (decision.reason === 'not_valid') {
+          return { ok: false, reason: 'not_valid', status: decision.status, canOverride: decision.canOverride };
+        }
+
         return { ok: false, reason: 'override_needs_reason' };
       }
 
@@ -59,11 +69,15 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
           note: input.note ?? null,
         });
         const [entry] = await toEntries(deps, orgId, [record]);
+
         return { ok: true, entry, overridden };
       } catch (error) {
         // Another check-in won a race between the read above and this write: report it as the already-on-site answer.
-        if (!isAlreadyCheckedIn(error)) throw error;
+        if (!isAlreadyCheckedIn(error)) {
+          throw error;
+        }
         const current = await attendance.openFor(orgId, input.personId);
+
         return { ok: false, reason: 'already_on_site', since: current?.checkedInAt ?? at };
       }
     },
@@ -72,7 +86,9 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       assertAllowed(actor, 'attendance:record');
       const orgId = actor.orgId;
       const person = await people.get(orgId, input.personId);
-      if (!person) throw notFound('Person not found');
+      if (!person) {
+        throw notFound('Person not found');
+      }
 
       const timeZone = await campZone(orgs, orgId);
       const now = clock();
@@ -82,7 +98,9 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       let collectedBy: { personId: string; canPickup: boolean } | null = null;
       if (input.collectedByPersonId !== undefined) {
         const collector = await people.get(orgId, input.collectedByPersonId);
-        if (!collector) throw badRequest('Choose who is collecting from the list.');
+        if (!collector) {
+          throw badRequest('Choose who is collecting from the list.');
+        }
         const authorised = await authorisedCollectors(people, orgId, input.personId);
         collectedBy = { personId: collector.id, canPickup: authorised.has(collector.id) };
       }
@@ -96,9 +114,14 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       });
 
       if (decision.kind === 'refuse') {
-        if (decision.reason === 'not_on_site') return { ok: false, reason: 'not_on_site' };
-        if (decision.reason === 'override_needs_reason') return { ok: false, reason: 'override_needs_reason' };
+        if (decision.reason === 'not_on_site') {
+          return { ok: false, reason: 'not_on_site' };
+        }
+        if (decision.reason === 'override_needs_reason') {
+          return { ok: false, reason: 'override_needs_reason' };
+        }
         const guardians = await pickupOptionsFor(people, orgId, input.personId);
+
         return { ok: false, reason: decision.reason, canOverride: decision.canOverride, guardians };
       }
 
@@ -111,9 +134,12 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
           note: input.note ?? null,
         });
         const [entry] = await toEntries(deps, orgId, [record]);
+
         return { ok: true, entry, overridden: decision.kind === 'allow_override' };
       } catch (error) {
-        if (isNotOnSite(error)) return { ok: false, reason: 'not_on_site' };
+        if (isNotOnSite(error)) {
+          return { ok: false, reason: 'not_on_site' };
+        }
         throw error;
       }
     },
@@ -122,7 +148,9 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       assertAllowed(actor, 'attendance:read');
       const orgId = actor.orgId;
       const records = await attendance.onSite(orgId);
-      if (records.length === 0) return [];
+      if (records.length === 0) {
+        return [];
+      }
 
       const timeZone = await campZone(orgs, orgId);
       const today = toLocalDate(clock(), timeZone);
@@ -140,7 +168,9 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       const result: OnSiteEntry[] = [];
       for (const [index, record] of records.entries()) {
         const person = byId.get(record.personId);
-        if (!person) continue;
+        if (!person) {
+          continue;
+        }
         const minor = seeContact ? isMinor(person, today) : null;
         result.push({
           entry: entries[index],
@@ -149,6 +179,7 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
           pickupOptions: minor === true ? await pickupOptionsFor(people, orgId, person.id) : [],
         });
       }
+
       return result;
     },
 
@@ -156,14 +187,18 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       assertAllowed(actor, 'attendance:read');
       const orgId = actor.orgId;
       const records = await recordsFor(orgId, filter, await campZone(orgs, orgId));
+
       return toEntries(deps, orgId, records);
     },
 
     async history(actor, personId) {
       assertAllowed(actor, 'attendance:read');
       const orgId = actor.orgId;
-      if (!(await people.get(orgId, personId))) throw notFound('Person not found');
+      if (!(await people.get(orgId, personId))) {
+        throw notFound('Person not found');
+      }
       const records = await attendance.log(orgId, { from: EARLIEST, to: LATEST, personId });
+
       return toEntries(deps, orgId, records);
     },
 
@@ -171,8 +206,11 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       assertAllowed(actor, 'attendance:export');
       const orgId = actor.orgId;
       const records = await recordsFor(orgId, filter, await campZone(orgs, orgId));
-      if (records.length >= MAX_LOG_ROWS) throw badRequest('That is too many visits to export at once. Choose a shorter date range.');
+      if (records.length >= MAX_LOG_ROWS) {
+        throw badRequest('That is too many visits to export at once. Choose a shorter date range.');
+      }
       const entries = await toEntries(deps, orgId, records);
+
       return encodeCsv([EXPORT_HEADER, ...entries.map(exportRow)]);
     },
   };

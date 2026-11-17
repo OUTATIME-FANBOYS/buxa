@@ -19,6 +19,7 @@ export function BoardColumn({ col, index, project, items, readOnly, dnd, adding,
   const colOver = dnd.mode === 'column' && dnd.over?.id === col.id ? dnd.over : null;
   const dragged = dnd.mode === 'column' && dnd.id === col.id;
   const last = project.columns.length - 1;
+
   return (
     <section data-col-id={col.id} className={`column ${colOver ? 'col-over-' + colOver.side : ''} ${dragged ? 'is-dragging' : ''} ${over ? 'is-target' : ''}`}
       aria-label={`${col.name}, ${items.length} tasks`} onDragOver={e => columnDrag.over(e, col)} onDrop={e => columnDrag.drop(e, col)} onDragLeave={e => columnDrag.leave(e, col)}>

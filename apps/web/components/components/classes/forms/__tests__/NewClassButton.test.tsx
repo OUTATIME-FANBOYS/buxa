@@ -11,8 +11,12 @@ vi.mock('@buxa/server/composers/classes/createClassAction', () => ({ createClass
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 // The dialog's exit runs for 190ms before it unmounts; wait past it.
-const settle = () => act(async () => { await new Promise(r => setTimeout(r, 250)); });
-const flush = () => act(async () => { await new Promise(r => setTimeout(r, 0)); });
+const settle = () => act(async () => {
+  await new Promise(r => setTimeout(r, 250));
+});
+const flush = () => act(async () => {
+  await new Promise(r => setTimeout(r, 0));
+});
 
 describe('NewClassButton (the Classes page)', () => {
   let root: Root;
@@ -22,11 +26,15 @@ describe('NewClassButton (the Classes page)', () => {
     host = document.body.appendChild(document.createElement('div'));
     root = createRoot(host);
   });
-  afterEach(() => { act(() => root.unmount()); host.remove(); });
+  afterEach(() => {
+    act(() => root.unmount()); host.remove();
+  });
 
-  const button = () => Array.from(host.querySelectorAll('button')).find(b => b.textContent === 'New class') as HTMLButtonElement;
+  const button = () => Array.from(host.querySelectorAll('button')).find(b => b.textContent === 'New class')!;
   const dialog = () => document.querySelector<HTMLElement>('[role="dialog"]');
-  const open = async () => { button().focus(); act(() => button().click()); await flush(); };
+  const open = async () => {
+    button().focus(); act(() => button().click()); await flush();
+  };
 
   it('opens the create form in a dialog from the New class button', async () => {
     act(() => root.render(<NewClassButton />));
@@ -50,7 +58,7 @@ describe('NewClassButton (the Classes page)', () => {
   it('closes from its Cancel button', async () => {
     act(() => root.render(<NewClassButton />));
     await open();
-    const cancel = Array.from(dialog()!.querySelectorAll('button')).find(b => b.textContent === 'Cancel') as HTMLButtonElement;
+    const cancel = Array.from(dialog()!.querySelectorAll('button')).find(b => b.textContent === 'Cancel')!;
     act(() => cancel.click());
     await settle();
     expect(dialog()).toBeNull();
@@ -60,7 +68,7 @@ describe('NewClassButton (the Classes page)', () => {
     createClass.mockResolvedValue(failure('Check the highlighted fields.', { name: 'Enter a class name.', capacity: 'Enter the default places.' }));
     act(() => root.render(<NewClassButton />));
     await open();
-    const form = dialog()!.querySelector('form') as HTMLFormElement;
+    const form = dialog()!.querySelector('form')!;
     act(() => form.requestSubmit());
     await flush();
     expect(createClass).toHaveBeenCalledTimes(1);
@@ -75,7 +83,7 @@ describe('NewClassButton (the Classes page)', () => {
     await open();
     dialog()!.querySelector<HTMLInputElement>('input[name="name"]')!.value = 'Robotics';
     dialog()!.querySelector<HTMLInputElement>('input[name="minAge"]')!.value = '8';
-    act(() => (dialog()!.querySelector('form') as HTMLFormElement).requestSubmit());
+    act(() => (dialog()!.querySelector('form')!).requestSubmit());
     await flush();
     const data = createClass.mock.calls[0]?.[1] as FormData;
     expect(data.get('name')).toBe('Robotics');

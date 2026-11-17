@@ -16,7 +16,11 @@ describe('server config', () => {
   });
   it('lists every problem and never echoes a secret', () => {
     let message = '';
-    try { loadConfig({ DB_POOL_MAX: '999', DATABASE_URL: 'mysql://user:hunter2@h/db' }); } catch (e) { message = (e as Error).message; }
+    try {
+      loadConfig({ DB_POOL_MAX: '999', DATABASE_URL: 'mysql://user:hunter2@h/db' });
+    } catch (e) {
+      message = (e as Error).message;
+    }
     expect(message).toMatch(/DB_POOL_MAX/); expect(message).toMatch(/DATABASE_URL/); expect(message).not.toContain('hunter2');
   });
   it('bounds the pool size and the log level', () => {

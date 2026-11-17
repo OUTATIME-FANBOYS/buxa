@@ -6,12 +6,12 @@ import { buildDemo } from '@buxa/shared';
 import { type Proposal } from '@buxa/shared';
 import { ProposalRow } from '@/components/components/kanban/agents/export';
 
-const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
+const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
 
 const demo = buildDemo();
-const proposal = (demo.proposals[0] ?? demo.proposals[0]) as Proposal;
+const proposal = (demo.proposals[0] ?? demo.proposals[0]);
 
 describe('ProposalRow', () => {
   beforeEach(() => {

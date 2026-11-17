@@ -19,6 +19,7 @@ export class PgOrgRepository implements OrgRepository {
       const { rows } = await withOrg(this.pool, null, db => db.query<OrgSummary>(
         'SELECT org_id AS id, org_name AS name, org_slug AS slug FROM buxa_create_org($1, $2, $3, $4)',
         [input.name, input.slug, input.timezone, ownerId]));
+
       return { ...rows[0], role: 'owner' };
     } catch (error) {
       throw isUniqueViolation(error) ? new SlugTakenError() : error;
@@ -29,8 +30,11 @@ export class PgOrgRepository implements OrgRepository {
     return withOrg(this.pool, orgId, async db => {
       const { rows } = await db.query<OrgRow>(
         `SELECT id, name, slug, timezone, clock_format, created_at, (SELECT count(*)::int FROM org_members) AS member_count FROM orgs`);
-      if (!rows[0]) throw new OrgNotFoundError();
+      if (!rows[0]) {
+        throw new OrgNotFoundError();
+      }
       const row = rows[0];
+
       return { id: row.id, name: row.name, slug: row.slug, createdAt: row.created_at.toISOString(), memberCount: row.member_count, timezone: row.timezone, clockFormat: row.clock_format };
     });
   }
@@ -41,12 +45,15 @@ export class PgOrgRepository implements OrgRepository {
         `UPDATE orgs SET name = coalesce($1, name), timezone = coalesce($2, timezone), clock_format = coalesce($3, clock_format)
          WHERE id = $4 RETURNING id, name, slug`,
         [input.name ?? null, input.timezone ?? null, input.clockFormat ?? null, actor.orgId]);
-      if (!rows[0]) throw new OrgNotFoundError();
+      if (!rows[0]) {
+        throw new OrgNotFoundError();
+      }
       await recordAudit(db, { actor, action: 'org.update', entity: 'org', entityId: actor.orgId, data: {
         ...(input.name !== undefined && { name: input.name }),
         ...(input.timezone !== undefined && { timezone: input.timezone }),
         ...(input.clockFormat !== undefined && { clockFormat: input.clockFormat }),
       } });
+
       return rows[0];
     });
   }
@@ -55,6 +62,7 @@ export class PgOrgRepository implements OrgRepository {
     return withOrg(this.pool, orgId, async db => {
       const { rows } = await db.query<Member>(
         `SELECT u.id, u.name, u.email, m.role FROM org_members m JOIN users u ON u.id = m.user_id ORDER BY u.name`);
+
       return rows;
     });
   }

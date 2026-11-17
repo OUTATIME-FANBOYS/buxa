@@ -5,6 +5,7 @@ import { ExampleTable } from './ExampleTable';
 /** One section: its heading, an optional status, then each subsection with its steps, table and sample. Subsection headings are h3. */
 export function HelpSection({ section }: { section: HelpSectionContent }) {
   const headingId = `help-${section.id}`;
+
   return (
     <section id={section.id} aria-labelledby={headingId} className="help-section panel">
       <h2 id={headingId}>{section.title}</h2>

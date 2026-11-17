@@ -8,6 +8,7 @@ const adult = (givenName: string, familyName: string, extra: Partial<NewPersonIn
 /** A guardian with a new household, created as an admin would. */
 async function guardianWithHousehold(camp: Camp, name: string, household = 'Lee family') {
   const admin = camp.actor('admin');
+
   return camp.people.create(admin, { givenName: name, familyName: 'Lee', roles: ['guardian'], newHouseholdName: household, relationship: 'Parent' });
 }
 
@@ -44,6 +45,7 @@ describe('PeopleService permissions', () => {
 async function withFixtures(camp: Camp): Promise<Camp> {
   await guardianWithHousehold(camp, 'Ana');
   await camp.people.create(camp.actor('admin'), adult('Ben', 'Stone', { dateOfBirth: '1990-04-02', email: 'ben@example.org', phone: '+44 7700 900123' }));
+
   return camp;
 }
 
@@ -87,7 +89,9 @@ describe('PeopleService redaction', () => {
   it('keeps contact details out of the list rows for everyone', async () => {
     const camp = await withFixtures(await createCamp());
     const rows = await camp.people.list(camp.actor('staff'));
-    for (const row of rows) expect(Object.keys(row)).not.toContain('email');
+    for (const row of rows) {
+      expect(Object.keys(row)).not.toContain('email');
+    }
   });
 });
 

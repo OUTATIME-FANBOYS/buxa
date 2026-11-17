@@ -20,15 +20,23 @@ const slug = (name: string): string => name.toLowerCase();
 
 /** Membership by position: the 5th to 7th campers have lapsed, the 8th is revoked, the 9th never bought one. */
 function camperState(index: number): MembershipState {
-  if (index >= 4 && index <= 6) return 'expired';
-  if (index === 7) return 'revoked';
-  if (index === 8) return 'none';
+  if (index >= 4 && index <= 6) {
+    return 'expired';
+  }
+  if (index === 7) {
+    return 'revoked';
+  }
+  if (index === 8) {
+    return 'none';
+  }
+
   return 'valid';
 }
 
 /** Twelve families: the odd-numbered ones have one child, the even-numbered ones two; a second guardian joins eight of them. */
 export function families(): RosterFamily[] {
   let camperIndex = 0;
+
   return SURNAMES.map((surname, i) => {
     const guardians: RosterGuardian[] = [{
       givenName: FIRST_GUARDIANS[i], email: `${slug(FIRST_GUARDIANS[i])}.${slug(surname)}@example.com`, canPickup: true,
@@ -47,6 +55,7 @@ export function families(): RosterFamily[] {
       campers.push({ givenName: CHILDREN[camperIndex % CHILDREN.length], familyName: surname, dateOfBirth: `${birthYear}-06-15`, membership: camperState(camperIndex) });
       camperIndex++;
     }
+
     return { surname, guardians, campers };
   });
 }

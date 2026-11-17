@@ -13,11 +13,13 @@ export function checkInAnnouncement(state: CheckInState, timeZone: string, clock
     case 'error': return state.message;
     case 'ready': {
       const { status } = state.card.person;
+
       return `${displayName(state.card.person)}.${status === null ? '' : ` ${STATUS_DISPLAY[status].label}.`}`;
     }
     case 'submitting': return 'Checking in.';
     case 'refused': {
       const copy = checkInRefusalCopy(state.refusal, timeZone, clockFormat);
+
       return `${copy.title}. ${copy.body}`;
     }
     case 'failed': return state.message;

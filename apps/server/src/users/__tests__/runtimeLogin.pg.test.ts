@@ -21,7 +21,7 @@ describe.skipIf(!url)('runtime login without row-level-security bypass (S-06)', 
     await migrate(admin);
     await admin.query(`CREATE ROLE "${role}" LOGIN PASSWORD '${password}' NOSUPERUSER NOBYPASSRLS NOCREATEROLE NOCREATEDB`);
     await admin.query(`GRANT buxa_app TO "${role}"`);
-    const runtimeUrl = new URL(url as string);
+    const runtimeUrl = new URL(url!);
     runtimeUrl.username = role;
     runtimeUrl.password = password;
     runtime = new pg.Pool({ connectionString: runtimeUrl.toString(), max: 2 });

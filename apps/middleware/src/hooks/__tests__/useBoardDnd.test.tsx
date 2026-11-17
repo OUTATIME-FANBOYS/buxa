@@ -7,7 +7,7 @@ import { UiProvider } from '../../providers/UiProvider';
 import { buildSeed } from '@buxa/shared';
 import { useBoardDnd } from '../useBoardDnd';
 
-const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
+const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('../../providers/store', () => ({ useStore: () => h.store }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -15,7 +15,12 @@ vi.mock('../../providers/store', () => ({ useStore: () => h.store }));
 type Api = ReturnType<typeof useBoardDnd>;
 let api: Api | undefined;
 const seed = buildSeed();
-function Probe() { api = useBoardDnd(seed.projects[0], seed.tasks.filter((t) => t.projectId === seed.projects[0].id), true); return null; }
+
+function Probe() {
+  api = useBoardDnd(seed.projects[0], seed.tasks.filter((t) => t.projectId === seed.projects[0].id), true);
+
+  return null;
+}
 
 describe('useBoardDnd', () => {
   let root: Root;
@@ -25,7 +30,9 @@ describe('useBoardDnd', () => {
     root = createRoot(document.body.appendChild(document.createElement('div')));
     act(() => root.render(<UiProvider Dialog={StubDialog}><Probe /></UiProvider>));
   });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = '';
+  });
 
   it('starts idle, with a scroller and handlers for cards and columns', () => {
     expect(api!.dnd.mode).toBe('idle');

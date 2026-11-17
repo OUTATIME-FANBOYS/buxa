@@ -8,7 +8,7 @@ import { CAMP, STAFF_ACCOUNTS } from './roster';
 /**
  * Camp-level setup. The seed uses the privileged pool for three things the app has no path for, because they happen outside a
  * signed-in request: finding the camp by its slug (row-level security hides a camp from anyone not in it), adding the
- * fictional staff accounts as members (phase 1 has no invite flow), and clearing a camp's rows on --reset. Creating the camp
+ * fictional staff accounts as members (the seed has no invite flow), and clearing a camp's rows on --reset. Creating the camp
  * and the accounts still goes through the services and repositories, so the audit rows the app writes are written here too.
  */
 
@@ -19,6 +19,7 @@ export interface CampRef { orgId: string; actors: Record<'owner' | 'staff', Acto
 /** The camp's id if it already exists. */
 export async function findCampId(pool: pg.Pool): Promise<string | null> {
   const { rows } = await pool.query<{ id: string }>('SELECT id FROM orgs WHERE slug = $1', [CAMP.slug]);
+
   return rows[0]?.id ?? null;
 }
 
@@ -28,6 +29,7 @@ export async function findCampId(pool: pg.Pool): Promise<string | null> {
  */
 export function fictionalAuthId(email: string): string {
   const hex = createHash('sha256').update(`buxa-mock-seed:${email}`).digest('hex');
+
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-8${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
 }
 
@@ -35,10 +37,14 @@ export function fictionalAuthId(email: string): string {
 async function accountFor(pool: pg.Pool, repos: Repositories, email: string | undefined, fictional: { name: string; email: string }): Promise<string> {
   if (email === undefined) {
     const user = await repos.users.upsertFromIdentity({ authId: fictionalAuthId(fictional.email), email: fictional.email, name: fictional.name });
+
     return user.id;
   }
   const { rows } = await pool.query<{ id: string }>('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
-  if (!rows[0]) throw new Error(`No account for ${email} yet. Sign in once with that account, then run the seed again.`);
+  if (!rows[0]) {
+    throw new Error(`No account for ${email} yet. Sign in once with that account, then run the seed again.`);
+  }
+
   return rows[0].id;
 }
 
@@ -53,9 +59,10 @@ export async function createCamp(pool: pg.Pool, services: Services, repos: Repos
   ];
   for (const [role, email, fictional] of others) {
     const userId = await accountFor(pool, repos, email, fictional);
-    // Direct insert: phase 1 has no invite flow, so membership is added here, outside any request. Not audited.
+    // Direct insert: the seed has no invite flow, so membership is added here, outside any request. Not audited.
     await pool.query('INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING', [camp.id, userId, role]);
   }
+
   return camp.id;
 }
 
@@ -65,9 +72,13 @@ export async function actorsFor(pool: pg.Pool, orgId: string): Promise<CampRef['
     `SELECT user_id, role FROM org_members WHERE org_id = $1 AND role IN ('owner', 'staff')`, [orgId]);
   const find = (role: 'owner' | 'staff'): Actor => {
     const row = rows.find(r => r.role === role);
-    if (!row) throw new Error(`The camp has no ${role}.`);
+    if (!row) {
+      throw new Error(`The camp has no ${role}.`);
+    }
+
     return { userId: row.user_id, orgId, role };
   };
+
   return { owner: find('owner'), staff: find('staff') };
 }
 

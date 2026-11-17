@@ -12,6 +12,7 @@ const upload = { fileName: 'season.csv', rows: 2, created: 2, updated: 0, refuse
 importRepositoryContract(async () => {
   const classes = new InMemoryClassRepository(() => new Date('2027-07-01T00:00:00Z'));
   const repo = new InMemoryImportRepository(classes);
+
   return { repo, classes, actor, close: async () => {} };
 });
 

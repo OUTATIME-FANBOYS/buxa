@@ -12,7 +12,9 @@ export function OverrideForm({ busy, onSubmit }: Props) {
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (trimmed !== '' && !busy) onSubmit(trimmed);
+    if (trimmed !== '' && !busy) {
+      onSubmit(trimmed);
+    }
   };
 
   return (

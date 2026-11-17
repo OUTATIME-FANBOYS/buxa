@@ -15,9 +15,12 @@ export function ResetDemoButton() {
       confirmLabel: 'Reset',
       danger: true,
     });
-    if (!ok) return;
+    if (!ok) {
+      return;
+    }
     actions.resetDemo();
     toast('Demo data restored');
   };
+
   return <button className="btn btn-danger-ghost" onClick={reset}>Reset demo data</button>;
 }

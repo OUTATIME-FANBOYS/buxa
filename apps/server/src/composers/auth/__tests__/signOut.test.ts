@@ -3,7 +3,9 @@ import { ROUTES } from '@buxa/shared/config/routes';
 import { signOut } from '../signOut';
 
 const h = vi.hoisted(() => ({
-  redirect: vi.fn((url: string) => { throw new Error(`REDIRECT ${url}`); }),
+  redirect: vi.fn((url: string) => {
+    throw new Error(`REDIRECT ${url}`);
+  }),
   cookieDelete: vi.fn(),
   requestSessionClient: vi.fn(),
   signOut: vi.fn(),

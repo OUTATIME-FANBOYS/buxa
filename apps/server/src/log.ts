@@ -26,10 +26,13 @@ const serialise = (value: unknown): unknown =>
  */
 export function createLogger(level: LogLevel, write: Write = line => process.stdout.write(`${line}\n`), bindings: object = {}): Logger {
   const emit = (name: Exclude<LogLevel, 'silent'>) => (fields: object | string, message?: string): void => {
-    if (SEVERITY[name] < SEVERITY[level] || level === 'silent') return;
+    if (SEVERITY[name] < SEVERITY[level] || level === 'silent') {
+      return;
+    }
     const extra = typeof fields === 'string' ? {} : Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, serialise(v)]));
     write(JSON.stringify({ level: SEVERITY[name], time: Date.now(), ...bindings, ...extra, msg: typeof fields === 'string' ? fields : message }));
   };
+
   return {
     fatal: emit('fatal'), error: emit('error'), warn: emit('warn'), info: emit('info'), debug: emit('debug'),
     child: fields => createLogger(level, write, { ...bindings, ...fields }),

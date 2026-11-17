@@ -17,12 +17,17 @@ export function createCredentialService(deps: CredentialServiceDeps): Credential
       assertAllowed(actor, 'credentials:manage');
       const orgId = actor.orgId;
       const person = await people.get(orgId, personId);
-      if (!person) throw notFound('Person not found');
-      if (person.archivedAt !== null) throw conflict('Archived people cannot have a badge.');
+      if (!person) {
+        throw notFound('Person not found');
+      }
+      if (person.archivedAt !== null) {
+        throw conflict('Archived people cannot have a badge.');
+      }
 
       // The token exists only here and in the response: storage gets its hash. The repository revokes any previous badge in the same step.
       const token = generateCredentialToken();
       const record = await guard(() => credentials.issue(actor, personId, hashCredentialToken(token), clock().toISOString()));
+
       return {
         credentialId: record.id,
         token,
@@ -33,7 +38,9 @@ export function createCredentialService(deps: CredentialServiceDeps): Credential
 
     async revoke(actor, personId) {
       assertAllowed(actor, 'credentials:manage');
-      if (!(await people.get(actor.orgId, personId))) throw notFound('Person not found');
+      if (!(await people.get(actor.orgId, personId))) {
+        throw notFound('Person not found');
+      }
       await guard(() => credentials.revoke(actor, personId, clock().toISOString()));
     },
 
@@ -42,18 +49,25 @@ export function createCredentialService(deps: CredentialServiceDeps): Credential
       assertAllowed(actor, 'attendance:record');
       const orgId = actor.orgId;
       const token = parseCredentialPayload(raw);
-      if (token === null) return UNKNOWN;
+      if (token === null) {
+        return UNKNOWN;
+      }
 
       const personId = await credentials.resolve(orgId, hashCredentialToken(token));
-      if (personId === null) return UNKNOWN;
+      if (personId === null) {
+        return UNKNOWN;
+      }
       const person = await people.get(orgId, personId);
-      if (!person || person.archivedAt !== null) return UNKNOWN;
+      if (!person || person.archivedAt !== null) {
+        return UNKNOWN;
+      }
 
       const today = campToday(clock, await campZone(orgs, orgId));
       const [ms, open] = await Promise.all([
         memberships.forPerson(orgId, personId),
         attendance.openFor(orgId, personId),
       ]);
+
       return { kind: 'person', person: toSummary(person, ms, open !== null, today, true) };
     },
   };

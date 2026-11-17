@@ -19,7 +19,9 @@ describe('archivePersonAction', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     h.actor = { userId: 'u1', orgId: 'o1', role: 'admin' };
-    h.redirect.mockImplementation((to: string) => { throw new Error(`NEXT_REDIRECT ${to}`); });
+    h.redirect.mockImplementation((to: string) => {
+      throw new Error(`NEXT_REDIRECT ${to}`);
+    });
     h.people.archive.mockResolvedValue(undefined);
   });
 

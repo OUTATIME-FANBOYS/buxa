@@ -21,7 +21,10 @@ const skippedDirs = new Set(['node_modules', '.git', '.next', '.claude', 'dist',
 function textFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((entry) => {
     const full = path.join(dir, entry);
-    if (statSync(full).isDirectory()) return skippedDirs.has(entry) ? [] : textFiles(full);
+    if (statSync(full).isDirectory()) {
+      return skippedDirs.has(entry) ? [] : textFiles(full);
+    }
+
     return textExtensions.has(path.extname(entry)) ? [full] : [];
   });
 }

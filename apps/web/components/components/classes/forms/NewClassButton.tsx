@@ -11,6 +11,7 @@ import { NewClassForm } from './NewClassForm';
 export function NewClassButton() {
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
+
   return (
     <>
       <button type="button" className="btn btn-primary classes-target" aria-haspopup="dialog" onClick={() => setOpen(true)}>New class</button>

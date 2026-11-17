@@ -16,7 +16,11 @@ function TimelineHeader({ days, t0 }: { days: string[]; t0: string }) {
   return (
     <div className="tl-row tl-header">
       <div className="tl-label" />
-      <div className="tl-days">{days.map(d => { const dt = parse(d); return <span key={d} style={{ width: DAYW }} className={`${d === t0 ? 'today' : ''} ${dt.getDay() % 6 === 0 ? 'weekend' : ''}`}>{dt.getDate() === 1 || d === days[0] ? <b>{dt.toLocaleDateString(undefined, { month: 'short' })}</b> : null}{dt.getDate()}</span>; })}</div>
+      <div className="tl-days">{days.map(d => {
+        const dt = parse(d);
+
+        return <span key={d} style={{ width: DAYW }} className={`${d === t0 ? 'today' : ''} ${dt.getDay() % 6 === 0 ? 'weekend' : ''}`}>{dt.getDate() === 1 || d === days[0] ? <b>{dt.toLocaleDateString(undefined, { month: 'short' })}</b> : null}{dt.getDate()}</span>;
+      })}</div>
     </div>
   );
 }
@@ -25,6 +29,7 @@ function TimelineRow({ task, s, e, base }: { task: Task; s: string; e: string; b
   const { kindOf, userById } = useStore(); const { openTask } = useTaskDrawer();
   const left = diffDays(s, base) * DAYW; const width = (diffDays(e, s) + 1) * DAYW; const sp = subtaskProgress(task); const done = kindOf(task) === 'done';
   const visible = left + width > 0 && left < DAYS * DAYW;
+
   return (
     <div className="tl-row">
       <button className="tl-label" onClick={() => openTask(task.id)} title={task.title}><Avatar user={userById(task.assigneeId)} size={20} /><span>{task.title}</span></button>
@@ -43,12 +48,18 @@ export function TimelineView({ tasks }: { tasks: Task[] }) {
   const t0 = today(); const base = addDays(t0, -((parse(t0).getDay() + 6) % 7) - 7 + offset * 7);
   const days = Array.from({ length: DAYS }, (_, i) => addDays(base, i));
   const rows = useMemo(() => tasks.flatMap(t => {
-    const first = t.start ?? t.due; const last = t.due ?? t.start; if (!first || !last) return [];
+    const first = t.start ?? t.due; const last = t.due ?? t.start; if (!first || !last) {
+      return [];
+    }
+
     return [{ t, s: first <= last ? first : last, e: first <= last ? last : first }];
   }).sort((a, b) => a.s.localeCompare(b.s)), [tasks]);
   const unscheduled = tasks.length - rows.length;
   const todayX = diffDays(t0, base) * DAYW + DAYW / 2;
-  if (!rows.length) return <Empty icon="timeline" title="Nothing scheduled" body="Give tasks a start or due date and they will appear here." />;
+  if (!rows.length) {
+    return <Empty icon="timeline" title="Nothing scheduled" body="Give tasks a start or due date and they will appear here." />;
+  }
+
   return (
     <div className="timeline">
       <div className="cal-head">

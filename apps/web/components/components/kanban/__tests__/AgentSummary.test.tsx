@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { buildSeed } from '@buxa/shared';
 import { AgentSummary } from '@/components/components/kanban/export';
 
-const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
+const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 
 describe('AgentSummary', () => {

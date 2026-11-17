@@ -5,7 +5,9 @@ import { publicRoute } from '@buxa/server/http/route';
 import { createTestIdentityProvider } from '@buxa/server/__tests__/tokens';
 
 let env: ReturnType<typeof startRuntime> | undefined;
-afterEach(async () => { await env?.stop(); env = undefined; vi.unstubAllEnvs(); });
+afterEach(async () => {
+  await env?.stop(); env = undefined; vi.unstubAllEnvs();
+});
 const idp = await createTestIdentityProvider();
 
 describe('request handling around every route', () => {
@@ -57,7 +59,9 @@ describe('request handling around every route', () => {
 
   it('an unexpected error becomes a generic 500 and is logged with its cause', async () => {
     env = startRuntime({ verifier: idp.verifier });
-    const boom = publicRoute(async () => { throw new Error('secret table users_pii'); });
+    const boom = publicRoute(async () => {
+      throw new Error('secret table users_pii');
+    });
     const r = await boom(new Request('http://localhost/boom'));
     expect(r.status).toBe(500); expect(await r.text()).not.toContain('users_pii');
     expect(env.logs.join('')).toContain('users_pii');
@@ -68,7 +72,9 @@ describe('request handling around every route', () => {
     await call('GET', '/v1/me?token=SECRETQUERY', { headers: { authorization: 'Bearer SECRETBEARER', cookie: 'sid=SECRETCOOKIE', 'x-request-id': 'trace-abcdef12' } });
     const out = env.logs.join('');
     expect(out).toContain('trace-abcdef12'); expect(out).toContain('"/v1/me"');
-    for (const s of ['SECRETQUERY', 'SECRETBEARER', 'SECRETCOOKIE']) expect(out).not.toContain(s);
+    for (const s of ['SECRETQUERY', 'SECRETBEARER', 'SECRETCOOKIE']) {
+      expect(out).not.toContain(s);
+    }
   });
 
   it('a broken configuration is a generic 500 to the client and a clear message in the server log', async () => {

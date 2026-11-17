@@ -4,7 +4,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Membership } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
 
-const notFound = vi.hoisted(() => vi.fn(() => { throw new Error('NEXT_NOT_FOUND'); }));
+const notFound = vi.hoisted(() => vi.fn(() => {
+  throw new Error('NEXT_NOT_FOUND');
+}));
 const session = vi.hoisted(() => ({ current: null as null | { user: { id: string; email: string; name: string }; memberships: Membership[] }, camp: null as Membership | null }));
 const orgs = vi.hoisted(() => ({
   getCamp: vi.fn(async () => ({ id: 'o1', name: 'Sunrise', slug: 'sunrise', createdAt: '2026-03-04T10:00:00Z', memberCount: 2 })),
@@ -34,7 +36,9 @@ const as = (role: Role) => {
   session.camp = camp;
 };
 
-beforeEach(() => { vi.clearAllMocks(); });
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 describe('Members', () => {
   it('lists the members with their roles', async () => {
@@ -55,13 +59,13 @@ describe('CampFrame', () => {
 
   it('shows the page inside the frame when there is a camp', () => {
     const frame = CampFrame({ user, camps: [camp], current: camp, children: 'THE-PAGE' });
-    expect(labels(frame.props.nav)).toEqual(['Home', 'Check-in', 'On site', 'People', 'Attendance', 'Classes', 'Help', 'My tasks', 'Projects', 'Boards', 'Calendar', 'Agents', 'Reports', 'Team access']);
+    expect(labels(frame.props.nav)).toEqual(['Home', 'Check-in', 'On site', 'People', 'Attendance', 'Classes', 'My tasks', 'Projects', 'Boards', 'Calendar', 'Agents', 'Team access']);
     expect(frame.props.children[0]).toBe('THE-PAGE');
   });
 
   it('shows first-run setup instead of the page when there is no camp', () => {
     const frame = CampFrame({ user, camps: [], current: null, children: 'THE-PAGE' });
     expect(frame.props.children[0].props).toEqual({ first: true });
-    expect(labels(frame.props.nav)).toEqual(['Home', 'Help', 'My tasks', 'Projects', 'Boards', 'Calendar', 'Agents', 'Reports']);
+    expect(labels(frame.props.nav)).toEqual(['Home', 'My tasks', 'Projects', 'Boards', 'Calendar', 'Agents']);
   });
 });

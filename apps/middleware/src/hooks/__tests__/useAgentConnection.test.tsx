@@ -11,7 +11,12 @@ import { useAgentConnection } from '../useAgentConnection';
 
 type Api = ReturnType<typeof useAgentConnection>;
 let api: Api | undefined;
-function Probe() { api = useAgentConnection('u-agent-triage', 'Triage Agent'); return null; }
+
+function Probe() {
+  api = useAgentConnection('u-agent-triage', 'Triage Agent');
+
+  return null;
+}
 
 describe('useAgentConnection', () => {
   let root: Root;
@@ -21,17 +26,25 @@ describe('useAgentConnection', () => {
     root = createRoot(document.body.appendChild(document.createElement('div')));
     act(() => root.render(<UiProvider Dialog={StubDialog}><Probe /></UiProvider>));
   });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; vi.restoreAllMocks(); });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = ''; vi.restoreAllMocks();
+  });
 
   it('loads the agent’s token status when it mounts', async () => {
-    await act(async () => { await Promise.resolve(); });
+    await act(async () => {
+      await Promise.resolve();
+    });
     expect(serverApi.tokenInfo).toHaveBeenCalledWith('u-agent-triage');
     expect(api!.conn.phase).toBe('ready');
   });
   it('issues a token and shows it once', async () => {
-    await act(async () => { await Promise.resolve(); });
+    await act(async () => {
+      await Promise.resolve();
+    });
     vi.spyOn(serverApi, 'issueToken').mockResolvedValueOnce({ token: 'tok-123' });
-    await act(async () => { await api!.issue(); });
+    await act(async () => {
+      await api!.issue();
+    });
     expect(serverApi.issueToken).toHaveBeenCalledWith('u-agent-triage');
     expect(JSON.stringify(api!.conn)).toContain('tok-123');
   });

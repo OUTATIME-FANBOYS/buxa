@@ -5,6 +5,7 @@ async function setup(start?: string) {
   const camp = await createCamp('UTC', start);
   const admin = camp.actor('admin');
   const ben = await camp.people.create(admin, { givenName: 'Ben', familyName: 'Stone', roles: ['participant'] });
+
   return { camp, admin, ben };
 }
 

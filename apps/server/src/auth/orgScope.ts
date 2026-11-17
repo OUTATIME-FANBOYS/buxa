@@ -8,9 +8,16 @@ import type { Session } from './session';
  */
 export function actorFor(headers: Headers, session: Session): Actor {
   const header = headers.get('x-org-id');
-  if (header === null || header === '') throw badRequest('x-org-id header is required');
-  if (!isUuid(header)) throw badRequest('x-org-id must be an organisation id');
+  if (header === null || header === '') {
+    throw badRequest('x-org-id header is required');
+  }
+  if (!isUuid(header)) {
+    throw badRequest('x-org-id must be an organisation id');
+  }
   const membership = session.memberships.find(m => m.orgId === header);
-  if (!membership) throw forbidden('You do not have access to this organisation');
+  if (!membership) {
+    throw forbidden('You do not have access to this organisation');
+  }
+
   return { userId: session.user.id, orgId: membership.orgId, role: membership.role };
 }

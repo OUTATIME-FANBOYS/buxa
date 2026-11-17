@@ -8,11 +8,16 @@ import { Dialog } from '@/components/components/export';
 
 describe('Dialog', () => {
   let root: Root;
-  beforeEach(() => { root = createRoot(document.body.appendChild(document.createElement('div'))); });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; document.body.style.overflow = ''; });
+  beforeEach(() => {
+    root = createRoot(document.body.appendChild(document.createElement('div')));
+  });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = ''; document.body.style.overflow = '';
+  });
 
   it('renders a modal dialog in the body with its title, content and footer', () => {
     act(() => root.render(<Dialog title="Rename camp" onClose={() => undefined} footer={<button>Save</button>}><p>Pick a new name.</p></Dialog>));
+    // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
     const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
     expect(dialog.getAttribute('aria-modal')).toBe('true');
     expect(dialog.getAttribute('aria-label')).toBe('Rename camp');
@@ -26,11 +31,17 @@ describe('Dialog', () => {
     vi.useFakeTimers();
     const onClose = vi.fn();
     act(() => root.render(<Dialog title="Hi" onClose={onClose}><p>x</p></Dialog>));
+    // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
     const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
-    act(() => { (document.querySelector('button[aria-label="Close"]') as HTMLButtonElement).click(); });
+    act(() => {
+      // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
+      (document.querySelector('button[aria-label="Close"]') as HTMLButtonElement).click();
+    });
     expect(dialog.className).toContain('leaving');
     expect(onClose).not.toHaveBeenCalled();
-    act(() => { vi.advanceTimersByTime(200); });
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
     expect(onClose).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
   });

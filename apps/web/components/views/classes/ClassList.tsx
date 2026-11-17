@@ -12,7 +12,9 @@ import { NewClassButton } from '@/components/components/classes/forms/export';
 /** The camp's classes. Anyone who can read classes sees them; only staff with classes:manage see the create and import buttons. */
 export async function ClassList() {
   const actor = await currentActor();
-  if (!actor) notFound();
+  if (!actor) {
+    notFound();
+  }
   const canManage = can(actor, 'classes:manage');
   const loaded = await loadClasses(actor);
 

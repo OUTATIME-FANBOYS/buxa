@@ -12,7 +12,7 @@ function commands() {
 
 describe('taskMenuItems', () => {
   it('gives read-only members only Open', () => {
-    const items = taskMenuItems(task, project, true, commands() as never);
+    const items = taskMenuItems(task, project, true, commands());
     expect(items.map((i) => i && i.label)).toEqual(['Open']);
   });
   it('gives editors the full menu, with a move for every other column', () => {

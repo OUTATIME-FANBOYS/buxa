@@ -6,6 +6,7 @@ async function camperWithPerson(name = 'Ben') {
   const camp = await createCamp();
   const admin = camp.actor('admin');
   const person = await camp.people.create(admin, { givenName: name, familyName: 'Stone', roles: ['participant'] });
+
   return { camp, admin, person };
 }
 
@@ -62,7 +63,9 @@ describe('CredentialService', () => {
       await camp.credentials.scan(staff, `bx1.short`),
       await camp.credentials.scan(staff, unknownToken),
     ];
-    for (const answer of answers) expect(answer).toEqual({ kind: 'unknown' });
+    for (const answer of answers) {
+      expect(answer).toEqual({ kind: 'unknown' });
+    }
 
     await camp.credentials.revoke(admin, person.id);
     expect(await camp.credentials.scan(staff, live.payload)).toEqual({ kind: 'unknown' });

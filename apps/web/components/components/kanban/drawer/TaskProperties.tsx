@@ -13,6 +13,7 @@ import { TagInput } from './TagInput';
 export function TaskProperties({ task, project, d }: { task: Task | null; project: Project; d: TaskDraft }) {
   const { actions, members, wsTasks } = useStore();
   const allTags = useMemo(() => Array.from(new Set(wsTasks.flatMap(t => t.tags))).sort(), [wsTasks]);
+
   return (
     <div className="props">
       <Field label="Status">

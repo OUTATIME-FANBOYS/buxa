@@ -3,11 +3,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const env = vi.hoisted(() => {
   process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://127.0.0.1:1';
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'test-publishable-key';
+
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Kept: the compiler needs this assertion to type the value; removing it fails typecheck.
   return { store: undefined as unknown };
 });
 
 vi.mock('next/headers', () => ({ cookies: async () => env.store }));
-vi.mock('next/navigation', () => ({ redirect: (url: string) => { throw new Error(`REDIRECT ${url}`); } }));
+vi.mock('next/navigation', () => ({ redirect: (url: string) => {
+  throw new Error(`REDIRECT ${url}`);
+} }));
 
 import { ROUTES } from '@buxa/shared/config/routes';
 import { installRuntime } from '@buxa/server/runtime';
@@ -22,7 +26,9 @@ let data: InMemoryStore;
 let runtime: ReturnType<typeof startRuntime>;
 const sub = crypto.randomUUID();
 
-const signedInWith = (token: string, extra: Record<string, string> = {}) => { env.store = new FakeCookieStore({ [SESSION_COOKIE]: sessionCookieValue(token), ...extra }); };
+const signedInWith = (token: string, extra: Record<string, string> = {}) => {
+  env.store = new FakeCookieStore({ [SESSION_COOKIE]: sessionCookieValue(token), ...extra });
+};
 
 beforeEach(async () => {
   idp = await createTestIdentityProvider();
@@ -30,7 +36,9 @@ beforeEach(async () => {
   runtime = startRuntime({ verifier: idp.verifier, repositories: data.asRepositories() });
   env.store = new FakeCookieStore();
 });
-afterEach(async () => { await runtime.stop(); installRuntime(undefined); vi.unstubAllEnvs(); });
+afterEach(async () => {
+  await runtime.stop(); installRuntime(undefined); vi.unstubAllEnvs();
+});
 
 describe('getSession', () => {
   it('accepts a valid session cookie and loads the user and their camps', async () => {
@@ -41,7 +49,9 @@ describe('getSession', () => {
     expect(session?.memberships.map(m => m.name)).toEqual(['Pine Lake']);
   });
 
-  it('is null without a cookie', async () => { expect(await getSession()).toBeNull(); });
+  it('is null without a cookie', async () => {
+    expect(await getSession()).toBeNull();
+  });
   it('is null when the cookie is not a session at all', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {}); // the Supabase library warns about the unreadable cookie
     env.store = new FakeCookieStore({ [SESSION_COOKIE]: 'base64-%%%not-json' });

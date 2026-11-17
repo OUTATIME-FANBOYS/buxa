@@ -6,6 +6,11 @@ import { isDark, setTheme } from '@buxa/shared';
 /** Light/dark for the current browser. Reads the page after mount, because the server cannot know it. */
 export function useDarkMode(): { dark: boolean; toggle: () => void } {
   const [dark, setDark] = useState(false);
-  useEffect(() => { setDark(isDark()); }, []);
-  return { dark, toggle: () => { setTheme(!dark); setDark(!dark); } };
+  useEffect(() => {
+    setDark(isDark());
+  }, []);
+
+  return { dark, toggle: () => {
+    setTheme(!dark); setDark(!dark);
+  } };
 }

@@ -41,7 +41,9 @@ describe.skipIf(!url)('tenant isolation (row-level security)', () => {
 
   it('with no organisation set, every tenant table is empty', async () => {
     await withOrg(pool, null, async db => {
-      for (const t of ['orgs', 'users', 'org_members', 'audit_log']) expect((await db.query(`SELECT 1 FROM ${t}`)).rowCount).toBe(0);
+      for (const t of ['orgs', 'users', 'org_members', 'audit_log']) {
+        expect((await db.query(`SELECT 1 FROM ${t}`)).rowCount).toBe(0);
+      }
     });
   });
 
@@ -85,5 +87,7 @@ describe.skipIf(!url)('tenant isolation (row-level security)', () => {
     expect(r.rows.map(x => x.role).sort()).toEqual([...ROLES].sort());
   });
 
-  it('migrations are idempotent', async () => { expect(await migrate(pool)).toEqual([]); });
+  it('migrations are idempotent', async () => {
+    expect(await migrate(pool)).toEqual([]);
+  });
 });

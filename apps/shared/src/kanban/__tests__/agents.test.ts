@@ -12,7 +12,11 @@ const proj = () => s.projects.find(p => p.id === PROJECT.registration)!;
 const col = (name: string) => proj().columns.find(c => c.name === name)!.id;
 const task = (id: string) => s.tasks.find(t => t.id === id)!;
 const last = () => s.proposals[0];
-const propose = (c: Change, reason = 'because') => { s = A.submit(s, AGENT_ID, runId, c, reason); return last(); };
+const propose = (c: Change, reason = 'because') => {
+  s = A.submit(s, AGENT_ID, runId, c, reason);
+
+  return last();
+};
 
 beforeEach(() => {
   s = as(buildSeed(), USER.rosa);

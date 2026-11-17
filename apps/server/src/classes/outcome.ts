@@ -35,7 +35,9 @@ export async function attempt<T>(work: () => Promise<T>, timeZone: string): Prom
     return ok(await work());
   } catch (e) {
     for (const kind of Object.keys(NOT_FOUND) as (keyof typeof NOT_FOUND)[]) {
-      if (isClassError(e, kind)) return { ok: false, failure: NOT_FOUND[kind] };
+      if (isClassError(e, kind)) {
+        return { ok: false, failure: NOT_FOUND[kind] };
+      }
     }
     if (isEnrolmentRefusal(e)) {
       return { ok: false, failure: { reason: e.refusal.reason, message: describeRefusal(e.refusal, timeZone), refusal: e.refusal } };

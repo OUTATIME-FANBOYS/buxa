@@ -1,16 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { buildSeed } from '@buxa/shared';
-import { type Task } from '@buxa/shared';
 import { SubtaskList } from '@/components/components/kanban/drawer/export';
 
-const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
+const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 
-const task = { ...buildSeed().tasks[0], subtasks: [{ id: 's1', title: 'Book bus', done: true }, { id: 's2', title: 'Print lists', done: false }] } as unknown as Task;
+const task = { ...buildSeed().tasks[0], subtasks: [{ id: 's1', title: 'Book bus', done: true }, { id: 's2', title: 'Print lists', done: false }] };
 
 describe('SubtaskList', () => {
-  beforeEach(() => { h.store = { actions: {} }; });
+  beforeEach(() => {
+    h.store = { actions: {} };
+  });
 
   it('shows the progress in words and as a bar, with each subtask as a checkbox', () => {
     const html = renderToStaticMarkup(<SubtaskList task={task} ro={false} />);

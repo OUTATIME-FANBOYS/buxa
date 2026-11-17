@@ -14,6 +14,7 @@ export async function insertCheckIn(db: Db, actor: Actor, input: NewCheckIn): Pr
   if (input.overrideReason !== null) {
     await recordAudit(db, { actor, action: 'attendance.override', entity: 'check_in', entityId: id, data: { personId: input.personId, phase: 'check_in', reason: input.overrideReason } });
   }
+
   return id;
 }
 
@@ -29,7 +30,9 @@ export async function closeVisit(db: Db, actor: Actor, visit: CheckInRecord, inp
             override_reason = COALESCE($5::text, override_reason), note = COALESCE($6::text, note)
       WHERE id = $1 AND checked_out_at IS NULL`,
     [visit.id, input.at, actor.userId, input.collectedByPersonId, input.overrideReason, input.note]);
-  if (closed.rowCount !== 1) throw new NotOnSiteError();
+  if (closed.rowCount !== 1) {
+    throw new NotOnSiteError();
+  }
   await recordAudit(db, {
     actor,
     action: 'attendance.check_out',

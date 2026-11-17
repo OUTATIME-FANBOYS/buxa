@@ -5,7 +5,7 @@
  *   Vibrant Coral  #F05D5E  critical marks; text uses a darker or lighter derived step
  *   Platinum       #E7ECEF  light background; dark-mode text
  *   Shadow Grey    #272932  light-mode text; dark-mode surface
- *   Midnight Violet #36213E hero and agent hue; dark-mode hero
+ *   Midnight Violet #36213E agent hue (the sign-in hero uses grey and coral)
  *   text step  (--accent, --ok, --warn, --crit, --agent): 4.5:1 or better on every surface
  *   soft + ink (--x-soft, --x-ink):                      tinted backgrounds for pills and icons, ink is 4.5:1 on soft
  *   fill       (--f-x):                                   chart marks and dots, 3:1 on surfaces, checked for colour-blind separation
@@ -22,9 +22,16 @@
   --crit: #a3282b; --crit-soft: #fbe4e4; --crit-ink: #7f1d20; --f-crit: #f05d5e;
   --agent: #4f2d66; --agent-soft: #efe7f4; --agent-ink: #36213e; --f-agent: #7b5597;
   --f-neutral: #6b7480; --neutral-soft: #e0e6eb; --neutral-ink: #4a4e5c;
+  /* Role pills only: viewer is blue, teacher (planned, phase 3) is green-blue. Text on soft is 4.5:1 or better. */
+  --role-viewer: #1d4f8c; --role-viewer-soft: #dbe8f7;
+  --role-teacher: #0b5a5e; --role-teacher-soft: #d5eeee;
   --accent-ink: #ffffff; --on-solid: #ffffff; --on-inverse-accent: #9fd6d7;
   --coral: #f05d5e; --on-coral: #14161c; --on-fill: #14161c;
-  --hero-bg: #36213e; --hero-fg: #ffffff; --hero-fg-2: #c9b2d9;
+  --hero-bg: #eef1f4; --hero-fg: #272932; --hero-fg-2: #4a4e5c;
+  /* Sign-in backgrounds (layout/auth.css): a pale coral glow from the top-left and a fine grid of dots on the form side. */
+  --auth-glow: radial-gradient(120% 90% at 0% 0%, rgba(240,93,94,.20) 0%, rgba(240,93,94,0) 60%);
+  --auth-stars: linear-gradient(transparent, transparent);
+  --auth-dots: #c9d1d8;
   --p-low: var(--text-3); --p-medium: var(--accent); --p-high: var(--warn); --p-critical: var(--crit);
   --track: #c9d1d8; --grid: #d8dee4;
   --shadow-1: 0 1px 2px rgba(39,41,50,.06);
@@ -50,9 +57,21 @@
   --crit: #ff8a8b; --crit-soft: #3d2227; --crit-ink: #ffb3b4; --f-crit: #f05d5e;
   --agent: #c9b2d9; --agent-soft: #34263f; --agent-ink: #e0d0ee; --f-agent: #9b7bb8;
   --f-neutral: #8a90a0; --neutral-soft: #373a46; --neutral-ink: #b9bec9;
+  --role-viewer: #9cc3f0; --role-viewer-soft: #1a2b43;
+  --role-teacher: #7fd6d0; --role-teacher-soft: #173a3b;
   --accent-ink: #1e2026; --on-solid: #1e2026; --on-inverse-accent: #7a2e12;
   --coral: #f05d5e; --on-coral: #14161c; --on-fill: #14161c;
-  --hero-bg: #36213e; --hero-fg: #e7ecef; --hero-fg-2: #c9b2d9;
+  --hero-bg: #1b1f29; --hero-fg: #e7ecef; --hero-fg-2: #b9bec9;
+  /* Sign-in backgrounds (layout/auth.css): a coral glow from the top-left, a few faint stars, and a faint dot grid. */
+  --auth-glow: radial-gradient(120% 90% at 0% 0%, rgba(240,93,94,.30) 0%, rgba(240,93,94,0) 60%);
+  --auth-stars:
+    radial-gradient(1.5px 1.5px at 14% 22%, rgba(231,236,239,.75) 0, transparent 2px),
+    radial-gradient(1px 1px at 38% 12%, rgba(231,236,239,.55) 0, transparent 2px),
+    radial-gradient(1.5px 1.5px at 72% 28%, rgba(231,236,239,.65) 0, transparent 2px),
+    radial-gradient(1px 1px at 58% 64%, rgba(231,236,239,.5) 0, transparent 2px),
+    radial-gradient(1px 1px at 22% 80%, rgba(231,236,239,.45) 0, transparent 2px),
+    radial-gradient(1.5px 1.5px at 86% 58%, rgba(231,236,239,.6) 0, transparent 2px);
+  --auth-dots: rgba(231,236,239,.08);
   --track: #3a3e4b; --grid: #31343f;
   --shadow-1: 0 1px 2px rgba(0,0,0,.35);
   --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.5);
@@ -65,5 +84,10 @@
 .tone-warn, .pill-warn { --tone: var(--warn); --tone-soft: var(--warn-soft); --tone-ink: var(--warn-ink); --tone-f: var(--f-warn); }
 .tone-crit, .pill-crit { --tone: var(--crit); --tone-soft: var(--crit-soft); --tone-ink: var(--crit-ink); --tone-f: var(--f-crit); }
 .tone-agent, .pill-agent { --tone: var(--agent); --tone-soft: var(--agent-soft); --tone-ink: var(--agent-ink); --tone-f: var(--f-agent); }
+/* Camp roles on the Team access page: owner violet, admin orange (warn), staff green (ok), viewer blue. */
+.tone-role-owner, .pill-role-owner { --tone: var(--agent); --tone-soft: var(--agent-soft); --tone-ink: var(--agent-ink); --tone-f: var(--f-agent); }
+.tone-role-admin, .pill-role-admin { --tone: var(--warn); --tone-soft: var(--warn-soft); --tone-ink: var(--warn-ink); --tone-f: var(--f-warn); }
+.tone-role-staff, .pill-role-staff { --tone: var(--ok); --tone-soft: var(--ok-soft); --tone-ink: var(--ok-ink); --tone-f: var(--f-ok); }
+.tone-role-viewer, .pill-role-viewer { --tone: var(--role-viewer); --tone-soft: var(--role-viewer-soft); --tone-ink: var(--role-viewer); --tone-f: var(--role-viewer); }
 /* hero: the same violet family, for highlights that are not AI activity */
 .tone-hero, .pill-hero { --tone: var(--agent); --tone-soft: var(--agent-soft); --tone-ink: var(--agent-ink); --tone-f: var(--f-agent); }

@@ -24,22 +24,35 @@ export function useTaskDraft(task: Task | null, project: Project, defaults?: { c
   const [errs, setErrs] = useState<Errors>({});
 
   const commitTitle = () => {
-    if (!task) return;
+    if (!task) {
+      return;
+    }
     const err = titleError(title); setErrs(e => ({ ...e, title: err }));
-    const t = title.trim(); if (!err && t !== task.title) actions.updateTask(task.id, { title: t });
+    const t = title.trim(); if (!err && t !== task.title) {
+      actions.updateTask(task.id, { title: t });
+    }
   };
   const changeDates = (st: string, du: string, which: 'start' | 'due') => {
     setStart(st); setDue(du);
     const err = datesError(st, du); setErrs(e => ({ ...e, due: err }));
-    if (!err && task) actions.updateTask(task.id, which === 'start' ? { start: st || undefined } : { due: du || undefined });
+    if (!err && task) {
+      actions.updateTask(task.id, which === 'start' ? { start: st || undefined } : { due: du || undefined });
+    }
   };
   const create = () => {
     const er: Errors = { title: titleError(title), due: datesError(start, due) };
-    setErrs(er); if (er.title || er.due) return;
+    setErrs(er); if (er.title || er.due) {
+      return;
+    }
     const id = actions.createTask({ projectId: project.id, columnId, title: title.trim(), description: desc.trim(), priority, assigneeId: assignee || undefined, start: start || undefined, due: due || undefined, tags });
     toast('Task created'); openTask(id);
   };
-  const clearTitleError = () => { if (errs.title) setErrs(x => ({ ...x, title: undefined })); };
+  const clearTitleError = () => {
+    if (errs.title) {
+      setErrs(x => ({ ...x, title: undefined }));
+    }
+  };
+
   return { isNew, title, setTitle, desc, setDesc, start, due, columnId, setColumnId, priority, setPriority, assignee, setAssignee, tags, setTags, errs, commitTitle, changeDates, create, clearTitleError };
 }
 export type TaskDraft = ReturnType<typeof useTaskDraft>;

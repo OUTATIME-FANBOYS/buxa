@@ -27,11 +27,12 @@ How work gets named, checked, merged and released. The rules for the code are in
 
 ## Before opening a PR
 
-Run these from the repo root. CI runs the same three steps and fails the PR if any of them fails.
+Use Node 22, as CI does. Run these from the repo root. CI runs them as ordered chunks (`.github/workflows/ci.yml`): typecheck, lint, unit tests, database tests and build. The umbrella check, **Verify build**, fails if a chunk that should run does not pass.
 
 ```bash
 npm run typecheck
-npm test            # database tests run only when DATABASE_URL is set
+npm run lint
+npm test            # database tests run only when DATABASE_URL is set; npm run test:unit and npm run test:db run the two halves
 npm run build
 ```
 
@@ -39,7 +40,7 @@ Database tests need the local database: `docker compose up -d db`, then `export 
 
 ## Testing
 
-Vitest is the unit test runner for the whole repo, including `apps/web`, `packages/*` and `test/`. Next.js does not replace it: `npm test` runs `vitest run` from the root. Its major-version upgrade is tracked separately and does not block this work.
+Vitest is the unit test runner for the whole repo, including `apps/web`, `packages/*` and `test/`. Next.js does not replace it: `npm test` runs `vitest run` from the root.
 
 ## Merging
 
@@ -56,6 +57,8 @@ Vitest is the unit test runner for the whole repo, including `apps/web`, `packag
 3. Merge it with a merge commit.
 4. Tag the `main` commit `vX.Y.Z` and push the tag.
 
+Tags so far: `v0.1.0`, `v0.1.1`, `v0.1.2`, `v0.1.3-release`, `v0.2.1` and `v0.2.2`. `v0.1.3-release` and `v0.2.2` are on `main`.
+
 ## Enforcement
 
-GitHub branch protection is not available on this plan (private repo, free org). Until it is, these rules are enforced by CI and by review. When the org moves to GitHub Team, require the PR and the `verify` check on `develop` and `main`, require `Branch flow` on `main`, and block force pushes and deletions on both.
+GitHub branch protection is not available on this plan (private repo, free org). Until it is, these rules are enforced by CI and by review. When the org moves to GitHub Team, require the PR and the **Verify build** check on `develop` and `main`, require `Branch flow` on `main`, and block force pushes and deletions on both.

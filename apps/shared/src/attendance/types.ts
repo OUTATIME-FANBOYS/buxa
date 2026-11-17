@@ -1,7 +1,6 @@
 import type { AttendanceEntry, PersonSummary } from '@buxa/contracts';
 import type { AccessStatus } from '@buxa/domain';
 
-
 /** Expected outcomes are results, not exceptions, so a screen can render each one. Unexpected problems still throw. */
 export type CheckInResult =
   | { ok: true; entry: AttendanceEntry; overridden: boolean }

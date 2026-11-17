@@ -5,7 +5,7 @@ import { migrate, withOrg } from '../src';
 
 const url = process.env.DATABASE_URL;
 
-/** Tables added in phase 1. Each one must refuse another organisation's rows, in both directions. */
+/** People tables. Each one must refuse another organisation's rows, in both directions. */
 const TENANT_TABLES = ['people', 'person_roles', 'households', 'household_members', 'memberships', 'credentials', 'check_ins'] as const;
 
 interface Seeded {
@@ -52,6 +52,7 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
       const checkIn = (await db.query<{ id: string }>(
         `INSERT INTO check_ins (org_id, person_id, checked_in_at, checked_in_by, method)
          VALUES ($1, $2, '2027-07-01T09:00:00Z', $3, 'qr') RETURNING id`, [org, person, user])).rows[0].id;
+
       return { person, guardian, household, membership, credential, checkIn };
     });
   }

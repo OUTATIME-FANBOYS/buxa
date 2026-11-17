@@ -10,7 +10,7 @@ export interface NavItem {
   exact?: boolean;
   /**
    * Shown only to roles granted this action. Absent: shown to everyone, including someone with no camp yet.
-   * Work and Admin items have no permission model yet, so they are absent here: access control for them is a later phase.
+   * Work and Admin items have no permission model yet, so they are absent here: access control for them is not built yet.
    */
   requires?: Action;
 }
@@ -38,8 +38,6 @@ export const CAMP_NAV_GROUPS: readonly NavGroup[] = [
       { href: ROUTES.people, label: 'People', icon: 'users', requires: 'people:read' },
       { href: ROUTES.attendance, label: 'Attendance', icon: 'list', requires: 'attendance:read' },
       { href: ROUTES.classes, label: 'Classes', icon: 'calendar', requires: 'events:read' },
-      // Help has no `requires`: anyone may read it.
-      { href: ROUTES.help, label: 'Help', icon: 'help' },
     ],
   },
   {
@@ -50,7 +48,6 @@ export const CAMP_NAV_GROUPS: readonly NavGroup[] = [
       { href: ROUTES.boards, label: 'Boards', icon: 'kanban' },
       { href: ROUTES.calendar, label: 'Calendar', icon: 'calendar' },
       { href: ROUTES.agents, label: 'Agents', icon: 'agent' },
-      { href: ROUTES.reports, label: 'Reports', icon: 'chart' },
     ],
   },
   {

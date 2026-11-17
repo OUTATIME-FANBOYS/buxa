@@ -12,6 +12,7 @@ export function poolConfigFor(connectionString: string, extra: Omit<PoolConfig, 
   const local = LOCAL_HOSTS.has(url.hostname);
   url.searchParams.delete('sslmode');
   url.searchParams.delete('uselibpqcompat');
+
   return {
     ...extra,
     connectionString: url.toString(),

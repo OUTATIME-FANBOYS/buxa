@@ -12,9 +12,13 @@ import { loadPerson } from '@buxa/server/composers/index.server';
 /** Change one person's details. Only people:update may; everyone else is told so, without a form to fill in. */
 export async function EditPerson({ id }: { id: string }) {
   const actor = await currentActor();
-  if (!actor) notFound();
+  if (!actor) {
+    notFound();
+  }
   const person = await loadPerson(actor, id);
-  if (!person) notFound();
+  if (!person) {
+    notFound();
+  }
 
   if (!can(actor, 'people:update')) {
     return (

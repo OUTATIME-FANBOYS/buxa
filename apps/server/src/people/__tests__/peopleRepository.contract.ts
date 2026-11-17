@@ -8,8 +8,12 @@ import { expectRejection, ISO_INSTANT, LOCAL_DATE, samplePerson, type Repository
 export function peopleRepositoryContract(factory: RepositoryFactory): void {
   describe('PeopleRepository contract', () => {
     let fx: RepositoryFixture;
-    beforeEach(async () => { fx = await factory(); });
-    afterEach(async () => { await fx.close(); });
+    beforeEach(async () => {
+      fx = await factory();
+    });
+    afterEach(async () => {
+      await fx.close();
+    });
 
     describe('create and get', () => {
       it('returns dates as YYYY-MM-DD and instants as ISO strings', async () => {

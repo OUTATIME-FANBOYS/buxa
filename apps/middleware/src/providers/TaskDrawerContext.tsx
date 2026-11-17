@@ -12,12 +12,19 @@ interface TaskDrawerCtx {
 }
 const Ctx = createContext<TaskDrawerCtx | null>(null);
 
-export const useTaskDrawer = () => { const c = useContext(Ctx); if (!c) throw new Error('TaskDrawerProvider missing'); return c; };
+export const useTaskDrawer = () => {
+  const c = useContext(Ctx); if (!c) {
+    throw new Error('TaskDrawerProvider missing');
+  }
+
+  return c;
+};
 
 export function TaskDrawerProvider({ children }: { children: ReactNode }) {
   const [drawer, setDrawer] = useState<TaskDrawerState | null>(null);
   const openTask = useCallback<TaskDrawerCtx['openTask']>((id, defaults) => setDrawer({ id, defaults }), []);
   const closeTask = useCallback(() => setDrawer(null), []);
   const value = useMemo(() => ({ drawer, openTask, closeTask }), [drawer, openTask, closeTask]);
+
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
