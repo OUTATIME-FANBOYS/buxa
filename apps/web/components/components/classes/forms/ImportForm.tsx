@@ -5,6 +5,7 @@ import { Field } from '@/components/elements/export';
 import { IMPORT_IDLE } from '@buxa/shared';
 import { importClassesAction } from '@/actions/classes';
 import { ImportResults } from './ImportResults';
+import { ErrorReportButton } from './ErrorReportButton';
 
 /**
  * Upload a filled template, read the preview, then confirm. Nothing is saved until the confirm button is pressed. The confirm writes
@@ -33,6 +34,7 @@ export function ImportForm() {
       {state.status === 'preview' && (
         <div className="panel stack" aria-busy={pending}>
           <ImportResults results={state.results} counts={state.counts} />
+          <ErrorReportButton fileName={state.fileName} text={state.text} refused={state.counts.refused} />
           <form action={formAction} className="classes-actions" aria-label="Confirm the import">
             <input type="hidden" name="intent" value="confirm" />
             <input type="hidden" name="fileName" value={state.fileName} />

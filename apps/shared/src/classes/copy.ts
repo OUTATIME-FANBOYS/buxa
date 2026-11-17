@@ -6,3 +6,4 @@ export const FORBIDDEN_ENROLMENTS = 'You cannot see who is enrolled. Ask an admi
 export const WHOLE_NUMBER = 'Enter a whole number.';
 export const CHECK_FIELDS = 'Check the highlighted fields.';
 export const TEMPLATE_FILE_NAME = 'buxa-classes-template.csv';
+export const ERROR_REPORT_FILE_NAME = 'buxa-classes-import-errors.csv';
