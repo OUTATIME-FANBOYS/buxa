@@ -16,7 +16,12 @@ const LAYER_DIRS: [string, Layer][] = [
   ['app/', 'app'], ['components/views/', 'views'], ['components/components/', 'components'], ['components/elements/', 'elements'],
 ];
 const layerOf = (rel: string): Layer => {
-  for (const [prefix, layer] of LAYER_DIRS) if (rel.startsWith(prefix)) return layer;
+  for (const [prefix, layer] of LAYER_DIRS) {
+    if (rel.startsWith(prefix)) {
+      return layer;
+    }
+  }
+
   return 'other';
 };
 
@@ -37,11 +42,17 @@ const DEEP_ALLOWED = new Set<string>();
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
-    if (entry === 'node_modules' || entry.startsWith('.') || entry === '__tests__') continue;
+    if (entry === 'node_modules' || entry.startsWith('.') || entry === '__tests__') {
+      continue;
+    }
     const full = join(dir, entry);
-    if (statSync(full).isDirectory()) walk(full, out);
-    else if (/\.tsx?$/.test(entry) && !/\.test\.tsx?$/.test(entry) && !entry.endsWith('.d.ts')) out.push(full);
+    if (statSync(full).isDirectory()) {
+      walk(full, out);
+    } else if (/\.tsx?$/.test(entry) && !/\.test\.tsx?$/.test(entry) && !entry.endsWith('.d.ts')) {
+      out.push(full);
+    }
   }
+
   return out;
 }
 
@@ -56,22 +67,34 @@ function importsOf(text: string): string[] {
   for (const m of text.matchAll(re)) {
     // `import { type A, type B }` is type-only and erased at build time
     const named = /\{([^}]*)\}/.exec(m[2]);
-    if (named && named[1].split(',').every((x) => x.trim() === '' || x.trim().startsWith('type '))) continue;
+    if (named && named[1].split(',').every((x) => x.trim() === '' || x.trim().startsWith('type '))) {
+      continue;
+    }
     out.push(m[3]);
   }
-  for (const m of text.matchAll(/^\s*import\s+['"]([^'"]+)['"]/gm)) out.push(m[1]);
+  for (const m of text.matchAll(/^\s*import\s+['"]([^'"]+)['"]/gm)) {
+    out.push(m[1]);
+  }
+
   return out;
 }
 
 /** Resolves an alias or relative specifier to a repository-relative source file, or null for packages. */
 function resolveSpec(spec: string, fromRel: string): string | null {
   let base: string;
-  if (spec.startsWith('@/')) base = join(WEB, spec.slice(2));
-  else if (spec.startsWith('.')) base = resolve(dirname(join(WEB, fromRel)), spec);
-  else return null;
-  for (const cand of [base, `${base}.ts`, `${base}.tsx`, join(base, 'index.ts'), join(base, 'index.tsx'), `${base}.server.ts`]) {
-    if (existsSync(cand) && statSync(cand).isFile()) return rel(cand);
+  if (spec.startsWith('@/')) {
+    base = join(WEB, spec.slice(2));
+  } else if (spec.startsWith('.')) {
+    base = resolve(dirname(join(WEB, fromRel)), spec);
+  } else {
+    return null;
   }
+  for (const cand of [base, `${base}.ts`, `${base}.tsx`, join(base, 'index.ts'), join(base, 'index.tsx'), `${base}.server.ts`]) {
+    if (existsSync(cand) && statSync(cand).isFile()) {
+      return rel(cand);
+    }
+  }
+
   return null;
 }
 
@@ -79,6 +102,7 @@ const edges = new Map<string, { to: string; spec: string }[]>();
 for (const [file, text] of source) {
   edges.set(file, importsOf(text).flatMap((spec) => {
     const to = resolveSpec(spec, file);
+
     return to ? [{ to, spec }] : [];
   }));
 }
@@ -89,10 +113,14 @@ describe('layer rules', () => {
     for (const [file, list] of edges) {
       const from = layerOf(file);
       const allowed = MAY_IMPORT[from];
-      if (!allowed) continue;
+      if (!allowed) {
+        continue;
+      }
       for (const { to, spec } of list) {
         const target = layerOf(to);
-        if (!allowed.includes(target)) bad.push(`${file} (${from}) -> ${spec} (${target})`);
+        if (!allowed.includes(target)) {
+          bad.push(`${file} (${from}) -> ${spec} (${target})`);
+        }
       }
     }
     expect(bad).toEqual([]);
@@ -104,14 +132,17 @@ describe('layer rules', () => {
       const from = layerOf(file);
       for (const { to, spec } of list) {
         const target = layerOf(to);
-        if (target === from || !BARREL_FILES[target]) continue;
-        if (BARREL_FILES[target]!.includes(to) || to.endsWith('/export.ts') || DEEP_ALLOWED.has(spec)) continue;
+        if (target === from || !BARREL_FILES[target]) {
+          continue;
+        }
+        if (BARREL_FILES[target]!.includes(to) || to.endsWith('/export.ts') || DEEP_ALLOWED.has(spec)) {
+          continue;
+        }
         bad.push(`${file} -> ${spec}`);
       }
     }
     expect(bad).toEqual([]);
   });
-
 
   it('elements do not hold domain knowledge: they import no components, views, hooks or providers', () => {
     const bad = [...edges].filter(([f]) => layerOf(f) === 'elements').flatMap(([f, l]) => l.filter((e) => ['components', 'views'].includes(layerOf(e.to))).map((e) => `${f} -> ${e.spec}`));
@@ -128,12 +159,19 @@ describe('cycles', () => {
       state.set(node, 1); stack.push(node);
       for (const { to } of edges.get(node) ?? []) {
         const s = state.get(to);
-        if (s === 1) cycles.push([...stack.slice(stack.indexOf(to)), to].join(' -> '));
-        else if (s === undefined) visit(to);
+        if (s === 1) {
+          cycles.push([...stack.slice(stack.indexOf(to)), to].join(' -> '));
+        } else if (s === undefined) {
+          visit(to);
+        }
       }
       stack.pop(); state.set(node, 2);
     };
-    for (const node of edges.keys()) if (!state.has(node)) visit(node);
+    for (const node of edges.keys()) {
+      if (!state.has(node)) {
+        visit(node);
+      }
+    }
     expect(cycles).toEqual([]);
   });
 });
@@ -147,11 +185,23 @@ describe('server-only code stays out of client barrels', () => {
     const seen = new Set<string>();
     const hits: string[] = [];
     const walkFrom = (file: string, path: string[]) => {
-      if (seen.has(file)) return;
+      if (seen.has(file)) {
+        return;
+      }
       seen.add(file);
-      if (isServerOnly(file)) { hits.push([...path, file].join(' -> ')); return; }
-      if (isUseServer(file) && file !== barrel) return; // server actions are RPC stubs on the client
-      for (const { to } of edges.get(file) ?? []) if (source.has(to)) walkFrom(to, [...path, file]);
+      if (isServerOnly(file)) {
+        hits.push([...path, file].join(' -> '));
+
+        return;
+      }
+      if (isUseServer(file) && file !== barrel) {
+        return;
+      } // server actions are RPC stubs on the client
+      for (const { to } of edges.get(file) ?? []) {
+        if (source.has(to)) {
+          walkFrom(to, [...path, file]);
+        }
+      }
     };
     walkFrom(barrel, []);
     expect(hits).toEqual([]);
@@ -168,11 +218,17 @@ describe('components folders are used through their export.ts', () => {
   it('no file outside a components folder imports a file inside it (only its export.ts)', () => {
     const bad: string[] = [];
     for (const [file, list] of edges) {
-      if (!file.startsWith(COMPONENTS) && !file.startsWith('app/') && !file.startsWith('components/')) continue;
+      if (!file.startsWith(COMPONENTS) && !file.startsWith('app/') && !file.startsWith('components/')) {
+        continue;
+      }
       for (const { to, spec } of list) {
-        if (!to.startsWith(COMPONENTS) || to.endsWith('/export.ts')) continue;
+        if (!to.startsWith(COMPONENTS) || to.endsWith('/export.ts')) {
+          continue;
+        }
         const folder = folderOf(to);
-        if (insideFolder(file, folder)) continue;
+        if (insideFolder(file, folder)) {
+          continue;
+        }
         bad.push(`${file} -> ${spec}`);
       }
     }

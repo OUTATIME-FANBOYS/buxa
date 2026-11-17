@@ -23,13 +23,20 @@ export interface CliOptions extends SeedOptions { yes: boolean }
 export function parseArgs(argv: readonly string[]): CliOptions {
   const options: CliOptions = { reset: false, yes: false };
   for (const arg of argv) {
-    if (arg === '--reset') { options.reset = true; continue; }
-    if (arg === '--yes') { options.yes = true; continue; }
+    if (arg === '--reset') {
+      options.reset = true; continue;
+    }
+    if (arg === '--yes') {
+      options.yes = true; continue;
+    }
     const [flag, value] = arg.split('=', 2);
     const key = FLAGS[flag];
-    if (key === undefined || value === undefined || value === '') throw new Error(`Unknown or incomplete option: ${flag}`);
+    if (key === undefined || value === undefined || value === '') {
+      throw new Error(`Unknown or incomplete option: ${flag}`);
+    }
     options[key] = value;
   }
+
   return options;
 }
 
@@ -50,6 +57,7 @@ async function main(): Promise<void> {
         if (!options.yes && !await confirmReset()) {
           console.log('Not confirmed. Nothing was deleted. (Without a terminal, pass --yes.)');
           process.exitCode = 1;
+
           return;
         }
       }
@@ -57,6 +65,7 @@ async function main(): Promise<void> {
     const result = await seedMock(pool, options);
     if (result.status === 'already-seeded') {
       console.log('Camp Birchwood is already seeded. Run `npm run seed:reset` to clear and rebuild it.');
+
       return;
     }
     const c = result.counts;

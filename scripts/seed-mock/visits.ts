@@ -36,5 +36,6 @@ export async function seedVisits(services: Services, staff: Actor, ids: RosterId
   await services.attendance.checkIn(staff, { personId: camperD, method: 'qr' });
   setTime(at(-25 * HOUR));
   await services.attendance.checkOut(staff, { personId: camperD, collectedByPersonId: guardianC });
+
   return 6;
 }

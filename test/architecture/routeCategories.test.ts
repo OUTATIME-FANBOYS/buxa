@@ -25,6 +25,7 @@ const isPageFile = (name: string) => name === 'page.tsx' || name === 'route.ts';
 function listFiles(dir: string, prefix: string[] = []): string[] {
   return readdirSync(join(dir, ...prefix), { withFileTypes: true }).flatMap(entry => {
     const here = [...prefix, entry.name];
+
     return entry.isDirectory() ? listFiles(dir, here) : [here.join('/')];
   });
 }
@@ -35,6 +36,7 @@ const pageFiles = files.filter(file => isPageFile(file.split('/').pop() ?? ''));
 /** The URL a page file serves: group folders are removed, the file name is dropped. */
 const urlOf = (file: string) => {
   const segments = file.split('/').slice(0, -1).filter(segment => !isGroup(segment));
+
   return ['/camp', ...segments].join('/').replace(/\/$/, '');
 };
 
@@ -66,7 +68,9 @@ describe('route categories', () => {
       const folder = GROUP_FOLDER[group.label];
       expect(folder, `no folder for sidebar group "${group.label}"`).toBeDefined();
       for (const item of group.items) {
-        if (folderOf.get(item.href) !== folder) wrong.push(`${item.label} (${item.href}) is in ${folderOf.get(item.href) ?? 'no page'}, not ${folder}`);
+        if (folderOf.get(item.href) !== folder) {
+          wrong.push(`${item.label} (${item.href}) is in ${folderOf.get(item.href) ?? 'no page'}, not ${folder}`);
+        }
       }
     }
     expect(wrong).toEqual([]);

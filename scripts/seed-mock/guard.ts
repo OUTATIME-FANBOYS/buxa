@@ -5,9 +5,15 @@ const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
  * (the Postgres driver lets it override the host), so a remote database cannot be reached by either route.
  */
 export function assertLocalDatabase(url: string | undefined): void {
-  if (!url) throw new Error('DATABASE_URL is not set. Point it at the local database (see docker-compose.yml).');
+  if (!url) {
+    throw new Error('DATABASE_URL is not set. Point it at the local database (see docker-compose.yml).');
+  }
   let parsed: URL;
-  try { parsed = new URL(url); } catch { throw new Error('DATABASE_URL is not a valid URL.'); }
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error('DATABASE_URL is not a valid URL.');
+  }
   const overridden = parsed.searchParams.get('host');
   const hosts = [parsed.hostname, ...(overridden === null ? [] : [overridden])];
   const remote = hosts.find(host => !LOCAL_HOSTS.has(host));
