@@ -10,7 +10,7 @@ export interface NavItem {
   exact?: boolean;
   /**
    * Shown only to roles granted this action. Absent: shown to everyone, including someone with no camp yet.
-   * Work and Admin items have no permission model yet, so they are absent here: access control for them is a later phase.
+   * Work and Admin items have no permission model yet, so they are absent here: access control for them is not built yet.
    */
   requires?: Action;
 }

@@ -4,7 +4,7 @@ import { HELP_LINK_LABEL, HELP_SECTIONS, helpLink } from '../content';
 import { IMPORT_COLUMNS } from '../imports';
 import { type HelpSectionContent, type HelpSubsection } from '../types';
 
-/** The import columns as the phase 2 bulk import spec names them (docs/phases/02-events-calendar.md, "Template columns"). */
+/** The import columns as the bulk import spec names them (docs/phases/02-events-calendar.md, "Template columns"). */
 const SPEC_COLUMNS = [
   'external_key', 'class_name', 'starts_at', 'ends_at', 'location', 'age_min', 'age_max', 'capacity', 'instructor_names', 'ratio_campers', 'ratio_instructors',
 ];

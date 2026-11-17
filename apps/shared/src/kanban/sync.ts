@@ -14,7 +14,7 @@ export type Updater = (s: AppState) => AppState;
 export interface Host { getState(): AppState; commit(s: AppState): void; pending: Updater[]; onStatus(s: SyncState, info?: { mcpUrl?: string }): void }
 
 const clientId = (globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)).slice(0, 36);
-/** The local server's per-run secret (see apps/server/src/agents/index.ts). Set NEXT_PUBLIC_LEGACY_SECRET to the value it prints. */
+/** The local server's secret, sent on every request. It comes from NEXT_PUBLIC_LEGACY_SECRET, which must match the server's BUXA_LEGACY_SECRET. */
 const runSecret = process.env.NEXT_PUBLIC_LEGACY_SECRET ?? '';
 const headers = { 'content-type': 'application/json', 'x-buxa-client': clientId, 'x-buxa-run-secret': runSecret };
 
@@ -55,7 +55,7 @@ export const serverApi = {
 
 const sameData = (a: Data, b: Data) => DATA_KEYS.every(k => a[k] === b[k]);
 
-/** The original kanban demo can sync with its old single-user server (`npm run server`), but only when asked: set NEXT_PUBLIC_LEGACY_SYNC=true. Otherwise the board is local-only and never calls it. */
+/** Sync to the local server (`npm run server`) is opt-in: it runs only when NEXT_PUBLIC_LEGACY_SYNC=true. Otherwise the board is local-only. */
 const SYNC_AVAILABLE = process.env.NEXT_PUBLIC_LEGACY_SYNC === 'true';
 
 export function createSync(h: Host) {
