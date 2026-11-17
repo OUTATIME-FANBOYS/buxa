@@ -4,8 +4,8 @@
 @keyframes popOut { to { opacity: 0; transform: scale(.97); } }
 @keyframes fadeOut { to { opacity: 0; } }
 @keyframes slideOut { to { transform: translateX(100%); } }
-.menu [role=menu] { display: grid; } .menu button[role=menuitem] { display: flex; align-items: center; gap: var(--s3); height: 34px; padding: 0 var(--s3); border-radius: var(--r-1); text-align: left; white-space: nowrap; width: 100%; }
-.menu button[role=menuitem]:hover, .menu button[role=menuitem]:focus-visible { background: var(--hover); outline: none; } .menu button.danger { color: var(--crit); } .menu hr { border: 0; border-top: 1px solid var(--line); margin: var(--s1) 0; }
+.menu [role=menu] { display: grid; } .menu [role=menuitem] { text-decoration: none; color: inherit; box-sizing: border-box;  display: flex; align-items: center; gap: var(--s3); height: 34px; padding: 0 var(--s3); border-radius: var(--r-1); text-align: left; white-space: nowrap; width: 100%; }
+.menu [role=menuitem]:hover, .menu [role=menuitem]:focus-visible { background: var(--hover); outline: none; } .menu button.danger { color: var(--crit); } .menu hr { border: 0; border-top: 1px solid var(--line); margin: var(--s1) 0; }
 .menu button:disabled { opacity: .4; cursor: default; } .menu-check { margin-left: auto; color: var(--accent); }
 .notif { padding: 0; } .notif-head { display: flex; justify-content: space-between; padding: var(--s3) var(--s4); border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); }
 .notif-item { display: flex; gap: var(--s3); align-items: flex-start; width: 100%; text-align: left; padding: var(--s3) var(--s4); } .notif-item:hover { background: var(--hover); } .notif-item.unread { background: color-mix(in srgb, var(--coral) 12%, var(--surface)); }
