@@ -1,5 +1,6 @@
 import 'server-only';
 import pg from 'pg';
+import { poolConfigFor } from '@buxa/db';
 import { createRemoteJWKSet } from 'jose';
 import { decideStartup, readEmailConfirmation, type StartupDecision } from './auth/emailConfirmation';
 import { createVerifier, type Verifier } from './auth/verifier';
@@ -68,7 +69,7 @@ export interface RuntimeOptions {
 export function createRuntime(options: RuntimeOptions = {}): Runtime {
   const config = loadConfig(options.env ?? process.env);
   const log = createLogger(config.logLevel, options.logSink);
-  const pool = new pg.Pool({ connectionString: config.databaseUrl, max: config.dbPoolMax, connectionTimeoutMillis: 5000 });
+  const pool = new pg.Pool(poolConfigFor(config.databaseUrl, { max: config.dbPoolMax, connectionTimeoutMillis: 5000 }));
   const repositories = options.repositories ?? createPgRepositories(pool);
   const rateLimiter = options.rateLimiter ?? createPgRateLimiter(pool);
   const base = config.supabaseUrl?.replace(/\/+$/, '');
