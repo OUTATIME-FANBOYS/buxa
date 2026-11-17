@@ -38,7 +38,7 @@ export function OnSiteRow({ row, canRecord, canOverride }: Props) {
           <span className="muted small">Arrived {row.arrivedAt}</span>
         </div>
         {canRecord && (
-          <button ref={toggle} type="button" className="btn att-btn-lg" aria-expanded={panelOpen} aria-controls={panelId}
+          <button ref={toggle} type="button" className={panelOpen ? "btn att-btn-lg" : "btn btn-primary att-btn-lg"} aria-expanded={panelOpen} aria-controls={panelId}
             onClick={() => (panelOpen ? cancel() : open())}>
             {panelOpen ? 'Cancel' : 'Check out'}
           </button>
