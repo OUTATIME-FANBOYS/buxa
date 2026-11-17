@@ -79,6 +79,17 @@ export default tseslint.config(
     },
   },
 
+  // Layout and brace rules from ESLint core. Every conditional and loop body is a block, braces are never on one line,
+  // a return after other statements gets a blank line above it, and runs of blank lines collapse to one.
+  {
+    rules: {
+      curly: ['error', 'all'],
+      'brace-style': ['error', '1tbs', { allowSingleLine: false }],
+      'padding-line-between-statements': ['error', { blankLine: 'always', prev: '*', next: 'return' }],
+      'no-multiple-empty-lines': ['error', { max: 1 }],
+    },
+  },
+
   // Scripts, tests and CLI entry points may use console.log.
   {
     files: consoleAllowed,
