@@ -9,16 +9,16 @@ const membership = { id: 'm-1', plan: 'Full season', startsOn: '2027-06-01', end
 
 describe('MembershipRow', () => {
   it('shows the plan, the camp days and the status in words', () => {
-    const html = renderToStaticMarkup(<MembershipRow membership={membership} personId="p-1" canManage={false} timeZone="Europe/London" />);
+    const html = renderToStaticMarkup(<MembershipRow membership={membership} personId="p-1" canManage={false} timeZone="Europe/London" clockFormat="24h" />);
     expect(html).toContain('<strong>Full season</strong>');
     expect(html).toContain('1 Jun 2027 to 31 Aug 2027');
     expect(html).toContain('Valid');
     expect(html).not.toContain('Revoke');
   });
   it('offers revoke behind a disclosure to managers, and says when a membership was revoked', () => {
-    expect(renderToStaticMarkup(<MembershipRow membership={membership} personId="p-1" canManage timeZone="Europe/London" />)).toContain('<summary');
+    expect(renderToStaticMarkup(<MembershipRow membership={membership} personId="p-1" canManage timeZone="Europe/London" clockFormat="24h" />)).toContain('<summary');
     const revoked = { ...membership, status: 'revoked', revokedAt: '2027-07-01T10:00:00.000Z', revokedReason: 'Left camp' } as unknown as PersonMembership;
-    const html = renderToStaticMarkup(<MembershipRow membership={revoked} personId="p-1" canManage timeZone="Europe/London" />);
+    const html = renderToStaticMarkup(<MembershipRow membership={revoked} personId="p-1" canManage timeZone="Europe/London" clockFormat="24h" />);
     expect(html).toContain('Revoked');
     expect(html).toContain('Left camp');
     expect(html).not.toContain('<summary');

@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { can, isUuid } from '@buxa/domain';
 import { ROUTES, classPath, newSessionPath } from '@/config/routes';
 import { Empty, PageHeader } from '@/components/components/export';
-import { campZone } from '@buxa/server/composers/index.server';
+import { campClock } from '@buxa/server/composers/index.server';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_ENROLMENTS, FORBIDDEN_READ } from '@buxa/shared';
 import { loadClassPage, loadEnrolments, loadPeopleWithRole } from '@buxa/server/composers/index.server';
@@ -34,7 +34,7 @@ export async function ClassPage({ classId, searchParams }: {
 
   const { cls, sessions } = loaded.value;
   const canManage = can(actor, 'classes:manage');
-  const timeZone = await campZone(actor);
+  const { timeZone, clockFormat } = await campClock(actor);
   const selectedId = pick(searchParams.session);
   const selected = sessions.find(s => s.id === selectedId) ?? null;
 
@@ -64,7 +64,7 @@ export async function ClassPage({ classId, searchParams }: {
             body={canManage ? 'Add the first session, with its time, place and instructors.' : 'No sessions are scheduled for this class yet.'}
             action={canManage && <Link className="btn btn-primary classes-target" href={newSessionPath(cls.id)}>Add session</Link>} />
         ) : (
-          <SessionTable classId={cls.id} sessions={sessions} timeZone={timeZone} selectedId={selected?.id ?? null} />
+          <SessionTable classId={cls.id} sessions={sessions} timeZone={timeZone} clockFormat={clockFormat} selectedId={selected?.id ?? null} />
         )}
       </section>
 
@@ -72,8 +72,8 @@ export async function ClassPage({ classId, searchParams }: {
         <section id="enrolments" aria-labelledby="enrolments-heading" className="stack classes-enrolments">
           <h2 id="enrolments-heading" className="people-subheading">Enrolments</h2>
           <dl className="people-facts classes-facts" aria-label="Session details">
-            <dt>Starts</dt><dd>{formatCampDateTime(selected.startsAt, timeZone)}</dd>
-            <dt>Ends</dt><dd>{formatCampDateTime(selected.endsAt, timeZone)}</dd>
+            <dt>Starts</dt><dd>{formatCampDateTime(selected.startsAt, timeZone, clockFormat)}</dd>
+            <dt>Ends</dt><dd>{formatCampDateTime(selected.endsAt, timeZone, clockFormat)}</dd>
             <dt>Location</dt><dd>{selected.location}</dd>
             <dt>Instructors</dt><dd>{instructorNames(selected)}</dd>
           </dl>
@@ -92,7 +92,7 @@ export async function ClassPage({ classId, searchParams }: {
           {!enrolments ? null : enrolments.ok ? (
             enrolments.value.length === 0
               ? <Empty icon="users" title="Nobody is enrolled yet" body="Enrolled and waitlisted campers appear here." />
-              : <EnrolmentTable classId={cls.id} enrolments={enrolments.value} canManage={canManage} timeZone={timeZone} />
+              : <EnrolmentTable classId={cls.id} enrolments={enrolments.value} canManage={canManage} timeZone={timeZone} clockFormat={clockFormat} />
           ) : (
             <Empty icon="alert" title="You cannot see who is enrolled" body={FORBIDDEN_ENROLMENTS} />
           )}

@@ -3,7 +3,7 @@ import { authorize } from '@buxa/domain';
 import { Empty } from '@/components/components/export';
 import { PageHeader } from '@/components/components/export';
 import { CheckInConsole } from '@/components/components/attendance/export';
-import { campActor, campZone } from '@buxa/server/composers/index.server';
+import { campActor, campClock } from '@buxa/server/composers/index.server';
 
 /** The check-in page. Without attendance:record the person gets a friendly answer, not an error. */
 export async function CheckInScreen() {
@@ -17,12 +17,12 @@ export async function CheckInScreen() {
       </div>
     );
   }
-  const timeZone = await campZone(actor);
+  const { timeZone, clockFormat } = await campClock(actor);
   const canOverride = authorize(actor, 'attendance:override').allow;
   return (
     <div className="page">
       <PageHeader title="Check-in" subtitle="Scan a badge or find a name." />
-      <CheckInConsole timeZone={timeZone} canOverride={canOverride} />
+      <CheckInConsole timeZone={timeZone} clockFormat={clockFormat} canOverride={canOverride} />
     </div>
   );
 }

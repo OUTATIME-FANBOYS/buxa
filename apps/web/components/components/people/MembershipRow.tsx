@@ -3,14 +3,15 @@ import { formatCampDateTime } from '@buxa/shared';
 import { AccessPill } from './AccessPill';
 import { RevokeMembershipForm } from '@/components/components/people/forms/export';
 import { formatLocalDate } from '@buxa/shared';
+import type { ClockFormat } from '@buxa/domain';
 
-export interface MembershipRowProps { membership: PersonMembership; personId: string; canManage: boolean; timeZone: string }
+export interface MembershipRowProps { membership: PersonMembership; personId: string; canManage: boolean; timeZone: string; clockFormat: ClockFormat }
 
 /**
  * One membership: its plan, its dates and its status in words. Dates are camp days; the revoke time is an instant shown in the camp's
  * zone (`timeZone`), like every other time on the people screens. Revoking is behind a disclosure, and asks for a reason.
  */
-export function MembershipRow({ membership, personId, canManage, timeZone }: MembershipRowProps) {
+export function MembershipRow({ membership, personId, canManage, timeZone, clockFormat }: MembershipRowProps) {
   const revoked = membership.status === 'revoked';
   return (
     <li className="people-member">
@@ -18,7 +19,7 @@ export function MembershipRow({ membership, personId, canManage, timeZone }: Mem
         <strong>{membership.plan}</strong>
         <span className="muted">{formatLocalDate(membership.startsOn)} to {formatLocalDate(membership.endsOn)}</span>
         {revoked && membership.revokedAt && (
-          <span className="muted">Revoked {formatCampDateTime(membership.revokedAt, timeZone)}{membership.revokedReason ? `: ${membership.revokedReason}` : ''}</span>
+          <span className="muted">Revoked {formatCampDateTime(membership.revokedAt, timeZone, clockFormat)}{membership.revokedReason ? `: ${membership.revokedReason}` : ''}</span>
         )}
       </div>
       <div className="row">

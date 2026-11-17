@@ -1,3 +1,4 @@
+import type { ClockFormat } from '@buxa/domain';
 import type { CheckInResult, CheckOutResult } from './types';
 import { formatCampTime } from '../time';
 import { STATUS_DISPLAY } from './status';
@@ -12,10 +13,10 @@ const OVERRIDE_HINT = 'An admin can check them in anyway with a written reason.'
 const REASON_NEEDED = 'An override needs a written reason, so it is on record.';
 
 /** Every CheckInResult refusal, with the camp's local time where a time is shown. */
-export function checkInRefusalCopy(refusal: CheckInRefusal, timeZone: string): Copy {
+export function checkInRefusalCopy(refusal: CheckInRefusal, timeZone: string, clockFormat: ClockFormat): Copy {
   switch (refusal.reason) {
     case 'already_on_site':
-      return { title: 'Already on site', body: `Checked in at ${formatCampTime(refusal.since, timeZone)}. Nothing to do.` };
+      return { title: 'Already on site', body: `Checked in at ${formatCampTime(refusal.since, timeZone, clockFormat)}. Nothing to do.` };
     case 'not_valid': {
       const label = STATUS_DISPLAY[refusal.status].label;
       const why: Record<typeof refusal.status, string> = {

@@ -15,26 +15,26 @@ const enrolment = (over: Partial<Enrolment> = {}): Enrolment => ({
 
 describe('EnrolmentTable', () => {
   it('lists each camper by name and status, with no contact details', () => {
-    const html = renderToStaticMarkup(<EnrolmentTable classId={CLASS_ID} enrolments={[enrolment()]} canManage timeZone="Australia/Sydney" />);
+    const html = renderToStaticMarkup(<EnrolmentTable classId={CLASS_ID} enrolments={[enrolment()]} canManage timeZone="Australia/Sydney" clockFormat="24h" />);
     expect(html).toContain('Ada Lovelace');
     expect(html).toContain('Enrolled');
     expect(html).not.toMatch(/@|phone|email/i);
   });
 
   it('offers cancel to staff, naming the camper on the button', () => {
-    const html = renderToStaticMarkup(<EnrolmentTable classId={CLASS_ID} enrolments={[enrolment()]} canManage timeZone="Australia/Sydney" />);
+    const html = renderToStaticMarkup(<EnrolmentTable classId={CLASS_ID} enrolments={[enrolment()]} canManage timeZone="Australia/Sydney" clockFormat="24h" />);
     expect(html).toContain('Cancel enrolment');
     expect(html).toContain('for Ada Lovelace');
   });
 
   it('shows no cancel button and no actions column to a viewer', () => {
-    const html = renderToStaticMarkup(<EnrolmentTable classId={CLASS_ID} enrolments={[enrolment()]} canManage={false} timeZone="Australia/Sydney" />);
+    const html = renderToStaticMarkup(<EnrolmentTable classId={CLASS_ID} enrolments={[enrolment()]} canManage={false} timeZone="Australia/Sydney" clockFormat="24h" />);
     expect(html).not.toContain('Cancel enrolment');
     expect(html).not.toContain('Actions');
   });
 
   it('does not offer to cancel an enrolment that is already cancelled', () => {
-    const html = renderToStaticMarkup(<EnrolmentTable classId={CLASS_ID} enrolments={[enrolment({ status: 'cancelled' })]} canManage timeZone="Australia/Sydney" />);
+    const html = renderToStaticMarkup(<EnrolmentTable classId={CLASS_ID} enrolments={[enrolment({ status: 'cancelled' })]} canManage timeZone="Australia/Sydney" clockFormat="24h" />);
     expect(html).toContain('Cancelled');
     expect(html).not.toContain('Cancel enrolment');
   });

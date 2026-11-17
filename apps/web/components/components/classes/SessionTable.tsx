@@ -3,6 +3,7 @@ import type { Session } from '@buxa/contracts';
 import { classPath } from '@/config/routes';
 import { formatCampDateTime } from '@buxa/shared';
 import { SessionStatus } from './SessionStatus';
+import type { ClockFormat } from '@buxa/domain';
 
 /** The session's instructors by name, comma separated. A session with none says so. */
 export const instructorNames = (session: Pick<Session, 'instructors'>): string =>
@@ -12,8 +13,8 @@ export const instructorNames = (session: Pick<Session, 'instructors'>): string =
  * The class's sessions, with instructors, capacity, enrolled and waitlisted counts. Times are the camp's own clock. The link opens that session's
  * enrolments on the same page (a query parameter, so it works without JavaScript).
  */
-export function SessionTable({ classId, sessions, timeZone, selectedId }: {
-  classId: string; sessions: readonly Session[]; timeZone: string; selectedId: string | null;
+export function SessionTable({ classId, sessions, timeZone, clockFormat, selectedId }: {
+  classId: string; sessions: readonly Session[]; timeZone: string; clockFormat: ClockFormat; selectedId: string | null;
 }) {
   return (
     <div className="table-wrap"><table className="table">
@@ -27,8 +28,8 @@ export function SessionTable({ classId, sessions, timeZone, selectedId }: {
           const selected = session.id === selectedId;
           return (
             <tr key={session.id}>
-              <td>{formatCampDateTime(session.startsAt, timeZone)}</td>
-              <td>{formatCampDateTime(session.endsAt, timeZone)}</td>
+              <td>{formatCampDateTime(session.startsAt, timeZone, clockFormat)}</td>
+              <td>{formatCampDateTime(session.endsAt, timeZone, clockFormat)}</td>
               <td>{session.location}</td>
               <td>{instructorNames(session)}</td>
               <td>{session.capacity}</td>
@@ -39,7 +40,7 @@ export function SessionTable({ classId, sessions, timeZone, selectedId }: {
                 <Link className="btn btn-ghost classes-target" aria-current={selected ? 'true' : undefined}
                   href={`${classPath(classId)}?session=${encodeURIComponent(session.id)}#enrolments`}>
                   {selected ? 'Showing enrolments' : 'Enrolments'}
-                  <span className="sr-only"> for the session starting {formatCampDateTime(session.startsAt, timeZone)}</span>
+                  <span className="sr-only"> for the session starting {formatCampDateTime(session.startsAt, timeZone, clockFormat)}</span>
                 </Link>
               </td>
             </tr>

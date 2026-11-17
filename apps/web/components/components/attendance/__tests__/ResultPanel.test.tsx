@@ -7,7 +7,7 @@ import { ResultPanel } from '@/components/components/attendance/export';
 vi.mock('@buxa/server/composers/attendance/checkIn', () => ({ checkInAction: async () => ({ kind: 'ok', value: { ok: false, reason: 'archived' } }) }));
 
 const card = { person: { id: 'p-1', givenName: 'Ada', familyName: 'Lee', preferredName: null, status: 'valid', roles: [] }, onSiteSince: null } as unknown as PersonCard;
-const props = { timeZone: 'Europe/London', canOverride: false, onCheckIn: () => undefined, onClear: () => undefined };
+const props = { timeZone: 'Europe/London', clockFormat: '24h' as const, canOverride: false, onCheckIn: () => undefined, onClear: () => undefined };
 const render = (state: CheckInState, extra: Partial<typeof props> = {}) => renderToStaticMarkup(<ResultPanel state={state} {...props} {...extra} />);
 
 describe('ResultPanel', () => {

@@ -10,17 +10,17 @@ const entry = {
 
 describe('LogTable', () => {
   it('shows one row per visit, with the person, the method and dashes for empty fields', () => {
-    const html = renderToStaticMarkup(<LogTable entries={[entry]} timeZone="Europe/London" />);
+    const html = renderToStaticMarkup(<LogTable entries={[entry]} timeZone="Europe/London" clockFormat="24h" />);
     expect(html).toContain('<th scope="row">Mia Cole</th>');
     expect(html).toContain('<td data-label="Method">Badge</td>');
     expect(html).toContain('<td data-label="Checked out by">—</td>');
   });
   it('marks a visit with no check-out as on site', () => {
-    expect(renderToStaticMarkup(<LogTable entries={[entry]} timeZone="Europe/London" />)).toContain('>On site</td>');
+    expect(renderToStaticMarkup(<LogTable entries={[entry]} timeZone="Europe/London" clockFormat="24h" />)).toContain('>On site</td>');
   });
   it('shows the check-out time when there is one', () => {
     const out = { ...entry, checkedOutAt: '2027-07-03T11:30:00.000Z', checkedOutByName: 'Tom', collectedByName: 'Jo Cole' } as unknown as AttendanceEntry;
-    const html = renderToStaticMarkup(<LogTable entries={[out]} timeZone="Europe/London" />);
+    const html = renderToStaticMarkup(<LogTable entries={[out]} timeZone="Europe/London" clockFormat="24h" />);
     expect(html).not.toContain('On site');
     expect(html).toContain('<td data-label="Collected by">Jo Cole</td>');
   });
