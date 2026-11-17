@@ -64,6 +64,6 @@ export function ReportsPage() {
   return <Reports />;
 }
 
-export function SettingsPage({ leading }: { leading?: ReactNode }) {
-  return <Settings leading={leading} />;
+export function SettingsPage({ clock }: { clock?: ReactNode }) {
+  return <Settings clock={clock} />;
 }

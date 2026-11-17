@@ -10,8 +10,10 @@ export interface MenuItem { label: string; icon?: string; onSelect?: () => void;
 
 const isItem = (x: MenuItem | false | null): x is MenuItem => !!x;
 
-export function Menu({ label, trigger, items, align = 'end', className = 'icon-btn' }: {
+export function Menu({ label, trigger, items, align = 'end', className = 'icon-btn', header }: {
   label: string; trigger: ReactNode; items: (MenuItem | false | null)[]; align?: 'start' | 'end'; className?: string;
+  /** A line of text above the items. It is not a menu item and cannot be chosen. */
+  header?: string;
 }) {
   const [open, setOpen] = useState(false);
   const btn = useRef<HTMLButtonElement>(null);
@@ -50,6 +52,7 @@ export function Menu({ label, trigger, items, align = 'end', className = 'icon-b
       {open && (
         <Popover anchor={btn.current} onClose={close} align={align} label={label} className="menu">
           <div role="menu" aria-label={label} onKeyDown={onKey} onClick={e => e.stopPropagation()}>
+            {header && <p className="menu-head" role="presentation">{header}</p>}
             {list.map((it, i) => {
               if (it.divider) {
                 return <hr key={i} />;

@@ -21,16 +21,36 @@ describe('the account menu', () => {
     act(() => root.unmount()); document.body.innerHTML = '';
   });
 
-  it('lists Settings as a link to the settings page, after the account line', () => {
+  const openMenu = () => {
     act(() => root.render(<AccountMenu user={user} />));
     act(() => {
       document.querySelector<HTMLButtonElement>('button[aria-label="Account"]')?.click();
     });
-    const items = Array.from(document.querySelectorAll<HTMLElement>('[role=menu] [role=menuitem]'));
-    const settings = items.find(item => item.textContent?.includes('Settings'));
-    expect(settings?.tagName).toBe('A');
-    expect(settings?.getAttribute('href')).toBe(ROUTES.settings);
+
+    return Array.from(document.querySelectorAll<HTMLElement>('[role=menu] [role=menuitem]'));
+  };
+
+  it('is headed by the user’s name, not their email', () => {
+    openMenu();
+
+    const head = document.querySelector('[role=menu] .menu-head');
+    expect(head?.textContent).toBe('Rosa Delgado');
+    expect(document.querySelector('[role=menu]')?.textContent).not.toContain('rosa@example.com');
+  });
+
+  it('lists Profile, Settings, Help, Reports, the theme toggle, then Sign out', () => {
+    const items = openMenu();
+    expect(items.map(item => item.textContent)).toEqual(['Profile', 'Settings', 'Help', 'Reports', 'Dark mode', 'Sign out']);
+  });
+
+  it('links Profile to the Profile section of Settings, and the others to their pages', () => {
+    const items = openMenu();
+    const href = (label: string) => items.find(item => item.textContent === label)?.getAttribute('href');
+    expect(items.find(item => item.textContent === 'Profile')?.tagName).toBe('A');
+    expect(href('Profile')).toBe(`${ROUTES.settings}#profile`);
+    expect(href('Settings')).toBe(ROUTES.settings);
     expect(ROUTES.settings).toBe('/camp/settings');
-    expect(items.indexOf(settings!)).toBe(1);
+    expect(href('Help')).toBe(ROUTES.help);
+    expect(href('Reports')).toBe(ROUTES.reports);
   });
 });

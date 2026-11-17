@@ -10,8 +10,8 @@ import { AgentDialog } from '@/components/components/kanban/dialogs/export';
 import { ResetDemoButton } from '@/components/components/kanban/export';
 import type { ThemePref } from '@buxa/shared';
 
-/** Every setting is a card in one grid: the cards fill the page and reflow by width (see styles/features/settings.css). `leading` is the first card. */
-export function Settings({ leading }: { leading?: ReactNode }) {
+/** Every setting is a card in one grid: the cards fill the page and reflow by width (see styles/features/settings.css). `clock` is the camp clock, shown inside the Appearance card. */
+export function Settings({ clock }: { clock?: ReactNode }) {
   const { s, actions, me } = useStore(); const { toast } = useUi();
   const [name, setName] = useState(me?.name ?? ''); const [title, setTitle] = useState(me?.title ?? ''); const [err, setErr] = useState<string | null>(null);
   const file = useRef<HTMLInputElement>(null); const [addAgent, setAddAgent] = useState(false);
@@ -25,8 +25,7 @@ export function Settings({ leading }: { leading?: ReactNode }) {
     <div className="page settings-page">
       <header className="page-head"><div className="page-title"><h1>Settings</h1></div></header>
       <div className="settings-grid">
-        {leading}
-        <section className="panel"><h2>Profile</h2>
+        <section className="panel" id="profile"><h2>Profile</h2>
           <form className="stack" noValidate onSubmit={e => {
             e.preventDefault(); if (!name.trim()) {
               return setErr('Name can’t be empty.');
@@ -39,6 +38,7 @@ export function Settings({ leading }: { leading?: ReactNode }) {
           </form></section>
         <section className="panel"><h2>Appearance</h2>
           <Segmented<ThemePref> label="Theme" value={s.ui.theme} onChange={actions.setTheme} options={[{ value: 'system', label: 'System' }, { value: 'light', label: 'Light', icon: 'sun' }, { value: 'dark', label: 'Dark', icon: 'moon' }]} />
+          {clock && <div className="settings-sub">{clock}</div>}
         </section>
         <section className="panel"><h2>Agents</h2>
           <p className="muted">Let AI agents add and update tasks on your boards. Their changes can wait for your approval, and every one is recorded. Leave this off and Buxa is a plain Kanban board.</p>

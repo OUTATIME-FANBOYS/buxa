@@ -59,13 +59,13 @@ describe('CampFrame', () => {
 
   it('shows the page inside the frame when there is a camp', () => {
     const frame = CampFrame({ user, camps: [camp], current: camp, children: 'THE-PAGE' });
-    expect(labels(frame.props.nav)).toEqual(['Home', 'Check-in', 'On site', 'People', 'Attendance', 'Classes', 'Help', 'My tasks', 'Projects', 'Boards', 'Calendar', 'Agents', 'Reports', 'Team access']);
+    expect(labels(frame.props.nav)).toEqual(['Home', 'Check-in', 'On site', 'People', 'Attendance', 'Classes', 'My tasks', 'Projects', 'Boards', 'Calendar', 'Agents', 'Team access']);
     expect(frame.props.children[0]).toBe('THE-PAGE');
   });
 
   it('shows first-run setup instead of the page when there is no camp', () => {
     const frame = CampFrame({ user, camps: [], current: null, children: 'THE-PAGE' });
     expect(frame.props.children[0].props).toEqual({ first: true });
-    expect(labels(frame.props.nav)).toEqual(['Home', 'Help', 'My tasks', 'Projects', 'Boards', 'Calendar', 'Agents', 'Reports']);
+    expect(labels(frame.props.nav)).toEqual(['Home', 'My tasks', 'Projects', 'Boards', 'Calendar', 'Agents']);
   });
 });

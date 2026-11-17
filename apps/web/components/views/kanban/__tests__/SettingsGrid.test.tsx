@@ -37,10 +37,11 @@ describe('the settings grid', () => {
     act(() => root.unmount()); document.body.innerHTML = '';
   });
 
-  const render = (leading?: ReactNode) => act(() => root.render(
-    <UiProvider Dialog={ConfirmDialog}><SettingsPage leading={leading} /></UiProvider>,
+  const render = (clock?: ReactNode) => act(() => root.render(
+    <UiProvider Dialog={ConfirmDialog}><SettingsPage clock={clock} /></UiProvider>,
   ));
   const cards = () => Array.from(document.querySelectorAll('.settings-grid > section.panel'));
+  const appearance = () => cards().find(card => card.querySelector('h2')?.textContent === 'Appearance') as HTMLElement;
 
   it('puts every setting in one grid of cards, with the page title above it', () => {
     render();
@@ -49,15 +50,17 @@ describe('the settings grid', () => {
     expect(document.querySelector('.settings-page .settings-grid')).not.toBeNull();
   });
 
-  it('places the leading card, such as the camp clock, first in the grid', () => {
+  it('puts the camp clock inside the Appearance card, not in a card of its own', () => {
     render(<section className="panel"><h2>Camp clock</h2></section>);
-    expect(cards().map(card => card.querySelector('h2')?.textContent)).toEqual(['Camp clock', ...CARDS]);
+    expect(cards().map(card => card.querySelector('h2')?.textContent)).toEqual(CARDS);
+    expect(appearance().textContent).toContain('Camp clock');
   });
 
-  it('keeps the camp clock card in the grid with its save action', () => {
+  it('keeps the camp clock in the Appearance card with its save action', () => {
     render(<CampClockPanel campId="c-1" clockFormat="24h" canChange />);
-    const clock = cards()[0];
-    expect(clock.querySelector('h2')?.textContent).toBe('Camp clock');
+    const clock = appearance();
+    expect(clock.querySelector('#camp-clock-title')?.textContent).toBe('Camp clock');
+    expect(clock.querySelectorAll('section.panel').length).toBe(0);
     expect(clock.querySelector('form')).not.toBeNull();
     const group = clock.querySelector('[role="radiogroup"][aria-label="Clock"]');
     expect(group).not.toBeNull();
@@ -70,7 +73,7 @@ describe('the settings grid', () => {
 
   it('switches the clock format on the segmented control without submitting the form', () => {
     render(<CampClockPanel campId="c-1" clockFormat="24h" canChange />);
-    const clock = cards()[0];
+    const clock = appearance();
     const twelve = Array.from(clock.querySelectorAll<HTMLButtonElement>('[role="radio"]')).find(b => b.textContent === '12-hour (9:05 AM)');
     act(() => {
       twelve?.click();
@@ -80,10 +83,15 @@ describe('the settings grid', () => {
     expect(twelve?.getAttribute('type')).toBe('button');
   });
 
+  it('gives the Profile card the id the account menu links to', () => {
+    render();
+    expect(document.querySelector('.settings-grid > section#profile h2')?.textContent).toBe('Profile');
+  });
+
   it('saves the profile: submitting the form sends the name and role', () => {
     render();
     const input = document.querySelector<HTMLInputElement>('input[maxlength="60"]');
-    const form = document.querySelector<HTMLFormElement>('.settings-grid form');
+    const form = document.querySelector<HTMLFormElement>('#profile form');
     expect(form).not.toBeNull();
     act(() => {
       form?.querySelector<HTMLButtonElement>('button')?.click();

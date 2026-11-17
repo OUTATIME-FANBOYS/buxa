@@ -14,15 +14,17 @@ describe('the sidebar groups', () => {
   it('lists the items of each group in order', () => {
     expect(CAMP_NAV_GROUPS.map(group => group.items.map(item => item.label))).toEqual([
       ['Home'],
-      ['Check-in', 'On site', 'People', 'Attendance', 'Classes', 'Help'],
-      ['My tasks', 'Projects', 'Boards', 'Calendar', 'Agents', 'Reports'],
+      ['Check-in', 'On site', 'People', 'Attendance', 'Classes'],
+      ['My tasks', 'Projects', 'Boards', 'Calendar', 'Agents'],
       ['Team access'],
     ]);
   });
 
-  it('does not list Settings in the sidebar: it lives in the profile menu', () => {
-    expect(CAMP_NAV.map(item => item.href)).not.toContain(ROUTES.settings);
-    expect(hrefs('owner')).not.toContain(ROUTES.settings);
+  it('does not list Settings, Help or Reports in the sidebar: they live in the profile menu', () => {
+    for (const href of [ROUTES.settings, ROUTES.help, ROUTES.reports]) {
+      expect(CAMP_NAV.map(item => item.href)).not.toContain(href);
+      expect(hrefs('owner')).not.toContain(href);
+    }
   });
 
   it('keeps every route in one place: the nav links only to known routes, and the old kanban address is gone', () => {
@@ -38,7 +40,7 @@ describe('the sidebar groups', () => {
     expect(requires).toMatchObject({
       'Check-in': 'attendance:record', 'On site': 'attendance:read', People: 'people:read', Attendance: 'attendance:read',
       Classes: 'events:read', 'Team access': 'members:read',
-      Home: undefined, 'My tasks': undefined, Projects: undefined, Help: undefined,
+      Home: undefined, 'My tasks': undefined, Projects: undefined,
     });
   });
 });
@@ -53,7 +55,7 @@ describe('navFor', () => {
   });
 
   it('shows only items needing no permission when there is no camp yet', () => {
-    expect(hrefs(null)).toEqual([ROUTES.camp, ROUTES.help, ROUTES.tasks, ROUTES.projects, ROUTES.boards, ROUTES.calendar, ROUTES.agents, ROUTES.reports]);
+    expect(hrefs(null)).toEqual([ROUTES.camp, ROUTES.tasks, ROUTES.projects, ROUTES.boards, ROUTES.calendar, ROUTES.agents]);
   });
 
   it('hides an item from a role that lacks its permission, and keeps the rest', () => {
@@ -73,7 +75,7 @@ describe('navFor', () => {
 
 describe('navGroupsFor', () => {
   it('keeps the group order and drops a group with nothing left to show', () => {
-    expect(groupLabels(navGroupsFor(null))).toEqual(['', 'Operations', 'Work']);
+    expect(groupLabels(navGroupsFor(null))).toEqual(['', 'Work']);
     expect(groupLabels(navGroupsFor('owner'))).toEqual(['', 'Operations', 'Work', 'Admin']);
     const onlyPermitted = [
       { label: 'Gated', items: [{ href: ROUTES.people, label: 'People', icon: 'users', requires: 'people:read' }] },

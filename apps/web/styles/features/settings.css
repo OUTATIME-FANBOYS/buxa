@@ -2,6 +2,12 @@
  * One column on a phone, two from 900px (the sidebar is still open), three from 1280px. Cards share .panel, so padding and style match.
  * Cards in a row stretch to the same height. */
 .page.settings-page { max-width: none; }
+/* The camp clock sits inside the Appearance card, under the theme control, with a rule between them. */
+.settings-sub { margin-top: var(--s4); padding-top: var(--s4); border-top: 1px solid var(--line); display: grid; gap: var(--s3); }
+.settings-sub h3 { margin: 0; font-size: 15px; }
+/* Segmented controls fill their card and never run past its border: the options share the width and wrap their labels. */
+.settings-page .segmented { display: flex; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }
+.settings-page .segmented button { flex: 1 1 0; min-width: 0; height: auto; min-height: 30px; padding: 4px var(--s2); justify-content: center; text-align: center; white-space: normal; overflow-wrap: anywhere; line-height: 1.25; }
 .settings-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s5); align-items: stretch; }
 @media (min-width: 900px) { .settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1280px) { .settings-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
