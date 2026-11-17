@@ -1,4 +1,4 @@
-/** "1:8" is one instructor for every eight campers. Stored and reported; automatic enforcement is not part of phase 2. */
+/** "1:8" is one instructor for every eight campers. Stored and reported; automatic enforcement is not built. */
 export interface InstructorRatio { instructors: number; campers: number }
 
 export interface RatioReport {

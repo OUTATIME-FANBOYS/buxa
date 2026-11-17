@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { AUDIT_ACTIONS, type AuditAction } from '../src';
 
-/** Every write in phase 2 has a named audit action. A rename or a missing name fails here, not in production. */
+/** Every write to camp data has a named audit action. A rename or a missing name fails here, not in production. */
 describe('audit action names', () => {
   it('are unique', () => {
     expect(new Set(AUDIT_ACTIONS).size).toBe(AUDIT_ACTIONS.length);

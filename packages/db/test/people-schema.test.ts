@@ -5,7 +5,7 @@ import { migrate, withOrg } from '../src';
 
 const url = process.env.DATABASE_URL;
 
-/** Tables added in phase 1. Each one must refuse another organisation's rows, in both directions. */
+/** People tables. Each one must refuse another organisation's rows, in both directions. */
 const TENANT_TABLES = ['people', 'person_roles', 'households', 'household_members', 'memberships', 'credentials', 'check_ins'] as const;
 
 interface Seeded {

@@ -5,7 +5,7 @@ import { migrate, withOrg } from '../src';
 
 const url = process.env.DATABASE_URL;
 
-/** Phase 2 tables. Each one must refuse another organisation's rows, in both directions. */
+/** Class, session and enrolment tables. Each one must refuse another organisation's rows, in both directions. */
 const TENANT_TABLES = ['classes', 'sessions', 'enrolments'] as const;
 
 interface Seeded {
