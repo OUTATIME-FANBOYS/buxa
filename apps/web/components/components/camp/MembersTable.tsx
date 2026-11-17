@@ -1,7 +1,7 @@
 import type { Member } from '@buxa/contracts';
 import { Avatar } from '@/components/elements/export';
 import { Pill } from '@/components/elements/export';
-import { ROLE_LABEL } from '@buxa/shared';
+import { ROLE_LABEL, ROLE_TONE } from '@buxa/shared';
 
 /** Email is shown only where the reader may see it (admins and above); everyone else sees names and roles. */
 export function MembersTable({ members, showEmail }: { members: readonly Member[]; showEmail: boolean }) {
@@ -13,7 +13,7 @@ export function MembersTable({ members, showEmail }: { members: readonly Member[
           <tr key={m.id}>
             <td><span className="row"><Avatar user={{ name: m.name }} size={26} /> {m.name}</span></td>
             {showEmail && <td>{m.email}</td>}
-            <td><Pill tone={m.role === 'owner' ? 'brand' : 'neutral'} dot={false}>{ROLE_LABEL[m.role]}</Pill></td>
+            <td><Pill tone={ROLE_TONE[m.role]} dot={false}>{ROLE_LABEL[m.role]}</Pill></td>
           </tr>
         ))}
       </tbody>

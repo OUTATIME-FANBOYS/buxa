@@ -1,6 +1,10 @@
 import { GRANTS, type Action, type Role } from '@buxa/domain';
+import type { RoleTone } from '../tones';
 
 export const ROLE_LABEL: Readonly<Record<Role, string>> = { owner: 'Owner', admin: 'Admin', staff: 'Staff', viewer: 'Viewer' };
+
+/** The pill colour for each camp role: owner violet, admin orange, staff green, viewer blue. */
+export const ROLE_TONE: Readonly<Record<Role, RoleTone>> = { owner: 'role-owner', admin: 'role-admin', staff: 'role-staff', viewer: 'role-viewer' };
 
 /** The abilities worth showing a person, in plain words. */
 const ABILITIES: readonly { action: Action; label: string }[] = [

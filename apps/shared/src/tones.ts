@@ -1,5 +1,7 @@
 /** The five-colour system. A tone always travels with a text label, never colour alone. */
 export type Tone = 'neutral' | 'brand' | 'ok' | 'warn' | 'crit' | 'agent' | 'hero';
+/** Camp role pills only (see ROLE_TONE in camp/abilities). Not status colours, so they are kept out of `Tone`. */
+export type RoleTone = 'role-owner' | 'role-admin' | 'role-staff' | 'role-viewer';
 
 export const KIND_TONE: Record<'open' | 'active' | 'done', Tone> = { open: 'neutral', active: 'brand', done: 'ok' };
 

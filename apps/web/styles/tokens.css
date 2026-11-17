@@ -22,6 +22,9 @@
   --crit: #a3282b; --crit-soft: #fbe4e4; --crit-ink: #7f1d20; --f-crit: #f05d5e;
   --agent: #4f2d66; --agent-soft: #efe7f4; --agent-ink: #36213e; --f-agent: #7b5597;
   --f-neutral: #6b7480; --neutral-soft: #e0e6eb; --neutral-ink: #4a4e5c;
+  /* Role pills only: viewer is blue, teacher (planned, phase 3) is green-blue. Text on soft is 4.5:1 or better. */
+  --role-viewer: #1d4f8c; --role-viewer-soft: #dbe8f7;
+  --role-teacher: #0b5a5e; --role-teacher-soft: #d5eeee;
   --accent-ink: #ffffff; --on-solid: #ffffff; --on-inverse-accent: #9fd6d7;
   --coral: #f05d5e; --on-coral: #14161c; --on-fill: #14161c;
   --hero-bg: #36213e; --hero-fg: #ffffff; --hero-fg-2: #c9b2d9;
@@ -50,6 +53,8 @@
   --crit: #ff8a8b; --crit-soft: #3d2227; --crit-ink: #ffb3b4; --f-crit: #f05d5e;
   --agent: #c9b2d9; --agent-soft: #34263f; --agent-ink: #e0d0ee; --f-agent: #9b7bb8;
   --f-neutral: #8a90a0; --neutral-soft: #373a46; --neutral-ink: #b9bec9;
+  --role-viewer: #9cc3f0; --role-viewer-soft: #1a2b43;
+  --role-teacher: #7fd6d0; --role-teacher-soft: #173a3b;
   --accent-ink: #1e2026; --on-solid: #1e2026; --on-inverse-accent: #7a2e12;
   --coral: #f05d5e; --on-coral: #14161c; --on-fill: #14161c;
   --hero-bg: #36213e; --hero-fg: #e7ecef; --hero-fg-2: #c9b2d9;
@@ -65,5 +70,10 @@
 .tone-warn, .pill-warn { --tone: var(--warn); --tone-soft: var(--warn-soft); --tone-ink: var(--warn-ink); --tone-f: var(--f-warn); }
 .tone-crit, .pill-crit { --tone: var(--crit); --tone-soft: var(--crit-soft); --tone-ink: var(--crit-ink); --tone-f: var(--f-crit); }
 .tone-agent, .pill-agent { --tone: var(--agent); --tone-soft: var(--agent-soft); --tone-ink: var(--agent-ink); --tone-f: var(--f-agent); }
+/* Camp roles on the Team access page: owner violet, admin orange (warn), staff green (ok), viewer blue. */
+.tone-role-owner, .pill-role-owner { --tone: var(--agent); --tone-soft: var(--agent-soft); --tone-ink: var(--agent-ink); --tone-f: var(--f-agent); }
+.tone-role-admin, .pill-role-admin { --tone: var(--warn); --tone-soft: var(--warn-soft); --tone-ink: var(--warn-ink); --tone-f: var(--f-warn); }
+.tone-role-staff, .pill-role-staff { --tone: var(--ok); --tone-soft: var(--ok-soft); --tone-ink: var(--ok-ink); --tone-f: var(--f-ok); }
+.tone-role-viewer, .pill-role-viewer { --tone: var(--role-viewer); --tone-soft: var(--role-viewer-soft); --tone-ink: var(--role-viewer); --tone-f: var(--role-viewer); }
 /* hero: the same violet family, for highlights that are not AI activity */
 .tone-hero, .pill-hero { --tone: var(--agent); --tone-soft: var(--agent-soft); --tone-ink: var(--agent-ink); --tone-f: var(--f-agent); }
