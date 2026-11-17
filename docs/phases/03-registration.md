@@ -1,6 +1,6 @@
 # Phase 3: registration
 
-Status: **spec for review. No code yet.** Roadmap row: "Registration: sign-up forms with custom fields, holds, waitlist. No card payments yet (demo only)." Card payments and refunds moved to phase 8 (`08-payments-go-live.md`).
+Status: **spec for review. No code yet.** Roadmap row: "Registration: sign-up forms with custom fields, holds, waitlist. No card payments yet (demo only)." Card payments and refunds moved to phase 9 (`09-payments-go-live.md`).
 Depends on: phase 2 (sessions and enrolments).
 
 ## Words we use
@@ -13,9 +13,9 @@ Depends on: phase 2 (sessions and enrolments).
 
 ## Decisions
 
-1. **No money in this phase.** Registrations are demo-only and no card is charged. Payments follow in phase 8.
+1. **No money in this phase.** Registrations are demo-only and no card is charged. Payments follow in phase 9.
 2. **Holds, not overselling.** Taking a place is done in a database transaction that locks the session row. A hold expires on its own; a background job releases expired holds.
-3. **Confirmation** is a staff action in this phase, recorded in the audit log, until payments arrive in phase 8.
+3. **Confirmation** is a staff action in this phase, recorded in the audit log, until payments arrive in phase 9.
 4. **Custom fields are versioned.** A change to a form does not change answers already given; each answer stores the form version.
 5. **Prices are stored in the smallest currency unit** with the currency code, for display only.
 
@@ -67,4 +67,4 @@ The scoping rule ("assigned classes only") is not in the matrix yet. It is added
 ## Open for review
 
 - Hold length (proposed 15 minutes) and whether camps can change it.
-- Whether a deposit or balance-later option is wanted once payments arrive (phase 8).
+- Whether a deposit or balance-later option is wanted once payments arrive (phase 9).
