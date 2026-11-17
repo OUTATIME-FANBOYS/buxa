@@ -33,7 +33,11 @@ export class InMemoryImportRepository implements ImportRepository {
     return [...this.sessions.values()]
       .filter(s => s.orgId === orgId)
       .sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.id.localeCompare(b.id))
-      .map(({ orgId: _orgId, ...session }) => session);
+      .map(s => {
+        const copy: Partial<typeof s> = { ...s };
+        delete copy.orgId;
+        return copy as Omit<typeof s, 'orgId'>;
+      });
   }
 
   async applyImport(actor: Actor, upload: ImportUpload, writes: readonly PlannedWrite[]): Promise<void> {

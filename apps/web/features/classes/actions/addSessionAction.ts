@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { isUuid } from '@buxa/domain';
-import { ROUTES, classPath } from '@/config/routes';
+import { classPath } from '@/config/routes';
 import { failure, type ActionState } from '@/lib/actions/state';
 import { getRuntime } from '@/server/runtime';
 import { currentActor } from '@/features/people/lib/camp';
