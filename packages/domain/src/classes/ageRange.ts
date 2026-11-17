@@ -16,5 +16,6 @@ export type AgeCheck = { ok: true; age: number } | { ok: false; age: number; ran
 /** The camper's age on `onDay` (the camp-local day the session starts), checked against the range. */
 export function checkAge(dateOfBirth: LocalDate, onDay: LocalDate, range: AgeRange): AgeCheck {
   const age = ageOn(dateOfBirth, onDay);
+
   return age >= range.minAge && age <= range.maxAge ? { ok: true, age } : { ok: false, age, range };
 }

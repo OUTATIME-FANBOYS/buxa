@@ -18,8 +18,12 @@ describe.skipIf(!url)('schema guarantees', () => {
          WHERE n.nspname = 'public' AND c.relkind = 'r' AND c.relname <> 'schema_migrations'
          ORDER BY c.relname`)).rows;
       expect(tables.map(t => t.name)).toEqual(expect.arrayContaining(['audit_log', 'org_members', 'orgs', 'users']));
-      for (const t of tables) expect(t, `table ${t.name}`).toMatchObject({ enabled: true, forced: true });
-      for (const t of tables) expect(t.policies, `policies on ${t.name}`).toBeGreaterThan(0);
+      for (const t of tables) {
+        expect(t, `table ${t.name}`).toMatchObject({ enabled: true, forced: true });
+      }
+      for (const t of tables) {
+        expect(t.policies, `policies on ${t.name}`).toBeGreaterThan(0);
+      }
     });
 
     it('the request role cannot read the migration bookkeeping table', async () => {
@@ -71,9 +75,11 @@ describe.skipIf(!url)('Supabase Data API is locked out', () => {
   it('anon and authenticated have no privileges on any table in public (when those roles exist)', async () => {
     const roles = (await pool.query<{ rolname: string }>(`SELECT rolname FROM pg_roles WHERE rolname IN ('anon', 'authenticated')`)).rows.map(r => r.rolname);
     const tables = (await pool.query<{ t: string }>(`SELECT tablename AS t FROM pg_tables WHERE schemaname = 'public'`)).rows.map(r => r.t);
-    for (const role of roles) for (const table of tables) {
-      const r = await pool.query(`SELECT has_table_privilege($1, format('public.%I', $2::text), 'SELECT,INSERT,UPDATE,DELETE') AS any`, [role, table]);
-      expect(r.rows[0].any, `${role} on ${table}`).toBe(false);
+    for (const role of roles) {
+      for (const table of tables) {
+        const r = await pool.query(`SELECT has_table_privilege($1, format('public.%I', $2::text), 'SELECT,INSERT,UPDATE,DELETE') AS any`, [role, table]);
+        expect(r.rows[0].any, `${role} on ${table}`).toBe(false);
+      }
     }
   });
 });

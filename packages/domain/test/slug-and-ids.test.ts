@@ -10,7 +10,9 @@ describe('suggestSlug', () => {
   it('only ever returns something that passes the address rule', () => {
     for (const name of ['Lake Camp', 'x'.repeat(80), 'Ça va? Oui!', '123 456', 'a b c d e f']) {
       const slug = suggestSlug(name);
-      if (slug) expect(slug).toMatch(SLUG_PATTERN);
+      if (slug) {
+        expect(slug).toMatch(SLUG_PATTERN);
+      }
     }
   });
   it('is capped at 50 characters and never ends with a dash', () => {
@@ -21,8 +23,16 @@ describe('suggestSlug', () => {
 });
 
 describe('isSlug', () => {
-  it('accepts valid addresses', () => { for (const s of ['abc', 'a-b', 'camp-2026', 'a1b']) expect(isSlug(s)).toBe(true); });
-  it('rejects invalid ones', () => { for (const s of ['ab', '-ab', 'ab-', 'A-bc', 'a b c', 'a_b', '', 'x'.repeat(51)]) expect(isSlug(s)).toBe(false); });
+  it('accepts valid addresses', () => {
+    for (const s of ['abc', 'a-b', 'camp-2026', 'a1b']) {
+      expect(isSlug(s)).toBe(true);
+    }
+  });
+  it('rejects invalid ones', () => {
+    for (const s of ['ab', '-ab', 'ab-', 'A-bc', 'a b c', 'a_b', '', 'x'.repeat(51)]) {
+      expect(isSlug(s)).toBe(false);
+    }
+  });
 });
 
 describe('isUuid', () => {
@@ -31,6 +41,8 @@ describe('isUuid', () => {
     expect(isUuid('ABCDEF12-3456-7890-ABCD-EF1234567890')).toBe(true);
   });
   it('rejects everything else, including non-strings and injection attempts', () => {
-    for (const v of ['', 'not-a-uuid', "'; drop table orgs;--", '1111111111111111111111111111111111', 42, null, undefined, {}]) expect(isUuid(v)).toBe(false);
+    for (const v of ['', 'not-a-uuid', "'; drop table orgs;--", '1111111111111111111111111111111111', 42, null, undefined, {}]) {
+      expect(isUuid(v)).toBe(false);
+    }
   });
 });

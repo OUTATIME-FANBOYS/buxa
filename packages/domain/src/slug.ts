@@ -8,5 +8,6 @@ export const isSlug = (value: string): boolean => SLUG_PATTERN.test(value);
 export function suggestSlug(name: string): string {
   const slug = name.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase()
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50).replace(/-+$/g, '');
+
   return isSlug(slug) ? slug : '';
 }

@@ -10,6 +10,7 @@ export function formatClash(clash: Pick<ActiveEnrolmentFacts, 'startsAt' | 'ends
   const start = new Date(clash.startsAt);
   const end = new Date(clash.endsAt);
   const sameDay = day.format(start).split(',')[0] === day.format(end).split(',')[0];
+
   return `${day.format(start)}-${sameDay ? clock.format(end) : day.format(end)}`;
 }
 

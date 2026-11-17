@@ -7,6 +7,7 @@ export const ADULT_AGE = 18;
 export function ageOn(born: LocalDate, today: LocalDate): number {
   const [by, bm, bd] = born.split('-').map(Number);
   const [ty, tm, td] = today.split('-').map(Number);
+
   return ty - by - (tm < bm || (tm === bm && td < bd) ? 1 : 0);
 }
 
@@ -15,6 +16,9 @@ export function ageOn(born: LocalDate, today: LocalDate): number {
  * A known date of birth always wins, so an adult listed as a camper is not treated as a child.
  */
 export function isMinor(person: { dateOfBirth: LocalDate | null; roles: readonly CampRole[] }, today: LocalDate): boolean {
-  if (person.dateOfBirth !== null) return ageOn(person.dateOfBirth, today) < ADULT_AGE;
+  if (person.dateOfBirth !== null) {
+    return ageOn(person.dateOfBirth, today) < ADULT_AGE;
+  }
+
   return person.roles.includes('camper');
 }

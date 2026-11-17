@@ -8,8 +8,12 @@ const url = process.env.DATABASE_URL;
 // three privileged paths must be the only cross-organisation functions it can run.
 describe.skipIf(!url)('narrow privileges (S-06)', () => {
   const pool = new pg.Pool({ connectionString: url });
-  beforeAll(async () => { await migrate(pool); });
-  afterAll(async () => { await pool.end(); });
+  beforeAll(async () => {
+    await migrate(pool);
+  });
+  afterAll(async () => {
+    await pool.end();
+  });
 
   it('the request role cannot read the migration history', async () => {
     await expect(withOrg(pool, null, db => db.query('SELECT name FROM schema_migrations'))).rejects.toThrow(/permission denied/);

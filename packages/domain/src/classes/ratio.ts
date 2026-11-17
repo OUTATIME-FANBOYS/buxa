@@ -14,9 +14,12 @@ export interface RatioReport {
 
 /** Compares the enrolled campers with the instructors assigned to a session. Returns null when the class has no ratio. */
 export function instructorRatio(ratio: InstructorRatio | null, enrolled: number, assignedInstructors: number): RatioReport | null {
-  if (ratio === null) return null;
+  if (ratio === null) {
+    return null;
+  }
   const requiredInstructors = Math.ceil(enrolled / ratio.campers);
   const shortfall = Math.max(0, requiredInstructors - assignedInstructors);
+
   return {
     ratio,
     enrolled,

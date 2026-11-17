@@ -22,21 +22,33 @@ export function readImportFile(text: string): ImportFile {
     return { ok: false, message: 'That file is larger than 1 MB. Split it into smaller files.' };
   }
   const parsed = parseCsvRecords(text);
-  if (!parsed.ok) return { ok: false, message: `Line ${parsed.line}: ${parsed.message}` };
+  if (!parsed.ok) {
+    return { ok: false, message: `Line ${parsed.line}: ${parsed.message}` };
+  }
   const [header, ...data] = parsed.records;
-  if (!header) return { ok: false, message: 'The file is empty. Download the template and fill it in.' };
+  if (!header) {
+    return { ok: false, message: 'The file is empty. Download the template and fill it in.' };
+  }
 
   const names = header.cells.map(c => c.trim());
   const known = new Set<string>(IMPORT_COLUMNS);
   for (const column of IMPORT_COLUMNS) {
-    if (!names.includes(column)) return { ok: false, message: `The column "${column}" is missing from the header row.` };
+    if (!names.includes(column)) {
+      return { ok: false, message: `The column "${column}" is missing from the header row.` };
+    }
   }
   for (const name of names) {
-    if (name === '') continue;
-    if (!known.has(name)) return { ok: false, message: `The column "${name}" is not part of the template. Check the spelling.` };
+    if (name === '') {
+      continue;
+    }
+    if (!known.has(name)) {
+      return { ok: false, message: `The column "${name}" is not part of the template. Check the spelling.` };
+    }
   }
   const dup = names.find((n, i) => n !== '' && names.indexOf(n) !== i);
-  if (dup !== undefined) return { ok: false, message: `The column "${dup}" appears more than once.` };
+  if (dup !== undefined) {
+    return { ok: false, message: `The column "${dup}" appears more than once.` };
+  }
   if (data.length > MAX_IMPORT_ROWS) {
     return { ok: false, message: `That file has ${data.length} rows. Import at most ${MAX_IMPORT_ROWS} at a time.` };
   }
@@ -48,9 +60,12 @@ export function readImportFile(text: string): ImportFile {
     }
     const cells = EMPTY_CELLS();
     names.forEach((name, i) => {
-      if (known.has(name)) cells[name as ImportColumn] = (record.cells[i] ?? '').trim();
+      if (known.has(name)) {
+        cells[name as ImportColumn] = (record.cells[i] ?? '').trim();
+      }
     });
     rows.push({ rowNumber: record.line, cells });
   }
+
   return { ok: true, rows };
 }

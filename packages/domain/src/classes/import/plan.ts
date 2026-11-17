@@ -95,26 +95,41 @@ function checkFields(row: ImportRow, classes: ClassRef[], timeZone: string): Che
     problems.push(problem('class_name', 'Give the class name.'));
   } else {
     const matches = classes.filter(x => sameText(x.name, c.class_name));
-    if (matches.length === 0) problems.push(problem('class_name', `There is no class called "${c.class_name}". Create the class first: an import does not create classes.`));
-    else if (matches.length > 1) problems.push(problem('class_name', `More than one class is called "${c.class_name}". Rename one of them first.`));
-    else cls = matches[0];
+    if (matches.length === 0) {
+      problems.push(problem('class_name', `There is no class called "${c.class_name}". Create the class first: an import does not create classes.`));
+    } else if (matches.length > 1) {
+      problems.push(problem('class_name', `More than one class is called "${c.class_name}". Rename one of them first.`));
+    } else {
+      cls = matches[0];
+    }
   }
 
   const start = parseCampLocal(c.starts_at, timeZone);
   const end = parseCampLocal(c.ends_at, timeZone);
-  if (!start.ok) problems.push(problem('starts_at', start.message));
-  if (!end.ok) problems.push(problem('ends_at', end.message));
+  if (!start.ok) {
+    problems.push(problem('starts_at', start.message));
+  }
+  if (!end.ok) {
+    problems.push(problem('ends_at', end.message));
+  }
   if (start.ok && end.ok && !isValidSpan({ startsAt: start.instant, endsAt: end.instant })) {
     problems.push(problem('ends_at', 'The session must end after it starts.'));
   }
 
-  if (c.location === '') problems.push(problem('location', 'Give the location.'));
-  else if (c.location.length > MAX_LOCATION) problems.push(problem('location', `Keep the location under ${MAX_LOCATION} characters.`));
+  if (c.location === '') {
+    problems.push(problem('location', 'Give the location.'));
+  } else if (c.location.length > MAX_LOCATION) {
+    problems.push(problem('location', `Keep the location under ${MAX_LOCATION} characters.`));
+  }
 
   const minAge = wholeNumber(c.age_min);
   const maxAge = wholeNumber(c.age_max);
-  if (minAge === null) problems.push(problem('age_min', 'Enter the youngest age as a whole number.'));
-  if (maxAge === null) problems.push(problem('age_max', 'Enter the oldest age as a whole number.'));
+  if (minAge === null) {
+    problems.push(problem('age_min', 'Enter the youngest age as a whole number.'));
+  }
+  if (maxAge === null) {
+    problems.push(problem('age_max', 'Enter the oldest age as a whole number.'));
+  }
   if (minAge !== null && maxAge !== null) {
     if (!isValidAgeRange({ minAge, maxAge })) {
       const outOfBounds = minAge > MAX_AGE_LIMIT || maxAge > MAX_AGE_LIMIT;
@@ -145,14 +160,25 @@ function checkFields(row: ImportRow, classes: ClassRef[], timeZone: string): Che
     const instructors = wholeNumber(c.ratio_instructors);
     const campersOk = campers !== null && campers >= 1 && campers <= MAX_CAPACITY;
     const instructorsOk = instructors !== null && instructors >= 1 && instructors <= MAX_INSTRUCTORS;
-    if (!campersOk) problems.push(problem('ratio_campers', 'The ratio is a positive whole number of campers.'));
-    if (!instructorsOk) problems.push(problem('ratio_instructors', 'The ratio is a positive whole number of instructors.'));
-    if (campersOk && instructorsOk) ratio = { campers, instructors };
+    if (!campersOk) {
+      problems.push(problem('ratio_campers', 'The ratio is a positive whole number of campers.'));
+    }
+    if (!instructorsOk) {
+      problems.push(problem('ratio_instructors', 'The ratio is a positive whole number of instructors.'));
+    }
+    if (campersOk && instructorsOk) {
+      ratio = { campers, instructors };
+    }
   }
 
-  if (c.external_key.length > MAX_KEY) problems.push(problem('external_key', `Keep the external key under ${MAX_KEY} characters.`));
+  if (c.external_key.length > MAX_KEY) {
+    problems.push(problem('external_key', `Keep the external key under ${MAX_KEY} characters.`));
+  }
 
-  if (problems.length > 0 || !cls || !start.ok || !end.ok || capacity === null) return { problems, parsed: null };
+  if (problems.length > 0 || !cls || !start.ok || !end.ok || capacity === null) {
+    return { problems, parsed: null };
+  }
+
   return {
     problems,
     parsed: {
@@ -181,7 +207,9 @@ export function planImport({ rows, classes, sessions, timeZone }: PlanInput): Im
 
   for (const row of rows) {
     const { problems, parsed } = checkFields(row, classes, timeZone);
-    if (!parsed) { refuse(row, problems); continue; }
+    if (!parsed) {
+      refuse(row, problems); continue;
+    }
     const { cls, startsAt, endsAt, location, capacity, key, instructorNames, ratio } = parsed;
 
     if (key !== null && keyRows.has(key)) {
@@ -202,7 +230,9 @@ export function planImport({ rows, classes, sessions, timeZone }: PlanInput): Im
           return problem('starts_at', `This session is already in the camp (${existing.className}, ${formatClash(existing, timeZone)}). Nothing to add.`);
         }
         const earlier = accepted.find(same);
-        if (earlier) return problem('starts_at', `The same session is on row ${earlier.rowNumber} of this file.`);
+        if (earlier) {
+          return problem('starts_at', `The same session is on row ${earlier.rowNumber} of this file.`);
+        }
       } else if (target.seatsTaken > capacity) {
         return problem('capacity', `${target.seatsTaken} campers are enrolled in this session, so the capacity cannot go below that.`);
       }
@@ -214,10 +244,13 @@ export function planImport({ rows, classes, sessions, timeZone }: PlanInput): Im
       if (clashRow) {
         return problem('starts_at', `Clashes with row ${clashRow.rowNumber} of this file (${clashRow.className}, ${formatClash(clashRow, timeZone)}).`);
       }
+
       return null;
     })();
 
-    if (fileProblem) { refuse(row, [fileProblem]); continue; }
+    if (fileProblem) {
+      refuse(row, [fileProblem]); continue;
+    }
 
     const status: RowStatus = target ? 'update' : 'create';
     writes.push({
@@ -225,8 +258,12 @@ export function planImport({ rows, classes, sessions, timeZone }: PlanInput): Im
       startsAt, endsAt, location, capacity, externalKey: key, instructorNames, ratio,
     });
     accepted.push({ rowNumber: row.rowNumber, classId: cls.id, className: cls.name, location, startsAt, endsAt });
-    if (target) claimed.add(target.id);
-    if (key !== null) keyRows.set(key, row.rowNumber);
+    if (target) {
+      claimed.add(target.id);
+    }
+    if (key !== null) {
+      keyRows.set(key, row.rowNumber);
+    }
     results.push({
       rowNumber: row.rowNumber, status, externalKey: key, className: cls.name, startsAt: row.cells.starts_at,
       endsAt: row.cells.ends_at, location, problems: [],
@@ -234,6 +271,9 @@ export function planImport({ rows, classes, sessions, timeZone }: PlanInput): Im
   }
 
   const counts = { create: 0, update: 0, refused: 0 };
-  for (const r of results) counts[r.status] += 1;
+  for (const r of results) {
+    counts[r.status] += 1;
+  }
+
   return { results, writes, counts };
 }

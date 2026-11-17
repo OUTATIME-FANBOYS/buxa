@@ -39,6 +39,7 @@ describe.skipIf(!url)('phase 2 schema: isolation, constraints and grants', () =>
       const enrolment = (await db.query<{ id: string }>(
         `INSERT INTO enrolments (org_id, session_id, person_id, status) VALUES ($1, $2, $3, 'enrolled') RETURNING id`,
         [org, session, person])).rows[0].id;
+
       return { person, classId, session, enrolment };
     });
   }

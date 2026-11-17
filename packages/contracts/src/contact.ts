@@ -10,20 +10,32 @@ const PHONE_SHAPE = /^\+?[0-9(][0-9 ()\-.]*$/;
 
 /** A plausible address: `local@domain.tld`, a local part of up to 64 characters, labels of letters, digits and hyphens, and a letter-only TLD. */
 export function isPlausibleEmail(value: string): boolean {
-  if (value.length > MAX_EMAIL) return false;
+  if (value.length > MAX_EMAIL) {
+    return false;
+  }
   const at = value.lastIndexOf('@');
-  if (at < 1) return false;
+  if (at < 1) {
+    return false;
+  }
   const local = value.slice(0, at);
   const labels = value.slice(at + 1).split('.');
-  if (local.length > 64 || !LOCAL_PART.test(local)) return false;
-  if (labels.length < 2 || !labels.every(label => DOMAIN_LABEL.test(label))) return false;
+  if (local.length > 64 || !LOCAL_PART.test(local)) {
+    return false;
+  }
+  if (labels.length < 2 || !labels.every(label => DOMAIN_LABEL.test(label))) {
+    return false;
+  }
+
   return TLD.test(labels[labels.length - 1]);
 }
 
 /** A plausible phone number: digits with optional spaces, brackets, dots or hyphens, an optional leading +, and 7 to 15 digits (E.164). */
 export function isPlausiblePhone(value: string): boolean {
-  if (value.length > MAX_PHONE || !PHONE_SHAPE.test(value)) return false;
+  if (value.length > MAX_PHONE || !PHONE_SHAPE.test(value)) {
+    return false;
+  }
   const digits = value.replace(/\D/g, '').length;
+
   return digits >= 7 && digits <= 15;
 }
 

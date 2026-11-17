@@ -11,7 +11,9 @@ describe('readImportFile: header', () => {
   it('accepts the template header and maps each data row by column name', () => {
     const r = read(`${HEADER}\r\n${ROW}\r\n`);
     expect(r.ok).toBe(true);
-    if (!r.ok) return;
+    if (!r.ok) {
+      return;
+    }
     expect(r.rows).toEqual([{
       rowNumber: 2,
       cells: {
@@ -37,7 +39,9 @@ describe('readImportFile: header', () => {
     const misspelt = HEADER.replace('starts_at', 'start_at');
     const r = read(`${misspelt}\n`);
     expect(r.ok).toBe(false);
-    if (r.ok) return;
+    if (r.ok) {
+      return;
+    }
     expect(r.message).toBe('The column "starts_at" is missing from the header row.');
   });
 

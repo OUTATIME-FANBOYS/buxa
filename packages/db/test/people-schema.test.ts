@@ -52,6 +52,7 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
       const checkIn = (await db.query<{ id: string }>(
         `INSERT INTO check_ins (org_id, person_id, checked_in_at, checked_in_by, method)
          VALUES ($1, $2, '2027-07-01T09:00:00Z', $3, 'qr') RETURNING id`, [org, person, user])).rows[0].id;
+
       return { person, guardian, household, membership, credential, checkIn };
     });
   }

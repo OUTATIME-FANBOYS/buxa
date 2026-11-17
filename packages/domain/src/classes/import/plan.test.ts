@@ -17,6 +17,7 @@ let nextRow = 2;
 /** A valid row, with overrides. Each call takes the next spreadsheet row number unless one is given. */
 const row = (over: Partial<Record<ImportColumn, string>> = {}, rowNumber?: number): ImportRow => {
   const n = rowNumber ?? nextRow++;
+
   return { rowNumber: n, cells: { ...VALID, ...over } };
 };
 
@@ -31,6 +32,7 @@ const plan = (rows: ImportRow[], sessions: ExistingSession[] = [], classes: Clas
 
 const only = (rows: ImportRow[], sessions: ExistingSession[] = [], classes?: ClassRef[]) => {
   const p = plan(rows, sessions, classes);
+
   return p.results.map(r => ({ row: r.rowNumber, status: r.status, problems: r.problems }));
 };
 
@@ -241,6 +243,8 @@ describe('planImport: results', () => {
   it('uses every template column name in its problem fields', () => {
     const fields = new Set(IMPORT_COLUMNS as readonly string[]);
     const p = plan([row({ class_name: 'x', starts_at: 'x', ends_at: 'x', age_min: 'x', age_max: 'x', capacity: 'x', ratio_campers: '1', ratio_instructors: 'x' }, 2)]);
-    for (const problem of p.results[0]?.problems ?? []) expect(fields.has(problem.field)).toBe(true);
+    for (const problem of p.results[0]?.problems ?? []) {
+      expect(fields.has(problem.field)).toBe(true);
+    }
   });
 });
