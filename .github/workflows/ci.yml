@@ -5,15 +5,106 @@ on:
   workflow_dispatch:
 
 # The checks run as ordered chunks. Each chunk has its own name, so a red check points at the cause:
-#   1. install      npm ci, once, into a cache that every later chunk restores
+#   0. changes      which areas the diff touches (web, server, db, docs, ci); decides which chunks run
+#   0b. workflow    ci only: this file parses, "Verify build" exists, and the classifier's own tests pass
+#   1. install      npm ci, once, into a cache that every later chunk restores (only when a chunk runs)
 #   2a. typecheck   2b. lint     run in parallel after install
 #   3. unit         packages and apps, no database
 #   4. database     migrations and the Postgres-backed tests, on two Postgres servers
 #   5. build        next build, only after 2 to 4 pass
-# "Verify build" is the umbrella job. Branch protection requires only "Verify build", and it fails if any chunk did not succeed.
+# A chunk that is skipped because nothing it checks changed is not a failure. A chunk that was expected to run and did not
+# succeed is. The decision table lives in .github/scripts/classify-changes.sh.
+# "Verify build" is the umbrella job. Branch protection requires only "Verify build".
 jobs:
+  changes:
+    name: 0. changed areas (git diff against the base)
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.classify.outputs.web }}
+      web_integration: ${{ steps.classify.outputs.web_integration }}
+      server: ${{ steps.classify.outputs.server }}
+      db: ${{ steps.classify.outputs.db }}
+      db_test: ${{ steps.classify.outputs.db_test }}
+      docs: ${{ steps.classify.outputs.docs }}
+      ci: ${{ steps.classify.outputs.ci }}
+      all: ${{ steps.classify.outputs.all }}
+      run_install: ${{ steps.classify.outputs.run_install }}
+      run_typecheck: ${{ steps.classify.outputs.run_typecheck }}
+      run_lint: ${{ steps.classify.outputs.run_lint }}
+      run_unit: ${{ steps.classify.outputs.run_unit }}
+      run_database: ${{ steps.classify.outputs.run_database }}
+      run_build: ${{ steps.classify.outputs.run_build }}
+      run_workflow: ${{ steps.classify.outputs.run_workflow }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      # Pull request: the diff against the base branch. Push: the diff against the previous commit (event.before, or HEAD~1
+      # for a new branch). Anything else, or a diff that cannot be computed, runs every chunk.
+      - id: classify
+        name: Classify the changed files
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          set -u
+          range=""
+          case "$EVENT_NAME" in
+            pull_request)
+              if git fetch --no-tags origin "+refs/heads/$BASE_REF:refs/remotes/origin/$BASE_REF"; then
+                range="origin/$BASE_REF...HEAD"
+              fi ;;
+            push)
+              if [ -n "$PUSH_BEFORE" ] && [ "$PUSH_BEFORE" != "0000000000000000000000000000000000000000" ] \
+                && git cat-file -e "$PUSH_BEFORE^{commit}" 2>/dev/null; then
+                range="$PUSH_BEFORE HEAD"
+              else
+                range="HEAD~1 HEAD"
+              fi ;;
+          esac
+          if [ -n "$range" ] && git diff --name-only $range > "$RUNNER_TEMP/changed.txt"; then
+            echo "Changed files ($range):"
+            cat "$RUNNER_TEMP/changed.txt"
+            .github/scripts/classify-changes.sh < "$RUNNER_TEMP/changed.txt" >> "$GITHUB_OUTPUT"
+          else
+            echo "The diff could not be computed for '$EVENT_NAME'. Running every chunk."
+            .github/scripts/classify-changes.sh --all < /dev/null >> "$GITHUB_OUTPUT"
+          fi
+          cat "$GITHUB_OUTPUT"
+
+  workflow:
+    name: 0b. workflow file and CI scripts (YAML parses, classifier tests)
+    needs: changes
+    if: needs.changes.outputs.run_workflow == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Every workflow file parses as YAML
+        run: |
+          set -o pipefail
+          for file in .github/workflows/*.yml; do
+            npx --yes js-yaml@4.3.2 "$file" > /dev/null || { echo "::error file=$file::YAML does not parse"; exit 1; }
+          done
+      - name: Verify build job still exists (branch protection requires it)
+        run: |
+          set -o pipefail
+          npx --yes js-yaml@4.3.2 .github/workflows/ci.yml | node -e '
+            const jobs = Object.values(JSON.parse(require("fs").readFileSync(0, "utf8")).jobs);
+            if (!jobs.some((job) => job.name === "Verify build")) {
+              console.error("::error::No job is named \"Verify build\"");
+              process.exit(1);
+            }
+            console.log("Found the Verify build job.");
+          '
+      - name: Classifier tests
+        run: bash .github/scripts/test-classify-changes.sh
+
   install:
     name: 1. install dependencies (npm ci, cached)
+    needs: changes
+    if: needs.changes.outputs.run_install == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,7 +121,8 @@ jobs:
 
   typecheck:
     name: 2a. typecheck (tsc, next typegen, web tsc)
-    needs: install
+    needs: [changes, install]
+    if: always() && needs.install.result == 'success' && needs.changes.outputs.run_typecheck == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -45,7 +137,8 @@ jobs:
 
   lint:
     name: 2b. lint (eslint)
-    needs: install
+    needs: [changes, install]
+    if: always() && needs.install.result == 'success' && needs.changes.outputs.run_lint == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -60,7 +153,11 @@ jobs:
 
   unit:
     name: 3. unit tests (packages and apps, no database)
-    needs: [typecheck, lint]
+    needs: [changes, install, typecheck, lint]
+    if: >-
+      always() && needs.install.result == 'success' && needs.changes.outputs.run_unit == 'true'
+      && needs.typecheck.result != 'failure' && needs.typecheck.result != 'cancelled'
+      && needs.lint.result != 'failure' && needs.lint.result != 'cancelled'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -75,7 +172,10 @@ jobs:
 
   database:
     name: 4. database tests (migrations, Postgres-backed tests)
-    needs: [unit]
+    needs: [changes, install, unit]
+    if: >-
+      always() && needs.install.result == 'success' && needs.changes.outputs.run_database == 'true'
+      && needs.unit.result != 'failure' && needs.unit.result != 'cancelled'
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -122,7 +222,13 @@ jobs:
 
   build:
     name: 5. build (next build apps/web)
-    needs: [typecheck, lint, unit, database]
+    needs: [changes, install, typecheck, lint, unit, database]
+    if: >-
+      always() && needs.install.result == 'success' && needs.changes.outputs.run_build == 'true'
+      && needs.typecheck.result != 'failure' && needs.typecheck.result != 'cancelled'
+      && needs.lint.result != 'failure' && needs.lint.result != 'cancelled'
+      && needs.unit.result != 'failure' && needs.unit.result != 'cancelled'
+      && needs.database.result != 'failure' && needs.database.result != 'cancelled'
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgres://buxa:buxa@localhost:5433/buxa
@@ -139,18 +245,52 @@ jobs:
 
   verify:
     name: Verify build
-    # Runs even when a chunk failed, so the umbrella check reports red instead of being skipped (a skipped check can pass
-    # a required-check rule).
+    # Runs even when a chunk was skipped, so the umbrella check always reports. A chunk that was skipped because nothing it
+    # checks changed passes. A chunk that failed or was cancelled fails. A chunk that should have run and did not succeed fails.
     if: always()
-    needs: [install, typecheck, lint, unit, database, build]
+    needs: [changes, workflow, install, typecheck, lint, unit, database, build]
     runs-on: ubuntu-latest
     steps:
-      - name: Every chunk succeeded
-        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}
+      - name: Every chunk that ran succeeded
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          CHANGES_RUN: "true"
+          WORKFLOW_RESULT: ${{ needs.workflow.result }}
+          WORKFLOW_RUN: ${{ needs.changes.outputs.run_workflow }}
+          INSTALL_RESULT: ${{ needs.install.result }}
+          INSTALL_RUN: ${{ needs.changes.outputs.run_install }}
+          TYPECHECK_RESULT: ${{ needs.typecheck.result }}
+          TYPECHECK_RUN: ${{ needs.changes.outputs.run_typecheck }}
+          LINT_RESULT: ${{ needs.lint.result }}
+          LINT_RUN: ${{ needs.changes.outputs.run_lint }}
+          UNIT_RESULT: ${{ needs.unit.result }}
+          UNIT_RUN: ${{ needs.changes.outputs.run_unit }}
+          DATABASE_RESULT: ${{ needs.database.result }}
+          DATABASE_RUN: ${{ needs.changes.outputs.run_database }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          BUILD_RUN: ${{ needs.changes.outputs.run_build }}
         run: |
-          echo "::error::A chunk did not succeed. Open the failing job above; the chunk name says what it checks."
-          exit 1
-      - run: echo "All chunks passed."
+          status=0
+          # check NAME RESULT SHOULD_RUN
+          check() {
+            if [ "$2" = failure ] || [ "$2" = cancelled ]; then
+              echo "::error::$1 ended as $2. Open the failing job; the chunk name says what it checks."; status=1
+            elif [ "$3" = true ] && [ "$2" != success ]; then
+              echo "::error::$1 should have run but ended as $2."; status=1
+            else
+              echo "$1: $2 (expected to run: $3)"
+            fi
+          }
+          check changes "$CHANGES_RESULT" "$CHANGES_RUN"
+          check workflow "$WORKFLOW_RESULT" "$WORKFLOW_RUN"
+          check install "$INSTALL_RESULT" "$INSTALL_RUN"
+          check typecheck "$TYPECHECK_RESULT" "$TYPECHECK_RUN"
+          check lint "$LINT_RESULT" "$LINT_RUN"
+          check unit "$UNIT_RESULT" "$UNIT_RUN"
+          check database "$DATABASE_RESULT" "$DATABASE_RUN"
+          check build "$BUILD_RESULT" "$BUILD_RUN"
+          if [ "$status" -ne 0 ]; then exit 1; fi
+          echo "All chunks that were expected to run passed."
 
   # Vercel builds only after "Verify build" passes on a push. The hook for each branch is a repository secret.
   deploy:
