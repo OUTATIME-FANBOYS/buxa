@@ -10,8 +10,8 @@ if (problem) {
   console.error(`\n  Refusing to start: ${problem}\n`); process.exit(1);
 }
 
-// The secret every /api request must send. BUXA_LEGACY_SECRET keeps it fixed across restarts (for the browser's
-// NEXT_PUBLIC_LEGACY_SECRET); otherwise a new one is made for each run and printed below.
+// The secret every /api request must send. Set BUXA_LEGACY_SECRET (16+ characters) to keep it fixed across restarts, and
+// give the same value to the browser as NEXT_PUBLIC_LEGACY_SECRET. Otherwise a new one is made on each run and printed below.
 const secret = process.env.BUXA_LEGACY_SECRET && process.env.BUXA_LEGACY_SECRET.length >= 16 ? process.env.BUXA_LEGACY_SECRET : newRunSecret();
 const app = createApp({ dataDir, port, host, secret });
 

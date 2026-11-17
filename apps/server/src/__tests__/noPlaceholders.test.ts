@@ -3,7 +3,7 @@ import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 /**
- * Phase 1 is done when no service is still a placeholder. The `unimplemented` helper builds one; a call to it may appear only in
+ * No service may still be a placeholder. The `unimplemented` helper builds one; a call to it may appear only in
  * its own definition. Any other call means a factory still returns something that throws on every method.
  */
 const ROOT = join(__dirname, '..', '..', '..', '..');

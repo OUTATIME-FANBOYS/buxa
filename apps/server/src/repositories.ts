@@ -22,7 +22,7 @@ export interface Repositories {
   memberships: MembershipRepository;
   credentials: CredentialRepository;
   attendance: AttendanceRepository;
-  /** Classes, sessions and enrolments (phase 2). The Postgres adapter in production; the in-memory one is for tests. */
+  /** Classes, sessions and enrolments. The Postgres adapter in production; the in-memory one is for tests. */
   classes: ClassRepository;
 }
 
