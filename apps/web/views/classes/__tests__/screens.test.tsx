@@ -1,9 +1,10 @@
+import { Dialog as ConfirmDialog } from '@/components/Dialog';
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Class, Enrolment, PersonSummary, Session } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
-import { UiProvider } from '@/providers/providers';
+import { UiProvider } from '@buxa/middleware/providers/providers';
 import { forbidden } from '@buxa/server/http/errors';
 
 const notFound = vi.hoisted(() => vi.fn(() => { throw new Error('NEXT_NOT_FOUND'); }));
@@ -44,7 +45,7 @@ const enrolment: Enrolment = {
   camperName: 'Ada Lovelace', status: 'enrolled', enrolledAt: '2027-07-01T00:00:00.000Z', overrideReason: null,
 };
 
-const render = (node: ReactNode) => renderToStaticMarkup(<UiProvider>{node}</UiProvider>);
+const render = (node: ReactNode) => renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}>{node}</UiProvider>);
 const asRole = (role: Role | null) => { session.role = role; };
 
 beforeEach(() => {

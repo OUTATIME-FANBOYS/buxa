@@ -3,8 +3,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { buildSeed } from '@buxa/shared';
 import { TaskDrawerHeader } from '../TaskDrawerHeader';
 
-vi.mock('@/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
-vi.mock('@/hooks/useTaskCommands', () => ({ useTaskCommands: () => ({ duplicate: () => 'x', toggleArchive() {} }) }));
+vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
+vi.mock('@buxa/middleware/hooks/useTaskCommands', () => ({ useTaskCommands: () => ({ duplicate: () => 'x', toggleArchive() {} }) }));
 
 const seed = buildSeed();
 const project = seed.projects[0];

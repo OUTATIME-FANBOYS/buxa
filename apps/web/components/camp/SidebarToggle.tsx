@@ -1,7 +1,7 @@
 'use client';
 
 import { Icon } from '@/elements';
-import { useUi } from '@/providers/UiProvider';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 
 export function SidebarToggle() {
   const { setSidebarOpen } = useUi();

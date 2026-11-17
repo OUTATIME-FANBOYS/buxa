@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { Task } from '@buxa/shared';
-import { useStore } from '@/providers/providers';
+import { useStore } from '@buxa/middleware/providers/providers';
 import { Icon } from '@/elements';
 import { Progress } from '@/elements';
 import { subtaskProgress } from '@buxa/shared';

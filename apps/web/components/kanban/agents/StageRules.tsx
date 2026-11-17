@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useStore } from '@/providers/providers';
+import { useStore } from '@buxa/middleware/providers/providers';
 import { Pill } from '@/elements';
 import { TRUST_TONE } from '@buxa/shared';
 import type { Agent, Trust } from '@buxa/shared';

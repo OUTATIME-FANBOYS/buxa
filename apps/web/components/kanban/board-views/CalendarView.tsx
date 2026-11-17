@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import type { Task } from '@buxa/shared';
-import { useStore } from '@/providers/providers';
-import { useTaskDrawer } from '@/providers/providers';
+import { useStore } from '@buxa/middleware/providers/providers';
+import { useTaskDrawer } from '@buxa/middleware/providers/providers';
 import { Icon } from '@/elements';
 import { fmt, parse, toISO, today } from '@buxa/shared';
 

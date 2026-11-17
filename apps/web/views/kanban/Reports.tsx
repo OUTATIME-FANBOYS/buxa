@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { boardPath } from '@/config/routes';
-import { useStore } from '@/providers/providers';
+import { useStore } from '@buxa/middleware/providers/providers';
 import { Empty } from '@/components';
 import { Progress } from '@/elements';
 import { Segmented } from '@/elements';

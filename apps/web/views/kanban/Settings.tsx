@@ -1,10 +1,10 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { useStore } from '@/providers/providers';
+import { useStore } from '@buxa/middleware/providers/providers';
 import { Field } from '@/elements';
 import { Segmented } from '@/elements';
-import { useUi } from '@/providers/UiProvider';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { ROUTES } from '@/config/routes';
 import { AgentDialog } from '@/components';
 import { ResetDemoButton } from '@/components';

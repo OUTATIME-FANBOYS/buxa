@@ -1,8 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useStore } from '@/providers/providers';
-import { useTaskDrawer } from '@/providers/providers';
+import { useStore } from '@buxa/middleware/providers/providers';
+import { useTaskDrawer } from '@buxa/middleware/providers/providers';
 import { Icon } from '@/elements';
 
 export function GlobalSearch({ inputRef }: { inputRef: React.RefObject<HTMLInputElement | null> }) {

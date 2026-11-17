@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useStore } from '@/providers/providers';
-import { useUi } from '@/providers/UiProvider';
+import { useStore } from '@buxa/middleware/providers/providers';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 
 /** A comment box with @mention suggestions drawn from the workspace members. */
 export function CommentComposer({ taskId, members }: { taskId: string; members: { id: string; name: string }[] }) {

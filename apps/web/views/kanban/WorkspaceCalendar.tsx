@@ -1,4 +1,4 @@
-import { useStore } from '@/providers/providers';
+import { useStore } from '@buxa/middleware/providers/providers';
 import { CalendarView } from '@/components';
 
 export function WorkspaceCalendar() {

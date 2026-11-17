@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useTaskDrawer } from '@/providers/providers';
-import { useStore } from '@/providers/providers';
+import { useTaskDrawer } from '@buxa/middleware/providers/providers';
+import { useStore } from '@buxa/middleware/providers/providers';
 import { Icon } from '@/elements';
 import { Avatar } from '@/elements';
 import { Empty } from '@/components';

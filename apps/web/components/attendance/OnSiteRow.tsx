@@ -4,7 +4,8 @@ import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Pill } from '@/elements';
 import type { OnSiteRowView } from '@buxa/shared';
-import { useCheckOut } from '@/hooks/hooks';
+import { useCheckOut } from '@buxa/middleware/hooks/hooks';
+import * as attendance from '@/actions/attendance';
 import { CheckOutPanel } from './CheckOutPanel';
 
 /** The list's id that receives focus after a check-out, since the row it came from leaves the list. */
@@ -15,7 +16,7 @@ interface Props { row: OnSiteRowView; canRecord: boolean; canOverride: boolean }
 /** One person on site: name, minors marked, arrival time, and (for staff) a Check out control that opens the panel. */
 export function OnSiteRow({ row, canRecord, canOverride }: Props) {
   const router = useRouter();
-  const { state, open, close, patch, submit } = useCheckOut(row.personId);
+  const { state, open, close, patch, submit } = useCheckOut(row.personId, attendance);
   const toggle = useRef<HTMLButtonElement>(null);
   const panelOpen = state.phase !== 'closed' && state.phase !== 'done';
   const panelId = `checkout-${row.personId}`;

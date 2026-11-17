@@ -4,7 +4,7 @@ import { buildSeed } from '@buxa/shared';
 import { AgentSummary } from '../AgentSummary';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
+vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 
 describe('AgentSummary', () => {
   beforeEach(() => {

@@ -5,7 +5,7 @@ import { type Task } from '@buxa/shared';
 import { SubtaskList } from '../SubtaskList';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
+vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 
 const task = { ...buildSeed().tasks[0], subtasks: [{ id: 's1', title: 'Book bus', done: true }, { id: 's2', title: 'Print lists', done: false }] } as unknown as Task;
 

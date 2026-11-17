@@ -1,5 +1,5 @@
-import { useStore } from '@/providers/providers';
-import { useUi } from '@/providers/UiProvider';
+import { useStore } from '@buxa/middleware/providers/providers';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 
 /**
  * Restores the browser demo (the Camp Birchwood staff sample) from the single seed source, after a confirmation. It changes only this

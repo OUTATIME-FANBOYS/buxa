@@ -3,15 +3,15 @@
 import { PriorityMark } from '@/elements';
 import { memo } from 'react';
 import type { Project, Task } from '@buxa/shared';
-import { useStore } from '@/providers/providers';
-import { useTaskDrawer } from '@/providers/providers';
+import { useStore } from '@buxa/middleware/providers/providers';
+import { useTaskDrawer } from '@buxa/middleware/providers/providers';
 import { Avatar } from '@/elements';
 import { Icon } from '@/elements';
 import { Menu } from '../../Menu';
 import { tagHue } from '@buxa/shared';
 import { subtaskProgress } from '@buxa/shared';
 import { justDragged } from '@buxa/shared';
-import { useTaskCommands } from '@/hooks/hooks';
+import { useTaskCommands } from '@buxa/middleware/hooks/hooks';
 import { DueChip } from './DueChip';
 import { taskMenuItems } from './taskMenuItems';
 

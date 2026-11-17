@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { Dialog } from '../../Dialog';
 import { Field } from '@/elements';
-import { useUi } from '@/providers/UiProvider';
-import { useStore } from '@/providers/providers';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
+import { useStore } from '@buxa/middleware/providers/providers';
 
 export function AgentDialog({ onClose }: { onClose: () => void }) {
   const { actions, workspace, projects } = useStore(); const { toast } = useUi();

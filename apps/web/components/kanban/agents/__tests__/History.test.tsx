@@ -1,12 +1,13 @@
+import { Dialog as ConfirmDialog } from '@/components/Dialog';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { UiProvider } from '@/providers/UiProvider';
+import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { buildSeed } from '@buxa/shared';
 import { History } from '../History';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
-vi.mock('@/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
+vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
+vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
 
 describe('History', () => {
   beforeEach(() => {
@@ -16,7 +17,7 @@ describe('History', () => {
 
   it('is the audit trail: filterable by outcome and agent, with an export', () => {
     const seed = buildSeed();
-    const html = renderToStaticMarkup(<UiProvider><History proposals={[]} agents={seed.agents} /></UiProvider>);
+    const html = renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}><History proposals={[]} agents={seed.agents} /></UiProvider>);
     expect(html).toContain('aria-label="Filter by outcome"');
     expect(html).toContain('>All outcomes</option>');
     expect(html).toContain('Export audit log');

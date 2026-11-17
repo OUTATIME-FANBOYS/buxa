@@ -1,7 +1,7 @@
 import { Avatar } from '@/elements';
 import { Empty } from '../../Empty';
-import { useUi } from '@/providers/UiProvider';
-import { useStore } from '@/providers/providers';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
+import { useStore } from '@buxa/middleware/providers/providers';
 import { ago } from '@buxa/shared';
 import * as A from '@buxa/shared';
 import type { Proposal } from '@buxa/shared';

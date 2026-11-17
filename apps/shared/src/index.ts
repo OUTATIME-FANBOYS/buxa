@@ -9,6 +9,7 @@ export * from './attendance/inputs';
 export * from './attendance/labels';
 export * from './attendance/logFilter';
 export * from './attendance/onSiteView';
+export * from './attendance/types';
 export * from './attendance/outcome';
 export * from './attendance/paths';
 export * from './attendance/refusals';

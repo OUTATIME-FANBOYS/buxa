@@ -5,7 +5,7 @@ import { type Agent } from '@buxa/shared';
 import { AgentCard } from '../AgentCard';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
+vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 vi.mock('@/components/kanban/dialogs/ConnectAgentDialog', () => ({ ConnectAgentDialog: () => null }));
 
 describe('AgentCard', () => {

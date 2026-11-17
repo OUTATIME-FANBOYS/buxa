@@ -4,8 +4,8 @@ import { buildSeed } from '@buxa/shared';
 import { TaskDrawer } from '../TaskDrawer';
 
 const h = vi.hoisted(() => ({ drawer: null as null | { id: string }, store: {} as Record<string, unknown> }));
-vi.mock('@/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ drawer: h.drawer, closeTask: () => undefined }) }));
-vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
+vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ drawer: h.drawer, closeTask: () => undefined }) }));
+vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 
 describe('TaskDrawer', () => {
   it('renders nothing while no task is open', () => {

@@ -1,15 +1,16 @@
+import { Dialog as ConfirmDialog } from '@/components/Dialog';
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { UiProvider } from '@/providers/UiProvider';
+import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { buildSeed } from '@buxa/shared';
 import { TaskForm } from '../TaskForm';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
-vi.mock('@/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
-vi.mock('@/hooks/useTaskCommands', () => ({ useTaskCommands: () => ({ open() {}, duplicate() {}, moveTo() {}, toggleArchive() {}, remove() {} }) }));
+vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
+vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
+vi.mock('@buxa/middleware/hooks/useTaskCommands', () => ({ useTaskCommands: () => ({ open() {}, duplicate() {}, moveTo() {}, toggleArchive() {}, remove() {} }) }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -28,7 +29,7 @@ describe('TaskForm', () => {
   afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
 
   it('opens a new task as a drawer with a title box and a Create action', () => {
-    act(() => root.render(<UiProvider><TaskForm task={null} project={project} onClose={() => undefined} /></UiProvider>));
+    act(() => root.render(<UiProvider Dialog={ConfirmDialog}><TaskForm task={null} project={project} onClose={() => undefined} /></UiProvider>));
     const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
     expect(dialog.className).toContain('drawer');
     expect(dialog.querySelector('#drawer-title')?.getAttribute('placeholder')).toBe('Task title');
@@ -37,7 +38,7 @@ describe('TaskForm', () => {
   });
   it('locks the whole form for read-only members', () => {
     h.store = { ...h.store, readOnly: true };
-    act(() => root.render(<UiProvider><TaskForm task={seed.tasks[0]} project={project} onClose={() => undefined} /></UiProvider>));
+    act(() => root.render(<UiProvider Dialog={ConfirmDialog}><TaskForm task={seed.tasks[0]} project={project} onClose={() => undefined} /></UiProvider>));
     const fieldset = document.querySelector('fieldset') as HTMLFieldSetElement;
     expect(fieldset.disabled).toBe(true);
   });

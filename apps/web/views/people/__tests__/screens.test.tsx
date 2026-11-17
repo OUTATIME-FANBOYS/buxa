@@ -1,9 +1,10 @@
+import { Dialog as ConfirmDialog } from '@/components/Dialog';
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Household, Membership, Person, PersonSummary } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
-import { UiProvider } from '@/providers/UiProvider';
+import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { forbidden, notFound as notFoundError } from '@buxa/server/http/errors';
 
 const notFound = vi.hoisted(() => vi.fn(() => { throw new Error('NEXT_NOT_FOUND'); }));
@@ -31,7 +32,7 @@ const { EditPerson } = await import('@/views');
 const ID = { ben: '22222222-2222-4222-8222-222222222222', anna: '55555555-5555-4555-8555-555555555555', household: '11111111-1111-4111-8111-111111111111', membership: '33333333-3333-4333-8333-333333333333' };
 
 const as = (role: Role) => { session.camp = { orgId: 'o1', role, name: 'Sunrise', slug: 'sunrise' }; };
-const render = (node: ReactNode) =>renderToStaticMarkup(<UiProvider>{node}</UiProvider>);
+const render = (node: ReactNode) =>renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}>{node}</UiProvider>);
 
 const summary = (over: Partial<PersonSummary> = {}): PersonSummary => ({
   id: ID.ben, givenName: 'Ben', familyName: 'Lee', preferredName: null, roles: ['camper'], status: 'valid', onSite: true, archived: false, ...over,

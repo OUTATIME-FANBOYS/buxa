@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { THEME_KEY } from '@buxa/shared/config/theme';
+import { THEME_KEY } from '../config/theme';
 import { isDark, setTheme } from '../theme';
 
 // Node 22+ ships its own localStorage global that shadows jsdom's, so the store is stubbed for these tests.

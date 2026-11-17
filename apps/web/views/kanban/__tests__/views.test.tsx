@@ -1,6 +1,7 @@
+import { Dialog as ConfirmDialog } from '@/components/Dialog';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { UiProvider } from '@/providers/UiProvider';
+import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { buildSeed } from '@buxa/shared';
 import { Settings } from '../Settings';
 import { Projects } from '../Projects';
@@ -12,8 +13,8 @@ import { Agents } from '../Agents';
 import { Reports } from '../Reports';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
-vi.mock('@/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
+vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
+vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push() {}, replace() {}, refresh() {} }), usePathname: () => '/camp/boards' }));
 
 const seed = buildSeed();
@@ -30,7 +31,7 @@ function store(over: Record<string, unknown> = {}) {
     ...over,
   };
 }
-const page = (node: React.ReactElement) => renderToStaticMarkup(<UiProvider>{node}</UiProvider>);
+const page = (node: React.ReactElement) => renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}>{node}</UiProvider>);
 
 describe('kanban views', () => {
   beforeEach(() => { h.store = store(); });

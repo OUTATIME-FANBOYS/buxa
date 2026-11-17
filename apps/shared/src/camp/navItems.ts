@@ -1,5 +1,5 @@
 import type { Action, Role } from '@buxa/domain';
-import { ROUTES, type RoutePath } from '@buxa/shared/config/routes';
+import { ROUTES, type RoutePath } from '../config/routes';
 import { roleAllows } from './abilities';
 
 export interface NavItem {

@@ -12,7 +12,7 @@ vi.mock('next/navigation', () => ({ redirect: (url: string) => { throw new Error
 import { ROUTES } from '@buxa/shared/config/routes';
 import { idle } from '@buxa/shared';
 import { InMemoryStore } from '../../../__tests__/fakes';
-import { startRuntime } from '@buxa/server/__tests__/runtimeHarness';
+import { startRuntime } from '../../../__tests__/runtimeHarness';
 import { createTestIdentityProvider } from '../../../__tests__/tokens';
 import { CAMP_COOKIE, getSession } from '../../../session';
 import { gotrue, stubIdentityProvider } from '../../../session/__tests__/gotrue';

@@ -1,8 +1,8 @@
 'use client';
 
 import { useRef, type ReactNode } from 'react';
-import { useStore } from '@/providers/providers';
-import { useGlobalShortcuts } from '@/hooks/hooks';
+import { useStore } from '@buxa/middleware/providers/providers';
+import { useGlobalShortcuts } from '@buxa/middleware/hooks/hooks';
 import { GlobalSearch } from './GlobalSearch';
 import { Notifications } from './Notifications';
 

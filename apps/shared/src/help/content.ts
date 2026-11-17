@@ -1,4 +1,4 @@
-import { ROUTES } from '@buxa/shared/config/routes';
+import { ROUTES } from '../config/routes';
 import { EXPORTS_SECTION } from './exports';
 import { IMPORTS_SECTION } from './imports';
 import { PRIVACY_SECTION } from './privacy';

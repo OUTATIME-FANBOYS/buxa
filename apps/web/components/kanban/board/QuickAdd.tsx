@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { Column, Project } from '@buxa/shared';
-import { useStore } from '@/providers/providers';
+import { useStore } from '@buxa/middleware/providers/providers';
 
 export function QuickAdd({ project, column, onDone }: { project: Project; column: Column; onDone: () => void }) {
   const { actions, me } = useStore(); const [v, setV] = useState(''); const [err, setErr] = useState('');

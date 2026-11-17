@@ -6,7 +6,7 @@ import { buildSeed } from '@buxa/shared';
 import { ColumnDialog } from '../ColumnDialog';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
+vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 

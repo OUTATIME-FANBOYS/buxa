@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useStore } from '@/providers/providers';
-import { useTaskDrawer } from '@/providers/providers';
+import { useStore } from '@buxa/middleware/providers/providers';
+import { useTaskDrawer } from '@buxa/middleware/providers/providers';
 import { Empty } from '../../Empty';
 import { Icon } from '@/elements';
 import { Popover } from '../../Popover';

@@ -1,10 +1,10 @@
 import type { Project, Task } from '@buxa/shared';
-import { useStore } from '@/providers/providers';
+import { useStore } from '@buxa/middleware/providers/providers';
 import { Dialog } from '../../Dialog';
 import { Field } from '@/elements';
-import { useUi } from '@/providers/UiProvider';
-import { useTaskCommands } from '@/hooks/hooks';
-import { useTaskDraft } from '@/hooks/hooks';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
+import { useTaskCommands } from '@buxa/middleware/hooks/hooks';
+import { useTaskDraft } from '@buxa/middleware/hooks/hooks';
 import { TaskDrawerHeader } from './TaskDrawerHeader';
 import { TaskProperties } from './TaskProperties';
 import { TaskSections } from './TaskSections';

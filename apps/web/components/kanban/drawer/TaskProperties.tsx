@@ -3,8 +3,8 @@
 import { PriorityMark } from '@/elements';
 import { useMemo } from 'react';
 import type { Priority, Project, Task } from '@buxa/shared';
-import { useStore } from '@/providers/providers';
-import type { TaskDraft } from '@/hooks/hooks';
+import { useStore } from '@buxa/middleware/providers/providers';
+import type { TaskDraft } from '@buxa/middleware/hooks/hooks';
 import { Field } from '@/elements';
 import { PRIORITIES, PRIORITY_LABEL } from '@buxa/shared';
 import { TagInput } from './TagInput';

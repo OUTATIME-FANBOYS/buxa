@@ -1,4 +1,4 @@
-import { useStore } from '@/providers/providers';
+import { useStore } from '@buxa/middleware/providers/providers';
 import { Ring } from '@/elements';
 import { HBars } from '../charts/HBars';
 import { Legend } from '@/elements';

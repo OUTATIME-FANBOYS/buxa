@@ -2,7 +2,7 @@
 
 import { Empty } from '@/components';
 import type { CampHome } from '@buxa/server/composers/index.server';
-import { useStore } from '@/providers/providers';
+import { useStore } from '@buxa/middleware/providers/providers';
 import { taskCounts } from '@buxa/shared';
 import { HomeHeader } from '@/components';
 import { HomeStats } from '@/components';

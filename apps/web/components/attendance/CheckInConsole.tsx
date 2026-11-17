@@ -7,13 +7,14 @@ import { LiveRegion } from '@/elements';
 import { NameSearch } from './NameSearch';
 import { ResultPanel } from './ResultPanel';
 import { ScanPanel } from './ScanPanel';
-import { useCheckIn } from '@/hooks/hooks';
+import { useCheckIn } from '@buxa/middleware/hooks/hooks';
+import * as attendance from '@/actions/attendance';
 
 interface Props { timeZone: string; canOverride: boolean }
 
 /** The fast screen: one scan field and a name search on the left, the result on the right. Focus returns to the scan field after each person. */
 export function CheckInConsole({ timeZone, canOverride }: Props) {
-  const { state, scanCode, pickPerson, checkIn, clear } = useCheckIn();
+  const { state, scanCode, pickPerson, checkIn, clear } = useCheckIn(attendance);
   const scanRef = useRef<ScanFieldHandle>(null);
   const busy = state.phase === 'submitting';
 

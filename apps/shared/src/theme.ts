@@ -1,4 +1,4 @@
-import { THEME_KEY } from '@buxa/shared/config/theme';
+import { THEME_KEY } from './config/theme';
 
 /** Light/dark. Shares the key the original app and index.html read, so the choice carries across both. */
 export function setTheme(dark: boolean): void {

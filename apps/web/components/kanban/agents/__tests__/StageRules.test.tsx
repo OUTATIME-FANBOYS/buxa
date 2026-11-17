@@ -5,7 +5,7 @@ import { type Agent } from '@buxa/shared';
 import { StageRules } from '../StageRules';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
+vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 
 const seed = buildSeed();
 const agent = { ...seed.agents[0], scope: [seed.projects[0].id], moveRules: { [seed.projects[0].columns[0].id]: 'approve' } } as unknown as Agent;

@@ -1,12 +1,13 @@
+import { Dialog as ConfirmDialog } from '@/components/Dialog';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { UiProvider } from '@/providers/UiProvider';
+import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { buildSeed } from '@buxa/shared';
 import { Inbox } from '../Inbox';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
-vi.mock('@/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
+vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
+vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
 
 describe('Inbox', () => {
   beforeEach(() => {
@@ -15,7 +16,7 @@ describe('Inbox', () => {
   });
 
   it('says nothing is waiting when no proposal needs a decision', () => {
-    const html = renderToStaticMarkup(<UiProvider><Inbox proposals={[]} /></UiProvider>);
+    const html = renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}><Inbox proposals={[]} /></UiProvider>);
     expect(html).toContain('Nothing waiting for you');
   });
 });

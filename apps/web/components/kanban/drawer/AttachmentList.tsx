@@ -1,8 +1,8 @@
 import type { Task } from '@buxa/shared';
-import { useStore } from '@/providers/providers';
+import { useStore } from '@buxa/middleware/providers/providers';
 import { Icon } from '@/elements';
 import { fmtSize } from '@buxa/shared';
-import { useAttachmentUpload } from '@/hooks/hooks';
+import { useAttachmentUpload } from '@buxa/middleware/hooks/hooks';
 
 export function AttachmentList({ task, ro }: { task: Task; ro: boolean }) {
   const { actions } = useStore();

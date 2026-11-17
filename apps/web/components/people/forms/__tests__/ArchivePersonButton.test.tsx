@@ -1,8 +1,9 @@
+import { Dialog as ConfirmDialog } from '@/components/Dialog';
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { UiProvider } from '@/providers/UiProvider';
+import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { ArchivePersonButton } from '../ArchivePersonButton';
 
 const h = vi.hoisted(() => ({ archivePersonAction: vi.fn() }));
@@ -16,7 +17,7 @@ describe('ArchivePersonButton', () => {
   afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
 
   it('asks for confirmation before archiving, and does nothing when the person says no', async () => {
-    act(() => root.render(<UiProvider><ArchivePersonButton personId="p-1" personName="Ada Lee" /></UiProvider>));
+    act(() => root.render(<UiProvider Dialog={ConfirmDialog}><ArchivePersonButton personId="p-1" personName="Ada Lee" /></UiProvider>));
     const button = Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Archive person') as HTMLButtonElement;
     await act(async () => { button.click(); });
     const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
@@ -28,7 +29,7 @@ describe('ArchivePersonButton', () => {
 
   it('archives once confirmed', async () => {
     h.archivePersonAction.mockResolvedValueOnce({ status: 'success' });
-    act(() => root.render(<UiProvider><ArchivePersonButton personId="p-1" personName="Ada Lee" /></UiProvider>));
+    act(() => root.render(<UiProvider Dialog={ConfirmDialog}><ArchivePersonButton personId="p-1" personName="Ada Lee" /></UiProvider>));
     const button = Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Archive person') as HTMLButtonElement;
     await act(async () => { button.click(); });
     const confirm = Array.from(document.querySelectorAll('[role="dialog"] button')).find((b) => b.textContent === 'Archive') as HTMLButtonElement;

@@ -4,9 +4,9 @@ import { buildSeed } from '@buxa/shared';
 import { TaskTopBar } from '../TaskTopBar';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
-vi.mock('@/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
-vi.mock('@/hooks/useGlobalShortcuts', () => ({ useGlobalShortcuts: () => undefined }));
+vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
+vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
+vi.mock('@buxa/middleware/hooks/useGlobalShortcuts', () => ({ useGlobalShortcuts: () => undefined }));
 
 const seed = buildSeed();
 

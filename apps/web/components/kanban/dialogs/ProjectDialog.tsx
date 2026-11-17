@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dialog } from '../../Dialog';
 import { Field } from '@/elements';
-import { useUi } from '@/providers/UiProvider';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { boardPath } from '@/config/routes';
-import { useStore } from '@/providers/providers';
+import { useStore } from '@buxa/middleware/providers/providers';
 import type { Project } from '@buxa/shared';
 
 export function ProjectDialog({ project, onClose }: { project?: Project; onClose: () => void }) {

@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from 'react';
 import { Dialog } from '../Dialog';
-import { useUi } from '@/providers/UiProvider';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { fieldError, idle } from '@buxa/shared';
 import { renameCampAction } from '@buxa/server/composers/index';
 import { TextField } from '@/elements';

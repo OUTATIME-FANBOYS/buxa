@@ -4,7 +4,7 @@ import { buildSeed } from '@buxa/shared';
 import { TaskProperties } from '../TaskProperties';
 
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
-vi.mock('@/providers/store', () => ({ useStore: () => h.store }));
+vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 
 const seed = buildSeed();
 const project = seed.projects[0];

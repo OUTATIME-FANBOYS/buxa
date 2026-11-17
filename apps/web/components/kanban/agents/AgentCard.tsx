@@ -5,7 +5,7 @@ import { Avatar } from '@/elements';
 import { Icon } from '@/elements';
 import { Pill } from '@/elements';
 import { Segmented } from '@/elements';
-import { useStore } from '@/providers/providers';
+import { useStore } from '@buxa/middleware/providers/providers';
 import { ConnectAgentDialog } from '../dialogs/ConnectAgentDialog';
 import * as A from '@buxa/shared';
 import type { Agent, Trust } from '@buxa/shared';

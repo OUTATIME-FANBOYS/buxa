@@ -2,10 +2,10 @@
 
 import { Dialog } from '../../Dialog';
 import { Field } from '@/elements';
-import { useUi } from '@/providers/UiProvider';
-import { useStore } from '@/providers/providers';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
+import { useStore } from '@buxa/middleware/providers/providers';
 import { UNREACHABLE, type AgentConnection } from '@buxa/shared';
-import { useAgentConnection } from '@/hooks/hooks';
+import { useAgentConnection } from '@buxa/middleware/hooks/hooks';
 
 function TokenReveal({ name, token, url }: { name: string; token: string; url: string }) {
   const { toast } = useUi();

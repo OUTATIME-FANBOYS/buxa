@@ -3,13 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useStore } from '@/providers/providers';
+import { useStore } from '@buxa/middleware/providers/providers';
 import { Avatar } from '@/elements';
 import { Empty } from '@/components';
 import { Menu } from '@/components';
 import { Pill } from '@/elements';
 import { Progress } from '@/elements';
-import { useUi } from '@/providers/UiProvider';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { Icon } from '@/elements';
 import { ProjectDialog } from '@/components';
 import { diffDays, fmt, today } from '@buxa/shared';

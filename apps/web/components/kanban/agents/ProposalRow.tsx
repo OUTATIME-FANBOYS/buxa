@@ -1,8 +1,8 @@
 import { Icon } from '@/elements';
 import { Pill } from '@/elements';
-import { useUi } from '@/providers/UiProvider';
-import { useStore } from '@/providers/providers';
-import { useTaskDrawer } from '@/providers/providers';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
+import { useStore } from '@buxa/middleware/providers/providers';
+import { useTaskDrawer } from '@buxa/middleware/providers/providers';
 import * as A from '@buxa/shared';
 import type { Proposal } from '@buxa/shared';
 import { KIND_ICON, STATUS_LABEL, STATUS_TONE } from '@buxa/shared';

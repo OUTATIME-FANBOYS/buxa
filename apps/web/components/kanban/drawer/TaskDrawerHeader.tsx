@@ -1,8 +1,8 @@
 import type { Project, Task } from '@buxa/shared';
 import { Icon } from '@/elements';
 import { Menu } from '../../Menu';
-import { useTaskDrawer } from '@/providers/providers';
-import { useTaskCommands } from '@/hooks/hooks';
+import { useTaskDrawer } from '@buxa/middleware/providers/providers';
+import { useTaskCommands } from '@buxa/middleware/hooks/hooks';
 
 export function TaskDrawerHeader({ task, project, readOnly, onClose, onDelete }: { task: Task | null; project: Project; readOnly: boolean; onClose: () => void; onDelete: () => void }) {
   const { openTask } = useTaskDrawer(); const cmd = useTaskCommands();

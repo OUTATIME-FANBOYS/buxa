@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import type { Column, Project, Task } from '@buxa/shared';
-import { useStore } from '@/providers/providers';
+import { useStore } from '@buxa/middleware/providers/providers';
 import { Icon } from '@/elements';
-import { useUi } from '@/providers/UiProvider';
-import { useBoardDnd } from '@/hooks/hooks';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
+import { useBoardDnd } from '@buxa/middleware/hooks/hooks';
 import { ColumnDialog } from '../dialogs/ColumnDialog';
 import { BoardColumn } from './BoardColumn';
 

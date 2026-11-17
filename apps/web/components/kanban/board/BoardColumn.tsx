@@ -1,9 +1,9 @@
 import type { Column, Project, Task } from '@buxa/shared';
 import type { BoardDnd } from '@buxa/shared';
-import { useStore } from '@/providers/providers';
+import { useStore } from '@buxa/middleware/providers/providers';
 import { Icon } from '@/elements';
 import { Menu } from '../../Menu';
-import type { useBoardDnd } from '@/hooks/hooks';
+import type { useBoardDnd } from '@buxa/middleware/hooks/hooks';
 import { QuickAdd } from './QuickAdd';
 import { TaskCard } from './TaskCard';
 

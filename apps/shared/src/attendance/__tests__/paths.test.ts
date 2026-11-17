@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ROUTES } from '@buxa/shared/config/routes';
+import { ROUTES } from '../../config/routes';
 import { attendanceExportPath, attendanceFileName } from '../paths';
 
 const filter = { from: '2027-07-01', to: '2027-07-03' } as const;

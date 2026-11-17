@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ROLES } from '@buxa/domain';
-import { ROUTES } from '@buxa/shared/config/routes';
+import { ROUTES } from '../../config/routes';
 import { CAMP_NAV, CAMP_NAV_GROUPS, isActive, navFor, navGroupsFor, type NavGroup } from '../navItems';
 
 const hrefs = (role: Parameters<typeof navFor>[0]) => navFor(role).map(item => item.href);

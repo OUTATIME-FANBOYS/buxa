@@ -1,6 +1,6 @@
 import type { Project, Task } from '@buxa/shared';
 import type { MenuItem } from '../../Menu';
-import type { TaskCommands } from '@/hooks/hooks';
+import type { TaskCommands } from '@buxa/middleware/hooks/hooks';
 
 /** The ⋯ menu for a task card. Read-only members only get "Open". */
 export function taskMenuItems(t: Task, project: Project, readOnly: boolean, cmd: TaskCommands): (MenuItem | false)[] {

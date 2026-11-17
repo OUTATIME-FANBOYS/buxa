@@ -1,5 +1,5 @@
 import type { AttendanceFilter } from '@buxa/contracts';
-import { ROUTES } from '@buxa/shared/config/routes';
+import { ROUTES } from '../config/routes';
 
 /** The CSV export address for a filter, built from ROUTES so the address is defined once. */
 export const attendanceExportPath = (filter: AttendanceFilter): string => {

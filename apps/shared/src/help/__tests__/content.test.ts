@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ROUTES } from '@buxa/shared/config/routes';
+import { ROUTES } from '../../config/routes';
 import { HELP_LINK_LABEL, HELP_SECTIONS, helpLink } from '../content';
 import { IMPORT_COLUMNS } from '../imports';
 import { type HelpSectionContent, type HelpSubsection } from '../types';
