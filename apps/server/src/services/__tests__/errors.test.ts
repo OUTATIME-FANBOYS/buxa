@@ -43,7 +43,7 @@ describe('the camp service', () => {
   });
 
   it('still returns a camp that exists', async () => {
-    const org = { id: owner.orgId, name: 'Lake', slug: 'lake', createdAt: '2027-01-01T00:00:00.000Z', memberCount: 1, timezone: 'UTC' };
+    const org = { id: owner.orgId, name: 'Lake', slug: 'lake', createdAt: '2027-01-01T00:00:00.000Z', memberCount: 1, timezone: 'UTC', clockFormat: '24h' as const };
     expect(await createOrgService(repo(async () => org)).getCamp(owner)).toEqual(org);
   });
 });

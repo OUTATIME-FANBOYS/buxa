@@ -1,9 +1,10 @@
 import type { AttendanceEntry } from '@buxa/contracts';
 import { OnSitePill } from './OnSitePill';
 import { formatCampDateTime } from '@buxa/shared';
+import type { ClockFormat } from '@buxa/domain';
 
 /** One person's visits, newest first. Staff are named, never shown as ids. Times are the camp's local time (`timeZone`). */
-export function AttendanceHistory({ entries, timeZone }: { entries: readonly AttendanceEntry[]; timeZone: string }) {
+export function AttendanceHistory({ entries, timeZone, clockFormat }: { entries: readonly AttendanceEntry[]; timeZone: string; clockFormat: ClockFormat }) {
   return (
     <section className="panel" aria-labelledby="visits-heading">
       <h2 id="visits-heading" className="people-heading">Attendance</h2>
@@ -14,8 +15,8 @@ export function AttendanceHistory({ entries, timeZone }: { entries: readonly Att
           <tbody>
             {entries.map(entry => (
               <tr key={entry.id}>
-                <td>{formatCampDateTime(entry.checkedInAt, timeZone)}</td>
-                <td>{entry.checkedOutAt ? formatCampDateTime(entry.checkedOutAt, timeZone) : <OnSitePill onSite />}</td>
+                <td>{formatCampDateTime(entry.checkedInAt, timeZone, clockFormat)}</td>
+                <td>{entry.checkedOutAt ? formatCampDateTime(entry.checkedOutAt, timeZone, clockFormat) : <OnSitePill onSite />}</td>
                 <td>{entry.checkedInByName ?? '—'}</td>
                 <td>{entry.collectedByName ?? '—'}</td>
                 <td>{[entry.overrideReason && `Override: ${entry.overrideReason}`, entry.note].filter(Boolean).join(' · ') || '—'}</td>

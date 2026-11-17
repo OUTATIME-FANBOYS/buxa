@@ -21,7 +21,9 @@ describe('kanban route pages', () => {
   });
 
   it('the home page renders the dashboard for the camp', () => {
-    expect(renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}><HomePage camp={null} /></UiProvider>)).toContain('No workspace');
+    const home = renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}><HomePage camp={{ campId: 'o1', name: 'Lake Camp', firstName: 'Priya', canRename: false, people: 1, onSite: 0, checkedInToday: 0, validMemberships: 1, upcomingSessions: [], checkInsByDay: null, onSiteByAge: null, membershipStatus: null }} /></UiProvider>);
+    expect(home).toContain('On site now');
+    expect(home).not.toContain('No workspace');
   });
   it('the boards page asks for a project when there are none', () => {
     expect(renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}><BoardsPage /></UiProvider>)).toContain('No projects yet');

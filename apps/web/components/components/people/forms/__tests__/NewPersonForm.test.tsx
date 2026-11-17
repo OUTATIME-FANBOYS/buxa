@@ -22,4 +22,15 @@ describe('NewPersonForm', () => {
     expect(html).not.toContain('Existing household');
     expect(html).toContain('New household name');
   });
+  it('on its own page it keeps the panel and a Cancel link back to People', () => {
+    const html = renderToStaticMarkup(<NewPersonForm household={null} households={[]} />);
+    expect(html).toContain('class="panel people-form person-form"');
+    expect(html).toContain('href="/camp/people"');
+  });
+  it('in the dialog it has no panel, and Cancel is a button, not a link away from the list', () => {
+    const html = renderToStaticMarkup(<NewPersonForm household={null} households={[]} variant="dialog" />);
+    expect(html).toContain('class="people-form person-form"');
+    expect(html).not.toContain('href="/camp/people"');
+    expect(html).toContain('<button type="button" class="btn">Cancel</button>');
+  });
 });

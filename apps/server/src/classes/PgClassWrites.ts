@@ -49,6 +49,10 @@ export async function insertSession(db: Db, actor: Actor, classId: string, input
       'INSERT INTO session_instructors (org_id, session_id, person_id) SELECT $1, $2, unnest($3::uuid[])',
       [actor.orgId, id, instructors]);
   }
-  await recordAudit(db, { actor, action: 'session.create', entity: 'session', entityId: id, data: { classId, startsAt: input.startsAt, endsAt: input.endsAt } });
+  // The audit keeps the instructors' ids (the people's names are not copied into the log), so a later read can show who was linked.
+  await recordAudit(db, {
+    actor, action: 'session.create', entity: 'session', entityId: id,
+    data: { classId, startsAt: input.startsAt, endsAt: input.endsAt, instructorIds: instructors },
+  });
   return id;
 }

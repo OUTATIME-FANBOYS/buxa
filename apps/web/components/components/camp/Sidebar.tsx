@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Icon } from '@/components/elements/export';
+import { BrandMark } from '@/components/elements/export';
 import type { RoutePath } from '@/config/routes';
 import type { NavGroup } from '@buxa/shared';
 import { SidebarNav } from './SidebarNav';
@@ -8,7 +8,7 @@ import { SidebarNav } from './SidebarNav';
 export function Sidebar({ groups, brandHref }: { groups: readonly NavGroup[]; brandHref: RoutePath }) {
   return (
     <aside className="sidebar" aria-label="Primary">
-      <div className="sidebar-head"><Link className="brand" href={brandHref}><span className="logo" aria-hidden="true"><Icon name="kanban" size={16} /></span><span className="collapsible">Buxa</span></Link></div>
+      <div className="sidebar-head"><Link className="brand" href={brandHref}><span className="logo logo-mark" aria-hidden="true"><BrandMark size={28} /></span><span className="collapsible">Buxa</span></Link></div>
       <SidebarNav groups={groups} />
     </aside>
   );

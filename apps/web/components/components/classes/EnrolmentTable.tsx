@@ -3,6 +3,7 @@ import { Pill } from '@/components/elements/export';
 import type { Tone } from '@buxa/shared';
 import { formatCampDateTime } from '@buxa/shared';
 import { CancelEnrolmentButton } from '@/components/components/classes/forms/export';
+import type { ClockFormat } from '@buxa/domain';
 
 const STATUS: Record<EnrolmentStatus, { label: string; tone: Tone }> = {
   enrolled: { label: 'Enrolled', tone: 'ok' },
@@ -14,8 +15,8 @@ const STATUS: Record<EnrolmentStatus, { label: string; tone: Tone }> = {
  * Who is in one session, by name and status. Contact details are not part of an enrolment, so none are shown. Cancel is offered
  * only to people who manage classes; the service checks the permission again.
  */
-export function EnrolmentTable({ classId, enrolments, canManage, timeZone }: {
-  classId: string; enrolments: readonly Enrolment[]; canManage: boolean; timeZone: string;
+export function EnrolmentTable({ classId, enrolments, canManage, timeZone, clockFormat }: {
+  classId: string; enrolments: readonly Enrolment[]; canManage: boolean; timeZone: string; clockFormat: ClockFormat;
 }) {
   return (
     <div className="table-wrap"><table className="table">
@@ -32,7 +33,7 @@ export function EnrolmentTable({ classId, enrolments, canManage, timeZone }: {
             <tr key={enrolment.id}>
               <td>{enrolment.camperName}</td>
               <td><Pill tone={status.tone}>{status.label}</Pill></td>
-              <td>{formatCampDateTime(enrolment.enrolledAt, timeZone)}</td>
+              <td>{formatCampDateTime(enrolment.enrolledAt, timeZone, clockFormat)}</td>
               {canManage && (
                 <td>{live && <CancelEnrolmentButton classId={classId} enrolmentId={enrolment.id} camperName={enrolment.camperName} />}</td>
               )}

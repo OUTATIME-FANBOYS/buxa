@@ -3,7 +3,7 @@ import { Icon } from './Icon';
 import { avatarHue } from '@buxa/shared';
 
 /** Anything with a name works; `agent` marks a non-human member. */
-export interface AvatarUser { name: string; agent?: boolean }
+interface AvatarUser { name: string; agent?: boolean }
 
 export function Avatar({ user, size = 24 }: { user?: AvatarUser | null; size?: number }) {
   if (!user) return <span className="avatar avatar-empty" style={{ width: size, height: size }} title="Unassigned"><Icon name="user" size={size * 0.55} /></span>;

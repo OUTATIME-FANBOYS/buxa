@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import type { CampHome } from '@buxa/shared/camp/campHomeTypes';
 import { ROUTES, boardPath } from '@/config/routes';
 import { Empty } from '@/components/components/export';
@@ -17,7 +17,7 @@ import { Settings } from './Settings';
 import { WorkspaceCalendar } from './WorkspaceCalendar';
 
 /** Home: one page for the camp (when there is one) and its staff tasks. */
-export function HomePage({ camp }: { camp: CampHome | null }) {
+export function HomePage({ camp }: { camp: CampHome }) {
   return <Dashboard camp={camp} />;
 }
 
@@ -48,4 +48,4 @@ export function AgentsPage() {
 
 export function ReportsPage() { return <Reports />; }
 
-export function SettingsPage() { return <Settings />; }
+export function SettingsPage({ leading }: { leading?: ReactNode }) { return <Settings leading={leading} />; }

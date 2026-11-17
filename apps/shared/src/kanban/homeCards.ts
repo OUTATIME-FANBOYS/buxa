@@ -1,28 +1,40 @@
 import type { Tone } from '../tones';
-import type { CampHome } from '../camp/campHomeTypes';
-import type { TaskCounts } from './homeTasks';
+import type { CampHome, CheckInsByDay } from '../camp/campHomeTypes';
 
-export interface HomeCard { label: string; value: number; note: string; tone: Tone; icon: string; strong?: boolean }
+export interface HomeCardChange { text: string; tone: Tone }
+/** One number on the Home stats row. `change` is a short chip (for example "+3 vs yesterday"), or null when there is nothing honest to compare. */
+export interface HomeCard { label: string; value: number; info: string; icon: string; tone: Tone; change: HomeCardChange | null }
+
+/** Today against yesterday, from the chart's days. Only when both days are complete, so the comparison is not against a short count. */
+export function dayChange(series: CheckInsByDay | null): HomeCardChange | null {
+  if (!series || !series.complete || series.days.length < 2) return null;
+  const today = series.days[series.days.length - 1].count;
+  const yesterday = series.days[series.days.length - 2].count;
+  const diff = today - yesterday;
+  if (diff === 0) return { text: 'Same as yesterday', tone: 'neutral' };
+  return diff > 0 ? { text: `+${diff} vs yesterday`, tone: 'ok' } : { text: `${diff} vs yesterday`, tone: 'warn' };
+}
 
 /**
- * The one stats row: camp facts the viewer may see first, then the task counts. Pure, so the mix is tested without rendering.
- * A camp fact the viewer may not read (null) gets no card at all.
+ * The three cards on Home's stats row: the camp facts the viewer may see. A fact the viewer may not read (null) gets no card.
+ * Pure, so the values and chips are tested without rendering.
  */
-export function homeCards(camp: CampHome | null, tasks: TaskCounts): HomeCard[] {
-  const pct = tasks.total ? Math.round((tasks.completed / tasks.total) * 100) : 0;
-  const facts: HomeCard[] = camp === null ? [] : [
-    ...(camp.people === null ? [] : [{ label: 'People', value: camp.people, note: 'on the camp list', tone: 'brand' as const, icon: 'users' }]),
-    ...(camp.onSite === null ? [] : [{ label: 'On site now', value: camp.onSite, note: 'checked in right now', tone: 'ok' as const, icon: 'clock' }]),
-    ...(camp.validMemberships === null ? [] : [{ label: 'Valid memberships', value: camp.validMemberships, note: 'valid today', tone: 'neutral' as const, icon: 'check' }]),
+export function homeCards(camp: CampHome): HomeCard[] {
+  const share: HomeCardChange | null = camp.validMemberships !== null && camp.people
+    ? { text: `${Math.round((camp.validMemberships / camp.people) * 100)}% of people`, tone: 'neutral' }
+    : null;
+  return [
+    ...(camp.onSite === null ? [] : [{
+      label: 'On site now', value: camp.onSite, icon: 'clock', tone: 'ok' as const,
+      info: 'People checked in right now who have not checked out.', change: { text: 'Live', tone: 'ok' as const },
+    }]),
+    ...(camp.checkedInToday === null ? [] : [{
+      label: 'Checked in today', value: camp.checkedInToday, icon: 'check', tone: 'brand' as const,
+      info: 'People who checked in at any time today, in camp time.', change: dayChange(camp.checkInsByDay),
+    }]),
+    ...(camp.validMemberships === null ? [] : [{
+      label: 'Valid memberships', value: camp.validMemberships, icon: 'check', tone: 'neutral' as const,
+      info: 'People whose membership is valid today.', change: share,
+    }]),
   ];
-  const work: HomeCard[] = [
-    { label: 'Total tasks', value: tasks.total, note: 'in this workspace', tone: 'hero', icon: 'tasks' },
-    { label: 'In progress', value: tasks.inProgress, note: 'being worked on', tone: 'brand', icon: 'timeline' },
-    { label: 'Completed', value: tasks.completed, note: `${pct}% of tasks`, tone: 'ok', icon: 'check' },
-    {
-      label: 'Overdue', value: tasks.overdue, note: tasks.overdue ? 'past their due date' : 'all on schedule',
-      tone: tasks.overdue ? 'crit' : 'ok', icon: tasks.overdue ? 'alert' : 'check', strong: tasks.overdue > 0,
-    },
-  ];
-  return [...facts, ...work];
 }

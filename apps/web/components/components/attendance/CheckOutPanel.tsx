@@ -18,11 +18,13 @@ export interface CheckOutPanelProps {
   failure: string | null;
   onPatch: (patch: Partial<CheckOutDraft>) => void;
   onSubmit: () => void;
+  /** When given, a Cancel button sits in the same row as Check out. */
+  onCancel?: () => void;
 }
 
-/** The check-out form under one on-site row. A child needs a guardian; an admin may check a child out with a written reason instead. */
+/** The check-out form for one on-site person, shown in the check-out dialog. A child needs a guardian; an admin may check a child out with a written reason instead. */
 export function CheckOutPanel(props: CheckOutPanelProps) {
-  const { id, row, draft, busy, canOverride, refusal, failure, onPatch, onSubmit } = props;
+  const { id, row, draft, busy, canOverride, refusal, failure, onPatch, onSubmit, onCancel } = props;
   const reasonId = useId();
   const radioName = `pickup-${row.personId}`;
   const submittable = !busy && canSubmitCheckOut(row.isMinor, draft);
@@ -50,8 +52,9 @@ export function CheckOutPanel(props: CheckOutPanelProps) {
       )}
       {copy && <Notice tone="crit" title={copy.title} body={copy.body} />}
       {failure && <Notice tone="crit" title="Not checked out" body={failure} />}
-      <div className="row-end">
-        <button type="submit" className="btn btn-primary att-btn-lg" disabled={!submittable}>
+      <div className="checkout-actions">
+        {onCancel && <button type="button" className="btn onsite-btn" onClick={onCancel}>Cancel</button>}
+        <button type="submit" className="btn btn-primary onsite-btn" disabled={!submittable}>
           {busy ? 'Checking out…' : 'Check out'}
         </button>
       </div>

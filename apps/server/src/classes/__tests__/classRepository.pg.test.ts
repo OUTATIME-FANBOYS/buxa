@@ -3,7 +3,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import pg from 'pg';
 import { migrate } from '@buxa/db';
 import { AgeOutOfRangeError, ClassNotFoundError, CamperNotFoundError, EnrolmentNotFoundError, EnrolmentRefusedError, InstructorNotFoundError, OverlapError, SessionFullError, SessionNotFoundError } from '../errors';
-import { auditActions, createClassFixture, enrolRule, makeClass, sessionInput, type ClassFixture } from './pgClassFixture';
+import { auditActions, createClassFixture, enrolRule, makeClass, sessionAuditData, sessionInput, type ClassFixture } from './pgClassFixture';
 
 const url = process.env.DATABASE_URL;
 
@@ -54,6 +54,8 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
       const instructor = await fx.addPerson(fx.orgA, '1980-01-01', 'Ivy');
       const session = await fx.repo.addSession(fx.actor, cls.id, sessionInput(9, 12, { instructorIds: [instructor] }));
       expect(session).toMatchObject({ classId: cls.id, className: 'Robotics', capacity: 5, seatsTaken: 0, waitlisted: 0, instructorIds: [instructor] });
+      expect(session.instructors).toEqual([{ id: instructor, name: 'Ivy Test' }]);
+      expect(await sessionAuditData(pool, fx.orgA)).toMatchObject({ instructorIds: [instructor] });
       const ratio = await pool.query('SELECT ratio_campers, ratio_instructors FROM sessions WHERE id = $1', [session.id]);
       expect(ratio.rows[0]).toEqual({ ratio_campers: 8, ratio_instructors: 1 });
     });

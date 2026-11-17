@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { Field } from '@/components/elements/export';
 import { Segmented } from '@/components/elements/export';
@@ -10,7 +10,8 @@ import { AgentDialog } from '@/components/components/kanban/dialogs/export';
 import { ResetDemoButton } from '@/components/components/kanban/export';
 import type { ThemePref } from '@buxa/shared';
 
-export function Settings() {
+/** Every setting is a card in one grid: the cards fill the page and reflow by width (see styles/features/settings.css). `leading` is the first card. */
+export function Settings({ leading }: { leading?: ReactNode }) {
   const { s, actions, me } = useStore(); const { toast } = useUi();
   const [name, setName] = useState(me?.name ?? ''); const [title, setTitle] = useState(me?.title ?? ''); const [err, setErr] = useState<string | null>(null);
   const file = useRef<HTMLInputElement>(null); const [addAgent, setAddAgent] = useState(false);
@@ -20,8 +21,10 @@ export function Settings() {
     const a = document.createElement('a'); a.href = url; a.download = `buxa-${new Date().toISOString().slice(0, 10)}.json`; a.click(); URL.revokeObjectURL(url);
   };
   return (
-    <div className="page narrow">
+    <div className="page settings-page">
       <header className="page-head"><div className="page-title"><h1>Settings</h1></div></header>
+      <div className="settings-grid">
+      {leading}
       <section className="panel"><h2>Profile</h2>
         <form className="stack" noValidate onSubmit={e => { e.preventDefault(); if (!name.trim()) return setErr('Name can’t be empty.'); actions.updateProfile({ name: name.trim(), title: title.trim() || undefined }); setErr(null); toast('Profile saved'); }}>
           <Field label="Name" error={err}><input value={name} onChange={e => setName(e.target.value)} maxLength={60} /></Field>
@@ -50,6 +53,7 @@ export function Settings() {
       <section className="panel"><h2>Keyboard shortcuts</h2>
         <dl className="keys"><div><dt><kbd className="kbd">C</kbd></dt><dd>Create a task</dd></div><div><dt><kbd className="kbd">/</kbd> or <kbd className="kbd">⌘K</kbd></dt><dd>Search</dd></div>
           <div><dt><kbd className="kbd">Alt</kbd> <kbd className="kbd">←</kbd> <kbd className="kbd">→</kbd></dt><dd>Move a focused card between columns</dd></div><div><dt><kbd className="kbd">Esc</kbd></dt><dd>Close menus and panels</dd></div></dl></section>
+      </div>
     </div>
   );
 }

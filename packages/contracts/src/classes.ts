@@ -39,6 +39,16 @@ export const NewClassInputSchema = z.object({
 });
 export type NewClassInput = z.infer<typeof NewClassInputSchema>;
 
+/** A session's instructor as the screens show them: the person's id and name. Names are trimmed and bounded like a person's name. */
+export const SessionInstructorSchema = z.object({
+  id: z.string(),
+  name: z.string().trim().min(1, 'An instructor needs a name.').max(120),
+});
+export type SessionInstructor = z.infer<typeof SessionInstructorSchema>;
+
+/** A session has at most this many instructors. */
+export const MAX_SESSION_INSTRUCTORS = 20;
+
 export const SessionSchema = z.object({
   id: z.string(),
   classId: z.string(),
@@ -47,6 +57,7 @@ export const SessionSchema = z.object({
   endsAt: z.string(),
   location: z.string(),
   instructorIds: z.array(z.string()),
+  instructors: z.array(SessionInstructorSchema).max(MAX_SESSION_INSTRUCTORS),
   capacity: z.number().int(),
   seatsTaken: z.number().int(),
   waitlisted: z.number().int(),
@@ -57,7 +68,7 @@ export const NewSessionInputSchema = z.object({
   startsAt: InstantSchema,
   endsAt: InstantSchema,
   location: z.string().trim().min(1, 'Give the location.').max(200),
-  instructorIds: z.array(z.string().uuid()).max(20).default([]),
+  instructorIds: z.array(z.string().uuid()).max(MAX_SESSION_INSTRUCTORS).default([]),
   /** Defaults to the class capacity when left out. */
   capacity: CapacitySchema.optional(),
 }).refine(v => isValidSpan({ startsAt: v.startsAt, endsAt: v.endsAt }), { message: 'The session must end after it starts.', path: ['endsAt'] });

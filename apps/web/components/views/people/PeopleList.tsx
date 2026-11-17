@@ -1,13 +1,12 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
-import { ROUTES } from '@/config/routes';
 import { Empty } from '@/components/components/export';
-import { loadPeopleOrForbidden } from '@buxa/server/composers/index.server';
+import { loadHouseholdList, loadPeopleOrForbidden } from '@buxa/server/composers/index.server';
 import { currentActor } from '@buxa/server/composers/index.server';
-import { readListParams, type ListParams } from '@buxa/shared';
+import { readListParams, toHouseholdChoices, type ListParams } from '@buxa/shared';
 import { PeopleSearch } from '@/components/components/people/export';
 import { PeopleTable } from '@/components/components/people/export';
+import { AddPersonButton } from '@/components/components/people/forms/export';
 import type { PersonSummary } from '@buxa/contracts';
 import type { Actor } from '@buxa/domain';
 
@@ -25,12 +24,14 @@ export async function PeopleList({ searchParams }: { searchParams: Record<string
   const canAdd = can(actor, 'people:create');
   const people = await listFor(actor, params);
   const filtered = params.q !== '' || params.role !== '';
+  // The add dialog's household picker. Only staff who can add people load the list.
+  const households = canAdd ? toHouseholdChoices(await loadHouseholdList(actor)) : [];
 
   return (
     <div className="page">
       <header className="page-head">
         <div className="page-title"><h1>People</h1><p className="muted">Children, families, instructors and staff who belong to the camp.</p></div>
-        {canAdd && <div className="page-actions"><Link className="btn btn-primary" href={ROUTES.newPerson}>Add person</Link></div>}
+        {canAdd && <div className="page-actions"><AddPersonButton households={households} /></div>}
       </header>
       <PeopleSearch params={params} />
       {people === 'forbidden' ? (
@@ -41,7 +42,7 @@ export async function PeopleList({ searchParams }: { searchParams: Record<string
             filtered
               ? <Empty icon="search" title="No one matches that search" body="Check the spelling, or try another role." />
               : <Empty icon="users" title="No people yet" body={canAdd ? 'Add the first child, parent or staff member to start the camp list.' : 'Nobody has been added to the camp yet.'}
-                  action={canAdd && <Link className="btn btn-primary" href={ROUTES.newPerson}>Add person</Link>} />
+                  action={canAdd && <AddPersonButton households={households} />} />
           ) : (
             <>
               <p className="muted">{countLine(people.length)}</p>

@@ -1,19 +1,15 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { project, reduceMotion, rubberband, springAnimate, VelocityTracker } from '@buxa/shared';
 import { FOCUSABLE } from '@buxa/shared';
 import { Icon } from '@/components/elements/export';
 
-const CloseCtx = createContext<() => void>(() => {});
-/** The close function of the nearest Dialog, so a child can dismiss it with the exit animation. */
-export const useDialogClose = () => useContext(CloseCtx);
-
 interface Swipe { id: number; x0: number; x: number; on: boolean; vel: VelocityTracker; cancel?: () => void }
 
-export function Dialog({ title, onClose, children, footer, drawer = false, wide = false, labelledBy }: {
-  title?: string; onClose: () => void; children: ReactNode | ((close: () => void) => ReactNode); footer?: ReactNode; drawer?: boolean; wide?: boolean; labelledBy?: string;
+export function Dialog({ title, onClose, children, footer, drawer = false, wide = false, labelledBy, className = '' }: {
+  title?: string; onClose: () => void; children: ReactNode | ((close: () => void) => ReactNode); footer?: ReactNode; drawer?: boolean; wide?: boolean; labelledBy?: string; className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null); const scrim = useRef<HTMLDivElement>(null);
   const [leaving, setLeaving] = useState(false);
@@ -74,15 +70,13 @@ export function Dialog({ title, onClose, children, footer, drawer = false, wide 
   };
 
   return createPortal(
-    <CloseCtx.Provider value={close}>
-      <div ref={scrim} className={`scrim ${drawer ? 'scrim-drawer' : ''} ${leaving ? 'leaving' : ''}`} onMouseDown={e => { if (e.target === e.currentTarget) close(); }}>
-        <div ref={ref} role="dialog" aria-modal="true" aria-label={labelledBy ? undefined : title} aria-labelledby={labelledBy}
-          className={`${drawer ? 'drawer' : 'dialog'} ${wide ? 'dialog-wide' : ''} ${leaving ? 'leaving' : ''}`} onKeyDown={onKey}
-          onPointerDown={onPD} onPointerMove={onPM} onPointerUp={onPU} onPointerCancel={onPU}>
-          {title && !drawer && <header className="dialog-head"><h2>{title}</h2><button className="icon-btn" onClick={close} aria-label="Close"><Icon name="x" /></button></header>}
-          <div className={drawer ? 'drawer-body' : 'dialog-body'}>{typeof children === 'function' ? children(close) : children}</div>
-          {footer && <footer className="dialog-foot">{footer}</footer>}
-        </div>
+    <div ref={scrim} className={`scrim ${drawer ? 'scrim-drawer' : ''} ${leaving ? 'leaving' : ''}`} onMouseDown={e => { if (e.target === e.currentTarget) close(); }}>
+      <div ref={ref} role="dialog" aria-modal="true" aria-label={labelledBy ? undefined : title} aria-labelledby={labelledBy}
+        className={`${drawer ? 'drawer' : 'dialog'} ${wide ? 'dialog-wide' : ''} ${className} ${leaving ? 'leaving' : ''}`} onKeyDown={onKey}
+        onPointerDown={onPD} onPointerMove={onPM} onPointerUp={onPU} onPointerCancel={onPU}>
+        {title && !drawer && <header className="dialog-head"><h2>{title}</h2><button className="icon-btn" onClick={close} aria-label="Close"><Icon name="x" /></button></header>}
+        <div className={drawer ? 'drawer-body' : 'dialog-body'}>{typeof children === 'function' ? children(close) : children}</div>
+        {footer && <footer className="dialog-foot">{footer}</footer>}
       </div>
-    </CloseCtx.Provider>, document.body);
+    </div>, document.body);
 }

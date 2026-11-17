@@ -1,10 +1,10 @@
-import { Icon } from '@/components/elements/export';
+import { BrandMark, Icon } from '@/components/elements/export';
 
 /** The brand panel beside the sign-in form. Decorative, so hidden from assistive technology. */
 export function AuthHero() {
   return (
     <aside className="auth-hero" aria-hidden="true">
-      <div className="brand brand-lg"><span className="logo"><Icon name="kanban" size={18} /></span> Buxa</div>
+      <div className="brand brand-lg"><span className="logo logo-mark"><BrandMark size={32} /></span> Buxa</div>
       <div className="hero-copy">
         <p className="hero-title">Run your camp from one place.</p>
         <ul>

@@ -16,8 +16,13 @@ describe('the sidebar groups', () => {
       ['Home'],
       ['Check-in', 'On site', 'People', 'Attendance', 'Classes', 'Help'],
       ['My tasks', 'Projects', 'Boards', 'Calendar', 'Agents', 'Reports'],
-      ['Team access', 'Settings'],
+      ['Team access'],
     ]);
+  });
+
+  it('does not list Settings in the sidebar: it lives in the profile menu', () => {
+    expect(CAMP_NAV.map(item => item.href)).not.toContain(ROUTES.settings);
+    expect(hrefs('owner')).not.toContain(ROUTES.settings);
   });
 
   it('keeps every route in one place: the nav links only to known routes, and the old kanban address is gone', () => {
@@ -31,7 +36,7 @@ describe('the sidebar groups', () => {
     expect(requires).toMatchObject({
       'Check-in': 'attendance:record', 'On site': 'attendance:read', People: 'people:read', Attendance: 'attendance:read',
       Classes: 'events:read', 'Team access': 'members:read',
-      Home: undefined, 'My tasks': undefined, Projects: undefined, Settings: undefined, Help: undefined,
+      Home: undefined, 'My tasks': undefined, Projects: undefined, Help: undefined,
     });
   });
 });
@@ -44,16 +49,16 @@ describe('navFor', () => {
   });
 
   it('shows only items needing no permission when there is no camp yet', () => {
-    expect(hrefs(null)).toEqual([ROUTES.camp, ROUTES.help, ROUTES.tasks, ROUTES.projects, ROUTES.boards, ROUTES.calendar, ROUTES.agents, ROUTES.reports, ROUTES.settings]);
+    expect(hrefs(null)).toEqual([ROUTES.camp, ROUTES.help, ROUTES.tasks, ROUTES.projects, ROUTES.boards, ROUTES.calendar, ROUTES.agents, ROUTES.reports]);
   });
 
   it('hides an item from a role that lacks its permission, and keeps the rest', () => {
     const items = [
       { href: ROUTES.people, label: 'People', icon: 'users', requires: 'people:read' },
-      { href: ROUTES.settings, label: 'Settings', icon: 'settings' },
+      { href: ROUTES.help, label: 'Help', icon: 'help' },
     ] as const;
-    expect(navFor(null, items).map(i => i.label)).toEqual(['Settings']);
-    expect(navFor('viewer', items).map(i => i.label)).toEqual(['People', 'Settings']);
+    expect(navFor(null, items).map(i => i.label)).toEqual(['Help']);
+    expect(navFor('viewer', items).map(i => i.label)).toEqual(['People', 'Help']);
   });
 
   it('works on any item list, so another layout can bring its own', () => {
@@ -64,11 +69,11 @@ describe('navFor', () => {
 
 describe('navGroupsFor', () => {
   it('keeps the group order and drops a group with nothing left to show', () => {
-    expect(groupLabels(navGroupsFor(null))).toEqual(['', 'Operations', 'Work', 'Admin']);
+    expect(groupLabels(navGroupsFor(null))).toEqual(['', 'Operations', 'Work']);
     expect(groupLabels(navGroupsFor('owner'))).toEqual(['', 'Operations', 'Work', 'Admin']);
     const onlyPermitted = [
       { label: 'Gated', items: [{ href: ROUTES.people, label: 'People', icon: 'users', requires: 'people:read' }] },
-      { label: 'Open', items: [{ href: ROUTES.settings, label: 'Settings', icon: 'settings' }] },
+      { label: 'Open', items: [{ href: ROUTES.help, label: 'Help', icon: 'help' }] },
     ] as const satisfies readonly NavGroup[];
     expect(groupLabels(navGroupsFor(null, onlyPermitted))).toEqual(['Open']);
   });

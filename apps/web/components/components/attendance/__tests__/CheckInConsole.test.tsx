@@ -7,7 +7,7 @@ vi.mock('@buxa/server/composers/attendance/scanCode', () => ({ scanCodeAction: a
 
 describe('CheckInConsole', () => {
   it('lays out the scan field, the result, the name search and the live announcement', () => {
-    const html = renderToStaticMarkup(<CheckInConsole timeZone="Europe/London" canOverride={false} />);
+    const html = renderToStaticMarkup(<CheckInConsole timeZone="Europe/London" clockFormat="24h" canOverride={false} />);
     expect(html).toContain('Scan a badge, or type a code');
     expect(html).toContain('aria-label="Result"');
     expect(html).toContain('aria-label="Find a person"');

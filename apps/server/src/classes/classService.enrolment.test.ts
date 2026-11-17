@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CAMPER_ADA, CAMPER_BEN, CAMPER_CY, ORG, OTHER_ORG, as, classWithSession, monday11to13, painting, robotics, setup } from './__tests__/fixtures';
+import { CAMPER_ADA, CAMPER_BEN, CAMPER_CY, ORG, OTHER_ORG, as, classWithSession, monday9to12, monday11to13, painting, robotics, setup } from './__tests__/fixtures';
 
 const CAMPER_DAN = '00000000-0000-4000-8000-0000000000d4';
 const enrolInput = (sessionId: string, camperId: string, extra: { waitlistIfFull?: boolean; override?: { reason: string } } = {}) => ({
@@ -23,6 +23,21 @@ describe('enrolment: age range (inclusive, checked on the camp-local day)', () =
     repo.seedCamper(ORG, CAMPER_DAN, 'Dan Young', '2019-07-05');   // exactly 8 on 5 July 2027
     const { sessionId } = await classWithSession(service);
     expect((await service.enrol(as('staff'), enrolInput(sessionId, CAMPER_DAN))).ok).toBe(true);
+  });
+
+  it('accepts a camper exactly on the maximum age', async () => {
+    const { service, repo } = setup();
+    repo.seedCamper(ORG, CAMPER_DAN, 'Dan Young', '2015-07-05');   // exactly 12 on 5 July 2027
+    const { sessionId } = await classWithSession(service);
+    expect((await service.enrol(as('staff'), enrolInput(sessionId, CAMPER_DAN))).ok).toBe(true);
+  });
+
+  it('refuses a camper one day over the maximum age', async () => {
+    const { service, repo } = setup();
+    repo.seedCamper(ORG, CAMPER_DAN, 'Dan Young', '2014-07-04');   // 13 on 5 July 2027
+    const { sessionId } = await classWithSession(service);
+    expect(await service.enrol(as('staff'), enrolInput(sessionId, CAMPER_DAN)))
+      .toMatchObject({ ok: false, failure: { reason: 'age_out_of_range', refusal: { age: 13 } } });
   });
 
   it('counts the age on the camp-local day: a session at 23:30 UTC is already the next day in Sydney', async () => {
@@ -77,6 +92,32 @@ describe('enrolment: overlap across the camp', () => {
     if (!after.ok) throw new Error('setup');
     expect((await service.enrol(as('staff'), enrolInput(robo, CAMPER_ADA))).ok).toBe(true);
     expect((await service.enrol(as('staff'), enrolInput(after.value.id, CAMPER_ADA))).ok).toBe(true);
+  });
+
+  it('a session nested inside an enrolled one clashes with it', async () => {
+    const { service } = setup();
+    const { sessionId: robo } = await classWithSession(service);
+    const created = await service.createClass(as('admin'), painting);
+    if (!created.ok) throw new Error('setup');
+    const inner = await service.addSession(as('admin'), created.value.id, { ...monday9to12, startsAt: '2027-07-05T10:00:00+10:00', endsAt: '2027-07-05T11:00:00+10:00' });
+    if (!inner.ok) throw new Error('setup');
+    expect((await service.enrol(as('staff'), enrolInput(robo, CAMPER_ADA))).ok).toBe(true);
+    expect(await service.enrol(as('staff'), enrolInput(inner.value.id, CAMPER_ADA)))
+      .toMatchObject({ ok: false, failure: { reason: 'overlap', refusal: { clash: { className: 'Robotics' } } } });
+  });
+
+  it('a session that crosses midnight clashes with an enrolled session that starts after midnight', async () => {
+    const { service } = setup();
+    const { classId } = await classWithSession(service);
+    const late = await service.addSession(as('admin'), classId, { ...monday9to12, startsAt: '2027-07-05T23:00:00+10:00', endsAt: '2027-07-06T01:00:00+10:00' });
+    if (!late.ok) throw new Error('setup');
+    const created = await service.createClass(as('admin'), painting);
+    if (!created.ok) throw new Error('setup');
+    const early = await service.addSession(as('admin'), created.value.id, { ...monday9to12, startsAt: '2027-07-06T00:30:00+10:00', endsAt: '2027-07-06T02:00:00+10:00' });
+    if (!early.ok) throw new Error('setup');
+    expect((await service.enrol(as('staff'), enrolInput(late.value.id, CAMPER_ADA))).ok).toBe(true);
+    expect(await service.enrol(as('staff'), enrolInput(early.value.id, CAMPER_ADA)))
+      .toMatchObject({ ok: false, failure: { reason: 'overlap', refusal: { clash: { sessionId: late.value.id } } } });
   });
 
   it('an admin may override with a reason, the reason is kept and the override is audit-logged', async () => {

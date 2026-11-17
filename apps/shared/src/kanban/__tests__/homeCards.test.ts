@@ -1,36 +1,67 @@
 import { describe, expect, it } from 'vitest';
-import type { CampHome } from '../../camp/campHomeTypes';
-import type { TaskCounts } from '../homeTasks';
-import { homeCards } from '../homeCards';
+import type { CampHome, CheckInsByDay } from '../../camp/campHomeTypes';
+import { dayChange, homeCards } from '../homeCards';
 
-const tasks: TaskCounts = { total: 8, inProgress: 3, completed: 2, overdue: 0 };
-const camp: CampHome = { campId: 'o1', name: 'Lake Camp', firstName: 'Priya', canRename: true, people: 40, onSite: 12, validMemberships: 35 };
+const series = (counts: number[], complete = true): CheckInsByDay => ({
+  days: counts.map((count, i) => ({ date: `2026-11-${String(i + 1).padStart(2, '0')}`, count })), complete,
+});
+
+const camp: CampHome = {
+  campId: 'o1', name: 'Lake Camp', firstName: 'Priya', canRename: true,
+  people: 40, onSite: 12, checkedInToday: 20, validMemberships: 30, upcomingSessions: [],
+  checkInsByDay: series([5, 9, 20]), onSiteByAge: { adults: 10, minors: 2 },
+  membershipStatus: { valid: 30, notStarted: 0, expired: 6, none: 4 },
+};
 
 describe('homeCards', () => {
-  it('mixes camp facts with task facts in one row, camp first', () => {
-    const cards = homeCards(camp, tasks);
-    expect(cards.map(c => c.label)).toEqual(['People', 'On site now', 'Valid memberships', 'Total tasks', 'In progress', 'Completed', 'Overdue']);
-    expect(cards.map(c => c.value)).toEqual([40, 12, 35, 8, 3, 2, 0]);
+  it('shows the three camp facts in one row, in order, with their values', () => {
+    const cards = homeCards(camp);
+    expect(cards.map(c => c.label)).toEqual(['On site now', 'Checked in today', 'Valid memberships']);
+    expect(cards.map(c => c.value)).toEqual([12, 20, 30]);
+  });
+
+  it('says what each number counts, for the info icon', () => {
+    const cards = homeCards(camp);
+    expect(cards.every(c => c.info.length > 0)).toBe(true);
+    expect(cards[0].info).toContain('not checked out');
   });
 
   it('gives every card a palette tone', () => {
-    const tones = homeCards(camp, tasks).map(c => c.tone);
+    const tones = homeCards(camp).map(c => c.tone);
     expect(tones.every(t => ['neutral', 'brand', 'ok', 'warn', 'crit', 'agent', 'hero'].includes(t))).toBe(true);
   });
 
-  it('shows only the task cards when there is no camp', () => {
-    expect(homeCards(null, tasks).map(c => c.label)).toEqual(['Total tasks', 'In progress', 'Completed', 'Overdue']);
-  });
-
   it('leaves out a camp fact the viewer may not read', () => {
-    const cards = homeCards({ ...camp, people: null, onSite: null }, tasks);
-    expect(cards.map(c => c.label)).toEqual(['Valid memberships', 'Total tasks', 'In progress', 'Completed', 'Overdue']);
+    const cards = homeCards({ ...camp, onSite: null, checkedInToday: null, checkInsByDay: null, validMemberships: null });
+    expect(cards).toEqual([]);
+    expect(homeCards({ ...camp, onSite: null }).map(c => c.label)).toEqual(['Checked in today', 'Valid memberships']);
   });
 
-  it('turns overdue red and strong only when something is overdue', () => {
-    const late = homeCards(null, { ...tasks, overdue: 2 }).find(c => c.label === 'Overdue');
-    const onTime = homeCards(null, tasks).find(c => c.label === 'Overdue');
-    expect(late).toMatchObject({ tone: 'crit', strong: true, note: 'past their due date' });
-    expect(onTime).toMatchObject({ tone: 'ok', note: 'all on schedule' });
+  it('gives the check-in card a change chip against yesterday', () => {
+    const chip = homeCards(camp)[1].change;
+    expect(chip).toEqual({ text: '+11 vs yesterday', tone: 'ok' });
+  });
+
+  it('gives the memberships card its share of the camp list', () => {
+    expect(homeCards(camp)[2].change).toEqual({ text: '75% of people', tone: 'neutral' });
+  });
+
+  it('gives no membership share when the camp has no people', () => {
+    expect(homeCards({ ...camp, people: 0 })[2].change).toBeNull();
+  });
+});
+
+describe('dayChange', () => {
+  it('reports a fall as a warn chip with its sign', () => {
+    expect(dayChange(series([9, 4]))).toEqual({ text: '-5 vs yesterday', tone: 'warn' });
+  });
+
+  it('says so when the day matches yesterday', () => {
+    expect(dayChange(series([3, 3]))).toEqual({ text: 'Same as yesterday', tone: 'neutral' });
+  });
+
+  it('gives no chip when the series is incomplete, or there is no series', () => {
+    expect(dayChange(series([3, 4], false))).toBeNull();
+    expect(dayChange(null)).toBeNull();
   });
 });

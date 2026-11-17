@@ -27,6 +27,8 @@
  *  12. features/camp.css               camp area (setup, steps, abilities).
  *  13. features/people.css             people screens: lists, households, memberships, badges (print).
  *  14. features/help.css               the help page: sections, steps, example tables and code samples.
+ *  15. features/settings.css           the settings grid: one column on a phone, more as the page widens.
+ *  16. features/home.css               the camp Home dashboard: chart rows, bars, membership ring, sessions table.
  *
  * Where does a new style go?
  *   - A colour, spacing, radius, font size, shadow or easing value: tokens.css (add a custom property, never a literal).
@@ -61,5 +63,7 @@
 @import './features/people.css';
 @import './features/classes.css';
 @import './features/help.css';
+@import './features/settings.css';
+@import './features/home.css';
 @import './features/badge-scanner.css';
 @import './features/install.css';

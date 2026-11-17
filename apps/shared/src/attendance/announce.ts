@@ -1,3 +1,4 @@
+import type { ClockFormat } from '@buxa/domain';
 import { checkInRefusalCopy } from './refusals';
 import { displayName } from '../name';
 import { STATUS_DISPLAY } from './status';
@@ -5,7 +6,7 @@ import { formatCampTime } from '../time';
 import type { CheckInState } from './checkInState';
 
 /** What a screen reader should hear for this state. Empty when there is nothing new to say. */
-export function checkInAnnouncement(state: CheckInState, timeZone: string): string {
+export function checkInAnnouncement(state: CheckInState, timeZone: string, clockFormat: ClockFormat): string {
   switch (state.phase) {
     case 'idle': return '';
     case 'unknown': return 'Code not recognised.';
@@ -16,10 +17,10 @@ export function checkInAnnouncement(state: CheckInState, timeZone: string): stri
     }
     case 'submitting': return 'Checking in.';
     case 'refused': {
-      const copy = checkInRefusalCopy(state.refusal, timeZone);
+      const copy = checkInRefusalCopy(state.refusal, timeZone, clockFormat);
       return `${copy.title}. ${copy.body}`;
     }
     case 'failed': return state.message;
-    case 'done': return `${displayName(state.card.person)} checked in at ${formatCampTime(state.entry.checkedInAt, timeZone)}.`;
+    case 'done': return `${displayName(state.card.person)} checked in at ${formatCampTime(state.entry.checkedInAt, timeZone, clockFormat)}.`;
   }
 }

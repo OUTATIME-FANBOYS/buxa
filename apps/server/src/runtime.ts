@@ -22,7 +22,6 @@ import { type AttendanceService } from './services/attendance/AttendanceService'
 import { type CredentialService } from './services/credentials/CredentialService';
 import { type MembershipService } from './services/memberships/MembershipService';
 import { type PeopleService } from './services/people/PeopleService';
-import type { ClassRepository } from './classes/ClassRepository';
 import { unimplemented } from './unimplemented';
 
 export interface Runtime {
@@ -103,13 +102,12 @@ export function createServices(repositories: Repositories, clock: Clock): Servic
 }
 
 /**
- * Classes, sessions, enrolments and the bulk import. There is no class storage in `Repositories` on this branch yet, so the storage
- * ports are placeholders that throw a clear "not implemented" error. The Postgres adapter replaces them here; screens and actions
- * already call these services.
+ * Classes, sessions, enrolments and the bulk import. Class storage is the Postgres adapter in `repositories.classes`. Import
+ * storage has no Postgres adapter yet, so the import port stays a placeholder that throws a clear "not implemented" error.
  */
 function createClassServices(repositories: Repositories): Pick<Services, 'classes' | 'imports'> {
   const timezoneOf = async (orgId: string): Promise<string> => (await repositories.orgs.get(orgId)).timezone;
-  const classes = unimplemented<ClassRepository>('ClassRepository');
+  const classes = repositories.classes;
   const imports = unimplemented<ImportRepository>('ImportRepository');
   return {
     classes: createClassService({ repo: classes, timezoneOf }),

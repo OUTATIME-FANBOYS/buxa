@@ -4,7 +4,7 @@ import type { Class, Enrolment, EnrolmentStatus, NewClassInput, Session } from '
 import { systemClock, type Clock } from '../services/clock';
 import type { AuditRecord } from '../people/InMemoryDatabase';
 import type { ClassRepository, EnrolRequest, EnrolmentRule, GatheredEnrolmentFacts, NewSessionRecord } from './ClassRepository';
-import { ClassNotFoundError, CamperNotFoundError, EnrolmentNotFoundError, SessionNotFoundError, refusalError } from './errors';
+import { ClassNotFoundError, CamperNotFoundError, EnrolmentNotFoundError, InstructorNotFoundError, SessionNotFoundError, refusalError } from './errors';
 
 interface StoredClass extends Class { orgId: string }
 interface StoredSession extends NewSessionRecord { id: string; orgId: string; classId: string }
@@ -56,9 +56,13 @@ export class InMemoryClassRepository implements ClassRepository {
   async addSession(actor: Actor, classId: string, input: NewSessionRecord): Promise<Session> {
     const cls = this.classIn(actor.orgId, classId);
     if (!cls) throw new ClassNotFoundError();
+    // As in Postgres: every instructor must be a person in this camp.
+    if (input.instructorIds.some(id => !this.camperIn(actor.orgId, id))) throw new InstructorNotFoundError();
     const row: StoredSession = { ...input, id: randomUUID(), orgId: actor.orgId, classId };
     this.sessions.set(row.id, row);
-    this.record(actor, 'session.create', 'session', row.id, { classId, startsAt: row.startsAt, endsAt: row.endsAt });
+    this.record(actor, 'session.create', 'session', row.id, {
+      classId, startsAt: row.startsAt, endsAt: row.endsAt, instructorIds: [...new Set(input.instructorIds)],
+    });
     return this.toSession(row, cls);
   }
 
@@ -171,7 +175,9 @@ export class InMemoryClassRepository implements ClassRepository {
   private toSession(s: StoredSession, cls: StoredClass): Session {
     return {
       id: s.id, classId: s.classId, className: cls.name, startsAt: s.startsAt, endsAt: s.endsAt, location: s.location,
-      instructorIds: [...s.instructorIds], capacity: s.capacity,
+      instructorIds: [...s.instructorIds],
+      instructors: s.instructorIds.map(id => ({ id, name: this.campers.get(id)?.name ?? '' })),
+      capacity: s.capacity,
       seatsTaken: this.countWhere(s.id, 'enrolled'), waitlisted: this.countWhere(s.id, 'waitlisted'),
     };
   }

@@ -75,7 +75,10 @@ describe('PeopleList', () => {
   });
 
   it('offers adding a person to staff, and not to viewers', async () => {
-    expect(render(await PeopleList({ searchParams: {} }))).toContain('Add person');
+    const html = render(await PeopleList({ searchParams: {} }));
+    expect(html).toContain('Add person');
+    expect(html).toContain('aria-haspopup="dialog"');
+    expect(html).not.toContain('href="/camp/people/new"');
     as('viewer');
     expect(render(await PeopleList({ searchParams: {} }))).not.toContain('Add person');
   });

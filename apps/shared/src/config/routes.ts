@@ -19,6 +19,7 @@ export const ROUTES = {
   newClass: '/camp/classes/new',
   classImport: '/camp/classes/import',
   classImportTemplate: '/camp/classes/import/template',
+  classImportErrorReport: '/camp/classes/import/error-report',
   // Work: tasks kept in this browser (the kanban demo), shown in the same shell.
   tasks: '/camp/tasks',
   projects: '/camp/projects',

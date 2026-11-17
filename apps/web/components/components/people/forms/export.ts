@@ -1,4 +1,5 @@
 export * from './AddMembershipForm';
+export * from './AddPersonButton';
 export * from './ArchivePersonButton';
 export * from './BadgeActions';
 export * from './EditPersonForm';

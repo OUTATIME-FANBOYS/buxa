@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-export interface HRow { label: ReactNode; segments: { value: number; className: string; name: string }[]; total?: number }
+interface HRow { label: ReactNode; segments: { value: number; className: string; name: string }[]; total?: number }
 
 export function HBars({ rows, max, ariaLabel }: { rows: HRow[]; max?: number; ariaLabel: string }) {
   const m = max ?? Math.max(1, ...rows.map(r => r.segments.reduce((a, s) => a + s.value, 0)));
