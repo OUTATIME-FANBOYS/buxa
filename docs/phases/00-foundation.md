@@ -36,8 +36,8 @@ Without `DATABASE_URL` the database tests are skipped, so say so when reporting 
 ## Running the web app
 1. `cp apps/web/.env.example apps/web/.env.local` and fill in the two public Supabase values.
 2. `npm run dev`; open the URL it prints.
-3. Sign in (or create an account), set up a camp, look around. The old kanban demo is still at `/kanban`.
+3. Sign in (or create an account), set up a camp, look around. The staff board is under the Work group (for example `/camp/tasks`); `/kanban` redirects to `/camp`.
 Without the env file the app shows a setup page instead of failing.
 
 ## Deploying
-See `docs/deploy.md`. Vercel builds Next.js natively; a production build applies migrations first. Connecting the Vercel project is the remaining step.
+See `docs/deploy.md`. Vercel builds Next.js natively; a production build applies migrations first. The Vercel project and its settings are the owner's steps in `docs/deploy.md`; they are not verified on Vercel yet.

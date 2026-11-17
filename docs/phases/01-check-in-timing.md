@@ -26,7 +26,7 @@ The server budget is **not the phone budget**. It is a regression guard on the d
 
 The Server Action wrapper (session lookup, the rate limiter, the input check) is **not** included. Those add a little time on top of these numbers, and the phone measurement captures them.
 
-Unit tests cover the helpers: `scripts/timing/stats.test.ts` (percentiles and summaries), `scripts/timing/targetUrl.test.ts` (the localhost guard), `scripts/timing/options.test.ts` (argument checks) and `scripts/timing/actionId.test.ts` (finding the scan action's id).
+Unit tests cover the helpers in `scripts/timing/`: `targetUrl.test.ts` (the localhost guard), `options.test.ts` (argument checks) and `actionId.test.ts` (finding the scan action's id).
 
 ### How to run it
 
@@ -66,7 +66,7 @@ This is the evidence the exit criterion needs. It has to be done on **real devic
 
 ### Steps (for each phone: one iPhone on Safari, one Android on Chrome)
 
-1. Install the app from the phone's home screen (once the app exists; otherwise open the staging URL in the browser).
+1. Install the app from the phone's home screen (open the staging URL in the browser first if the install prompt is not offered).
 2. Sign in as a staff member with the `staff` role or higher.
 3. Open **Check in** (`/camp/check-in`).
 4. Start the screen recording, or the stopwatch, on the moment the badge is held up to the camera or the moment the code is typed or scanned.
@@ -142,5 +142,5 @@ BUXA_SESSION_COOKIE='<Cookie header from a signed-in staff browser>' \
 ## Still open
 
 - The phone results table is blank. The phase exit criterion is not met until the owner fills it in with a passing median on both phones.
-- The installable app (PWA) is not built, so the "install from the home screen" step cannot be done yet.
+- The install check on real phones is still open. The manifest and the install hint are built.
 - The browser script has not been run end to end against a signed-in site.

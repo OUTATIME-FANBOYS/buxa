@@ -72,6 +72,8 @@ The UI reads in Server Components and writes through Server Actions, all through
 - **Actions and screens:** action tests with mocked session; accessibility checks on the new screens; real-browser flow with a real sign-in: add a person → membership → badge → scan → check in → on site → check out → export.
 
 ## Chunks (built in parallel, as for steps 3 and 4)
+
+_The paths in this plan are as planned. The code now lives under `apps/server`, `apps/web` and `apps/shared` (see the README layout)._
 **Wave 0 (one person, first, so the rest can start together):** migration `0007` (tables, indexes, policies, grants, `orgs.timezone`), the pure rules and types in `@buxa/domain`, the contract schemas, the new permission actions and the updated matrix test, the route constants, and **frozen repository and service interfaces** with stubs.
 | Chunk | Owns | Delivers |
 |---|---|---|
