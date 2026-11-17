@@ -7,16 +7,16 @@ const hrefs = (role: Parameters<typeof navFor>[0]) => navFor(role).map(item => i
 const groupLabels = (groups: readonly NavGroup[]) => groups.map(group => group.label);
 
 describe('the sidebar groups', () => {
-  it('puts Home first, then camp operations, work and admin, in that order', () => {
-    expect(groupLabels(CAMP_NAV_GROUPS)).toEqual(['', 'Camp operations', 'Work', 'Admin']);
+  it('puts Home first, then operations, work and admin, in that order', () => {
+    expect(groupLabels(CAMP_NAV_GROUPS)).toEqual(['', 'Operations', 'Work', 'Admin']);
   });
 
   it('lists the items of each group in order', () => {
     expect(CAMP_NAV_GROUPS.map(group => group.items.map(item => item.label))).toEqual([
       ['Home'],
-      ['Check-in', 'On site', 'People', 'Attendance'],
-      ['My tasks', 'Projects', 'Boards', 'Classes', 'Calendar', 'Agents', 'Reports'],
-      ['Team access', 'Settings', 'Help'],
+      ['Check-in', 'On site', 'People', 'Attendance', 'Classes', 'Help'],
+      ['My tasks', 'Projects', 'Boards', 'Calendar', 'Agents', 'Reports'],
+      ['Team access', 'Settings'],
     ]);
   });
 
@@ -30,7 +30,8 @@ describe('the sidebar groups', () => {
     const requires = Object.fromEntries(CAMP_NAV.map(item => [item.label, item.requires]));
     expect(requires).toMatchObject({
       'Check-in': 'attendance:record', 'On site': 'attendance:read', People: 'people:read', Attendance: 'attendance:read',
-      'Team access': 'members:read', Home: undefined, 'My tasks': undefined, Projects: undefined, Settings: undefined, Help: undefined,
+      Classes: 'events:read', 'Team access': 'members:read',
+      Home: undefined, 'My tasks': undefined, Projects: undefined, Settings: undefined, Help: undefined,
     });
   });
 });
@@ -43,7 +44,7 @@ describe('navFor', () => {
   });
 
   it('shows only items needing no permission when there is no camp yet', () => {
-    expect(hrefs(null)).toEqual([ROUTES.camp, ROUTES.tasks, ROUTES.projects, ROUTES.boards, ROUTES.calendar, ROUTES.agents, ROUTES.reports, ROUTES.settings, ROUTES.help]);
+    expect(hrefs(null)).toEqual([ROUTES.camp, ROUTES.help, ROUTES.tasks, ROUTES.projects, ROUTES.boards, ROUTES.calendar, ROUTES.agents, ROUTES.reports, ROUTES.settings]);
   });
 
   it('hides an item from a role that lacks its permission, and keeps the rest', () => {
@@ -63,8 +64,13 @@ describe('navFor', () => {
 
 describe('navGroupsFor', () => {
   it('keeps the group order and drops a group with nothing left to show', () => {
-    expect(groupLabels(navGroupsFor(null))).toEqual(['', 'Work', 'Admin']);
-    expect(groupLabels(navGroupsFor('owner'))).toEqual(['', 'Camp operations', 'Work', 'Admin']);
+    expect(groupLabels(navGroupsFor(null))).toEqual(['', 'Operations', 'Work', 'Admin']);
+    expect(groupLabels(navGroupsFor('owner'))).toEqual(['', 'Operations', 'Work', 'Admin']);
+    const onlyPermitted = [
+      { label: 'Gated', items: [{ href: ROUTES.people, label: 'People', icon: 'users', requires: 'people:read' }] },
+      { label: 'Open', items: [{ href: ROUTES.settings, label: 'Settings', icon: 'settings' }] },
+    ] as const satisfies readonly NavGroup[];
+    expect(groupLabels(navGroupsFor(null, onlyPermitted))).toEqual(['Open']);
   });
 });
 

@@ -12,7 +12,7 @@ vi.mock('../../../../server/runtime', () => ({
 }));
 vi.mock('../../../../server/session', () => ({ requireSession: async () => ({}), getCurrentCamp: async () => ({}), toActor: () => mocks.actor }));
 
-const { GET } = await import('../../../../app/(app)/camp/(ops)/attendance/export/route');
+const { GET } = await import('../../../../app/(app)/camp/(operations)/attendance/export/route');
 
 const owner: Actor = { userId: 'u1', orgId: 'o1', role: 'owner' };
 const request = (query: string) => new Request(`https://camp.example.test/camp/attendance/export${query}`);

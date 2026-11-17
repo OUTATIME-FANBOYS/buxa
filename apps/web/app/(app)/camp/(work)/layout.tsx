@@ -7,7 +7,7 @@ import { WorkArea } from '@/views';
 import { getCurrentCamp, requireSession } from '@/server/session';
 
 /**
- * The shell for every work page: tasks, projects, boards, calendar, agents, reports and settings.
+ * The shell for the work pages: home, tasks, projects, boards, calendar, agents and reports.
  * It needs a session: the board acts as the signed-in person, and anyone else is sent to sign-in.
  * The task data itself stays in the browser; the camp switcher and account menu come from the session.
  */
