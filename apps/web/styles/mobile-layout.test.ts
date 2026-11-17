@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const attendance = read('./features/attendance.css');
 const phoneBlock = attendance.slice(attendance.indexOf('@media (max-width: 720px)'), attendance.indexOf('.log-filters'));
-const tsx = (path: string) => read(`../components/${path}`);
+const tsx = (path: string) => read(`../components/components/${path}`);
 
 describe('sign-in on a phone', () => {
   it('the single column may shrink below its widest child, so the page does not scroll sideways', () => {

@@ -12,7 +12,7 @@
  */
 import { findScanActionId } from './timing/actionId';
 import { parseMeasureOptions, type MeasureOptions } from './timing/options';
-import { formatSummary, summarize } from './timing/stats';
+import { formatSummary, summarize } from '@buxa/shared/timing/stats';
 
 /** The page the check-in screen lives on (apps/web/config/routes.ts, `checkIn`). */
 const CHECK_IN_PATH = '/camp/check-in';

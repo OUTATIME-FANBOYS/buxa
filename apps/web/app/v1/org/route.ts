@@ -1,7 +1,7 @@
 import { OrgPatchInputSchema } from '@buxa/contracts';
-import { actorFor } from '@/server/auth/orgScope';
-import { parseBody, readJson } from '@/server/http/parse';
-import { authedRoute } from '@/server/http/route';
+import { actorFor } from '@buxa/server/auth/orgScope';
+import { parseBody, readJson } from '@buxa/server/http/parse';
+import { authedRoute } from '@buxa/server/http/route';
 
 export const dynamic = 'force-dynamic';
 

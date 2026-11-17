@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { NewCampForm } from '@/components/export';
-import { HomePage } from '@/views/export';
-import { loadHomeCamp } from '@/views/export';
-import { getCurrentCamp, getOptionalSession } from '@/server/session';
+import { NewCampForm } from '@/components/components/camp/export';
+import { HomePage } from '@/components/views/kanban/export';
+import { loadHomeCamp } from '@/components/views/kanban/export';
+import { getCurrentCamp, getOptionalSession } from '@buxa/server/session/index';
 
 export const metadata: Metadata = { title: 'Home' };
 

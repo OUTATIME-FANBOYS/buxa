@@ -1,5 +1,5 @@
 'use client';
 
-import { ErrorState } from '@/components/export';
+import { ErrorState } from '@/components/components/export';
 
 export default ErrorState;

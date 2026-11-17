@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react';
-import { AccountMenu } from '@/components/export';
-import { CampSwitcher } from '@/components/export';
-import { WorkFrame } from '@/views/export';
-import { TaskTopBar } from '@/components/export';
-import { WorkArea } from '@/views/export';
-import { getCurrentCamp, requireSession } from '@/server/session';
+import { AccountMenu } from '@/components/components/camp/export';
+import { CampSwitcher } from '@/components/components/camp/export';
+import { WorkFrame } from '@/components/views/camp/export';
+import { TaskTopBar } from '@/components/components/kanban/topbar/export';
+import { WorkArea } from '@/components/views/kanban/export';
+import { getCurrentCamp, requireSession } from '@buxa/server/session/index';
 
 /**
- * The shell for every work page: tasks, projects, boards, calendar, agents, reports and settings.
+ * The shell for the work pages: home, tasks, projects, boards, calendar, agents and reports.
  * It needs a session: the board acts as the signed-in person, and anyone else is sent to sign-in.
  * The task data itself stays in the browser; the camp switcher and account menu come from the session.
  */

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { ReportsPage } from '@/views/export';
+import { ReportsPage } from '@/components/views/kanban/export';
 
 export const metadata: Metadata = { title: 'Reports' };
 
