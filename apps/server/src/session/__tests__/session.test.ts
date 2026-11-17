@@ -9,11 +9,11 @@ const env = vi.hoisted(() => {
 vi.mock('next/headers', () => ({ cookies: async () => env.store }));
 vi.mock('next/navigation', () => ({ redirect: (url: string) => { throw new Error(`REDIRECT ${url}`); } }));
 
-import { ROUTES } from '../../../config/routes';
+import { ROUTES } from '@buxa/shared/config/routes';
 import { installRuntime } from '@buxa/server/runtime';
 import { InMemoryStore } from '@buxa/server/__tests__/fakes';
 import { ISSUER, createTestIdentityProvider } from '@buxa/server/__tests__/tokens';
-import { startRuntime } from '../harness';
+import { startRuntime } from '@buxa/server/__tests__/runtimeHarness';
 import { CAMP_COOKIE, getCurrentCamp, getSession, rememberCamp, requireSession, toActor } from '@buxa/server/session/index';
 import { FakeCookieStore, SESSION_COOKIE, personWithCamps, sessionCookieValue, tampered, unsignedToken } from '@buxa/server/session/__tests__/support';
 
