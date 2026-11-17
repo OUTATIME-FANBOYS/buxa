@@ -3,9 +3,9 @@ import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
 import { Empty, PageHeader } from '@/components';
-import { currentActor } from '@/logic/composers/index.server';
+import { currentActor } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_READ } from '@buxa/shared';
-import { loadClasses } from '@/logic/composers/index.server';
+import { loadClasses } from '@buxa/server/composers/index.server';
 import { ClassesTable } from '@/components';
 
 /** The camp's classes. Anyone who can read classes sees them; only staff with classes:manage see the create and import buttons. */

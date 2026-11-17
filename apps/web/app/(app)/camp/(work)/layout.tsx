@@ -4,7 +4,7 @@ import { CampSwitcher } from '@/components';
 import { WorkFrame } from '@/views';
 import { TaskTopBar } from '@/components';
 import { WorkArea } from '@/views';
-import { getCurrentCamp, requireSession } from '@/server/session';
+import { getCurrentCamp, requireSession } from '@buxa/server/session/index';
 
 /**
  * The shell for the work pages: home, tasks, projects, boards, calendar, agents and reports.

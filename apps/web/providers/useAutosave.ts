@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { AppState } from '@buxa/shared';
-import { storage, type SaveStatus } from '@/logic/composers';
+import { storage, type SaveStatus } from '@buxa/server/composers/index';
 
 /** Saves the state shortly after it stops changing and reports whether the save worked. The first render is not a change. */
 export function useAutosave(state: AppState): SaveStatus {

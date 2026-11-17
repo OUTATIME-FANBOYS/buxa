@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { BadgePanel, type BadgePanelProps } from '../BadgePanel';
 
-vi.mock('@/logic/composers/people/issueBadgeAction', () => ({ issueBadgeAction: async () => ({ status: 'idle' }) }));
-vi.mock('@/logic/composers/people/revokeBadgeAction', () => ({ revokeBadgeAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/people/issueBadgeAction', () => ({ issueBadgeAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/people/revokeBadgeAction', () => ({ revokeBadgeAction: async () => ({ status: 'idle' }) }));
 
 const base: BadgePanelProps = { personId: 'p-1', personName: 'Ada Lee', roleLabel: 'Camper', campName: 'Camp Birchwood', hasActiveBadge: false, archived: false, canManage: true };
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, type ReactNode } from 'react';
-import type { SessionIdentity } from '@/logic/composers';
+import type { SessionIdentity } from '@buxa/server/composers/index';
 import { useStore } from './store';
 
 /**

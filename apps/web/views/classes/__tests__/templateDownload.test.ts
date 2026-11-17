@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 const response = new Response('template');
 const classTemplateResponse = vi.fn(async () => response);
-vi.mock('@/logic/composers/index.server', () => ({ classTemplateResponse }));
+vi.mock('@buxa/server/composers/index.server', () => ({ classTemplateResponse }));
 
 const { classTemplateDownload } = await import('../templateDownload');
 

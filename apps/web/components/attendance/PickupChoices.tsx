@@ -1,6 +1,6 @@
 'use client';
 
-import type { PickupOption } from '@/server/services/attendance/AttendanceService';
+import type { PickupOption } from '@buxa/server/services/attendance/AttendanceService';
 
 interface Props { name: string; options: readonly PickupOption[]; value: string | null; onChange: (personId: string) => void }
 

@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { EnrolForm } from '../EnrolForm';
 
-vi.mock('@/logic/composers', () => ({ enrolAction: vi.fn(), cancelEnrolmentAction: vi.fn() }));
+vi.mock('@buxa/server/composers/index', () => ({ enrolAction: vi.fn(), cancelEnrolmentAction: vi.fn() }));
 
 const base = {
   classId: '11111111-1111-4111-8111-111111111111',

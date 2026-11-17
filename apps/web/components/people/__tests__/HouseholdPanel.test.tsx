@@ -3,8 +3,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import type { Household } from '@buxa/contracts';
 import { HouseholdPanel, type HouseholdPanelProps } from '../HouseholdPanel';
 
-vi.mock('@/logic/composers/people/unlinkHouseholdAction', () => ({ unlinkHouseholdAction: async () => ({ status: 'idle' }) }));
-vi.mock('@/logic/composers/people/linkHouseholdAction', () => ({ linkHouseholdAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/people/unlinkHouseholdAction', () => ({ unlinkHouseholdAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/people/linkHouseholdAction', () => ({ linkHouseholdAction: async () => ({ status: 'idle' }) }));
 vi.mock('@/components/people/forms/PersonFinder', () => ({ PersonFinder: () => null }));
 
 const household = { id: 'h-1', name: 'The Coles', members: [] } as unknown as Household;

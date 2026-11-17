@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { ActionOutcome } from '@buxa/shared';
-import { searchPeopleAction } from '@/logic/composers';
+import { searchPeopleAction } from '@buxa/server/composers/index';
 import type { PersonCard } from '@buxa/shared';
 import { StatusPill } from './StatusPill';
 import { attendanceDisplayName } from '@buxa/shared';

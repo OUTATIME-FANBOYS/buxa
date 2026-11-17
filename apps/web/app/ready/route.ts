@@ -1,7 +1,7 @@
-import type { Logger } from '@/server/log';
-import type { Runtime } from '@/server/runtime';
-import { publicRoute } from '@/server/http/route';
-import { RATE_RULES, clientAddress, type RateLimiter } from '@/server/rateLimit/limiter';
+import type { Logger } from '@buxa/server/log';
+import type { Runtime } from '@buxa/server/runtime';
+import { publicRoute } from '@buxa/server/http/route';
+import { RATE_RULES, clientAddress, type RateLimiter } from '@buxa/server/rateLimit/limiter';
 
 export const dynamic = 'force-dynamic';
 

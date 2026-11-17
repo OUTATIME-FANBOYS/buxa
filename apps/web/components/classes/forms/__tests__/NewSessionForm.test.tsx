@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { NewSessionForm } from '../NewSessionForm';
 
-vi.mock('@/logic/composers', () => ({ addSessionAction: vi.fn() }));
+vi.mock('@buxa/server/composers/index', () => ({ addSessionAction: vi.fn() }));
 
 const base = {
   classId: '11111111-1111-4111-8111-111111111111', className: 'Robotics', defaultCapacity: 12,

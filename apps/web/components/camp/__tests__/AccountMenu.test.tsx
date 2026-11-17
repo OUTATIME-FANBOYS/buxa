@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import type { User } from '@buxa/contracts';
 import { AccountMenu } from '../AccountMenu';
 
-vi.mock('@/logic/composers/auth/signOut', () => ({ signOut: async () => undefined }));
+vi.mock('@buxa/server/composers/auth/signOut', () => ({ signOut: async () => undefined }));
 
 describe('AccountMenu', () => {
   it('is an Account menu on the user’s avatar, with a hidden sign-out form', () => {

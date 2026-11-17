@@ -7,7 +7,7 @@ import { type AppState } from '@buxa/shared';
 import { useAutosave } from '../useAutosave';
 
 const h = vi.hoisted(() => ({ save: vi.fn() }));
-vi.mock('@/logic/composers/kanban/persistence', () => ({ storage: { save: h.save }, loadState: () => undefined }));
+vi.mock('@buxa/server/composers/kanban/persistence', () => ({ storage: { save: h.save }, loadState: () => undefined }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 

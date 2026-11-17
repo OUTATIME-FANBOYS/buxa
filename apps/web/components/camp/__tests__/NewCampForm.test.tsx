@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { NewCampForm } from '../NewCampForm';
 
-vi.mock('@/logic/composers/camp/createCampAction', () => ({ createCampAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/camp/createCampAction', () => ({ createCampAction: async () => ({ status: 'idle' }) }));
 
 describe('NewCampForm', () => {
   it('is the first-run set-up screen when there are no camps yet', () => {

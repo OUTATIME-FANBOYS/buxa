@@ -4,7 +4,7 @@ import type { Membership } from '@buxa/contracts';
 import { CampSwitcher } from '../CampSwitcher';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push() {}, refresh() {} }) }));
-vi.mock('@/logic/composers/camp/selectCampAction', () => ({ selectCampAction: async () => undefined }));
+vi.mock('@buxa/server/composers/camp/selectCampAction', () => ({ selectCampAction: async () => undefined }));
 
 describe('CampSwitcher', () => {
   it('shows the current camp name in the crumb, and a menu labelled to switch camp', () => {

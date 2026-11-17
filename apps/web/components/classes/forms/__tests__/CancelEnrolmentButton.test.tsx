@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { CancelEnrolmentButton } from '../CancelEnrolmentButton';
 
-vi.mock('@/logic/composers', () => ({ cancelEnrolmentAction: vi.fn() }));
+vi.mock('@buxa/server/composers/index', () => ({ cancelEnrolmentAction: vi.fn() }));
 
 describe('CancelEnrolmentButton', () => {
   it('names the camper on the button for a screen reader, and carries the ids it posts', () => {

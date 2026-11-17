@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { NewCampForm } from '@/components';
 import { Members } from '@/views';
-import { getCurrentCamp, requireSession } from '@/server/session';
+import { getCurrentCamp, requireSession } from '@buxa/server/session/index';
 
 export const metadata: Metadata = { title: 'Team access' };
 

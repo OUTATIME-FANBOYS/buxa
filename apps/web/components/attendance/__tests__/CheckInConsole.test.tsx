@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { CheckInConsole } from '../CheckInConsole';
 
-vi.mock('@/logic/composers/attendance/searchPeople', () => ({ searchPeopleAction: async () => ({ kind: 'ok', value: [] }) }));
-vi.mock('@/logic/composers/attendance/scanCode', () => ({ scanCodeAction: async () => ({ kind: 'ok', value: { kind: 'unknown' } }) }));
+vi.mock('@buxa/server/composers/attendance/searchPeople', () => ({ searchPeopleAction: async () => ({ kind: 'ok', value: [] }) }));
+vi.mock('@buxa/server/composers/attendance/scanCode', () => ({ scanCodeAction: async () => ({ kind: 'ok', value: { kind: 'unknown' } }) }));
 
 describe('CheckInConsole', () => {
   it('lays out the scan field, the result, the name search and the live announcement', () => {

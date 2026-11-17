@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { LinkHouseholdForm } from '../LinkHouseholdForm';
 
-vi.mock('@/logic/composers/people/linkHouseholdAction', () => ({ linkHouseholdAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/people/linkHouseholdAction', () => ({ linkHouseholdAction: async () => ({ status: 'idle' }) }));
 
 const households = [{ id: 'h-1', name: 'The Coles' }];
 const people = [{ id: 'p-2', name: 'Jo Cole' }];

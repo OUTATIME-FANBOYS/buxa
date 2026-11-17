@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AppState } from '@buxa/shared';
 import { createSync, type SyncState, type Updater } from '@buxa/shared';
-import { createActions } from '@/logic/composers';
-import { loadState } from '@/logic/composers';
+import { createActions } from '@buxa/server/composers/index';
+import { loadState } from '@buxa/server/composers/index';
 import { useAutosave } from './useAutosave';
 import { useTheme } from './useTheme';
 

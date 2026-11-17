@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useReducer } from 'react';
-import { checkOutAction } from '@/logic/composers';
+import { checkOutAction } from '@buxa/server/composers/index';
 import { checkOutInputFor } from '@buxa/shared';
 import { CHECK_OUT_CLOSED, checkOutReducer, type CheckOutDraft } from '@buxa/shared';
 

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { Enrolment } from '@buxa/contracts';
 import { EnrolmentTable } from '../EnrolmentTable';
 
-vi.mock('@/logic/composers', () => ({ cancelEnrolmentAction: vi.fn() }));
+vi.mock('@buxa/server/composers/index', () => ({ cancelEnrolmentAction: vi.fn() }));
 
 const CLASS_ID = '11111111-1111-4111-8111-111111111111';
 

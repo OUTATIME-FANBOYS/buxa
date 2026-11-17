@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import type { HouseholdMember } from '@buxa/contracts';
 import { HouseholdMemberRow } from '../HouseholdMemberRow';
 
-vi.mock('@/logic/composers/people/unlinkHouseholdAction', () => ({ unlinkHouseholdAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/people/unlinkHouseholdAction', () => ({ unlinkHouseholdAction: async () => ({ status: 'idle' }) }));
 
 const member = { personId: 'p-2', givenName: 'Jo', familyName: 'Cole', relationship: 'Mother', isGuardian: true, canPickup: true } as unknown as HouseholdMember;
 

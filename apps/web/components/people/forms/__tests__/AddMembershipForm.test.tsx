@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AddMembershipForm } from '../AddMembershipForm';
 
-vi.mock('@/logic/composers/people/addMembershipAction', () => ({ addMembershipAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/people/addMembershipAction', () => ({ addMembershipAction: async () => ({ status: 'idle' }) }));
 
 describe('AddMembershipForm', () => {
   it('asks for a plan and the first and last camp days, for the person', () => {

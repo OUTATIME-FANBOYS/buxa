@@ -2,9 +2,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can, CAMP_ROLE_LABELS, type Actor, type CampRole } from '@buxa/domain';
 import { personEditPath } from '@/config/routes';
-import { loadCampProfile } from '@/logic/composers/index.server';
-import { loadHouseholdList, loadPersonMatches } from '@/logic/composers/index.server';
-import { loadVisitHistory } from '@/logic/composers/index.server';
+import { loadCampProfile } from '@buxa/server/composers/index.server';
+import { loadHouseholdList, loadPersonMatches } from '@buxa/server/composers/index.server';
+import { loadVisitHistory } from '@buxa/server/composers/index.server';
 import { ArchivePersonButton } from '@/components';
 import { AttendanceHistory } from '@/components';
 import { BadgePanel } from '@/components';
@@ -12,9 +12,9 @@ import { ContactDetails } from '@/components';
 import { HouseholdPanel } from '@/components';
 import { MembershipsPanel } from '@/components';
 import { PersonHeader } from '@/components';
-import { currentActor } from '@/logic/composers/index.server';
+import { currentActor } from '@buxa/server/composers/index.server';
 import { readListParams } from '@buxa/shared';
-import { loadPerson } from '@/logic/composers/index.server';
+import { loadPerson } from '@buxa/server/composers/index.server';
 
 /**
  * One person. What is shown follows the role: contact details come back null for viewers (and are then left out), link and

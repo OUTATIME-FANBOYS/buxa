@@ -2,9 +2,9 @@ import { notFound } from 'next/navigation';
 import { authorize } from '@buxa/domain';
 import { Empty } from '@/components';
 import { PageHeader } from '@/components';
-import { loadOnSiteEntries } from '@/logic/composers/index.server';
+import { loadOnSiteEntries } from '@buxa/server/composers/index.server';
 import { ON_SITE_LIST_ID, OnSiteRow } from '@/components';
-import { campActor, campZone } from '@/logic/composers/index.server';
+import { campActor, campZone } from '@buxa/server/composers/index.server';
 import { onSiteSummary, toOnSiteRow } from '@buxa/shared';
 
 /** Everyone on site now, oldest arrival first, with check-out for staff. */

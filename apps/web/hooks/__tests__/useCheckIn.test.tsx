@@ -6,8 +6,8 @@ import type { PersonCard } from '@buxa/shared';
 import { useCheckIn } from '../useCheckIn';
 
 const h = vi.hoisted(() => ({ checkInAction: vi.fn(), scanCodeAction: vi.fn() }));
-vi.mock('@/logic/composers/attendance/checkIn', () => ({ checkInAction: h.checkInAction }));
-vi.mock('@/logic/composers/attendance/scanCode', () => ({ scanCodeAction: h.scanCodeAction }));
+vi.mock('@buxa/server/composers/attendance/checkIn', () => ({ checkInAction: h.checkInAction }));
+vi.mock('@buxa/server/composers/attendance/scanCode', () => ({ scanCodeAction: h.scanCodeAction }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 

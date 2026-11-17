@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef } from 'react';
 import { Field } from '@/elements';
 import { fieldError, idle } from '@buxa/shared';
-import { linkHouseholdAction } from '@/logic/composers';
+import { linkHouseholdAction } from '@buxa/server/composers/index';
 import { FormMessage } from './FormMessage';
 
 export interface PersonOption { id: string; name: string }

@@ -3,10 +3,10 @@ import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { classPath } from '@/config/routes';
 import { Empty, PageHeader } from '@/components';
-import { currentActor } from '@/logic/composers/index.server';
-import { campZone } from '@/logic/composers/index.server';
+import { currentActor } from '@buxa/server/composers/index.server';
+import { campZone } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_MANAGE } from '@buxa/shared';
-import { loadClassPage, loadPeopleWithRole } from '@/logic/composers/index.server';
+import { loadClassPage, loadPeopleWithRole } from '@buxa/server/composers/index.server';
 import { NewSessionForm } from '@/components';
 
 /** Add a session to one class. Viewers get the forbidden state and no form; an unknown class is not found. */

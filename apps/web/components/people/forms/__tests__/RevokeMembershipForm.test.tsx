@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { RevokeMembershipForm } from '../RevokeMembershipForm';
 
-vi.mock('@/logic/composers/people/revokeMembershipAction', () => ({ revokeMembershipAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/people/revokeMembershipAction', () => ({ revokeMembershipAction: async () => ({ status: 'idle' }) }));
 
 describe('RevokeMembershipForm', () => {
   it('requires a reason and carries the membership and person ids', () => {

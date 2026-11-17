@@ -5,7 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { useCheckOut } from '../useCheckOut';
 
 const h = vi.hoisted(() => ({ checkOutAction: vi.fn() }));
-vi.mock('@/logic/composers/attendance/checkOut', () => ({ checkOutAction: h.checkOutAction }));
+vi.mock('@buxa/server/composers/attendance/checkOut', () => ({ checkOutAction: h.checkOutAction }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 

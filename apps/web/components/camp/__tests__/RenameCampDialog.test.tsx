@@ -5,7 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { UiProvider } from '@/providers/UiProvider';
 import { RenameCampDialog } from '../RenameCampDialog';
 
-vi.mock('@/logic/composers/camp/renameCampAction', () => ({ renameCampAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/camp/renameCampAction', () => ({ renameCampAction: async () => ({ status: 'idle' }) }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 

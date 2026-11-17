@@ -6,7 +6,7 @@ import { UiProvider } from '@/providers/UiProvider';
 import { ArchivePersonButton } from '../ArchivePersonButton';
 
 const h = vi.hoisted(() => ({ archivePersonAction: vi.fn() }));
-vi.mock('@/logic/composers/people/archivePersonAction', () => ({ archivePersonAction: h.archivePersonAction }));
+vi.mock('@buxa/server/composers/people/archivePersonAction', () => ({ archivePersonAction: h.archivePersonAction }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 

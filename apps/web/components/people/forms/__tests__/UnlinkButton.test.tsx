@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { UnlinkButton } from '../UnlinkButton';
 
-vi.mock('@/logic/composers/people/unlinkHouseholdAction', () => ({ unlinkHouseholdAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/people/unlinkHouseholdAction', () => ({ unlinkHouseholdAction: async () => ({ status: 'idle' }) }));
 
 describe('UnlinkButton', () => {
   it('removes the named person from the household, with the name in the accessible label', () => {

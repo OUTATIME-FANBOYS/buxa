@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { NewClassForm } from '../NewClassForm';
 
-vi.mock('@/logic/composers', () => ({ createClassAction: vi.fn() }));
+vi.mock('@buxa/server/composers/index', () => ({ createClassAction: vi.fn() }));
 
 describe('NewClassForm', () => {
   const html = renderToStaticMarkup(<NewClassForm />);

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { WorkGate } from './WorkGate';
-import type { SessionIdentity } from '@/logic/composers';
+import type { SessionIdentity } from '@buxa/server/composers/index';
 import { StoreProvider } from './store';
 import { TaskDrawerProvider } from './TaskDrawerContext';
 

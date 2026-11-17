@@ -19,6 +19,6 @@ export function useStore() {
   return useMemo(() => ({ s, actions, saveStatus, sync, serverInfo, ...deriveView(s) }), [s, actions, saveStatus, sync, serverInfo]);
 }
 
-export type { Actions } from '@/logic/composers';
-export type { SaveStatus } from '@/logic/composers';
+export type { Actions } from '@buxa/server/composers/index';
+export type { SaveStatus } from '@buxa/server/composers/index';
 export { normalize } from '@buxa/shared';

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useUi } from '@/providers/UiProvider';
-import { archivePersonAction } from '@/logic/composers';
+import { archivePersonAction } from '@buxa/server/composers/index';
 
 /**
  * Archive behind a confirmation. Archiving hides the person from search and revokes their badge. A refusal (checked in right now) is

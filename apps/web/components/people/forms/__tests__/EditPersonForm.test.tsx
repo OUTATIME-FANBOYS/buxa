@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { CAMP_ROLES } from '@buxa/domain';
 import { EditPersonForm, type EditablePerson } from '../EditPersonForm';
 
-vi.mock('@/logic/composers/people/updatePersonAction', () => ({ updatePersonAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/people/updatePersonAction', () => ({ updatePersonAction: async () => ({ status: 'idle' }) }));
 
 const person: EditablePerson = {
   id: 'p-1', givenName: 'Ada', familyName: 'Lee', preferredName: 'Annie', roles: [CAMP_ROLES[0]], dateOfBirth: null, email: 'ada@example.com', phone: null,

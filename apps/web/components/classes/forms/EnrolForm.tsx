@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef } from 'react';
 import { Field } from '@/elements';
 import { fieldError, idle } from '@buxa/shared';
-import { enrolAction } from '@/logic/composers';
+import { enrolAction } from '@buxa/server/composers/index';
 import { ActionMessage } from './ActionMessage';
 
 export interface CamperChoice { id: string; name: string }

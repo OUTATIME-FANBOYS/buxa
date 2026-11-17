@@ -5,8 +5,8 @@ import { publicEnv } from '@/config/env';
 import { AuthHero } from '@/components';
 import { NotConfigured } from '@/components';
 import { SignInForm } from '@/components';
-import { MAINTENANCE_PATH, isServiceRefused } from '@/server/availability';
-import { getSession } from '@/server/session';
+import { MAINTENANCE_PATH, isServiceRefused } from '@buxa/server/availability';
+import { getSession } from '@buxa/server/session/index';
 
 export const metadata: Metadata = { title: 'Sign in' };
 

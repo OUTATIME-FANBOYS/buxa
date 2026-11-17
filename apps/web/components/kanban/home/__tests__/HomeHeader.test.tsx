@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import type { CampHome } from '@/logic/composers/index.server';
+import type { CampHome } from '@buxa/server/composers/index.server';
 
 vi.mock('@/components/camp/RenameCampButton', () => ({ RenameCampButton: () => 'RENAME-BUTTON' }));
 

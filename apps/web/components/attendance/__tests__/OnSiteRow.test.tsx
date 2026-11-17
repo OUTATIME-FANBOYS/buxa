@@ -4,7 +4,7 @@ import type { OnSiteRowView } from '@buxa/shared';
 import { OnSiteRow } from '../OnSiteRow';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh() {}, push() {} }) }));
-vi.mock('@/logic/composers/attendance/checkOut', () => ({ checkOutAction: async () => ({ kind: 'ok', value: {} }) }));
+vi.mock('@buxa/server/composers/attendance/checkOut', () => ({ checkOutAction: async () => ({ kind: 'ok', value: {} }) }));
 
 const row = { personId: 'p-1', name: 'Mia Cole', arrivedAt: '09:05', isMinor: true } as unknown as OnSiteRowView;
 

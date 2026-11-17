@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
 import { Empty, PageHeader } from '@/components';
-import { currentActor } from '@/logic/composers/index.server';
+import { currentActor } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_MANAGE } from '@buxa/shared';
 import { NewClassForm } from '@/components';
 

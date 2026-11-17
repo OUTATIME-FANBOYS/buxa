@@ -4,7 +4,7 @@ import type { CheckInState } from '@buxa/shared';
 import type { PersonCard } from '@buxa/shared';
 import { ResultPanel } from '../ResultPanel';
 
-vi.mock('@/logic/composers/attendance/checkIn', () => ({ checkInAction: async () => ({ kind: 'ok', value: { ok: false, reason: 'archived' } }) }));
+vi.mock('@buxa/server/composers/attendance/checkIn', () => ({ checkInAction: async () => ({ kind: 'ok', value: { ok: false, reason: 'archived' } }) }));
 
 const card = { person: { id: 'p-1', givenName: 'Ada', familyName: 'Lee', preferredName: null, status: 'valid', roles: [] }, onSiteSince: null } as unknown as PersonCard;
 const props = { timeZone: 'Europe/London', canOverride: false, onCheckIn: () => undefined, onClear: () => undefined };

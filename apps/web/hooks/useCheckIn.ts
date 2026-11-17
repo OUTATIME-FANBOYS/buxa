@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useReducer } from 'react';
 import type { CheckInMethod } from '@buxa/contracts';
-import { checkInAction } from '@/logic/composers';
-import { scanCodeAction } from '@/logic/composers';
+import { checkInAction } from '@buxa/server/composers/index';
+import { scanCodeAction } from '@buxa/server/composers/index';
 import type { PersonCard } from '@buxa/shared';
 import { CHECK_IN_IDLE, checkInReducer, lookupEvent } from '@buxa/shared';
 

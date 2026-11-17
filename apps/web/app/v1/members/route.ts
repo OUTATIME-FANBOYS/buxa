@@ -1,5 +1,5 @@
-import { actorFor } from '@/server/auth/orgScope';
-import { authedRoute } from '@/server/http/route';
+import { actorFor } from '@buxa/server/auth/orgScope';
+import { authedRoute } from '@buxa/server/http/route';
 
 export const dynamic = 'force-dynamic';
 

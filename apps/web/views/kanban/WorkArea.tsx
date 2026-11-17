@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import type { ReactNode } from 'react';
 import { TaskDrawer } from '@/components';
-import type { SessionIdentity } from '@/logic/composers';
+import type { SessionIdentity } from '@buxa/server/composers/index';
 
 // The task store reads and writes localStorage and is never server-rendered, so the whole work area is client-only.
 // The task drawer is composed here, in the screens layer, so the providers do not import components.

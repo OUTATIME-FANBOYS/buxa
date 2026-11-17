@@ -1,8 +1,8 @@
 import { can } from '@buxa/domain';
-import { loadMembers } from '@/logic/composers/index.server';
+import { loadMembers } from '@buxa/server/composers/index.server';
 import { MembersTable } from '@/components';
 import { PageHeader } from '@/components';
-import { campContext } from '@/logic/composers/index.server';
+import { campContext } from '@buxa/server/composers/index.server';
 
 export async function Members() {
   const { actor } = await campContext();

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { NewCampForm } from '@/components';
 import { HomePage } from '@/views';
 import { loadHomeCamp } from '@/views';
-import { getCurrentCamp, getOptionalSession } from '@/server/session';
+import { getCurrentCamp, getOptionalSession } from '@buxa/server/session/index';
 
 export const metadata: Metadata = { title: 'Home' };
 

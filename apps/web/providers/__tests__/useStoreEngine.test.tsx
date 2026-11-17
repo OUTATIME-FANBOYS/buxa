@@ -6,7 +6,7 @@ import { buildSeed } from '@buxa/shared';
 import { useStoreEngine } from '../useStoreEngine';
 
 const h = vi.hoisted(() => ({ stop: vi.fn(), changed: vi.fn(), seed: null as null | ReturnType<typeof buildSeed> }));
-vi.mock('@/logic/composers/kanban/persistence', () => ({ loadState: () => h.seed, storage: { save: () => undefined } }));
+vi.mock('@buxa/server/composers/kanban/persistence', () => ({ loadState: () => h.seed, storage: { save: () => undefined } }));
 vi.mock('@/providers/useAutosave', () => ({ useAutosave: () => 'saved' }));
 vi.mock('@/providers/useTheme', () => ({ useTheme: () => undefined }));
 vi.mock('@buxa/shared/kanban/sync', () => ({

@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { ImportForm } from '../ImportForm';
 
-vi.mock('@/logic/composers', () => ({ importClassesAction: vi.fn() }));
+vi.mock('@buxa/server/composers/index', () => ({ importClassesAction: vi.fn() }));
 
 describe('ImportForm', () => {
   it('starts with the upload step only: a labelled CSV file input, and nothing to confirm', () => {

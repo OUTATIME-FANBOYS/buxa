@@ -1,15 +1,15 @@
-import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { planImport, readImportFile } from '@buxa/domain';
-import { CAMP_TZ } from '@/server/classes/__tests__/fixtures';
+import { CAMP_TZ } from '@buxa/server/classes/__tests__/fixtures';
+import { SEASON_CSV } from '@buxa/server/composers/classes/__tests__/seasonFixture';
 import { ImportResults, countsLine } from '../ImportResults';
 
 /*
  * The preview screen, fed by the real planner and the fixture file the action tests use. The file has two ready rows, a row that
  * clashes with an earlier row in the same file, a row for a class that does not exist, and a row whose ages do not match the class.
  */
-const FIXTURE = readFileSync(new URL('../../../logic/composers/classes/__tests__/fixtures/season.csv', import.meta.url), 'utf8');
+const FIXTURE = SEASON_CSV;
 
 function previewOf(text: string) {
   const read = readImportFile(text);

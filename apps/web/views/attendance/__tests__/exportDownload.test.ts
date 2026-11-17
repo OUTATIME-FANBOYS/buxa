@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { attendanceExportDownload } from '@/views/attendance/exportDownload';
 
 const h = vi.hoisted(() => ({ respond: vi.fn(async () => new Response('csv')) }));
-vi.mock('@/logic/composers/index.server', () => ({ attendanceExportResponse: h.respond }));
+vi.mock('@buxa/server/composers/index.server', () => ({ attendanceExportResponse: h.respond }));
 
 describe('attendanceExportDownload', () => {
   it('answers the request URL with the composer’s CSV response', async () => {

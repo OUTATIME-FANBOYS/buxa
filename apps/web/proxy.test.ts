@@ -7,10 +7,10 @@ vi.hoisted(() => {
 
 import { NextRequest } from 'next/server';
 import { SECURITY_HEADERS } from './config/security';
-import { createTestIdentityProvider } from './server/__tests__/tokens';
-import { gotrue, stubIdentityProvider } from './server/session/__tests__/gotrue';
-import { SESSION_COOKIE, sessionCookieValue } from './server/session/__tests__/support';
-import { refreshSessionCookies } from './server/session/refresh';
+import { createTestIdentityProvider } from '@buxa/server/__tests__/tokens';
+import { gotrue, stubIdentityProvider } from '@buxa/server/session/__tests__/gotrue';
+import { SESSION_COOKIE, sessionCookieValue } from '@buxa/server/session/__tests__/support';
+import { refreshSessionCookies } from '@buxa/server/session/refresh';
 import { proxy } from './proxy';
 
 const request = (cookie?: string) => new NextRequest('http://localhost/camp', { headers: cookie ? { cookie } : {} });

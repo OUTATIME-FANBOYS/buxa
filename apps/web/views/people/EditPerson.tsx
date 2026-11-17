@@ -5,9 +5,9 @@ import { personPath } from '@/config/routes';
 import { Empty } from '@/components';
 import { PageHeader } from '@/components';
 import { EditPersonForm } from '@/components';
-import { currentActor } from '@/logic/composers/index.server';
+import { currentActor } from '@buxa/server/composers/index.server';
 import { displayName } from '@buxa/shared';
-import { loadPerson } from '@/logic/composers/index.server';
+import { loadPerson } from '@buxa/server/composers/index.server';
 
 /** Change one person's details. Only people:update may; everyone else is told so, without a form to fill in. */
 export async function EditPerson({ id }: { id: string }) {

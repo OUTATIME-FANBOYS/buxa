@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Class, Enrolment, PersonSummary, Session } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
 import { UiProvider } from '@/providers/providers';
-import { forbidden } from '@/server/http/errors';
+import { forbidden } from '@buxa/server/http/errors';
 
 const notFound = vi.hoisted(() => vi.fn(() => { throw new Error('NEXT_NOT_FOUND'); }));
 const session = vi.hoisted(() => ({ role: 'staff' as Role | null }));
@@ -15,8 +15,8 @@ const services = vi.hoisted(() => ({
 }));
 
 vi.mock('next/navigation', () => ({ notFound, redirect: vi.fn() }));
-vi.mock('@/server/runtime', () => ({ getRuntime: () => ({ services }) }));
-vi.mock('@/logic/composers/people/camp', () => ({
+vi.mock('@buxa/server/runtime', () => ({ getRuntime: () => ({ services }) }));
+vi.mock('@buxa/server/composers/people/camp', () => ({
   currentActor: async () => (session.role ? { userId: 'u1', orgId: 'o1', role: session.role } : null),
 }));
 

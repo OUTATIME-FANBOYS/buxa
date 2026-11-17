@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Household, Membership, Person, PersonSummary } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
 import { UiProvider } from '@/providers/UiProvider';
-import { forbidden, notFound as notFoundError } from '@/server/http/errors';
+import { forbidden, notFound as notFoundError } from '@buxa/server/http/errors';
 
 const notFound = vi.hoisted(() => vi.fn(() => { throw new Error('NEXT_NOT_FOUND'); }));
 const session = vi.hoisted(() => ({ camp: null as Membership | null }));
@@ -16,8 +16,8 @@ const services = vi.hoisted(() => ({
 
 vi.mock('next/navigation', () => ({ notFound, redirect: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
-vi.mock('@/server/runtime', () => ({ getRuntime: () => ({ services }) }));
-vi.mock('@/server/session', () => ({
+vi.mock('@buxa/server/runtime', () => ({ getRuntime: () => ({ services }) }));
+vi.mock('@buxa/server/session/index', () => ({
   requireSession: async () => ({ user: { id: 'u1', email: 'a@example.test', name: 'Ana' }, memberships: [session.camp] }),
   getCurrentCamp: async () => session.camp,
   toActor: (_s: unknown, camp: Membership) => ({ userId: 'u1', orgId: camp.orgId, role: camp.role }),

@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AttendanceEntry, PersonSummary } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
-import type { OnSiteEntry } from '@/server/services/attendance/AttendanceService';
+import type { OnSiteEntry } from '@buxa/server/services/attendance/AttendanceService';
 
 const notFound = vi.hoisted(() => vi.fn(() => { throw new Error('NEXT_NOT_FOUND'); }));
 const session = vi.hoisted(() => ({ camp: true as boolean, role: 'staff' as Role, timeZone: 'Asia/Kolkata' }));
@@ -14,8 +14,8 @@ const services = vi.hoisted(() => ({
 }));
 
 vi.mock('next/navigation', () => ({ notFound, useRouter: () => ({ refresh() {}, push() {} }) }));
-vi.mock('@/server/runtime', () => ({ getRuntime: () => ({ services }) }));
-vi.mock('@/server/session', () => ({
+vi.mock('@buxa/server/runtime', () => ({ getRuntime: () => ({ services }) }));
+vi.mock('@buxa/server/session/index', () => ({
   requireSession: async () => ({ user: { id: 'u1', email: 'a@example.test', name: 'Ada' }, memberships: [] }),
   getCurrentCamp: async () => (session.camp ? { orgId: 'o1', role: session.role, name: 'Sunrise', slug: 'sunrise' } : null),
   toActor: (_s: unknown, camp: { role: Role }) => ({ userId: 'u1', orgId: 'o1', role: camp.role }),
@@ -26,9 +26,9 @@ vi.mock('@/components/scanner/ScanField', () => ({
 vi.mock('@/components/scanner/CameraScanner', () => ({
   CameraScanner: () => 'CAMERA',
 }));
-vi.mock('@/logic/composers/attendance/searchPeople', () => ({ searchPeopleAction: async () => ({ kind: 'ok', value: [] }) }));
-vi.mock('@/logic/composers/attendance/checkIn', () => ({ checkInAction: async () => ({ kind: 'ok', value: { ok: false, reason: 'archived' } }) }));
-vi.mock('@/logic/composers/attendance/checkOut', () => ({ checkOutAction: async () => ({ kind: 'ok', value: { ok: false, reason: 'not_on_site' } }) }));
+vi.mock('@buxa/server/composers/attendance/searchPeople', () => ({ searchPeopleAction: async () => ({ kind: 'ok', value: [] }) }));
+vi.mock('@buxa/server/composers/attendance/checkIn', () => ({ checkInAction: async () => ({ kind: 'ok', value: { ok: false, reason: 'archived' } }) }));
+vi.mock('@buxa/server/composers/attendance/checkOut', () => ({ checkOutAction: async () => ({ kind: 'ok', value: { ok: false, reason: 'not_on_site' } }) }));
 
 const { CheckInScreen } = await import('@/views');
 const { OnSiteScreen } = await import('@/views');

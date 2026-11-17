@@ -3,11 +3,11 @@ import { notFound } from 'next/navigation';
 import { can, isUuid } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
 import { Empty } from '@/components';
-import { loadHouseholdList } from '@/logic/composers/index.server';
+import { loadHouseholdList } from '@buxa/server/composers/index.server';
 import { PageHeader } from '@/components';
 import { NewPersonForm } from '@/components';
-import { currentActor } from '@/logic/composers/index.server';
-import { loadHousehold } from '@/logic/composers/index.server';
+import { currentActor } from '@buxa/server/composers/index.server';
+import { loadHousehold } from '@buxa/server/composers/index.server';
 import { toHouseholdChoices } from '@buxa/shared';
 
 /**

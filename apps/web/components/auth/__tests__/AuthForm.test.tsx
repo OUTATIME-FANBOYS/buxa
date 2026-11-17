@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AuthForm } from '../AuthForm';
 
-vi.mock('@/logic/composers/auth/signIn', () => ({ signIn: async () => ({ status: 'idle' }) }));
-vi.mock('@/logic/composers/auth/signUp', () => ({ signUp: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/auth/signIn', () => ({ signIn: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/auth/signUp', () => ({ signUp: async () => ({ status: 'idle' }) }));
 
 describe('AuthForm', () => {
   it('signs in with an email and password only', () => {
