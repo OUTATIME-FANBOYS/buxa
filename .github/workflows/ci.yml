@@ -10,7 +10,7 @@ on:
 #   3. unit         packages and apps, no database
 #   4. database     migrations and the Postgres-backed tests, on two Postgres servers
 #   5. build        next build, only after 2 to 4 pass
-# "verify" is the umbrella job. Branch protection requires only "verify", and it fails if any chunk did not succeed.
+# "Verify build" is the umbrella job. Branch protection requires only "Verify build", and it fails if any chunk did not succeed.
 jobs:
   install:
     name: 1. install dependencies (npm ci, cached)
@@ -138,7 +138,7 @@ jobs:
       - run: npm run build
 
   verify:
-    name: verify
+    name: Verify build
     # Runs even when a chunk failed, so the umbrella check reports red instead of being skipped (a skipped check can pass
     # a required-check rule).
     if: always()
