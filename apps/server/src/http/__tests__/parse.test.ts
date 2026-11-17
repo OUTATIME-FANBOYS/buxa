@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { MAX_BODY_BYTES, readJson } from '@buxa/server/http/parse';
 import { isHttpError } from '@buxa/server/http/errors';
 import { publicRoute } from '@buxa/server/http/route';
-import { startRuntime } from '../harness';
+import { startRuntime } from '@buxa/server/__tests__/runtimeHarness';
 
 const CHUNK = 64 * 1024;
 

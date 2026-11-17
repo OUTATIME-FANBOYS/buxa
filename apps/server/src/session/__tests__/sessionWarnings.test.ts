@@ -21,7 +21,7 @@ vi.mock('@buxa/server/session/supabaseClient', async importOriginal => {
 });
 
 import { installRuntime } from '@buxa/server/runtime';
-import { startRuntime } from '../harness';
+import { startRuntime } from '@buxa/server/__tests__/runtimeHarness';
 import { createTestIdentityProvider } from '@buxa/server/__tests__/tokens';
 import { getSession } from '@buxa/server/session/index';
 import { InMemoryStore } from '@buxa/server/__tests__/fakes';

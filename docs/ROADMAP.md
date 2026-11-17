@@ -19,7 +19,7 @@ payments → seats & rosters → scheduling → comms & extras.** Scheduling is 
 | # | Phase | Deliverable | Exit criteria |
 |---|---|---|---|
 | 0 | Foundation | Monorepo, Postgres, migrations, managed auth, orgs (tenants), roles, audit log, CI | Two orgs cannot see each other's rows (tested); CI green; deploy to a staging URL |
-| 1 | Members & check-in (spec: `docs/phases/01-members-checkin.md`) | People & households, memberships (valid/expired), QR + name lookup, attendance log, staff mobile app (installable web app, see below) | Staff check in a member in under 5 seconds on a phone (iOS Safari and Android Chrome); attendance export; staff can install the app and sign in from a phone. **Status:** released as v0.1.0 without the installable app; the app was reverted from `develop` for v0.1.1 and is not built yet |
+| 1 | Members & check-in (spec: `docs/phases/01-members-checkin.md`) | People & households, memberships (valid/expired), QR + name lookup, attendance log, staff mobile app (installable web app, see below) | Staff check in a member in under 5 seconds on a phone (iOS Safari and Android Chrome); attendance export; staff can install the app and sign in from a phone. **Status:** released as v0.1.0 without the installable app. The app was reverted for v0.1.1 and re-landed on `develop` in #82; it is built. Still open: the owner's device timing and the signed-in walkthrough |
 | 2 | Events & calendar (spec for classes and sessions: `docs/phases/02-events-calendar.md`) | Programs (called classes in the spec) → sessions, recurring events, capacity, public pages, iCal feed | Recurrence rules tested incl. DST; public page works without login. **Status:** not started (spec only) |
 | 3 | Registration & payments | Sign-up forms with custom fields, Stripe Connect, waitlist, refunds | Concurrent sign-ups never exceed capacity; payments reconcile with Stripe |
 | 4 | Seats & rosters | Groups, cabins, rooms, assign people, per-session check-in | Ratio rules enforced; assignments conflict-checked |
@@ -34,8 +34,10 @@ Staff use a phone at the check-in desk, so phase 1 includes a mobile app. Decisi
 works in the browser. A native app is revisited only if the PWA cannot meet the 5-second check-in target on real
 phones. Mobile check-in needs a connection; offline check-in is out of scope (see `docs/phases/01-members-checkin.md`).
 
-**Status:** not on `develop`. The installable app and the phone check-in layouts were reverted for v0.1.1: there is no
-web app manifest and no install prompt in the code. Re-landing it is a separate change.
+**Status:** on `develop` and built. The installable staff app was reverted for v0.1.1 and re-landed in #82; the build
+serves a web app manifest (`/manifest.webmanifest`), and the install hint offers Android Chrome's install prompt.
+Still open for phase 1: the owner's timing on real iOS and Android phones (`docs/phases/01-check-in-timing.md`) and
+the signed-in walkthrough.
 
 ## Decisions that must be made early (from the roadmap)
 

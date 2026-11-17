@@ -26,7 +26,7 @@ describe('errors survive being loaded twice', () => {
   it('a route answers 403, not 500, for an error made by another copy of the module', async () => {
     const { HttpError: Other } = await import('@buxa/server/http/errors');
     vi.resetModules();
-    const { startRuntime } = await import('../harness');
+    const { startRuntime } = await import('@buxa/server/__tests__/runtimeHarness');
     const { publicRoute } = await import('@buxa/server/http/route');
     const env = startRuntime();
     const response = await publicRoute(async () => { throw new Other(403, 'Your role cannot do this'); })(new Request('http://localhost/x'));

@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 // Rules for the four packages (apps/web, apps/middleware, apps/shared, apps/server) and the three shared libraries in packages/.
 // Dependencies point one way: web -> middleware -> shared, and web -> server -> shared. Client code never reaches the server package.
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 type Pkg = 'web' | 'middleware' | 'shared' | 'server' | 'domain' | 'contracts' | 'db' | 'other';
 
@@ -38,7 +38,7 @@ const pkgOf = (rel: string): Pkg => {
 };
 
 const SRC_ROOTS = ['apps/web', 'apps/middleware/src', 'apps/shared/src', 'apps/server/src', 'packages'];
-const SKIP = new Set(['node_modules', '.next', '.git', 'legacy-server']);
+const SKIP = new Set(['node_modules', '.next', '.git']);
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
@@ -52,7 +52,7 @@ function walk(dir: string, out: string[] = []): string[] {
 
 const rel = (abs: string) => relative(ROOT, abs).split(sep).join('/');
 const isTest = (file: string) => /\/__tests__\/|\.test\.tsx?$/.test(file);
-const files = SRC_ROOTS.flatMap((r) => walk(join(ROOT, r))).map(rel).filter((f) => !f.startsWith('apps/web/architecture/'));
+const files = SRC_ROOTS.flatMap((r) => walk(join(ROOT, r))).map(rel);
 const source = new Map(files.map((f) => [f, readFileSync(join(ROOT, f), 'utf8')]));
 
 /** A runtime import: `import type` and imports whose named bindings are all types are erased, so they are skipped. */
