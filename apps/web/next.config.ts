@@ -37,7 +37,7 @@ const config: NextConfig = {
 
     return [
       { source: '/api/:path*', destination: `${LOCAL_SERVER}/api/:path*` },
-      { source: '/mcp', destination: `${LEGACY}/mcp` },
+      { source: '/mcp', destination: `${LOCAL_SERVER}/mcp` },
     ];
   },
 };
