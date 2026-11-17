@@ -24,6 +24,7 @@ function Chip({ label, count, children, width = 220 }: { label: string; count: n
     </>
   );
 }
+
 function Check({ checked, onChange, children }: { checked: boolean; onChange: () => void; children: ReactNode }) {
   return <label className="check-row"><input type="checkbox" checked={checked} onChange={onChange} /><span>{children}</span></label>;
 }

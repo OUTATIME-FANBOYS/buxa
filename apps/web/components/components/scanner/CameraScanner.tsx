@@ -76,6 +76,7 @@ export function CameraScanner({ onScan, onClose }: CameraScannerProps) {
       setPhase(name === 'NotAllowedError' || name === 'SecurityError' ? 'denied' : 'failed');
     }
   }
+
   function close() {
     stop(); onClose();
   }

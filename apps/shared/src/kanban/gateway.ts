@@ -147,6 +147,7 @@ function propose(s: AppState, agentId: string, change: Change, reason: string): 
 }
 
 const bad = (s: AppState, msg: string) => fail(s, msg);
+
 function checkText(s: AppState, label: string, v: string | undefined, max: number): Out<never> | null {
   if (v !== undefined && v.length > max) {
     return bad(s, `${label} is too long (max ${max} characters).`);

@@ -12,6 +12,7 @@ vi.mock('../../store/persistence', () => ({ storage: { save: h.save }, loadState
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 let status: string | undefined;
+
 function Probe({ state }: { state: AppState }) {
   status = useAutosave(state);
 

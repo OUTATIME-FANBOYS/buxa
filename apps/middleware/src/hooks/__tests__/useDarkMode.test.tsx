@@ -15,6 +15,7 @@ vi.stubGlobal('localStorage', { getItem: (k: string) => store.get(k) ?? null, se
 
 type Api = ReturnType<typeof useDarkMode>;
 let api: Api | undefined;
+
 function Probe() {
   api = useDarkMode();
 

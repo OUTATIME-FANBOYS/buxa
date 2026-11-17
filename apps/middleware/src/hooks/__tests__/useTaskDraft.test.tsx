@@ -16,6 +16,7 @@ vi.mock('../../providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ op
 const seed = buildSeed();
 const project = seed.projects[0];
 let d: TaskDraft | undefined;
+
 function Probe({ task }: { task: (typeof seed.tasks)[number] | null }) {
   d = useTaskDraft(task, project, { columnId: project.columns[1].id });
 

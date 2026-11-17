@@ -13,6 +13,7 @@ vi.mock('../../providers/store', () => ({ useStore: () => h.store }));
 
 type Api = ReturnType<typeof useAttachmentUpload>;
 let api: Api | undefined;
+
 function Probe() {
   api = useAttachmentUpload('t-1');
 

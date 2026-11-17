@@ -15,6 +15,7 @@ vi.mock('../../providers/store', () => ({ useStore: () => h.store }));
 type Api = ReturnType<typeof useBoardDnd>;
 let api: Api | undefined;
 const seed = buildSeed();
+
 function Probe() {
   api = useBoardDnd(seed.projects[0], seed.tasks.filter((t) => t.projectId === seed.projects[0].id), true);
 

@@ -11,6 +11,7 @@ const h = vi.hoisted(() => ({ checkOutAction: vi.fn() }));
 type Api = ReturnType<typeof useCheckOut>;
 let api: Api | undefined;
 const actions = { checkOut: h.checkOutAction };
+
 function Probe() {
   api = useCheckOut('p-1', actions);
 

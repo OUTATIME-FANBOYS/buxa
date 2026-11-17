@@ -12,6 +12,7 @@ const h = vi.hoisted(() => ({ checkInAction: vi.fn(), scanCodeAction: vi.fn() })
 type Api = ReturnType<typeof useCheckIn>;
 let api: Api | undefined;
 const actions = { checkIn: h.checkInAction, scanCode: h.scanCodeAction };
+
 function Probe() {
   api = useCheckIn(actions);
 

@@ -15,6 +15,7 @@ vi.mock('../../providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ op
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 let cmd: TaskCommands | undefined;
+
 function Probe() {
   cmd = useTaskCommands();
 

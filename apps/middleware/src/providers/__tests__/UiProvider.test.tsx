@@ -14,6 +14,7 @@ const Dialog: ComponentType<ConfirmDialogProps> = ({ title, footer, children }) 
 
 type Api = ReturnType<typeof useUi>;
 let api: Api | undefined;
+
 function Probe() {
   api = useUi();
 

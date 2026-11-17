@@ -8,6 +8,7 @@ import { TaskDrawerProvider, useTaskDrawer } from '../TaskDrawerContext';
 
 type Api = ReturnType<typeof useTaskDrawer>;
 let api: Api | undefined;
+
 function Probe() {
   api = useTaskDrawer();
 

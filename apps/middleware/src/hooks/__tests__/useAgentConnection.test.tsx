@@ -11,6 +11,7 @@ import { useAgentConnection } from '../useAgentConnection';
 
 type Api = ReturnType<typeof useAgentConnection>;
 let api: Api | undefined;
+
 function Probe() {
   api = useAgentConnection('u-agent-triage', 'Triage Agent');
 

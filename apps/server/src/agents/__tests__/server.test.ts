@@ -24,6 +24,7 @@ const seed = () => pickData(buildSeed());
 const start = async (d = dir) => {
   app = createApp({ dataDir: d, port: 0, secret: SECRET }); base = `http://127.0.0.1:${await app.listen()}`;
 };
+
 async function connect(token: string) {
   const c = new Client({ name: 'test', version: '1' });
   await c.connect(new StreamableHTTPClientTransport(new URL(base + '/mcp'), { requestInit: { headers: { authorization: `Bearer ${token}` } } }));

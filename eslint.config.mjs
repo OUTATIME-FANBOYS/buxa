@@ -85,7 +85,12 @@ export default tseslint.config(
     rules: {
       curly: ['error', 'all'],
       'brace-style': ['error', '1tbs', { allowSingleLine: false }],
-      'padding-line-between-statements': ['error', { blankLine: 'always', prev: '*', next: 'return' }],
+      'padding-line-between-statements': [
+        'error',
+        { blankLine: 'always', prev: '*', next: 'return' },
+        // Function and class declarations (top-level or nested) start after a blank line.
+        { blankLine: 'always', prev: '*', next: ['function', 'class'] },
+      ],
       'no-multiple-empty-lines': ['error', { max: 1 }],
     },
   },

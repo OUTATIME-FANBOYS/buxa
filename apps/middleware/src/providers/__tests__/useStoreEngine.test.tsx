@@ -18,6 +18,7 @@ vi.mock('@buxa/shared/kanban/sync', () => ({
 
 type Api = ReturnType<typeof useStoreEngine>;
 let api: Api | undefined;
+
 function Probe() {
   api = useStoreEngine();
 

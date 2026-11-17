@@ -15,6 +15,7 @@ vi.mock('../useStoreEngine', () => ({
 
 type Api = ReturnType<typeof useStore>;
 let api: Api | undefined;
+
 function Probe() {
   api = useStore();
 

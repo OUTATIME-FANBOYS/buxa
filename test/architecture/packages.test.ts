@@ -90,6 +90,7 @@ function runtimeSpecs(text: string): string[] {
 }
 
 const SUFFIXES = ['', '.ts', '.tsx', '/index.ts', '/index.tsx'];
+
 function firstExisting(base: string): string | null {
   for (const s of SUFFIXES) {
     const candidate = base + s;
