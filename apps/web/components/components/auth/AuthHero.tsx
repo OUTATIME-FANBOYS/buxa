@@ -4,7 +4,7 @@ import { Icon } from '@/components/elements/export';
 export function AuthHero() {
   return (
     <aside className="auth-hero" aria-hidden="true">
-      <div className="brand brand-lg"><span className="logo"><Icon name="kanban" size={18} /></span> Buxa</div>
+      <div className="brand brand-lg"><span className="logo"><Icon name="camp" size={18} /></span> Buxa</div>
       <div className="hero-copy">
         <p className="hero-title">Run your camp from one place.</p>
         <ul>

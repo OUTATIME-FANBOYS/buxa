@@ -10,7 +10,7 @@ export function SignInForm() {
   const isSignIn = mode === 'in';
   return (
     <div className="auth-card">
-      <div className="brand brand-lg auth-brand"><span className="logo" aria-hidden="true"><Icon name="kanban" size={18} /></span> Buxa</div>
+      <div className="brand brand-lg auth-brand"><span className="logo" aria-hidden="true"><Icon name="camp" size={18} /></span> Buxa</div>
       <h1>{isSignIn ? 'Welcome back' : 'Create your account'}</h1>
       <p className="muted">{isSignIn ? 'Sign in to manage your camp.' : 'Then set up your first camp.'}</p>
       <AuthForm key={mode} mode={mode} />

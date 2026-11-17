@@ -8,7 +8,7 @@ import { SidebarNav } from './SidebarNav';
 export function Sidebar({ groups, brandHref }: { groups: readonly NavGroup[]; brandHref: RoutePath }) {
   return (
     <aside className="sidebar" aria-label="Primary">
-      <div className="sidebar-head"><Link className="brand" href={brandHref}><span className="logo" aria-hidden="true"><Icon name="kanban" size={16} /></span><span className="collapsible">Buxa</span></Link></div>
+      <div className="sidebar-head"><Link className="brand" href={brandHref}><span className="logo" aria-hidden="true"><Icon name="camp" size={16} /></span><span className="collapsible">Buxa</span></Link></div>
       <SidebarNav groups={groups} />
     </aside>
   );

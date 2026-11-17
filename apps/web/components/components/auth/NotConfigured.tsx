@@ -4,7 +4,7 @@ import { Icon } from '@/components/elements/export';
 export function NotConfigured() {
   return (
     <main className="auth"><div className="auth-card">
-      <div className="brand brand-lg auth-brand"><span className="logo" aria-hidden="true"><Icon name="kanban" size={18} /></span> Buxa</div>
+      <div className="brand brand-lg auth-brand"><span className="logo" aria-hidden="true"><Icon name="camp" size={18} /></span> Buxa</div>
       <h1>Connect Supabase</h1>
       <p className="muted">This app needs two public settings before people can sign in.</p>
       <ol className="steps">
