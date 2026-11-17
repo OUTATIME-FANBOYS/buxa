@@ -29,7 +29,7 @@ docs/               roadmap, ADRs, security, auth, deploy, phase specs, audit
 - **Target: pages and components do not fetch data.** They receive data from a composer in `logic/composers/` (see the layers in section 3). Today some screens and routes still call the server directly: `app/(app)/camp/(work)/page.tsx` calls `loadCampHome`, `features/attendance/screens/AttendanceScreen.tsx` calls `getRuntime`, and `app/ready/route.ts` runs a query. New code does not add more of these.
 - **Server-only code is marked.** A module that holds secrets, reads the database or runs a service imports `'server-only'`. Twelve modules do so today.
 - **Target: explicit server entry points.** A server-only module is exported only through a server entry point (for example `server/index.server.ts`), never through a barrel that a Client Component can import. There are no `*.server.ts` entry points yet.
-- **Client components import only client-safe modules.** Today `features/camp/client.ts` is the client-safe subset of the camp feature, and `features/camp/index.ts` (which pulls in server code) is for Server Components and routes only. Keep it that way: a server-only module is never re-exported through a client barrel.
+- **Client components import only client-safe modules.** `@buxa/server` (its entry point, `apps/server/src/index.ts`) pulls in server code, so it is for Server Components, route handlers and `'use server'` files only. Keep it that way: a server-only module is never re-exported through a client barrel.
 - **Route categories.** Every camp page sits in a route group named for its category, so the folder tree matches the sidebar. Route groups do not change URLs. A new page goes in the group for what it is for:
 
   | Group (folder under `app/(app)/camp/`) | Sidebar group | What goes in it |
@@ -88,7 +88,11 @@ The rules below are enforced by `test/architecture/architecture.test.ts` and `pa
 
 - **Names are human-readable.** Name a file, function or folder for what it is for (`exportResponse`, `checkInState`), not an abbreviation. Components are `PascalCase.tsx`; modules are `camelCase.ts`.
 - **One concern per file.** If a file needs a section comment to separate two jobs, split it. The aim is under about 120 lines per file and about 30 per function. This is guidance, not a lint rule: seven non-test files are longer today.
-- **A feature exposes an `index.ts`.** Code outside `features/<name>/` imports from `@/features/<name>`, not from a deep path. Several folders have one today (`features/attendance`, `features/camp`, `server/services`).
+- **Barrels: the file name says which kind.** These are the barrels in the code today, and a new one follows the same pattern:
+  - `export.ts` in every folder under `apps/web/components/` (`elements/`, `components/`, `views/`, and their subfolders). Code outside the folder imports the `export.ts`, never a file inside it (rule 3 in section 3).
+  - `index.ts` for each package entry point (`apps/shared`, `apps/server`, `apps/middleware`, `apps/web/config`, `packages/domain`, `packages/contracts`, `packages/db`) and for the server and domain subfolders that group related code (for example `apps/server/src/session/index.ts`, `apps/server/src/services/index.ts`, `packages/domain/src/people/index.ts`).
+  - `hooks/hooks.ts` and `providers/providers.ts` in `apps/middleware`, named for their folder. The app imports `@buxa/middleware/hooks/hooks` and `@buxa/middleware/providers/providers`.
+  - There is no `logic/` or `common/` barrel in the code. Do not add one to match a pattern you read elsewhere; add the barrel the folder needs.
 - **Single source of truth.** A URL, permission, validation rule, theme key or piece of copy is defined once and imported everywhere. URLs come from `config/routes.ts`; permissions come from `packages/domain`; the theme storage key is in `config/theme.ts`. If you are about to write the same string a second time, move it first.
 
 ## 6. Lint

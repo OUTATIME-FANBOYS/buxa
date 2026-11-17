@@ -8,7 +8,7 @@ This page holds the evidence for it. It has two halves: a server-side guard that
 | Budget | Value | Where it is enforced |
 |---|---|---|
 | **Phone budget** | 5 seconds from the scan to the green result, on a real phone, on iOS Safari and Android Chrome | Manual, procedure below |
-| **Server budget** | p95 under **1000 ms** for the server side of a scan followed by a check-in | `SERVER_P95_BUDGET_MS` in `apps/web/server/attendance/__tests__/checkInTiming.pg.test.ts` |
+| **Server budget** | p95 under **1000 ms** for the server side of a scan followed by a check-in | `SERVER_P95_BUDGET_MS` in `apps/server/src/attendance/__tests__/checkInTiming.pg.test.ts` |
 
 The server budget is **not the phone budget**. It is a regression guard on the database and the services. The 5 seconds on the phone also includes the network, the phone itself, the browser, and the staff member's taps. The server's share has to stay well inside it, so a slow query fails the build before a phone ever sees it.
 
@@ -32,7 +32,7 @@ Unit tests cover the helpers: `scripts/timing/stats.test.ts` (percentiles and su
 
 ```bash
 export DATABASE_URL=<the Postgres URL for your local database, as set up in docker-compose.yml>   # never commit it
-npx vitest run apps/web/server/attendance/__tests__/checkInTiming.pg.test.ts
+npx vitest run apps/server/src/attendance/__tests__/checkInTiming.pg.test.ts
 ```
 
 The test prints the numbers. Without `DATABASE_URL` it is skipped, as the other Postgres tests are.
@@ -58,7 +58,7 @@ This is the evidence the exit criterion needs. It has to be done on **real devic
 
 ### Before you start
 
-- **Install step:** the installable staff app (PWA) is not built yet. There is no web app manifest on `develop` or `Phase1` (see `docs/ROADMAP.md`, "Staff mobile app"). Until it lands, skip the home-screen install and use the browser on the phone. Record `browser` in the table's *Install* column. Once the manifest exists, repeat the run with the app installed from the home screen and record `home screen` instead.
+- **Install step:** the installable staff app (PWA) is on `develop` and built (`/manifest.webmanifest`; see `docs/ROADMAP.md`, "Staff mobile app"). Run each phone once in the browser and record `browser` in the table's *Install* column. Then install the app from the home screen and repeat the run, recording `home screen`.
 - Use a **production build** on a **staging URL** (the same build as `npm run build` and `npm run start`), never `next dev`.
 - You need one **test badge**: a test person (not a real member) with a membership valid today and a badge printed or shown on a second screen. Archive or revoke that person afterwards. Do not use a real child's badge.
 - Turn off battery saver and low-power mode. Keep the phone on Wi-Fi or a normal mobile connection, and write down which one.
@@ -79,6 +79,8 @@ This is the evidence the exit criterion needs. It has to be done on **real devic
 Optional, for the check-in itself: after the green card, tap **Check in** and time the tap to the confirmation in a second column. This is not part of the exit criterion, but it shows the staff member's full cost.
 
 ### Results (fill in; leave blank until measured)
+
+The phone tables below are blank on purpose. They are for the owner to fill in on real devices; nobody else should write results into them. The server numbers above are not a substitute for them.
 
 Median is over the 10 runs of each phone. The median goes in the "Median" row, and the PASS/FAIL line is set from it.
 
