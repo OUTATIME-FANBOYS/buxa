@@ -5,6 +5,47 @@ Built phase by phase; see `docs/ROADMAP.md`. The repository is public, so it hol
 
 **Stack:** Next.js (App Router) · TypeScript · Postgres with row-level security · Supabase sign-in. See `docs/adr/`.
 
+## Flows
+
+The diagrams below were made with [Archify](https://github.com/tt-a1i/archify) from the source code. They use mock data only and show how the app works, not who is in it.
+
+Each preview links to the interactive diagram, which you can explore in the browser. The standalone HTML files are in `docs/architecture/` if you want to download them.
+
+### Check-in
+
+[![Check-in flow, preview](docs/architecture/checkin-flow.png)](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/docs/architecture/checkin-flow.html)
+
+[Open the interactive diagram](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/docs/architecture/checkin-flow.html)
+
+Staff scan a badge on a staff device. The check-in service checks the staff member's permission, then resolves the person: an unknown or revoked code gets a neutral reply and nothing is recorded. A known person is checked against their membership for the camp's local day. If it is not valid, only an admin can override it, and only with a reason. A valid check-in records one open visit per person and adds them to the on-site list, in the same transaction as the audit entry.
+
+### Membership lifecycle
+
+[![Membership lifecycle, preview](docs/architecture/membership-lifecycle.png)](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/docs/architecture/membership-lifecycle.html)
+
+[Open the interactive diagram](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/docs/architecture/membership-lifecycle.html)
+
+A person starts with no membership. Adding a membership that starts today makes it valid straight away, so the person can check in. A membership that starts later waits as not started until its start date arrives. When the end date passes, a valid membership expires and needs renewal, and a renewal makes it valid again. An admin can revoke a membership at any time; revoked is a terminal state with the reason recorded.
+
+### Check-out with guardian pickup
+
+[![Check-out with guardian pickup, preview](docs/architecture/checkout-sequence.png)](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/docs/architecture/checkout-sequence.html)
+
+[Open the interactive diagram](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/docs/architecture/checkout-sequence.html)
+
+Staff check a child out from the on-site screen. The attendance service loads the open visit and its households. Adults can leave without a collector, but a child needs one, so staff choose who collects. The check-out then goes through again with that collector, which must be a guardian allowed to pick up. The service closes the visit only if it is still open, writes the check-out to the audit log in the same transaction, and removes the child from the on-site list. If the visit was already closed, nothing changes.
+
+### Pickup authorisation
+
+[![Pickup authorisation, preview](docs/architecture/pickup-authorisation.png)](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/docs/architecture/pickup-authorisation.html)
+
+[Open the interactive diagram](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/docs/architecture/pickup-authorisation.html)
+
+An admin sets or clears the pickup flag on a household link. The permission check runs first and fails closed: anyone who is not an admin or owner is refused and nothing is written. An admin's request then goes to the people service, which confirms the person is a guardian before saving the link and its audit entry together. Check-out reads that link later and accepts only a guardian with the pickup flag set.
+
+If a diagram disagrees with the code, the code wins. Fix the diagram in the same PR as the change, and re-export its PNG (see `CONTRIBUTING.md`).
+
+
 ## Run it locally
 ```bash
 npm install
