@@ -15,12 +15,20 @@ vi.mock('../useStoreEngine', () => ({
 
 type Api = ReturnType<typeof useStore>;
 let api: Api | undefined;
-function Probe() { api = useStore(); return null; }
+function Probe() {
+  api = useStore();
+
+  return null;
+}
 
 describe('StoreProvider and useStore', () => {
   let root: Root;
-  beforeEach(() => { api = undefined; root = createRoot(document.body.appendChild(document.createElement('div'))); });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+  beforeEach(() => {
+    api = undefined; root = createRoot(document.body.appendChild(document.createElement('div')));
+  });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = '';
+  });
 
   it('gives the state, the actions and what is derived from them to its children', () => {
     act(() => root.render(<StoreProvider><Probe /></StoreProvider>));
@@ -31,6 +39,8 @@ describe('StoreProvider and useStore', () => {
     expect(api!.myRole).toBe('viewer');
   });
   it('refuses to be used outside its provider', () => {
-    expect(() => { act(() => root.render(<Probe />)); }).toThrow('StoreProvider missing');
+    expect(() => {
+      act(() => root.render(<Probe />));
+    }).toThrow('StoreProvider missing');
   });
 });

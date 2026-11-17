@@ -7,6 +7,7 @@ import { dataActions } from '../data';
 function harness() {
   const replace = vi.fn<(s: AppState) => void>();
   const actions = dataActions({ set: vi.fn(), get: () => buildSeed(), replace });
+
   return { actions, replace };
 }
 

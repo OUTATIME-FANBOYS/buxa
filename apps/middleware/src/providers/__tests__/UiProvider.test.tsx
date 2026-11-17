@@ -14,7 +14,11 @@ const Dialog: ComponentType<ConfirmDialogProps> = ({ title, footer, children }) 
 
 type Api = ReturnType<typeof useUi>;
 let api: Api | undefined;
-function Probe() { api = useUi(); return null; }
+function Probe() {
+  api = useUi();
+
+  return null;
+}
 
 describe('UiProvider', () => {
   let root: Root;
@@ -23,7 +27,9 @@ describe('UiProvider', () => {
     root = createRoot(document.body.appendChild(document.createElement('div')));
     act(() => root.render(<UiProvider Dialog={Dialog}><Probe /><p>app</p></UiProvider>));
   });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = '';
+  });
 
   it('shows a toast with its text in the status region', () => {
     act(() => api!.toast('Saved'));
@@ -36,20 +42,32 @@ describe('UiProvider', () => {
   });
   it('asks for confirmation and resolves true when confirmed', async () => {
     let answer: boolean | undefined;
-    act(() => { void api!.confirm({ title: 'Delete task?', body: 'This cannot be undone.', confirmLabel: 'Delete', danger: true }).then((b) => { answer = b; }); });
+    act(() => {
+      void api!.confirm({ title: 'Delete task?', body: 'This cannot be undone.', confirmLabel: 'Delete', danger: true }).then((b) => {
+        answer = b;
+      });
+    });
     const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
     expect(dialog.getAttribute('aria-label')).toBe('Delete task?');
     expect(dialog.textContent).toContain('This cannot be undone.');
     const confirm = Array.from(dialog.querySelectorAll('button')).find((b) => b.textContent === 'Delete') as HTMLButtonElement;
     expect(confirm.className).toContain('btn-danger');
-    await act(async () => { confirm.click(); });
+    await act(async () => {
+      confirm.click();
+    });
     expect(answer).toBe(true);
   });
   it('resolves false when cancelled', async () => {
     let answer: boolean | undefined;
-    act(() => { void api!.confirm({ title: 'Leave?' }).then((b) => { answer = b; }); });
+    act(() => {
+      void api!.confirm({ title: 'Leave?' }).then((b) => {
+        answer = b;
+      });
+    });
     const cancel = Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Cancel') as HTMLButtonElement;
-    await act(async () => { cancel.click(); });
+    await act(async () => {
+      cancel.click();
+    });
     expect(answer).toBe(false);
   });
   it('tracks the small-screen sidebar state', () => {
@@ -57,6 +75,12 @@ describe('UiProvider', () => {
     expect(api!.sidebarOpen).toBe(true);
   });
   it('throws a clear error when used outside the provider', () => {
-    expect(() => { function Bare() { useUi(); return null; } act(() => createRoot(document.createElement('div')).render(<Bare />)); }).toThrow();
+    expect(() => {
+      function Bare() {
+        useUi();
+
+        return null;
+      } act(() => createRoot(document.createElement('div')).render(<Bare />));
+    }).toThrow();
   });
 });

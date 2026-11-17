@@ -18,7 +18,11 @@ vi.mock('@buxa/shared/kanban/sync', () => ({
 
 type Api = ReturnType<typeof useStoreEngine>;
 let api: Api | undefined;
-function Probe() { api = useStoreEngine(); return null; }
+function Probe() {
+  api = useStoreEngine();
+
+  return null;
+}
 
 describe('useStoreEngine', () => {
   let root: Root;
@@ -28,7 +32,9 @@ describe('useStoreEngine', () => {
     api = undefined;
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = '';
+  });
 
   it('starts from the saved state and reports the autosave status', () => {
     act(() => root.render(<Probe />));
@@ -43,7 +49,9 @@ describe('useStoreEngine', () => {
   });
   it('follows a theme chosen outside the store, without syncing it as a data change', () => {
     act(() => root.render(<Probe />));
-    act(() => { window.dispatchEvent(new CustomEvent(THEME_EVENT, { detail: 'light' })); });
+    act(() => {
+      window.dispatchEvent(new CustomEvent(THEME_EVENT, { detail: 'light' }));
+    });
     expect(api!.state.ui.theme).toBe('light');
     expect(h.changed).not.toHaveBeenCalled();
   });

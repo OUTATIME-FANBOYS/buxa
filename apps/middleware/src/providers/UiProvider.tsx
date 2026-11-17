@@ -15,7 +15,13 @@ interface UiCtx {
   sidebarOpen: boolean; setSidebarOpen: (b: boolean) => void;
 }
 const Ctx = createContext<UiCtx | null>(null);
-export const useUi = () => { const c = useContext(Ctx); if (!c) throw new Error('UiProvider missing'); return c; };
+export const useUi = () => {
+  const c = useContext(Ctx); if (!c) {
+    throw new Error('UiProvider missing');
+  }
+
+  return c;
+};
 
 export function UiProvider({ children, Dialog }: { children: ReactNode; Dialog: ComponentType<ConfirmDialogProps> }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -33,17 +39,23 @@ export function UiProvider({ children, Dialog }: { children: ReactNode; Dialog: 
   const confirm = useCallback((o: ConfirmOpts) => new Promise<boolean>(resolve => setQueue(q => [...q, { ...o, resolve }])), []);
   const value = useMemo(() => ({ toast, confirm, sidebarOpen, setSidebarOpen }), [toast, confirm, sidebarOpen]);
 
-  const done = (b: boolean) => { conf?.resolve(b); setQueue(q => q.slice(1)); };
+  const done = (b: boolean) => {
+    conf?.resolve(b); setQueue(q => q.slice(1));
+  };
+
   return (
     <Ctx.Provider value={value}>
       {children}
       <div className="toasts" role="status" aria-live="polite">
         {toasts.map(t => {
           const action = t.action;
+
           return (
             <div key={t.id} className={`toast ${t.tone === 'error' ? 'toast-error' : ''}`}>
               <span>{t.text}</span>
-              {action && <button onClick={() => { action.run(); setToasts(x => x.filter(y => y.id !== t.id)); }}>{action.label}</button>}
+              {action && <button onClick={() => {
+                action.run(); setToasts(x => x.filter(y => y.id !== t.id));
+              }}>{action.label}</button>}
             </div>
           );
         })}

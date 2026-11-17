@@ -20,8 +20,11 @@ export function useCheckIn(actions: CheckInActions) {
   const phase = state.phase;
 
   useEffect(() => {
-    if (phase !== 'done') return undefined;
+    if (phase !== 'done') {
+      return undefined;
+    }
     const timer = window.setTimeout(() => dispatch({ type: 'reset' }), CONFIRM_MS);
+
     return () => window.clearTimeout(timer);
   }, [phase]);
 

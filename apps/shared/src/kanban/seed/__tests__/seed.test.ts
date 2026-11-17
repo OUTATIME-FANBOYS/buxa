@@ -33,7 +33,9 @@ describe('seed projects', () => {
   it('builds the five camp projects, each with the five default columns', () => {
     const projects = buildProjects();
     expect(projects.map((p) => p.id)).toEqual(CAMP_PROJECT_IDS);
-    for (const p of projects) expect(p.columns.map((c) => c.kind)).toEqual(['open', 'open', 'active', 'active', 'done']);
+    for (const p of projects) {
+      expect(p.columns.map((c) => c.kind)).toEqual(['open', 'open', 'active', 'active', 'done']);
+    }
   });
   it('defaultColumns uses the id generator for each slot', () => {
     const cols = defaultColumns((slot) => `c${slot}`);
@@ -73,7 +75,9 @@ describe('seed task lists', () => {
     const camp = campTasks();
     expect(reg.length).toBeGreaterThan(0);
     expect(camp.length).toBeGreaterThan(0);
-    for (const s of [...reg, ...camp]) expect(CAMP_PROJECT_IDS).toContain(s.project);
+    for (const s of [...reg, ...camp]) {
+      expect(CAMP_PROJECT_IDS).toContain(s.project);
+    }
   });
 });
 

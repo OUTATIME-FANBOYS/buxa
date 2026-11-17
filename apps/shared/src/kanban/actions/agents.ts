@@ -14,10 +14,16 @@ export function agentActions({ set, get }: ActionContext) {
     decide: (proposalId: string, verdict: 'approve' | 'reject') => set(s => Ag.decide(s, proposalId, verdict)),
     decideMany: (ids: string[], verdict: 'approve' | 'reject') => set(s => Ag.decideMany(s, ids, verdict)),
     revertRun(runId: string): { reverted: number; skipped: number } {
-      const r = Ag.revertRun(get(), runId); set(s => Ag.revertRun(s, runId).state); return { reverted: r.reverted, skipped: r.skipped };
+      const r = Ag.revertRun(get(), runId); set(s => Ag.revertRun(s, runId).state);
+
+      return { reverted: r.reverted, skipped: r.skipped };
     },
     simulateRun(agentId: string, projectId: string): number {
-      const r = simulateRun(get(), agentId, projectId); if (r.count) set(s => simulateRun(s, agentId, projectId).state); return r.count;
+      const r = simulateRun(get(), agentId, projectId); if (r.count) {
+        set(s => simulateRun(s, agentId, projectId).state);
+      }
+
+      return r.count;
     },
   };
 }

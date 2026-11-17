@@ -5,6 +5,7 @@ const { rosa, tom, hannah, sam, nia } = USER;
 
 const facilities = (): TaskSpec[] => {
   const F = PROJECT.facilities;
+
   return [
     spec(F, 0, 'Shade structure for the archery field', 'medium', tom, null, 35, ['facilities']),
     spec(F, 0, 'Repaint dining hall trim', 'low', rosa, null, null, ['maintenance']),
@@ -22,6 +23,7 @@ const facilities = (): TaskSpec[] => {
 
 const staffing = (): TaskSpec[] => {
   const S = PROJECT.staffing;
+
   return [
     spec(S, 0, 'Plan counsellor reunion evening', 'low', hannah, null, 25, ['events']),
     spec(S, 1, 'Recruit lifeguards for the waterfront', 'high', sam, null, 5, ['hiring', 'waterfront']),
@@ -36,6 +38,7 @@ const staffing = (): TaskSpec[] => {
 
 const comms = (): TaskSpec[] => {
   const C = PROJECT.comms;
+
   return [
     spec(C, 0, 'Packing list and what-to-bring guide', 'low', nia, null, 20, ['communications']),
     spec(C, 1, 'Newsletter: meet the 2027 staff', 'medium', nia, null, 14, ['communications', 'newsletter']),
@@ -48,6 +51,7 @@ const comms = (): TaskSpec[] => {
 
 const programme = (): TaskSpec[] => {
   const P = PROJECT.programme;
+
   return [
     spec(P, 0, 'End-of-summer talent show plan', 'low', sam, null, 55, ['events']),
     spec(P, 1, 'Tie-dye supplies order', 'medium', sam, null, 6, ['arts', 'supplies']),

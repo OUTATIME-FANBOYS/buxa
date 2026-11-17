@@ -13,8 +13,11 @@ export function savedTheme(): ThemePref | null {
   try {
     const raw = localStorage.getItem(THEME_KEY) ?? localStorage.getItem(LEGACY_THEME_KEY);
     const value: unknown = raw === null ? null : JSON.parse(raw);
+
     return value === 'system' || value === 'light' || value === 'dark' ? value : null;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 /** The saved state, or a fresh demo when nothing usable is stored. The theme always comes from the saved choice, when there is one. */
@@ -23,9 +26,14 @@ export function loadState(): AppState {
   let state: AppState | null = null;
   try {
     const raw = localStorage.getItem(KEY) ?? localStorage.getItem(LEGACY_KEY);
-    if (raw) { const s = JSON.parse(raw) as AppState; if (s.version === 1) state = normalize(s); }
+    if (raw) {
+      const s = JSON.parse(raw) as AppState; if (s.version === 1) {
+        state = normalize(s);
+      }
+    }
   } catch { /* fall through to seed */ }
   const base = state ?? buildDemo();
+
   return theme ? { ...base, ui: { ...base.ui, theme } } : base;
 }
 

@@ -27,7 +27,9 @@ describe('the sidebar groups', () => {
 
   it('keeps every route in one place: the nav links only to known routes, and the old kanban address is gone', () => {
     const known: readonly string[] = Object.values(ROUTES);
-    for (const item of CAMP_NAV) expect(known).toContain(item.href);
+    for (const item of CAMP_NAV) {
+      expect(known).toContain(item.href);
+    }
     expect(hrefs('owner')).not.toContain('/kanban');
   });
 
@@ -43,7 +45,9 @@ describe('the sidebar groups', () => {
 
 describe('navFor', () => {
   it('shows every item to staff and above; a viewer sees no attendance items (check-in, on site, attendance)', () => {
-    for (const role of ROLES.filter(r => r !== 'viewer')) expect(hrefs(role)).toEqual(CAMP_NAV.map(item => item.href));
+    for (const role of ROLES.filter(r => r !== 'viewer')) {
+      expect(hrefs(role)).toEqual(CAMP_NAV.map(item => item.href));
+    }
     const attendance: string[] = [ROUTES.checkIn, ROUTES.onSite, ROUTES.attendance];
     expect(hrefs('viewer')).toEqual(CAMP_NAV.map(item => item.href).filter(h => !attendance.includes(h)));
   });

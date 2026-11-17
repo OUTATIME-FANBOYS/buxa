@@ -15,7 +15,11 @@ vi.mock('../../providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ op
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 let cmd: TaskCommands | undefined;
-function Probe() { cmd = useTaskCommands(); return null; }
+function Probe() {
+  cmd = useTaskCommands();
+
+  return null;
+}
 
 describe('useTaskCommands', () => {
   let root: Root;
@@ -27,7 +31,9 @@ describe('useTaskCommands', () => {
     root = createRoot(document.body.appendChild(document.createElement('div')));
     act(() => root.render(<UiProvider Dialog={StubDialog}><Probe /></UiProvider>));
   });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = '';
+  });
 
   it('deletes a task and offers to undo', () => {
     act(() => cmd!.remove(task));
@@ -43,7 +49,9 @@ describe('useTaskCommands', () => {
   });
   it('duplicates a task and returns the copy’s id', () => {
     let copy: string | undefined;
-    act(() => { copy = cmd!.duplicate(task); });
+    act(() => {
+      copy = cmd!.duplicate(task);
+    });
     expect(copy).toBe('t-copy');
   });
   it('moves a task to another column', () => {

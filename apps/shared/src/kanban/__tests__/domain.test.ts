@@ -11,7 +11,9 @@ const proj = () => s.projects.find(p => p.id === PROJECT.registration)!;
 const col = (name: string) => proj().columns.find(c => c.name === name)!.id;
 const task = (id: string) => s.tasks.find(t => t.id === id)!;
 
-beforeEach(() => { s = as(buildSeed(), USER.rosa); });
+beforeEach(() => {
+  s = as(buildSeed(), USER.rosa);
+});
 
 describe('moveTask', () => {
   it('sets completedAt on entering a done column and clears it on leaving', () => {

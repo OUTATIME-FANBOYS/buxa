@@ -17,13 +17,18 @@ import { CHECK_FIELDS, WHOLE_NUMBER } from './copy';
 export function numberField(form: FormData, name: string, problems: FieldErrors, required?: string): number | undefined {
   const raw = field(form, name).trim();
   if (raw === '') {
-    if (required) problems[name] = required;
+    if (required) {
+      problems[name] = required;
+    }
+
     return undefined;
   }
   if (!/^\d+$/.test(raw)) {
     problems[name] = WHOLE_NUMBER;
+
     return undefined;
   }
+
   return Number(raw);
 }
 
@@ -35,10 +40,15 @@ function withProblems<T>(problems: FieldErrors, check: () => PersonParsed<T>, re
   const parsed = check();
   const contract: FieldErrors = {};
   if (!parsed.ok && parsed.state.status === 'error') {
-    for (const [name, message] of Object.entries(parsed.state.fieldErrors ?? {})) contract[renames[name] ?? name] = message;
+    for (const [name, message] of Object.entries(parsed.state.fieldErrors ?? {})) {
+      contract[renames[name] ?? name] = message;
+    }
   }
   const fieldErrors: FieldErrors = { ...contract, ...problems };
-  if (Object.keys(fieldErrors).length === 0) return parsed;
+  if (Object.keys(fieldErrors).length === 0) {
+    return parsed;
+  }
+
   return { ok: false, state: failure(CHECK_FIELDS, fieldErrors) };
 }
 
@@ -69,8 +79,12 @@ export function sessionForm(form: FormData, timeZone: string): PersonParsed<NewS
   const problems: FieldErrors = {};
   const starts = parseCampLocal(field(form, 'startsAt'), timeZone);
   const ends = parseCampLocal(field(form, 'endsAt'), timeZone);
-  if (!starts.ok) problems.startsAt = starts.message;
-  if (!ends.ok) problems.endsAt = ends.message;
+  if (!starts.ok) {
+    problems.startsAt = starts.message;
+  }
+  if (!ends.ok) {
+    problems.endsAt = ends.message;
+  }
   const capacity = numberField(form, 'capacity', problems);
 
   return withProblems(problems, () => parseWith(NewSessionInputSchema, {
@@ -85,8 +99,11 @@ export function sessionForm(form: FormData, timeZone: string): PersonParsed<NewS
 /** An enrolment. The button pressed decides the waitlist: "waitlist" puts a camper on the list when the session is full. */
 export function enrolForm(form: FormData): PersonParsed<EnrolInput> {
   const problems: FieldErrors = {};
-  if (field(form, 'camperId') === '') problems.camperId = 'Choose a camper.';
+  if (field(form, 'camperId') === '') {
+    problems.camperId = 'Choose a camper.';
+  }
   const reason = field(form, 'overrideReason').trim();
+
   return withProblems(problems, () => parseWith(EnrolInputSchema, {
     sessionId: field(form, 'sessionId'),
     camperId: field(form, 'camperId'),
@@ -97,6 +114,7 @@ export function enrolForm(form: FormData): PersonParsed<EnrolInput> {
 
 export function cancelForm(form: FormData): PersonParsed<CancelEnrolmentInput> {
   const note = field(form, 'note').trim();
+
   return parseWith(CancelEnrolmentInputSchema, {
     enrolmentId: field(form, 'enrolmentId'),
     ...(note ? { note } : {}),

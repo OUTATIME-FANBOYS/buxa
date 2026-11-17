@@ -6,6 +6,7 @@ export type PersonParsed<T> = { ok: true; data: T } | { ok: false; state: Action
 /** One posted value as a string. Anything that is not a string (missing, a file) counts as empty, so the schema reports it. */
 export const field = (form: FormData, name: string): string => {
   const value = form.get(name);
+
   return typeof value === 'string' ? value : '';
 };
 
@@ -22,7 +23,12 @@ export const checked = (form: FormData, name: string): boolean => form.get(name)
  */
 export function dropBlank(values: Record<string, unknown>, optional: readonly string[]): Record<string, unknown> {
   const out = { ...values };
-  for (const key of optional) if (out[key] === '') delete out[key];
+  for (const key of optional) {
+    if (out[key] === '') {
+      delete out[key];
+    }
+  }
+
   return out;
 }
 
@@ -32,12 +38,17 @@ export function dropBlank(values: Record<string, unknown>, optional: readonly st
  */
 export function parseWith<T>(schema: ZodType<T>, values: unknown): PersonParsed<T> {
   const result = schema.safeParse(values);
-  if (result.success) return { ok: true, data: result.data };
+  if (result.success) {
+    return { ok: true, data: result.data };
+  }
   const fieldErrors: FieldErrors = {};
   for (const issue of result.error.issues) {
     const name = String(issue.path[0] ?? '');
-    if (name) fieldErrors[name] ??= issue.message;
+    if (name) {
+      fieldErrors[name] ??= issue.message;
+    }
   }
   const message = Object.keys(fieldErrors).length > 0 ? 'Check the highlighted fields.' : (result.error.issues[0]?.message ?? 'Check the form.');
+
   return { ok: false, state: failure(message, fieldErrors) };
 }

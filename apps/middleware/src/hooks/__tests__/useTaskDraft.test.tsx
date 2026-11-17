@@ -16,7 +16,11 @@ vi.mock('../../providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ op
 const seed = buildSeed();
 const project = seed.projects[0];
 let d: TaskDraft | undefined;
-function Probe({ task }: { task: (typeof seed.tasks)[number] | null }) { d = useTaskDraft(task, project, { columnId: project.columns[1].id }); return null; }
+function Probe({ task }: { task: (typeof seed.tasks)[number] | null }) {
+  d = useTaskDraft(task, project, { columnId: project.columns[1].id });
+
+  return null;
+}
 
 describe('useTaskDraft', () => {
   let root: Root;
@@ -25,7 +29,9 @@ describe('useTaskDraft', () => {
     h.store = { me: seed.users[0], actions: { createTask: vi.fn(() => 't-new'), updateTask: vi.fn() } };
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = '';
+  });
 
   it('starts a new task in the column it was opened from, assigned to the signed-in person', () => {
     act(() => root.render(<UiProvider Dialog={StubDialog}><Probe task={null} /></UiProvider>));

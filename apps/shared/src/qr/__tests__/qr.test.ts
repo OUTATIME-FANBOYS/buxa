@@ -8,15 +8,16 @@ function decode(payload: string): string | null {
   const data = new Uint8ClampedArray(w * w * 4).fill(255);
   for (const m of d.matchAll(/M(\d+) (\d+)h/g)) {
     const mx = Number(m[1]), my = Number(m[2]);
-    for (let y = my * scale; y < (my + 1) * scale; y++) for (let x = mx * scale; x < (mx + 1) * scale; x++) {
-      const i = (y * w + x) * 4;
-      data[i] = data[i + 1] = data[i + 2] = 0;
+    for (let y = my * scale; y < (my + 1) * scale; y++) {
+      for (let x = mx * scale; x < (mx + 1) * scale; x++) {
+        const i = (y * w + x) * 4;
+        data[i] = data[i + 1] = data[i + 2] = 0;
+      }
     }
   }
+
   return jsQR(data, w, w)?.data ?? null;
 }
-
-
 
 describe('QR rendering', () => {
   it('decodes back to the payload', () => {

@@ -7,11 +7,16 @@ export interface HomeCard { label: string; value: number; info: string; icon: st
 
 /** Today against yesterday, from the chart's days. Only when both days are complete, so the comparison is not against a short count. */
 export function dayChange(series: CheckInsByDay | null): HomeCardChange | null {
-  if (!series || !series.complete || series.days.length < 2) return null;
+  if (!series || !series.complete || series.days.length < 2) {
+    return null;
+  }
   const today = series.days[series.days.length - 1].count;
   const yesterday = series.days[series.days.length - 2].count;
   const diff = today - yesterday;
-  if (diff === 0) return { text: 'Same as yesterday', tone: 'neutral' };
+  if (diff === 0) {
+    return { text: 'Same as yesterday', tone: 'neutral' };
+  }
+
   return diff > 0 ? { text: `+${diff} vs yesterday`, tone: 'ok' } : { text: `${diff} vs yesterday`, tone: 'warn' };
 }
 
@@ -23,6 +28,7 @@ export function homeCards(camp: CampHome): HomeCard[] {
   const share: HomeCardChange | null = camp.validMemberships !== null && camp.people
     ? { text: `${Math.round((camp.validMemberships / camp.people) * 100)}% of people`, tone: 'neutral' }
     : null;
+
   return [
     ...(camp.onSite === null ? [] : [{
       label: 'On site now', value: camp.onSite, icon: 'clock', tone: 'ok' as const,

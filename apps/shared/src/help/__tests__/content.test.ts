@@ -11,7 +11,10 @@ const SPEC_COLUMNS = [
 
 const section = (id: string): HelpSectionContent => {
   const found = HELP_SECTIONS.find(s => s.id === id);
-  if (!found) throw new Error(`no section ${id}`);
+  if (!found) {
+    throw new Error(`no section ${id}`);
+  }
+
   return found;
 };
 
@@ -45,7 +48,9 @@ describe('the import instructions and the spec cannot drift apart', () => {
 
   it('keeps the rule words of the spec: overlap, age range, capacity, external key, atomic save', () => {
     const text = textOf(section('imports'));
-    for (const word of ['overlap', 'age', 'capacity', 'external key', 'Saving is all or nothing']) expect(text).toContain(word);
+    for (const word of ['overlap', 'age', 'capacity', 'external key', 'Saving is all or nothing']) {
+      expect(text).toContain(word);
+    }
   });
 });
 

@@ -6,10 +6,16 @@ import * as A from '../..';
 import type { AppState } from '../..';
 
 let s: AppState;
-const call = <T,>(r: G.Out<T>): T => { expect(r.error).toBeUndefined(); s = r.state; return r.value as T; };
+const call = <T, >(r: G.Out<T>): T => {
+  expect(r.error).toBeUndefined(); s = r.state;
+
+  return r.value as T;
+};
 const col = (name: string) => s.projects.find(p => p.id === PROJECT.registration)!.columns.find(c => c.name === name)!.id;
 
-beforeEach(() => { s = buildSeed(); });
+beforeEach(() => {
+  s = buildSeed();
+});
 
 describe('reads are limited to the agent’s scope', () => {
   it('lists only projects in scope and hides the rest as "not found"', () => {

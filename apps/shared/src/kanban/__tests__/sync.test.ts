@@ -5,11 +5,14 @@ import { createSync, serverApi, type Host, type SyncState } from '../sync';
 // Sync only talks to the local server when NEXT_PUBLIC_LEGACY_SYNC=true. Without it the board stays local and never calls out.
 const host = (statuses: SyncState[]): Host => {
   const state = buildSeed();
+
   return {
     getState: () => state,
     commit: () => undefined,
     pending: [],
-    onStatus: (s) => { statuses.push(s); },
+    onStatus: (s) => {
+      statuses.push(s);
+    },
   };
 };
 

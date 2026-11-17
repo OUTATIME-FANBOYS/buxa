@@ -30,7 +30,10 @@ export function boardDndReducer(s: BoardDnd, a: BoardDndAction): BoardDnd {
     case 'cleared': return idleDnd;
     case 'taskOver': return s.mode === 'task' ? { ...s, over: a.over } : s;
     case 'columnOver': {
-      if (s.mode !== 'column' || s.id === a.over.id) return s;
+      if (s.mode !== 'column' || s.id === a.over.id) {
+        return s;
+      }
+
       return s.over?.id === a.over.id && s.over.side === a.over.side ? s : { ...s, over: a.over };
     }
     case 'columnLeft': return s.mode === 'column' && s.over?.id === a.id ? { ...s, over: null } : s;

@@ -14,9 +14,14 @@ export function WorkGate({ user, children }: { user: SessionIdentity; children: 
   const ready = s.session.userId === id;
 
   useEffect(() => {
-    if (!ready) actions.adoptSessionUser({ id, name, email });
+    if (!ready) {
+      actions.adoptSessionUser({ id, name, email });
+    }
   }, [ready, id, name, email, actions]);
 
-  if (!ready) return <p className="muted" role="status" style={{ padding: 24 }}>Loading…</p>;
+  if (!ready) {
+    return <p className="muted" role="status" style={{ padding: 24 }}>Loading…</p>;
+  }
+
   return <>{children}</>;
 }

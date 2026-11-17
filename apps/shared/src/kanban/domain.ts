@@ -24,17 +24,23 @@ const mapProject = (s: AppState, id: string, f: (p: Project) => Project): AppSta
 /* ---------- history & notifications ---------- */
 export function log(s: AppState, taskId: string, verb: string, detail = ''): AppState {
   const actor = s.session.userId ?? 'system';
-  const task = s.tasks.find(t => t.id === taskId); if (!task) return s;
+  const task = s.tasks.find(t => t.id === taskId); if (!task) {
+    return s;
+  }
   const at = clock.now();
   const via = s.acting;
   const entry = { id: clock.id(), at, actorId: actor, text: `${verb} this${detail ? ' ' + detail : ''}`, ...(via ? { via } : {}) };
+
   return {
     ...mapTask(s, taskId, t => ({ ...t, history: [entry, ...t.history] })),
     activity: [{ id: clock.id(), at, actorId: actor, projectId: task.projectId, taskId, taskTitle: task.title, verb, detail, ...(via ? { via } : {}) }, ...s.activity].slice(0, 400),
   };
 }
 export function notify(s: AppState, userId: string | undefined, kind: Notice['kind'], text: string, task?: Task): AppState {
-  if (!userId || userId === s.session.userId) return s;
+  if (!userId || userId === s.session.userId) {
+    return s;
+  }
+
   return { ...s, notices: [{ id: clock.id(), userId, at: clock.now(), kind, text, read: false, taskId: task?.id, projectId: task?.projectId }, ...s.notices].slice(0, 300) };
 }
 
@@ -42,6 +48,7 @@ export function notify(s: AppState, userId: string | undefined, kind: Notice['ki
 export function uiFor(s: AppState, userId: string): AppState['ui'] {
   const ws = s.workspaces.find(w => w.id === s.ui.workspaceId && w.members.some(m => m.userId === userId)) ?? s.workspaces.find(w => w.members.some(m => m.userId === userId));
   const proj = s.projects.find(p => p.id === s.ui.projectId && p.workspaceId === ws?.id) ?? s.projects.find(p => p.workspaceId === ws?.id);
+
   return { ...s.ui, workspaceId: ws?.id ?? '', projectId: proj?.id ?? '' };
 }
 
@@ -52,52 +59,91 @@ export function createTask(s: AppState, id: string, d: TaskDraft): AppState {
   const given = Object.fromEntries(Object.entries(d).filter(([, v]) => v !== undefined)) as typeof d; // `{ description: undefined }` must not erase the default
   const task: Task = { description: '', priority: 'medium', tags: [], subtasks: [], comments: [], attachments: [], archived: false, ...given, id, history: [], createdAt: clock.now(), createdBy: actor, completedAt: kind === 'done' ? clock.now() : undefined };
   let n = log({ ...s, tasks: [...s.tasks, task] }, id, 'created');
-  if (task.assigneeId) n = notify(n, task.assigneeId, 'assign', `${nameOf(n, actor)} assigned you “${task.title}”`, task);
+  if (task.assigneeId) {
+    n = notify(n, task.assigneeId, 'assign', `${nameOf(n, actor)} assigned you “${task.title}”`, task);
+  }
+
   return n;
 }
 
 export function updateTask(s: AppState, id: string, patch: TaskPatch): AppState {
-  const old = s.tasks.find(t => t.id === id); if (!old) return s;
+  const old = s.tasks.find(t => t.id === id); if (!old) {
+    return s;
+  }
   let n = mapTask(s, id, t => ({ ...t, ...patch }));
   const actor = nameOf(s, s.session.userId);
-  if ('title' in patch && patch.title !== old.title) n = log(n, id, 'renamed', `from “${old.title}”`);
-  if ('description' in patch && patch.description !== old.description) n = log(n, id, 'edited the description of');
-  if ('priority' in patch && patch.priority !== old.priority) n = log(n, id, 'changed priority of', `to ${PRIORITY_LABEL[patch.priority!]}`);
-  if ('assigneeId' in patch && patch.assigneeId !== old.assigneeId) {
-    if (patch.assigneeId) { n = log(n, id, 'assigned', `to ${nameOf(s, patch.assigneeId)}`); n = notify(n, patch.assigneeId, 'assign', `${actor} assigned you “${old.title}”`, old); }
-    else n = log(n, id, 'unassigned');
+  if ('title' in patch && patch.title !== old.title) {
+    n = log(n, id, 'renamed', `from “${old.title}”`);
   }
-  if ('due' in patch && patch.due !== old.due) n = log(n, id, patch.due ? 'set the due date of' : 'cleared the due date of', patch.due ? `to ${fmt(patch.due)}` : '');
-  if ('start' in patch && patch.start !== old.start) n = log(n, id, patch.start ? 'set the start date of' : 'cleared the start date of', patch.start ? `to ${fmt(patch.start)}` : '');
-  if ('tags' in patch && patch.tags!.join() !== old.tags.join()) n = log(n, id, 'updated tags on');
+  if ('description' in patch && patch.description !== old.description) {
+    n = log(n, id, 'edited the description of');
+  }
+  if ('priority' in patch && patch.priority !== old.priority) {
+    n = log(n, id, 'changed priority of', `to ${PRIORITY_LABEL[patch.priority!]}`);
+  }
+  if ('assigneeId' in patch && patch.assigneeId !== old.assigneeId) {
+    if (patch.assigneeId) {
+      n = log(n, id, 'assigned', `to ${nameOf(s, patch.assigneeId)}`); n = notify(n, patch.assigneeId, 'assign', `${actor} assigned you “${old.title}”`, old);
+    } else {
+      n = log(n, id, 'unassigned');
+    }
+  }
+  if ('due' in patch && patch.due !== old.due) {
+    n = log(n, id, patch.due ? 'set the due date of' : 'cleared the due date of', patch.due ? `to ${fmt(patch.due)}` : '');
+  }
+  if ('start' in patch && patch.start !== old.start) {
+    n = log(n, id, patch.start ? 'set the start date of' : 'cleared the start date of', patch.start ? `to ${fmt(patch.start)}` : '');
+  }
+  if ('tags' in patch && patch.tags!.join() !== old.tags.join()) {
+    n = log(n, id, 'updated tags on');
+  }
+
   return n;
 }
 
 /** Move a task to a column, before `beforeId` (or to the end). Owns the completedAt invariant and status notifications. */
 export function moveTask(s: AppState, id: string, columnId: string, beforeId: string | null): AppState {
-  const t = s.tasks.find(x => x.id === id); if (!t) return s;
-  const proj = s.projects.find(p => p.id === t.projectId); const col = proj?.columns.find(c => c.id === columnId); if (!proj || !col) return s;
+  const t = s.tasks.find(x => x.id === id); if (!t) {
+    return s;
+  }
+  const proj = s.projects.find(p => p.id === t.projectId); const col = proj?.columns.find(c => c.id === columnId); if (!proj || !col) {
+    return s;
+  }
   const changed = t.columnId !== columnId;
   const wasDone = proj.columns.find(c => c.id === t.columnId)?.kind === 'done';
   const completing = changed && col.kind === 'done' && !wasDone;
   const moved: Task = { ...t, columnId, completedAt: completing ? clock.now() : changed && col.kind !== 'done' ? undefined : t.completedAt };
   const rest = s.tasks.filter(x => x.id !== id);
   let idx = beforeId ? rest.findIndex(x => x.id === beforeId) : -1;
-  if (idx < 0) { let last = -1; rest.forEach((x, i) => { if (x.projectId === t.projectId && x.columnId === columnId) last = i; }); idx = last >= 0 ? last + 1 : rest.length; }
+  if (idx < 0) {
+    let last = -1; rest.forEach((x, i) => {
+      if (x.projectId === t.projectId && x.columnId === columnId) {
+        last = i;
+      }
+    }); idx = last >= 0 ? last + 1 : rest.length;
+  }
   rest.splice(idx, 0, moved);
   let n: AppState = { ...s, tasks: rest };
-  if (!changed) return n;
+  if (!changed) {
+    return n;
+  }
   const actor = nameOf(s, s.session.userId);
   n = completing ? log(n, id, 'completed') : log(n, id, 'moved', `to ${col.name}`);
   n = notify(n, t.assigneeId, completing ? 'complete' : 'status', completing ? `${actor} completed “${t.title}”` : `${actor} moved “${t.title}” to ${col.name}`, t);
-  if (completing && t.createdBy !== t.assigneeId) n = notify(n, t.createdBy, 'complete', `${actor} completed “${t.title}”`, t);
+  if (completing && t.createdBy !== t.assigneeId) {
+    n = notify(n, t.createdBy, 'complete', `${actor} completed “${t.title}”`, t);
+  }
+
   return n;
 }
 
 export function duplicateTask(s: AppState, id: string, nid: string): AppState {
-  const t = s.tasks.find(x => x.id === id); if (!t) return s;
+  const t = s.tasks.find(x => x.id === id); if (!t) {
+    return s;
+  }
   const copy: Task = { ...t, id: nid, title: `${t.title} (copy)`, comments: [], attachments: [], history: [], subtasks: t.subtasks.map(x => ({ ...x, id: clock.id(), done: false })), createdAt: clock.now(), createdBy: s.session.userId ?? t.createdBy, completedAt: undefined, archived: false };
   const tasks = [...s.tasks]; tasks.splice(s.tasks.findIndex(x => x.id === id) + 1, 0, copy);
+
   return log({ ...s, tasks }, nid, 'duplicated', `from “${t.title}”`);
 }
 export const archiveTask = (s: AppState, id: string, archived: boolean) => log(mapTask(s, id, t => ({ ...t, archived })), id, archived ? 'archived' : 'restored');
@@ -107,8 +153,11 @@ export const restoreTask = (s: AppState, t: Task): AppState => (s.tasks.some(x =
 export const addSubtask = (s: AppState, id: string, title: string) => mapTask(s, id, t => ({ ...t, subtasks: [...t.subtasks, { id: clock.id(), title, done: false }] }));
 export const removeSubtask = (s: AppState, id: string, sid: string) => mapTask(s, id, t => ({ ...t, subtasks: t.subtasks.filter(x => x.id !== sid) }));
 export function toggleSubtask(s: AppState, id: string, sid: string): AppState {
-  const st = s.tasks.find(x => x.id === id)?.subtasks.find(x => x.id === sid); if (!st) return s;
+  const st = s.tasks.find(x => x.id === id)?.subtasks.find(x => x.id === sid); if (!st) {
+    return s;
+  }
   const n = mapTask(s, id, t => ({ ...t, subtasks: t.subtasks.map(y => (y.id === sid ? { ...y, done: !y.done } : y)) }));
+
   return st.done ? n : log(n, id, 'checked off a subtask on', `“${st.title}”`);
 }
 
@@ -117,12 +166,19 @@ export const mentionedUserIds = (s: AppState, body: string): string[] =>
   Array.from(new Set(Array.from(body.matchAll(/@([\p{L}]+)/gu)).map(m => s.users.find(u => u.name.split(' ')[0].toLowerCase() === m[1].toLowerCase())?.id).filter(Boolean) as string[]));
 
 export function addComment(s: AppState, id: string, body: string): AppState {
-  const t = s.tasks.find(x => x.id === id); if (!t) return s;
+  const t = s.tasks.find(x => x.id === id); if (!t) {
+    return s;
+  }
   const actorId = s.session.userId ?? 'system'; const actor = nameOf(s, actorId);
   let n = log(mapTask(s, id, x => ({ ...x, comments: [...x.comments, { id: clock.id(), authorId: actorId, body, at: clock.now() }] })), id, 'commented on');
   const mentioned = mentionedUserIds(s, body);
-  mentioned.forEach(u => { n = notify(n, u, 'mention', `${actor} mentioned you in “${t.title}”`, t); });
-  if (t.assigneeId && !mentioned.includes(t.assigneeId)) n = notify(n, t.assigneeId, 'comment', `${actor} commented on “${t.title}”`, t);
+  mentioned.forEach(u => {
+    n = notify(n, u, 'mention', `${actor} mentioned you in “${t.title}”`, t);
+  });
+  if (t.assigneeId && !mentioned.includes(t.assigneeId)) {
+    n = notify(n, t.assigneeId, 'comment', `${actor} commented on “${t.title}”`, t);
+  }
+
   return n;
 }
 export const addAttachment = (s: AppState, id: string, a: Omit<Attachment, 'id' | 'at'>) =>
@@ -140,17 +196,23 @@ export function updateColumn(s: AppState, projectId: string, colId: string, patc
     const done = patch.kind === 'done'; const at = clock.now();
     n = { ...n, tasks: n.tasks.map(t => (t.projectId === projectId && t.columnId === colId ? { ...t, completedAt: done ? t.completedAt ?? at : undefined } : t)) };
   }
+
   return n;
 }
 export function deleteColumn(s: AppState, projectId: string, colId: string, moveTo: string): AppState {
   const target = s.projects.find(p => p.id === projectId)?.columns.find(c => c.id === moveTo);
   const n = { ...s, tasks: s.tasks.map(t => (t.projectId === projectId && t.columnId === colId ? { ...t, columnId: moveTo, completedAt: target?.kind === 'done' ? t.completedAt ?? clock.now() : undefined } : t)) };
+
   return mapProject(n, projectId, p => ({ ...p, columns: p.columns.filter(c => c.id !== colId) }));
 }
 export const moveColumn = (s: AppState, projectId: string, colId: string, beforeId: string | null) => mapProject(s, projectId, p => {
-  const col = p.columns.find(c => c.id === colId); if (!col || beforeId === colId) return p;
+  const col = p.columns.find(c => c.id === colId); if (!col || beforeId === colId) {
+    return p;
+  }
   const rest = p.columns.filter(c => c.id !== colId); const i = beforeId ? rest.findIndex(c => c.id === beforeId) : rest.length;
-  rest.splice(i < 0 ? rest.length : i, 0, col); return { ...p, columns: rest };
+  rest.splice(i < 0 ? rest.length : i, 0, col);
+
+  return { ...p, columns: rest };
 });
 
 /* ---------- projects, workspaces, people ---------- */
@@ -159,17 +221,25 @@ export const createProject = (s: AppState, id: string, workspaceId: string, name
 export const updateProject = (s: AppState, id: string, patch: Partial<Pick<Project, 'name' | 'description' | 'deadline'>>) => mapProject(s, id, p => ({ ...p, ...patch }));
 export function deleteProject(s: AppState, id: string): AppState {
   const projects = s.projects.filter(p => p.id !== id); const next = projects.find(p => p.workspaceId === s.ui.workspaceId);
+
   return { ...s, projects, tasks: s.tasks.filter(t => t.projectId !== id), proposals: s.proposals.filter(p => p.projectId !== id), activity: s.activity.filter(a => a.projectId !== id), ui: { ...s.ui, projectId: s.ui.projectId === id ? next?.id ?? '' : s.ui.projectId } };
 }
 export const createWorkspace = (s: AppState, id: string, name: string): AppState =>
   ({ ...s, workspaces: [...s.workspaces, { id, name, members: [{ userId: s.session.userId!, role: 'owner' }] }], ui: { ...s.ui, workspaceId: id, projectId: '' } });
 
 export function invite(s: AppState, workspaceId: string, email: string, role: Role): { state: AppState; error: string | null } {
-  const e = email.trim().toLowerCase(); const ws = s.workspaces.find(w => w.id === workspaceId); if (!ws) return { state: s, error: 'Workspace not found.' };
+  const e = email.trim().toLowerCase(); const ws = s.workspaces.find(w => w.id === workspaceId); if (!ws) {
+    return { state: s, error: 'Workspace not found.' };
+  }
   let user: User | undefined = s.users.find(u => u.email.toLowerCase() === e); let users = s.users;
-  if (user && ws.members.some(m => m.userId === user!.id)) return { state: s, error: 'That person is already in this workspace.' };
-  if (!user) { user = { id: 'u-' + clock.id(), name: e.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), email: e, pending: true }; users = [...users, user]; }
+  if (user && ws.members.some(m => m.userId === user!.id)) {
+    return { state: s, error: 'That person is already in this workspace.' };
+  }
+  if (!user) {
+    user = { id: 'u-' + clock.id(), name: e.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), email: e, pending: true }; users = [...users, user];
+  }
   const n = { ...s, users, workspaces: s.workspaces.map(w => (w.id === workspaceId ? { ...w, members: [...w.members, { userId: user!.id, role }] } : w)) };
+
   return { state: notify(n, user.id, 'invite', `${nameOf(s, s.session.userId)} added you to ${ws.name}`), error: null };
 }
 export const setRole = (s: AppState, workspaceId: string, userId: string, role: Role): AppState =>

@@ -12,7 +12,11 @@ const h = vi.hoisted(() => ({ checkInAction: vi.fn(), scanCodeAction: vi.fn() })
 type Api = ReturnType<typeof useCheckIn>;
 let api: Api | undefined;
 const actions = { checkIn: h.checkInAction, scanCode: h.scanCodeAction };
-function Probe() { api = useCheckIn(actions); return null; }
+function Probe() {
+  api = useCheckIn(actions);
+
+  return null;
+}
 
 const card = { person: { id: 'p-1', givenName: 'Ada', familyName: 'Lee', preferredName: null, status: 'valid' }, onSiteSince: null } as unknown as PersonCard;
 
@@ -24,7 +28,9 @@ describe('useCheckIn', () => {
     root = createRoot(document.body.appendChild(document.createElement('div')));
     act(() => root.render(<Probe />));
   });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = '';
+  });
 
   it('starts idle', () => {
     expect(api!.state.phase).toBe('idle');
@@ -36,13 +42,17 @@ describe('useCheckIn', () => {
   it('checks the person in with the validated input and records the answer', async () => {
     h.checkInAction.mockResolvedValueOnce({ kind: 'forbidden', message: 'No.' });
     act(() => api!.pickPerson(card));
-    await act(async () => { await api!.checkIn(card, 'search'); });
+    await act(async () => {
+      await api!.checkIn(card, 'search');
+    });
     expect(h.checkInAction).toHaveBeenCalledWith({ personId: 'p-1', method: 'search' });
     expect(api!.state.phase).toBe('failed');
   });
   it('passes an override reason through when given', async () => {
     h.checkInAction.mockResolvedValueOnce({ kind: 'forbidden', message: 'No.' });
-    await act(async () => { await api!.checkIn(card, 'qr', 'Early pickup agreed'); });
+    await act(async () => {
+      await api!.checkIn(card, 'qr', 'Early pickup agreed');
+    });
     expect(h.checkInAction).toHaveBeenCalledWith({ personId: 'p-1', method: 'qr', overrideReason: 'Early pickup agreed' });
   });
   it('clears back to idle', async () => {

@@ -33,12 +33,17 @@ export function buildTasks(specs: TaskSpec[], projects: Project[]): Task[] {
   const columnId = (projectId: string, slot: ColumnSlot) => {
     const project = projects.find(p => p.id === projectId);
     const column = project?.columns[slot];
-    if (!column) throw new Error(`Seed refers to a missing column ${slot} of project ${projectId}`);
+    if (!column) {
+      throw new Error(`Seed refers to a missing column ${slot} of project ${projectId}`);
+    }
+
     return column.id;
   };
+
   return specs.map((s, i) => {
     const created = s.extras.created ?? -(8 + (i % 12));
     const id = 't-' + (i + 1);
+
     return {
       id, projectId: s.project, columnId: columnId(s.project, s.slot), title: s.title,
       description: s.extras.desc ?? '', priority: s.priority, assigneeId: s.who,

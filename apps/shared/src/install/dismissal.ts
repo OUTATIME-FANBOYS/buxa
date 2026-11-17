@@ -21,7 +21,9 @@ export function browserStorage(): KeyValueStore | null {
 
 /** True when the store says the hint was dismissed. A store that throws counts as "not dismissed": the hint shows again, which is harmless. */
 export function readDismissed(store: KeyValueStore | null, key: string = INSTALL_HINT_KEY): boolean {
-  if (!store) return false;
+  if (!store) {
+    return false;
+  }
   try {
     return store.getItem(key) === '1';
   } catch {
@@ -31,9 +33,12 @@ export function readDismissed(store: KeyValueStore | null, key: string = INSTALL
 
 /** Remembers the dismissal. Returns false when the store refused, so the caller can keep the dismissal for this page view only. */
 export function writeDismissed(store: KeyValueStore | null, key: string = INSTALL_HINT_KEY): boolean {
-  if (!store) return false;
+  if (!store) {
+    return false;
+  }
   try {
     store.setItem(key, '1');
+
     return true;
   } catch {
     return false;

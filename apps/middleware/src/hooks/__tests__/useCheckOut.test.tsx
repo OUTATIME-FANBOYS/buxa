@@ -11,7 +11,11 @@ const h = vi.hoisted(() => ({ checkOutAction: vi.fn() }));
 type Api = ReturnType<typeof useCheckOut>;
 let api: Api | undefined;
 const actions = { checkOut: h.checkOutAction };
-function Probe() { api = useCheckOut('p-1', actions); return null; }
+function Probe() {
+  api = useCheckOut('p-1', actions);
+
+  return null;
+}
 
 describe('useCheckOut', () => {
   let root: Root;
@@ -21,7 +25,9 @@ describe('useCheckOut', () => {
     root = createRoot(document.body.appendChild(document.createElement('div')));
     act(() => root.render(<Probe />));
   });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+  afterEach(() => {
+    act(() => root.unmount()); document.body.innerHTML = '';
+  });
 
   it('starts closed and opens its panel on request', () => {
     expect(api!.state.phase).toBe('closed');
@@ -38,7 +44,9 @@ describe('useCheckOut', () => {
   it('sends the check-out for this person and records the answer', async () => {
     h.checkOutAction.mockResolvedValueOnce({ kind: 'forbidden', message: 'No.' });
     act(() => api!.open());
-    await act(async () => { await api!.submit({ collectedBy: null, overrideReason: null }); });
+    await act(async () => {
+      await api!.submit({ collectedBy: null, overrideReason: null });
+    });
     expect(h.checkOutAction).toHaveBeenCalledWith(expect.objectContaining({ personId: 'p-1' }));
     expect(api!.state.phase).toBe('failed');
   });

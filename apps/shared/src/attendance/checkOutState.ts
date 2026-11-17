@@ -51,8 +51,13 @@ export function checkOutReducer(state: CheckOutState, event: CheckOutEvent): Che
 }
 
 function answered(draft: CheckOutDraft, outcome: ActionOutcome<CheckOutResult>): CheckOutState {
-  if (outcome.kind !== 'ok') return { phase: 'failed', draft, message: outcome.message };
+  if (outcome.kind !== 'ok') {
+    return { phase: 'failed', draft, message: outcome.message };
+  }
   const result = outcome.value;
-  if (result.ok) return { phase: 'done', entry: result.entry };
+  if (result.ok) {
+    return { phase: 'done', entry: result.entry };
+  }
+
   return { phase: 'refused', draft, refusal: result };
 }

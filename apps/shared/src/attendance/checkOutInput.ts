@@ -6,13 +6,17 @@ import type { CheckOutDraft } from './checkOutState';
  * When the screen cannot tell (null), it does not block: the server answers with what is missing.
  */
 export function canSubmitCheckOut(minor: boolean | null, draft: CheckOutDraft): boolean {
-  if (minor !== true) return true;
+  if (minor !== true) {
+    return true;
+  }
+
   return draft.collectedBy !== null || hasText(draft.overrideReason);
 }
 
 /** The Server Action's input for one row. The override reason is sent trimmed, and only when there is one. */
 export function checkOutInputFor(personId: string, draft: CheckOutDraft): CheckOutInput {
   const reason = draft.overrideReason?.trim() ?? '';
+
   return {
     personId,
     ...(draft.collectedBy ? { collectedByPersonId: draft.collectedBy } : {}),

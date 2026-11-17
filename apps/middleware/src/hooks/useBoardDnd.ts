@@ -28,9 +28,16 @@ export function useBoardDnd(project: Project, tasks: Task[], manual: boolean) {
   }));
   const grab = useCallback((e: React.PointerEvent<HTMLElement>, id: string) => dragger.grab(e, id), [dragger]);
   useEffect(() => {
-    const block = (e: TouchEvent) => { if (dragger.active()) e.preventDefault(); };
+    const block = (e: TouchEvent) => {
+      if (dragger.active()) {
+        e.preventDefault();
+      }
+    };
     addEventListener('touchmove', block, { passive: false });
-    return () => { removeEventListener('touchmove', block); dragger.destroy(); };
+
+    return () => {
+      removeEventListener('touchmove', block); dragger.destroy();
+    };
   }, [dragger]);
 
   const columnDrag = {
@@ -39,21 +46,28 @@ export function useBoardDnd(project: Project, tasks: Task[], manual: boolean) {
     },
     end: () => dispatch({ type: 'cleared' }),
     over(e: React.DragEvent<HTMLElement>, col: Column) {
-      if (dnd.mode !== 'column' || dnd.id === col.id) return;
+      if (dnd.mode !== 'column' || dnd.id === col.id) {
+        return;
+      }
       e.preventDefault(); e.dataTransfer.dropEffect = 'move';
       const r = e.currentTarget.getBoundingClientRect();
       dispatch({ type: 'columnOver', over: { id: col.id, side: e.clientX < r.left + r.width / 2 ? 'l' : 'r' } });
     },
     drop(e: React.DragEvent<HTMLElement>, col: Column) {
-      if (dnd.mode !== 'column' || !dnd.over) return;
+      if (dnd.mode !== 'column' || !dnd.over) {
+        return;
+      }
       e.preventDefault();
       const i = project.columns.findIndex(c => c.id === col.id);
       actions.moveColumn(project.id, dnd.id, dnd.over.side === 'l' ? col.id : project.columns[i + 1]?.id ?? null);
       dispatch({ type: 'cleared' });
     },
     leave(e: React.DragEvent<HTMLElement>, col: Column) {
-      if (!e.currentTarget.contains(e.relatedTarget as Node)) dispatch({ type: 'columnLeft', id: col.id });
+      if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+        dispatch({ type: 'columnLeft', id: col.id });
+      }
     },
   };
+
   return { dnd, scroller, grab, columnDrag };
 }

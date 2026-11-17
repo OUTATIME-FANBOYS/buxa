@@ -7,13 +7,19 @@ import { loadState, storage } from '../persistence';
 const store = new Map<string, string>();
 const stub = {
   getItem: (k: string) => store.get(k) ?? null,
-  setItem: (k: string, v: string) => { store.set(k, v); },
-  removeItem: (k: string) => { store.delete(k); },
+  setItem: (k: string, v: string) => {
+    store.set(k, v);
+  },
+  removeItem: (k: string) => {
+    store.delete(k);
+  },
   clear: () => store.clear(),
 };
 
 describe('state persistence', () => {
-  beforeEach(() => { vi.stubGlobal('localStorage', stub); store.clear(); });
+  beforeEach(() => {
+    vi.stubGlobal('localStorage', stub); store.clear();
+  });
   afterEach(() => vi.unstubAllGlobals());
 
   it('loads the saved state, normalised, when the current version is stored', () => {

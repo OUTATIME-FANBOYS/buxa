@@ -4,7 +4,10 @@ import { checked, dropBlank, field, fieldAll, parseWith } from '../parse';
 
 const form = (entries: [string, string | File][]) => {
   const data = new FormData();
-  for (const [k, v] of entries) data.append(k, v);
+  for (const [k, v] of entries) {
+    data.append(k, v);
+  }
+
   return data;
 };
 

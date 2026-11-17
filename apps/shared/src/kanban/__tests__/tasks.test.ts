@@ -17,7 +17,9 @@ describe('task priorities', () => {
 });
 
 describe('dueInfo', () => {
-  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date(2027, 6, 10, 12)); });
+  beforeEach(() => {
+    vi.useFakeTimers(); vi.setSystemTime(new Date(2027, 6, 10, 12));
+  });
   afterEach(() => vi.useRealTimers());
   it('has no info without a due date', () => {
     expect(dueInfo(undefined, 'open')).toBeNull();
@@ -35,7 +37,9 @@ describe('dueInfo', () => {
 });
 
 describe('matchesFilter', () => {
-  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date(2027, 6, 10, 12)); });
+  beforeEach(() => {
+    vi.useFakeTimers(); vi.setSystemTime(new Date(2027, 6, 10, 12));
+  });
   afterEach(() => vi.useRealTimers());
   const f = (over: Partial<Filter>): Filter => ({ ...emptyFilter, ...over });
   it('matches the text query against title and description, case-insensitively', () => {
