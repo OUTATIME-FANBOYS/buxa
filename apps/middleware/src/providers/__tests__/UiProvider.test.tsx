@@ -53,8 +53,10 @@ describe('UiProvider', () => {
     expect(dialog.textContent).toContain('This cannot be undone.');
     const confirm = Array.from(dialog.querySelectorAll('button')).find((b) => b.textContent === 'Delete')!;
     expect(confirm.className).toContain('btn-danger');
-    await act(async () => {
+    await act(() => {
       confirm.click();
+
+      return Promise.resolve();
     });
     expect(answer).toBe(true);
   });
@@ -66,8 +68,10 @@ describe('UiProvider', () => {
       });
     });
     const cancel = Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Cancel')!;
-    await act(async () => {
+    await act(() => {
       cancel.click();
+
+      return Promise.resolve();
     });
     expect(answer).toBe(false);
   });

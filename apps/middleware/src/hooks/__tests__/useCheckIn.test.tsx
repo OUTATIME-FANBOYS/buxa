@@ -56,7 +56,7 @@ describe('useCheckIn', () => {
     });
     expect(h.checkInAction).toHaveBeenCalledWith({ personId: 'p-1', method: 'qr', overrideReason: 'Early pickup agreed' });
   });
-  it('clears back to idle', async () => {
+  it('clears back to idle', () => {
     act(() => api!.pickPerson(card));
     act(() => api!.clear());
     expect(api!.state.phase).toBe('idle');
