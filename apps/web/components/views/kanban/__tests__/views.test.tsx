@@ -88,12 +88,19 @@ describe('kanban views', () => {
     h.store = store();
   });
 
-  it('Settings lists the name and email, time format, agents, data and shortcuts sections, with no Appearance', () => {
+  it('Settings lists the name and email, time format, appearance, agents, data and shortcuts cards, with no Camp clock', () => {
     const html = page(<Settings />);
-    for (const heading of ['Name and email', 'Time format', 'Agents', 'Your data', 'Keyboard shortcuts']) {
+    for (const heading of [
+      'Name and email',
+      'Time format',
+      'Appearance',
+      'Agents',
+      'Your data',
+      'Keyboard shortcuts',
+    ]) {
       expect(html).toContain(heading);
     }
-    expect(html).not.toContain('Appearance');
+    expect(html).not.toContain('Camp clock');
     expect(html).toContain('>Export JSON</button>');
   });
   it('Projects offers to start the first project when there are none', () => {

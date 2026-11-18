@@ -1,17 +1,16 @@
 'use client';
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import type { ClockFormat, User } from '@buxa/contracts';
+import { useRef, useState } from 'react';
+import type { User } from '@buxa/contracts';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Button, Segmented } from '@/components/elements';
+import { Button } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { ROUTES } from '@/config/routes';
 import { AgentDialog } from '@/components/components/kanban/dialogs';
 import { ResetDemoButton } from '@/components/components/kanban';
-import { ArchivedCampsCard, DangerZone, UpdateDisplayNameDialog } from '@/components/components/camp';
+import { AppearanceCard, NameEmailCard, TimeFormatCard } from '@/components/components/settings';
+import { ArchivedCampsCard, DangerZone } from '@/components/components/camp';
 import type { ArchivedCamp } from '@/actions/camp';
-import { updateTimeFormatAction } from '@/actions/account';
-import { browserClockFormat, localTimeZone } from '@buxa/shared/clockPreference';
 import { fullNameOf } from '@buxa/shared/names';
 
 /** The camp the settings are for. `canDelete` is the owner's right (org:delete); an archived camp shows no danger zone. */
@@ -22,23 +21,16 @@ export interface SettingsCamp {
   archived: boolean;
 }
 
-const TIME_FORMATS: { value: ClockFormat; label: string }[] = [
-  { value: '12h', label: '12-hour (9:05 AM)' },
-  { value: '24h', label: '24-hour (09:05)' },
-];
-
 /**
- * Every setting is a tile in one grid. The name and email tile spans the full width, the time format and camp clock tiles share
- * a row, and the danger zone spans the bottom (see styles/features/settings.css). On a phone every tile stacks.
- * Appearance (light, dark, system) is not here: it is in the account menu. `clock` is the camp clock panel.
+ * Settings is one grid of cards. The first three are the person's own: Name and email (full width), then Time format and
+ * Appearance side by side. They are followed by the Agents, data and shortcut cards, then archived camps and the danger zone.
+ * On a phone every card stacks.
  */
 export function Settings({
-  clock,
   camp,
   user,
   archivedCamps = [],
 }: {
-  clock?: ReactNode;
   camp?: SettingsCamp;
   user?: User;
   archivedCamps?: readonly ArchivedCamp[];
@@ -47,32 +39,17 @@ export function Settings({
   const { toast } = useUi();
   const file = useRef<HTMLInputElement>(null);
   const [addAgent, setAddAgent] = useState(false);
-  const [editName, setEditName] = useState(false);
-  const [browser, setBrowser] = useState<ClockFormat>('24h');
-  const [zone, setZone] = useState('');
-  useEffect(() => {
-    setBrowser(browserClockFormat());
-    setZone(localTimeZone());
-  }, [setBrowser, setZone]);
   const on = s.ui.agentsEnabled;
   const hasAgents = s.agents.length > 0;
   const firstName = user?.firstName ?? me?.name.split(' ')[0] ?? '';
   const lastName = user?.lastName ?? null;
-  const fullName = user ? fullNameOf(user.firstName, user.lastName) : (me?.name ?? '');
-  const clockFormat: ClockFormat = user?.clockFormat ?? browser;
+  const email = user?.email ?? me?.email ?? '';
 
   // The name is saved to the signed-in account first: the greeting, the account menu and the team list read it from there.
   // Only then does the board's own copy change, so it never shows a name the account does not have.
-  const savedName = (saved: { firstName: string; lastName: string | null }, title: string) => {
-    actions.updateProfile({ name: fullNameOf(saved.firstName, saved.lastName), title: title.trim() || undefined });
+  const savedName = (saved: { firstName: string; lastName: string | null }) => {
+    actions.updateProfile({ name: fullNameOf(saved.firstName, saved.lastName), title: me?.title });
     toast('Profile saved');
-  };
-  const chooseTimeFormat = async (format: ClockFormat) => {
-    const saved = await updateTimeFormatAction({ clockFormat: format });
-    toast(
-      saved.status === 'error' ? saved.message : 'Time format saved',
-      saved.status === 'error' ? { tone: 'error' } : undefined,
-    );
   };
   const exportJson = () => {
     const url = URL.createObjectURL(new Blob([actions.exportData()], { type: 'application/json' }));
@@ -91,51 +68,15 @@ export function Settings({
         </div>
       </header>
       <div className="settings-grid">
-        <section className="panel settings-tile settings-tile--full" id="profile" aria-labelledby="name-email-title">
-          <h2 id="name-email-title">Name and email</h2>
-          <dl className="settings-facts">
-            <div>
-              <dt>Name</dt>
-              <dd>{fullName || '—'}</dd>
-            </div>
-            <div>
-              <dt>Email</dt>
-              <dd>
-                {user?.email ?? me?.email ?? ''}
-                <span className="muted settings-note">
-                  {' '}
-                  Your email comes from your sign-in and can’t be changed here.
-                </span>
-              </dd>
-            </div>
-          </dl>
-          <div>
-            <Button onClick={() => setEditName(true)}>Update display name</Button>
-          </div>
-          {editName && user && (
-            <UpdateDisplayNameDialog
-              firstName={firstName}
-              lastName={lastName}
-              title={me?.title ?? ''}
-              onClose={() => setEditName(false)}
-              onSaved={(saved, title) => savedName(saved, title)}
-            />
-          )}
-        </section>
-        <section className="panel settings-tile settings-tile--half" aria-labelledby="time-format-title">
-          <h2 id="time-format-title">Time format</h2>
-          <p className="muted">
-            How times show for you. Until you choose, your browser’s setting is used
-            {zone ? ` (${zone}).` : '.'}
-          </p>
-          <Segmented<ClockFormat>
-            label="Time format"
-            value={clockFormat}
-            onChange={format => void chooseTimeFormat(format)}
-            options={TIME_FORMATS}
-          />
-        </section>
-        {clock && <section className="panel settings-tile settings-tile--half">{clock}</section>}
+        <NameEmailCard
+          className="settings-tile--full"
+          firstName={firstName}
+          lastName={lastName}
+          email={email}
+          onSaved={savedName}
+        />
+        <TimeFormatCard className="settings-tile--half" clockFormat={user?.clockFormat ?? undefined} />
+        <AppearanceCard className="settings-tile--half" />
         <section className="panel settings-tile">
           <h2>Agents</h2>
           <p className="muted">
