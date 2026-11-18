@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { AppState } from '@buxa/shared';
 import * as G from '@buxa/shared/kanban/gateway';
 import type { Store } from './store';
-import { settle } from '@buxa/domain';
+import { settle, requirePresent } from '@buxa/domain';
 
 const INSTRUCTIONS = `You are connected to Buxa, a Kanban board shared with people and other agents.
 - Call whoami first: it lists the projects you may use and what you are allowed to do.
@@ -44,7 +44,9 @@ export function buildMcp(store: Store, agentId: string): McpServer {
       return r.error ? s : r.state;
     }, 'agent:' + agentId);
 
-    return r!.error ? err(r!.error) : text(r!.value);
+    const out = requirePresent(r, 'r');
+
+    return out.error ? err(out.error) : text(out.value);
   };
 
   server.registerTool('whoami', { description: 'Your identity, the projects you may use, and exactly what you are allowed to do. Call this first.' },
