@@ -1,20 +1,8 @@
 /* Settings: every setting is a card in one grid that fills the content area.
- * One column on a phone, two from 900px (the sidebar is still open), three from 1280px. Cards share .panel, so padding and style match.
+ * One column on a phone, two from 900px (the sidebar is still open). Cards share .panel, so padding and style match.
  * Cards in a row stretch to the same height. */
 .page.settings-page {
   max-width: none;
-}
-/* The camp clock sits inside the Appearance card, under the theme control, with a rule between them. */
-.settings-sub {
-  margin-top: var(--s4);
-  padding-top: var(--s4);
-  border-top: 1px solid var(--line);
-  display: grid;
-  gap: var(--s3);
-}
-.settings-sub h3 {
-  margin: 0;
-  font-size: 15px;
 }
 /* Segmented controls fill their card and never run past its border: the options share the width and wrap their labels. */
 .settings-page .segmented {
@@ -42,20 +30,47 @@
   gap: var(--s5);
   align-items: stretch;
 }
+/* From 900px a tile is half the width (two columns). Below that every tile stacks, so the half tiles fill the phone width. */
 @media (min-width: 900px) {
   .settings-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-@media (min-width: 1280px) {
-  .settings-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+/* Full-width tiles span both columns: the name and email tile. */
+.settings-grid > .settings-tile--full {
+  grid-column: 1 / -1;
+}
+/* Half-width tiles take one column each from 900px. */
+.settings-grid > .settings-tile--half {
+  grid-column: auto;
+  min-width: 0;
 }
 /* Danger zone: spans the whole grid row at the bottom, with the destructive colour on its border. */
 .settings-grid > .danger-zone {
   grid-column: 1 / -1;
   border-color: var(--danger);
+}
+/* Name and email: label and value pairs, the email with its note underneath on a phone. */
+.settings-facts {
+  margin: 0;
+  display: grid;
+  gap: var(--s3);
+}
+.settings-facts > div {
+  display: grid;
+  gap: var(--s1);
+}
+.settings-facts dt {
+  font-size: 13px;
+  color: var(--muted);
+}
+.settings-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.settings-note {
+  display: block;
+  font-size: 13px;
 }
 /* Archived camps: a plain read-only list, name and date on one line. */
 .archived-list {

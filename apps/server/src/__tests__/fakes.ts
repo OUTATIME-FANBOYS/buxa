@@ -23,6 +23,19 @@ import { InMemoryDatabase, type AuditRecord } from '../people/InMemoryDatabase';
 import type { Repositories } from '../repositories';
 import { EmailInUseError, type UserRepository } from '../users/UserRepository';
 
+/** The first word of a full name is the first name, the rest the last name (migration 0017 does the same in SQL). */
+function splitName(name: string): { firstName: string; lastName: string | null } {
+  const trimmed = name.trim();
+  const firstName = trimmed.split(/\s+/)[0] ?? '';
+
+  return { firstName, lastName: trimmed.slice(firstName.length).trim() || null };
+}
+
+/** The User the repository returns: the stored fields, without the auth id. */
+function publicUser(u: { id: string; email: string; name: string; firstName: string; lastName: string | null; clockFormat: ClockFormat | null }): User {
+  return { id: u.id, email: u.email, name: u.name, firstName: u.firstName, lastName: u.lastName, clockFormat: u.clockFormat };
+}
+
 interface StoredOrg {
   id: string;
   name: string;
@@ -51,34 +64,44 @@ export class InMemoryStore implements UserRepository, OrgRepository {
   async upsertFromIdentity(identity: Identity): Promise<User> {
     const existing = [...this.users.values()].find(u => u.authId === identity.authId);
     if (existing) {
-      return { id: existing.id, email: existing.email, name: existing.name };
+      return publicUser(existing);
     }
     if ([...this.users.values()].some(u => u.email === identity.email)) {
       throw new EmailInUseError();
     }
-    const user = { id: randomUUID(), authId: identity.authId, email: identity.email, name: identity.name };
+    const user = { ...splitName(identity.name), id: randomUUID(), authId: identity.authId, email: identity.email, name: identity.name, clockFormat: null };
     this.users.set(user.id, user);
 
-    return { id: user.id, email: user.email, name: user.name };
+    return publicUser(user);
   }
-  async updateName(userId: string, name: string): Promise<User> {
+  async updateName(userId: string, name: { firstName: string; lastName: string | null }): Promise<User> {
     const user = this.users.get(userId);
     if (!user) {
       throw new Error('no user to rename');
     }
-    user.name = name;
+    Object.assign(user, { firstName: name.firstName, lastName: name.lastName, name: [name.firstName, name.lastName].filter(Boolean).join(' ') });
 
-    return { id: user.id, email: user.email, name: user.name };
+    return publicUser(user);
+  }
+  async setClockFormat(userId: string, clockFormat: ClockFormat): Promise<User> {
+    const user = this.users.get(userId);
+    if (!user) {
+      throw new Error('no user to update');
+    }
+    user.clockFormat = clockFormat;
+
+    return publicUser(user);
   }
   async roleIn(orgId: string, userId: string): Promise<Membership['role'] | null> {
     return this.members.find(m => m.orgId === orgId && m.userId === userId)?.role ?? null;
   }
-  async renameMember(orgId: string, userId: string, name: string): Promise<User | null> {
+  async renameMember(orgId: string, userId: string, name: string): Promise<Pick<User, 'id' | 'email' | 'name'> | null> {
     const user = this.users.get(userId);
     const inCamp = this.members.some(m => m.orgId === orgId && m.userId === userId);
     if (!user || !inCamp) {
       return null;
     }
+    Object.assign(user, splitName(name));
     user.name = name;
 
     return { id: user.id, email: user.email, name: user.name };

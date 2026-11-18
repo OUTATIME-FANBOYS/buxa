@@ -115,7 +115,7 @@ describe('getCurrentCamp', () => {
   it('uses the selected camp when the person belongs to it', async () => {
     const { memberships } = await personWithCamps(data, sub, ['First', 'Second']);
     env.store = new FakeCookieStore({ [CAMP_COOKIE]: memberships[1].orgId });
-    const session = { user: { id: 'u', email: 'a@b.c', name: 'A' }, memberships };
+    const session = { user: { id: 'u', email: 'a@b.c', name: 'A', firstName: 'A', lastName: null, clockFormat: null }, memberships };
     expect((await getCurrentCamp(session))?.name).toBe('Second');
   });
 
@@ -123,14 +123,14 @@ describe('getCurrentCamp', () => {
     const mine = await personWithCamps(data, sub, ['Mine']);
     const theirs = await personWithCamps(data, crypto.randomUUID(), ['Theirs']);
     env.store = new FakeCookieStore({ [CAMP_COOKIE]: theirs.memberships[0].orgId });
-    const camp = await getCurrentCamp({ user: { id: 'u', email: 'a@b.c', name: 'A' }, memberships: mine.memberships });
+    const camp = await getCurrentCamp({ user: { id: 'u', email: 'a@b.c', name: 'A', firstName: 'A', lastName: null, clockFormat: null }, memberships: mine.memberships });
     expect(camp?.name).toBe('Mine');
   });
 
   it('opens an archived camp read-only when the cookie selects it, and never as the default', async () => {
     const { memberships } = await personWithCamps(data, sub, ['Active']);
     const archived = { orgId: crypto.randomUUID(), role: 'staff' as const, name: 'Old Camp', slug: 'old-camp' };
-    const session = { user: { id: 'u', email: 'a@b.c', name: 'A' }, memberships, archivedMemberships: [archived] };
+    const session = { user: { id: 'u', email: 'a@b.c', name: 'A', firstName: 'A', lastName: null, clockFormat: null }, memberships, archivedMemberships: [archived] };
 
     env.store = new FakeCookieStore({ [CAMP_COOKIE]: archived.orgId });
     expect(await getCurrentCamp(session)).toEqual({ ...archived, archived: true });
@@ -145,7 +145,7 @@ describe('getCurrentCamp', () => {
 
   it('falls back to the first camp when the cookie is junk or missing', async () => {
     const { memberships } = await personWithCamps(data, sub, ['First', 'Second']);
-    const session = { user: { id: 'u', email: 'a@b.c', name: 'A' }, memberships };
+    const session = { user: { id: 'u', email: 'a@b.c', name: 'A', firstName: 'A', lastName: null, clockFormat: null }, memberships };
     env.store = new FakeCookieStore({ [CAMP_COOKIE]: 'not-a-camp' });
     expect((await getCurrentCamp(session))?.name).toBe('First');
     env.store = new FakeCookieStore();
@@ -154,7 +154,7 @@ describe('getCurrentCamp', () => {
 
   it('is null when the person has no camp yet', async () => {
     env.store = new FakeCookieStore({ [CAMP_COOKIE]: crypto.randomUUID() });
-    expect(await getCurrentCamp({ user: { id: 'u', email: 'a@b.c', name: 'A' }, memberships: [] })).toBeNull();
+    expect(await getCurrentCamp({ user: { id: 'u', email: 'a@b.c', name: 'A', firstName: 'A', lastName: null, clockFormat: null }, memberships: [] })).toBeNull();
   });
 });
 
@@ -183,7 +183,7 @@ describe('rememberCamp', () => {
 describe('toActor', () => {
   it('describes the person in the chosen camp', () => {
     const camp = { orgId: 'o', role: 'admin' as const, name: 'N', slug: 's', archived: false };
-    expect(toActor({ user: { id: 'u', email: 'a@b.c', name: 'A' }, memberships: [camp] }, camp)).toEqual({
+    expect(toActor({ user: { id: 'u', email: 'a@b.c', name: 'A', firstName: 'A', lastName: null, clockFormat: null }, memberships: [camp] }, camp)).toEqual({
       userId: 'u',
       orgId: 'o',
       role: 'admin',
@@ -193,6 +193,6 @@ describe('toActor', () => {
 
   it('marks the actor of an archived camp, so every write is refused', () => {
     const camp = { orgId: 'o', role: 'owner' as const, name: 'N', slug: 's', archived: true };
-    expect(toActor({ user: { id: 'u', email: 'a@b.c', name: 'A' }, memberships: [] }, camp).archived).toBe(true);
+    expect(toActor({ user: { id: 'u', email: 'a@b.c', name: 'A', firstName: 'A', lastName: null, clockFormat: null }, memberships: [] }, camp).archived).toBe(true);
   });
 });

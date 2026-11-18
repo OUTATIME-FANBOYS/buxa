@@ -86,7 +86,10 @@ const session_ = (id: string, classId: string, startsAt: string, location = 'Ran
 
 const as = (role: Role) => {
   const camp: Membership = { orgId: 'o1', role, name: 'Lake Camp', slug: 'lake' };
-  session.current = { user: { id: 'u1', email: 'priya@example.com', name: 'Priya Nair' }, memberships: [camp] };
+  session.current = {
+    user: { id: 'u1', email: 'priya@example.com', name: 'Priya Nair', firstName: 'Priya', lastName: 'Nair', clockFormat: null },
+    memberships: [camp],
+  };
   session.camp = camp;
 };
 

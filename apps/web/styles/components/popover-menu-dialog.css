@@ -74,6 +74,40 @@
   margin-left: auto;
   color: var(--accent);
 }
+/* A submenu (Appearance, Timezone): its trigger opens a group of choices indented under it, each with a check on the current one. */
+.menu .menu-sub-trigger .menu-chev {
+  margin-left: auto;
+  color: var(--muted);
+}
+.menu .menu-sub-trigger .menu-check {
+  margin-left: auto;
+}
+.menu .menu-sub {
+  display: grid;
+  padding-left: var(--s4);
+}
+.menu [role='menuitemradio'] {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  height: 32px;
+  padding: 0 var(--s3);
+  border: 0;
+  border-radius: var(--r-1);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  width: 100%;
+  cursor: pointer;
+}
+.menu [role='menuitemradio']:hover,
+.menu [role='menuitemradio']:focus-visible {
+  background: var(--hover);
+  outline: none;
+}
 .menu-head {
   margin: 0;
   padding: var(--s2) var(--s3);

@@ -9,7 +9,6 @@ import { campContext } from './campContext';
 import type { CampHome, CheckInsByDay, MembershipStatusCounts, UpcomingSession } from '@buxa/shared/camp/campHomeTypes';
 export type { CampHome, UpcomingSession };
 
-const firstNameOf = (name: string): string => name.trim().split(/\s+/)[0] ?? '';
 /** How many upcoming sessions the Home page lists. */
 const UPCOMING_LIMIT = 5;
 /**
@@ -57,7 +56,7 @@ export async function loadCampHome(): Promise<CampHome> {
   return {
     campId: org.id,
     name: org.name,
-    firstName: firstNameOf(session.user.name),
+    firstName: session.user.firstName,
     canRename: can(actor, 'org:update'),
     people: list ? list.length : null,
     onSite: onSiteEntries ? onSiteEntries.length : null,

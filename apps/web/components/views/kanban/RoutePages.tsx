@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
+import type { User } from '@buxa/contracts';
 import type { CampHome } from '@buxa/shared/camp/campHomeTypes';
 import { ROUTES, boardPath } from '@/config/routes';
 import { Empty } from '@/components/components/export';
@@ -92,11 +93,13 @@ export function ReportsPage() {
 export function SettingsPage({
   clock,
   camp,
+  user,
   archivedCamps,
 }: {
   clock?: ReactNode;
   camp?: SettingsCamp;
+  user?: User;
   archivedCamps?: readonly ArchivedCamp[];
 }) {
-  return <Settings clock={clock} camp={camp} archivedCamps={archivedCamps} />;
+  return <Settings clock={clock} camp={camp} user={user} archivedCamps={archivedCamps} />;
 }

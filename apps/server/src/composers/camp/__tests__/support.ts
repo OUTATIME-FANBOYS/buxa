@@ -44,7 +44,14 @@ export function startWorld() {
       }
 
       return {
-        user: { id: user.id, email: user.email, name: user.name },
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          clockFormat: user.clockFormat,
+        },
         memberships: await store.membershipsOf(userId),
       };
     },
