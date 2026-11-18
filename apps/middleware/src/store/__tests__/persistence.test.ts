@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { THEME_KEY } from '@buxa/shared/config/theme';
 import { buildSeed } from '@buxa/shared';
 import { loadState, storage } from '../persistence';
+import { requirePresent } from '@buxa/domain';
 
 // Node has its own localStorage global; the store here is an in-memory stub for every test.
 const store = new Map<string, string>();
@@ -55,9 +56,9 @@ describe('state persistence', () => {
     store.set('tessera.state.v1', '{}');
     const seed = buildSeed();
     storage.save(seed);
-    const saved: unknown = JSON.parse(store.get('buxa.state.v1')!);
+    const saved: unknown = JSON.parse(requirePresent(store.get('buxa.state.v1'), "store.get('buxa.state.v1')"));
     expect(saved).toMatchObject({ version: 1 });
-    expect(JSON.parse(store.get(THEME_KEY)!)).toBe(seed.ui.theme);
+    expect(JSON.parse(requirePresent(store.get(THEME_KEY), 'store.get(THEME_KEY)'))).toBe(seed.ui.theme);
     expect(store.has('tessera.state.v1')).toBe(false);
   });
 });
