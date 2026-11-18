@@ -1,0 +1,31 @@
+name: Issue PR check
+# Warns about open board issues that no pull request mentions. It runs weekly and on demand, and only warns,
+# so it never blocks a merge. Pull requests get their own check (pr-board-link.yml).
+on:
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  check:
+    name: Open issues have a PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Warn about open issues with no PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh issue list --repo "$REPO" --state open --limit 500 --json number,title --jq '.[] | "\(.number)\t\(.title)"' > issues.tsv
+          gh pr list --repo "$REPO" --state all --limit 1000 --json title,body --jq '.[] | "\(.title)\n\(.body)"' > prs.txt
+          while IFS=$'\t' read -r number title; do
+            if ! grep -qE "#${number}([^0-9]|$)" prs.txt; then
+              echo "::warning title=Open issue with no PR::#${number} ${title} has no pull request that mentions it."
+            fi
+          done < issues.tsv
+          echo "Checked open issues against pull requests."
