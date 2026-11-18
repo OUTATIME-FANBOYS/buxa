@@ -98,7 +98,8 @@ export function createApp(opts: AppOptions) {
   }, 25_000);
   beat.unref();
 
-  const server = http.createServer(async (req, res) => {
+  // handleRequest catches every error itself, so the promise it returns never rejects.
+  const handleRequest = async (req: http.IncomingMessage, res: http.ServerResponse) => {
     try {
       const url = new URL(req.url ?? '/', 'http://local');
       // DNS-rebinding guard: only answer requests addressed to this machine.
@@ -148,6 +149,9 @@ export function createApp(opts: AppOptions) {
         console.error(e);
       }
     }
+  };
+  const server = http.createServer((req, res) => {
+    void handleRequest(req, res);
   });
 
   /* ---------- MCP: bearer token -> agent -> tools bound to that agent ---------- */

@@ -136,15 +136,17 @@ export function Settings({
                   type="file"
                   accept="application/json"
                   hidden
-                  onChange={async e => {
-                    const f = e.target.files?.[0];
-                    if (!f) {
-                      return;
-                    }
-                    const m = actions.importData(await f.text());
-                    toast(m ?? 'Data imported', m ? { tone: 'error' } : undefined);
-                    e.target.value = '';
-                  }}
+                  onChange={e =>
+                    void (async () => {
+                      const f = e.target.files?.[0];
+                      if (!f) {
+                        return;
+                      }
+                      const m = actions.importData(await f.text());
+                      toast(m ?? 'Data imported', m ? { tone: 'error' } : undefined);
+                      e.target.value = '';
+                    })()
+                  }
                 />
                 <ResetDemoButton />
               </>

@@ -9,7 +9,13 @@ const MAX_FILE = 1024 * 1024;
 const readAsDataUrl = (f: File) =>
   new Promise<string>((res, rej) => {
     const r = new FileReader();
-    r.onload = () => res(String(r.result));
+    r.onload = () => {
+      if (typeof r.result === 'string') {
+        res(r.result);
+      } else {
+        rej(new Error('read failed'));
+      }
+    };
     r.onerror = () => rej(new Error('read failed'));
     r.readAsDataURL(f);
   });

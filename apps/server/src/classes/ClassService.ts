@@ -34,7 +34,7 @@ export interface ClassService {
 export interface ClassServiceDeps {
   repo: ClassRepository;
   /** The camp's IANA zone (orgs.timezone). Used for the camp's local day and for wording refusals. */
-  timezoneOf(orgId: string): Promise<string>;
+  timezoneOf: (orgId: string) => Promise<string>;
 }
 
 export function createClassService({ repo, timezoneOf }: ClassServiceDeps): ClassService {
