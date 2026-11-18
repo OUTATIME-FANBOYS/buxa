@@ -25,7 +25,7 @@ describe('sign-in background tokens', () => {
     }
   });
 
-  it('the dark theme ([data-theme="dark"]) defines the same tokens, so the page switches with the theme', () => {
+  it('the dark theme ([data-theme=dark]) defines the same tokens, so the page switches with the theme', () => {
     const dark = block("[data-theme='dark']");
     for (const token of BACKGROUND_TOKENS) {
       expect(dark, token).toContain(`${token}:`);
@@ -46,6 +46,6 @@ describe('sign-in background tokens', () => {
   it('the light theme tints the form side teal and draws darker teal stars, the dark theme tints it coral-orange', () => {
     expect(block(':root')).toContain('--auth-tint: #d6eeeb;');
     expect(block(':root')).toContain('rgba(10, 79, 81, 0.6)');
-    expect(block('[data-theme="dark"]')).toContain('--auth-tint: #3d2619;');
+    expect(block("[data-theme='dark']")).toContain('--auth-tint: #3d2619;');
   });
 });
