@@ -1,13 +1,13 @@
 'use client';
 
-import { PriorityMark, Button } from '@/components/elements/export';
+import { PriorityMark, Button } from '@/components/elements';
 import { useCallback, useRef, useState, type ReactNode } from 'react';
 import type { Filter, DueFilter, Project, Sort } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Icon } from '@/components/elements/export';
-import { Menu } from '@/components/components/export';
-import { Popover } from '@/components/components/export';
-import { Avatar } from '@/components/elements/export';
+import { Icon } from '@/components/elements';
+import { Menu } from '@/components/components';
+import { Popover } from '@/components/components';
+import { Avatar } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { PRIORITIES, emptyFilter, isFilterActive } from '@buxa/shared';
 import { requirePresent } from '@buxa/domain';

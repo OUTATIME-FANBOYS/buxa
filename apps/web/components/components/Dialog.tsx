@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type Poin
 import { createPortal } from 'react-dom';
 import { project, reduceMotion, rubberband, springAnimate, VelocityTracker } from '@buxa/shared';
 import { FOCUSABLE } from '@buxa/shared';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 
 interface Swipe {
   id: number;

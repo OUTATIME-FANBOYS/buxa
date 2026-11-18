@@ -4,7 +4,7 @@ import { useActionState } from 'react';
 import { idle } from '@buxa/shared';
 import { unlinkHouseholdAction } from '@/actions/people';
 import { FormMessage } from './FormMessage';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 import { HiddenField } from '@/components/atoms';
 
 /** Take someone out of a household. Its result is shown beside the member, so a refused removal (a child's last guardian) explains itself. */

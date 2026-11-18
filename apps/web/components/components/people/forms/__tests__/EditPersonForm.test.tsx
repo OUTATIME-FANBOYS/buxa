@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { CAMP_ROLES, settle } from '@buxa/domain';
-import { EditPersonForm, type EditablePerson } from '@/components/components/people/forms/export';
+import { EditPersonForm, type EditablePerson } from '@/components/components/people/forms';
 
 vi.mock('@buxa/server/composers/people/updatePersonAction', () => ({
   updatePersonAction: () => settle(() => ({ status: 'idle' })),

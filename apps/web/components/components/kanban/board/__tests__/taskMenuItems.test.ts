@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { buildSeed } from '@buxa/shared';
-import { taskMenuItems } from '@/components/components/kanban/board/export';
+import { taskMenuItems } from '@/components/components/kanban/board';
 import { requirePresent } from '@buxa/domain';
 
 const seed = buildSeed();

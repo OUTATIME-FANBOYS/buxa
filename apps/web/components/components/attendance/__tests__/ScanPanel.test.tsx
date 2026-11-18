@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { ScanPanel } from '@/components/components/attendance/export';
+import { ScanPanel } from '@/components/components/attendance';
 
 describe('ScanPanel', () => {
   it('shows the scan field and a closed camera toggle', () => {

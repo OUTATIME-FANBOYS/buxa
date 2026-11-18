@@ -4,7 +4,7 @@ import { useActionState, useEffect, useRef } from 'react';
 import type { Person } from '@buxa/contracts';
 import { CAMP_ROLES, CAMP_ROLE_LABELS } from '@buxa/domain';
 import { personPath } from '@/config/routes';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 import { Checkbox, DatePicker, HiddenField, parseLocalDate, TextField } from '@/components/atoms';
 import { fieldError, idle } from '@buxa/shared';
 import { updatePersonAction } from '@/actions/people';

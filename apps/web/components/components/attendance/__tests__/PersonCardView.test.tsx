@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { PersonCard } from '@buxa/shared';
-import { PersonCardView } from '@/components/components/attendance/export';
+import { PersonCardView } from '@/components/components/attendance';
 
 const card = {
   person: { id: 'p-1', givenName: 'Ada', familyName: 'Lee', preferredName: null, status: 'valid', roles: [] },

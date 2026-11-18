@@ -1,4 +1,4 @@
-import { Dialog as ConfirmDialog } from '@/components/components/export';
+import { Dialog as ConfirmDialog } from '@/components/components';
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -30,10 +30,10 @@ vi.mock('@buxa/server/session/index', () => ({
   toActor: (_s: unknown, camp: Membership) => ({ userId: 'u1', orgId: camp.orgId, role: camp.role }),
 }));
 
-const { PeopleList } = await import('@/components/views/people/export');
-const { NewPerson } = await import('@/components/views/people/export');
-const { PersonScreen } = await import('@/components/views/people/export');
-const { EditPerson } = await import('@/components/views/people/export');
+const { PeopleList } = await import('@/components/views/people');
+const { NewPerson } = await import('@/components/views/people');
+const { PersonScreen } = await import('@/components/views/people');
+const { EditPerson } = await import('@/components/views/people');
 
 const ID = {
   ben: '22222222-2222-4222-8222-222222222222',

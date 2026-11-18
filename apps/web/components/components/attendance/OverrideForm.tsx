@@ -1,7 +1,7 @@
 'use client';
 
 import { useId, useState, type FormEvent } from 'react';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 
 interface Props {
   busy: boolean;

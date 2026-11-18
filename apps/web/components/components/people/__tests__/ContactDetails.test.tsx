@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { ContactDetails } from '@/components/components/people/export';
+import { ContactDetails } from '@/components/components/people';
 
 describe('ContactDetails', () => {
   it('shows the date of birth with the minor note, the email and the phone', () => {

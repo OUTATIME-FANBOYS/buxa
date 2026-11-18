@@ -1,8 +1,8 @@
-import { Dialog as ConfirmDialog } from '@/components/components/export';
+import { Dialog as ConfirmDialog } from '@/components/components';
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
-import { TopBar } from '@/components/components/camp/export';
+import { TopBar } from '@/components/components/camp';
 
 describe('TopBar', () => {
   it('puts the navigation toggle first, then the start and end content around the spacer', () => {

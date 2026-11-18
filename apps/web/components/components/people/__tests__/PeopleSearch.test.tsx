@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { PeopleSearch } from '@/components/components/people/export';
+import { PeopleSearch } from '@/components/components/people';
 
 describe('PeopleSearch', () => {
   it('is a bookmarkable GET search with the current name and role kept in the fields', () => {

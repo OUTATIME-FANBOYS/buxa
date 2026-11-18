@@ -1,5 +1,5 @@
 import type { Project, Task } from '@buxa/shared';
-import { type MenuItem } from '@/components/components/export';
+import { type MenuItem } from '@/components/components';
 import type { TaskCommands } from '@buxa/middleware/hooks/hooks';
 
 /** The ⋯ menu for a task card. Read-only members only get "Open". */

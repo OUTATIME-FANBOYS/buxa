@@ -1,13 +1,13 @@
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { classPath } from '@/config/routes';
-import { Empty, PageHeader } from '@/components/components/export';
+import { Empty, PageHeader } from '@/components/components';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { campZone } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_MANAGE } from '@buxa/shared';
 import { loadClassPage, loadPeopleWithRole } from '@buxa/server/composers/index.server';
-import { NewSessionForm } from '@/components/components/classes/forms/export';
-import { Button } from '@/components/elements/export';
+import { NewSessionForm } from '@/components/components/classes/forms';
+import { Button } from '@/components/elements';
 
 /** Add a session to one class. Viewers get the forbidden state and no form; an unknown class is not found. */
 export async function NewSession({ classId }: { classId: string }) {

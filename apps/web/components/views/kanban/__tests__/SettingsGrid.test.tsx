@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { Dialog as ConfirmDialog } from '@/components/components/export';
+import { Dialog as ConfirmDialog } from '@/components/components';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -7,8 +7,8 @@ import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { buildSeed } from '@buxa/shared';
-import { SettingsPage } from '@/components/views/kanban/export';
-import { CampClockPanel } from '@/components/components/camp/export';
+import { SettingsPage } from '@/components/views/kanban';
+import { CampClockPanel } from '@/components/components/camp';
 
 const saveName = vi.hoisted(() =>
   vi.fn<

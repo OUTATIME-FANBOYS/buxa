@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useRef } from 'react';
-import { Field, Button } from '@/components/elements/export';
+import { Field, Button } from '@/components/elements';
 import { HiddenField } from '@/components/atoms';
 import { fieldError, idle } from '@buxa/shared';
 import { revokeMembershipAction } from '@/actions/people';

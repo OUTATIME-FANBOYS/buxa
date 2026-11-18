@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { Person } from '@buxa/contracts';
-import { PersonHeader } from '@/components/components/people/export';
+import { PersonHeader } from '@/components/components/people';
 
 const person = {
   givenName: 'Ada',

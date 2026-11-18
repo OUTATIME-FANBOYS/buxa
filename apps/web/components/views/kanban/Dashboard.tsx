@@ -2,13 +2,13 @@
 
 import type { CampHome } from '@buxa/shared/camp/campHomeTypes';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { CheckInsPanel } from '@/components/components/kanban/home/export';
-import { HomeHeader } from '@/components/components/kanban/home/export';
-import { HomeStats } from '@/components/components/kanban/home/export';
-import { MembershipPanel } from '@/components/components/kanban/home/export';
-import { OnSiteAgePanel } from '@/components/components/kanban/home/export';
-import { UpcomingSessionsPanel } from '@/components/components/kanban/home/export';
-import { YourTasksPanel } from '@/components/components/kanban/home/export';
+import { CheckInsPanel } from '@/components/components/kanban/home';
+import { HomeHeader } from '@/components/components/kanban/home';
+import { HomeStats } from '@/components/components/kanban/home';
+import { MembershipPanel } from '@/components/components/kanban/home';
+import { OnSiteAgePanel } from '@/components/components/kanban/home';
+import { UpcomingSessionsPanel } from '@/components/components/kanban/home';
+import { YourTasksPanel } from '@/components/components/kanban/home';
 
 /**
  * Home for the signed-in camp. Row by row: three numbers, the check-ins chart with the age-group bars beside it, membership status

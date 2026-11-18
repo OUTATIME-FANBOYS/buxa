@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { StatusBar } from '@/components/elements/export';
+import { StatusBar } from '@/components/elements';
 
 describe('StatusBar', () => {
   const parts = [

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { HouseholdMember } from '@buxa/contracts';
-import { HouseholdMemberRow } from '@/components/components/people/export';
+import { HouseholdMemberRow } from '@/components/components/people';
 import { settle } from '@buxa/domain';
 
 vi.mock('@buxa/server/composers/people/unlinkHouseholdAction', () => ({

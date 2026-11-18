@@ -4,7 +4,7 @@ import { useActionState } from 'react';
 import { idle } from '@buxa/shared';
 import { cancelEnrolmentAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 import { HiddenField } from '@/components/atoms';
 
 /** Cancels one enrolment. The label names the camper, so a screen reader user knows which row the button belongs to. */

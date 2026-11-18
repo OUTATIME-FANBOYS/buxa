@@ -1,4 +1,4 @@
-import { Icon } from '@/components/elements/export';
+import { Icon } from '@/components/elements';
 import type { Tone } from '@buxa/shared';
 
 interface Props {

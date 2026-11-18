@@ -1,8 +1,8 @@
 'use client';
 
 import { useActionState } from 'react';
-import { BadgeCard } from '@/components/components/badge/export';
-import { PrintButton, Button } from '@/components/elements/export';
+import { BadgeCard } from '@/components/components/badge';
+import { PrintButton, Button } from '@/components/elements';
 import { HiddenField } from '@/components/atoms';
 import { idle } from '@buxa/shared';
 import { issueBadgeAction, revokeBadgeAction } from '@/actions/people';

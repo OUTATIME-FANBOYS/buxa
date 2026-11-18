@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import type { Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Button } from '@/components/elements/export';
-import { Progress } from '@/components/elements/export';
+import { Button } from '@/components/elements';
+import { Progress } from '@/components/elements';
 import { Checkbox, TextField } from '@/components/atoms';
 import { subtaskProgress } from '@buxa/shared';
 

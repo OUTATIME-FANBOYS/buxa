@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { Class } from '@buxa/contracts';
-import { ClassesTable } from '@/components/components/classes/export';
+import { ClassesTable } from '@/components/components/classes';
 
 const cls = (over: Partial<Class> = {}): Class => ({
   id: '11111111-1111-4111-8111-111111111111',

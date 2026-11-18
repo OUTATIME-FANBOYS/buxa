@@ -1,13 +1,13 @@
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { personPath } from '@/config/routes';
-import { Empty } from '@/components/components/export';
-import { PageHeader } from '@/components/components/export';
-import { EditPersonForm } from '@/components/components/people/forms/export';
+import { Empty } from '@/components/components';
+import { PageHeader } from '@/components/components';
+import { EditPersonForm } from '@/components/components/people/forms';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { displayName } from '@buxa/shared';
 import { loadPerson } from '@buxa/server/composers/index.server';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 
 /** Change one person's details. Only people:update may; everyone else is told so, without a form to fill in. */
 export async function EditPerson({ id }: { id: string }) {

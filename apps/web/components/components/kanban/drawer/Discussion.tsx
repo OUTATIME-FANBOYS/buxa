@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import type { Task } from '@buxa/shared';
-import { Avatar } from '@/components/elements/export';
-import { Icon } from '@/components/elements/export';
+import { Avatar } from '@/components/elements';
+import { Icon } from '@/components/elements';
 import { Button } from '@/components/atoms';
 import { ago, fmt } from '@buxa/shared';
 import { CommentComposer } from './CommentComposer';

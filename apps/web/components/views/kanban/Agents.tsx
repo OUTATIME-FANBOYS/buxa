@@ -1,16 +1,16 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Empty } from '@/components/components/export';
-import { Icon, Button } from '@/components/elements/export';
-import { Segmented } from '@/components/elements/export';
+import { Empty } from '@/components/components';
+import { Icon, Button } from '@/components/elements';
+import { Segmented } from '@/components/elements';
 import { Select } from '@/components/atoms';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { AgentDialog } from '@/components/components/kanban/dialogs/export';
-import { AgentCard } from '@/components/components/kanban/agents/export';
-import { History } from '@/components/components/kanban/agents/export';
-import { Inbox } from '@/components/components/kanban/agents/export';
+import { AgentDialog } from '@/components/components/kanban/dialogs';
+import { AgentCard } from '@/components/components/kanban/agents';
+import { History } from '@/components/components/kanban/agents';
+import { Inbox } from '@/components/components/kanban/agents';
 
 type Tab = 'inbox' | 'history' | 'agents';
 

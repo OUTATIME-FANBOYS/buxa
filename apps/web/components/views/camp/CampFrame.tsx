@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
 import type { Membership, User } from '@buxa/contracts';
 import { ROUTES } from '@/config/routes';
-import { NewCampForm } from '@/components/components/camp/export';
-import { AccountMenu } from '@/components/components/camp/export';
-import { CampSwitcher } from '@/components/components/camp/export';
-import { InstallHint } from '@/components/components/install/export';
+import { NewCampForm } from '@/components/components/camp';
+import { AccountMenu } from '@/components/components/camp';
+import { CampSwitcher } from '@/components/components/camp';
+import { InstallHint } from '@/components/components/install';
 import { navGroupsFor } from '@buxa/shared';
-import { ArchivedBanner, Shell } from '@/components/components/camp/export';
+import { ArchivedBanner, Shell } from '@/components/components/camp';
 import type { ArchivedCamp } from '@/actions/camp';
 import type { CampFrameElement } from './types';
 

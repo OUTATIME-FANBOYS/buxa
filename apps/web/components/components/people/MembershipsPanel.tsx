@@ -1,5 +1,5 @@
 import type { PersonMembership } from '@buxa/contracts';
-import { AddMembershipForm } from '@/components/components/people/forms/export';
+import { AddMembershipForm } from '@/components/components/people/forms';
 import { MembershipRow } from './MembershipRow';
 import type { ClockFormat } from '@buxa/domain';
 

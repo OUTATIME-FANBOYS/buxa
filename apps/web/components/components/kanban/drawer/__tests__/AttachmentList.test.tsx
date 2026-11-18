@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { buildSeed } from '@buxa/shared';
 import { type Task } from '@buxa/shared';
-import { AttachmentList } from '@/components/components/kanban/drawer/export';
+import { AttachmentList } from '@/components/components/kanban/drawer';
 
 const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));

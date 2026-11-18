@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { PageHeader } from '@/components/components/export';
+import { PageHeader } from '@/components/components';
 
 describe('PageHeader', () => {
   it('renders the title alone when there is no subtitle or action', () => {

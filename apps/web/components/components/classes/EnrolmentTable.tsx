@@ -1,8 +1,8 @@
 import type { Enrolment, EnrolmentStatus } from '@buxa/contracts';
-import { Pill } from '@/components/elements/export';
+import { Pill } from '@/components/elements';
 import type { Tone } from '@buxa/shared';
 import { formatCampDateTime } from '@buxa/shared';
-import { CancelEnrolmentButton } from '@/components/components/classes/forms/export';
+import { CancelEnrolmentButton } from '@/components/components/classes/forms';
 import type { ClockFormat } from '@buxa/domain';
 
 const STATUS: Record<EnrolmentStatus, { label: string; tone: Tone }> = {

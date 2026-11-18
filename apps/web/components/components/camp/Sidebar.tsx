@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BrandMark } from '@/components/elements/export';
+import { BrandMark } from '@/components/elements';
 import type { RoutePath } from '@/config/routes';
 import type { NavGroup } from '@buxa/shared';
 import { SidebarNav } from './SidebarNav';

@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { Session } from '@buxa/contracts';
-import { SessionTable } from '@/components/components/classes/export';
+import { SessionTable } from '@/components/components/classes';
 
 const CLASS_ID = '11111111-1111-4111-8111-111111111111';
 const SESSION_ID = '22222222-2222-4222-8222-222222222222';

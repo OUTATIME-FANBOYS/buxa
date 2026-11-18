@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Icon } from '@/components/elements/export';
+import { Icon } from '@/components/elements';
 import { isActive, type NavGroup } from '@buxa/shared';
 
 /** The links in their groups, a client island only to mark the current page. */

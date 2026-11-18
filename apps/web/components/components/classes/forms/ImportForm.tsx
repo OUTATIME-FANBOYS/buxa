@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useRef } from 'react';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 import { FileField, HiddenField } from '@/components/atoms';
 import { IMPORT_IDLE } from '@buxa/shared';
 import { importClassesAction } from '@/actions/classes';

@@ -1,5 +1,5 @@
 import { personPath } from '@/config/routes';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 import { SearchField } from '@/components/atoms';
 
 interface PersonFinderProps {

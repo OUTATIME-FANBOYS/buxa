@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { CampFrame } from '@/components/views/camp/export';
+import { CampFrame } from '@/components/views/camp';
 import { getCurrentCamp, requireSession } from '@buxa/server/session/index';
 import { listArchivedCamps } from '@/actions/camp';
 

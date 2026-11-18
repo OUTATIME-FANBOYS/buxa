@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import type { HouseholdMember } from '@buxa/contracts';
-import { Pill } from '@/components/elements/export';
+import { Pill } from '@/components/elements';
 import { personPath } from '@/config/routes';
-import { UnlinkButton } from '@/components/components/people/forms/export';
+import { UnlinkButton } from '@/components/components/people/forms';
 
 /** One member of a household, with the two facts that decide pick-up, as words. */
 export function HouseholdMemberRow({

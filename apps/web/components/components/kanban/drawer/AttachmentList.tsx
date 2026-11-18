@@ -1,6 +1,6 @@
 import type { Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Icon, Button } from '@/components/elements/export';
+import { Icon, Button } from '@/components/elements';
 import { FileField } from '@/components/atoms';
 import { fmtSize } from '@buxa/shared';
 import { useAttachmentUpload } from '@buxa/middleware/hooks/hooks';

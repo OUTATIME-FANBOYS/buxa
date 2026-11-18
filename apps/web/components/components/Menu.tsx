@@ -2,7 +2,7 @@
 
 import { useCallback, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import Link from 'next/link';
-import { Button, Icon } from '@/components/elements/export';
+import { Button, Icon } from '@/components/elements';
 import { Popover } from './Popover';
 
 /**

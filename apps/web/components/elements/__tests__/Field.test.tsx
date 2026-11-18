@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Field } from '@/components/elements/export';
+import { Field } from '@/components/elements';
 
 describe('Field', () => {
   it('wraps its control in a labelled field', () => {

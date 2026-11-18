@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { NewCampForm } from '@/components/components/camp/export';
+import { NewCampForm } from '@/components/components/camp';
 import { getCurrentCamp, requireSession } from '@buxa/server/session/index';
 
 export const metadata: Metadata = { title: 'New camp' };

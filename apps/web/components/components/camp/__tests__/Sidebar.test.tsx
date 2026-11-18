@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Sidebar } from '@/components/components/camp/export';
+import { Sidebar } from '@/components/components/camp';
 
 vi.mock('next/navigation', () => ({ usePathname: () => '/camp' }));
 

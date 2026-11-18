@@ -1,8 +1,8 @@
-import { Dialog as ConfirmDialog } from '@/components/components/export';
+import { Dialog as ConfirmDialog } from '@/components/components';
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
-import { ResetDemoButton } from '@/components/components/kanban/export';
+import { ResetDemoButton } from '@/components/components/kanban';
 
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => ({ actions: { resetDemo: () => undefined } }) }));
 

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { PeopleList } from '@/components/views/people/export';
+import { PeopleList } from '@/components/views/people';
 
 export const metadata: Metadata = { title: 'People' };
 

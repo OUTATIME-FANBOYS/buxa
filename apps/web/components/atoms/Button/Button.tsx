@@ -4,7 +4,7 @@ import { Button as HeroButton } from '@heroui/react/button';
 import { buttonVariants } from '@heroui/styles';
 import Link from 'next/link';
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ComponentProps, ReactNode, Ref } from 'react';
-import { Icon } from '../Icon/Icon';
+import { Icon } from '../Icon';
 
 /*
  * The one button for the app. Call sites write <Button variant="primary">; they do not import HeroUI.

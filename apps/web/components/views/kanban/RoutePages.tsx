@@ -5,7 +5,7 @@ import { useEffect, type ReactNode } from 'react';
 import type { User } from '@buxa/contracts';
 import type { CampHome } from '@buxa/shared/camp/campHomeTypes';
 import { ROUTES, boardPath } from '@/config/routes';
-import { Empty } from '@/components/components/export';
+import { Empty } from '@/components/components';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { Agents } from './Agents';
 import { BoardPage } from './BoardPage';
@@ -16,7 +16,7 @@ import { Reports } from './Reports';
 import { Settings, type SettingsCamp } from './Settings';
 import type { ArchivedCamp } from '@/actions/camp';
 import { WorkspaceCalendar } from './WorkspaceCalendar';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 
 /** Home: one page for the camp (when there is one) and its staff tasks. */
 export function HomePage({ camp }: { camp: CampHome }) {

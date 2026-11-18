@@ -1,4 +1,4 @@
-import { Dialog as ConfirmDialog } from '@/components/components/export';
+import { Dialog as ConfirmDialog } from '@/components/components';
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -27,11 +27,11 @@ vi.mock('@buxa/server/composers/people/camp', () => ({
   currentActor: () => settle(() => (session.role ? { userId: 'u1', orgId: 'o1', role: session.role } : null)),
 }));
 
-const { ClassList } = await import('@/components/views/classes/export');
-const { ClassPage } = await import('@/components/views/classes/export');
-const { NewClass } = await import('@/components/views/classes/export');
-const { NewSession } = await import('@/components/views/classes/export');
-const { ImportClasses } = await import('@/components/views/classes/export');
+const { ClassList } = await import('@/components/views/classes');
+const { ClassPage } = await import('@/components/views/classes');
+const { NewClass } = await import('@/components/views/classes');
+const { NewSession } = await import('@/components/views/classes');
+const { ImportClasses } = await import('@/components/views/classes');
 
 const CLASS_ID = '11111111-1111-4111-8111-111111111111';
 const SESSION_ID = '22222222-2222-4222-8222-222222222222';

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { BrandMark, Button } from '@/components/elements/export';
+import { BrandMark, Button } from '@/components/elements';
 import { AuthForm, type AuthMode } from './AuthForm';
 
 /** The sign-in card: switches between signing in and creating an account. The page around it is rendered on the server. */

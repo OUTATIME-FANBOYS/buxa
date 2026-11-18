@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { AttendanceEntry } from '@buxa/contracts';
-import { LogTable } from '@/components/components/attendance/export';
+import { LogTable } from '@/components/components/attendance';
 
 const entry = {
   id: 'v-1',

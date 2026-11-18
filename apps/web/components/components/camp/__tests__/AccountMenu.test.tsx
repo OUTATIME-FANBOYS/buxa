@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { AccountMenu } from '@/components/components/camp/export';
+import { AccountMenu } from '@/components/components/camp';
 import { settle } from '@buxa/domain';
 
 vi.mock('@buxa/server/composers/auth/signOut', () => ({ signOut: () => settle(() => undefined) }));

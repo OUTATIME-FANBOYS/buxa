@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { CheckInConsole } from '@/components/components/attendance/export';
+import { CheckInConsole } from '@/components/components/attendance';
 import { settle } from '@buxa/domain';
 
 vi.mock('@buxa/server/composers/attendance/searchPeople', () => ({

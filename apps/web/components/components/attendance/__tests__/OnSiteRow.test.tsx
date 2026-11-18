@@ -4,7 +4,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { OnSiteRowView } from '@buxa/shared';
-import { OnSiteRow } from '@/components/components/attendance/export';
+import { OnSiteRow } from '@/components/components/attendance';
 import { settle, requirePresent } from '@buxa/domain';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh() {}, push() {} }) }));

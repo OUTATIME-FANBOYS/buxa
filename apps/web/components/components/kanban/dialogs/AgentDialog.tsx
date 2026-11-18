@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog } from '@/components/components/export';
-import { Field, Button } from '@/components/elements/export';
+import { Dialog } from '@/components/components';
+import { Field, Button } from '@/components/elements';
 import { Checkbox, TextField } from '@/components/atoms';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { useStore } from '@buxa/middleware/providers/providers';

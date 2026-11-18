@@ -1,4 +1,4 @@
-import { classErrorReportDownload } from '@/components/views/classes/export';
+import { classErrorReportDownload } from '@/components/views/classes';
 import { isSameOriginPost } from '@/config/sameOrigin';
 
 /**

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Notice } from '@/components/components/export';
+import { Notice } from '@/components/components';
 
 describe('Notice', () => {
   it('a critical notice is an alert, anything else is a polite status', () => {

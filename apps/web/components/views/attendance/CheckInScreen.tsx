@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
 import { authorize } from '@buxa/domain';
-import { Empty } from '@/components/components/export';
-import { PageHeader } from '@/components/components/export';
-import { CheckInConsole } from '@/components/components/attendance/export';
+import { Empty } from '@/components/components';
+import { PageHeader } from '@/components/components';
+import { CheckInConsole } from '@/components/components/attendance';
 import { campActor, campClock } from '@buxa/server/composers/index.server';
 
 /** The check-in page. Without attendance:record the person gets a friendly answer, not an error. */

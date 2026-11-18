@@ -1,7 +1,7 @@
 import type { Project, Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Dialog } from '@/components/components/export';
-import { Field, Button } from '@/components/elements/export';
+import { Dialog } from '@/components/components';
+import { Field, Button } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { useTaskCommands } from '@buxa/middleware/hooks/hooks';
 import { useTaskDraft } from '@buxa/middleware/hooks/hooks';

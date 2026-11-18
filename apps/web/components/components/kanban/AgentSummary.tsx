@@ -1,10 +1,10 @@
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Ring } from '@/components/elements/export';
-import { HBars } from '@/components/components/charts/export';
-import { Legend } from '@/components/elements/export';
-import { Avatar } from '@/components/elements/export';
+import { Ring } from '@/components/elements';
+import { HBars } from '@/components/components/charts';
+import { Legend } from '@/components/elements';
+import { Avatar } from '@/components/elements';
 import { ROUTES } from '@/config/routes';
-import { Icon } from '@/components/elements/export';
+import { Icon } from '@/components/elements';
 import * as A from '@buxa/shared';
 
 /** Agent work at a glance. Renders nothing unless agents are on and this workspace has one, so plain boards stay plain. */

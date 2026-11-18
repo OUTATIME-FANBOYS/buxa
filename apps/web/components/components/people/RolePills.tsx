@@ -1,5 +1,5 @@
 import { CAMP_ROLE_LABELS, type CampRole } from '@buxa/domain';
-import { Pill } from '@/components/elements/export';
+import { Pill } from '@/components/elements';
 
 export function RolePills({ roles }: { roles: readonly CampRole[] }) {
   if (roles.length === 0) {

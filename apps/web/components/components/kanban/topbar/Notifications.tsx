@@ -3,9 +3,9 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
-import { Empty } from '@/components/components/export';
-import { Icon, Button } from '@/components/elements/export';
-import { Popover } from '@/components/components/export';
+import { Empty } from '@/components/components';
+import { Icon, Button } from '@/components/elements';
+import { Popover } from '@/components/components';
 import { ago, diffDays, today } from '@buxa/shared';
 
 const NOTICE_ICON: Record<string, string> = { mention: 'at', comment: 'message', complete: 'check', invite: 'users' };

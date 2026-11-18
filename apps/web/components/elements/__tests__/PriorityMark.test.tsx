@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { PriorityMark } from '@/components/elements/export';
+import { PriorityMark } from '@/components/elements';
 
 describe('PriorityMark', () => {
   it('fills bars up to the priority rank and names the priority for screen readers', () => {

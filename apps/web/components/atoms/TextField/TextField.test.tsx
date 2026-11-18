@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { TextField } from '@/components/elements/export';
+import { TextField } from '@/components/elements';
 
 const base = { label: 'Camp name', name: 'name', value: 'Lake', onChange: () => undefined, maxLength: 60 };
 

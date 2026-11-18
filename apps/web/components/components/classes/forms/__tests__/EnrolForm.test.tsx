@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { EnrolForm } from '@/components/components/classes/forms/export';
+import { EnrolForm } from '@/components/components/classes/forms';
 
 vi.mock('@buxa/server/composers/index', () => ({ enrolAction: vi.fn(), cancelEnrolmentAction: vi.fn() }));
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { FormMessage } from '@/components/components/people/forms/export';
+import { FormMessage } from '@/components/components/people/forms';
 
 describe('FormMessage', () => {
   it('shows nothing while idle', () => {

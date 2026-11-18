@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from 'react';
 import type { CheckInMethod } from '@buxa/contracts';
-import { Empty } from '@/components/components/export';
-import { Notice } from '@/components/components/export';
+import { Empty } from '@/components/components';
+import { Notice } from '@/components/components';
 import { PersonCardView } from './PersonCardView';
 import { OverrideForm } from './OverrideForm';
 import { checkInRefusalCopy } from '@buxa/shared';
@@ -12,7 +12,7 @@ import type { PersonCard } from '@buxa/shared';
 import { attendanceDisplayName } from '@buxa/shared';
 import type { CheckInState } from '@buxa/shared';
 import type { ClockFormat } from '@buxa/domain';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 
 interface Props {
   state: CheckInState;

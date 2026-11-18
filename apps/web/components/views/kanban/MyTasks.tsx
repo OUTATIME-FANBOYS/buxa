@@ -3,9 +3,9 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
-import { Empty } from '@/components/components/export';
-import { Segmented, Button } from '@/components/elements/export';
-import { ListView } from '@/components/components/kanban/board-views/export';
+import { Empty } from '@/components/components';
+import { Segmented, Button } from '@/components/elements';
+import { ListView } from '@/components/components/kanban/board-views';
 import { SearchField } from '@/components/atoms';
 import { diffDays, today } from '@buxa/shared';
 import type { Task } from '@buxa/shared';

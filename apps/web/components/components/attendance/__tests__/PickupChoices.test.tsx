@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { PickupChoices } from '@/components/components/attendance/export';
+import { PickupChoices } from '@/components/components/attendance';
 
 const options = [
   { personId: 'g-1', name: 'Jo Cole', relationship: 'Mother' },

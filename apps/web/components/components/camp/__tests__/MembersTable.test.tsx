@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { Member } from '@buxa/contracts';
-import { MembersTable } from '@/components/components/camp/export';
+import { MembersTable } from '@/components/components/camp';
 import { ROLE_TONE } from '@buxa/shared';
 
 const members = [{ id: 'm-1', name: 'Rosa Delgado', email: 'rosa@example.com', role: 'owner' }] as unknown as Member[];

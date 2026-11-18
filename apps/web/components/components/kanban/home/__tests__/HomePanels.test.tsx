@@ -9,7 +9,7 @@ import {
   OnSiteAgePanel,
   UpcomingSessionsPanel,
   YourTasksPanel,
-} from '@/components/components/kanban/home/export';
+} from '@/components/components/kanban/home';
 
 Object.assign(globalThis, { React });
 

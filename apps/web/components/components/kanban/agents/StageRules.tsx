@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Pill } from '@/components/elements/export';
+import { Pill } from '@/components/elements';
 import { Select } from '@/components/atoms';
 import { TRUST_TONE } from '@buxa/shared';
 import type { Agent, Trust } from '@buxa/shared';

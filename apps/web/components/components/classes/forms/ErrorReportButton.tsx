@@ -1,5 +1,5 @@
 import { ROUTES } from '@/config/routes';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 import { HiddenField } from '@/components/atoms';
 
 /**

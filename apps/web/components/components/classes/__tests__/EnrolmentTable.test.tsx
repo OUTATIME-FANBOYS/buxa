@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import type { Enrolment } from '@buxa/contracts';
-import { EnrolmentTable } from '@/components/components/classes/export';
+import { EnrolmentTable } from '@/components/components/classes';
 
 vi.mock('@buxa/server/composers/index', () => ({ cancelEnrolmentAction: vi.fn() }));
 

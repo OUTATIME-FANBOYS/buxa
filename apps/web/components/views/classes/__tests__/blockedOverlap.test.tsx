@@ -5,7 +5,7 @@ import type { Class, Session } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
 import { settle } from '@buxa/domain';
 import { UiProvider } from '@buxa/middleware/providers/providers';
-import { Dialog as ConfirmDialog } from '@/components/components/export';
+import { Dialog as ConfirmDialog } from '@/components/components';
 import { ActionMessage } from '@/components/components/classes/forms/ActionMessage';
 import { idle } from '@buxa/shared';
 import { attempt } from '@buxa/server/classes/outcome';
@@ -34,7 +34,7 @@ vi.mock('@buxa/server/composers/people/camp', () => ({
   currentActor: () => settle(() => (session.role ? { userId: 'u1', orgId: 'o1', role: session.role } : null)),
 }));
 
-const { ClassPage } = await import('@/components/views/classes/export');
+const { ClassPage } = await import('@/components/views/classes');
 
 const CLASS_ID = '11111111-1111-4111-8111-111111111111';
 const PAINTING_SESSION = '22222222-2222-4222-8222-222222222222';

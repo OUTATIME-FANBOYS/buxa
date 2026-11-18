@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { attendanceExportDownload } from '@/components/views/attendance/export';
+import { attendanceExportDownload } from '@/components/views/attendance';
 import { settle } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({ respond: vi.fn(() => settle(() => new Response('csv'))) }));

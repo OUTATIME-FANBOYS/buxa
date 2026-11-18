@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 
 export function SidebarToggle() {

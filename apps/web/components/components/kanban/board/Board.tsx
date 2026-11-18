@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import type { Column, Project, Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { useBoardDnd } from '@buxa/middleware/hooks/hooks';
-import { ColumnDialog } from '@/components/components/kanban/dialogs/export';
+import { ColumnDialog } from '@/components/components/kanban/dialogs';
 import { BoardColumn } from './BoardColumn';
 
 export function BoardView({

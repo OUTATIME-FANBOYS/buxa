@@ -1,13 +1,9 @@
 import type { Household } from '@buxa/contracts';
 import { ROUTES } from '@/config/routes';
-import {
-  LinkHouseholdForm,
-  type HouseholdOption,
-  type PersonOption,
-} from '@/components/components/people/forms/export';
-import { PersonFinder } from '@/components/components/people/forms/export';
+import { LinkHouseholdForm, type HouseholdOption, type PersonOption } from '@/components/components/people/forms';
+import { PersonFinder } from '@/components/components/people/forms';
 import { HouseholdMemberRow } from './HouseholdMemberRow';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 
 export interface HouseholdPanelProps {
   personId: string;

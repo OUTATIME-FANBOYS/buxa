@@ -2,8 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import type { Membership } from '@buxa/contracts';
-import { Icon } from '@/components/elements/export';
-import { Menu } from '@/components/components/export';
+import { Icon } from '@/components/elements';
+import { Menu } from '@/components/components';
 import { ROUTES } from '@/config/routes';
 import { selectCampAction, type ArchivedCamp } from '@/actions/camp';
 

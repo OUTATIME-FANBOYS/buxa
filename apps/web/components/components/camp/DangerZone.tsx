@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Dialog } from '@/components/components/export';
+import { Dialog } from '@/components/components';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { archiveCamp, type CampActionResult } from '@/actions/camp';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 import { ROUTES } from '@/config/routes';
 import { DeleteCampButton } from './DeleteCampButton';
 

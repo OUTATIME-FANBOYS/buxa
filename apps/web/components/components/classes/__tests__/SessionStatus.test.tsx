@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { SessionStatus, sessionState } from '@/components/components/classes/export';
+import { SessionStatus, sessionState } from '@/components/components/classes';
 
 describe('sessionState', () => {
   it.each([

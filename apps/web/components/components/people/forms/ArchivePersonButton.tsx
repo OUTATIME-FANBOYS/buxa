@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { archivePersonAction } from '@/actions/people';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 
 /**
  * Archive behind a confirmation. Archiving hides the person from search and revokes their badge. A refusal (checked in right now) is

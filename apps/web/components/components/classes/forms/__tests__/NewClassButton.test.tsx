@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { failure } from '@buxa/shared';
-import { NewClassButton } from '@/components/components/classes/forms/export';
+import { NewClassButton } from '@/components/components/classes/forms';
 import { requirePresent } from '@buxa/domain';
 
 const createClass = vi.hoisted(() => vi.fn());

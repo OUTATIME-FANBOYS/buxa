@@ -5,7 +5,7 @@ import { suggestSlug } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
 import { fieldError, idle } from '@buxa/shared';
 import { createCampAction } from '@/actions/camp';
-import { TextField, Button } from '@/components/elements/export';
+import { TextField, Button } from '@/components/elements';
 import { HiddenField } from '@/components/atoms';
 
 /** Where the address came from: made from the name until the person types their own. */

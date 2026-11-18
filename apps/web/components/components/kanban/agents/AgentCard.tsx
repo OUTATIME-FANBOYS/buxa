@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Avatar, Button } from '@/components/elements/export';
-import { Icon } from '@/components/elements/export';
-import { Pill } from '@/components/elements/export';
-import { Segmented } from '@/components/elements/export';
+import { Avatar, Button } from '@/components/elements';
+import { Icon } from '@/components/elements';
+import { Pill } from '@/components/elements';
+import { Segmented } from '@/components/elements';
 import { Checkbox } from '@/components/atoms';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { ConnectAgentDialog } from '@/components/components/kanban/dialogs/export';
+import { ConnectAgentDialog } from '@/components/components/kanban/dialogs';
 import * as A from '@buxa/shared';
 import type { Agent, Trust } from '@buxa/shared';
 import { TRUST_LABEL, TRUST_TONE } from '@buxa/shared';

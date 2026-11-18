@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Segmented } from '@/components/elements/export';
+import { Segmented } from '@/components/elements';
 
 describe('Segmented', () => {
   const options = [

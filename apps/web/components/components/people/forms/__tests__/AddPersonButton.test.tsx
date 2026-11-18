@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { failure } from '@buxa/shared';
-import { AddPersonButton } from '@/components/components/people/forms/export';
+import { AddPersonButton } from '@/components/components/people/forms';
 import { requirePresent } from '@buxa/domain';
 
 const createPerson = vi.hoisted(() => vi.fn());

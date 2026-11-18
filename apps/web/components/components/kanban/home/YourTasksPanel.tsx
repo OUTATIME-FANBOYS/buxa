@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { Task } from '@buxa/shared';
 import { boardPath, ROUTES } from '@/config/routes';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 
 const SHOWN = 5;
 

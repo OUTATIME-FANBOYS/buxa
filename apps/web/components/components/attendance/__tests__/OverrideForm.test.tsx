@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { OverrideForm } from '@/components/components/attendance/export';
+import { OverrideForm } from '@/components/components/attendance';
 
 describe('OverrideForm', () => {
   it('asks for a reason and keeps the submit disabled until one is written', () => {

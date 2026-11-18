@@ -1,5 +1,5 @@
-import { Icon, Button } from '@/components/elements/export';
-import { Pill } from '@/components/elements/export';
+import { Icon, Button } from '@/components/elements';
+import { Pill } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';

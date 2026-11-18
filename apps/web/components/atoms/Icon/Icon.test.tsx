@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Icon } from '@/components/elements/export';
-import { ICONS } from '@/components/elements/export';
+import { Icon } from '@/components/elements';
+import { ICONS } from '@/components/elements';
 
 describe('Icon', () => {
   it('renders a decorative lucide svg for the named icon', () => {

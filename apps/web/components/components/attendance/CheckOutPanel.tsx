@@ -1,13 +1,13 @@
 'use client';
 
 import { useId } from 'react';
-import { Notice } from '@/components/components/export';
+import { Notice } from '@/components/components';
 import type { OnSiteRowView } from '@buxa/shared';
 import { checkOutRefusalCopy, type CheckOutRefusal } from '@buxa/shared';
 import { canSubmitCheckOut } from '@buxa/shared';
 import type { CheckOutDraft } from '@buxa/shared';
 import { PickupChoices } from './PickupChoices';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 
 export interface CheckOutPanelProps {
   id: string;

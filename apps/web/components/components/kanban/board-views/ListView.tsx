@@ -1,17 +1,17 @@
 'use client';
 
-import { PriorityMark } from '@/components/elements/export';
+import { PriorityMark } from '@/components/elements';
 import { useMemo, useState } from 'react';
 import type { Project, Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
-import { Avatar } from '@/components/elements/export';
-import { Empty } from '@/components/components/export';
-import { Icon } from '@/components/elements/export';
+import { Avatar } from '@/components/elements';
+import { Empty } from '@/components/components';
+import { Icon } from '@/components/elements';
 import { KIND_TONE } from '@buxa/shared';
-import { Button, Pill } from '@/components/elements/export';
+import { Button, Pill } from '@/components/elements';
 import { Checkbox } from '@/components/atoms';
-import { DueChip } from '@/components/components/kanban/board/export';
+import { DueChip } from '@/components/components/kanban/board';
 import { PRIORITY_RANK, subtaskProgress } from '@buxa/shared';
 
 type SortKey = 'title' | 'status' | 'priority' | 'assignee' | 'due';

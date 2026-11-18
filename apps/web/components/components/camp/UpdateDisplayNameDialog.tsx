@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog } from '@/components/components/export';
-import { Button } from '@/components/elements/export';
+import { Dialog } from '@/components/components';
+import { Button } from '@/components/elements';
 import { TextField } from '@/components/atoms';
 import { updateProfileAction } from '@/actions/account';
 

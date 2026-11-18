@@ -3,10 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { HELP_SECTIONS } from '@buxa/shared';
 import { IMPORTS_SECTION } from '@buxa/shared';
 import { EXPORTS_SECTION } from '@buxa/shared';
-import { CodeBlock } from '@/components/components/help/export';
-import { ExampleTable } from '@/components/components/help/export';
-import { HelpPage } from '@/components/views/help/export';
-import { HelpSection } from '@/components/components/help/export';
+import { CodeBlock } from '@/components/components/help';
+import { ExampleTable } from '@/components/components/help';
+import { HelpPage } from '@/components/views/help';
+import { HelpSection } from '@/components/components/help';
 
 /** The heading levels in the order they appear in the markup, for example ['h1', 'h2', 'h3']. */
 const headingLevels = (html: string): string[] => [...html.matchAll(/<(h[1-6])[ >]/g)].map(m => m[1] ?? '');

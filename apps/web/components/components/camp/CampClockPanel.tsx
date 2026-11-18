@@ -5,7 +5,7 @@ import type { ClockFormat } from '@buxa/domain';
 import { idle } from '@buxa/shared';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { updateCampClockAction } from '@/actions/camp';
-import { Segmented, Button } from '@/components/elements/export';
+import { Segmented, Button } from '@/components/elements';
 import { HiddenField } from '@/components/atoms';
 
 const OPTIONS: { value: ClockFormat; label: string; example: string }[] = [

@@ -1,10 +1,10 @@
-import { Dialog as ConfirmDialog } from '@/components/components/export';
+import { Dialog as ConfirmDialog } from '@/components/components';
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
-import { ArchivePersonButton } from '@/components/components/people/forms/export';
+import { ArchivePersonButton } from '@/components/components/people/forms';
 import { settle, requirePresent } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({ archivePersonAction: vi.fn() }));

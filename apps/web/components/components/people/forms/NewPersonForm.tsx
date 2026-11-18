@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef } from 'react';
 import { CAMP_ROLES, CAMP_ROLE_LABELS } from '@buxa/domain';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 import { Checkbox, DatePicker, HiddenField, Select, TextField } from '@/components/atoms';
 import { ROUTES } from '@/config/routes';
 import { fieldError, idle } from '@buxa/shared';

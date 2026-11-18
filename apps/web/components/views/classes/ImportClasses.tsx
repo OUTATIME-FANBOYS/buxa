@@ -1,11 +1,11 @@
 import { notFound } from 'next/navigation';
 import { can, IMPORT_COLUMNS, MAX_IMPORT_ROWS } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
-import { Empty, PageHeader } from '@/components/components/export';
+import { Empty, PageHeader } from '@/components/components';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_MANAGE } from '@buxa/shared';
-import { ImportForm } from '@/components/components/classes/forms/export';
-import { Button } from '@/components/elements/export';
+import { ImportForm } from '@/components/components/classes/forms';
+import { Button } from '@/components/elements';
 
 /**
  * Bulk import: download the template, fill it in a spreadsheet, upload it, read the preview, then confirm. Viewers get the forbidden

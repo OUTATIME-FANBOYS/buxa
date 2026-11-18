@@ -1,12 +1,12 @@
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
-import { Empty } from '@/components/components/export';
+import { Empty } from '@/components/components';
 import { loadHouseholdList, loadPeopleOrForbidden } from '@buxa/server/composers/index.server';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { readListParams, toHouseholdChoices, type ListParams } from '@buxa/shared';
-import { PeopleSearch } from '@/components/components/people/export';
-import { PeopleTable } from '@/components/components/people/export';
-import { AddPersonButton } from '@/components/components/people/forms/export';
+import { PeopleSearch } from '@/components/components/people';
+import { PeopleTable } from '@/components/components/people';
+import { AddPersonButton } from '@/components/components/people/forms';
 import type { PersonSummary } from '@buxa/contracts';
 import type { Actor } from '@buxa/domain';
 

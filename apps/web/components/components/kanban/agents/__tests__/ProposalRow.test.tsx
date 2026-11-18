@@ -1,10 +1,10 @@
-import { Dialog as ConfirmDialog } from '@/components/components/export';
+import { Dialog as ConfirmDialog } from '@/components/components';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { buildDemo } from '@buxa/shared';
 import { type Proposal } from '@buxa/shared';
-import { ProposalRow } from '@/components/components/kanban/agents/export';
+import { ProposalRow } from '@/components/components/kanban/agents';
 
 const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));

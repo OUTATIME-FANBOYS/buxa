@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 
 describe('Button', () => {
   it('renders the default as the secondary variant, a submit button, in the md size', () => {

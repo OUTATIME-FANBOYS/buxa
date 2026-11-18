@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Empty } from '@/components/components/export';
+import { Empty } from '@/components/components';
 
 describe('Empty', () => {
   it('shows the title, the optional body and action, and the default inbox icon', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { LinkHouseholdForm } from '@/components/components/people/forms/export';
+import { LinkHouseholdForm } from '@/components/components/people/forms';
 import { settle } from '@buxa/domain';
 
 vi.mock('@buxa/server/composers/people/linkHouseholdAction', () => ({

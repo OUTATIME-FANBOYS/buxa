@@ -3,12 +3,12 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { ClockFormat, User } from '@buxa/contracts';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Button, Segmented } from '@/components/elements/export';
+import { Button, Segmented } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { ROUTES } from '@/config/routes';
-import { AgentDialog } from '@/components/components/kanban/dialogs/export';
-import { ResetDemoButton } from '@/components/components/kanban/export';
-import { ArchivedCampsCard, DangerZone, UpdateDisplayNameDialog } from '@/components/components/camp/export';
+import { AgentDialog } from '@/components/components/kanban/dialogs';
+import { ResetDemoButton } from '@/components/components/kanban';
+import { ArchivedCampsCard, DangerZone, UpdateDisplayNameDialog } from '@/components/components/camp';
 import type { ArchivedCamp } from '@/actions/camp';
 import { updateTimeFormatAction } from '@/actions/account';
 import { browserClockFormat, localTimeZone } from '@buxa/shared/clockPreference';

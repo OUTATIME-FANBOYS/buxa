@@ -1,11 +1,11 @@
 'use client';
 
-import { PriorityMark } from '@/components/elements/export';
+import { PriorityMark } from '@/components/elements';
 import { useMemo } from 'react';
 import type { Priority, Project, Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
 import type { TaskDraft } from '@buxa/middleware/hooks/hooks';
-import { Field } from '@/components/elements/export';
+import { Field } from '@/components/elements';
 import { PRIORITIES, PRIORITY_LABEL } from '@buxa/shared';
 import { DatePicker, formatLocalDate, parseLocalDate, Select } from '@/components/atoms';
 import { firstNameOf } from '@buxa/shared/names';
