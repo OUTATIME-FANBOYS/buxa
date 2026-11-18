@@ -118,22 +118,23 @@ export function History({ proposals, agents }: { proposals: Proposal[]; agents: 
                           label: `Revert ${revertable} change${revertable === 1 ? '' : 's'}`,
                           icon: 'undo',
                           danger: true,
-                          onSelect: async () => {
-                            if (
-                              !(await confirm({
-                                title: 'Revert this run?',
-                                body: 'Its changes are undone where nobody has worked on them since. Anything a person has touched is left as it is.',
-                                confirmLabel: 'Revert',
-                                danger: true,
-                              }))
-                            ) {
-                              return;
-                            }
-                            const r = actions.revertRun(g.runId);
-                            toast(
-                              `Reverted ${r.reverted}${r.skipped ? `, left ${r.skipped} that people have changed` : ''}`,
-                            );
-                          },
+                          onSelect: () =>
+                            void (async () => {
+                              if (
+                                !(await confirm({
+                                  title: 'Revert this run?',
+                                  body: 'Its changes are undone where nobody has worked on them since. Anything a person has touched is left as it is.',
+                                  confirmLabel: 'Revert',
+                                  danger: true,
+                                }))
+                              ) {
+                                return;
+                              }
+                              const r = actions.revertRun(g.runId);
+                              toast(
+                                `Reverted ${r.reverted}${r.skipped ? `, left ${r.skipped} that people have changed` : ''}`,
+                              );
+                            })(),
                         },
                       ]}
                     />

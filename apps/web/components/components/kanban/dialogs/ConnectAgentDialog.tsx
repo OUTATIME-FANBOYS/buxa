@@ -32,7 +32,7 @@ function TokenReveal({ name, token, url }: { name: string; token: string; url: s
       <Field label="Claude Code (run in a terminal)">
         <div className="copy-box">
           <code>{cli}</code>
-          <Button size="sm" type="button" onClick={() => copy(cli, 'Command')}>
+          <Button size="sm" type="button" onClick={() => void copy(cli, 'Command')}>
             Copy
           </Button>
         </div>
@@ -40,7 +40,7 @@ function TokenReveal({ name, token, url }: { name: string; token: string; url: s
       <Field label="Other MCP clients (JSON config)">
         <div className="copy-box">
           <pre>{cfg}</pre>
-          <Button size="sm" type="button" onClick={() => copy(cfg, 'Config')}>
+          <Button size="sm" type="button" onClick={() => void copy(cfg, 'Config')}>
             Copy
           </Button>
         </div>
@@ -95,13 +95,13 @@ export function ConnectAgentDialog({ agentId, name, onClose }: { agentId: string
         {conn.phase === 'issued' && <TokenReveal name={name} token={conn.token} url={url} />}
         <div className="row-end">
           {conn.phase === 'ready' && conn.info.exists && (
-            <Button variant="danger-soft" onClick={revoke}>
+            <Button variant="danger-soft" onClick={() => void revoke()}>
               Disconnect
             </Button>
           )}
           <Button onClick={onClose}>{issued ? 'Done' : 'Close'}</Button>
           {!issued && (
-            <Button variant="primary" onClick={issue} disabled={conn.phase !== 'ready'}>
+            <Button variant="primary" onClick={() => void issue()} disabled={conn.phase !== 'ready'}>
               {hasToken ? 'Replace token' : 'Create token'}
             </Button>
           )}

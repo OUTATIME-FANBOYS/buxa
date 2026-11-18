@@ -30,8 +30,8 @@ const dlg = (text: string) =>
 const field = () => document.querySelector<HTMLInputElement>('input[name="confirmName"]');
 /** React listens for the input event, so set the value through the native setter. */
 const typeInto = (input: HTMLInputElement, value: string) => {
-  const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
-  set?.call(input, value);
+  const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  descriptor?.set?.call(input, value);
   input.dispatchEvent(new Event('input', { bubbles: true }));
 };
 const dialogText = () => document.querySelector('[role="dialog"]')?.textContent ?? '';
