@@ -5,7 +5,7 @@ import type { Person } from '@buxa/contracts';
 import { CAMP_ROLES, CAMP_ROLE_LABELS } from '@buxa/domain';
 import { personPath } from '@/config/routes';
 import { Button } from '@/components/elements';
-import { Checkbox, DatePicker, HiddenField, parseLocalDate, TextField } from '@/components/atoms';
+import { Checkbox, DatePicker, HiddenField, TextField } from '@/components/atoms';
 import { fieldError, idle } from '@buxa/shared';
 import { updatePersonAction } from '@/actions/people';
 import { FormMessage } from './FormMessage';
@@ -103,7 +103,7 @@ export function EditPersonForm({ person }: { person: EditablePerson }) {
           <DatePicker
             label="Date of birth"
             name="dateOfBirth"
-            defaultValue={parseLocalDate(person.dateOfBirth)}
+            defaultValue={person.dateOfBirth ?? null}
             error={err('dateOfBirth')}
             hint="Only used to tell whether someone is under 18. Leave blank to clear it."
           />

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dialog } from '@/components/components';
 import { Field, Button } from '@/components/elements';
-import { DatePicker, formatLocalDate, parseLocalDate, TextField } from '@/components/atoms';
+import { DatePicker, TextField } from '@/components/atoms';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { boardPath } from '@/config/routes';
 import { useStore } from '@buxa/middleware/providers/providers';
@@ -64,11 +64,7 @@ export function ProjectDialog({ project, onClose }: { project?: Project; onClose
             placeholder="What is this project for?"
           />
         </Field>
-        <DatePicker
-          label="Deadline"
-          value={parseLocalDate(deadline)}
-          onChange={value => setDeadline(formatLocalDate(value))}
-        />
+        <DatePicker label="Deadline" value={deadline} onChange={value => setDeadline(value ?? '')} />
         <div className="row-end">
           <Button type="button" onClick={onClose}>
             Cancel
