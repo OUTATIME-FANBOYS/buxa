@@ -473,7 +473,8 @@ export function describe(s: AppState, c: Change, undo?: Undo): Description {
       : t
         ? (t as unknown as Record<string, unknown>)[key]
         : '';
-  const cur = String(old ?? '—');
+  // Field values are strings, numbers, booleans, or objects: show objects as JSON, not as "[object Object]".
+  const cur = old == null ? '—' : typeof old === 'string' ? old : JSON.stringify(old);
 
   return mk(title, `Change ${key} on `, '', { label: String(key), from: cur, to: String(c.patch[key] ?? '—') });
 }
