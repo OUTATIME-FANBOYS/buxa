@@ -139,32 +139,43 @@
   color: var(--text-3);
 }
 /* The field is one box: the search glyph at its left, the input, and the clear (X) at its right, shown only with text.
- * HeroUI's own search-field CSS is not loaded in this app, so the field's parts are styled here, in the top bar only. */
+ * The classes are the native SearchField atom's (components/atoms/SearchField). */
 .search .search-field {
   flex: 1;
   min-width: 0;
 }
-.search .search-field__group {
+.search .search-field__box {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: var(--s2);
   height: 34px;
-  padding: 0 var(--s1) 0 var(--s3);
   background: var(--surface-3);
   border-radius: var(--r-1);
   color: var(--text-3);
 }
-.search .search-field__group:focus-within {
+.search .search-field__box:focus-within {
   outline: 2px solid var(--accent);
 }
-.search [data-slot='search-field-search-icon'] {
-  flex: none;
+.search .search-field__icon {
+  position: absolute;
+  left: 10px;
+  display: flex;
+  pointer-events: none;
+  color: var(--text-3);
+}
+.search .search-field__icon svg {
   width: 16px;
   height: 16px;
 }
-.search [data-slot='search-field-clear-button'] {
-  flex: none;
-  display: inline-grid;
+.search .search-field__input {
+  height: 34px;
+  padding: 0 32px 0 34px;
+  background: transparent;
+}
+.search .search-field__clear {
+  position: absolute;
+  right: 4px;
+  display: grid;
   place-items: center;
   width: 22px;
   height: 22px;
@@ -175,20 +186,17 @@
   color: var(--text-2);
   cursor: pointer;
 }
-.search [data-slot='search-field-clear-button']:hover {
+.search .search-field__clear:hover {
   background: var(--hover);
   color: var(--text);
 }
-.search [data-slot='search-field-clear-button']:focus-visible {
+.search .search-field__clear:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 1px;
 }
-.search [data-slot='search-field-clear-button'] svg {
+.search .search-field__clear svg {
   width: 12px;
   height: 12px;
-}
-.search .search-field[data-empty='true'] [data-slot='search-field-clear-button'] {
-  display: none;
 }
 .search input {
   flex: 1;
