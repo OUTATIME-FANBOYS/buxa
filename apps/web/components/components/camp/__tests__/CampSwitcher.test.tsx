@@ -2,9 +2,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { Membership } from '@buxa/contracts';
 import { CampSwitcher } from '@/components/components/camp/export';
+import { settle } from '@buxa/domain';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push() {}, refresh() {} }) }));
-vi.mock('@buxa/server/composers/camp/selectCampAction', () => ({ selectCampAction: async () => undefined }));
+vi.mock('@buxa/server/composers/camp/selectCampAction', () => ({ selectCampAction: () => settle(() => undefined) }));
 
 describe('CampSwitcher', () => {
   it('shows the current camp name in the crumb, and a menu labelled to switch camp', () => {

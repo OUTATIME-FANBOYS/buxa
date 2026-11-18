@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { LinkHouseholdForm } from '@/components/components/people/forms/export';
+import { settle } from '@buxa/domain';
 
-vi.mock('@buxa/server/composers/people/linkHouseholdAction', () => ({ linkHouseholdAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/people/linkHouseholdAction', () => ({ linkHouseholdAction: () => settle(() => ({ status: 'idle' })) }));
 
 const households = [{ id: 'h-1', name: 'The Coles' }];
 const people = [{ id: 'p-2', name: 'Jo Cole' }];

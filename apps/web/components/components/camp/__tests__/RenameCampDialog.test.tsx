@@ -5,8 +5,9 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { RenameCampDialog } from '@/components/components/camp/export';
+import { settle } from '@buxa/domain';
 
-vi.mock('@buxa/server/composers/camp/renameCampAction', () => ({ renameCampAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/camp/renameCampAction', () => ({ renameCampAction: () => settle(() => ({ status: 'idle' })) }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 

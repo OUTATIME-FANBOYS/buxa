@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
+import { settle } from '@buxa/domain';
 
 const response = new Response('report');
-const classErrorReportResponse = vi.fn<(form: FormData) => Promise<Response>>(async () => response);
+const classErrorReportResponse = vi.fn<(form: FormData) => Promise<Response>>(() => settle(() => response));
 vi.mock('@buxa/server/composers/index.server', () => ({ classErrorReportResponse }));
 
 const { POST } = await import('../../../../app/(app)/camp/(operations)/classes/import/error-report/route');

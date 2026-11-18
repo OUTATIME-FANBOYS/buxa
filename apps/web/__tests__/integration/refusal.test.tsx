@@ -9,7 +9,7 @@ const env = vi.hoisted(() => {
   return { store: undefined as unknown };
 });
 
-vi.mock('next/headers', () => ({ cookies: async () => env.store }));
+vi.mock('next/headers', () => ({ cookies: () => settle(() => env.store) }));
 vi.mock('next/navigation', () => ({ redirect: (url: string) => {
   throw new Error(`REDIRECT ${url}`);
 } }));
@@ -25,6 +25,7 @@ import { requireSession } from '@buxa/server/session/index';
 import { FakeCookieStore } from '@buxa/server/session/__tests__/support';
 import { gotrue, stubIdentityProvider } from '@buxa/server/session/__tests__/gotrue';
 import { startRuntime } from './harness';
+import { settle } from '@buxa/domain';
 
 // Production with Supabase set up: the start-up check reads Supabase's settings, so the test decides what it finds there.
 const PRODUCTION = { NODE_ENV: 'production', NEXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:1', NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'test-publishable-key' };

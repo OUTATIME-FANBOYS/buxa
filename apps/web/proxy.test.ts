@@ -12,6 +12,7 @@ import { gotrue, stubIdentityProvider } from '@buxa/server/session/__tests__/got
 import { SESSION_COOKIE, sessionCookieValue } from '@buxa/server/session/__tests__/support';
 import { refreshSessionCookies } from '@buxa/server/session/refresh';
 import { proxy } from './proxy';
+import { settle } from '@buxa/domain';
 
 const request = (cookie?: string) => new NextRequest('http://localhost/camp', { headers: cookie ? { cookie } : {} });
 afterEach(() => vi.unstubAllGlobals());
@@ -63,8 +64,10 @@ describe('proxy', () => {
   });
 
   it('does not make a page wait for an identity provider that is down', async () => {
-    vi.stubGlobal('fetch', async () => {
-      throw new Error('offline');
+    vi.stubGlobal('fetch', () => {
+      return settle(() => {
+        throw new Error('offline');
+      });
     }); // the library retries this for a long time
     const stale = sessionCookieValue('x.y.z', Math.floor(Date.now() / 1000) - 60);
     const started = Date.now();

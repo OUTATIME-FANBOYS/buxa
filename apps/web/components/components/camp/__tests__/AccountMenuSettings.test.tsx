@@ -4,11 +4,12 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { AccountMenu } from '@/components/components/camp/export';
 import { ROUTES } from '@/config/routes';
+import { settle } from '@buxa/domain';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-vi.mock('@/actions/auth', () => ({ signOut: async () => undefined }));
-vi.mock('@buxa/server/composers/auth/signOut', () => ({ signOut: async () => undefined }));
+vi.mock('@/actions/auth', () => ({ signOut: () => settle(() => undefined) }));
+vi.mock('@buxa/server/composers/auth/signOut', () => ({ signOut: () => settle(() => undefined) }));
 
 const user = { id: 'u-1', name: 'Rosa Delgado', email: 'rosa@example.com' };
 

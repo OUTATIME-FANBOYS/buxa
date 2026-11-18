@@ -3,8 +3,9 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import type { CheckInState } from '@buxa/shared';
 import type { PersonCard } from '@buxa/shared';
 import { ResultPanel } from '@/components/components/attendance/export';
+import { settle } from '@buxa/domain';
 
-vi.mock('@buxa/server/composers/attendance/checkIn', () => ({ checkInAction: async () => ({ kind: 'ok', value: { ok: false, reason: 'archived' } }) }));
+vi.mock('@buxa/server/composers/attendance/checkIn', () => ({ checkInAction: () => settle(() => ({ kind: 'ok', value: { ok: false, reason: 'archived' } })) }));
 
 const card = { person: { id: 'p-1', givenName: 'Ada', familyName: 'Lee', preferredName: null, status: 'valid', roles: [] }, onSiteSince: null } as unknown as PersonCard;
 const props = { timeZone: 'Europe/London', clockFormat: '24h' as const, canOverride: false, onCheckIn: () => undefined, onClear: () => undefined };

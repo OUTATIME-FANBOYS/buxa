@@ -4,26 +4,37 @@ import { enrolAction as enrolActionImpl } from '@buxa/server/composers/classes/e
 import { importClassesAction as importClassesActionImpl } from '@buxa/server/composers/classes/importClassesAction';
 import { createClassAction as createClassActionImpl } from '@buxa/server/composers/classes/createClassAction';
 import { addSessionAction as addSessionActionImpl } from '@buxa/server/composers/classes/addSessionAction';
+import { settle } from '@buxa/domain';
 
 // Server action wrappers for the classes screens. Client components import this module, never @buxa/server. Next.js allows only
 // async functions to be exported from a 'use server' file, so each action is wrapped rather than re-exported.
 
-export async function cancelEnrolmentAction(...args: Parameters<typeof cancelEnrolmentActionImpl>) {
-  return cancelEnrolmentActionImpl(...args);
+export function cancelEnrolmentAction(...args: Parameters<typeof cancelEnrolmentActionImpl>) {
+  return settle(() => {
+    return cancelEnrolmentActionImpl(...args);
+  });
 }
 
-export async function enrolAction(...args: Parameters<typeof enrolActionImpl>) {
-  return enrolActionImpl(...args);
+export function enrolAction(...args: Parameters<typeof enrolActionImpl>) {
+  return settle(() => {
+    return enrolActionImpl(...args);
+  });
 }
 
-export async function importClassesAction(...args: Parameters<typeof importClassesActionImpl>) {
-  return importClassesActionImpl(...args);
+export function importClassesAction(...args: Parameters<typeof importClassesActionImpl>) {
+  return settle(() => {
+    return importClassesActionImpl(...args);
+  });
 }
 
-export async function createClassAction(...args: Parameters<typeof createClassActionImpl>) {
-  return createClassActionImpl(...args);
+export function createClassAction(...args: Parameters<typeof createClassActionImpl>) {
+  return settle(() => {
+    return createClassActionImpl(...args);
+  });
 }
 
-export async function addSessionAction(...args: Parameters<typeof addSessionActionImpl>) {
-  return addSessionActionImpl(...args);
+export function addSessionAction(...args: Parameters<typeof addSessionActionImpl>) {
+  return settle(() => {
+    return addSessionActionImpl(...args);
+  });
 }

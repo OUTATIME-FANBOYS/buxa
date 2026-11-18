@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { attendanceExportDownload } from '@/components/views/attendance/export';
+import { settle } from '@buxa/domain';
 
-const h = vi.hoisted(() => ({ respond: vi.fn(async () => new Response('csv')) }));
+const h = vi.hoisted(() => ({ respond: vi.fn(() => settle(() => new Response('csv'))) }));
 vi.mock('@buxa/server/composers/index.server', () => ({ attendanceExportResponse: h.respond }));
 
 describe('attendanceExportDownload', () => {

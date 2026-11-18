@@ -6,6 +6,7 @@ import type { Household, Membership, Person, PersonSummary } from '@buxa/contrac
 import type { Role } from '@buxa/domain';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { forbidden, notFound as notFoundError } from '@buxa/server/http/errors';
+import { settle } from '@buxa/domain';
 
 const notFound = vi.hoisted(() => vi.fn(() => {
   throw new Error('NEXT_NOT_FOUND');
@@ -21,8 +22,8 @@ vi.mock('next/navigation', () => ({ notFound, redirect: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('@buxa/server/runtime', () => ({ getRuntime: () => ({ services }) }));
 vi.mock('@buxa/server/session/index', () => ({
-  requireSession: async () => ({ user: { id: 'u1', email: 'a@example.test', name: 'Ana' }, memberships: [session.camp] }),
-  getCurrentCamp: async () => session.camp,
+  requireSession: () => settle(() => ({ user: { id: 'u1', email: 'a@example.test', name: 'Ana' }, memberships: [session.camp] })),
+  getCurrentCamp: () => settle(() => session.camp),
   toActor: (_s: unknown, camp: Membership) => ({ userId: 'u1', orgId: camp.orgId, role: camp.role }),
 }));
 

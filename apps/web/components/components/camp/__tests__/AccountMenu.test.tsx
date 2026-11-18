@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AccountMenu } from '@/components/components/camp/export';
+import { settle } from '@buxa/domain';
 
-vi.mock('@buxa/server/composers/auth/signOut', () => ({ signOut: async () => undefined }));
+vi.mock('@buxa/server/composers/auth/signOut', () => ({ signOut: () => settle(() => undefined) }));
 
 describe('AccountMenu', () => {
   it('is an Account menu on the user’s avatar, with a hidden sign-out form', () => {

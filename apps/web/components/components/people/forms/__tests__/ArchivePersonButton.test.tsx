@@ -5,6 +5,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { ArchivePersonButton } from '@/components/components/people/forms/export';
+import { settle } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({ archivePersonAction: vi.fn() }));
 vi.mock('@buxa/server/composers/people/archivePersonAction', () => ({ archivePersonAction: h.archivePersonAction }));
@@ -23,14 +24,18 @@ describe('ArchivePersonButton', () => {
   it('asks for confirmation before archiving, and does nothing when the person says no', async () => {
     act(() => root.render(<UiProvider Dialog={ConfirmDialog}><ArchivePersonButton personId="p-1" personName="Ada Lee" /></UiProvider>));
     const button = Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Archive person')!;
-    await act(async () => {
-      button.click();
+    await act(() => {
+      return settle(() => {
+        button.click();
+      });
     });
     const dialog = document.querySelector('[role="dialog"]')!;
     expect(dialog.getAttribute('aria-label')).toBe('Archive Ada Lee?');
     const cancel = Array.from(dialog.querySelectorAll('button')).find((b) => b.textContent === 'Cancel')!;
-    await act(async () => {
-      cancel.click();
+    await act(() => {
+      return settle(() => {
+        cancel.click();
+      });
     });
     expect(h.archivePersonAction).not.toHaveBeenCalled();
   });
@@ -39,12 +44,16 @@ describe('ArchivePersonButton', () => {
     h.archivePersonAction.mockResolvedValueOnce({ status: 'success' });
     act(() => root.render(<UiProvider Dialog={ConfirmDialog}><ArchivePersonButton personId="p-1" personName="Ada Lee" /></UiProvider>));
     const button = Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Archive person')!;
-    await act(async () => {
-      button.click();
+    await act(() => {
+      return settle(() => {
+        button.click();
+      });
     });
     const confirm = Array.from(document.querySelectorAll('[role="dialog"] button')).find((b) => b.textContent === 'Archive') as HTMLButtonElement;
-    await act(async () => {
-      confirm.click();
+    await act(() => {
+      return settle(() => {
+        confirm.click();
+      });
     });
     expect(h.archivePersonAction).toHaveBeenCalledWith('p-1');
   });
