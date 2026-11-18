@@ -184,3 +184,25 @@ fieldset.plain {
   padding-left: var(--s3);
   box-sizing: border-box;
 }
+
+/* Checkboxes: the native box at the start of the label, sized to the text, in the accent colour. */
+.check-field {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  cursor: pointer;
+}
+.check-field input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex: none;
+  accent-color: var(--accent);
+}
+.check-field input[type='checkbox']:disabled {
+  cursor: default;
+}
+.check-field__label {
+  font-size: var(--fs-m, 15px);
+  line-height: 1.4;
+}
