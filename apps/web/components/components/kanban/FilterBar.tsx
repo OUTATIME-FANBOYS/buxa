@@ -44,7 +44,7 @@ export function FilterBar({ filter, setFilter, project, tags, showStatus = true 
     <div className="filters" role="group" aria-label="Filters and sorting">
       <div className="search-local"><Icon name="search" size={15} />
         <input value={filter.q} onChange={e => set({ q: e.target.value })} placeholder="Filter tasks" aria-label="Filter tasks by title or description" />
-        {filter.q && <Button variant="icon" aria-label="Clear search" onClick={() => set({ q: '' })}><Icon name="x" size={13} /></Button>}</div>
+        {filter.q && <Button iconOnly icon="x" aria-label="Clear search" onClick={() => set({ q: '' })} />}</div>
       <Chip label="Priority" count={filter.priorities.length}>
         {PRIORITIES.slice().reverse().map(p => <Check key={p} checked={filter.priorities.includes(p)} onChange={() => set({ priorities: toggle(filter.priorities, p) })}><PriorityMark priority={p} label /></Check>)}
       </Chip>

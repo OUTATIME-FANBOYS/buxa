@@ -1,10 +1,10 @@
 'use client';
 
-import { Icon, Button } from '@/components/elements/export';
+import { Button } from '@/components/elements/export';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 
 export function SidebarToggle() {
   const { setSidebarOpen } = useUi();
 
-  return <Button variant="icon" className="only-mobile" aria-label="Open navigation" onClick={() => setSidebarOpen(true)}><Icon name="menu" /></Button>;
+  return <Button iconOnly icon="menu" className="only-mobile" aria-label="Open navigation" onClick={() => setSidebarOpen(true)} />;
 }

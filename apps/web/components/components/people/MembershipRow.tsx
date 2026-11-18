@@ -28,7 +28,7 @@ export function MembershipRow({ membership, personId, canManage, timeZone, clock
         <AccessPill status={membership.status} />
         {canManage && !revoked && (
           <details className="people-disclosure">
-            <summary className={buttonClassName({ variant: 'danger-ghost', size: 'sm' })}>Revoke</summary>
+            <summary className={buttonClassName({ variant: "danger-soft", size: 'sm' })}>Revoke</summary>
             <RevokeMembershipForm membershipId={membership.id} personId={personId} />
           </details>
         )}

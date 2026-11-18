@@ -35,7 +35,7 @@ export function ArchivePersonButton({ personId, personName }: { personId: string
 
   return (
     <div className="stack">
-      <Button variant="danger-ghost" type="button" onClick={onClick} disabled={pending}>
+      <Button variant="danger-soft" type="button" onClick={onClick} disabled={pending}>
         {pending ? 'Archiving…' : 'Archive person'}
       </Button>
       {error && <p className="field-error" role="alert">{error}</p>}

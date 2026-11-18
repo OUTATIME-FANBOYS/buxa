@@ -31,6 +31,6 @@ describe('NewPersonForm', () => {
     const html = renderToStaticMarkup(<NewPersonForm household={null} households={[]} variant="dialog" />);
     expect(html).toContain('class="people-form person-form"');
     expect(html).not.toContain('href="/camp/people"');
-    expect(html).toMatch(/<button[^>]*class="button button--md button--outline"[^>]*type="button"[^>]*>Cancel<\/button>/);
+    expect(html).toMatch(/<button[^>]*class="button button--md button--secondary"[^>]*type="button"[^>]*>Cancel<\/button>/);
   });
 });

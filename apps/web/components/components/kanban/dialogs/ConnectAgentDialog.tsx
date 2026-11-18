@@ -53,7 +53,7 @@ export function ConnectAgentDialog({ agentId, name, onClose }: { agentId: string
         <TokenStatus conn={conn} />
         {conn.phase === 'issued' && <TokenReveal name={name} token={conn.token} url={url} />}
         <div className="row-end">
-          {conn.phase === 'ready' && conn.info.exists && <Button variant="danger-ghost" onClick={revoke}>Disconnect</Button>}
+          {conn.phase === 'ready' && conn.info.exists && <Button variant="danger-soft" onClick={revoke}>Disconnect</Button>}
           <Button onClick={onClose}>{issued ? 'Done' : 'Close'}</Button>
           {!issued && <Button variant="primary" onClick={issue} disabled={conn.phase !== 'ready'}>{hasToken ? 'Replace token' : 'Create token'}</Button>}
         </div>

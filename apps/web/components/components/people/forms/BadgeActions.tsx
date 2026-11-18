@@ -37,7 +37,7 @@ export function BadgeActions({ personId, hasActiveBadge, personName, roleLabel, 
         {hasActiveBadge && (
           <form action={revokeAction}>
             <input type="hidden" name="personId" value={personId} />
-            <Button variant="danger-ghost" disabled={revoking}>{revoking ? 'Revoking…' : 'Revoke badge'}</Button>
+            <Button variant="danger-soft" disabled={revoking}>{revoking ? 'Revoking…' : 'Revoke badge'}</Button>
           </form>
         )}
       </div>

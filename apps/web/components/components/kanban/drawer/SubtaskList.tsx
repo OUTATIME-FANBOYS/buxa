@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Icon, Button } from '@/components/elements/export';
+import { Button } from '@/components/elements/export';
 import { Progress } from '@/components/elements/export';
 import { subtaskProgress } from '@buxa/shared';
 
@@ -19,7 +19,7 @@ export function SubtaskList({ task, ro }: { task: Task; ro: boolean }) {
         {task.subtasks.map(st => (
           <li key={st.id}>
             <label><input type="checkbox" checked={st.done} disabled={ro} onChange={() => actions.toggleSubtask(task.id, st.id)} /><span className={st.done ? 'done' : ''}>{st.title}</span></label>
-            {!ro && <Button variant="icon" aria-label={`Remove subtask ${st.title}`} onClick={() => actions.removeSubtask(task.id, st.id)}><Icon name="x" size={14} /></Button>}
+            {!ro && <Button iconOnly icon="x" aria-label={`Remove subtask ${st.title}`} onClick={() => actions.removeSubtask(task.id, st.id)} />}
           </li>
         ))}
       </ul>
