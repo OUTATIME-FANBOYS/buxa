@@ -58,6 +58,7 @@ describe('transaction() when the rollback fails (S-13)', () => {
     client.query.mockImplementation((sql: string) => {
       return settle(() => {
         if (sql === 'ROLLBACK') {
+          // eslint-disable-next-line @typescript-eslint/only-throw-error -- this test covers a rollback that rejects with a non-Error value, so the throw must be a string
           throw 'socket reset';
         }
 
