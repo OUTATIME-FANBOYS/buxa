@@ -63,6 +63,21 @@
   background: var(--tone-soft);
   color: var(--tone-ink);
 }
+/* Every pill has a thin border in its text colour, so it reads as a pill on any surface. */
+.pill,
+.pill-neutral,
+.pill-brand,
+.pill-ok,
+.pill-warn,
+.pill-crit,
+.pill-agent,
+.pill-role-owner,
+.pill-role-admin,
+.pill-role-staff,
+.pill-role-viewer,
+.pill-hero {
+  border: 1px solid currentColor;
+}
 .pill-dot {
   width: 6px;
   height: 6px;
