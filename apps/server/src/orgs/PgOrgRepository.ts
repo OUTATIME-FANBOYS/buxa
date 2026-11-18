@@ -112,6 +112,17 @@ export class PgOrgRepository implements OrgRepository {
     }
   }
 
+  /** buxa_unarchive_camp (migration 0017) checks the owner role, refuses a camp that is not archived and writes the audit row. */
+  async unarchive(actor: Actor): Promise<void> {
+    try {
+      await withOrg(this.pool, actor.orgId, db =>
+        db.query('SELECT buxa_unarchive_camp($1, $2)', [actor.orgId, actor.userId]),
+      );
+    } catch (error) {
+      throw mapCampFunctionError(error);
+    }
+  }
+
   /** buxa_delete_camp (migration 0013) checks the owner role and the exact name, then deletes the camp; the rows go with it. */
   async deleteCamp(actor: Actor, confirmName: string): Promise<void> {
     try {

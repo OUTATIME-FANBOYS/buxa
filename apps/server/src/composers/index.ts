@@ -10,6 +10,7 @@ export * from './camp/archiveCamp';
 export * from './camp/createCampAction';
 export * from './camp/deleteCamp';
 export * from './camp/listArchivedCamps';
+export * from './camp/unarchiveCamp';
 export * from './camp/renameCampAction';
 export * from './camp/selectCampAction';
 export * from './people/addMembershipAction';

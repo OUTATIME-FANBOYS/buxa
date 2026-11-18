@@ -4,22 +4,20 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dialog } from '@/components/components/export';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
-import { archiveCamp, deleteCamp, type CampActionResult } from '@/actions/camp';
-import { Button, TextField } from '@/components/elements/export';
+import { archiveCamp, type CampActionResult } from '@/actions/camp';
+import { Button } from '@/components/elements/export';
 import { ROUTES } from '@/config/routes';
-
-type Step = 'archive' | 'delete-ask' | 'delete-type' | null;
+import { DeleteCampButton } from './DeleteCampButton';
 
 /**
  * The owner's danger zone in Settings: archive the camp (keeps its data), or delete it (removes everything).
- * Delete asks twice: "Are you sure?", then the person types the camp name exactly, with matching capitals.
+ * Delete asks twice: "Are you sure?", then the person types the camp name exactly, with matching capitals (DeleteCampButton).
  * Every button is disabled while a request runs, and a failure shows the server's message in the open dialog.
  */
 export function DangerZone({ campId, campName }: { campId: string; campName: string }) {
   const router = useRouter();
   const { toast } = useUi();
-  const [step, setStep] = useState<Step>(null);
-  const [typed, setTyped] = useState('');
+  const [archiving, setArchiving] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,8 +25,7 @@ export function DangerZone({ campId, campName }: { campId: string; campName: str
     if (busy) {
       return;
     }
-    setStep(null);
-    setTyped('');
+    setArchiving(false);
     setError(null);
   };
 
@@ -42,8 +39,7 @@ export function DangerZone({ campId, campName }: { campId: string; campName: str
 
       return;
     }
-    setStep(null);
-    setTyped('');
+    setArchiving(false);
     toast(done);
     router.push(ROUTES.camp);
     router.refresh();
@@ -62,15 +58,20 @@ export function DangerZone({ campId, campName }: { campId: string; campName: str
         Archive hides this camp and keeps its data. Delete removes the camp and everything in it, for good.
       </p>
       <div className="row">
-        <Button variant="secondary" disabled={busy} onClick={() => setStep('archive')}>
+        <Button variant="secondary" icon="archive" disabled={busy} onClick={() => setArchiving(true)}>
           Archive camp
         </Button>
-        <Button variant="danger" disabled={busy} onClick={() => setStep('delete-ask')}>
-          Delete camp
-        </Button>
+        <DeleteCampButton
+          campId={campId}
+          campName={campName}
+          onDeleted={() => {
+            router.push(ROUTES.camp);
+            router.refresh();
+          }}
+        />
       </div>
 
-      {step === 'archive' && (
+      {archiving && (
         <Dialog
           title="Archive camp?"
           onClose={close}
@@ -81,6 +82,7 @@ export function DangerZone({ campId, campName }: { campId: string; campName: str
               </Button>
               <Button
                 variant="primary"
+                icon="archive"
                 disabled={busy}
                 onClick={() => void run(() => archiveCamp({ orgId: campId }), 'Camp archived')}
               >
@@ -93,59 +95,6 @@ export function DangerZone({ campId, campName }: { campId: string; campName: str
             Archiving hides {campName} from your camp list. Its people, tasks, attendance and records are kept. You can
             still open it read-only from the camp switcher, under Archived.
           </p>
-          {errorLine}
-        </Dialog>
-      )}
-
-      {step === 'delete-ask' && (
-        <Dialog
-          title="Delete camp"
-          onClose={close}
-          footer={
-            <>
-              <Button type="button" onClick={close}>
-                Cancel
-              </Button>
-              <Button variant="danger" onClick={() => setStep('delete-type')}>
-                Continue
-              </Button>
-            </>
-          }
-        >
-          <p>Are you sure you want to delete {campName}?</p>
-        </Dialog>
-      )}
-
-      {step === 'delete-type' && (
-        <Dialog
-          title={`Delete ${campName}`}
-          onClose={close}
-          footer={
-            <>
-              <Button type="button" disabled={busy} onClick={close}>
-                Cancel
-              </Button>
-              <Button
-                variant="danger"
-                disabled={busy || typed !== campName}
-                onClick={() => void run(() => deleteCamp({ orgId: campId, confirmName: typed }), 'Camp deleted')}
-              >
-                {busy ? 'Deleting…' : 'Delete camp'}
-              </Button>
-            </>
-          }
-        >
-          <p>
-            This removes {campName} and everything in it: people, tasks, attendance and records. It cannot be undone.
-          </p>
-          <TextField
-            label="Type the camp name to confirm"
-            name="confirmName"
-            value={typed}
-            onChange={setTyped}
-            maxLength={120}
-            autoFocus
-          />
           {errorLine}
         </Dialog>
       )}

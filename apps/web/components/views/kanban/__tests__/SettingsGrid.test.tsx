@@ -19,6 +19,7 @@ vi.mock('@/actions/camp', () => ({
   updateCampClockAction: async () => ({ status: 'idle' }),
   archiveCamp: async () => ({ ok: true }),
   deleteCamp: async () => ({ ok: true }),
+  unarchiveCamp: async () => ({ ok: true }),
 }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -70,7 +71,10 @@ describe('the settings grid', () => {
 
   const render = (
     clock?: ReactNode,
-    extra: { camp?: typeof OWNER_CAMP; archivedCamps?: { id: string; name: string; archivedAt: string }[] } = {},
+    extra: {
+      camp?: typeof OWNER_CAMP;
+      archivedCamps?: { id: string; name: string; archivedAt: string; role: 'viewer' | 'staff' | 'admin' | 'owner' }[];
+    } = {},
   ) =>
     act(() =>
       root.render(
@@ -179,12 +183,35 @@ describe('the settings grid', () => {
   });
 
   it('lists archived camps read-only, with the name and the archived date', () => {
-    render(undefined, { archivedCamps: [{ id: 'o-9', name: 'Camp Cedar', archivedAt: '2026-10-02T09:00:00.000Z' }] });
+    render(undefined, {
+      archivedCamps: [{ id: 'o-9', name: 'Camp Cedar', archivedAt: '2026-10-02T09:00:00.000Z', role: 'admin' }],
+    });
     const card = document.querySelector('#archived-camps');
     expect(card?.querySelector('h2')?.textContent).toBe('Archived camps');
     expect(card?.querySelector('.archived-list')?.textContent).toContain('Camp Cedar');
     expect(card?.querySelector('.archived-list')?.textContent).toContain('Archived Oct 2, 2026');
     expect(card?.querySelectorAll('button').length).toBe(0);
+  });
+
+  it('gives an owner of an archived camp Unarchive and Delete camp, and no one else those buttons', () => {
+    render(undefined, {
+      archivedCamps: [
+        { id: 'o-9', name: 'Camp Cedar', archivedAt: '2026-10-02T09:00:00.000Z', role: 'owner' },
+        { id: 'o-8', name: 'Camp Birch', archivedAt: '2026-10-03T09:00:00.000Z', role: 'staff' },
+      ],
+    });
+    const rows = Array.from(document.querySelectorAll('#archived-camps .archived-list li'));
+    const labels = (row: Element) => Array.from(row.querySelectorAll('button')).map(b => b.textContent?.trim());
+
+    expect(labels(rows[0])).toEqual(['Unarchive camp', 'Delete camp']);
+    expect(labels(rows[1])).toEqual([]);
+  });
+
+  it('gives the Save profile button its icon', () => {
+    render();
+    const save = Array.from(document.querySelectorAll('button')).find(b => b.textContent?.trim() === 'Save profile');
+
+    expect(save?.querySelector('svg[class*="lucide-save"]')).not.toBeNull();
   });
 
   it('shows no danger zone for an archived camp, even to its owner', () => {

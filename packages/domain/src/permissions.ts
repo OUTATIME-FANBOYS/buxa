@@ -16,6 +16,7 @@ export const ACTIONS = [
   'org:update',
   'org:archive',
   'org:delete',
+  'org:unarchive',
   'org:transfer_ownership',
   'members:read',
   'members:read_contact',
@@ -89,7 +90,15 @@ const ADMIN: Action[] = [
   'tasks:delete',
   'tasks:manage_board',
 ];
-const OWNER: Action[] = [...ADMIN, 'org:archive', 'org:delete', 'org:transfer_ownership', 'data:export', 'data:erase'];
+const OWNER: Action[] = [
+  ...ADMIN,
+  'org:archive',
+  'org:unarchive',
+  'org:delete',
+  'org:transfer_ownership',
+  'data:export',
+  'data:erase',
+];
 
 /** What each role may attempt. Rules below can still deny an action the role has. */
 export const GRANTS: Record<Role, ReadonlySet<Action>> = {
@@ -107,12 +116,13 @@ export interface Actor {
   archived?: boolean;
 }
 
-/** What may still be done in an archived camp: reading it, and the owner deleting it. Everything else is refused. */
+/** What may still be done in an archived camp: reading it, and the owner deleting it or unarchiving it. Everything else is refused. */
 const readOnlyWhileArchived = (action: Action): boolean =>
   action.endsWith(':read') ||
   action.endsWith(':read_contact') ||
   action === 'attendance:export' ||
-  action === 'org:delete';
+  action === 'org:delete' ||
+  action === 'org:unarchive';
 
 /** Context for the action. Member actions need `target`; role changes and invites need `newRole`. */
 export interface Resource {

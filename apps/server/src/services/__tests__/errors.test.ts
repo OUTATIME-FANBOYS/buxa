@@ -46,6 +46,9 @@ describe('the camp service', () => {
     archive: async () => {
       throw new Error('unused');
     },
+    unarchive: async () => {
+      throw new Error('unused');
+    },
     deleteCamp: async () => {
       throw new Error('unused');
     },

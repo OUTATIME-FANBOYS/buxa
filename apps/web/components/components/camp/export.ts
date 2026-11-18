@@ -14,3 +14,4 @@ export * from './SidebarToggle';
 export * from './TopBar';
 export * from './ArchivedCampsCard';
 export * from './DangerZone';
+export * from './DeleteCampButton';

@@ -4,13 +4,15 @@ const h = vi.hoisted(() => ({
   archiveCamp: vi.fn(),
   deleteCamp: vi.fn(),
   listArchivedCamps: vi.fn(),
+  unarchiveCamp: vi.fn(),
 }));
 
 vi.mock('@buxa/server/composers/camp/archiveCamp', () => ({ archiveCamp: h.archiveCamp }));
 vi.mock('@buxa/server/composers/camp/deleteCamp', () => ({ deleteCamp: h.deleteCamp }));
 vi.mock('@buxa/server/composers/camp/listArchivedCamps', () => ({ listArchivedCamps: h.listArchivedCamps }));
+vi.mock('@buxa/server/composers/camp/unarchiveCamp', () => ({ unarchiveCamp: h.unarchiveCamp }));
 
-import { archiveCamp, deleteCamp, listArchivedCamps } from '../camp';
+import { archiveCamp, deleteCamp, listArchivedCamps, unarchiveCamp } from '../camp';
 
 const ORG_ID = '6f1c2b1e-0d7a-4c3e-9a55-2f8e1b7d4c10';
 
@@ -19,6 +21,7 @@ describe('camp archive and delete actions', () => {
     h.archiveCamp.mockReset();
     h.deleteCamp.mockReset();
     h.listArchivedCamps.mockReset();
+    h.unarchiveCamp.mockReset();
   });
 
   it('archiveCamp calls the server composer with the camp id and returns its result', async () => {
@@ -31,7 +34,10 @@ describe('camp archive and delete actions', () => {
   it('archiveCamp passes the server refusal message through', async () => {
     h.archiveCamp.mockResolvedValue({ ok: false, message: 'Only the owner can archive this camp.' });
 
-    await expect(archiveCamp({ orgId: ORG_ID })).resolves.toEqual({ ok: false, message: 'Only the owner can archive this camp.' });
+    await expect(archiveCamp({ orgId: ORG_ID })).resolves.toEqual({
+      ok: false,
+      message: 'Only the owner can archive this camp.',
+    });
   });
 
   it('deleteCamp calls the server composer with the camp id and the typed name, and returns its result', async () => {
@@ -50,8 +56,24 @@ describe('camp archive and delete actions', () => {
     });
   });
 
-  it('listArchivedCamps returns the server composer result, with archivedAt as an ISO string', async () => {
-    const camps = [{ id: ORG_ID, name: 'Summer Camp', archivedAt: '2026-10-01T09:30:00.000Z' }];
+  it('unarchiveCamp calls the server composer with the camp id and returns its result', async () => {
+    h.unarchiveCamp.mockResolvedValue({ ok: true });
+
+    await expect(unarchiveCamp({ orgId: ORG_ID })).resolves.toEqual({ ok: true });
+    expect(h.unarchiveCamp).toHaveBeenCalledWith({ orgId: ORG_ID });
+  });
+
+  it('unarchiveCamp passes the server refusal message through (not archived, or not the owner)', async () => {
+    h.unarchiveCamp.mockResolvedValue({ ok: false, message: 'This camp is not archived' });
+
+    await expect(unarchiveCamp({ orgId: ORG_ID })).resolves.toEqual({
+      ok: false,
+      message: 'This camp is not archived',
+    });
+  });
+
+  it('listArchivedCamps returns the server composer result, with archivedAt as an ISO string and the role', async () => {
+    const camps = [{ id: ORG_ID, name: 'Summer Camp', archivedAt: '2026-10-01T09:30:00.000Z', role: 'owner' }];
     h.listArchivedCamps.mockResolvedValue(camps);
 
     await expect(listArchivedCamps()).resolves.toEqual(camps);
