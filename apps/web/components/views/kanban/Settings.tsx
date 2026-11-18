@@ -69,7 +69,10 @@ export function Settings({
   };
   const chooseTimeFormat = async (format: ClockFormat) => {
     const saved = await updateTimeFormatAction({ clockFormat: format });
-    toast(saved.status === 'error' ? saved.message : 'Time format saved', saved.status === 'error' ? { tone: 'error' } : undefined);
+    toast(
+      saved.status === 'error' ? saved.message : 'Time format saved',
+      saved.status === 'error' ? { tone: 'error' } : undefined,
+    );
   };
   const exportJson = () => {
     const url = URL.createObjectURL(new Blob([actions.exportData()], { type: 'application/json' }));

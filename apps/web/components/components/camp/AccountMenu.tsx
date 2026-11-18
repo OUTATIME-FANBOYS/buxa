@@ -57,8 +57,16 @@ export function AccountMenu({ user }: { user: User }) {
             icon: 'clock',
             submenu: [
               { label: `Local time${zone ? ` (${zone})` : ''}`, checked: true, onSelect() {} },
-              { label: '12-hour clock', checked: clock === '12h', onSelect: () => void updateTimeFormatAction({ clockFormat: '12h' }) },
-              { label: '24-hour clock', checked: clock === '24h', onSelect: () => void updateTimeFormatAction({ clockFormat: '24h' }) },
+              {
+                label: '12-hour clock',
+                checked: clock === '12h',
+                onSelect: () => void updateTimeFormatAction({ clockFormat: '12h' }),
+              },
+              {
+                label: '24-hour clock',
+                checked: clock === '24h',
+                onSelect: () => void updateTimeFormatAction({ clockFormat: '24h' }),
+              },
             ],
           },
           { label: 'Settings', icon: 'settings', href: ROUTES.settings },

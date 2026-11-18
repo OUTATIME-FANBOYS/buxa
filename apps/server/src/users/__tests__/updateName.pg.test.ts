@@ -31,11 +31,20 @@ describe.skipIf(!url)('PgUserRepository names and clock format', () => {
       email: `split-${tag}@example.test`,
       name: 'Ana Maria Lopez',
     });
-    expect(created).toMatchObject({ firstName: 'Ana', lastName: 'Maria Lopez', name: 'Ana Maria Lopez', clockFormat: null });
+    expect(created).toMatchObject({
+      firstName: 'Ana',
+      lastName: 'Maria Lopez',
+      name: 'Ana Maria Lopez',
+      clockFormat: null,
+    });
   });
 
   it('a single-word name has a first name and no last name', async () => {
-    const created = await repo.upsertFromIdentity({ authId: randomUUID(), email: `one-${tag}@example.test`, name: 'Mononym' });
+    const created = await repo.upsertFromIdentity({
+      authId: randomUUID(),
+      email: `one-${tag}@example.test`,
+      name: 'Mononym',
+    });
     expect(created).toMatchObject({ firstName: 'Mononym', lastName: null, name: 'Mononym' });
   });
 
@@ -81,7 +90,9 @@ describe.skipIf(!url)('PgUserRepository names and clock format', () => {
   });
 
   it('refuses to rename a user who does not exist', async () => {
-    await expect(repo.updateName(randomUUID(), { firstName: 'Nobody', lastName: null })).rejects.toThrow('no user to rename');
+    await expect(repo.updateName(randomUUID(), { firstName: 'Nobody', lastName: null })).rejects.toThrow(
+      'no user to rename',
+    );
   });
 
   it('refuses to set the clock of a user who does not exist', async () => {
