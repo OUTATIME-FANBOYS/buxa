@@ -45,7 +45,7 @@ describe('sign-in background tokens', () => {
 
   it('the light theme tints the form side teal and draws darker teal stars, the dark theme tints it coral-orange', () => {
     expect(block(':root')).toContain('--auth-tint: #d6eeeb;');
-    expect(block(':root')).toContain('rgba(10,79,81,.6)');
+    expect(block(':root')).toContain('rgba(10, 79, 81, 0.6)');
     expect(block('[data-theme="dark"]')).toContain('--auth-tint: #3d2619;');
   });
 });
