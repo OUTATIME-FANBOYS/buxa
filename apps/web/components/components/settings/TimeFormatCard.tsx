@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { ClockFormat } from '@buxa/contracts';
 import { browserClockFormat, localTimeZone } from '@buxa/shared/clockPreference';
-import { RadioGroup } from '@/components/atoms';
+import { Select } from '@/components/atoms';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { updateTimeFormatAction } from '@/actions/account';
 
@@ -63,12 +63,13 @@ export function TimeFormatCard({
         </p>
       </div>
       <div className="settings-choice__control">
-        <RadioGroup
-          label="Format"
-          value={shown}
-          onChange={value => void choose(value as ClockFormat)}
-          options={TIME_FORMATS}
-        />
+      <Select
+        label="Time format"
+        hideLabel
+        value={shown}
+        onChange={value => value && void choose(value as ClockFormat)}
+        options={TIME_FORMATS}
+      />
       </div>
     </section>
   );

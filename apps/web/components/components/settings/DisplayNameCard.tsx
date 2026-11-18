@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { TextField } from '@/components/atoms';
 import { Button } from '@/components/elements';
 import { updateProfileAction } from '@/actions/account';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 
 /** The name the person saved, as the server returns it. */
 export interface SavedName {
@@ -27,7 +28,8 @@ export function DisplayNameCard({
 }) {
   const [first, setFirst] = useState(firstName);
   const [last, setLast] = useState(lastName ?? '');
-  const [errors, setErrors] = useState<{ firstName?: string; lastName?: string; form?: string }>({});
+  const { toast } = useUi();
+  const [errors, setErrors] = useState<{ firstName?: string; lastName?: string }>({});
   const [pending, setPending] = useState(false);
 
   const save = async () => {
@@ -35,15 +37,16 @@ export function DisplayNameCard({
     const saved = await updateProfileAction({ firstName: first, lastName: last });
     setPending(false);
     if (saved.status === 'error') {
-      setErrors({
-        firstName: saved.fieldErrors?.firstName,
-        lastName: saved.fieldErrors?.lastName,
-        form: saved.fieldErrors ? undefined : saved.message,
-      });
+      // Field problems show under their input; anything else shows in the same popup as a successful save.
+      setErrors({ firstName: saved.fieldErrors?.firstName, lastName: saved.fieldErrors?.lastName });
+      if (!saved.fieldErrors) {
+        toast(saved.message, { tone: 'error' });
+      }
 
       return;
     }
     setErrors({});
+    toast(saved.message);
     onSaved({ firstName: first.trim(), lastName: last.trim() || null });
   };
 
@@ -79,11 +82,6 @@ export function DisplayNameCard({
         <Button variant="secondary" size="sm" disabled={pending}>
           Update
         </Button>
-        {errors.form && (
-          <p className="field-error" role="alert">
-            {errors.form}
-          </p>
-        )}
       </form>
     </section>
   );
