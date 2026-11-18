@@ -6,6 +6,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { UiProvider } from '../../providers/UiProvider';
 import { buildSeed } from '@buxa/shared';
 import { useBoardDnd } from '../useBoardDnd';
+import { requirePresent } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('../../providers/store', () => ({ useStore: () => h.store }));
@@ -35,10 +36,10 @@ describe('useBoardDnd', () => {
   });
 
   it('starts idle, with a scroller and handlers for cards and columns', () => {
-    expect(api!.dnd.mode).toBe('idle');
-    expect(api!.scroller).toBeTruthy();
-    expect(typeof api!.grab).toBe('function');
-    expect(typeof api!.columnDrag.start).toBe('function');
-    expect(typeof api!.columnDrag.drop).toBe('function');
+    expect(requirePresent(api, 'api').dnd.mode).toBe('idle');
+    expect(requirePresent(api, 'api').scroller).toBeTruthy();
+    expect(typeof requirePresent(api, 'api').grab).toBe('function');
+    expect(typeof requirePresent(api, 'api').columnDrag.start).toBe('function');
+    expect(typeof requirePresent(api, 'api').columnDrag.drop).toBe('function');
   });
 });
