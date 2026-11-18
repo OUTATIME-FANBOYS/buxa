@@ -14,19 +14,19 @@ interface FakeClient {
 /** A client whose statements succeed unless `fail` names them. */
 function fakeClient(fail: Record<string, Error>): FakeClient {
   return {
-    query: vi.fn(async (sql: string): Promise<{ rows: never[]; rowCount: number }> => {
+    query: vi.fn((sql: string): Promise<{ rows: never[]; rowCount: number }> => {
       if (fail[sql]) {
-        throw fail[sql];
+        return Promise.reject( fail[sql]);
       }
 
-      return { rows: [], rowCount: 0 };
+      return Promise.resolve({ rows: [], rowCount: 0 });
     }),
     release: vi.fn<(err?: unknown) => void>(),
   };
 }
 
 function poolWith(client: FakeClient): Pool {
-  return { connect: vi.fn(async () => client) } as unknown as Pool;
+  return { connect: vi.fn(() => Promise.resolve(client)) } as unknown as Pool;
 }
 
 describe('transaction() when the rollback fails (S-13)', () => {
@@ -36,8 +36,8 @@ describe('transaction() when the rollback fails (S-13)', () => {
     const client = fakeClient({ ROLLBACK: rollbackError });
     const pool = poolWith(client);
 
-    const outcome = transaction(pool, async () => {
-      throw workError;
+    const outcome = transaction(pool, () => {
+      return Promise.reject( workError);
     });
 
     await expect(outcome).rejects.toThrow(/Rollback failed.*connection lost/);
@@ -50,17 +50,19 @@ describe('transaction() when the rollback fails (S-13)', () => {
 
   it('a non-Error rollback failure still destroys the connection', async () => {
     const client = fakeClient({});
-    client.query.mockImplementation(async (sql: string) => {
+    client.query.mockImplementation((sql: string) => {
       if (sql === 'ROLLBACK') {
-        throw 'socket reset';
+        // The test needs a rejection that is not an Error, which is what a non-Error driver failure looks like.
+        // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+        return Promise.reject('socket reset');
       }
 
-      return { rows: [], rowCount: 0 };
+      return Promise.resolve({ rows: [], rowCount: 0 });
     });
     const pool = poolWith(client);
 
-    await expect(transaction(pool, async () => {
-      throw new Error('boom');
+    await expect(transaction(pool, () => {
+      return Promise.reject( new Error('boom'));
     })).rejects.toThrow(/socket reset/);
     expect(client.release.mock.calls[0][0]).toBeInstanceOf(Error);
   });
@@ -70,8 +72,8 @@ describe('transaction() when the rollback fails (S-13)', () => {
     const client = fakeClient({});
     const pool = poolWith(client);
 
-    await expect(transaction(pool, async () => {
-      throw workError;
+    await expect(transaction(pool, () => {
+      return Promise.reject( workError);
     })).rejects.toBe(workError);
     expect(client.release).toHaveBeenCalledWith();
     expect(client.query).toHaveBeenCalledWith('ROLLBACK');

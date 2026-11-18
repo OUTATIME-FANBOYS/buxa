@@ -80,7 +80,7 @@ describe.skipIf(!url)('tenant isolation (row-level security)', () => {
   });
 
   it('rejects a malformed organisation id before it reaches SQL', async () => {
-    await expect(withOrg(pool, `'; DROP TABLE orgs; --`, async () => 1)).rejects.toThrow(/Invalid organisation id/);
+    await expect(withOrg(pool, `'; DROP TABLE orgs; --`, () => Promise.resolve(1))).rejects.toThrow(/Invalid organisation id/);
   });
 
   it('database roles match the permissions module (no drift)', async () => {

@@ -25,8 +25,8 @@ describe.skipIf(!url)('phase 2 schema: isolation, constraints and grants', () =>
   let b: Seeded;
 
   /** One class, a session, a person and an enrolment, all in one organisation. */
-  async function seed(org: string, label: string): Promise<Seeded> {
-    return withOrg(pool, org, async db => {
+  function seed(org: string, label: string): Promise<Seeded> {
+    return Promise.resolve(withOrg(pool, org, async db => {
       const person = (await db.query<{ id: string }>(
         `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, $2, 'Camper') RETURNING id`, [org, label])).rows[0].id;
       const classId = (await db.query<{ id: string }>(
@@ -41,7 +41,7 @@ describe.skipIf(!url)('phase 2 schema: isolation, constraints and grants', () =>
         [org, session, person])).rows[0].id;
 
       return { person, classId, session, enrolment };
-    });
+    }));
   }
 
   beforeAll(async () => {
