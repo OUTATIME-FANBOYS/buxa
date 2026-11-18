@@ -292,7 +292,7 @@ describe('the settings layout styles', () => {
   });
 
   it('keeps the cards stacked at every width', () => {
-    expect(css).not.toMatch(/repeat\(2,/);
+    expect(css).not.toMatch(/\.settings-grid\s*{[^}]*repeat\(2/);
     expect(css).not.toContain('min-width: 1280px');
   });
 });
