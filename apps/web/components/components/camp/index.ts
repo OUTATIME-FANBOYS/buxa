@@ -1,6 +1,5 @@
 export * from './AccountMenu';
 export * from './ArchivedBanner';
-export * from './CampClockPanel';
 export * from './CampSwitcher';
 export * from './MembersTable';
 export * from './NewCampForm';
@@ -12,7 +11,6 @@ export * from './Sidebar';
 export * from './SidebarNav';
 export * from './SidebarToggle';
 export * from './TopBar';
-export * from './UpdateDisplayNameDialog';
 export * from './ArchivedCampsCard';
 export * from './DangerZone';
 export * from './DeleteCampButton';

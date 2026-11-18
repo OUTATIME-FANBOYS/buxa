@@ -3,12 +3,11 @@ import { Dialog as ConfirmDialog } from '@/components/components';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { act, type ReactNode } from 'react';
+import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { buildSeed } from '@buxa/shared';
 import { SettingsPage } from '@/components/views/kanban';
-import { CampClockPanel } from '@/components/components/camp';
 
 const saveName = vi.hoisted(() =>
   vi.fn<
@@ -26,7 +25,6 @@ const saveTime = vi.hoisted(() =>
 vi.mock('@/actions/account', () => ({ updateProfileAction: saveName, updateTimeFormatAction: saveTime }));
 
 vi.mock('@/actions/camp', () => ({
-  updateCampClockAction: async () => ({ status: 'idle' }),
   archiveCamp: async () => ({ ok: true }),
   deleteCamp: async () => ({ ok: true }),
   unarchiveCamp: async () => ({ ok: true }),
@@ -53,20 +51,30 @@ const USER = {
   lastName: 'Delgado',
   clockFormat: '12h' as const,
 };
-/** The tiles every camp's settings show, in order (the camp clock, which has an h3 not an h2, is added in the tests that pass it). */
-const TILES = ['Name and email', 'Time format', 'Agents', 'Your data', 'Keyboard shortcuts', 'Archived camps'];
+/** The cards every camp's settings show, in order: the three personal cards first, then the rest. */
+const TILES = [
+  'Name and email',
+  'Time format',
+  'Appearance',
+  'Agents',
+  'Your data',
+  'Keyboard shortcuts',
+  'Archived camps',
+];
 const OWNER_CAMP = { id: 'o-1', name: 'Camp Birchwood', canDelete: true, archived: false };
 
 describe('the settings page', () => {
   let root: Root;
   let updateProfile: ReturnType<typeof vi.fn>;
+  let setTheme: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     updateProfile = vi.fn();
+    setTheme = vi.fn();
     h.store = {
       s: { ...seed, ui: { ...seed.ui, agentsEnabled: false, theme: 'system' } },
       agents: [],
-      actions: { updateProfile, exportData: () => '{}', setTheme() {}, setAgentsEnabled() {} },
+      actions: { updateProfile, exportData: () => '{}', setTheme, setAgentsEnabled() {} },
       me: { id: 'u-1', name: 'Rosa Delgado', title: 'Coordinator', email: 'rosa@example.com' },
       workspace: null,
       project: null,
@@ -85,12 +93,12 @@ describe('the settings page', () => {
   afterEach(() => {
     act(() => root.unmount());
     document.body.innerHTML = '';
-    saveName.mockClear();
+    saveName.mockReset();
+    saveName.mockResolvedValue({ status: 'success', message: 'Profile saved' });
     saveTime.mockClear();
   });
 
   const render = (
-    clock?: ReactNode,
     extra: {
       camp?: typeof OWNER_CAMP;
       archivedCamps?: { id: string; name: string; archivedAt: string; role: 'viewer' | 'staff' | 'admin' | 'owner' }[];
@@ -100,77 +108,77 @@ describe('the settings page', () => {
     act(() =>
       root.render(
         <UiProvider Dialog={ConfirmDialog}>
-          <SettingsPage clock={clock} camp={extra.camp} archivedCamps={extra.archivedCamps} user={extra.user ?? USER} />
+          <SettingsPage camp={extra.camp} archivedCamps={extra.archivedCamps} user={extra.user ?? USER} />
         </UiProvider>,
       ),
     );
   const tiles = () => Array.from(document.querySelectorAll<HTMLElement>('.settings-grid > section.panel'));
   const titles = () => tiles().map(tile => tile.querySelector('h2, h3')?.textContent);
   const tile = (title: string) => tiles().find(t => t.querySelector('h2, h3')?.textContent === title)!;
+  const buttonIn = (card: HTMLElement, label: string) =>
+    Array.from(card.querySelectorAll<HTMLButtonElement>('button')).find(b => b.textContent?.trim() === label);
 
-  it('puts every setting in one grid of tiles, with the page title above it', () => {
+  it('puts every setting in one grid of cards, with the page title above it', () => {
     render();
     expect(document.querySelector('h1')?.textContent).toBe('Settings');
     expect(titles()).toEqual(TILES);
     expect(document.querySelector('.settings-page .settings-grid')).not.toBeNull();
   });
 
-  it('has no Appearance control: light, dark and system are chosen in the account menu', () => {
-    render(<CampClockPanel campId="c-1" clockFormat="24h" canChange />);
-    expect(titles()).not.toContain('Appearance');
-    expect(document.body.textContent).not.toContain('Appearance');
-    const labels = Array.from(document.querySelectorAll('[role="radio"]')).map(b => b.textContent);
-    expect(labels).not.toContain('Light');
-    expect(labels).not.toContain('Dark');
-    expect(labels).not.toContain('System');
+  it('has no Camp clock card and no second clock control', () => {
+    render();
+    expect(titles()).not.toContain('Camp clock');
+    expect(document.body.textContent).not.toContain('Camp clock');
+    expect(document.body.textContent).not.toContain('Save clock');
+    expect(document.querySelector('#camp-clock-title')).toBeNull();
   });
 
-  it('lays out the name and email tile full width, and the time format and camp clock tiles as halves', () => {
-    render(<CampClockPanel campId="c-1" clockFormat="24h" canChange />);
+  it('shows no Language or Timezone card', () => {
+    render();
+    expect(titles()).not.toContain('Language');
+    expect(titles()).not.toContain('Timezone');
+  });
+
+  it('lays out name and email full width, and time format and appearance side by side as halves', () => {
+    render();
     expect(tile('Name and email').classList).toContain('settings-tile--full');
     expect(tile('Time format').classList).toContain('settings-tile--half');
-    expect(tile('Camp clock').classList).toContain('settings-tile--half');
+    expect(tile('Appearance').classList).toContain('settings-tile--half');
     expect(tile('Agents').classList).not.toContain('settings-tile--full');
   });
 
-  it('keeps the camp clock on its own tile with its save action', () => {
-    render(<CampClockPanel campId="c-1" clockFormat="24h" canChange />);
-    const clock = tile('Camp clock');
-    expect(clock.querySelector('#camp-clock-title')?.textContent).toBe('Camp clock');
-    expect(clock.querySelector('form')).not.toBeNull();
-    expect(Array.from(clock.querySelectorAll('button')).find(b => b.textContent === 'Save clock')).toBeDefined();
+  it('puts Appearance straight after Time format', () => {
+    render();
+    expect(titles().slice(0, 3)).toEqual(['Name and email', 'Time format', 'Appearance']);
   });
 
-  it('shows the full name and the email, with the email marked read-only', () => {
+  it('has two rows in the name and email card: the display name with its inputs, then a read-only email', () => {
     render();
     const card = tile('Name and email');
-    expect(card.querySelector('#profile')).toBeNull();
     expect(card.id).toBe('profile');
-    expect(card.textContent).toContain('Rosa Delgado');
-    expect(card.textContent).toContain('rosa@example.com');
-    expect(card.textContent).toContain('can’t be changed here');
-    expect(card.querySelector('input[disabled]')).toBeNull();
+    const rows = Array.from(card.querySelectorAll('.settings-row'));
+    expect(rows).toHaveLength(2);
+    expect(rows[0].querySelector('input[autocomplete="given-name"]')).not.toBeNull();
+    expect(rows[0].querySelector('input[autocomplete="family-name"]')).not.toBeNull();
+    expect(rows[1].querySelector('input')).toBeNull();
+    expect(rows[1].querySelector('button')).toBeNull();
+    expect(rows[1].textContent).toContain('rosa@example.com');
+    expect(rows[1].textContent).toContain('Your email comes from your sign-in and can’t be changed here.');
   });
 
-  it('updates the display name through the dialog: first and last name, saved to the account, then the board', async () => {
+  it('has no Update display name button and no dialog', () => {
     render();
-    act(() => {
-      Array.from(tile('Name and email').querySelectorAll<HTMLButtonElement>('button'))
-        .find(b => b.textContent === 'Update display name')
-        ?.click();
-    });
-    const first = document.querySelector<HTMLInputElement>('input[maxlength="60"]');
-    const dialog =
-      document.querySelector<HTMLElement>('#update-display-name-title')?.closest('[role="dialog"]') ?? document.body;
-    expect(dialog.textContent).toContain('First name');
-    expect(dialog.textContent).toContain('Last name');
-    expect(first?.value).toBe('Rosa');
-    const form = dialog.querySelector<HTMLFormElement>('form');
-    expect(form).not.toBeNull();
+    expect(document.body.textContent).not.toContain('Update display name');
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+    expect(buttonIn(tile('Name and email'), 'Update')).toBeDefined();
+  });
+
+  it('saves the name from the Update button beside the inputs, then the board', async () => {
+    render();
+    const card = tile('Name and email');
+    expect(card.querySelector<HTMLInputElement>('input[autocomplete="given-name"]')?.value).toBe('Rosa');
     await act(async () => {
-      Array.from(form?.querySelectorAll<HTMLButtonElement>('button') ?? [])
-        .find(b => b.textContent?.includes('Save profile'))
-        ?.click();
+      buttonIn(card, 'Update')?.click();
     });
     expect(saveName).toHaveBeenCalledWith({ firstName: 'Rosa', lastName: 'Delgado' });
     expect(updateProfile).toHaveBeenCalledWith({ name: 'Rosa Delgado', title: 'Coordinator' });
@@ -183,39 +191,45 @@ describe('the settings page', () => {
       fieldErrors: { firstName: 'Enter your first name.' },
     });
     render();
-    act(() => {
-      Array.from(tile('Name and email').querySelectorAll<HTMLButtonElement>('button'))
-        .find(b => b.textContent === 'Update display name')
-        ?.click();
-    });
-    const dialog =
-      document.querySelector<HTMLElement>('#update-display-name-title')?.closest('[role="dialog"]') ?? document.body;
     await act(async () => {
-      dialog
-        .querySelector<HTMLFormElement>('form')
-        ?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      buttonIn(tile('Name and email'), 'Update')?.click();
     });
     expect(updateProfile).not.toHaveBeenCalled();
     expect(document.body.textContent).toContain('Enter your first name.');
   });
 
-  it('saves the time format from the half tile, and shows the saved choice', async () => {
+  it('saves the time format at once when a choice is made, and shows the choice', async () => {
     render();
     const group = tile('Time format').querySelector('[role="radiogroup"]');
-    const checked = Array.from(group?.querySelectorAll('[role="radio"]') ?? []).find(
-      b => b.getAttribute('aria-checked') === 'true',
-    );
-    expect(checked?.textContent).toBe('12-hour (9:05 AM)');
-    const twentyFour = Array.from(group?.querySelectorAll<HTMLButtonElement>('[role="radio"]') ?? []).find(
-      b => b.textContent === '24-hour (09:05)',
-    );
+    const radios = Array.from(group?.querySelectorAll<HTMLInputElement>('input[type="radio"]') ?? []);
+    expect(radios.find(r => r.checked)?.value).toBe('12h');
+    const twentyFour = radios.find(r => r.value === '24h');
     await act(async () => {
       twentyFour?.click();
     });
     expect(saveTime).toHaveBeenCalledWith({ clockFormat: '24h' });
+    expect(radios.find(r => r.value === '24h')?.checked).toBe(true);
   });
 
-  it('keeps the Agents, data and shortcut tiles', () => {
+  it('has no Save button in the time format card', () => {
+    render();
+    expect(buttonIn(tile('Time format'), 'Save')).toBeUndefined();
+    expect(buttonIn(tile('Time format'), 'Save time format')).toBeUndefined();
+  });
+
+  it('offers System, Light and Dark in the appearance card, applied at once through the theme action', async () => {
+    render();
+    const group = tile('Appearance').querySelector('[role="radiogroup"]');
+    const radios = Array.from(group?.querySelectorAll<HTMLInputElement>('input[type="radio"]') ?? []);
+    expect(radios.map(r => r.value)).toEqual(['system', 'light', 'dark']);
+    expect(radios.find(r => r.checked)?.value).toBe('system');
+    await act(async () => {
+      radios.find(r => r.value === 'dark')?.click();
+    });
+    expect(setTheme).toHaveBeenCalledWith('dark');
+  });
+
+  it('keeps the Agents, data and shortcut cards', () => {
     render();
     expect(tile('Agents').textContent).toContain('Turn on agents');
     expect(tile('Your data').textContent).toContain('Export JSON');
@@ -223,7 +237,7 @@ describe('the settings page', () => {
   });
 
   it('shows the danger zone at the bottom of the grid to the owner only', () => {
-    render(undefined, { camp: OWNER_CAMP });
+    render({ camp: OWNER_CAMP });
     expect(titles()).toEqual([...TILES, 'Danger zone']);
     expect(tiles().at(-1)?.querySelector('h2')?.textContent).toBe('Danger zone');
     expect(Array.from(document.querySelectorAll('button')).map(b => b.textContent)).toEqual(
@@ -232,13 +246,13 @@ describe('the settings page', () => {
   });
 
   it('hides the danger zone from a camp admin who is not the owner', () => {
-    render(undefined, { camp: { ...OWNER_CAMP, canDelete: false } });
+    render({ camp: { ...OWNER_CAMP, canDelete: false } });
     expect(titles()).toEqual(TILES);
     expect(document.querySelector('.danger-zone')).toBeNull();
   });
 
   it('lists archived camps read-only, with the name and the archived date', () => {
-    render(undefined, {
+    render({
       archivedCamps: [{ id: 'o-9', name: 'Camp Cedar', archivedAt: '2026-10-02T09:00:00.000Z', role: 'admin' }],
     });
     const card = document.querySelector('#archived-camps');
@@ -249,7 +263,7 @@ describe('the settings page', () => {
   });
 
   it('gives an owner of an archived camp Unarchive and Delete camp, and no one else those buttons', () => {
-    render(undefined, {
+    render({
       archivedCamps: [
         { id: 'o-9', name: 'Camp Cedar', archivedAt: '2026-10-02T09:00:00.000Z', role: 'owner' },
         { id: 'o-8', name: 'Camp Birch', archivedAt: '2026-10-03T09:00:00.000Z', role: 'staff' },
@@ -262,20 +276,8 @@ describe('the settings page', () => {
     expect(labels(rows[1])).toEqual([]);
   });
 
-  it('gives the Save profile button its icon', () => {
-    render();
-    act(() => {
-      Array.from(tile('Name and email').querySelectorAll<HTMLButtonElement>('button'))
-        .find(b => b.textContent === 'Update display name')
-        ?.click();
-    });
-    const save = Array.from(document.querySelectorAll('button')).find(b => b.textContent?.trim() === 'Save profile');
-
-    expect(save?.querySelector('svg[class*="lucide-save"]')).not.toBeNull();
-  });
-
   it('shows no danger zone for an archived camp, even to its owner', () => {
-    render(undefined, { camp: { ...OWNER_CAMP, archived: true } });
+    render({ camp: { ...OWNER_CAMP, archived: true } });
     expect(document.querySelector('.danger-zone')).toBeNull();
   });
 

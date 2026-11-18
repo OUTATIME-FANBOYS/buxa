@@ -1,13 +1,12 @@
 import type { Metadata } from 'next';
 import { authorize } from '@buxa/domain';
 import { campContext, loadCampProfile } from '@buxa/server/composers/index.server';
-import { CampClockPanel } from '@/components/components/camp';
 import { SettingsPage } from '@/components/views/kanban';
 import { listArchivedCamps } from '@/actions/camp';
 
 export const metadata: Metadata = { title: 'Settings' };
 
-/** Settings for the camp. An archived camp is read-only: no clock change, no danger zone. Only the owner may delete. */
+/** Settings for the person and the camp. An archived camp is read-only: no danger zone. Only the owner may delete. */
 export default async function Page() {
   const { actor, camp, session } = await campContext();
   const org = await loadCampProfile(actor);
@@ -17,13 +16,6 @@ export default async function Page() {
   return (
     <SettingsPage
       user={session.user}
-      clock={
-        <CampClockPanel
-          campId={camp.orgId}
-          clockFormat={org.clockFormat}
-          canChange={authorize(actor, 'org:update').allow && !archived}
-        />
-      }
       camp={{ id: camp.orgId, name: org.name, canDelete: authorize(actor, 'org:delete').allow, archived }}
       archivedCamps={archivedCamps}
     />

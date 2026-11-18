@@ -50,23 +50,38 @@
   grid-column: 1 / -1;
   border-color: var(--danger);
 }
-/* Name and email: label and value pairs, the email with its note underneath on a phone. */
-.settings-facts {
+/* Name and email: rows in one card. Each row is a column: its label, then its value or inputs, all on one left edge.
+ * A rule divides the rows. */
+.settings-row {
   margin: 0;
   display: grid;
-  gap: var(--s3);
+  gap: var(--s2);
+  min-width: 0;
 }
-.settings-facts > div {
-  display: grid;
-  gap: var(--s1);
+.settings-row + .settings-row {
+  border-top: 1px solid var(--line);
+  padding-top: var(--s4);
 }
-.settings-facts dt {
+.settings-row__label {
+  margin: 0;
   font-size: 13px;
   color: var(--muted);
 }
-.settings-facts dd {
+.settings-row__value {
   margin: 0;
   overflow-wrap: anywhere;
+}
+/* The display name inputs share a row with the Update button beside them. The inputs take the free width and wrap
+ * below it on a phone, where the button then sits under them on the same left edge. */
+.settings-name__fields {
+  flex: 1 1 280px;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--s3);
+}
+.settings-name {
+  gap: var(--s3);
 }
 .settings-note {
   display: block;
