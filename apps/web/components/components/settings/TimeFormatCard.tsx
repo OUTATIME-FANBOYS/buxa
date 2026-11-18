@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { ClockFormat } from '@buxa/contracts';
 import { browserClockFormat } from '@buxa/shared/clockPreference';
-import { RadioGroup } from '@/components/atoms';
+import { Segmented } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { updateTimeFormatAction } from '@/actions/account';
 
@@ -58,7 +58,7 @@ export function TimeFormatCard({
         <p className="muted">How times show for you. Until you choose, your browser’s setting is used.</p>
       </div>
       <div className="settings-choice__control">
-        <RadioGroup
+        <Segmented
           label="Format"
           value={shown}
           onChange={value => void choose(value as ClockFormat)}
