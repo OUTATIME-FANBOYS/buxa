@@ -71,9 +71,9 @@ If a request does not fit the phase requirements (a new feature, a fix to a fini
 
 1. Open an issue with the title of the work and a short body: what was asked, which phase it would belong to, and why it is outside the current phase. Label it `feat`, `fix`, `chore` or `docs`, add the phase label it belongs to, and add `outside-phase` if it is not in the spec.
 2. Add it to the Buxa project board, with status **Todo**.
-3. Open the PR with "Closes #n" in its body. The PR board link check fails without one.
+3. Open the PR with "Closes #n" in its body. The PR board link check warns without one.
 4. The board moves the item as the work goes on: the PR opens and the item goes to **In Progress**, and merging closes the issue and moves it to **Done**.
 
 Phase work follows the same steps, with its phase label and the phase spec as its reference.
 
-Two project automations make this work. Set them in the board's settings (Workflows): "Auto-add items" for this repository, and the built-in status rules for pull requests and closed issues. The repository check (`.github/workflows/pr-board-link.yml`) enforces the link.
+Two project automations make this work. Set them in the board's settings (Workflows): "Auto-add items" for this repository, and the built-in status rules for pull requests and closed issues. The repository check (`.github/workflows/pr-board-link.yml`) warns when a PR has no linked issue; it does not block the PR.
