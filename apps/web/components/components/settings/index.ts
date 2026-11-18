@@ -1,3 +1,4 @@
 export * from './AppearanceCard';
-export * from './NameEmailCard';
+export * from './DisplayNameCard';
+export * from './EmailCard';
 export * from './TimeFormatCard';

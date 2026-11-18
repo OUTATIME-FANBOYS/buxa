@@ -57,7 +57,8 @@ const USER = {
 };
 /** The cards every camp's settings show, in order: the three personal cards first, then the rest. */
 const TILES = [
-  'Name and email',
+  'Display name',
+  'Email',
   'Time format',
   'Appearance',
   'Agents',
@@ -147,7 +148,7 @@ describe('the settings page', () => {
 
   it('lays out every card in one column, with time format and appearance as title and dropdown rows', () => {
     render();
-    expect(tile('Name and email').className).toContain('settings-tile');
+    expect(tile('Display name').className).toContain('settings-tile');
     expect(tile('Time format').className).toContain('settings-choice');
     expect(tile('Appearance').className).toContain('settings-choice');
     expect(tile('Time format').className).not.toContain('settings-tile--half');
@@ -155,33 +156,32 @@ describe('the settings page', () => {
 
   it('puts Appearance straight after Time format', () => {
     render();
-    expect(titles().slice(0, 3)).toEqual(['Name and email', 'Time format', 'Appearance']);
+    expect(titles().slice(0, 4)).toEqual(['Display name', 'Email', 'Time format', 'Appearance']);
   });
 
-  it('has two rows in the name and email card: the display name with its inputs, then a read-only email', () => {
+  it('has the display name with its first and last name inputs and one Update button, and an email card with a read-only input and no button', () => {
     render();
-    const card = tile('Name and email');
-    expect(card.id).toBe('profile');
-    const rows = Array.from(card.querySelectorAll('.settings-row'));
-    expect(rows).toHaveLength(2);
-    expect(rows[0].querySelector('input[autocomplete="given-name"]')).not.toBeNull();
-    expect(rows[0].querySelector('input[autocomplete="family-name"]')).not.toBeNull();
-    expect(rows[1].querySelector('input')).toBeNull();
-    expect(rows[1].querySelector('button')).toBeNull();
-    expect(rows[1].textContent).toContain('rosa@example.com');
-    expect(rows[1].textContent).toContain('Your email comes from your sign-in and can’t be changed here.');
+    const name = tile('Display name');
+    expect(name.querySelector('input[autocomplete="given-name"]')).not.toBeNull();
+    expect(name.querySelector('input[autocomplete="family-name"]')).not.toBeNull();
+    expect(buttonIn(name, 'Update')).toBeDefined();
+    const email = tile('Email');
+    const input = email.querySelector<HTMLInputElement>('input');
+    expect(input?.value).toBe('rosa@example.com');
+    expect(input?.disabled || input?.readOnly).toBe(true);
+    expect(email.querySelector('button')).toBeNull();
   });
 
   it('has no Update display name button and no dialog', () => {
     render();
     expect(document.body.textContent).not.toContain('Update display name');
     expect(document.querySelector('[role="dialog"]')).toBeNull();
-    expect(buttonIn(tile('Name and email'), 'Update')).toBeDefined();
+    expect(buttonIn(tile('Display name'), 'Update')).toBeDefined();
   });
 
   it('saves the name from the Update button beside the inputs, then the board', async () => {
     render();
-    const card = tile('Name and email');
+    const card = tile('Display name');
     expect(card.querySelector<HTMLInputElement>('input[autocomplete="given-name"]')?.value).toBe('Rosa');
     await act(async () => {
       buttonIn(card, 'Update')?.click();
@@ -198,7 +198,7 @@ describe('the settings page', () => {
     });
     render();
     await act(async () => {
-      buttonIn(tile('Name and email'), 'Update')?.click();
+      buttonIn(tile('Display name'), 'Update')?.click();
     });
     expect(updateProfile).not.toHaveBeenCalled();
     expect(document.body.textContent).toContain('Enter your first name.');
