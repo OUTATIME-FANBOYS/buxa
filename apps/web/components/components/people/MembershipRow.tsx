@@ -1,10 +1,10 @@
 import type { PersonMembership } from '@buxa/contracts';
 import { formatCampDateTime } from '@buxa/shared';
 import { AccessPill } from './AccessPill';
-import { RevokeMembershipForm } from '@/components/components/people/forms/export';
+import { RevokeMembershipForm } from '@/components/components/people/forms';
 import { formatLocalDate } from '@buxa/shared';
 import type { ClockFormat } from '@buxa/domain';
-import { buttonClassName } from '@/components/elements/export';
+import { buttonClassName } from '@/components/elements';
 
 interface MembershipRowProps {
   membership: PersonMembership;

@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import type { Task } from '@buxa/shared';
-import { Avatar } from '@/components/elements/export';
-import { Icon } from '@/components/elements/export';
+import { Avatar } from '@/components/elements';
+import { Icon } from '@/components/elements';
+import { Button } from '@/components/atoms';
 import { ago, fmt } from '@buxa/shared';
 import { CommentComposer } from './CommentComposer';
 
@@ -33,22 +34,28 @@ export function Discussion({ task, ro, members, userById }: DiscussionProps) {
   return (
     <section className="section">
       <div className="tabs" role="tablist">
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
+          type="button"
           role="tab"
           aria-selected={tab === 'comments'}
           className={tab === 'comments' ? 'on' : ''}
           onClick={() => setTab('comments')}
         >
           Comments <span className="count">{task.comments.length}</span>
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          type="button"
           role="tab"
           aria-selected={tab === 'activity'}
           className={tab === 'activity' ? 'on' : ''}
           onClick={() => setTab('activity')}
         >
           Activity <span className="count">{task.history.length}</span>
-        </button>
+        </Button>
       </div>
       {tab === 'comments' ? (
         <div role="tabpanel">

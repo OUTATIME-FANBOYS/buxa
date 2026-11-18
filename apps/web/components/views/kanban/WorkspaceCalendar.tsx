@@ -1,5 +1,5 @@
 import { useStore } from '@buxa/middleware/providers/providers';
-import { CalendarView } from '@/components/components/kanban/board-views/export';
+import { CalendarView } from '@/components/components/kanban/board-views';
 
 export function WorkspaceCalendar() {
   const { wsTasks, readOnly, projects, project } = useStore();

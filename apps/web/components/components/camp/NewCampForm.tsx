@@ -5,7 +5,8 @@ import { suggestSlug } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
 import { fieldError, idle } from '@buxa/shared';
 import { createCampAction } from '@/actions/camp';
-import { TextField, Button } from '@/components/elements/export';
+import { TextField, Button } from '@/components/elements';
+import { HiddenField } from '@/components/atoms';
 
 /** Where the address came from: made from the name until the person types their own. */
 interface Draft {
@@ -37,7 +38,7 @@ export function NewCampForm({ first }: { first: boolean }) {
           </p>
         </div>
         <form action={formAction} className="stack">
-          <input type="hidden" name="timezone" value={timezone} />
+          <HiddenField name="timezone" value={timezone} />
           <TextField
             label="Camp name"
             name="name"
@@ -62,7 +63,7 @@ export function NewCampForm({ first }: { first: boolean }) {
             </p>
           )}
           <div className="row">
-            <Button variant="primary" disabled={pending}>
+            <Button variant="primary" icon="plus" disabled={pending}>
               {pending ? 'Creating…' : 'Create camp'}
             </Button>
             {!first && <Button href={ROUTES.camp}>Cancel</Button>}

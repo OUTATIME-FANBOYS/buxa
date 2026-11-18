@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Icon } from '@/components/elements/export';
+import { Icon } from '@/components/elements';
 
 export function Empty({
   icon = 'inbox',

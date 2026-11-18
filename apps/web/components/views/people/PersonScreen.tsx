@@ -4,17 +4,17 @@ import { personEditPath } from '@/config/routes';
 import { loadCampProfile } from '@buxa/server/composers/index.server';
 import { loadHouseholdList, loadPersonMatches } from '@buxa/server/composers/index.server';
 import { loadVisitHistory } from '@buxa/server/composers/index.server';
-import { ArchivePersonButton } from '@/components/components/people/forms/export';
-import { AttendanceHistory } from '@/components/components/people/export';
-import { BadgePanel } from '@/components/components/people/export';
-import { ContactDetails } from '@/components/components/people/export';
-import { HouseholdPanel } from '@/components/components/people/export';
-import { MembershipsPanel } from '@/components/components/people/export';
-import { PersonHeader } from '@/components/components/people/export';
+import { ArchivePersonButton } from '@/components/components/people/forms';
+import { AttendanceHistory } from '@/components/components/people';
+import { BadgePanel } from '@/components/components/people';
+import { ContactDetails } from '@/components/components/people';
+import { HouseholdPanel } from '@/components/components/people';
+import { MembershipsPanel } from '@/components/components/people';
+import { PersonHeader } from '@/components/components/people';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { readListParams } from '@buxa/shared';
 import { loadPerson } from '@buxa/server/composers/index.server';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 
 /**
  * One person. What is shown follows the role: contact details come back null for viewers (and are then left out), link and
@@ -63,7 +63,7 @@ export async function PersonScreen({
           <ContactDetails person={person} />
           <div className="row">
             {canUpdate && (
-              <Button size="sm" href={personEditPath(person.id)}>
+              <Button size="sm" icon="edit" href={personEditPath(person.id)}>
                 Edit details
               </Button>
             )}

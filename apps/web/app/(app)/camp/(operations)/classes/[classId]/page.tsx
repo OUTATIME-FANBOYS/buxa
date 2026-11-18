@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { isUuid } from '@buxa/domain';
-import { ClassPage } from '@/components/views/classes/export';
+import { ClassPage } from '@/components/views/classes';
 
 export const metadata: Metadata = { title: 'Class' };
 

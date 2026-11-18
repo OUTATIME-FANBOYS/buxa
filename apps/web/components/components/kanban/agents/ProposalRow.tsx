@@ -1,5 +1,5 @@
-import { Icon, Button } from '@/components/elements/export';
-import { Pill } from '@/components/elements/export';
+import { Icon, Button } from '@/components/elements';
+import { Pill } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
@@ -31,9 +31,9 @@ export function ProposalRow({ p, actions: showActions }: { p: Proposal; actions:
           {t ? (
             <>
               {d.before}
-              <button className="link-inline" onClick={() => openTask(t.id)}>
+              <Button variant="ghost" size="sm" className="link-inline" onClick={() => openTask(t.id)}>
                 “{d.title}”
-              </button>
+              </Button>
               {d.after}
             </>
           ) : (

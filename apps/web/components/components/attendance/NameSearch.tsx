@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { ActionOutcome } from '@buxa/shared';
 import { searchPeopleAction } from '@/actions/attendance';
 import type { PersonCard } from '@buxa/shared';
+import { Button, SearchField } from '@/components/atoms';
 import { StatusPill } from './StatusPill';
 import { attendanceDisplayName } from '@buxa/shared';
 
@@ -41,28 +42,18 @@ export function NameSearch({ onPick }: { onPick: (card: PersonCard) => void }) {
 
   return (
     <div className="name-search">
-      <label className="field">
-        <span className="field-label">Find by name</span>
-        <input
-          type="search"
-          value={query}
-          autoComplete="off"
-          spellCheck={false}
-          aria-controls="name-results"
-          onChange={event => setQuery(event.target.value)}
-        />
-      </label>
+      <SearchField label="Find by name" value={query} onChange={setQuery} />
       <SearchStatus trimmed={trimmed} current={current} />
       <ul id="name-results" className="name-results">
         {trimmed !== '' &&
           current?.kind === 'ok' &&
           current.value.map(card => (
             <li key={card.person.id}>
-              <button type="button" className="name-result" onClick={() => onPick(card)}>
+              <Button variant="ghost" className="name-result" onClick={() => onPick(card)}>
                 <span className="name-result-name">{attendanceDisplayName(card.person)}</span>
                 <StatusPill status={card.person.status} />
                 {card.onSiteSince && <span className="muted small">On site</span>}
-              </button>
+              </Button>
             </li>
           ))}
       </ul>

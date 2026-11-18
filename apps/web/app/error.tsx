@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/components/export';
+import { Button } from '@/components/components';
 
 /** Shown when something unexpected breaks while rendering. The message is for the person; the error goes to the console. */
 export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { PersonMembership } from '@buxa/contracts';
-import { MembershipsPanel } from '@/components/components/people/export';
+import { MembershipsPanel } from '@/components/components/people';
 import { settle } from '@buxa/domain';
 
 vi.mock('@buxa/server/composers/people/addMembershipAction', () => ({

@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import type { Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 import { fmt, parse, toISO, today } from '@buxa/shared';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -103,20 +103,22 @@ export function CalendarView({
                 )}
               </div>
               {shown.map(t => (
-                <button
+                <Button
                   key={t.id}
+                  variant="ghost"
+                  size="sm"
                   className={`cal-task prio-bg-${t.priority} ${kindOf(t) === 'done' ? 'is-done' : ''}`}
                   onClick={() => openTask(t.id)}
                   title={t.title}
                 >
                   <span className="cal-dot" />
                   <span className="cal-title">{t.title}</span>
-                </button>
+                </Button>
               ))}
               {list.length > 3 && more !== day && (
-                <button className="cal-more" onClick={() => setMore(day)}>
+                <Button variant="ghost" size="sm" className="cal-more" onClick={() => setMore(day)}>
                   +{list.length - 3} more
-                </button>
+                </Button>
               )}
             </div>
           );

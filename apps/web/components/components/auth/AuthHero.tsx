@@ -1,4 +1,4 @@
-import { BrandMark, Icon } from '@/components/elements/export';
+import { BrandMark, Icon } from '@/components/elements';
 
 /** The brand panel beside the sign-in form. Decorative, so hidden from assistive technology. */
 export function AuthHero() {

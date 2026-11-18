@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import type { ReactNode } from 'react';
 import type { Role } from '@buxa/domain';
-import { TaskDrawer } from '@/components/components/kanban/drawer/export';
+import { TaskDrawer } from '@/components/components/kanban/drawer';
 import type { SessionIdentity } from '@buxa/shared/kanban/actions/auth';
 
 // The task store reads and writes localStorage and is never server-rendered, so the whole work area is client-only.

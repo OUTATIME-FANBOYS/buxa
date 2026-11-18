@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import type { Membership } from '@buxa/contracts';
-import { CampSwitcher } from '@/components/components/camp/export';
+import { CampSwitcher } from '@/components/components/camp';
 
 const h = vi.hoisted(() => ({ select: vi.fn(async () => undefined), push: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: h.push, refresh: h.refresh }) }));

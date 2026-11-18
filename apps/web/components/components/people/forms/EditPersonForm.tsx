@@ -4,7 +4,8 @@ import { useActionState, useEffect, useRef } from 'react';
 import type { Person } from '@buxa/contracts';
 import { CAMP_ROLES, CAMP_ROLE_LABELS } from '@buxa/domain';
 import { personPath } from '@/config/routes';
-import { Field, Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
+import { Checkbox, DatePicker, HiddenField, parseLocalDate, TextField } from '@/components/atoms';
 import { fieldError, idle } from '@buxa/shared';
 import { updatePersonAction } from '@/actions/people';
 import { FormMessage } from './FormMessage';
@@ -31,11 +32,10 @@ export function EditPersonForm({ person }: { person: EditablePerson }) {
   }, [state]);
 
   const err = (name: string) => fieldError(state, name);
-  const invalid = (name: string) => (err(name) ? true : undefined);
 
   return (
     <form ref={formRef} action={formAction} className="panel stack people-form" aria-describedby="people-form-help">
-      <input type="hidden" name="id" value={person.id} />
+      <HiddenField name="id" value={person.id} />
       <p id="people-form-help" className="muted">
         Fields marked with an asterisk are required.
       </p>
@@ -43,38 +43,32 @@ export function EditPersonForm({ person }: { person: EditablePerson }) {
       <fieldset className="plain">
         <legend className="field-label">Name</legend>
         <div className="people-form-grid">
-          <Field label="First name *" error={err('givenName')}>
-            <input
-              name="givenName"
-              defaultValue={person.givenName}
-              autoComplete="off"
-              maxLength={80}
-              aria-invalid={invalid('givenName')}
-              autoFocus
-            />
-          </Field>
-          <Field label="Family name *" error={err('familyName')}>
-            <input
-              name="familyName"
-              defaultValue={person.familyName}
-              autoComplete="off"
-              maxLength={80}
-              aria-invalid={invalid('familyName')}
-            />
-          </Field>
-          <Field
+          <TextField
+            label="First name *"
+            name="givenName"
+            defaultValue={person.givenName}
+            error={err('givenName')}
+            autoComplete="off"
+            maxLength={80}
+            autoFocus
+          />
+          <TextField
+            label="Family name *"
+            name="familyName"
+            defaultValue={person.familyName}
+            error={err('familyName')}
+            autoComplete="off"
+            maxLength={80}
+          />
+          <TextField
             label="Preferred name"
+            name="preferredName"
+            defaultValue={person.preferredName ?? ''}
             error={err('preferredName')}
             hint="The name people use, if it is not the first name."
-          >
-            <input
-              name="preferredName"
-              defaultValue={person.preferredName ?? ''}
-              autoComplete="off"
-              maxLength={80}
-              aria-invalid={invalid('preferredName')}
-            />
-          </Field>
+            autoComplete="off"
+            maxLength={80}
+          />
         </div>
       </fieldset>
 
@@ -85,10 +79,15 @@ export function EditPersonForm({ person }: { person: EditablePerson }) {
         </p>
         <div className="people-checks">
           {CAMP_ROLES.map(role => (
-            <label key={role} className="people-check">
-              <input type="checkbox" name="roles" value={role} defaultChecked={person.roles.includes(role)} />{' '}
+            <Checkbox
+              key={role}
+              className="people-check"
+              name="roles"
+              value={role}
+              defaultSelected={person.roles.includes(role)}
+            >
               {CAMP_ROLE_LABELS[role]}
-            </label>
+            </Checkbox>
           ))}
         </div>
         {err('roles') && (
@@ -101,44 +100,37 @@ export function EditPersonForm({ person }: { person: EditablePerson }) {
       <fieldset className="plain">
         <legend className="field-label">Contact and age</legend>
         <div className="people-form-grid">
-          <Field
+          <DatePicker
             label="Date of birth"
+            name="dateOfBirth"
+            defaultValue={parseLocalDate(person.dateOfBirth)}
             error={err('dateOfBirth')}
             hint="Only used to tell whether someone is under 18. Leave blank to clear it."
-          >
-            <input
-              type="date"
-              name="dateOfBirth"
-              defaultValue={person.dateOfBirth ?? ''}
-              aria-invalid={invalid('dateOfBirth')}
-            />
-          </Field>
-          <Field label="Email" error={err('email')}>
-            <input
-              type="email"
-              name="email"
-              defaultValue={person.email ?? ''}
-              autoComplete="off"
-              maxLength={254}
-              aria-invalid={invalid('email')}
-            />
-          </Field>
-          <Field label="Phone" error={err('phone')}>
-            <input
-              type="tel"
-              name="phone"
-              defaultValue={person.phone ?? ''}
-              autoComplete="off"
-              maxLength={32}
-              aria-invalid={invalid('phone')}
-            />
-          </Field>
+          />
+          <TextField
+            label="Email"
+            type="email"
+            name="email"
+            defaultValue={person.email ?? ''}
+            error={err('email')}
+            autoComplete="off"
+            maxLength={254}
+          />
+          <TextField
+            label="Phone"
+            type="tel"
+            name="phone"
+            defaultValue={person.phone ?? ''}
+            error={err('phone')}
+            autoComplete="off"
+            maxLength={32}
+          />
         </div>
       </fieldset>
 
       <FormMessage state={state} />
       <div className="row">
-        <Button variant="primary" disabled={pending}>
+        <Button variant="primary" icon="save" disabled={pending}>
           {pending ? 'Saving…' : 'Save changes'}
         </Button>
         <Button href={personPath(person.id)}>Cancel</Button>

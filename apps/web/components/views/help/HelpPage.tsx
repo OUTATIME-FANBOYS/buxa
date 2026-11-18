@@ -1,6 +1,6 @@
-import { PageHeader } from '@/components/components/export';
+import { PageHeader } from '@/components/components';
 import { HELP_PAGE, HELP_SECTIONS } from '@buxa/shared';
-import { HelpSection } from '@/components/components/help/export';
+import { HelpSection } from '@/components/components/help';
 
 /** The whole help page: the page title, then every section in order. */
 export function HelpPage() {

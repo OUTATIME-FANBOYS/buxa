@@ -1,9 +1,9 @@
-import { Dialog as ConfirmDialog } from '@/components/components/export';
+import { Dialog as ConfirmDialog } from '@/components/components';
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { buildSeed } from '@buxa/shared';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
-import { TaskSections } from '@/components/components/kanban/drawer/export';
+import { TaskSections } from '@/components/components/kanban/drawer';
 
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => ({ actions: {} }) }));
 vi.mock('@buxa/middleware/hooks/useAttachmentUpload', () => ({

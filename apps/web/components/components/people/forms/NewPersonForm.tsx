@@ -2,7 +2,8 @@
 
 import { useActionState, useEffect, useRef } from 'react';
 import { CAMP_ROLES, CAMP_ROLE_LABELS } from '@buxa/domain';
-import { Field, Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
+import { Checkbox, DatePicker, HiddenField, Select, TextField } from '@/components/atoms';
 import { ROUTES } from '@/config/routes';
 import { fieldError, idle } from '@buxa/shared';
 import { createPersonAction } from '@/actions/people';
@@ -44,7 +45,6 @@ export function NewPersonForm({
   }, [state]);
 
   const err = (name: string) => fieldError(state, name);
-  const invalid = (name: string) => (err(name) ? true : undefined);
 
   return (
     <form
@@ -60,26 +60,29 @@ export function NewPersonForm({
       <fieldset className="plain person-section">
         <legend className="person-legend">Name</legend>
         <div className="people-form-grid">
-          <Field label="First name *" error={err('givenName')}>
-            <input
-              name="givenName"
-              autoComplete="off"
-              maxLength={80}
-              aria-invalid={invalid('givenName')}
-              data-autofocus
-              autoFocus={!inDialog}
-            />
-          </Field>
-          <Field label="Family name *" error={err('familyName')}>
-            <input name="familyName" autoComplete="off" maxLength={80} aria-invalid={invalid('familyName')} />
-          </Field>
-          <Field
+          <TextField
+            label="First name *"
+            name="givenName"
+            error={err('givenName')}
+            autoComplete="off"
+            maxLength={80}
+            autoFocus={!inDialog}
+          />
+          <TextField
+            label="Family name *"
+            name="familyName"
+            error={err('familyName')}
+            autoComplete="off"
+            maxLength={80}
+          />
+          <TextField
             label="Preferred name"
+            name="preferredName"
             error={err('preferredName')}
             hint="The name people use, if it is not the first name."
-          >
-            <input name="preferredName" autoComplete="off" maxLength={80} aria-invalid={invalid('preferredName')} />
-          </Field>
+            autoComplete="off"
+            maxLength={80}
+          />
         </div>
       </fieldset>
 
@@ -88,9 +91,9 @@ export function NewPersonForm({
         <p className="person-helper">Choose everything that applies. Someone can be a parent and an instructor.</p>
         <div className="people-checks">
           {CAMP_ROLES.map(role => (
-            <label key={role} className="people-check">
-              <input type="checkbox" name="roles" value={role} /> {CAMP_ROLE_LABELS[role]}
-            </label>
+            <Checkbox key={role} className="people-check" name="roles" value={role}>
+              {CAMP_ROLE_LABELS[role]}
+            </Checkbox>
           ))}
         </div>
         {err('roles') && (
@@ -104,7 +107,7 @@ export function NewPersonForm({
         <legend className="person-legend">Household</legend>
         {household ? (
           <>
-            <input type="hidden" name="householdId" value={household.id} />
+            <HiddenField name="householdId" value={household.id} />
             <p>
               This person joins the <strong>{household.name}</strong> household.
             </p>
@@ -112,44 +115,36 @@ export function NewPersonForm({
         ) : (
           <>
             {households.length > 0 && (
-              <Field
+              <Select
                 label="Existing household"
+                name="householdId"
+                defaultValue=""
                 error={err('householdId')}
                 hint="Join a household already in the camp. A child needs one with a parent or guardian in it."
-              >
-                <select name="householdId" defaultValue="" aria-invalid={invalid('householdId')}>
-                  <option value="">Not an existing household</option>
-                  {households.map(h => (
-                    <option key={h.id} value={h.id}>
-                      {householdChoiceLabel(h)}
-                    </option>
-                  ))}
-                </select>
-              </Field>
+                options={[
+                  { value: '', label: 'Not an existing household' },
+                  ...households.map(h => ({ value: h.id, label: householdChoiceLabel(h) })),
+                ]}
+              />
             )}
-            <Field
+            <TextField
               label="New household name"
+              name="newHouseholdName"
               error={err('newHouseholdName') ?? (households.length === 0 ? err('householdId') : undefined)}
               hint={CAMPER_NEEDS_HOUSEHOLD}
-            >
-              <input
-                name="newHouseholdName"
-                autoComplete="off"
-                maxLength={120}
-                aria-invalid={
-                  invalid('newHouseholdName') ?? (households.length === 0 ? invalid('householdId') : undefined)
-                }
-              />
-            </Field>
+              autoComplete="off"
+              maxLength={120}
+            />
           </>
         )}
-        <Field
+        <TextField
           label="How they are related"
+          name="relationship"
           error={err('relationship')}
           hint="For example: son, daughter, mother, father. Needed when they join a household."
-        >
-          <input name="relationship" autoComplete="off" maxLength={40} aria-invalid={invalid('relationship')} />
-        </Field>
+          autoComplete="off"
+          maxLength={40}
+        />
         {household && err('householdId') && (
           <p className="field-error" role="alert">
             {err('householdId')}
@@ -160,15 +155,14 @@ export function NewPersonForm({
       <fieldset className="plain person-section">
         <legend className="person-legend">Contact and age</legend>
         <div className="people-form-grid">
-          <Field label="Date of birth" error={err('dateOfBirth')} hint="Only used to tell whether someone is under 18.">
-            <input type="date" name="dateOfBirth" aria-invalid={invalid('dateOfBirth')} />
-          </Field>
-          <Field label="Email" error={err('email')}>
-            <input type="email" name="email" autoComplete="off" maxLength={254} aria-invalid={invalid('email')} />
-          </Field>
-          <Field label="Phone" error={err('phone')}>
-            <input type="tel" name="phone" autoComplete="off" maxLength={32} aria-invalid={invalid('phone')} />
-          </Field>
+          <DatePicker
+            label="Date of birth"
+            name="dateOfBirth"
+            error={err('dateOfBirth')}
+            hint="Only used to tell whether someone is under 18."
+          />
+          <TextField label="Email" type="email" name="email" error={err('email')} autoComplete="off" maxLength={254} />
+          <TextField label="Phone" type="tel" name="phone" error={err('phone')} autoComplete="off" maxLength={32} />
         </div>
       </fieldset>
 
@@ -181,7 +175,7 @@ export function NewPersonForm({
         ) : (
           <Button href={ROUTES.people}>Cancel</Button>
         )}
-        <Button variant="primary" disabled={pending}>
+        <Button variant="primary" icon="plus" disabled={pending}>
           {pending ? 'Adding…' : 'Add person'}
         </Button>
       </div>

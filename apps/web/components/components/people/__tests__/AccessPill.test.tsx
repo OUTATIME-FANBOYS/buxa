@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { AccessPill } from '@/components/components/people/export';
+import { AccessPill } from '@/components/components/people';
 
 describe('AccessPill', () => {
   it('shows the membership status in words, in its tone', () => {

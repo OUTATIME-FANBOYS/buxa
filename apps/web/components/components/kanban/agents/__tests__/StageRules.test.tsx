@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { buildSeed } from '@buxa/shared';
 import { type Agent } from '@buxa/shared';
-import { StageRules } from '@/components/components/kanban/agents/export';
+import { StageRules } from '@/components/components/kanban/agents';
 
 const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
@@ -21,7 +21,7 @@ describe('StageRules', () => {
 
   it('lists each stage of the agent’s project with its rule, editable for managers', () => {
     const html = renderToStaticMarkup(<StageRules agent={agent} canManage />);
-    expect(html).toContain(`aria-label="Moving into ${seed.projects[0].columns[0].name}"`);
+    expect(html).toContain(`Moving into ${seed.projects[0].columns[0].name}`);
     expect(html).toContain('>Ask me</option>');
     expect(html).toContain('>Default</option>');
   });

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog } from '@/components/components/export';
-import { Field, Button } from '@/components/elements/export';
+import { Dialog } from '@/components/components';
+import { Button } from '@/components/elements';
+import { Select, TextField } from '@/components/atoms';
 import { useStore } from '@buxa/middleware/providers/providers';
 import type { Column, ColumnKind } from '@buxa/shared';
 
@@ -41,29 +42,39 @@ export function ColumnDialog({
           onClose();
         }}
       >
-        <Field label="Name" error={err}>
-          <input
-            value={name}
-            onChange={e => {
-              setName(e.target.value);
-              setErr(null);
-            }}
-            data-autofocus
-            placeholder="e.g. Blocked"
-          />
-        </Field>
-        <Field label="Counts as" hint="Used by the dashboard and reports to measure progress.">
-          <select value={kind} onChange={e => setKind(e.target.value as ColumnKind)}>
-            <option value="open">Not started</option>
-            <option value="active">In progress</option>
-            <option value="done">Done</option>
-          </select>
-        </Field>
+        <TextField
+          label="Name"
+          error={err}
+          value={name}
+          onChange={value => {
+            setName(value);
+            setErr(null);
+          }}
+          autoFocus
+          placeholder="e.g. Blocked"
+        />
+        <Select
+          label="Counts as"
+          hint="Used by the dashboard and reports to measure progress."
+          value={kind}
+          onChange={value => {
+            if (value) {
+              setKind(value as ColumnKind);
+            }
+          }}
+          options={[
+            { value: 'open', label: 'Not started' },
+            { value: 'active', label: 'In progress' },
+            { value: 'done', label: 'Done' },
+          ]}
+        />
         <div className="row-end">
           <Button type="button" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="primary">{column ? 'Save' : 'Add column'}</Button>
+          <Button variant="primary" icon={column ? 'save' : 'plus'}>
+            {column ? 'Save' : 'Add column'}
+          </Button>
         </div>
       </form>
     </Dialog>

@@ -53,8 +53,8 @@ vi.mock('@/components/components/camp/NewCampForm', () => ({
 // Vitest compiles JSX with the classic runtime, which needs React in scope.
 Object.assign(globalThis, { React });
 
-const { Members } = await import('@/components/views/camp/export');
-const { CampFrame } = await import('@/components/views/camp/export');
+const { Members } = await import('@/components/views/camp');
+const { CampFrame } = await import('@/components/views/camp');
 
 const as = (role: Role) => {
   const camp: Membership = { orgId: 'o1', role, name: 'Sunrise', slug: 'sunrise' };

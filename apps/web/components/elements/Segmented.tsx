@@ -1,6 +1,6 @@
 'use client';
 
-import { Icon } from './Icon';
+import { Button, Icon } from '../atoms';
 
 export function Segmented<T extends string>({
   value,
@@ -16,8 +16,10 @@ export function Segmented<T extends string>({
   return (
     <div className="segmented" role="radiogroup" aria-label={label}>
       {options.map(o => (
-        <button
+        <Button
           key={o.value}
+          variant="ghost"
+          size="sm"
           type="button"
           role="radio"
           aria-checked={value === o.value}
@@ -27,7 +29,7 @@ export function Segmented<T extends string>({
         >
           {o.icon && <Icon name={o.icon} size={15} />}
           <span className={o.icon ? 'seg-label' : ''}>{o.label}</span>
-        </button>
+        </Button>
       ))}
     </div>
   );

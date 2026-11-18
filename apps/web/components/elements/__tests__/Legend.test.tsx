@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Legend } from '@/components/elements/export';
+import { Legend } from '@/components/elements';
 
 describe('Legend', () => {
   it('lists each item with its swatch class', () => {

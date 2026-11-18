@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { buildSeed } from '@buxa/shared';
-import { TaskDrawerHeader } from '@/components/components/kanban/drawer/export';
+import { TaskDrawerHeader } from '@/components/components/kanban/drawer';
 import { requirePresent } from '@buxa/domain';
 
 vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({

@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { ActionMessage } from '@/components/components/classes/forms/export';
+import { ActionMessage } from '@/components/components/classes/forms';
 
 describe('ActionMessage', () => {
   it('announces a success politely (role status)', () => {

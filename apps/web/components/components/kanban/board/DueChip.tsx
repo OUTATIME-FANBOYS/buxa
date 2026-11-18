@@ -1,4 +1,4 @@
-import { Icon } from '@/components/elements/export';
+import { Icon } from '@/components/elements';
 import { dueInfo } from '@buxa/shared';
 
 export const DueChip = ({ due, kind }: { due?: string; kind: 'open' | 'active' | 'done' }) => {

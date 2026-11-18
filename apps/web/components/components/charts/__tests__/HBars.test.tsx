@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { HBars } from '@/components/components/charts/export';
+import { HBars } from '@/components/components/charts';
 
 describe('HBars', () => {
   it('lists each row with its label, a segment per non-zero value, and the total', () => {

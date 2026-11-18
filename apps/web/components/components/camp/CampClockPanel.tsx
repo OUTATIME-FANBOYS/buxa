@@ -5,7 +5,8 @@ import type { ClockFormat } from '@buxa/domain';
 import { idle } from '@buxa/shared';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { updateCampClockAction } from '@/actions/camp';
-import { Segmented, Button } from '@/components/elements/export';
+import { Segmented, Button } from '@/components/elements';
+import { HiddenField } from '@/components/atoms';
 
 const OPTIONS: { value: ClockFormat; label: string; example: string }[] = [
   { value: '12h', label: '12-hour', example: '9:05 AM' },
@@ -42,8 +43,8 @@ export function CampClockPanel({
       <p className="muted">Every time in the camp is shown on this clock.</p>
       {canChange ? (
         <form action={formAction} className="stack">
-          <input type="hidden" name="campId" value={campId} />
-          <input type="hidden" name="clockFormat" value={format} />
+          <HiddenField name="campId" value={campId} />
+          <HiddenField name="clockFormat" value={format} />
           <Segmented<ClockFormat> label="Clock" value={format} onChange={setFormat} options={SEGMENTS} />
           {state.status === 'error' && (
             <p className="field-error" role="alert">
@@ -51,7 +52,7 @@ export function CampClockPanel({
             </p>
           )}
           <div>
-            <Button variant="primary" disabled={pending}>
+            <Button variant="primary" icon="save" disabled={pending}>
               {pending ? 'Saving…' : 'Save clock'}
             </Button>
           </div>

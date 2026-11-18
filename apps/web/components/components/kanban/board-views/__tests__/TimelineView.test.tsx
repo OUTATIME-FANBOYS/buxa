@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { buildSeed } from '@buxa/shared';
-import { TimelineView } from '@/components/components/kanban/board-views/export';
+import { TimelineView } from '@/components/components/kanban/board-views';
 
 const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));

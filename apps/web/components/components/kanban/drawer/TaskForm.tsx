@@ -1,7 +1,7 @@
 import type { Project, Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Dialog } from '@/components/components/export';
-import { Field, Button } from '@/components/elements/export';
+import { Dialog } from '@/components/components';
+import { Field, Button } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { useTaskCommands } from '@buxa/middleware/hooks/hooks';
 import { useTaskDraft } from '@buxa/middleware/hooks/hooks';
@@ -97,7 +97,7 @@ export function TaskForm({ task, project, defaults, onClose }: TaskFormProps) {
           ) : (
             <div className="row-end sticky-foot">
               <Button onClick={close}>Cancel</Button>
-              <Button variant="primary" onClick={d.create}>
+              <Button variant="primary" icon="plus" onClick={d.create}>
                 Create task
               </Button>
             </div>

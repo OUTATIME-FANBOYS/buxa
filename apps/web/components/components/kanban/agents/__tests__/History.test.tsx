@@ -1,9 +1,9 @@
-import { Dialog as ConfirmDialog } from '@/components/components/export';
+import { Dialog as ConfirmDialog } from '@/components/components';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { buildSeed } from '@buxa/shared';
-import { History } from '@/components/components/kanban/agents/export';
+import { History } from '@/components/components/kanban/agents';
 
 const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
@@ -24,7 +24,7 @@ describe('History', () => {
         <History proposals={[]} agents={seed.agents} />
       </UiProvider>,
     );
-    expect(html).toContain('aria-label="Filter by outcome"');
+    expect(html).toContain('Filter by outcome');
     expect(html).toContain('>All outcomes</option>');
     expect(html).toContain('Export audit log');
   });

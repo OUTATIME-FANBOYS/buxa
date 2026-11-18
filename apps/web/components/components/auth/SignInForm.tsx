@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { BrandMark } from '@/components/elements/export';
+import { BrandMark, Button } from '@/components/elements';
 import { AuthForm, type AuthMode } from './AuthForm';
 
 /** The sign-in card: switches between signing in and creating an account. The page around it is rendered on the server. */
@@ -24,9 +24,9 @@ export function SignInForm() {
         <AuthForm key={mode} mode={mode} />
         <p className="auth-switch muted">
           {isSignIn ? 'New here?' : 'Already have an account?'}{' '}
-          <button type="button" className="link" onClick={() => setMode(isSignIn ? 'up' : 'in')}>
+          <Button variant="ghost" size="sm" className="link" onClick={() => setMode(isSignIn ? 'up' : 'in')}>
             {isSignIn ? 'Create an account' : 'Sign in'}
-          </button>
+          </Button>
         </p>
       </div>
     </>

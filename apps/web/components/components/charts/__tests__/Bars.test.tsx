@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Bars } from '@/components/components/charts/export';
+import { Bars } from '@/components/components/charts';
 
 describe('Bars', () => {
   it('draws a labelled chart with an axis label for the data', () => {

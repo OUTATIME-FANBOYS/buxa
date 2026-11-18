@@ -14,8 +14,9 @@ vi.mock('next/dynamic', () => ({
 }));
 
 describe('WorkArea', () => {
+  // The first import pulls in the whole views graph (HeroUI included), which is slower than the default 5s on a cold cache.
   it('is loaded on the client only, with a loading line', async () => {
-    const { WorkArea } = await import('@/components/views/kanban/export');
+    const { WorkArea } = await import('@/components/views/kanban');
     expect((WorkArea as unknown as { ssrOptions: boolean }).ssrOptions).toBe(false);
     expect(
       renderToStaticMarkup(
@@ -24,5 +25,5 @@ describe('WorkArea', () => {
         </WorkArea>,
       ),
     ).toContain('Loading…');
-  });
+  }, 30000);
 });

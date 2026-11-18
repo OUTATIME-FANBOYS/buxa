@@ -1,6 +1,7 @@
 import type { Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Icon, Button } from '@/components/elements/export';
+import { Icon, Button } from '@/components/elements';
+import { FileField } from '@/components/atoms';
 import { fmtSize } from '@buxa/shared';
 import { useAttachmentUpload } from '@buxa/middleware/hooks/hooks';
 
@@ -14,9 +15,8 @@ export function AttachmentList({ task, ro }: { task: Task; ro: boolean }) {
         <h3>Attachments</h3>
         {!ro && (
           <>
-            <input ref={input} type="file" multiple hidden onChange={e => void upload(e.target.files)} />
-            <Button size="sm" disabled={busy} onClick={() => input.current?.click()}>
-              <Icon name="clip" size={14} />
+            <FileField inputRef={input} multiple onChange={files => void upload(files)} />
+            <Button size="sm" icon="clip" disabled={busy} onClick={() => input.current?.click()}>
               {busy ? 'Uploading…' : 'Attach'}
             </Button>
           </>

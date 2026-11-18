@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog } from '@/components/components/export';
-import { Field, Button } from '@/components/elements/export';
+import { Dialog } from '@/components/components';
+import { Field, Button } from '@/components/elements';
+import { Checkbox, TextField } from '@/components/atoms';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { useStore } from '@buxa/middleware/providers/providers';
 
@@ -33,24 +34,25 @@ export function AgentDialog({ onClose }: { onClose: () => void }) {
           onClose();
         }}
       >
-        <Field label="Name" error={err}>
-          <input
-            value={name}
-            onChange={e => {
-              setName(e.target.value);
-              setErr(null);
-            }}
-            data-autofocus
-            placeholder="e.g. Packing list agent"
-            maxLength={40}
-          />
-        </Field>
-        <Field
+        <TextField
+          label="Name"
+          error={err}
+          value={name}
+          onChange={value => {
+            setName(value);
+            setErr(null);
+          }}
+          autoFocus
+          placeholder="e.g. Packing list agent"
+          maxLength={40}
+        />
+        <TextField
           label="Model or tool"
           hint="Shown next to its name. It is a label for people; it does not connect anything yet."
-        >
-          <input value={model} onChange={e => setModel(e.target.value)} maxLength={40} />
-        </Field>
+          value={model}
+          onChange={setModel}
+          maxLength={40}
+        />
         <Field label="What is it for?">
           <textarea
             rows={2}
@@ -63,21 +65,23 @@ export function AgentDialog({ onClose }: { onClose: () => void }) {
         <fieldset className="field">
           <legend className="field-label">Projects it may touch</legend>
           {projects.map(p => (
-            <label key={p.id} className="check-row">
-              <input
-                type="checkbox"
-                checked={scope.includes(p.id)}
-                onChange={() => setScope(x => (x.includes(p.id) ? x.filter(i => i !== p.id) : [...x, p.id]))}
-              />
-              <span>{p.name}</span>
-            </label>
+            <Checkbox
+              key={p.id}
+              className="check-row"
+              isSelected={scope.includes(p.id)}
+              onChange={() => setScope(x => (x.includes(p.id) ? x.filter(i => i !== p.id) : [...x, p.id]))}
+            >
+              {p.name}
+            </Checkbox>
           ))}
         </fieldset>
         <div className="row-end">
           <Button type="button" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="primary">Add agent</Button>
+          <Button variant="primary" icon="plus">
+            Add agent
+          </Button>
         </div>
       </form>
     </Dialog>

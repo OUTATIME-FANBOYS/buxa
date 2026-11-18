@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import { authorize } from '@buxa/domain';
 import { campContext, loadCampProfile } from '@buxa/server/composers/index.server';
-import { CampClockPanel } from '@/components/components/camp/export';
-import { SettingsPage } from '@/components/views/kanban/export';
+import { CampClockPanel } from '@/components/components/camp';
+import { SettingsPage } from '@/components/views/kanban';
 import { listArchivedCamps } from '@/actions/camp';
 
 export const metadata: Metadata = { title: 'Settings' };

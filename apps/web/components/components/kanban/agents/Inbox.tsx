@@ -1,5 +1,5 @@
-import { Avatar, Button } from '@/components/elements/export';
-import { Empty } from '@/components/components/export';
+import { Avatar, Button } from '@/components/elements';
+import { Empty } from '@/components/components';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { ago } from '@buxa/shared';

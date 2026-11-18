@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { ErrorReportButton } from '@/components/components/classes/forms/export';
+import { ErrorReportButton } from '@/components/components/classes/forms';
 
 describe('ErrorReportButton', () => {
   it('is not shown when the preview has no refused rows', () => {

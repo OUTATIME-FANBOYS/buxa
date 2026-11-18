@@ -1,5 +1,5 @@
-import { Pill } from '@/components/elements/export';
-import { BadgeActions } from '@/components/components/people/forms/export';
+import { Pill } from '@/components/elements';
+import { BadgeActions } from '@/components/components/people/forms';
 
 export interface BadgePanelProps {
   personId: string;

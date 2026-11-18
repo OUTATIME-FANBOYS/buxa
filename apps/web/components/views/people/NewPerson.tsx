@@ -1,14 +1,14 @@
 import { notFound } from 'next/navigation';
 import { can, isUuid } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
-import { Empty } from '@/components/components/export';
+import { Empty } from '@/components/components';
 import { loadHouseholdList } from '@buxa/server/composers/index.server';
-import { PageHeader } from '@/components/components/export';
-import { NewPersonForm } from '@/components/components/people/forms/export';
+import { PageHeader } from '@/components/components';
+import { NewPersonForm } from '@/components/components/people/forms';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { loadHousehold } from '@buxa/server/composers/index.server';
 import { toHouseholdChoices } from '@buxa/shared';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 
 /**
  * Add a person. `household` (a household id in the address) comes from a guardian's page, so adding a child to a family is one step.

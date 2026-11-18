@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { PickupChoices } from '@/components/components/attendance/export';
+import { PickupChoices } from '@/components/components/attendance';
 
 const options = [
   { personId: 'g-1', name: 'Jo Cole', relationship: 'Mother' },
@@ -12,8 +12,9 @@ describe('PickupChoices', () => {
     const html = renderToStaticMarkup(
       <PickupChoices name="collector" options={options} value="g-2" onChange={() => undefined} />,
     );
-    expect(html).toContain('<legend class="field-label">Who is collecting?</legend>');
-    expect(html.match(/type="radio" name="collector"/g)).toHaveLength(2);
+    expect(html).toContain('Who is collecting?');
+    expect(html).toMatch(/data-slot="radio-group"/);
+    expect(html.match(/type="radio"/g)).toHaveLength(2);
     expect(html.match(/checked=""/g)).toHaveLength(1);
     expect(html.indexOf('value="g-2"')).toBeGreaterThan(html.indexOf('checked=""') - 200);
     expect(html).toContain('Mother');

@@ -36,11 +36,11 @@ const MAY_IMPORT: Record<string, Layer[]> = {
   app: ['app', 'views', 'components', 'other'],
 };
 
-/** The export.ts of each layer's folder. Cross-layer imports must resolve to one of these. */
+/** The index.ts of each layer's folder. Cross-layer imports must resolve to one of these. */
 const BARREL_FILES: Partial<Record<Layer, string[]>> = {
-  components: ['components/components/export.ts'],
-  elements: ['components/elements/export.ts'],
-  views: ['components/views/export.ts'],
+  components: ['components/components/index.ts'],
+  elements: ['components/elements/index.ts'],
+  views: ['components/views/index.ts'],
 };
 /** Deep imports that are allowed on purpose. Each one is a reason in the PR body. */
 const DEEP_ALLOWED = new Set<string>();
@@ -150,7 +150,7 @@ describe('layer rules', () => {
         if (target === from || !BARREL_FILES[target]) {
           continue;
         }
-        if (BARREL_FILES[target].includes(to) || to.endsWith('/export.ts') || DEEP_ALLOWED.has(spec)) {
+        if (BARREL_FILES[target].includes(to) || to.endsWith('/index.ts') || DEEP_ALLOWED.has(spec)) {
           continue;
         }
         bad.push(`${file} -> ${spec}`);
@@ -199,9 +199,9 @@ describe('cycles', () => {
 
 describe('server-only code stays out of client barrels', () => {
   const CLIENT_BARRELS = [
-    'components/components/export.ts',
-    'components/elements/export.ts',
-    'components/views/export.ts',
+    'components/components/index.ts',
+    'components/elements/index.ts',
+    'components/views/index.ts',
   ];
   const isServerOnly = (file: string) =>
     /from ['"]server-only['"]|import ['"]server-only['"]/.test(source.get(file) ?? '');
@@ -234,21 +234,21 @@ describe('server-only code stays out of client barrels', () => {
   });
 });
 
-describe('components folders are used through their export.ts', () => {
-  // Every folder under components/ (elements, components, views and their subfolders) has an export.ts that re-exports its
-  // public items. A file outside a folder imports the folder's export.ts, never one of the files inside it.
+describe('components folders are used through their index.ts', () => {
+  // Every folder under components/ (elements, components, views and their subfolders) has an index.ts that re-exports its
+  // public items. A file outside a folder imports the folder's index.ts, never one of the files inside it.
   const COMPONENTS = 'components/';
   const folderOf = (file: string) => file.slice(0, file.lastIndexOf('/'));
   const insideFolder = (file: string, folder: string) => file === folder || file.startsWith(`${folder}/`);
 
-  it('no file outside a components folder imports a file inside it (only its export.ts)', () => {
+  it('no file outside a components folder imports a file inside it (only its index.ts)', () => {
     const bad: string[] = [];
     for (const [file, list] of edges) {
       if (!file.startsWith(COMPONENTS) && !file.startsWith('app/') && !file.startsWith('components/')) {
         continue;
       }
       for (const { to, spec } of list) {
-        if (!to.startsWith(COMPONENTS) || to.endsWith('/export.ts')) {
+        if (!to.startsWith(COMPONENTS) || to.endsWith('/index.ts')) {
           continue;
         }
         const folder = folderOf(to);
@@ -261,11 +261,11 @@ describe('components folders are used through their export.ts', () => {
     expect(bad).toEqual([]);
   });
 
-  it('every folder under components/ that holds source files has an export.ts', () => {
+  it('every folder under components/ that holds source files has an index.ts', () => {
     const folders = new Set(
       [...source.keys()].filter(f => f.startsWith(COMPONENTS) && !/\/__tests__\/|\.test\.tsx?$/.test(f)).map(folderOf),
     );
-    const missing = [...folders].filter(folder => !source.has(`${folder}/export.ts`));
+    const missing = [...folders].filter(folder => !source.has(`${folder}/index.ts`));
     expect(missing).toEqual([]);
   });
 });

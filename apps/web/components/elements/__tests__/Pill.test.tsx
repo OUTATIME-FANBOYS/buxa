@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Pill } from '@/components/elements/export';
+import { Pill } from '@/components/elements';
 
 describe('Pill', () => {
   it('uses the tone class and shows a dot by default', () => {

@@ -1,5 +1,5 @@
 import { ROUTES } from '@/config/routes';
-import { Button } from '@/components/components/export';
+import { Button } from '@/components/components';
 
 export default function NotFound() {
   return (

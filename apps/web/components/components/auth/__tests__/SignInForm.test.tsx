@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { SignInForm } from '@/components/components/auth/export';
+import { SignInForm } from '@/components/components/auth';
 import { settle } from '@buxa/domain';
 
 vi.mock('@buxa/server/composers/auth/signIn', () => ({ signIn: () => settle(() => ({ status: 'idle' })) }));

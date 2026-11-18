@@ -1,7 +1,8 @@
 'use client';
 
 import { useActionState, useRef } from 'react';
-import { Field, Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
+import { FileField, HiddenField } from '@/components/atoms';
 import { IMPORT_IDLE } from '@buxa/shared';
 import { importClassesAction } from '@/actions/classes';
 import { ImportResults } from './ImportResults';
@@ -22,12 +23,10 @@ export function ImportForm() {
           1. Upload a filled template
         </h2>
         <p className="muted">Use the template so the column names match. The file must be a CSV, up to 1 MB.</p>
-        <Field label="CSV file *">
-          <input type="file" name="file" accept=".csv,text/csv" required />
-        </Field>
-        <input type="hidden" name="intent" value="preview" />
+        <FileField label="CSV file *" name="file" accept=".csv,text/csv" required />
+        <HiddenField name="intent" value="preview" />
         <div className="classes-actions">
-          <Button variant="primary" type="submit" className="classes-target" disabled={pending}>
+          <Button variant="primary" type="submit" icon="check" className="classes-target" disabled={pending}>
             {pending ? 'Checking...' : 'Check the file'}
           </Button>
         </div>
@@ -44,12 +43,13 @@ export function ImportForm() {
           <ImportResults results={state.results} counts={state.counts} />
           <ErrorReportButton fileName={state.fileName} text={state.text} refused={state.counts.refused} />
           <form action={formAction} className="classes-actions" aria-label="Confirm the import">
-            <input type="hidden" name="intent" value="confirm" />
-            <input type="hidden" name="fileName" value={state.fileName} />
-            <input type="hidden" name="csv" value={state.text} />
+            <HiddenField name="intent" value="confirm" />
+            <HiddenField name="fileName" value={state.fileName} />
+            <HiddenField name="csv" value={state.text} />
             <Button
               variant="primary"
               type="submit"
+              icon="save"
               className="classes-target"
               disabled={pending || state.counts.create + state.counts.update === 0}
             >

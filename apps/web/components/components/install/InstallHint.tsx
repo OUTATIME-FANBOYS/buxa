@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Icon, Button } from '@/components/elements/export';
+import { Icon, Button } from '@/components/elements';
 import { browserStorage, readDismissed, writeDismissed } from '@buxa/shared/install/dismissal';
 import {
   PHONE_QUERY,

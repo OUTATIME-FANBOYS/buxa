@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { ErrorState } from '@/components/components/export';
+import { ErrorState } from '@/components/components';
 
 describe('ErrorState', () => {
   afterEach(() => vi.restoreAllMocks());

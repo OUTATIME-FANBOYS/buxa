@@ -1,6 +1,6 @@
 import type { Project, Task } from '@buxa/shared';
-import { Icon, Button } from '@/components/elements/export';
-import { Menu } from '@/components/components/export';
+import { Icon, Button } from '@/components/elements';
+import { Menu } from '@/components/components';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
 import { useTaskCommands } from '@buxa/middleware/hooks/hooks';
 

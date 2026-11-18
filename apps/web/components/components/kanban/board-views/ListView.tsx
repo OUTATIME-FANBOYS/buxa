@@ -1,16 +1,17 @@
 'use client';
 
-import { PriorityMark } from '@/components/elements/export';
+import { PriorityMark } from '@/components/elements';
 import { useMemo, useState } from 'react';
 import type { Project, Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
-import { Avatar } from '@/components/elements/export';
-import { Empty } from '@/components/components/export';
-import { Icon } from '@/components/elements/export';
+import { Avatar } from '@/components/elements';
+import { Empty } from '@/components/components';
+import { Icon } from '@/components/elements';
 import { KIND_TONE } from '@buxa/shared';
-import { Pill } from '@/components/elements/export';
-import { DueChip } from '@/components/components/kanban/board/export';
+import { Button, Pill } from '@/components/elements';
+import { Checkbox } from '@/components/atoms';
+import { DueChip } from '@/components/components/kanban/board';
 import { PRIORITY_RANK, subtaskProgress } from '@buxa/shared';
 
 type SortKey = 'title' | 'status' | 'priority' | 'assignee' | 'due';
@@ -56,10 +57,10 @@ export function ListView({
     setSort(s => (s?.key === k ? { key: k, dir: s.dir === 1 ? -1 : 1 } : { key: k, dir: 1 }));
   const th = (k: SortKey, label: string, cls = '') => (
     <th className={cls} aria-sort={sort?.key === k ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none'}>
-      <button onClick={() => toggleSort(k)}>
+      <Button variant="ghost" size="sm" onClick={() => toggleSort(k)}>
         {label}
         {sort?.key === k && <Icon name="down" size={12} className={sort.dir === 1 ? '' : 'flip'} />}
-      </button>
+      </Button>
     </th>
   );
   if (!rows.length) {
@@ -95,23 +96,23 @@ export function ListView({
             return (
               <tr key={t.id} className={t.archived ? 'is-archived' : ''}>
                 <td className="c-check">
-                  <input
-                    type="checkbox"
-                    checked={kind === 'done'}
-                    disabled={readOnly || !done}
-                    aria-label={`Mark “${t.title}” ${kind === 'done' ? 'not done' : 'done'}`}
+                  <Checkbox
+                    isSelected={kind === 'done'}
+                    isDisabled={readOnly || !done}
                     onChange={() => {
                       const to = kind === 'done' ? first : done;
                       if (to) {
                         actions.moveTask(t.id, to.id, null);
                       }
                     }}
-                  />
+                  >
+                    <span className="sr-only">{`Mark “${t.title}” ${kind === 'done' ? 'not done' : 'done'}`}</span>
+                  </Checkbox>
                 </td>
                 <td>
-                  <button className="row-title" onClick={() => openTask(t.id)}>
+                  <Button variant="ghost" className="row-title" onClick={() => openTask(t.id)}>
                     {t.title}
-                  </button>
+                  </Button>
                   <div className="row-sub">
                     {showProject && <span className="muted small">{proj.name}</span>}
                     {t.tags.slice(0, 3).map(g => (

@@ -2,8 +2,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { AccountMenu } from '@/components/components/camp/export';
-import { HomeHeader } from '@/components/components/kanban/home/export';
+import { AccountMenu } from '@/components/components/camp';
+import { HomeHeader } from '@/components/components/kanban/home';
 
 vi.mock('@/actions/auth', () => ({ signOut: () => Promise.resolve(undefined) }));
 vi.mock('@/actions/account', () => ({

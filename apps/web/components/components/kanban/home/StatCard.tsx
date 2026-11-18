@@ -1,4 +1,4 @@
-import { Icon, Pill } from '@/components/elements/export';
+import { Icon, Pill } from '@/components/elements';
 import { type Tone } from '@buxa/shared';
 
 interface StatCardProps {

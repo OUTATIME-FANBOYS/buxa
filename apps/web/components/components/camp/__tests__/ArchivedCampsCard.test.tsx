@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
-import { Dialog as ConfirmDialog } from '@/components/components/export';
-import { ArchivedCampsCard } from '@/components/components/camp/export';
+import { Dialog as ConfirmDialog } from '@/components/components';
+import { ArchivedCampsCard } from '@/components/components/camp';
 import type { ArchivedCamp } from '@/actions/camp';
 
 const h = vi.hoisted(() => ({

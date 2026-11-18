@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react';
 import { Dialog } from '@/components/components/Dialog';
 import { NewClassForm } from './NewClassForm';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 
 /**
  * The Classes page's New class button. It opens the create form in a dialog, so the list stays in view; the dialog closes on Escape,
@@ -18,6 +18,7 @@ export function NewClassButton() {
       <Button
         variant="primary"
         type="button"
+        icon="plus"
         className="classes-target"
         aria-haspopup="dialog"
         onClick={() => setOpen(true)}

@@ -4,14 +4,14 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Avatar, Button } from '@/components/elements/export';
-import { Empty } from '@/components/components/export';
-import { Menu } from '@/components/components/export';
-import { Pill } from '@/components/elements/export';
-import { Progress } from '@/components/elements/export';
+import { Avatar, Button } from '@/components/elements';
+import { Empty } from '@/components/components';
+import { Menu } from '@/components/components';
+import { Pill } from '@/components/elements';
+import { Progress } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
-import { Icon } from '@/components/elements/export';
-import { ProjectDialog } from '@/components/components/kanban/dialogs/export';
+import { Icon } from '@/components/elements';
+import { ProjectDialog } from '@/components/components/kanban/dialogs';
 import { diffDays, fmt, today } from '@buxa/shared';
 import { boardPath } from '@/config/routes';
 import { HEALTH_LABEL, HEALTH_TONE, healthOf, progressOf } from '@buxa/shared';
@@ -49,8 +49,7 @@ export function Projects() {
         </div>
         {!readOnly && (
           <div className="page-actions">
-            <Button variant="primary" size="header" onClick={() => setDlg({})}>
-              <Icon name="plus" size={16} />
+            <Button variant="primary" size="header" icon="plus" onClick={() => setDlg({})}>
               New project
             </Button>
           </div>
@@ -63,7 +62,7 @@ export function Projects() {
           body="Each project gets its own Kanban board."
           action={
             !readOnly ? (
-              <Button variant="primary" onClick={() => setDlg({})}>
+              <Button variant="primary" icon="plus" onClick={() => setDlg({})}>
                 New project
               </Button>
             ) : undefined

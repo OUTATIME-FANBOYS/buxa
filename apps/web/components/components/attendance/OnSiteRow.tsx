@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Dialog } from '@/components/components/export';
-import { Pill, Button } from '@/components/elements/export';
+import { Dialog } from '@/components/components';
+import { Pill, Button } from '@/components/elements';
 import type { OnSiteRowView } from '@buxa/shared';
 import { useCheckOut } from '@buxa/middleware/hooks/hooks';
 import * as attendance from '@/actions/attendance';

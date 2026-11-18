@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { AttendanceScreen } from '@/components/views/attendance/export';
+import { AttendanceScreen } from '@/components/views/attendance';
 
 export const metadata: Metadata = { title: 'Attendance' };
 

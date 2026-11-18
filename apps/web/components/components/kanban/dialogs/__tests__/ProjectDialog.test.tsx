@@ -1,11 +1,11 @@
-import { Dialog as ConfirmDialog } from '@/components/components/export';
+import { Dialog as ConfirmDialog } from '@/components/components';
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { buildSeed } from '@buxa/shared';
-import { ProjectDialog } from '@/components/components/kanban/dialogs/export';
+import { ProjectDialog } from '@/components/components/kanban/dialogs';
 
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Kept: the compiler needs this assertion to type the value; removing it fails typecheck.
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown>, push: vi.fn() }));

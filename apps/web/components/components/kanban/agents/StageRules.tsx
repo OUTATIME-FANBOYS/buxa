@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Pill } from '@/components/elements/export';
+import { Pill } from '@/components/elements';
+import { Select } from '@/components/atoms';
 import { TRUST_TONE } from '@buxa/shared';
 import type { Agent, Trust } from '@buxa/shared';
 
@@ -26,18 +27,18 @@ export function StageRules({ agent, canManage }: { agent: Agent; canManage: bool
         above.
       </p>
       {scoped.length > 1 && (
-        <select
+        <Select
+          label="Project for stage rules"
+          hideLabel
           className="inline-select"
-          aria-label="Project for stage rules"
           value={project.id}
-          onChange={e => setPid(e.target.value)}
-        >
-          {scoped.map(p => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
+          onChange={value => {
+            if (value) {
+              setPid(value);
+            }
+          }}
+          options={scoped.map(p => ({ value: p.id, label: p.name }))}
+        />
       )}
       <ul className="trust">
         {project.columns.map(c => (
@@ -47,21 +48,20 @@ export function StageRules({ agent, canManage }: { agent: Agent; canManage: bool
               <i className={`kind-dot kind-${c.kind} stage-dot`} aria-hidden="true" />
             </span>
             {canManage ? (
-              <select
+              <Select
+                label={`Moving into ${c.name}`}
+                hideLabel
                 className="inline-select stage-select"
-                aria-label={`Moving into ${c.name}`}
                 value={agent.moveRules[c.id] ?? 'default'}
-                onChange={e => {
-                  const v = e.target.value as StageChoice;
+                onChange={value => {
+                  const v = (value ?? 'default') as StageChoice;
                   actions.setMoveRule(agent.userId, c.id, v === 'default' ? null : v);
                 }}
-              >
-                {(['default', 'auto', 'approve', 'never'] as StageChoice[]).map(v => (
-                  <option key={v} value={v}>
-                    {label[v]}
-                  </option>
-                ))}
-              </select>
+                options={(['default', 'auto', 'approve', 'never'] as StageChoice[]).map(v => ({
+                  value: v,
+                  label: label[v],
+                }))}
+              />
             ) : (
               <Pill tone={agent.moveRules[c.id] ? TRUST_TONE[agent.moveRules[c.id]] : 'neutral'}>
                 {label[agent.moveRules[c.id] ?? 'default']}

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { CheckInState } from '@buxa/shared';
 import type { PersonCard } from '@buxa/shared';
-import { ResultPanel } from '@/components/components/attendance/export';
+import { ResultPanel } from '@/components/components/attendance';
 import { settle } from '@buxa/domain';
 
 vi.mock('@buxa/server/composers/attendance/checkIn', () => ({

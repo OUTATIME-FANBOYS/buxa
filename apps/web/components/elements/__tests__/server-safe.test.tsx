@@ -12,18 +12,18 @@ beforeAll(async () => {
   Object.assign(globalThis, { React });
   // Built from the files, not the retired barrel, so each module is one import.
   ui = {
-    ...(await import('@/components/elements/export')),
-    ...(await import('@/components/elements/export')),
-    ...(await import('@/components/elements/export')),
-    ...(await import('@/components/components/export')),
-    ...(await import('@/components/components/export')),
-    ...(await import('@/components/elements/export')),
-    ...(await import('@/components/elements/export')),
-    ...(await import('@/components/elements/export')),
-    ...(await import('@/components/components/export')),
-    ...(await import('@/components/components/export')),
-    ...(await import('@/components/components/export')),
-    ...(await import('@/components/components/export')),
+    ...(await import('@/components/elements')),
+    ...(await import('@/components/elements')),
+    ...(await import('@/components/elements')),
+    ...(await import('@/components/components')),
+    ...(await import('@/components/components')),
+    ...(await import('@/components/elements')),
+    ...(await import('@/components/elements')),
+    ...(await import('@/components/elements')),
+    ...(await import('@/components/components')),
+    ...(await import('@/components/components')),
+    ...(await import('@/components/components')),
+    ...(await import('@/components/components')),
     ...(await import('@buxa/shared')),
   };
 });

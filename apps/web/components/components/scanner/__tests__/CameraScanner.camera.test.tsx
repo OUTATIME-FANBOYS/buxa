@@ -2,7 +2,7 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { CameraScanner } from '@/components/components/scanner/export';
+import { CameraScanner } from '@/components/components/scanner';
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 

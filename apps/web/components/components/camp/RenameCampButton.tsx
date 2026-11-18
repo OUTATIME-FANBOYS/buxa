@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { RenameCampDialog } from './RenameCampDialog';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 
 /**
  * CONTRACT between chunks B2 (implements this file) and B1 (renders it on the overview page). Props are frozen.

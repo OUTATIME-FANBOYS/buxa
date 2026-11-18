@@ -1,5 +1,6 @@
 import { ROUTES } from '@/config/routes';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
+import { HiddenField } from '@/components/atoms';
 
 /**
  * Downloads the refused rows of the previewed file as CSV. It shows only when the preview has refused rows; with none, there is no
@@ -17,9 +18,9 @@ export function ErrorReportButton({ fileName, text, refused }: { fileName: strin
       className="classes-actions"
       aria-label="Download the error report"
     >
-      <input type="hidden" name="fileName" value={fileName} />
-      <input type="hidden" name="csv" value={text} />
-      <Button type="submit" className="classes-target">
+      <HiddenField name="fileName" value={fileName} />
+      <HiddenField name="csv" value={text} />
+      <Button type="submit" icon="download" className="classes-target">
         Download error report
       </Button>
       <span className="muted">One line per problem, with the row number, so you can fix the file.</span>

@@ -3,10 +3,10 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
-import { Empty } from '@/components/components/export';
-import { Segmented, Button } from '@/components/elements/export';
-import { ListView } from '@/components/components/kanban/board-views/export';
-import { Icon } from '@/components/elements/export';
+import { Empty } from '@/components/components';
+import { Segmented, Button } from '@/components/elements';
+import { ListView } from '@/components/components/kanban/board-views';
+import { SearchField } from '@/components/atoms';
 import { diffDays, today } from '@buxa/shared';
 import type { Task } from '@buxa/shared';
 
@@ -47,20 +47,17 @@ export function MyTasks() {
         </div>
         <div className="page-actions">
           {!readOnly && projects.length > 0 && (
-            <Button variant="primary" size="header" onClick={() => openTask('new')}>
-              <Icon name="plus" size={16} />
+            <Button variant="primary" size="header" icon="plus" onClick={() => openTask('new')}>
               New task
             </Button>
           )}
-          <div className="search-local">
-            <Icon name="search" size={15} />
-            <input
-              value={q}
-              onChange={e => setQ(e.target.value)}
-              placeholder="Search my tasks"
-              aria-label="Search my tasks"
-            />
-          </div>
+          <SearchField
+            className="search-local"
+            value={q}
+            onChange={setQ}
+            placeholder="Search my tasks"
+            aria-label="Search my tasks"
+          />
           <Segmented
             label="Show"
             value={show}

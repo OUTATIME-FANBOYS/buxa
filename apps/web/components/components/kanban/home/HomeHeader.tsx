@@ -1,5 +1,5 @@
-import { PageHeader } from '@/components/components/export';
-import { RenameCampButton } from '@/components/components/camp/export';
+import { PageHeader } from '@/components/components';
+import { RenameCampButton } from '@/components/components/camp';
 import type { CampHome } from '@buxa/shared/camp/campHomeTypes';
 import { greetingFor } from '@buxa/shared';
 

@@ -1,11 +1,11 @@
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
-import { Empty, PageHeader } from '@/components/components/export';
+import { Empty, PageHeader } from '@/components/components';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_MANAGE } from '@buxa/shared';
-import { NewClassForm } from '@/components/components/classes/forms/export';
-import { Button } from '@/components/elements/export';
+import { NewClassForm } from '@/components/components/classes/forms';
+import { Button } from '@/components/elements';
 
 /** Create a class. Viewers get the forbidden state and no form. */
 export async function NewClass() {

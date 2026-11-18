@@ -4,7 +4,7 @@ import { useCallback, useState } from 'react';
 import { Dialog } from '@/components/components/Dialog';
 import type { HouseholdChoice } from '@buxa/shared';
 import { NewPersonForm } from './NewPersonForm';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 
 /**
  * The People page's Add person button. It opens the add form in a dialog, so the list stays in view; the dialog closes on Escape,
@@ -16,7 +16,7 @@ export function AddPersonButton({ households }: { households: readonly Household
 
   return (
     <>
-      <Button variant="primary" type="button" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+      <Button variant="primary" type="button" icon="user-plus" aria-haspopup="dialog" onClick={() => setOpen(true)}>
         Add person
       </Button>
       {open && (

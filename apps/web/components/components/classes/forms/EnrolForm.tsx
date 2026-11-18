@@ -1,7 +1,8 @@
 'use client';
 
 import { useActionState, useEffect, useRef } from 'react';
-import { Field, Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
+import { HiddenField, Select, TextField } from '@/components/atoms';
 import { fieldError, idle } from '@buxa/shared';
 import { enrolAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
@@ -48,26 +49,25 @@ export function EnrolForm({
       className="panel stack classes-enrol"
       aria-label="Enrol a camper in this session"
     >
-      <input type="hidden" name="classId" value={classId} />
-      <input type="hidden" name="sessionId" value={sessionId} />
-      <Field label="Camper *" error={camperError}>
-        <select name="camperId" defaultValue="" aria-invalid={camperError ? true : undefined} disabled={noCampers}>
-          <option value="">{noCampers ? 'No campers in the camp yet' : 'Choose a camper'}</option>
-          {campers.map(c => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <HiddenField name="classId" value={classId} />
+      <HiddenField name="sessionId" value={sessionId} />
+      <Select
+        label="Camper *"
+        name="camperId"
+        error={camperError}
+        placeholder={noCampers ? 'No campers in the camp yet' : 'Choose a camper'}
+        isDisabled={noCampers}
+        options={campers.map(c => ({ value: c.id, label: c.name }))}
+      />
       {canOverride && (
-        <Field
+        <TextField
           label="Override reason (admins only)"
+          name="overrideReason"
           error={fieldError(state, 'override')}
           hint="Needed only to place a camper who clashes with another session. The reason is kept in the audit log."
-        >
-          <input name="overrideReason" maxLength={500} autoComplete="off" />
-        </Field>
+          maxLength={500}
+          autoComplete="off"
+        />
       )}
       <div className="classes-actions">
         {full ? (
@@ -78,6 +78,7 @@ export function EnrolForm({
             type="submit"
             name="intent"
             value="enrol"
+            icon="user-plus"
             className="classes-target"
             disabled={pending || noCampers}
           >

@@ -1,6 +1,6 @@
 import type { Member } from '@buxa/contracts';
-import { Avatar } from '@/components/elements/export';
-import { Pill } from '@/components/elements/export';
+import { Avatar } from '@/components/elements';
+import { Pill } from '@/components/elements';
 import { ROLE_LABEL, ROLE_TONE } from '@buxa/shared';
 import { firstNameOf } from '@buxa/shared/names';
 

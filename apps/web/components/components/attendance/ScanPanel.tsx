@@ -1,9 +1,9 @@
 'use client';
 
 import { useRef, useState, type RefObject } from 'react';
-import { CameraScanner } from '@/components/components/scanner/export';
-import { ScanField, type ScanFieldHandle } from '@/components/components/scanner/export';
-import { Button } from '@/components/elements/export';
+import { CameraScanner } from '@/components/components/scanner';
+import { ScanField, type ScanFieldHandle } from '@/components/components/scanner';
+import { Button } from '@/components/elements';
 
 interface Props {
   scanRef: RefObject<ScanFieldHandle | null>;

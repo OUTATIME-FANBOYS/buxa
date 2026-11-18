@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { RenameCampButton } from '@/components/components/camp/export';
+import { RenameCampButton } from '@/components/components/camp';
 import { settle } from '@buxa/domain';
 
 vi.mock('@buxa/server/composers/camp/renameCampAction', () => ({

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { NewCampForm } from '@/components/components/camp/export';
+import { NewCampForm } from '@/components/components/camp';
 import { settle } from '@buxa/domain';
 
 vi.mock('@buxa/server/composers/camp/createCampAction', () => ({
@@ -22,8 +22,8 @@ describe('NewCampForm', () => {
   });
   it('asks for a name and an address for the camp', () => {
     const html = renderToStaticMarkup(<NewCampForm first />);
-    expect(html).toContain('>Camp name</span>');
-    expect(html).toContain('>Address</span>');
+    expect(html).toMatch(/data-slot="label"[^>]*>Camp name</);
+    expect(html).toMatch(/data-slot="label"[^>]*>Address</);
     expect(html).toContain('>Create camp</button>');
   });
 });

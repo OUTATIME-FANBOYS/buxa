@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { PrintButton } from '@/components/elements/export';
+import { PrintButton } from '@/components/elements';
 
 describe('PrintButton', () => {
   it('is a plain button, labelled for the badge, that the print styles hide', () => {

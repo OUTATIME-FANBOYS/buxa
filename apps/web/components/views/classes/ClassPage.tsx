@@ -2,16 +2,16 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can, isUuid } from '@buxa/domain';
 import { ROUTES, classPath, newSessionPath } from '@/config/routes';
-import { Empty, PageHeader } from '@/components/components/export';
+import { Empty, PageHeader } from '@/components/components';
 import { campClock } from '@buxa/server/composers/index.server';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_ENROLMENTS, FORBIDDEN_READ } from '@buxa/shared';
 import { loadClassPage, loadEnrolments, loadPeopleWithRole } from '@buxa/server/composers/index.server';
-import { EnrolmentTable } from '@/components/components/classes/export';
-import { SessionTable, instructorNames } from '@/components/components/classes/export';
+import { EnrolmentTable } from '@/components/components/classes';
+import { SessionTable, instructorNames } from '@/components/components/classes';
 import { formatCampDateTime } from '@buxa/shared';
-import { EnrolForm } from '@/components/components/classes/forms/export';
-import { Button } from '@/components/elements/export';
+import { EnrolForm } from '@/components/components/classes/forms';
+import { Button } from '@/components/elements';
 
 const pick = (value: string | string[] | undefined): string | null =>
   typeof value === 'string' && isUuid(value) ? value : null;
@@ -68,7 +68,7 @@ export async function ClassPage({
         subtitle={cls.description || 'No description yet.'}
         actions={
           canManage && (
-            <Button variant="primary" className="classes-target" href={newSessionPath(cls.id)}>
+            <Button variant="primary" className="classes-target" icon="plus" href={newSessionPath(cls.id)}>
               Add session
             </Button>
           )
@@ -101,7 +101,7 @@ export async function ClassPage({
             }
             action={
               canManage && (
-                <Button variant="primary" className="classes-target" href={newSessionPath(cls.id)}>
+                <Button variant="primary" className="classes-target" icon="plus" href={newSessionPath(cls.id)}>
                   Add session
                 </Button>
               )

@@ -3,7 +3,7 @@ import { classPath } from '@/config/routes';
 import { formatCampDateTime } from '@buxa/shared';
 import { SessionStatus } from './SessionStatus';
 import type { ClockFormat } from '@buxa/domain';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 
 /** The session's instructors by name, comma separated. A session with none says so. */
 export const instructorNames = (session: Pick<Session, 'instructors'>): string =>

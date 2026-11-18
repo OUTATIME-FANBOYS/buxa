@@ -1,4 +1,4 @@
-import { BrandMark } from '@/components/elements/export';
+import { BrandMark } from '@/components/elements';
 
 /** Shown on the sign-in page when the public Supabase settings are missing, instead of a form that cannot work. */
 export function NotConfigured() {

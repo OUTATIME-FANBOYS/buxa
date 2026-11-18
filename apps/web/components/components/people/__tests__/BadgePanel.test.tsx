@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { BadgePanel, type BadgePanelProps } from '@/components/components/people/export';
+import { BadgePanel, type BadgePanelProps } from '@/components/components/people';
 import { settle } from '@buxa/domain';
 
 vi.mock('@buxa/server/composers/people/issueBadgeAction', () => ({

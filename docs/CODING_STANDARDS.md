@@ -8,7 +8,7 @@ Each rule describes the code on `develop` today. Where the rule is a **target** 
 
 ```
 apps/web            Next.js app: app/ (routes only), actions/ (server action wrappers for client code), config/, styles/, proxy.ts,
-                    components/ (all frontend: elements/, components/, views/; each component folder has an export.ts)
+                    components/ (all frontend: elements/, components/, views/; each component folder has an index.ts)
 apps/middleware     client-side React: hooks/ and providers/. No server code.
 apps/server         the backend: services, repositories, auth, http, session, rate limiting, runtime and the composers
 apps/shared         pure helpers: dates, CSV, tones, validation, ids, sorting, routes, theme, QR rendering. No React, no database
@@ -65,7 +65,7 @@ The rules below are enforced by `test/architecture/architecture.test.ts` and `pa
 
 1. **Packages point one way.** `shared` and `server` never import `web` or `middleware`. `shared` imports neither React nor the database.
 2. **Client code never reaches `@buxa/server`.** Client components call server actions through `apps/web/actions/`. Only server components, route handlers and `'use server'` files import `@buxa/server`. The test follows every module that client code can reach.
-3. **Each components folder has an `export.ts`.** It re-exports the folder's public items. Code outside a folder imports its `export.ts`, never a file inside it.
+3. **Each components folder has an `index.ts`.** It re-exports the folder's public items. Code outside a folder imports the folder by name (for example `@/components/elements`), never a file inside it.
 4. **Routes use views and components.** A route file imports from `components/views` and `components/components`, not from `components/elements`.
 5. **Only `apps/server` calls services or repositories.** Components and pages get their data through a composer or a server component.
 6. **Server-only code stays out of client barrels.** A module that imports `server-only` is never re-exported through a client barrel.
@@ -89,7 +89,7 @@ The rules below are enforced by `test/architecture/architecture.test.ts` and `pa
 - **Names are human-readable.** Name a file, function or folder for what it is for (`exportResponse`, `checkInState`), not an abbreviation. Components are `PascalCase.tsx`; modules are `camelCase.ts`.
 - **One concern per file.** If a file needs a section comment to separate two jobs, split it. The aim is under about 120 lines per file and about 30 per function. This is guidance, not a lint rule: some non-test files are longer than that today.
 - **Barrels: the file name says which kind.** These are the barrels in the code today, and a new one follows the same pattern:
-  - `export.ts` in every component folder under `apps/web/components/` (for example `elements/`, `components/attendance/` and `views/attendance/`). The two top-level folders, `components/` and `views/`, have none. Code outside a folder imports its `export.ts`, never a file inside it (rule 3 in section 3).
+  - `index.ts` in every component folder under `apps/web/components/` (for example `elements/`, `components/attendance/` and `views/attendance/`). The two top-level folders, `components/` and `views/`, have none. Code outside a folder imports the folder by name (for example `@/components/elements`), never a file inside it (rule 3 in section 3).
   - `index.ts` for each package entry point (`apps/shared`, `apps/server`, `apps/middleware`, `packages/domain`, `packages/contracts`, `packages/db`) and for the server and domain subfolders that group related code (for example `apps/server/src/session/index.ts`, `apps/server/src/services/index.ts`, `packages/domain/src/people/index.ts`).
   - `hooks/hooks.ts` and `providers/providers.ts` in `apps/middleware`, named for their folder. The app imports `@buxa/middleware/hooks/hooks` and `@buxa/middleware/providers/providers`.
   - There is no `logic/` or `common/` barrel in the code. Do not add one to match a pattern you read elsewhere; add the barrel the folder needs.

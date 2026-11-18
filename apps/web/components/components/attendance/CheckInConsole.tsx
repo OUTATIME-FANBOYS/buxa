@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import type { ScanFieldHandle } from '@/components/components/scanner/export';
+import type { ScanFieldHandle } from '@/components/components/scanner';
 import { checkInAnnouncement } from '@buxa/shared';
-import { LiveRegion } from '@/components/elements/export';
+import { LiveRegion } from '@/components/elements';
 import { NameSearch } from './NameSearch';
 import { ResultPanel } from './ResultPanel';
 import { ScanPanel } from './ScanPanel';

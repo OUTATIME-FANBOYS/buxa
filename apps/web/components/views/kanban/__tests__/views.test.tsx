@@ -1,17 +1,17 @@
-import { Dialog as ConfirmDialog } from '@/components/components/export';
+import { Dialog as ConfirmDialog } from '@/components/components';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { buildSeed } from '@buxa/shared';
 import type { CampHome } from '@buxa/shared/camp/campHomeTypes';
-import { Settings } from '@/components/views/kanban/export';
-import { Projects } from '@/components/views/kanban/export';
-import { MyTasks } from '@/components/views/kanban/export';
-import { Dashboard } from '@/components/views/kanban/export';
-import { WorkspaceCalendar } from '@/components/views/kanban/export';
-import { BoardPage } from '@/components/views/kanban/export';
-import { Agents } from '@/components/views/kanban/export';
-import { Reports } from '@/components/views/kanban/export';
+import { Settings } from '@/components/views/kanban';
+import { Projects } from '@/components/views/kanban';
+import { MyTasks } from '@/components/views/kanban';
+import { Dashboard } from '@/components/views/kanban';
+import { WorkspaceCalendar } from '@/components/views/kanban';
+import { BoardPage } from '@/components/views/kanban';
+import { Agents } from '@/components/views/kanban';
+import { Reports } from '@/components/views/kanban';
 import { requirePresent } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({ store: {} }));

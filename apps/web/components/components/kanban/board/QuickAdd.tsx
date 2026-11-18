@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { Column, Project } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 
 export function QuickAdd({ project, column, onDone }: { project: Project; column: Column; onDone: () => void }) {
   const { actions, me } = useStore();
@@ -52,10 +52,10 @@ export function QuickAdd({ project, column, onDone }: { project: Project; column
         </span>
       )}
       <div className="row">
-        <Button variant="primary" size="sm" onClick={submit}>
+        <Button variant="primary" size="sm" icon="plus" onClick={submit}>
           Add
         </Button>
-        <Button variant="ghost" size="sm" onClick={onDone}>
+        <Button variant="ghost" size="sm" icon="check" onClick={onDone}>
           Done
         </Button>
         <span className="muted small grow" style={{ textAlign: 'right' }}>

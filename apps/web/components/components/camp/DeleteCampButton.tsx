@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog } from '@/components/components/export';
+import { Dialog } from '@/components/components';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { deleteCamp, type CampActionResult } from '@/actions/camp';
-import { Button, TextField } from '@/components/elements/export';
+import { Button, TextField } from '@/components/elements';
 
 type Step = 'ask' | 'type' | null;
 

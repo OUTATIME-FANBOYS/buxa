@@ -3,7 +3,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { INSTALL_HINT_KEY } from '@buxa/shared/install/dismissal';
-import { InstallHint } from '@/components/components/install/export';
+import { InstallHint } from '@/components/components/install';
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 

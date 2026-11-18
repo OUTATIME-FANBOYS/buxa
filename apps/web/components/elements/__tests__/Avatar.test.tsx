@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Avatar } from '@/components/elements/export';
+import { Avatar } from '@/components/elements';
 
 describe('Avatar', () => {
   it('shows initials and the name for a person', () => {

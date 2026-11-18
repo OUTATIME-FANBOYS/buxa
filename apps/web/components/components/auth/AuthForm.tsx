@@ -1,7 +1,7 @@
 'use client';
 
-import { useActionState, useState, type ChangeEvent } from 'react';
-import { Field, Button } from '@/components/elements/export';
+import { useActionState, useState } from 'react';
+import { Button, TextField } from '@/components/atoms';
 import { fieldError, idle, type ActionState } from '@buxa/shared';
 import { signIn, signUp } from '@/actions/auth';
 
@@ -15,23 +15,29 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const bind = (field: keyof typeof values) => ({
     name: field,
     value: values[field],
-    onChange: (event: ChangeEvent<HTMLInputElement>) =>
-      setValues(previous => ({ ...previous, [field]: event.target.value })),
+    onChange: (value: string) => setValues(previous => ({ ...previous, [field]: value })),
   });
 
   return (
     <form action={action} noValidate>
       {!isSignIn && (
-        <Field label="Name" error={fieldError(state, 'name')}>
-          <input {...bind('name')} autoComplete="name" autoFocus />
-        </Field>
+        <TextField label="Name" error={fieldError(state, 'name')} autoComplete="name" autoFocus {...bind('name')} />
       )}
-      <Field label="Email" error={fieldError(state, 'email')}>
-        <input type="email" {...bind('email')} autoComplete="email" autoFocus={isSignIn} />
-      </Field>
-      <Field label="Password" error={fieldError(state, 'password')}>
-        <input type="password" {...bind('password')} autoComplete={isSignIn ? 'current-password' : 'new-password'} />
-      </Field>
+      <TextField
+        label="Email"
+        type="email"
+        error={fieldError(state, 'email')}
+        autoComplete="email"
+        autoFocus={isSignIn}
+        {...bind('email')}
+      />
+      <TextField
+        label="Password"
+        type="password"
+        error={fieldError(state, 'password')}
+        autoComplete={isSignIn ? 'current-password' : 'new-password'}
+        {...bind('password')}
+      />
       {state.status === 'error' && (
         <p className="field-error" role="alert">
           {state.message}
@@ -42,7 +48,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           {state.message}
         </p>
       )}
-      <Button variant="primary" fullWidth disabled={pending || state.status === 'success'}>
+      <Button variant="primary" fullWidth type="submit" disabled={pending || state.status === 'success'}>
         {pending ? 'One moment…' : isSignIn ? 'Sign in' : 'Create account'}
       </Button>
     </form>

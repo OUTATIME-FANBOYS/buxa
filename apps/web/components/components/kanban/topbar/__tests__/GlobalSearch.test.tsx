@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { buildSeed } from '@buxa/shared';
-import { GlobalSearch } from '@/components/components/kanban/topbar/export';
+import { GlobalSearch } from '@/components/components/kanban/topbar';
 
 const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));

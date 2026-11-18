@@ -3,18 +3,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Icon, Button } from '@/components/elements/export';
-import { Avatar } from '@/components/elements/export';
-import { Empty } from '@/components/components/export';
-import { Progress } from '@/components/elements/export';
-import { Segmented } from '@/components/elements/export';
-import { Pill } from '@/components/elements/export';
-import { BoardView } from '@/components/components/kanban/board/export';
-import { CalendarView } from '@/components/components/kanban/board-views/export';
-import { ListView } from '@/components/components/kanban/board-views/export';
-import { TimelineView } from '@/components/components/kanban/board-views/export';
-import { FilterBar } from '@/components/components/kanban/export';
-import { ProjectDialog } from '@/components/components/kanban/dialogs/export';
+import { Avatar, Button } from '@/components/elements';
+import { Empty } from '@/components/components';
+import { Progress } from '@/components/elements';
+import { Segmented } from '@/components/elements';
+import { Pill } from '@/components/elements';
+import { BoardView } from '@/components/components/kanban/board';
+import { CalendarView } from '@/components/components/kanban/board-views';
+import { ListView } from '@/components/components/kanban/board-views';
+import { TimelineView } from '@/components/components/kanban/board-views';
+import { FilterBar } from '@/components/components/kanban';
+import { ProjectDialog } from '@/components/components/kanban/dialogs';
 import { emptyFilter, matchesFilter, sortTasks } from '@buxa/shared';
 import { diffDays, fmt, today } from '@buxa/shared';
 import type { Filter, ViewKind } from '@buxa/shared';
@@ -116,8 +115,7 @@ export function BoardPage({ projectId }: { projectId?: string }) {
                 <Avatar key={m.userId} user={m.user} size={24} />
               ))}
             </span>
-            <Button variant="ghost" size="sm" onClick={() => setEdit(true)}>
-              <Icon name="edit" size={14} />
+            <Button variant="ghost" size="sm" icon="edit" onClick={() => setEdit(true)}>
               Edit
             </Button>
           </div>
@@ -125,8 +123,12 @@ export function BoardPage({ projectId }: { projectId?: string }) {
         <div className="page-actions">
           <Segmented<ViewKind> label="Board view" value={view} onChange={actions.setView} options={options} />
           {!readOnly && (
-            <Button variant="primary" size="header" onClick={() => openTask('new', { projectId: target.id })}>
-              <Icon name="plus" size={16} />
+            <Button
+              variant="primary"
+              size="header"
+              icon="plus"
+              onClick={() => openTask('new', { projectId: target.id })}
+            >
               Add task
             </Button>
           )}

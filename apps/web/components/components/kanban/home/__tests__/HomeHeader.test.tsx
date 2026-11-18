@@ -6,7 +6,7 @@ import type { CampHome } from '@buxa/server/composers/index.server';
 vi.mock('@/components/components/camp/RenameCampButton', () => ({ RenameCampButton: () => 'RENAME-BUTTON' }));
 
 Object.assign(globalThis, { React });
-const { HomeHeader } = await import('@/components/components/kanban/home/export');
+const { HomeHeader } = await import('@/components/components/kanban/home');
 
 const camp = (canRename: boolean): CampHome => ({
   campId: 'o1',

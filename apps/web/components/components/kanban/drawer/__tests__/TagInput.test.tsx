@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { TagInput } from '@/components/components/kanban/drawer/export';
+import { TagInput } from '@/components/components/kanban/drawer';
 
 describe('TagInput', () => {
   it('shows each tag with a remove control, and the add prompt when there are none', () => {

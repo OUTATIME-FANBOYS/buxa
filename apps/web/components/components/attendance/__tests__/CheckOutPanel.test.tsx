@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { OnSiteRowView } from '@buxa/shared';
 import { EMPTY_DRAFT } from '@buxa/shared';
-import { CheckOutPanel, type CheckOutPanelProps } from '@/components/components/attendance/export';
+import { CheckOutPanel, type CheckOutPanelProps } from '@/components/components/attendance';
 
 const row = (overrides: Partial<OnSiteRowView>): OnSiteRowView => ({
   personId: '6f1c2b8e-9a3d-4c5e-8f70-1a2b3c4d5e6f',

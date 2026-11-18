@@ -42,9 +42,9 @@ vi.mock('@buxa/server/composers/attendance/checkOut', () => ({
   checkOutAction: () => settle(() => ({ kind: 'ok', value: { ok: false, reason: 'not_on_site' } })),
 }));
 
-const { CheckInScreen } = await import('@/components/views/attendance/export');
-const { OnSiteScreen } = await import('@/components/views/attendance/export');
-const { AttendanceScreen } = await import('@/components/views/attendance/export');
+const { CheckInScreen } = await import('@/components/views/attendance');
+const { OnSiteScreen } = await import('@/components/views/attendance');
+const { AttendanceScreen } = await import('@/components/views/attendance');
 
 const ada: PersonSummary = {
   id: '6f1c2b8e-9a3d-4c5e-8f70-1a2b3c4d5e6f',

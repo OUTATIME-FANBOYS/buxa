@@ -1,8 +1,8 @@
-import { Dialog as ConfirmDialog } from '@/components/components/export';
+import { Dialog as ConfirmDialog } from '@/components/components';
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
-import { SidebarToggle } from '@/components/components/camp/export';
+import { SidebarToggle } from '@/components/components/camp';
 
 describe('SidebarToggle', () => {
   it('is the mobile button that opens the navigation', () => {

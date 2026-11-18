@@ -1,5 +1,5 @@
 import type { ImportPlan, RowResult, RowStatus } from '@buxa/domain';
-import { Pill } from '@/components/elements/export';
+import { Pill } from '@/components/elements';
 import type { Tone } from '@buxa/shared';
 
 const STATUS: Record<RowStatus, { label: string; tone: Tone }> = {

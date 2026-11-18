@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { EnrolForm } from '@/components/components/classes/forms/export';
+import { EnrolForm } from '@/components/components/classes/forms';
 
 vi.mock('@buxa/server/composers/index', () => ({ enrolAction: vi.fn(), cancelEnrolmentAction: vi.fn() }));
 
@@ -36,7 +36,7 @@ describe('EnrolForm', () => {
 
   it('labels the camper field and says when there is no one to choose', () => {
     const html = renderToStaticMarkup(<EnrolForm {...base} campers={[]} full={false} canOverride={false} />);
-    expect(html).toContain('<span class="field-label">Camper *</span>');
+    expect(html).toMatch(/data-slot="label"[^>]*>Camper \*</);
     expect(html).toContain('No campers in the camp yet');
     expect(html).toMatch(/<select[^>]*disabled/);
   });

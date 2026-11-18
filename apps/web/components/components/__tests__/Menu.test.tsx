@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { Menu } from '@/components/components/export';
+import { Menu } from '@/components/components';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -47,7 +47,7 @@ describe('Menu', () => {
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
     const items = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'));
     expect(items.map(i => i.textContent)).toEqual(['Rename', 'Delete']);
-    expect(items[1].className).toBe('danger');
+    expect(items[1].classList.contains('danger')).toBe(true);
     act(() => items[0].click());
     expect(onRename).toHaveBeenCalledTimes(1);
     expect(document.querySelector('[role="menu"]')).toBeNull();

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ICONS } from '@/components/elements/export';
+import { ICONS } from '@/components/elements';
 
 describe('icon set', () => {
   it('has a lucide glyph for every name the app asks for', () => {

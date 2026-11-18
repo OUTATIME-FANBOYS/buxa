@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createScanDeduper } from '@buxa/shared';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 
 /** Reads a QR code with the phone camera and calls `onScan` once per distinct code. The camera starts only when asked. */
 interface CameraScannerProps {
@@ -132,7 +132,7 @@ export function CameraScanner({ onScan, onClose }: CameraScannerProps) {
           </p>
         </>
       )}
-      <Button type="button" onClick={close}>
+      <Button type="button" icon="x" onClick={close}>
         Close camera
       </Button>
     </div>

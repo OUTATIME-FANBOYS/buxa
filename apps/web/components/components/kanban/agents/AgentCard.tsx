@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Avatar, Button } from '@/components/elements/export';
-import { Icon } from '@/components/elements/export';
-import { Pill } from '@/components/elements/export';
-import { Segmented } from '@/components/elements/export';
+import { Avatar, Button } from '@/components/elements';
+import { Icon } from '@/components/elements';
+import { Pill } from '@/components/elements';
+import { Segmented } from '@/components/elements';
+import { Checkbox } from '@/components/atoms';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { ConnectAgentDialog } from '@/components/components/kanban/dialogs/export';
+import { ConnectAgentDialog } from '@/components/components/kanban/dialogs';
 import * as A from '@buxa/shared';
 import type { Agent, Trust } from '@buxa/shared';
 import { TRUST_LABEL, TRUST_TONE } from '@buxa/shared';
@@ -107,20 +108,20 @@ export function AgentCard({ agent, canManage }: { agent: Agent; canManage: boole
         </p>
         <div className="row">
           {A.PROPOSAL_KINDS.map(k => (
-            <label key={k} className="chip chip-check">
-              <input
-                type="checkbox"
-                disabled={!canManage}
-                checked={agent.approves.includes(k)}
-                onChange={() =>
-                  actions.setApproves(
-                    agent.userId,
-                    agent.approves.includes(k) ? agent.approves.filter(x => x !== k) : [...agent.approves, k],
-                  )
-                }
-              />{' '}
+            <Checkbox
+              key={k}
+              className="chip chip-check"
+              isDisabled={!canManage}
+              isSelected={agent.approves.includes(k)}
+              onChange={() =>
+                actions.setApproves(
+                  agent.userId,
+                  agent.approves.includes(k) ? agent.approves.filter(x => x !== k) : [...agent.approves, k],
+                )
+              }
+            >
               {A.KIND_LABEL[k]}
-            </label>
+            </Checkbox>
           ))}
         </div>
       </div>
@@ -128,15 +129,15 @@ export function AgentCard({ agent, canManage }: { agent: Agent; canManage: boole
         <h3>Projects it may touch</h3>
         <div className="row">
           {projects.map(p => (
-            <label key={p.id} className="chip chip-check">
-              <input
-                type="checkbox"
-                disabled={!canManage}
-                checked={agent.scope.includes(p.id)}
-                onChange={() => toggle(p.id)}
-              />{' '}
+            <Checkbox
+              key={p.id}
+              className="chip chip-check"
+              isDisabled={!canManage}
+              isSelected={agent.scope.includes(p.id)}
+              onChange={() => toggle(p.id)}
+            >
               {p.name}
-            </label>
+            </Checkbox>
           ))}
         </div>
       </div>

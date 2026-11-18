@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation';
 import { authorize } from '@buxa/domain';
-import { Empty } from '@/components/components/export';
-import { PageHeader } from '@/components/components/export';
+import { Empty } from '@/components/components';
+import { PageHeader } from '@/components/components';
 import { loadOnSiteEntries } from '@buxa/server/composers/index.server';
-import { ON_SITE_LIST_ID, OnSiteRow } from '@/components/components/attendance/export';
+import { ON_SITE_LIST_ID, OnSiteRow } from '@/components/components/attendance';
 import { campActor, campClock } from '@buxa/server/composers/index.server';
 import { onSiteSummary, toOnSiteRow } from '@buxa/shared';
 

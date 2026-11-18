@@ -1,14 +1,14 @@
 'use client';
 
-import { PriorityMark } from '@/components/elements/export';
+import { PriorityMark } from '@/components/elements';
 import { memo } from 'react';
 import type { Project, Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { firstNameOf } from '@buxa/shared/names';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
-import { Avatar } from '@/components/elements/export';
-import { Icon } from '@/components/elements/export';
-import { Menu } from '@/components/components/export';
+import { Avatar } from '@/components/elements';
+import { Icon } from '@/components/elements';
+import { Menu } from '@/components/components';
 import { tagHue } from '@buxa/shared';
 import { subtaskProgress } from '@buxa/shared';
 import { justDragged } from '@buxa/shared';

@@ -3,7 +3,7 @@
 import { Component, type ReactNode } from 'react';
 import { Empty } from './Empty';
 import { ROUTES } from '@/config/routes';
-import { Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
 
 export class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null as Error | null };

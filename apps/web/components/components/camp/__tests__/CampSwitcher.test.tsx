@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { readFileSync } from 'node:fs';
 import type { Membership } from '@buxa/contracts';
-import { CampSwitcher } from '@/components/components/camp/export';
+import { CampSwitcher } from '@/components/components/camp';
 import { settle } from '@buxa/domain';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push() {}, refresh() {} }) }));

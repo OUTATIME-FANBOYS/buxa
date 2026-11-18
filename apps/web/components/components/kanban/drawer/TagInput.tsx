@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Icon } from '@/components/elements/export';
+import { Button, TextField } from '@/components/elements';
 
 export function TagInput({
   tags,
@@ -26,18 +26,22 @@ export function TagInput({
       {tags.map(t => (
         <span key={t} className="tag tag-x">
           {t}
-          <button type="button" aria-label={`Remove tag ${t}`} onClick={() => onChange(tags.filter(x => x !== t))}>
-            <Icon name="x" size={11} />
-          </button>
+          <Button
+            variant="ghost"
+            iconOnly
+            icon="x"
+            aria-label={`Remove tag ${t}`}
+            onClick={() => onChange(tags.filter(x => x !== t))}
+          />
         </span>
       ))}
-      <input
+      <TextField
+        label="Add a tag"
+        hideLabel
         value={v}
-        list="tag-suggestions"
         placeholder={tags.length ? '' : 'Add tags'}
-        aria-label="Add a tag"
-        onChange={e => setV(e.target.value)}
-        onBlur={add}
+        onChange={setV}
+        inputProps={{ list: 'tag-suggestions', onBlur: add }}
         onKeyDown={e => {
           if (e.key === 'Enter' || e.key === ',') {
             e.preventDefault();

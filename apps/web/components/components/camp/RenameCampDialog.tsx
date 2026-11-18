@@ -1,11 +1,12 @@
 'use client';
 
 import { useActionState, useEffect, useState } from 'react';
-import { Dialog } from '@/components/components/export';
+import { Dialog } from '@/components/components';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { fieldError, idle } from '@buxa/shared';
 import { renameCampAction } from '@/actions/camp';
-import { TextField, Button } from '@/components/elements/export';
+import { TextField, Button } from '@/components/elements';
+import { HiddenField } from '@/components/atoms';
 
 const FORM_ID = 'rename-camp';
 
@@ -43,14 +44,14 @@ export function RenameCampDialog({
           <Button type="button" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="primary" form={FORM_ID} disabled={pending}>
+          <Button variant="primary" icon="save" form={FORM_ID} disabled={pending}>
             {pending ? 'Saving…' : 'Save'}
           </Button>
         </>
       }
     >
       <form id={FORM_ID} action={formAction}>
-        <input type="hidden" name="campId" value={campId} />
+        <HiddenField name="campId" value={campId} />
         <TextField
           label="Camp name"
           name="name"

@@ -1,7 +1,8 @@
 'use client';
 
 import { useActionState, useEffect, useRef } from 'react';
-import { Field, Button } from '@/components/elements/export';
+import { Button } from '@/components/elements';
+import { Checkbox, Select, TextField } from '@/components/atoms';
 import { fieldError, idle } from '@buxa/shared';
 import { linkHouseholdAction } from '@/actions/people';
 import { FormMessage } from './FormMessage';
@@ -40,48 +41,36 @@ export function LinkHouseholdForm({
   return (
     <form ref={formRef} action={formAction} className="stack">
       <div className="people-form-grid">
-        <Field label="Household" error={err('householdId')}>
-          <select
-            name="householdId"
-            aria-invalid={err('householdId') ? true : undefined}
-            defaultValue={households[0]?.id}
-          >
-            {households.map(h => (
-              <option key={h.id} value={h.id}>
-                {h.name}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Person" error={err('personId')}>
-          <select name="personId" aria-invalid={err('personId') ? true : undefined} defaultValue="">
-            <option value="" disabled>
-              Choose a person
-            </option>
-            {people.map(p => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label="How they are related" error={err('relationship')}>
-          <input
-            name="relationship"
-            maxLength={40}
-            autoComplete="off"
-            aria-invalid={err('relationship') ? true : undefined}
-          />
-        </Field>
+        <Select
+          label="Household"
+          name="householdId"
+          error={err('householdId')}
+          defaultValue={households[0]?.id}
+          options={households.map(h => ({ value: h.id, label: h.name }))}
+        />
+        <Select
+          label="Person"
+          name="personId"
+          error={err('personId')}
+          placeholder="Choose a person"
+          options={people.map(p => ({ value: p.id, label: p.name }))}
+        />
+        <TextField
+          label="How they are related"
+          name="relationship"
+          error={err('relationship')}
+          maxLength={40}
+          autoComplete="off"
+        />
       </div>
       <div className="people-checks">
-        <label className="people-check">
-          <input type="checkbox" name="isGuardian" /> Parent or guardian
-        </label>
+        <Checkbox className="people-check" name="isGuardian">
+          Parent or guardian
+        </Checkbox>
         {canAuthorisePickup && (
-          <label className="people-check">
-            <input type="checkbox" name="canPickup" /> May collect the child (guardians only)
-          </label>
+          <Checkbox className="people-check" name="canPickup">
+            May collect the child (guardians only)
+          </Checkbox>
         )}
       </div>
       {err('canPickup') && (
@@ -91,7 +80,9 @@ export function LinkHouseholdForm({
       )}
       <FormMessage state={state} />
       <div>
-        <Button disabled={pending}>{pending ? 'Linking…' : 'Link to household'}</Button>
+        <Button icon="unlink" disabled={pending}>
+          {pending ? 'Linking…' : 'Link to household'}
+        </Button>
       </div>
     </form>
   );

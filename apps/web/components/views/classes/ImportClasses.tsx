@@ -1,11 +1,11 @@
 import { notFound } from 'next/navigation';
 import { can, IMPORT_COLUMNS, MAX_IMPORT_ROWS } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
-import { Empty, PageHeader } from '@/components/components/export';
+import { Empty, PageHeader } from '@/components/components';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_MANAGE } from '@buxa/shared';
-import { ImportForm } from '@/components/components/classes/forms/export';
-import { Button } from '@/components/elements/export';
+import { ImportForm } from '@/components/components/classes/forms';
+import { Button } from '@/components/elements';
 
 /**
  * Bulk import: download the template, fill it in a spreadsheet, upload it, read the preview, then confirm. Viewers get the forbidden
@@ -40,7 +40,7 @@ export async function ImportClasses() {
         title="Import classes and sessions"
         subtitle="Create many sessions from a spreadsheet. Every row is checked the same way as a manual entry."
         actions={
-          <Button className="classes-target" href={ROUTES.classImportTemplate} download>
+          <Button className="classes-target" icon="download" href={ROUTES.classImportTemplate} download>
             Download the template (CSV)
           </Button>
         }
