@@ -1,15 +1,10 @@
 'use client';
 
-import { Description } from '@heroui/react/description';
-import { FieldError } from '@heroui/react/field-error';
-import { Label } from '@heroui/react/label';
-import { ListBox } from '@heroui/react/list-box';
-import { Select as HeroSelect } from '@heroui/react/select';
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 
 /*
- * A labelled dropdown that picks one option. Options are plain data (value, label), so the atom knows nothing about
- * the app. The chosen value is a string; `name` submits it with the form, as a native <select> would.
+ * A labelled dropdown that picks one option. Plain HTML: a native <select>, styled by the app's own select rules, so it
+ * needs no HeroUI styles and opens with the device's own picker. Options are plain data (value, label).
  * `placeholder` is shown while nothing is chosen (use it for an "All ..." or "Choose ..." first choice).
  */
 export interface SelectOption {
@@ -52,36 +47,45 @@ export function Select({
   id,
   className,
 }: SelectProps) {
+  const generated = useId();
+  const selectId = id ?? generated;
+  const hasPlaceholder = placeholder !== undefined;
+  const current = value === undefined ? undefined : (value ?? '');
+
   return (
-    <HeroSelect
-      id={id}
-      name={name}
-      selectedKey={value}
-      defaultSelectedKey={defaultValue}
-      onSelectionChange={key => onChange?.(key === null ? null : String(key))}
-      placeholder={placeholder}
-      isInvalid={Boolean(error)}
-      isRequired={isRequired}
-      isDisabled={isDisabled}
-      className={className}
-      fullWidth
-    >
-      <Label className={hideLabel ? 'sr-only' : undefined}>{label}</Label>
-      <HeroSelect.Trigger>
-        <HeroSelect.Value />
-        <HeroSelect.Indicator />
-      </HeroSelect.Trigger>
-      {error ? <FieldError>{error}</FieldError> : hint ? <Description>{hint}</Description> : null}
-      <HeroSelect.Popover>
-        <ListBox>
-          {options.map(option => (
-            <ListBox.Item key={option.value} id={option.value} textValue={option.label} isDisabled={option.isDisabled}>
-              {option.label}
-              <ListBox.ItemIndicator />
-            </ListBox.Item>
-          ))}
-        </ListBox>
-      </HeroSelect.Popover>
-    </HeroSelect>
+    <div className={`select-field ${className ?? ''}`}>
+      <label className={hideLabel ? 'sr-only' : 'field-label'} htmlFor={selectId}>
+        {label}
+        {isRequired ? ' *' : null}
+      </label>
+      <select
+        id={selectId}
+        name={name}
+        required={isRequired}
+        disabled={isDisabled}
+        aria-invalid={Boolean(error) || undefined}
+        {...(current !== undefined ? { value: current } : { defaultValue: defaultValue ?? '' })}
+        onChange={e => onChange?.(e.target.value === '' ? null : e.target.value)}
+        className="select-field__input"
+      >
+        {hasPlaceholder ? (
+          <option value="" disabled={isRequired}>
+            {placeholder}
+          </option>
+        ) : null}
+        {options.map(option => (
+          <option key={option.value} value={option.value} disabled={option.isDisabled}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      {error ? (
+        <p className="field-error" role="alert">
+          {error}
+        </p>
+      ) : hint ? (
+        <p className="field-hint">{hint}</p>
+      ) : null}
+    </div>
   );
 }
