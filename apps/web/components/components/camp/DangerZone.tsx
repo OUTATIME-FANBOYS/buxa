@@ -76,7 +76,7 @@ export function DangerZone({ campId, campName }: { campId: string; campName: str
             <Button variant="danger" disabled={busy || typed !== campName}
               onClick={() => void run(() => deleteCamp({ orgId: campId, confirmName: typed }), 'Camp deleted')}>{busy ? 'Deleting…' : 'Delete camp'}</Button></>}>
           <p>This removes {campName} and everything in it: people, tasks, attendance and records. It cannot be undone.</p>
-          <TextField label="Type the camp name to confirm" name="confirmName" value={typed} onChange={setTyped} autoFocus />
+          <TextField label="Type the camp name to confirm" name="confirmName" value={typed} onChange={setTyped} maxLength={120} autoFocus />
           {errorLine}
         </Dialog>
       )}
