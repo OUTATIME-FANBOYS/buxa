@@ -58,10 +58,14 @@ describe('FilterBar', () => {
   });
 
   it('the filter row wraps and has a gap, so its controls never overlap; the sort and saved triggers size to their labels', () => {
-    const filters = readFileSync(new URL('../../../../styles/features/kanban/filters.css', import.meta.url), 'utf8');
+    // Prettier breaks rules over several lines and uses single quotes, so the text is flattened before matching.
+    const flat = (css: string) => css.replace(/\s+/g, ' ').replace(/['"]/g, '');
+    const filters = flat(
+      readFileSync(new URL('../../../../styles/features/kanban/filters.css', import.meta.url), 'utf8'),
+    );
     expect(filters).toMatch(/\.filters \{ display: flex; flex-wrap: wrap; gap: var\(--s2\);/);
     expect(filters).toContain('.filters .buxa-chip-menu.button--icon-only { width: auto;');
-    const responsive = readFileSync(new URL('../../../../styles/responsive.css', import.meta.url), 'utf8');
+    const responsive = flat(readFileSync(new URL('../../../../styles/responsive.css', import.meta.url), 'utf8'));
     expect(responsive).not.toContain('.filters { flex-wrap: nowrap; overflow-x: auto;');
     expect(responsive).toMatch(/\.filters \{ flex-wrap: wrap; \}/);
     const html = renderToStaticMarkup(

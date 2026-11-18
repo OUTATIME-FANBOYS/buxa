@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 /** The phone block of each stylesheet: everything inside the first `@media (max-width: 720px)` after the given marker. */
-const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
+// Prettier breaks rules over several lines, so the stylesheet text is flattened to one line before matching.
+const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8').replace(/\s+/g, ' ');
 const attendance = read('./features/attendance.css');
 const phoneBlock = attendance.slice(
   attendance.indexOf('@media (max-width: 720px)'),
@@ -59,9 +60,11 @@ describe('phone layout for check-in, on site and the log', () => {
 describe('Add person form on a touch screen', () => {
   const people = read('./features/people.css');
   it('uses the touch target height and 16px inputs on a coarse pointer', () => {
-    expect(people).toContain('@media (pointer: coarse) {\n  /* Touch');
+    expect(people).toContain('@media (pointer: coarse) { /* Touch');
     expect(people).toContain('form.person-form { --control-h: var(--control-touch); }');
-    expect(people).toMatch(/\.person-form input:not\(\[type=checkbox\]\), \.person-form select \{ font-size: 16px; \}/);
+    expect(people).toMatch(
+      /\.person-form input:not\(\[type='checkbox'\]\), \.person-form select \{ font-size: 16px; \}/,
+    );
     expect(read('./tokens.css')).toContain('--control-touch: 44px');
   });
 });
