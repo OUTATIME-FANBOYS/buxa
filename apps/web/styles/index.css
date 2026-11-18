@@ -10,6 +10,7 @@
  *   0. tailwind.css                    Tailwind v4 theme and utilities, prefixed `buxa:` (no preflight, see that file).
  *   1. tokens.css                      the single source of colours, spacing, radii, type scale, motion.
  *                                      Dark theme overrides sit next to the light values. Also the `.tone-*` classes.
+ *      heroui-theme.css               HeroUI's theme variable names, each pointing at a token above (no new colours).
  *   2. base.css                        resets, element defaults, utility classes (.muted, .row, .stack, .sr-only ...).
  *   3. components/buttons-fields.css   buttons, icon buttons, inputs, selects, form fields.
  *   4. layout/shell.css                app shell: sidebar, topbar, search, avatars, main column.
@@ -44,6 +45,7 @@
  */
 @import './tailwind.css';
 @import './tokens.css';
+@import './heroui-theme.css';
 @import './base.css';
 @import './components/buttons-fields.css';
 @import './layout/shell.css';
