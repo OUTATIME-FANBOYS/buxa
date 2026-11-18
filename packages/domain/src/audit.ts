@@ -3,6 +3,7 @@ export const AUDIT_ACTIONS = [
   'org.create',
   'org.update',
   'org.archive',
+  'org.unarchive',
   'person.create',
   'person.update',
   'person.archive',

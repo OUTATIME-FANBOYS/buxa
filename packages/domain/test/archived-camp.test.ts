@@ -18,12 +18,17 @@ describe('archived camps (read-only)', () => {
   });
 
   it.each(ROLES)('a %s is refused every write in an archived camp, with the archived reason', role => {
-    for (const action of ACTIONS.filter(a => !READ_ONLY(a) && a !== 'org:delete')) {
+    for (const action of ACTIONS.filter(a => !READ_ONLY(a) && a !== 'org:delete' && a !== 'org:unarchive')) {
       expect(authorize(archived(role), action)).toEqual({ allow: false, reason: 'archived_camp' });
     }
   });
 
-  it('only the owner may delete an archived camp; everyone else is refused by role', () => {
+  it('only the owner may unarchive or delete an archived camp; everyone else is refused by role', () => {
+    expect(can(archived('owner'), 'org:unarchive', { orgId: ORG })).toBe(true);
+    expect(authorize(archived('admin'), 'org:unarchive', { orgId: ORG })).toEqual({
+      allow: false,
+      reason: 'role_not_allowed',
+    });
     expect(can(archived('owner'), 'org:delete', { orgId: ORG })).toBe(true);
     expect(authorize(archived('admin'), 'org:delete', { orgId: ORG })).toEqual({
       allow: false,

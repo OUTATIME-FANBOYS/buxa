@@ -5,6 +5,7 @@ import { renameCampAction as renameCampActionImpl } from '@buxa/server/composers
 import { updateCampClockAction as updateCampClockActionImpl } from '@buxa/server/composers/camp/updateCampClockAction';
 import { archiveCamp as archiveCampImpl } from '@buxa/server/composers/camp/archiveCamp';
 import { deleteCamp as deleteCampImpl } from '@buxa/server/composers/camp/deleteCamp';
+import { unarchiveCamp as unarchiveCampImpl } from '@buxa/server/composers/camp/unarchiveCamp';
 import { listArchivedCamps as listArchivedCampsImpl } from '@buxa/server/composers/camp/listArchivedCamps';
 
 // Server action wrappers for the camp screens. Client components import this module, never @buxa/server. Next.js allows only
@@ -33,6 +34,8 @@ export interface ArchivedCamp {
   id: string;
   name: string;
   archivedAt: string;
+  /** The person's role in the camp. Only the owner may unarchive or delete it. */
+  role: 'viewer' | 'staff' | 'admin' | 'owner';
 }
 
 /** Archives the camp (owner only). It is hidden from the switcher, and its data is kept. */
@@ -40,12 +43,17 @@ export async function archiveCamp(input: { orgId: string }): Promise<CampActionR
   return archiveCampImpl(input);
 }
 
+/** Makes an archived camp active again (owner only). Its data is unchanged. */
+export async function unarchiveCamp(input: { orgId: string }): Promise<CampActionResult> {
+  return unarchiveCampImpl(input);
+}
+
 /** Deletes the camp and everything in it (owner only). `confirmName` must match the camp name exactly. */
 export async function deleteCamp(input: { orgId: string; confirmName: string }): Promise<CampActionResult> {
   return deleteCampImpl(input);
 }
 
-/** The person's archived camps, read-only. */
+/** The person's archived camps. Read-only, except that the owner may unarchive or delete one. */
 export async function listArchivedCamps(): Promise<ArchivedCamp[]> {
   return listArchivedCampsImpl();
 }

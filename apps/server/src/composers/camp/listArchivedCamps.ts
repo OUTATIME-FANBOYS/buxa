@@ -9,5 +9,5 @@ export async function listArchivedCamps(): Promise<ArchivedCamps> {
   const session = await requireSession();
   const camps = await getRuntime().services.orgs.listArchivedCamps(session.user.id);
 
-  return camps.map(c => ({ id: c.id, name: c.name, archivedAt: c.archivedAt }));
+  return camps.map(c => ({ id: c.id, name: c.name, archivedAt: c.archivedAt, role: c.role }));
 }

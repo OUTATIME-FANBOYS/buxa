@@ -79,6 +79,10 @@ export type ArchiveCampInput = z.infer<typeof ArchiveCampInputSchema>;
 export const DeleteCampInputSchema = z.object({ orgId: z.string().uuid(), confirmName: z.string() });
 export type DeleteCampInput = z.infer<typeof DeleteCampInputSchema>;
 
+/** Unarchive an archived camp (owner only). It makes the camp active again; its data is unchanged. */
+export const UnarchiveCampInputSchema = z.object({ orgId: z.string().uuid() });
+export type UnarchiveCampInput = z.infer<typeof UnarchiveCampInputSchema>;
+
 /** `{ ok: true }` on success; `{ ok: false, message }` with a message safe to show when the camp could not be changed. */
 export const CampResultSchema = z.discriminatedUnion('ok', [
   z.object({ ok: z.literal(true) }),
@@ -86,8 +90,13 @@ export const CampResultSchema = z.discriminatedUnion('ok', [
 ]);
 export type CampResult = z.infer<typeof CampResultSchema>;
 
-/** An archived camp the signed-in person belongs to. Read-only: there is no unarchive yet. */
-export const ArchivedCampSchema = z.object({ id: z.string(), name: z.string(), archivedAt: z.string() });
+/** An archived camp the signed-in person belongs to. Read-only, except that its owner may unarchive or delete it; `role` says which. */
+export const ArchivedCampSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  archivedAt: z.string(),
+  role: z.enum(['viewer', 'staff', 'admin', 'owner']),
+});
 export type ArchivedCamp = z.infer<typeof ArchivedCampSchema>;
 export const ArchivedCampsSchema = z.array(ArchivedCampSchema);
 export type ArchivedCamps = z.infer<typeof ArchivedCampsSchema>;

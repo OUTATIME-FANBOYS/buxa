@@ -100,6 +100,11 @@ describe('the danger zone', () => {
     expect(h.push).not.toHaveBeenCalled();
   });
 
+  it('gives Archive camp and Delete camp their icons', () => {
+    expect(button('Archive camp')?.querySelector('svg[class*="lucide-archive"]')).not.toBeNull();
+    expect(button('Delete camp')?.querySelector('svg[class*="lucide-trash"]')).not.toBeNull();
+  });
+
   it('disables the buttons while the request runs', async () => {
     let finish: (v: { ok: true }) => void = () => undefined;
     h.archiveCamp.mockReturnValue(

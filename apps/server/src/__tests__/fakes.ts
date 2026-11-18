@@ -13,6 +13,7 @@ import type {
 import { DEFAULT_CLOCK_FORMAT, type Role } from '@buxa/domain';
 import type { Identity } from '../auth/identity';
 import { InMemoryAttendanceRepository } from '../attendance/InMemoryAttendanceRepository';
+import { conflict } from '../http/errors';
 import { InMemoryClassRepository } from '../classes/InMemoryClassRepository';
 import { InMemoryCredentialRepository } from '../credentials/InMemoryCredentialRepository';
 import { InMemoryMembershipRepository } from '../memberships/InMemoryMembershipRepository';
@@ -112,6 +113,17 @@ export class InMemoryStore implements UserRepository, OrgRepository {
     this.database.record(actor, 'org.archive', 'org', o.id);
 
     return { archivedAt: o.archivedAt };
+  }
+  async unarchive(actor: { userId: string; orgId: string }): Promise<void> {
+    const o = this.orgs.get(actor.orgId);
+    if (!o) {
+      throw new OrgNotFoundError();
+    }
+    if (!o.archivedAt) {
+      throw conflict('This camp is not archived');
+    }
+    o.archivedAt = null;
+    this.database.record(actor, 'org.unarchive', 'org', o.id);
   }
   /** Removes the camp and its memberships. The people and attendance tables are not modelled here; the database test covers the full cascade. */
   async deleteCamp(actor: { userId: string; orgId: string }, confirmName: string): Promise<void> {

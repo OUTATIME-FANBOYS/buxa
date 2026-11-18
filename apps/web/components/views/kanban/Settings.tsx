@@ -92,7 +92,9 @@ export function Settings({
               <input value={me?.email ?? ''} disabled />
             </Field>
             <div>
-              <Button variant="primary">Save profile</Button>
+              <Button variant="primary" icon="save">
+                Save profile
+              </Button>
             </div>
           </form>
         </section>

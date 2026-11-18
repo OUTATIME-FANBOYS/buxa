@@ -139,4 +139,63 @@ describe('delete camp', () => {
     expect(store.orgs.has(orgId)).toBe(false);
     expect(store.members.filter(m => m.orgId === orgId)).toHaveLength(0);
   });
+
+  it('lets the owner delete an archived camp when the typed name is exact', async () => {
+    const { store, service, orgId, as } = await setUp();
+    await service.archiveCamp(as(OWNER, 'owner'), orgId);
+
+    await service.deleteCamp({ ...as(OWNER, 'owner'), archived: true }, orgId, NAME);
+
+    expect(store.orgs.has(orgId)).toBe(false);
+  });
+});
+
+describe('unarchive camp', () => {
+  it('lets the owner unarchive; the camp is active again and its data is unchanged', async () => {
+    const { store, service, orgId, as } = await setUp();
+    await service.archiveCamp(as(OWNER, 'owner'), orgId);
+
+    await service.unarchiveCamp({ ...as(OWNER, 'owner'), archived: true }, orgId);
+
+    expect(store.orgs.get(orgId)!.archivedAt).toBeNull();
+    expect(store.orgs.get(orgId)!.name).toBe(NAME);
+    expect(store.members.filter(m => m.orgId === orgId)).toHaveLength(3);
+    expect((await store.membershipsOf(OWNER)).map(m => m.orgId)).toContain(orgId);
+    expect(await service.listArchivedCamps(OWNER)).toEqual([]);
+  });
+
+  it('writes an unarchive row to the audit log', async () => {
+    const { store, service, orgId, as } = await setUp();
+    await service.archiveCamp(as(OWNER, 'owner'), orgId);
+
+    await service.unarchiveCamp({ ...as(OWNER, 'owner'), archived: true }, orgId);
+
+    expect(store.audit.filter(a => a.action === 'org.unarchive')).toEqual([
+      expect.objectContaining({ orgId, actorId: OWNER, entity: 'org', entityId: orgId }),
+    ]);
+  });
+
+  it.each([
+    ['admin', ADMIN],
+    ['viewer', VIEWER],
+  ] as const)('refuses a %s, and the camp stays archived', async (role, userId) => {
+    const { store, service, orgId, as } = await setUp();
+    await service.archiveCamp(as(OWNER, 'owner'), orgId);
+
+    const error = await refusal(service.unarchiveCamp({ ...as(userId, role), archived: true }, orgId));
+
+    expect(isHttpError(error) && error.statusCode).toBe(403);
+    expect(store.orgs.get(orgId)!.archivedAt).not.toBeNull();
+  });
+
+  it('refuses a camp that is not archived, with a clear message, and changes nothing', async () => {
+    const { store, service, orgId, as } = await setUp();
+
+    const error = await refusal(service.unarchiveCamp(as(OWNER, 'owner'), orgId));
+
+    expect(isHttpError(error) && error.statusCode).toBe(409);
+    expect(error).toMatchObject({ message: 'This camp is not archived' });
+    expect(store.orgs.get(orgId)!.archivedAt).toBeNull();
+    expect(store.audit.filter(a => a.action === 'org.unarchive')).toHaveLength(0);
+  });
 });

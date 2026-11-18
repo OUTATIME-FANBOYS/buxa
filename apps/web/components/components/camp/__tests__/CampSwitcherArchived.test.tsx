@@ -12,7 +12,7 @@ vi.mock('@/actions/camp', () => ({ selectCampAction: h.select }));
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const live = { orgId: 'o-1', name: 'Camp Birchwood', role: 'owner', slug: 'birchwood' } as unknown as Membership;
-const CEDAR = { id: 'o-9', name: 'Camp Cedar', archivedAt: '2026-10-02T09:00:00.000Z' };
+const CEDAR = { id: 'o-9', name: 'Camp Cedar', archivedAt: '2026-10-02T09:00:00.000Z', role: 'admin' as const };
 
 describe('CampSwitcher with archived camps', () => {
   let root: Root;

@@ -38,6 +38,8 @@ export interface OrgRepository {
   listMembers(orgId: string): Promise<Member[]>;
   /** Sets the camp's archive time and records the audit entry, atomically. Refuses a camp that is already archived. */
   archive(actor: Actor): Promise<{ archivedAt: string }>;
+  /** Clears the archive time and records the audit entry, atomically. Refuses a camp that is not archived. */
+  unarchive(actor: Actor): Promise<void>;
   /** Deletes the camp and everything in it. The caller has checked the owner role and the exact name. */
   deleteCamp(actor: Actor, confirmName: string): Promise<void>;
   /** The archived camps `userId` belongs to, with their role there (the role decides who may delete). */

@@ -11,6 +11,7 @@ const MATRIX: Record<Action, string> = {
   'org:update': '..YY',
   'org:archive': '...Y',
   'org:delete': '...Y',
+  'org:unarchive': '...Y',
   'org:transfer_ownership': '...Y',
   'members:read': 'YYYY',
   'members:read_contact': '..YY',

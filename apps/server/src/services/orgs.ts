@@ -15,8 +15,10 @@ export interface OrgService {
   getCamp(actor: Actor): Promise<Org>;
   renameCamp(actor: Actor, input: OrgPatchInput): Promise<OrgSummary>;
   listMembers(actor: Actor): Promise<Members>;
-  /** Owner only. Hides the camp and keeps all its data. There is no unarchive yet. */
+  /** Owner only. Hides the camp and keeps all its data. */
   archiveCamp(actor: Actor, orgId: string): Promise<{ archivedAt: string }>;
+  /** Owner only. Makes an archived camp active again; its data is unchanged. Refuses a camp that is not archived. */
+  unarchiveCamp(actor: Actor, orgId: string): Promise<void>;
   /** Owner only. Removes the camp and everything in it. `confirmName` must equal the camp's name exactly (capitals included). */
   deleteCamp(actor: Actor, orgId: string, confirmName: string): Promise<void>;
   /** The archived camps this person belongs to. Read-only; any role may see them. */
@@ -55,6 +57,11 @@ export function createOrgService(orgs: OrgRepository): OrgService {
       assertAllowed(actor, 'org:archive', { orgId });
 
       return guard(() => orgs.archive(actor));
+    },
+    async unarchiveCamp(actor, orgId) {
+      assertAllowed(actor, 'org:unarchive', { orgId });
+
+      await guard(() => orgs.unarchive(actor));
     },
     async deleteCamp(actor, orgId, confirmName) {
       assertAllowed(actor, 'org:delete', { orgId });
