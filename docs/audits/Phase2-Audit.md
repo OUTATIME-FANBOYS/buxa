@@ -1,10 +1,8 @@
-# Audits
+# Phase2 Audit: principal engineer code audit
 
-Periodic reviews of the codebase. Each audit is a dated file in this folder, with its findings and the decisions taken on them.
+Periodic reviews of the codebase live in this folder, each with its findings and the decisions taken on them.
 
-## Post-Phase 2: principal engineer code audit
-
-**When:** once Phase 2 is complete. Not started before that.
+**When:** after all phases are complete (Phase 1 through Phase 9), not after Phase 2 alone. Not started before that.
 
 **Goal:** a comprehensive architectural and code quality review, approached as a principal engineer would. Identify overengineering, unnecessary complexity, and opportunities to improve maintainability, performance and resource use, without compromising existing functionality.
 
