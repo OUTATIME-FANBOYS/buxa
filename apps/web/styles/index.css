@@ -7,6 +7,7 @@
  * `.main`, `.grid-3`, `.search`, `.toast`) and the pixel screenshots.
  *
  * Layers, in load order:
+ *   0. tailwind.css                    Tailwind v4 theme and utilities, prefixed `buxa:` (no preflight, see that file).
  *   1. tokens.css                      the single source of colours, spacing, radii, type scale, motion.
  *                                      Dark theme overrides sit next to the light values. Also the `.tone-*` classes.
  *   2. base.css                        resets, element defaults, utility classes (.muted, .row, .stack, .sr-only ...).
@@ -41,6 +42,7 @@
  *     otherwise put it in responsive.css so the order stays explicit.
  * Class names and custom-property names are shared with the TSX; renaming one is a code change, not a style change.
  */
+@import './tailwind.css';
 @import './tokens.css';
 @import './base.css';
 @import './components/buttons-fields.css';
