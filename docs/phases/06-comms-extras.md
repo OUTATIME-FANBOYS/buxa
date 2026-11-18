@@ -53,6 +53,6 @@ The installable staff app moves here, with the parent portal, because the web ap
 build first. Scope: a PWA built into the existing site, with the camera scanner, the install prompt and check-in on
 a phone.
 
-- **Starts when:** the web app runs properly on the production build, and the phase 2 owner checks are done.
+- **Starts when:** the web app runs properly on the production build, and the owner acceptance pass (`docs/phases/owner-acceptance.md`) is done.
 - **Exit:** staff check in a member in under 5 seconds on a real iPhone (Safari) and Android (Chrome), and can install the app and sign in from a phone. The procedure is in `docs/phases/01-check-in-timing.md`.
 - **Not in scope:** offline check-in, and a native app (revisited only if the PWA misses the 5-second target).

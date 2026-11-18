@@ -111,6 +111,6 @@ _The paths in this plan are as planned. The code now lives under `apps/server`, 
 
 Released as `v0.1.0`. The installable staff app is not part of this release, so the exit criteria that name it are open.
 
-> **Closed.** The code for this phase is done. The owner's open checks moved to phase 2: see "Carried over from phase 1" in `docs/phases/02-events-calendar.md`.
+> **Closed.** The code for this phase is done. The owner's open checks run after phase 4: see `docs/phases/owner-acceptance.md`.
 
 > **Mobile app moved.** The installable staff app is part of phase 6 now (see `docs/phases/06-comms-extras.md`), not phase 1.

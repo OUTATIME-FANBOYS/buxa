@@ -20,12 +20,12 @@ A plain-words summary of the change requests the owner has made for the Buxa cam
 
 ## Critical (4)
 
-| Request                                                             | Status  | Tracked in                     |
-| ------------------------------------------------------------------- | ------- | ------------------------------ |
-| Production Supabase certificate fix, so the production build passes | Done    | #106, PR #216, release PR #217 |
-| Owner decision: production build migrations and mock data           | Planned | #110                           |
-| Owner check: phone check-in timing on iPhone and Android            | Planned | #98 (evidence PRs #186, #193)  |
-| Owner check: signed-in walkthrough on the production build          | Planned | #100                           |
+| Request                                                             | Status                 | Tracked in                     |
+| ------------------------------------------------------------------- | ---------------------- | ------------------------------ |
+| Production Supabase certificate fix, so the production build passes | Done                   | #106, PR #216, release PR #217 |
+| Owner decision: production build migrations and mock data           | Planned                | #110                           |
+| Owner check: phone check-in timing on iPhone and Android            | Planned, after phase 4 | #98 (evidence PRs #186, #193)  |
+| Owner check: signed-in walkthrough on the production build          | Planned, after phase 4 | #100                           |
 
 ## High (11)
 
@@ -45,23 +45,23 @@ A plain-words summary of the change requests the owner has made for the Buxa cam
 
 ## Medium (15)
 
-| Request                                                                                                             | Status      | Tracked in                         |
-| ------------------------------------------------------------------------------------------------------------------- | ----------- | ---------------------------------- |
-| Phase 1 closed                                                                                                      | Done        | #198, PR #87                       |
-| Owner checks moved to phase 2                                                                                       | Done        | #223, PR #97                       |
-| Mobile app moved to phase 6                                                                                         | Done        | #238, PR #221                      |
-| Permission categories in phase 3                                                                                    | Done        | Not tracked yet (#254)             |
-| Clock format: 12 or 24 hour (server messages still to follow)                                                       | In progress | #205, PR #94, #105                 |
-| Stacked check-in chart with Parent/Guardians and Students                                                           | Done        | Not tracked yet (#255)             |
-| New class as a popup                                                                                                | Done        | #236, PR #219                      |
-| Add person as a popup with a tidy form                                                                              | Done        | #207, PR #96                       |
-| Settings as a responsive grid, and Settings, Help and Reports in the profile menu, with the name in the menu header | Done        | PR #96, #235, PR #218              |
-| Remove `any` and `unknown` with a `types.ts` per folder                                                             | Done        | Not tracked yet (#256)             |
-| Release v0.1.3 tag and v0.2.2 release                                                                               | Done        | #226, PR #208, #234, PR #217       |
-| Every PR linked to a board issue, and out-of-phase work tracked                                                     | Done        | PR #250 (issue #249 is still open) |
-| Lint: remove unneeded `async` and non-null assertions                                                               | In progress | #244                               |
-| Lint: the remaining warnings                                                                                        | Planned     | #246                               |
-| Bulk import has a database adapter (phase 2 check)                                                                  | Planned     | #102                               |
+| Request                                                                                                             | Status      | Tracked in                                            |
+| ------------------------------------------------------------------------------------------------------------------- | ----------- | ----------------------------------------------------- |
+| Phase 1 closed                                                                                                      | Done        | #198, PR #87                                          |
+| Owner checks moved to phase 2                                                                                       | Superseded  | #223, PR #97. Now after phase 4 (owner-acceptance.md) |
+| Mobile app moved to phase 6                                                                                         | Done        | #238, PR #221                                         |
+| Permission categories in phase 3                                                                                    | Done        | Not tracked yet (#254)                                |
+| Clock format: 12 or 24 hour (server messages still to follow)                                                       | In progress | #205, PR #94, #105                                    |
+| Stacked check-in chart with Parent/Guardians and Students                                                           | Done        | Not tracked yet (#255)                                |
+| New class as a popup                                                                                                | Done        | #236, PR #219                                         |
+| Add person as a popup with a tidy form                                                                              | Done        | #207, PR #96                                          |
+| Settings as a responsive grid, and Settings, Help and Reports in the profile menu, with the name in the menu header | Done        | PR #96, #235, PR #218                                 |
+| Remove `any` and `unknown` with a `types.ts` per folder                                                             | Done        | Not tracked yet (#256)                                |
+| Release v0.1.3 tag and v0.2.2 release                                                                               | Done        | #226, PR #208, #234, PR #217                          |
+| Every PR linked to a board issue, and out-of-phase work tracked                                                     | Done        | PR #250 (issue #249 is still open)                    |
+| Lint: remove unneeded `async` and non-null assertions                                                               | In progress | #244                                                  |
+| Lint: the remaining warnings                                                                                        | Planned     | #246                                                  |
+| Bulk import has a database adapter (phase 2 check)                                                                  | Planned     | #102                                                  |
 
 ## Low (4)
 
