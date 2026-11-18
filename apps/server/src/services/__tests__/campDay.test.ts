@@ -22,7 +22,10 @@ describe('camp-local day arithmetic', () => {
   });
 
   it('gives a window covering the days inclusively, with an exclusive end', () => {
-    expect(localDaysWindow('2027-07-10', '2027-07-11', 'UTC')).toEqual({ from: '2027-07-10T00:00:00.000Z', to: '2027-07-12T00:00:00.000Z' });
+    expect(localDaysWindow('2027-07-10', '2027-07-11', 'UTC')).toEqual({
+      from: '2027-07-10T00:00:00.000Z',
+      to: '2027-07-12T00:00:00.000Z',
+    });
   });
 
   it('refuses something that is not a real day', () => {

@@ -13,6 +13,8 @@ describe('sessionState', () => {
   });
 
   it('uses a word, not colour alone, for a full session', () => {
-    expect(renderToStaticMarkup(<SessionStatus session={{ capacity: 2, seatsTaken: 2, waitlisted: 0 }} />)).toContain('Full');
+    expect(renderToStaticMarkup(<SessionStatus session={{ capacity: 2, seatsTaken: 2, waitlisted: 0 }} />)).toContain(
+      'Full',
+    );
   });
 });

@@ -8,7 +8,11 @@ export function RolePills({ roles }: { roles: readonly CampRole[] }) {
 
   return (
     <span className="row">
-      {roles.map(role => <Pill key={role} tone="neutral" dot={false}>{CAMP_ROLE_LABELS[role]}</Pill>)}
+      {roles.map(role => (
+        <Pill key={role} tone="neutral" dot={false}>
+          {CAMP_ROLE_LABELS[role]}
+        </Pill>
+      ))}
     </span>
   );
 }

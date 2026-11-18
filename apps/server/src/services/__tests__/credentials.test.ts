@@ -41,14 +41,19 @@ describe('CredentialService', () => {
     const second = await camp.credentials.issue(admin, person.id);
 
     expect(await camp.credentials.scan(admin, first.payload)).toEqual({ kind: 'unknown' });
-    expect((await camp.credentials.scan(admin, second.payload))).toMatchObject({ kind: 'person', person: { id: person.id } });
+    expect(await camp.credentials.scan(admin, second.payload)).toMatchObject({
+      kind: 'person',
+      person: { id: person.id },
+    });
   });
 
   it('refuses to issue for an archived person (409) and for an unknown one (404)', async () => {
     const { camp, admin, person } = await camperWithPerson();
     await camp.people.archive(admin, person.id);
     expect((await thrown(() => camp.credentials.issue(admin, person.id))).statusCode).toBe(409);
-    expect((await thrown(() => camp.credentials.issue(admin, '00000000-0000-4000-8000-000000000000'))).statusCode).toBe(404);
+    expect((await thrown(() => camp.credentials.issue(admin, '00000000-0000-4000-8000-000000000000'))).statusCode).toBe(
+      404,
+    );
   });
 
   it('answers unknown for a malformed, unknown, revoked, archived or foreign code, all the same way', async () => {
@@ -84,13 +89,27 @@ describe('CredentialService', () => {
 
   it('scans a live badge to a summary with status and on-site flag for staff, and refuses a viewer (403)', async () => {
     const { camp, admin, person } = await camperWithPerson();
-    await camp.memberships.add(admin, { personId: person.id, plan: 'Summer', startsOn: '2027-07-01', endsOn: '2027-08-31' });
+    await camp.memberships.add(admin, {
+      personId: person.id,
+      plan: 'Summer',
+      startsOn: '2027-07-01',
+      endsOn: '2027-08-31',
+    });
     const badge = await camp.credentials.issue(admin, person.id);
     expect((await thrown(() => camp.credentials.scan(camp.actor('viewer'), badge.payload))).statusCode).toBe(403);
     const result = await camp.credentials.scan(camp.actor('staff'), `  ${badge.payload}\n`);
     expect(result).toEqual({
       kind: 'person',
-      person: { id: person.id, givenName: 'Ben', familyName: 'Stone', preferredName: null, roles: ['participant'], status: 'valid', onSite: false, archived: false },
+      person: {
+        id: person.id,
+        givenName: 'Ben',
+        familyName: 'Stone',
+        preferredName: null,
+        roles: ['participant'],
+        status: 'valid',
+        onSite: false,
+        archived: false,
+      },
     });
   });
 

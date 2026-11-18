@@ -1,7 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { isPersonNotFound } from '../../people/PeopleRepository';
-import { expectRejection, ISO_INSTANT, samplePerson, tokenHash, type RepositoryFactory, type RepositoryFixture } from '../../people/__tests__/fixture';
+import {
+  expectRejection,
+  ISO_INSTANT,
+  samplePerson,
+  tokenHash,
+  type RepositoryFactory,
+  type RepositoryFixture,
+} from '../../people/__tests__/fixture';
 
 /** One contract for every CredentialRepository adapter. The adapter only ever sees hashes. */
 export function credentialRepositoryContract(factory: RepositoryFactory): void {
@@ -20,7 +27,11 @@ export function credentialRepositoryContract(factory: RepositoryFactory): void {
       const personId = await newPerson();
       const badge = await fx.repos.credentials.issue(fx.actor, personId, tokenHash('one'), '2027-06-01T09:00:00.000Z');
       expect(badge).toEqual({
-        id: badge.id, personId, issuedAt: '2027-06-01T09:00:00.000Z', issuedBy: fx.actor.userId, revokedAt: null,
+        id: badge.id,
+        personId,
+        issuedAt: '2027-06-01T09:00:00.000Z',
+        issuedBy: fx.actor.userId,
+        revokedAt: null,
       });
       expect(badge.issuedAt).toMatch(ISO_INSTANT);
       expect(Object.keys(badge)).not.toContain('tokenHash');
@@ -62,13 +73,21 @@ export function credentialRepositoryContract(factory: RepositoryFactory): void {
       await fx.repos.credentials.issue(fx.actor, withBadge, tokenHash('b1'), '2027-06-01T09:00:00.000Z');
       await fx.repos.credentials.issue(fx.actor, revokedOnly, tokenHash('b2'), '2027-06-01T09:00:00.000Z');
       await fx.repos.credentials.revoke(fx.actor, revokedOnly, '2027-06-02T09:00:00.000Z');
-      expect([...await fx.repos.credentials.withActive(fx.actor.orgId, [withBadge, revokedOnly, none])]).toEqual([withBadge]);
+      expect([...(await fx.repos.credentials.withActive(fx.actor.orgId, [withBadge, revokedOnly, none]))]).toEqual([
+        withBadge,
+      ]);
     });
 
-    it('issue throws PersonNotFoundError for an unknown person or another organisation\'s person', async () => {
-      await expectRejection(fx.repos.credentials.issue(fx.actor, randomUUID(), tokenHash('x'), '2027-06-01T09:00:00.000Z'), isPersonNotFound);
+    it("issue throws PersonNotFoundError for an unknown person or another organisation's person", async () => {
+      await expectRejection(
+        fx.repos.credentials.issue(fx.actor, randomUUID(), tokenHash('x'), '2027-06-01T09:00:00.000Z'),
+        isPersonNotFound,
+      );
       const theirs = (await fx.repos.people.create(fx.otherActor, samplePerson())).id;
-      await expectRejection(fx.repos.credentials.issue(fx.actor, theirs, tokenHash('y'), '2027-06-01T09:00:00.000Z'), isPersonNotFound);
+      await expectRejection(
+        fx.repos.credentials.issue(fx.actor, theirs, tokenHash('y'), '2027-06-01T09:00:00.000Z'),
+        isPersonNotFound,
+      );
     });
 
     it('another organisation cannot resolve, read or revoke a badge', async () => {
@@ -85,7 +104,11 @@ export function credentialRepositoryContract(factory: RepositoryFactory): void {
       await fx.repos.credentials.issue(fx.actor, personId, tokenHash('1'), '2027-06-01T09:00:00.000Z');
       await fx.repos.credentials.issue(fx.actor, personId, tokenHash('2'), '2027-06-02T09:00:00.000Z');
       await fx.repos.credentials.revoke(fx.actor, personId, '2027-06-03T09:00:00.000Z');
-      expect((await fx.auditActions()).filter(a => a.startsWith('credential.'))).toEqual(['credential.issue', 'credential.issue', 'credential.revoke']);
+      expect((await fx.auditActions()).filter(a => a.startsWith('credential.'))).toEqual([
+        'credential.issue',
+        'credential.issue',
+        'credential.revoke',
+      ]);
     });
   });
 }

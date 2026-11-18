@@ -2,7 +2,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { currentActor } from '../camp';
 
 const h = vi.hoisted(() => ({ requireSession: vi.fn(), getCurrentCamp: vi.fn(), toActor: vi.fn() }));
-vi.mock('../../../session', () => ({ requireSession: h.requireSession, getCurrentCamp: h.getCurrentCamp, toActor: h.toActor }));
+vi.mock('../../../session', () => ({
+  requireSession: h.requireSession,
+  getCurrentCamp: h.getCurrentCamp,
+  toActor: h.toActor,
+}));
 
 describe('currentActor', () => {
   beforeEach(() => vi.clearAllMocks());

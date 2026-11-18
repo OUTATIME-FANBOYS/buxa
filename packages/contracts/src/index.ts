@@ -19,7 +19,15 @@ export type Me = z.infer<typeof MeSchema>;
 export const ClockFormatSchema = z.enum(CLOCK_FORMATS);
 export type ClockFormat = z.infer<typeof ClockFormatSchema>;
 
-export const OrgSchema = z.object({ id: z.string(), name: z.string(), slug: z.string(), createdAt: z.string(), memberCount: z.number().int(), timezone: z.string(), clockFormat: ClockFormatSchema });
+export const OrgSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  slug: z.string(),
+  createdAt: z.string(),
+  memberCount: z.number().int(),
+  timezone: z.string(),
+  clockFormat: ClockFormatSchema,
+});
 export type Org = z.infer<typeof OrgSchema>;
 
 export const OrgSummarySchema = z.object({ id: z.string(), name: z.string(), slug: z.string() });
@@ -29,17 +37,33 @@ export const CreatedOrgSchema = OrgSummarySchema.extend({ role: RoleSchema });
 export type CreatedOrg = z.infer<typeof CreatedOrgSchema>;
 
 /** `email` is null unless the reader is an admin or above (members:read_contact). */
-export const MemberSchema = z.object({ id: z.string(), name: z.string(), email: z.string().nullable(), role: RoleSchema });
+export const MemberSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string().nullable(),
+  role: RoleSchema,
+});
 export type Member = z.infer<typeof MemberSchema>;
 export const MembersSchema = z.object({ members: z.array(MemberSchema) });
 export type Members = z.infer<typeof MembersSchema>;
 
 /** What a client may send. */
 const NameSchema = z.string().trim().min(1, 'Give your camp a name.').max(120);
-export const TimeZoneSchema = z.string().refine(isTimeZone, 'Choose a valid time zone, for example America/Los_Angeles.');
-export const NewOrgInputSchema = z.object({ name: NameSchema, slug: z.string().refine(isSlug, SLUG_HINT), timezone: TimeZoneSchema.default(DEFAULT_TIMEZONE) });
+export const TimeZoneSchema = z
+  .string()
+  .refine(isTimeZone, 'Choose a valid time zone, for example America/Los_Angeles.');
+export const NewOrgInputSchema = z.object({
+  name: NameSchema,
+  slug: z.string().refine(isSlug, SLUG_HINT),
+  timezone: TimeZoneSchema.default(DEFAULT_TIMEZONE),
+});
 export type NewOrgInput = z.infer<typeof NewOrgInputSchema>;
-export const OrgPatchInputSchema = z.object({ name: NameSchema.optional(), timezone: TimeZoneSchema.optional(), clockFormat: ClockFormatSchema.optional() })
+export const OrgPatchInputSchema = z
+  .object({
+    name: NameSchema.optional(),
+    timezone: TimeZoneSchema.optional(),
+    clockFormat: ClockFormatSchema.optional(),
+  })
   .refine(v => v.name !== undefined || v.timezone !== undefined || v.clockFormat !== undefined, 'Nothing to change.');
 export type OrgPatchInput = z.infer<typeof OrgPatchInputSchema>;
 
@@ -62,7 +86,9 @@ export type ArchivedCamp = z.infer<typeof ArchivedCampSchema>;
 export const ArchivedCampsSchema = z.array(ArchivedCampSchema);
 export type ArchivedCamps = z.infer<typeof ArchivedCampsSchema>;
 
-export const ErrorBodySchema = z.object({ error: z.object({ code: z.string(), message: z.string(), requestId: z.string().optional() }) });
+export const ErrorBodySchema = z.object({
+  error: z.object({ code: z.string(), message: z.string(), requestId: z.string().optional() }),
+});
 
 export * from './people';
 export * from './attendance';

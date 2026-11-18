@@ -3,7 +3,10 @@
  * a UTF-8 byte-order mark, and blank lines skipped. Each record keeps the line it starts on, so a row can be named to the owner
  * by the row number they see in their spreadsheet. Writing CSV is the web app's `encodeCsv`; this only reads.
  */
-export interface CsvRecord { line: number; cells: string[] }
+export interface CsvRecord {
+  line: number;
+  cells: string[];
+}
 export type CsvParse = { ok: true; records: CsvRecord[] } | { ok: false; line: number; message: string };
 
 const BOM = '﻿';
@@ -35,7 +38,8 @@ export function parseCsvRecords(input: string): CsvParse {
     if (inQuotes) {
       if (c === '"') {
         if (text[i + 1] === '"') {
-          field += '"'; i++;
+          field += '"';
+          i++;
         } else {
           inQuotes = false;
         }

@@ -12,17 +12,30 @@ import { requirePresent } from '@buxa/domain';
 
 export type SyncState = 'local' | 'connecting' | 'synced' | 'offline';
 export type Updater = (s: AppState) => AppState;
-export interface Host { getState(): AppState; commit(s: AppState): void; pending: Updater[]; onStatus(s: SyncState, info?: { mcpUrl?: string }): void }
+export interface Host {
+  getState(): AppState;
+  commit(s: AppState): void;
+  pending: Updater[];
+  onStatus(s: SyncState, info?: { mcpUrl?: string }): void;
+}
 
 /* Guards for the server's replies. A reply that does not have the expected shape is an error, not a guess. */
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
-const isHealthReply = (v: unknown): v is HealthReply => isObject(v) && typeof v.ok === 'boolean' && typeof v.mcpUrl === 'string';
-const isStateReply = (v: unknown): v is StateReply => isObject(v) && typeof v.version === 'number'
-  && (v.empty === undefined || typeof v.empty === 'boolean') && (v.data === undefined || isData(v.data));
-const isTokenInfo = (v: unknown): v is TokenInfo => isObject(v) && typeof v.exists === 'boolean'
-  && (v.createdAt === null || typeof v.createdAt === 'string') && (v.lastSeen === null || typeof v.lastSeen === 'string');
+const isHealthReply = (v: unknown): v is HealthReply =>
+  isObject(v) && typeof v.ok === 'boolean' && typeof v.mcpUrl === 'string';
+const isStateReply = (v: unknown): v is StateReply =>
+  isObject(v) &&
+  typeof v.version === 'number' &&
+  (v.empty === undefined || typeof v.empty === 'boolean') &&
+  (v.data === undefined || isData(v.data));
+const isTokenInfo = (v: unknown): v is TokenInfo =>
+  isObject(v) &&
+  typeof v.exists === 'boolean' &&
+  (v.createdAt === null || typeof v.createdAt === 'string') &&
+  (v.lastSeen === null || typeof v.lastSeen === 'string');
 const isIssuedToken = (v: unknown): v is IssuedToken => isObject(v) && typeof v.token === 'string';
-const isVersionEvent = (v: unknown): v is VersionEvent => isObject(v) && typeof v.version === 'number' && typeof v.origin === 'string';
+const isVersionEvent = (v: unknown): v is VersionEvent =>
+  isObject(v) && typeof v.version === 'number' && typeof v.origin === 'string';
 
 function replyAs<T>(body: unknown, isT: (b: unknown) => b is T): T {
   if (!isT(body)) {
@@ -66,10 +79,16 @@ export const serverApi = {
     return { status: r.status, version: isObject(j) && typeof j.version === 'number' ? j.version : undefined };
   },
   async tokenInfo(agentId: string): Promise<TokenInfo> {
-    return replyAs(await json(await fetch(`/api/agents/${encodeURIComponent(agentId)}/token`, { headers })), isTokenInfo);
+    return replyAs(
+      await json(await fetch(`/api/agents/${encodeURIComponent(agentId)}/token`, { headers })),
+      isTokenInfo,
+    );
   },
   async issueToken(agentId: string): Promise<IssuedToken> {
-    return replyAs(await json(await fetch(`/api/agents/${encodeURIComponent(agentId)}/token`, { method: 'POST', headers })), isIssuedToken);
+    return replyAs(
+      await json(await fetch(`/api/agents/${encodeURIComponent(agentId)}/token`, { method: 'POST', headers })),
+      isIssuedToken,
+    );
   },
   async revokeToken(agentId: string): Promise<void> {
     await fetch(`/api/agents/${encodeURIComponent(agentId)}/token`, { method: 'DELETE', headers });
@@ -82,22 +101,31 @@ const sameData = (a: Data, b: Data) => DATA_KEYS.every(k => a[k] === b[k]);
 const SYNC_AVAILABLE = process.env.NEXT_PUBLIC_LEGACY_SYNC === 'true';
 
 export function createSync(h: Host) {
-  let version = 0; let last: Data | null = null; let chain: Promise<unknown> = Promise.resolve(); let timer: ReturnType<typeof setTimeout> | undefined;
-  let retry: ReturnType<typeof setTimeout> | undefined; let events: EventSource | null = null; let stopped = false; let active = false;
-  const queue = <T, >(fn: () => Promise<T>) => {
-    const p = chain.then(fn, fn); chain = p.catch(() => undefined);
+  let version = 0;
+  let last: Data | null = null;
+  let chain: Promise<unknown> = Promise.resolve();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let retry: ReturnType<typeof setTimeout> | undefined;
+  let events: EventSource | null = null;
+  let stopped = false;
+  let active = false;
+  const queue = <T>(fn: () => Promise<T>) => {
+    const p = chain.then(fn, fn);
+    chain = p.catch(() => undefined);
 
     return p;
   };
 
   /** Take the server's data and put this browser's unsent changes back on top of it. */
   const adopt = (v: number, data: Data) => {
-    version = v; last = data;
+    version = v;
+    last = data;
     h.commit(h.pending.reduce((s, f) => f(s), { ...h.getState(), ...data }));
   };
 
   async function pull() {
-    const r = await serverApi.getState(); if (r.empty || !r.data) {
+    const r = await serverApi.getState();
+    if (r.empty || !r.data) {
       return;
     }
     adopt(r.version, r.data);
@@ -107,7 +135,8 @@ export function createSync(h: Host) {
     if (stopped) {
       return;
     }
-    const n = h.pending.length; if (!n) {
+    const n = h.pending.length;
+    if (!n) {
       return;
     }
     const data = pickData(h.getState());
@@ -116,15 +145,21 @@ export function createSync(h: Host) {
 
       return;
     } // only per-browser settings changed
-    let res; try {
+    let res;
+    try {
       res = await serverApi.putState(version, data);
     } catch {
-      h.onStatus('offline'); schedule(3000);
+      h.onStatus('offline');
+      schedule(3000);
 
       return;
     }
     if (res.status === 200) {
-      version = requirePresent(res.version, 'res.version'); last = data; h.pending.splice(0, n); h.onStatus('synced'); if (h.pending.length) {
+      version = requirePresent(res.version, 'res.version');
+      last = data;
+      h.pending.splice(0, n);
+      h.onStatus('synced');
+      if (h.pending.length) {
         return flushNow();
       }
     } else if (res.status === 409) {
@@ -132,14 +167,17 @@ export function createSync(h: Host) {
 
       return flushNow();
     } else {
-      h.onStatus('offline'); schedule(3000);
+      h.onStatus('offline');
+      schedule(3000);
     }
   }
 
   function schedule(ms = 250) {
     if (!active) {
       return;
-    } clearTimeout(timer); timer = setTimeout(() => {
+    }
+    clearTimeout(timer);
+    timer = setTimeout(() => {
       void queue(flushNow);
     }, ms);
   }
@@ -179,11 +217,13 @@ export function createSync(h: Host) {
       return;
     }
     h.onStatus('connecting');
-    let info; try {
+    let info;
+    try {
       info = await serverApi.health();
     } catch {
       if (!stopped) {
-        h.pending.length = 0; h.onStatus('local');
+        h.pending.length = 0;
+        h.onStatus('local');
       }
 
       return;
@@ -192,13 +232,18 @@ export function createSync(h: Host) {
       return;
     }
     try {
-      const r = await serverApi.getState(); if (stopped) {
+      const r = await serverApi.getState();
+      if (stopped) {
         return;
       }
-      if (r.empty || !r.data) { // first run: this browser's data becomes the server's
-        const data = pickData(h.getState()); const put = await serverApi.putState(r.version, data);
+      if (r.empty || !r.data) {
+        // first run: this browser's data becomes the server's
+        const data = pickData(h.getState());
+        const put = await serverApi.putState(r.version, data);
         if (put.status === 200) {
-          version = requirePresent(put.version, 'put.version'); last = data; h.pending.length = 0;
+          version = requirePresent(put.version, 'put.version');
+          last = data;
+          h.pending.length = 0;
         } else {
           await pull();
         }
@@ -207,12 +252,15 @@ export function createSync(h: Host) {
           if (!localStorage.getItem('buxa.pre-sync')) {
             localStorage.setItem('buxa.pre-sync', JSON.stringify(pickData(h.getState())));
           }
-        } catch { /* storage full or blocked */ }
+        } catch {
+          /* storage full or blocked */
+        }
         adopt(r.version, r.data);
       }
     } catch {
       if (!stopped) {
-        h.pending.length = 0; h.onStatus('local');
+        h.pending.length = 0;
+        h.onStatus('local');
       }
 
       return;
@@ -220,7 +268,10 @@ export function createSync(h: Host) {
     if (stopped) {
       return;
     }
-    active = true; h.onStatus('synced', { mcpUrl: info.mcpUrl }); listen(); if (h.pending.length) {
+    active = true;
+    h.onStatus('synced', { mcpUrl: info.mcpUrl });
+    listen();
+    if (h.pending.length) {
       schedule(0);
     }
   }
@@ -231,7 +282,10 @@ export function createSync(h: Host) {
     /** Call after every local change. */
     changed: () => schedule(),
     stop() {
-      stopped = true; clearTimeout(timer); clearTimeout(retry); events?.close();
+      stopped = true;
+      clearTimeout(timer);
+      clearTimeout(retry);
+      events?.close();
     },
   };
 }

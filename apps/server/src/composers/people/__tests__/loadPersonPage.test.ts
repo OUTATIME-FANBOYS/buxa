@@ -4,7 +4,9 @@ import { loadHouseholdList, loadPeople, loadPeopleOrForbidden, loadPersonMatches
 import { HttpError } from '../../../http/errors';
 import { settle } from '@buxa/domain';
 
-const svc = vi.hoisted(() => ({ people: { list: vi.fn(() => settle(() => ['people'])), listHouseholds: vi.fn(() => settle(() => ['houses'])) } }));
+const svc = vi.hoisted(() => ({
+  people: { list: vi.fn(() => settle(() => ['people'])), listHouseholds: vi.fn(() => settle(() => ['houses'])) },
+}));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: svc }) }));
 
 const ACTOR = { userId: 'u-1' } as unknown as Actor;

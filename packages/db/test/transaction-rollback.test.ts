@@ -66,11 +66,13 @@ describe('transaction() when the rollback fails (S-13)', () => {
     });
     const pool = poolWith(client);
 
-    await expect(transaction(pool, () => {
-      return settle(() => {
-        throw new Error('boom');
-      });
-    })).rejects.toThrow(/socket reset/);
+    await expect(
+      transaction(pool, () => {
+        return settle(() => {
+          throw new Error('boom');
+        });
+      }),
+    ).rejects.toThrow(/socket reset/);
     expect(client.release.mock.calls[0][0]).toBeInstanceOf(Error);
   });
 
@@ -79,11 +81,13 @@ describe('transaction() when the rollback fails (S-13)', () => {
     const client = fakeClient({});
     const pool = poolWith(client);
 
-    await expect(transaction(pool, () => {
-      return settle(() => {
-        throw workError;
-      });
-    })).rejects.toBe(workError);
+    await expect(
+      transaction(pool, () => {
+        return settle(() => {
+          throw workError;
+        });
+      }),
+    ).rejects.toBe(workError);
     expect(client.release).toHaveBeenCalledWith();
     expect(client.query).toHaveBeenCalledWith('ROLLBACK');
   });
@@ -92,11 +96,13 @@ describe('transaction() when the rollback fails (S-13)', () => {
     const client = fakeClient({});
     const pool = poolWith(client);
 
-    await expect(transaction(pool, async (db: PoolClient) => {
-      await db.query('SELECT 1');
+    await expect(
+      transaction(pool, async (db: PoolClient) => {
+        await db.query('SELECT 1');
 
-      return 42;
-    })).resolves.toBe(42);
+        return 42;
+      }),
+    ).resolves.toBe(42);
     expect(client.query.mock.calls.map(c => c[0])).toEqual(['BEGIN', 'SELECT 1', 'COMMIT']);
     expect(client.release).toHaveBeenCalledWith();
   });

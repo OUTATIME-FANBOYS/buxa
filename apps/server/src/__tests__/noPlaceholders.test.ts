@@ -29,8 +29,7 @@ function sourceFiles(dir: string): string[] {
 
 describe('no placeholder services', () => {
   it('calls the placeholder helper nowhere except its own definition', () => {
-    const offenders = SCANNED
-      .flatMap(dir => sourceFiles(join(ROOT, dir)))
+    const offenders = SCANNED.flatMap(dir => sourceFiles(join(ROOT, dir)))
       .filter(path => relative(ROOT, path) !== DEFINITION)
       .filter(path => readFileSync(path, 'utf8').includes(CALL))
       .map(path => relative(ROOT, path));

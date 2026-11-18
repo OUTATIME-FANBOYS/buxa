@@ -5,7 +5,11 @@ const run = (from: BoardDnd, ...actions: BoardDndAction[]) => actions.reduce(boa
 
 describe('board drag state', () => {
   it('walks idle to task drag and back', () => {
-    const s = run(idleDnd, { type: 'taskGrabbed', id: 't1' }, { type: 'taskOver', over: { columnId: 'c2', beforeId: null } });
+    const s = run(
+      idleDnd,
+      { type: 'taskGrabbed', id: 't1' },
+      { type: 'taskOver', over: { columnId: 'c2', beforeId: null } },
+    );
     expect(s).toEqual({ mode: 'task', id: 't1', over: { columnId: 'c2', beforeId: null } });
     expect(run(s, { type: 'cleared' })).toEqual(idleDnd);
   });

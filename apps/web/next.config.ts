@@ -14,7 +14,14 @@ const STATIC_HEADERS = [
 
 const config: NextConfig = {
   // The shared packages are TypeScript source, so Next compiles them with the app.
-  transpilePackages: ['@buxa/domain', '@buxa/contracts', '@buxa/db', '@buxa/shared', '@buxa/server', '@buxa/middleware'],
+  transpilePackages: [
+    '@buxa/domain',
+    '@buxa/contracts',
+    '@buxa/db',
+    '@buxa/shared',
+    '@buxa/server',
+    '@buxa/middleware',
+  ],
   // Dependencies are hoisted to the repository root, so tell Turbopack where the workspace starts.
   turbopack: { root: fileURLToPath(new URL('../..', import.meta.url)) },
   // /kanban redirects to /camp. Links with a #/ hash never reach the server, so this redirect only covers plain /kanban paths.

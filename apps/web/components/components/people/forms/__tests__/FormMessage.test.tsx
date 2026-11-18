@@ -7,7 +7,9 @@ describe('FormMessage', () => {
     expect(renderToStaticMarkup(<FormMessage state={{ status: 'idle' }} />)).toBe('');
   });
   it('announces a success politely', () => {
-    expect(renderToStaticMarkup(<FormMessage state={{ status: 'success', message: 'Saved.' }} />)).toContain('role="status"');
+    expect(renderToStaticMarkup(<FormMessage state={{ status: 'success', message: 'Saved.' }} />)).toContain(
+      'role="status"',
+    );
     expect(renderToStaticMarkup(<FormMessage state={{ status: 'success' }} />)).toBe('');
   });
   it('announces an error assertively', () => {

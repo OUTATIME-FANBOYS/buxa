@@ -9,9 +9,16 @@ export function ErrorState({ error, reset }: { error: Error & { digest?: string 
 
   return (
     <div className="page">
-      <Empty icon="alert" title="Could not load this"
-        body={error.digest ? `Something went wrong on our side. Reference: ${error.digest}` : 'Something went wrong on our side.'}
-        action={<Button onClick={reset}>Try again</Button>} />
+      <Empty
+        icon="alert"
+        title="Could not load this"
+        body={
+          error.digest
+            ? `Something went wrong on our side. Reference: ${error.digest}`
+            : 'Something went wrong on our side.'
+        }
+        action={<Button onClick={reset}>Try again</Button>}
+      />
     </div>
   );
 }

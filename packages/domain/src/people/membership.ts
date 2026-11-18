@@ -54,7 +54,12 @@ export function personAccess<M extends MembershipPeriod>(memberships: readonly M
   return best ? { status: best.status, membership: best.m } : { status: 'none' };
 }
 
-function beats(m: MembershipPeriod, status: MembershipStatus, other: MembershipPeriod, otherStatus: MembershipStatus): boolean {
+function beats(
+  m: MembershipPeriod,
+  status: MembershipStatus,
+  other: MembershipPeriod,
+  otherStatus: MembershipStatus,
+): boolean {
   const a = RELEVANCE[status as Exclude<MembershipStatus, 'valid'>];
   const b = RELEVANCE[otherStatus as Exclude<MembershipStatus, 'valid'>];
   if (a !== b) {

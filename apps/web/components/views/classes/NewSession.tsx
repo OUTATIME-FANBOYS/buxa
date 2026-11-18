@@ -18,8 +18,16 @@ export async function NewSession({ classId }: { classId: string }) {
   if (!can(actor, 'classes:manage')) {
     return (
       <div className="page">
-        <Empty icon="alert" title="You cannot add sessions" body={FORBIDDEN_MANAGE}
-          action={<Button className="classes-target" href={classPath(classId)}>Back to the class</Button>} />
+        <Empty
+          icon="alert"
+          title="You cannot add sessions"
+          body={FORBIDDEN_MANAGE}
+          action={
+            <Button className="classes-target" href={classPath(classId)}>
+              Back to the class
+            </Button>
+          }
+        />
       </div>
     );
   }

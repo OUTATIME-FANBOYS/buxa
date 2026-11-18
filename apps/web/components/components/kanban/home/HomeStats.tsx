@@ -7,7 +7,14 @@ export function HomeStats({ camp }: { camp: CampHome }) {
   return (
     <div className="stats stats-home" aria-label="At a glance">
       {homeCards(camp).map(card => (
-        <StatCard key={card.label} label={card.label} value={card.value} tone={card.tone} info={card.info} change={card.change} />
+        <StatCard
+          key={card.label}
+          label={card.label}
+          value={card.value}
+          tone={card.tone}
+          info={card.info}
+          change={card.change}
+        />
       ))}
     </div>
   );

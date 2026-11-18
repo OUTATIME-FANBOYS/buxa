@@ -2,11 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { SECURITY_HEADERS, buildContentSecurityPolicy } from './security';
 import { requirePresent } from '@buxa/domain';
 
-const policy = (over: Partial<Parameters<typeof buildContentSecurityPolicy>[0]> = {}) => buildContentSecurityPolicy({ nonce: 'abc123', dev: false, supabaseUrl: 'https://proj.supabase.co', ...over });
+const policy = (over: Partial<Parameters<typeof buildContentSecurityPolicy>[0]> = {}) =>
+  buildContentSecurityPolicy({ nonce: 'abc123', dev: false, supabaseUrl: 'https://proj.supabase.co', ...over });
 
 describe('Content-Security-Policy', () => {
   it('lets scripts run only from this origin or with this request’s nonce, never inline without it', () => {
-    const script = requirePresent(policy().split('; ').find(d => d.startsWith('script-src')), "policy().split('; ').find(d => d.startsWith('script-src'))");
+    const script = requirePresent(
+      policy()
+        .split('; ')
+        .find(d => d.startsWith('script-src')),
+      "policy().split('; ').find(d => d.startsWith('script-src'))",
+    );
     expect(script).toBe("script-src 'self' 'nonce-abc123'");
     expect(script).not.toContain('unsafe');
   });
@@ -24,7 +30,13 @@ describe('Content-Security-Policy', () => {
   });
   it('forbids framing, plugins, base tag changes and cross-site form posts', () => {
     const p = policy();
-    for (const d of ["frame-ancestors 'none'", "object-src 'none'", "base-uri 'self'", "form-action 'self'", "default-src 'self'"]) {
+    for (const d of [
+      "frame-ancestors 'none'",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "default-src 'self'",
+    ]) {
       expect(p).toContain(d);
     }
   });

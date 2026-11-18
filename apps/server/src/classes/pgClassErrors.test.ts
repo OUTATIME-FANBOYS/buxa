@@ -7,7 +7,10 @@ describe('translateCapacityError', () => {
     const pgError = Object.assign(new Error('session is full'), { code: '23514', constraint: CAPACITY_CONSTRAINT });
     const translated = translateCapacityError(pgError, 4);
     expect(translated).toBeInstanceOf(SessionFullError);
-    expect(translated).toMatchObject({ kind: 'session-full', refusal: { kind: 'refuse', reason: 'session_full', capacity: 4 } });
+    expect(translated).toMatchObject({
+      kind: 'session-full',
+      refusal: { kind: 'refuse', reason: 'session_full', capacity: 4 },
+    });
   });
 
   it('leaves other check violations alone, so they are not reported as a full session', () => {

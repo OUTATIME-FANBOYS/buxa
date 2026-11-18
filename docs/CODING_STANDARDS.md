@@ -32,12 +32,12 @@ docs/               roadmap, ADRs, security, auth, deploy, phase specs, audit
 - **Client components import only client-safe modules.** `@buxa/server` (its entry point, `apps/server/src/index.ts`) pulls in server code, so it is for Server Components, route handlers and `'use server'` files only. Keep it that way: a server-only module is never re-exported through a client barrel.
 - **Route categories.** Every camp page sits in a route group named for its category, so the folder tree matches the sidebar. Route groups do not change URLs. A new page goes in the group for what it is for:
 
-  | Group (folder under `app/(app)/camp/`) | Sidebar group | What goes in it |
-  |---|---|---|
-  | `(operations)` | Operations | The day-to-day camp operation: check-in, on site, people, attendance, classes and sessions (and the classes import page). Help is a page in this group, but it is reached from the account menu, not the sidebar. |
-  | `(work)` | Work | The staff board: my tasks, projects, boards, calendar, agents. Reports is a page in this group, reached from the account menu. Also Home (`/camp`), which stays in this group because it shares the work shell. |
-  | `(admin)` | Admin | Team access and settings, and the new-camp page. |
-  | `(parent)` | not shown yet | **Reserved** for the parent portal (phase 6). Do not create the folder or add routes to it before phase 6. |
+  | Group (folder under `app/(app)/camp/`) | Sidebar group | What goes in it                                                                                                                                                                                                   |
+  | -------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `(operations)`                         | Operations    | The day-to-day camp operation: check-in, on site, people, attendance, classes and sessions (and the classes import page). Help is a page in this group, but it is reached from the account menu, not the sidebar. |
+  | `(work)`                               | Work          | The staff board: my tasks, projects, boards, calendar, agents. Reports is a page in this group, reached from the account menu. Also Home (`/camp`), which stays in this group because it shares the work shell.   |
+  | `(admin)`                              | Admin         | Team access and settings, and the new-camp page.                                                                                                                                                                  |
+  | `(parent)`                             | not shown yet | **Reserved** for the parent portal (phase 6). Do not create the folder or add routes to it before phase 6.                                                                                                        |
 
   Each group has a `layout.tsx`. A page directly in a group folder is allowed only for Home. `test/architecture/routeCategories.test.ts` fails when a page sits outside the listed groups, when two pages share a URL, when the parent group exists early, or when a sidebar link is filed in the wrong folder.
 
@@ -50,16 +50,16 @@ apps/web  ->  apps/middleware  ->  apps/shared
 apps/web  ->  apps/server      ->  apps/shared
 ```
 
-| Package and folder | What goes in | May import |
-|---|---|---|
-| web: `app/` | Next.js routes and route handlers. They wire things together and nothing more | `components/views`, `components/components`, `actions/`, `config/`, the packages |
-| web: `components/elements/` | The smallest presentational pieces: buttons, pills, inputs, icons, chart primitives | `@buxa/shared` only |
-| web: `components/components/` | Reusable composites: tables, panels, dialogs, notices, forms | `components/elements/`, the packages |
-| web: `components/views/` | Whole screens and page compositions (formerly `views/` and `screens/`) | `components/components/`, `components/elements/`, the packages |
-| web: `actions/` | `'use server'` wrappers that client components call instead of `@buxa/server` | `@buxa/server` |
-| middleware: `src/hooks/`, `src/providers/` | Client-side React hooks and providers. Server calls arrive as arguments | `@buxa/shared` |
-| server: `src/` | Services, repositories, auth, http, session, rate limiting, runtime, composers. Server-only | `@buxa/shared`, `@buxa/domain`, `@buxa/contracts`, `@buxa/db` |
-| shared: `src/` | Pure helpers: dates, CSV, tones, validation, ids, sorting, routes, theme, QR rendering | `@buxa/domain`, `@buxa/contracts` |
+| Package and folder                         | What goes in                                                                                | May import                                                                       |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| web: `app/`                                | Next.js routes and route handlers. They wire things together and nothing more               | `components/views`, `components/components`, `actions/`, `config/`, the packages |
+| web: `components/elements/`                | The smallest presentational pieces: buttons, pills, inputs, icons, chart primitives         | `@buxa/shared` only                                                              |
+| web: `components/components/`              | Reusable composites: tables, panels, dialogs, notices, forms                                | `components/elements/`, the packages                                             |
+| web: `components/views/`                   | Whole screens and page compositions (formerly `views/` and `screens/`)                      | `components/components/`, `components/elements/`, the packages                   |
+| web: `actions/`                            | `'use server'` wrappers that client components call instead of `@buxa/server`               | `@buxa/server`                                                                   |
+| middleware: `src/hooks/`, `src/providers/` | Client-side React hooks and providers. Server calls arrive as arguments                     | `@buxa/shared`                                                                   |
+| server: `src/`                             | Services, repositories, auth, http, session, rate limiting, runtime, composers. Server-only | `@buxa/shared`, `@buxa/domain`, `@buxa/contracts`, `@buxa/db`                    |
+| shared: `src/`                             | Pure helpers: dates, CSV, tones, validation, ids, sorting, routes, theme, QR rendering      | `@buxa/domain`, `@buxa/contracts`                                                |
 
 The rules below are enforced by `test/architecture/architecture.test.ts` and `packages.test.ts`:
 
@@ -96,6 +96,7 @@ The rules below are enforced by `test/architecture/architecture.test.ts` and `pa
 - **Single source of truth.** A URL, permission, validation rule, theme key or piece of copy is defined once and imported everywhere. URLs come from `config/routes.ts`; permissions come from `packages/domain`; the theme storage key is in `config/theme.ts`. If you are about to write the same string a second time, move it first.
 
 ## 6. Lint
+
 - Run `npm run lint` before pushing. CI runs it in chunk 2b, alongside the typecheck (2a), and fails on any error. `npm run lint:fix` fixes what it can.
 - Config: `eslint.config.mjs` (flat config, ESLint 9). Errors that must not come back:
   - `@typescript-eslint/no-explicit-any`: no `any`; use `unknown` and narrow it, or a real type.

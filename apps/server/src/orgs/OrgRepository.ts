@@ -5,22 +5,26 @@ import type { Actor, Role } from '@buxa/domain';
 export class SlugTakenError extends Error {
   readonly kind = 'slug-taken';
   constructor() {
-    super('That address is already taken'); this.name = 'SlugTakenError';
+    super('That address is already taken');
+    this.name = 'SlugTakenError';
   }
 }
 
 /** True for a SlugTakenError from any copy of this module (see isHttpError for why not `instanceof`). */
-export const isSlugTaken = (error: unknown): error is SlugTakenError => error instanceof Error && (error as { kind?: unknown }).kind === 'slug-taken';
+export const isSlugTaken = (error: unknown): error is SlugTakenError =>
+  error instanceof Error && (error as { kind?: unknown }).kind === 'slug-taken';
 /** Raised when an organisation is not visible to the caller (it does not exist, or row-level security hides it). */
 export class OrgNotFoundError extends Error {
   readonly kind = 'org-not-found';
   constructor() {
-    super('Organisation not found'); this.name = 'OrgNotFoundError';
+    super('Organisation not found');
+    this.name = 'OrgNotFoundError';
   }
 }
 
 /** True for an OrgNotFoundError from any copy of this module (see isHttpError for why not `instanceof`). */
-export const isOrgNotFound = (error: unknown): error is OrgNotFoundError => error instanceof Error && (error as { kind?: unknown }).kind === 'org-not-found';
+export const isOrgNotFound = (error: unknown): error is OrgNotFoundError =>
+  error instanceof Error && (error as { kind?: unknown }).kind === 'org-not-found';
 
 /**
  * Everything the API needs to know about organisations. Callers decide *whether* something may happen
@@ -40,4 +44,9 @@ export interface OrgRepository {
   archivedCampsOf(userId: string): Promise<ArchivedCampRecord[]>;
 }
 
-export interface ArchivedCampRecord { id: string; name: string; archivedAt: string; role: Role }
+export interface ArchivedCampRecord {
+  id: string;
+  name: string;
+  archivedAt: string;
+  role: Role;
+}

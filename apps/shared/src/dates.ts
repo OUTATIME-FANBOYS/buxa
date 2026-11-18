@@ -7,7 +7,8 @@ export const parse = (s: string) => {
   return new Date(y, m - 1, d);
 };
 export const addDays = (s: string, n: number) => {
-  const d = parse(s); d.setDate(d.getDate() + n);
+  const d = parse(s);
+  d.setDate(d.getDate() + n);
 
   return toISO(d);
 };
@@ -34,7 +35,9 @@ export function ago(iso: string): string {
   return fmt(isoDay(iso));
 }
 export const iso = (daysFromNow: number, hour = 10) => {
-  const d = new Date(); d.setDate(d.getDate() + daysFromNow); d.setHours(hour, (Math.abs(daysFromNow) * 7) % 50, 0, 0);
+  const d = new Date();
+  d.setDate(d.getDate() + daysFromNow);
+  d.setHours(hour, (Math.abs(daysFromNow) * 7) % 50, 0, 0);
 
   return d.toISOString();
 };

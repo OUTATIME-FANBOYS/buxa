@@ -7,7 +7,12 @@ import { ROUTES, personPath } from '@buxa/shared/config/routes';
 import { failure, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../runtime';
 import { currentActor } from './camp';
-import { CAMPER_NEEDS_HOUSEHOLD, CHOOSE_ONE_HOUSEHOLD, HOUSEHOLD_NAME_NEEDED, NEW_HOUSEHOLD_NO_GUARDIAN } from '@buxa/shared';
+import {
+  CAMPER_NEEDS_HOUSEHOLD,
+  CHOOSE_ONE_HOUSEHOLD,
+  HOUSEHOLD_NAME_NEEDED,
+  NEW_HOUSEHOLD_NO_GUARDIAN,
+} from '@buxa/shared';
 import { expectedFailure, NO_CAMP } from './failures';
 import { dropBlank, field, fieldAll, parseWith } from '@buxa/shared';
 
@@ -25,11 +30,20 @@ export async function createPersonAction(_previous: ActionState, form: FormData)
   }
 
   const newHouseholdName = field(form, 'newHouseholdName').trim();
-  const posted = dropBlank({
-    givenName: field(form, 'givenName'), familyName: field(form, 'familyName'), preferredName: field(form, 'preferredName'),
-    dateOfBirth: field(form, 'dateOfBirth'), email: field(form, 'email'), phone: field(form, 'phone'),
-    roles: fieldAll(form, 'roles'), householdId: field(form, 'householdId'), relationship: field(form, 'relationship'),
-  }, OPTIONAL);
+  const posted = dropBlank(
+    {
+      givenName: field(form, 'givenName'),
+      familyName: field(form, 'familyName'),
+      preferredName: field(form, 'preferredName'),
+      dateOfBirth: field(form, 'dateOfBirth'),
+      email: field(form, 'email'),
+      phone: field(form, 'phone'),
+      roles: fieldAll(form, 'roles'),
+      householdId: field(form, 'householdId'),
+      relationship: field(form, 'relationship'),
+    },
+    OPTIONAL,
+  );
   const parsed = parseWith(NewPersonInputSchema, posted);
   if (!parsed.ok) {
     return parsed.state;

@@ -36,29 +36,47 @@ export function CheckOutPanel(props: CheckOutPanelProps) {
   const noGuardianLine = row.isMinor === true && row.pickupOptions.length === 0 && !copy;
 
   return (
-    <form id={id} className="checkout-panel" onSubmit={event => {
-      event.preventDefault(); if (submittable) {
-        onSubmit();
-      }
-    }}>
+    <form
+      id={id}
+      className="checkout-panel"
+      onSubmit={event => {
+        event.preventDefault();
+        if (submittable) {
+          onSubmit();
+        }
+      }}
+    >
       {showGuardians && (
-        <PickupChoices name={radioName} options={row.pickupOptions} value={draft.collectedBy}
-          onChange={collectedBy => onPatch({ collectedBy })} />
+        <PickupChoices
+          name={radioName}
+          options={row.pickupOptions}
+          value={draft.collectedBy}
+          onChange={collectedBy => onPatch({ collectedBy })}
+        />
       )}
       {noGuardianLine && <p className="muted">No guardian who may collect this child is linked yet.</p>}
       {row.isMinor !== false && canOverride && (
         <div className="stack">
           <label className="field" htmlFor={reasonId}>
             <span className="field-label">Admin override: reason (only if no guardian can collect)</span>
-            <textarea id={reasonId} rows={2} maxLength={500} value={draft.overrideReason ?? ''}
-              onChange={event => onPatch({ overrideReason: event.target.value })} />
+            <textarea
+              id={reasonId}
+              rows={2}
+              maxLength={500}
+              value={draft.overrideReason ?? ''}
+              onChange={event => onPatch({ overrideReason: event.target.value })}
+            />
           </label>
         </div>
       )}
       {copy && <Notice tone="crit" title={copy.title} body={copy.body} />}
       {failure && <Notice tone="crit" title="Not checked out" body={failure} />}
       <div className="checkout-actions">
-        {onCancel && <Button type="button" className="onsite-btn" onClick={onCancel}>Cancel</Button>}
+        {onCancel && (
+          <Button type="button" className="onsite-btn" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
         <Button variant="primary" type="submit" className="onsite-btn" disabled={!submittable}>
           {busy ? 'Checking out…' : 'Check out'}
         </Button>

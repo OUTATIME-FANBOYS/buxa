@@ -11,13 +11,20 @@ export function SignInForm() {
 
   return (
     <div className="auth-card">
-      <div className="brand brand-lg auth-brand"><span className="logo logo-mark" aria-hidden="true"><BrandMark size={32} /></span> Buxa</div>
+      <div className="brand brand-lg auth-brand">
+        <span className="logo logo-mark" aria-hidden="true">
+          <BrandMark size={32} />
+        </span>{' '}
+        Buxa
+      </div>
       <h1>{isSignIn ? 'Welcome back' : 'Create your account'}</h1>
       <p className="muted">{isSignIn ? 'Sign in to manage your camp.' : 'Then set up your first camp.'}</p>
       <AuthForm key={mode} mode={mode} />
       <p className="auth-switch muted">
         {isSignIn ? 'New here?' : 'Already have an account?'}{' '}
-        <button type="button" className="link" onClick={() => setMode(isSignIn ? 'up' : 'in')}>{isSignIn ? 'Create an account' : 'Sign in'}</button>
+        <button type="button" className="link" onClick={() => setMode(isSignIn ? 'up' : 'in')}>
+          {isSignIn ? 'Create an account' : 'Sign in'}
+        </button>
       </p>
     </div>
   );

@@ -16,7 +16,10 @@ export async function addMembershipAction(_previous: ActionState, form: FormData
     return failure(NO_CAMP);
   }
   const parsed = parseWith(NewMembershipInputSchema, {
-    personId: field(form, 'personId'), plan: field(form, 'plan'), startsOn: field(form, 'startsOn'), endsOn: field(form, 'endsOn'),
+    personId: field(form, 'personId'),
+    plan: field(form, 'plan'),
+    startsOn: field(form, 'startsOn'),
+    endsOn: field(form, 'endsOn'),
   });
   if (!parsed.ok) {
     return parsed.state;

@@ -15,7 +15,11 @@ export function PeopleSearch({ params }: { params: ListParams }) {
         <span className="field-label">Role</span>
         <select name="role" defaultValue={params.role}>
           <option value="">All roles</option>
-          {CAMP_ROLES.map(role => <option key={role} value={role}>{CAMP_ROLE_LABELS[role]}</option>)}
+          {CAMP_ROLES.map(role => (
+            <option key={role} value={role}>
+              {CAMP_ROLE_LABELS[role]}
+            </option>
+          ))}
         </select>
       </label>
       <Button type="submit">Search</Button>

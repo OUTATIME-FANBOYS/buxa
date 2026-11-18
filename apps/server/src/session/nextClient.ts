@@ -18,7 +18,9 @@ export async function requestSessionClient(): Promise<SupabaseClient | null> {
         for (const { name, value, options } of list) {
           store.set(name, value, options);
         }
-      } catch { /* read-only context (Server Component render) */ }
+      } catch {
+        /* read-only context (Server Component render) */
+      }
     },
   });
 }

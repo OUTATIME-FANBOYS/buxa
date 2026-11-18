@@ -23,7 +23,10 @@ export class InMemoryImportRepository implements ImportRepository {
   readonly audit: AuditRecord[] = [];
   private sessions = new Map<string, ExistingSession & { orgId: string }>();
 
-  constructor(private readonly classes: ClassRepository, private readonly options: InMemoryImportOptions = {}) {}
+  constructor(
+    private readonly classes: ClassRepository,
+    private readonly options: InMemoryImportOptions = {},
+  ) {}
 
   /** Test setup: a session that already exists in the camp. */
   seedSession(orgId: string, session: ExistingSession): void {
@@ -62,28 +65,73 @@ export class InMemoryImportRepository implements ImportRepository {
       if (w.kind === 'create') {
         const id = randomUUID();
         staged.set(id, {
-          id, orgId: actor.orgId, classId: w.classId, className: cls.name, startsAt: w.startsAt, endsAt: w.endsAt, location: w.location,
-          capacity: w.capacity, seatsTaken: 0, externalKey: w.externalKey,
+          id,
+          orgId: actor.orgId,
+          classId: w.classId,
+          className: cls.name,
+          startsAt: w.startsAt,
+          endsAt: w.endsAt,
+          location: w.location,
+          capacity: w.capacity,
+          seatsTaken: 0,
+          externalKey: w.externalKey,
         });
-        entries.push({ orgId: actor.orgId, actorId: actor.userId, action: 'session.create', entity: 'session', entityId: id, data: { classId: w.classId, startsAt: w.startsAt, endsAt: w.endsAt, externalKey: w.externalKey, importFile: upload.fileName } });
+        entries.push({
+          orgId: actor.orgId,
+          actorId: actor.userId,
+          action: 'session.create',
+          entity: 'session',
+          entityId: id,
+          data: {
+            classId: w.classId,
+            startsAt: w.startsAt,
+            endsAt: w.endsAt,
+            externalKey: w.externalKey,
+            importFile: upload.fileName,
+          },
+        });
       } else {
         const existing = w.sessionId === null ? undefined : staged.get(w.sessionId);
         if (!existing || existing.orgId !== actor.orgId) {
           throw new SessionNotFoundError();
         }
         staged.set(existing.id, {
-          ...existing, classId: w.classId, className: cls.name, startsAt: w.startsAt, endsAt: w.endsAt, location: w.location,
-          capacity: w.capacity, externalKey: w.externalKey,
+          ...existing,
+          classId: w.classId,
+          className: cls.name,
+          startsAt: w.startsAt,
+          endsAt: w.endsAt,
+          location: w.location,
+          capacity: w.capacity,
+          externalKey: w.externalKey,
         });
-        entries.push({ orgId: actor.orgId, actorId: actor.userId, action: 'session.update', entity: 'session', entityId: existing.id, data: { startsAt: w.startsAt, endsAt: w.endsAt, importFile: upload.fileName } });
+        entries.push({
+          orgId: actor.orgId,
+          actorId: actor.userId,
+          action: 'session.update',
+          entity: 'session',
+          entityId: existing.id,
+          data: { startsAt: w.startsAt, endsAt: w.endsAt, importFile: upload.fileName },
+        });
       }
     }
 
     // Everything succeeded: publish the staged state and its audit entries together.
     const now = (this.options.now ?? systemClock)().toISOString();
     const uploadEntry: AuditRecord = {
-      orgId: actor.orgId, actorId: actor.userId, action: 'import.upload', entity: 'import', entityId: randomUUID(),
-      data: { fileName: upload.fileName, rows: upload.rows, created: upload.created, updated: upload.updated, refused: upload.refused, at: now },
+      orgId: actor.orgId,
+      actorId: actor.userId,
+      action: 'import.upload',
+      entity: 'import',
+      entityId: randomUUID(),
+      data: {
+        fileName: upload.fileName,
+        rows: upload.rows,
+        created: upload.created,
+        updated: upload.updated,
+        refused: upload.refused,
+        at: now,
+      },
     };
     this.sessions = staged;
     this.audit.push(uploadEntry, ...entries);

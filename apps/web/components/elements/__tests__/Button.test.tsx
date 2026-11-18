@@ -22,7 +22,11 @@ describe('Button', () => {
   });
 
   it('leads with a named icon before the label', () => {
-    const html = renderToStaticMarkup(<Button variant="primary" icon="plus">New task</Button>);
+    const html = renderToStaticMarkup(
+      <Button variant="primary" icon="plus">
+        New task
+      </Button>,
+    );
     expect(html).toMatch(/<svg[\s\S]*?<\/svg>New task<\/button>/);
     expect(html).not.toContain('button--icon-only');
   });
@@ -35,12 +39,22 @@ describe('Button', () => {
   });
 
   it('keeps the header size as one compact class', () => {
-    expect(renderToStaticMarkup(<Button variant="primary" size="header">Add task</Button>)).toContain('buxa-button--header');
+    expect(
+      renderToStaticMarkup(
+        <Button variant="primary" size="header">
+          Add task
+        </Button>,
+      ),
+    ).toContain('buxa-button--header');
     expect(renderToStaticMarkup(<Button variant="primary">Add task</Button>)).not.toContain('buxa-button--header');
   });
 
   it('renders a link with the same classes when given an href', () => {
-    const html = renderToStaticMarkup(<Button variant="ghost" href="/x">Next</Button>);
+    const html = renderToStaticMarkup(
+      <Button variant="ghost" href="/x">
+        Next
+      </Button>,
+    );
     expect(html).toMatch(/<a class="button button--md button--ghost" href="\/x">Next<\/a>/);
   });
 });

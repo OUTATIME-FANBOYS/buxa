@@ -1,7 +1,11 @@
 import type { Household } from '@buxa/contracts';
 
 /** A household offered in a picker: its id, its name, and whether a camper could join it yet (it has a parent or guardian). */
-export interface HouseholdChoice { id: string; name: string; hasGuardian: boolean }
+export interface HouseholdChoice {
+  id: string;
+  name: string;
+  hasGuardian: boolean;
+}
 
 /** The picker's choices from the camp's households, in the order the service gave (by name). */
 export const toHouseholdChoices = (households: readonly Household[]): HouseholdChoice[] =>

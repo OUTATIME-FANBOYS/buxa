@@ -10,9 +10,7 @@ export const EXPORTS_SECTION: HelpSectionContent = {
     {
       id: 'attendance-csv',
       heading: 'Attendance CSV',
-      paragraphs: [
-        'The attendance CSV lists every visit in the days you choose, one visit per row.',
-      ],
+      paragraphs: ['The attendance CSV lists every visit in the days you choose, one visit per row.'],
       steps: [
         'Open Attendance from the sidebar.',
         'Choose the From and To dates. These are camp days, in camp time. They start as today.',

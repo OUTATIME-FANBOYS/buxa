@@ -12,7 +12,10 @@ const form = (values: Record<string, string>) => {
 
 describe('credentials', () => {
   it('parseSignIn trims the email and needs a password', () => {
-    expect(parseSignIn(form({ email: ' a@b.co ', password: 'x' }))).toEqual({ ok: true, value: { email: 'a@b.co', password: 'x' } });
+    expect(parseSignIn(form({ email: ' a@b.co ', password: 'x' }))).toEqual({
+      ok: true,
+      value: { email: 'a@b.co', password: 'x' },
+    });
     const bad = parseSignIn(form({ email: 'nope', password: '' }));
     expect(bad.ok).toBe(false);
     if (!bad.ok) {

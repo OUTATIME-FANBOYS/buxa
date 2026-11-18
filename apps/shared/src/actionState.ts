@@ -11,7 +11,11 @@ export type ActionState<F extends string = string> =
 
 export const idle: ActionState = { status: 'idle' };
 export const success = (message?: string): ActionState => ({ status: 'success', message });
-export const failure = <F extends string = string>(message: string, fieldErrors?: FieldErrors<F>): ActionState<F> => ({ status: 'error', message, fieldErrors });
+export const failure = <F extends string = string>(message: string, fieldErrors?: FieldErrors<F>): ActionState<F> => ({
+  status: 'error',
+  message,
+  fieldErrors,
+});
 
 /** The message for one field, if that field has a problem. */
 export const fieldError = <F extends string>(state: ActionState<F>, field: F): string | undefined =>

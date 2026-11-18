@@ -11,10 +11,17 @@ export function ErrorReportButton({ fileName, text, refused }: { fileName: strin
   }
 
   return (
-    <form method="post" action={ROUTES.classImportErrorReport} className="classes-actions" aria-label="Download the error report">
+    <form
+      method="post"
+      action={ROUTES.classImportErrorReport}
+      className="classes-actions"
+      aria-label="Download the error report"
+    >
       <input type="hidden" name="fileName" value={fileName} />
       <input type="hidden" name="csv" value={text} />
-      <Button type="submit" className="classes-target">Download error report</Button>
+      <Button type="submit" className="classes-target">
+        Download error report
+      </Button>
       <span className="muted">One line per problem, with the row number, so you can fix the file.</span>
     </form>
   );

@@ -3,7 +3,10 @@ import type { OnSiteEntry } from './types';
 import type { ScanResult } from './types';
 
 /** A person as the check-in screen shows them: who, and since when they are on site (null when not). */
-export interface PersonCard { person: PersonSummary; onSiteSince: string | null }
+export interface PersonCard {
+  person: PersonSummary;
+  onSiteSince: string | null;
+}
 
 /** Answer to "what is this code or name?": one neutral unknown, or a person. */
 export type Lookup = { kind: 'unknown' } | { kind: 'person'; card: PersonCard };

@@ -15,8 +15,10 @@ describe('createScanDeduper', () => {
     let t = 0;
     const d = createScanDeduper(1500, () => t);
     expect(d.accept('a')).toBe(true);
-    t = 1000; expect(d.accept('a')).toBe(false);
-    t = 1600; expect(d.accept('a')).toBe(true);
+    t = 1000;
+    expect(d.accept('a')).toBe(false);
+    t = 1600;
+    expect(d.accept('a')).toBe(true);
   });
   it('always accepts a different code', () => {
     const d = createScanDeduper(1500, () => 0);
@@ -28,7 +30,8 @@ describe('createScanDeduper', () => {
     let t = 0;
     const d = createScanDeduper(Infinity, () => t);
     expect(d.accept('a')).toBe(true);
-    t = 1e9; expect(d.accept('a')).toBe(false);
+    t = 1e9;
+    expect(d.accept('a')).toBe(false);
     expect(d.accept('b')).toBe(true);
     d.reset();
     expect(d.accept('b')).toBe(true);

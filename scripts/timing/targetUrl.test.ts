@@ -2,12 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { assertTargetUrl, isLocalUrl } from './targetUrl';
 
 describe('isLocalUrl', () => {
-  it.each([
-    'http://localhost:3000',
-    'https://localhost',
-    'http://127.0.0.1:5173/camp/check-in',
-    'http://[::1]:3000',
-  ])('treats %s as this machine', url => expect(isLocalUrl(url)).toBe(true));
+  it.each(['http://localhost:3000', 'https://localhost', 'http://127.0.0.1:5173/camp/check-in', 'http://[::1]:3000'])(
+    'treats %s as this machine',
+    url => expect(isLocalUrl(url)).toBe(true),
+  );
 
   it.each([
     'https://buxa.example.org',

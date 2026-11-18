@@ -23,5 +23,9 @@ export function ResetDemoButton() {
     toast('Demo data restored');
   };
 
-  return <Button variant="danger-soft" onClick={reset}>Reset demo data</Button>;
+  return (
+    <Button variant="danger-soft" onClick={reset}>
+      Reset demo data
+    </Button>
+  );
 }

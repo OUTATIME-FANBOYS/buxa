@@ -37,9 +37,10 @@ export async function enrolAction(_previous: ActionState, form: FormData): Promi
     if (!outcome.ok) {
       return failure(outcome.failure.message);
     }
-    message = outcome.value.status === 'waitlisted'
-      ? `${outcome.value.camperName} is on the waitlist for this session.`
-      : `${outcome.value.camperName} is enrolled.`;
+    message =
+      outcome.value.status === 'waitlisted'
+        ? `${outcome.value.camperName} is on the waitlist for this session.`
+        : `${outcome.value.camperName} is enrolled.`;
   } catch (error) {
     return expectedFailure(error, 'Could not enrol the camper.');
   }

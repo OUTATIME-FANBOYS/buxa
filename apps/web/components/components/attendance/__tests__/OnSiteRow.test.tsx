@@ -8,11 +8,19 @@ import { OnSiteRow } from '@/components/components/attendance/export';
 import { settle, requirePresent } from '@buxa/domain';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh() {}, push() {} }) }));
-vi.mock('@buxa/server/composers/attendance/checkOut', () => ({ checkOutAction: () => settle(() => ({ kind: 'ok', value: {} })) }));
+vi.mock('@buxa/server/composers/attendance/checkOut', () => ({
+  checkOutAction: () => settle(() => ({ kind: 'ok', value: {} })),
+}));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-const row = { personId: 'p-1', name: 'Mia Cole', arrivedAt: '09:05', isMinor: true, pickupOptions: [] } as unknown as OnSiteRowView;
+const row = {
+  personId: 'p-1',
+  name: 'Mia Cole',
+  arrivedAt: '09:05',
+  isMinor: true,
+  pickupOptions: [],
+} as unknown as OnSiteRowView;
 
 describe('OnSiteRow card', () => {
   it('shows the name, a warn-tone Minor pill and the checked-in and checked-out lines', () => {
@@ -26,7 +34,9 @@ describe('OnSiteRow card', () => {
   });
 
   it('leaves out the Minor pill for an adult', () => {
-    const html = renderToStaticMarkup(<OnSiteRow row={{ ...row, isMinor: false }} canRecord={false} canOverride={false} />);
+    const html = renderToStaticMarkup(
+      <OnSiteRow row={{ ...row, isMinor: false }} canRecord={false} canOverride={false} />,
+    );
     expect(html).not.toContain('Minor');
   });
 
@@ -44,13 +54,19 @@ describe('OnSiteRow check-out dialog', () => {
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = ''; document.body.style.overflow = ''; vi.useRealTimers();
+    act(() => root.unmount());
+    document.body.innerHTML = '';
+    document.body.style.overflow = '';
+    vi.useRealTimers();
   });
 
   it('opens the panel in a dialog from Check out, and Escape closes it and returns focus to Check out', () => {
     vi.useFakeTimers();
     act(() => root.render(<OnSiteRow row={row} canRecord canOverride={false} />));
-    const trigger = requirePresent(document.querySelector<HTMLButtonElement>('button.onsite-btn'), "document.querySelector<HTMLButtonElement>('button.onsite-btn')");
+    const trigger = requirePresent(
+      document.querySelector<HTMLButtonElement>('button.onsite-btn'),
+      "document.querySelector<HTMLButtonElement>('button.onsite-btn')",
+    );
     expect(document.querySelector('[role="dialog"]')).toBeNull();
 
     act(() => {
@@ -61,10 +77,12 @@ describe('OnSiteRow check-out dialog', () => {
     expect(requirePresent(dialog, 'dialog').querySelector('h2')?.textContent).toBe('Check out Mia Cole');
     expect(requirePresent(dialog, 'dialog').querySelector('form.checkout-panel')).not.toBeNull();
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
-    expect(requirePresent(dialog, 'dialog').querySelector('.checkout-actions')?.textContent).toContain('CancelCheck out');
+    expect(requirePresent(dialog, 'dialog').querySelector('.checkout-actions')?.textContent).toContain(
+      'CancelCheck out',
+    );
 
     act(() => {
- requirePresent(dialog, 'dialog').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      requirePresent(dialog, 'dialog').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     });
     act(() => {
       vi.advanceTimersByTime(200);
@@ -76,9 +94,15 @@ describe('OnSiteRow check-out dialog', () => {
   it('Cancel inside the dialog closes it at once', () => {
     act(() => root.render(<OnSiteRow row={row} canRecord canOverride={false} />));
     act(() => {
- requirePresent(document.querySelector<HTMLButtonElement>('button.onsite-btn'), "document.querySelector<HTMLButtonElement>('button.onsite-btn')").click();
+      requirePresent(
+        document.querySelector<HTMLButtonElement>('button.onsite-btn'),
+        "document.querySelector<HTMLButtonElement>('button.onsite-btn')",
+      ).click();
     });
-    const cancel = requirePresent([...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find(b => b.textContent === 'Cancel'), "[...document.querySelectorAll<HTMLButtonElement>('[role=\"dialog\"] button')].find(b => b.textContent === 'Cancel')");
+    const cancel = requirePresent(
+      [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find(b => b.textContent === 'Cancel'),
+      "[...document.querySelectorAll<HTMLButtonElement>('[role=\"dialog\"] button')].find(b => b.textContent === 'Cancel')",
+    );
     act(() => {
       cancel.click();
     });

@@ -27,7 +27,11 @@ export async function updateCampClockAction(...args: Parameters<typeof updateCam
 // STUB until server issue #266 merges: nothing is archived or deleted, and no camp is listed as archived. Replace the bodies with the server composers.
 
 export type CampActionResult = { ok: true } | { ok: false; message: string };
-export interface ArchivedCamp { id: string; name: string; archivedAt: string }
+export interface ArchivedCamp {
+  id: string;
+  name: string;
+  archivedAt: string;
+}
 
 /** STUB (server issue #266): archives the camp. It is hidden from the switcher, and its data is kept. */
 export async function archiveCamp(_input: { orgId: string }): Promise<CampActionResult> {

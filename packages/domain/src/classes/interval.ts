@@ -1,5 +1,8 @@
 /** A stretch of time, as ISO instants. Sessions and enrolments are compared as instants, so the camp zone never changes the answer. */
-export interface Span { startsAt: string; endsAt: string }
+export interface Span {
+  startsAt: string;
+  endsAt: string;
+}
 
 const ms = (iso: string): number => Date.parse(iso);
 

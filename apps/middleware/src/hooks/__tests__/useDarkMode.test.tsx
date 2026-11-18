@@ -8,11 +8,15 @@ import { requirePresent } from '@buxa/domain';
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const store = new Map<string, string>();
-vi.stubGlobal('localStorage', { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => {
-  store.set(k, v);
-}, removeItem: (k: string) => {
-  store.delete(k);
-} });
+vi.stubGlobal('localStorage', {
+  getItem: (k: string) => store.get(k) ?? null,
+  setItem: (k: string, v: string) => {
+    store.set(k, v);
+  },
+  removeItem: (k: string) => {
+    store.delete(k);
+  },
+});
 
 type Api = ReturnType<typeof useDarkMode>;
 let api: Api | undefined;
@@ -32,7 +36,10 @@ describe('useDarkMode', () => {
     act(() => root.render(<Probe />));
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = ''; delete document.documentElement.dataset.theme; store.clear();
+    act(() => root.unmount());
+    document.body.innerHTML = '';
+    delete document.documentElement.dataset.theme;
+    store.clear();
   });
 
   it('reads the page’s theme after mount and toggles it', () => {

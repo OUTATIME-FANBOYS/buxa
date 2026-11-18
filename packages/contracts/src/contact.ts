@@ -43,13 +43,29 @@ const EMAIL_MESSAGE = 'Use a valid email address, for example name@example.com.'
 const PHONE_MESSAGE = 'Use a valid phone number with 7 to 15 digits.';
 
 /** Optional on create: an empty value means "none" and becomes undefined. */
-export const OptionalEmailSchema = z.string().trim().max(MAX_EMAIL)
+export const OptionalEmailSchema = z
+  .string()
+  .trim()
+  .max(MAX_EMAIL)
   .refine(v => v === '' || isPlausibleEmail(v), EMAIL_MESSAGE)
-  .transform(v => (v === '' ? undefined : v)).optional();
-export const OptionalPhoneSchema = z.string().trim().max(MAX_PHONE)
+  .transform(v => (v === '' ? undefined : v))
+  .optional();
+export const OptionalPhoneSchema = z
+  .string()
+  .trim()
+  .max(MAX_PHONE)
   .refine(v => v === '' || isPlausiblePhone(v), PHONE_MESSAGE)
-  .transform(v => (v === '' ? undefined : v)).optional();
+  .transform(v => (v === '' ? undefined : v))
+  .optional();
 
 /** On patch: an empty value is passed on unchanged (as before); anything else must be plausible. */
-export const PatchEmailSchema = z.string().trim().max(MAX_EMAIL).refine(v => v === '' || isPlausibleEmail(v), EMAIL_MESSAGE);
-export const PatchPhoneSchema = z.string().trim().max(MAX_PHONE).refine(v => v === '' || isPlausiblePhone(v), PHONE_MESSAGE);
+export const PatchEmailSchema = z
+  .string()
+  .trim()
+  .max(MAX_EMAIL)
+  .refine(v => v === '' || isPlausibleEmail(v), EMAIL_MESSAGE);
+export const PatchPhoneSchema = z
+  .string()
+  .trim()
+  .max(MAX_PHONE)
+  .refine(v => v === '' || isPlausiblePhone(v), PHONE_MESSAGE);

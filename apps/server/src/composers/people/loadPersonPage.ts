@@ -12,7 +12,8 @@ export const loadHouseholdList = (actor: Actor) => getRuntime().services.people.
 export const loadPersonMatches = (actor: Actor, query: string) => getRuntime().services.people.list(actor, { query });
 
 /** The people list for the search and role filter in the URL. */
-export const loadPeople = (actor: Actor, params: ListParams) => getRuntime().services.people.list(actor, toListQuery(params));
+export const loadPeople = (actor: Actor, params: ListParams) =>
+  getRuntime().services.people.list(actor, toListQuery(params));
 
 /** The people list, or 'forbidden' when the role may not list people (403). Other failures are thrown for the error boundary. */
 export async function loadPeopleOrForbidden(actor: Actor, params: ListParams): Promise<PersonSummary[] | 'forbidden'> {

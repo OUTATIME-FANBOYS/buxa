@@ -5,13 +5,25 @@ import { TaskTopBar } from '@/components/components/kanban/topbar/export';
 
 const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
-vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
+vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({
+  useTaskDrawer: () => ({ openTask: () => undefined }),
+}));
 vi.mock('@buxa/middleware/hooks/useGlobalShortcuts', () => ({ useGlobalShortcuts: () => undefined }));
 
 const seed = buildSeed();
 
 function saveLabel(saveStatus: string, sync: string): string {
-  h.store = { s: seed, wsTasks: [], saveStatus, sync, project: seed.projects[0], userById: () => undefined, kindOf: () => 'open', me: null, actions: {} };
+  h.store = {
+    s: seed,
+    wsTasks: [],
+    saveStatus,
+    sync,
+    project: seed.projects[0],
+    userById: () => undefined,
+    kindOf: () => 'open',
+    me: null,
+    actions: {},
+  };
   const html = renderToStaticMarkup(<TaskTopBar account={<span>me</span>} />);
 
   return html.match(/class="save-state[^"]*" role="status">([^<]*)</)?.[1] ?? '';

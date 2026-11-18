@@ -6,7 +6,17 @@ import { type HelpSectionContent, type HelpSubsection } from '../types';
 
 /** The import columns as the bulk import spec names them (docs/phases/02-events-calendar.md, "Template columns"). */
 const SPEC_COLUMNS = [
-  'external_key', 'class_name', 'starts_at', 'ends_at', 'location', 'age_min', 'age_max', 'capacity', 'instructor_names', 'ratio_campers', 'ratio_instructors',
+  'external_key',
+  'class_name',
+  'starts_at',
+  'ends_at',
+  'location',
+  'age_min',
+  'age_max',
+  'capacity',
+  'instructor_names',
+  'ratio_campers',
+  'ratio_instructors',
 ];
 
 const section = (id: string): HelpSectionContent => {

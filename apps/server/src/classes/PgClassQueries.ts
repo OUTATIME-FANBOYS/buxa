@@ -53,9 +53,10 @@ export const toAgeRange = (min: number | null, max: number | null): { minAge: nu
 });
 
 export function toClass(row: ClassRow): Class {
-  const ratio = row.ratio_campers !== null && row.ratio_instructors !== null
-    ? { instructors: row.ratio_instructors, campers: row.ratio_campers }
-    : null;
+  const ratio =
+    row.ratio_campers !== null && row.ratio_instructors !== null
+      ? { instructors: row.ratio_instructors, campers: row.ratio_campers }
+      : null;
 
   return {
     id: row.id,
@@ -99,8 +100,18 @@ export function toEnrolment(row: EnrolmentRow): Enrolment {
 }
 
 /** The camper's enrolled or waitlisted sessions, as the overlap rule sees them. Cancelled ones free their time. */
-export function toActiveFacts(row: { session_id: string; class_name: string; starts_at: Date; ends_at: Date }): ActiveEnrolmentFacts {
-  return { sessionId: row.session_id, className: row.class_name, startsAt: toIso(row.starts_at), endsAt: toIso(row.ends_at) };
+export function toActiveFacts(row: {
+  session_id: string;
+  class_name: string;
+  starts_at: Date;
+  ends_at: Date;
+}): ActiveEnrolmentFacts {
+  return {
+    sessionId: row.session_id,
+    className: row.class_name,
+    startsAt: toIso(row.starts_at),
+    endsAt: toIso(row.ends_at),
+  };
 }
 
 const CLASS_COLUMNS = `c.id, c.name, c.description, c.age_min, c.age_max, c.default_capacity,
@@ -152,7 +163,9 @@ export async function getSession(db: Db, id: string): Promise<Session | null> {
     return null;
   }
   const { rows } = await db.query<SessionRow>(
-    `SELECT ${SESSION_COLUMNS} FROM sessions s JOIN classes c ON c.id = s.class_id WHERE s.id = $1`, [id]);
+    `SELECT ${SESSION_COLUMNS} FROM sessions s JOIN classes c ON c.id = s.class_id WHERE s.id = $1`,
+    [id],
+  );
 
   return rows[0] ? toSession(rows[0]) : null;
 }
@@ -160,7 +173,9 @@ export async function getSession(db: Db, id: string): Promise<Session | null> {
 export async function listSessionRows(db: Db, classId: string): Promise<Session[]> {
   const { rows } = await db.query<SessionRow>(
     `SELECT ${SESSION_COLUMNS} FROM sessions s JOIN classes c ON c.id = s.class_id
-      WHERE s.class_id = $1 ORDER BY s.starts_at, s.id`, [classId]);
+      WHERE s.class_id = $1 ORDER BY s.starts_at, s.id`,
+    [classId],
+  );
 
   return rows.map(toSession);
 }
@@ -177,7 +192,9 @@ export async function requireSessionExists(db: Db, id: string): Promise<void> {
 
 export async function listEnrolmentRows(db: Db, sessionId: string): Promise<Enrolment[]> {
   const { rows } = await db.query<EnrolmentRow>(
-    `SELECT ${ENROLMENT_COLUMNS} ${ENROLMENT_FROM} WHERE e.session_id = $1 ORDER BY e.created_at, e.id`, [sessionId]);
+    `SELECT ${ENROLMENT_COLUMNS} ${ENROLMENT_FROM} WHERE e.session_id = $1 ORDER BY e.created_at, e.id`,
+    [sessionId],
+  );
 
   return rows.map(toEnrolment);
 }
@@ -199,7 +216,9 @@ export async function activeFactsFor(db: Db, camperId: string): Promise<ActiveEn
        JOIN sessions s ON s.id = e.session_id
        JOIN classes c ON c.id = s.class_id
       WHERE e.person_id = $1 AND e.status IN ('enrolled', 'waitlisted')
-      ORDER BY s.starts_at, e.session_id`, [camperId]);
+      ORDER BY s.starts_at, e.session_id`,
+    [camperId],
+  );
 
   return rows.map(toActiveFacts);
 }

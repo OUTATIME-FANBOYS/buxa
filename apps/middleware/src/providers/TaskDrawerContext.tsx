@@ -3,7 +3,10 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
 /** Which task the drawer shows: an existing id, or `'new'` with optional starting values. */
-export interface TaskDrawerState { id: string | 'new'; defaults?: { columnId?: string; due?: string; projectId?: string } }
+export interface TaskDrawerState {
+  id: string | 'new';
+  defaults?: { columnId?: string; due?: string; projectId?: string };
+}
 
 interface TaskDrawerCtx {
   drawer: TaskDrawerState | null;
@@ -13,7 +16,8 @@ interface TaskDrawerCtx {
 const Ctx = createContext<TaskDrawerCtx | null>(null);
 
 export const useTaskDrawer = () => {
-  const c = useContext(Ctx); if (!c) {
+  const c = useContext(Ctx);
+  if (!c) {
     throw new Error('TaskDrawerProvider missing');
   }
 

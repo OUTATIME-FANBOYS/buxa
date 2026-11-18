@@ -25,7 +25,13 @@ export function startWorld() {
     async person(): Promise<string> {
       counter += 1;
 
-      return (await store.upsertFromIdentity({ authId: `auth-${counter}`, email: `p${counter}@example.test`, name: `Person ${counter}` })).id;
+      return (
+        await store.upsertFromIdentity({
+          authId: `auth-${counter}`,
+          email: `p${counter}@example.test`,
+          name: `Person ${counter}`,
+        })
+      ).id;
     },
     addMember(orgId: string, userId: string, role: Role) {
       store.members.push({ orgId, userId, role });
@@ -37,7 +43,10 @@ export function startWorld() {
         throw new Error('unknown person');
       }
 
-      return { user: { id: user.id, email: user.email, name: user.name }, memberships: await store.membershipsOf(userId) };
+      return {
+        user: { id: user.id, email: user.email, name: user.name },
+        memberships: await store.membershipsOf(userId),
+      };
     },
   };
 }

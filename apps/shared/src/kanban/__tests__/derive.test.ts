@@ -19,8 +19,8 @@ describe('deriveView', () => {
     expect(view.me?.id).toBe(userId);
     expect(view.workspace?.id).toBe(seed.ui.workspaceId);
     expect(view.project?.id).toBe(seed.ui.projectId);
-    expect(view.projects.every((p) => p.workspaceId === view.workspace?.id)).toBe(true);
-    expect(view.members.every((m) => m.user)).toBe(true);
+    expect(view.projects.every(p => p.workspaceId === view.workspace?.id)).toBe(true);
+    expect(view.members.every(m => m.user)).toBe(true);
     expect(view.today).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
   describe('camp role', () => {
@@ -28,11 +28,16 @@ describe('deriveView', () => {
     const outsider = () => {
       const seed = buildSeed();
       const id = 'user-not-on-board';
-      const state = { ...seed, users: [...seed.users, { id, name: 'Outside Person', email: 'outside@example.com' }], session: { userId: id } };
+      const state = {
+        ...seed,
+        users: [...seed.users, { id, name: 'Outside Person', email: 'outside@example.com' }],
+        session: { userId: id },
+      };
 
       return { seed, state };
     };
-    const campProjects = (seed: ReturnType<typeof buildSeed>) => seed.projects.filter(p => p.workspaceId === seed.ui.workspaceId);
+    const campProjects = (seed: ReturnType<typeof buildSeed>) =>
+      seed.projects.filter(p => p.workspaceId === seed.ui.workspaceId);
 
     it('gives an owner who is not a kanban member every project in the camp, with full rights', () => {
       const { seed, state } = outsider();
@@ -65,7 +70,10 @@ describe('deriveView', () => {
     });
     it('lets the camp role replace a weaker kanban membership role', () => {
       const seed = buildSeed();
-      const workspaces = seed.workspaces.map(w => ({ ...w, members: w.members.map(m => (m.userId === USER.rosa ? { ...m, role: 'viewer' as const } : m)) }));
+      const workspaces = seed.workspaces.map(w => ({
+        ...w,
+        members: w.members.map(m => (m.userId === USER.rosa ? { ...m, role: 'viewer' as const } : m)),
+      }));
       const state = { ...seed, workspaces, session: { userId: USER.rosa } };
       expect(deriveView(state, 'owner').readOnly).toBe(false);
       expect(deriveView(state, 'owner').myRole).toBe('owner');
@@ -81,7 +89,9 @@ describe('deriveView', () => {
     const seed = buildSeed();
     const view = deriveView({ ...seed, session: { userId: seed.workspaces[0].members[0].userId } });
     const task = view.wsTasks[0];
-    expect(view.kindOf(task)).toBe(seed.projects.find((p) => p.id === task.projectId)?.columns.find((c) => c.id === task.columnId)?.kind);
+    expect(view.kindOf(task)).toBe(
+      seed.projects.find(p => p.id === task.projectId)?.columns.find(c => c.id === task.columnId)?.kind,
+    );
     expect(view.kindOf({ ...task, columnId: 'missing' })).toBe('open');
   });
 });

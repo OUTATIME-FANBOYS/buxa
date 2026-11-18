@@ -1,5 +1,13 @@
 import type { Actor } from '@buxa/domain';
-import type { CancelEnrolmentInput, Class, Enrolment, EnrolInput, NewClassInput, NewSessionInput, Session } from '@buxa/contracts';
+import type {
+  CancelEnrolmentInput,
+  Class,
+  Enrolment,
+  EnrolInput,
+  NewClassInput,
+  NewSessionInput,
+  Session,
+} from '@buxa/contracts';
 import { assertAllowed } from '../auth/authorize';
 import type { ClassRepository } from './ClassRepository';
 import { ClassNotFoundError } from './errors';
@@ -40,14 +48,17 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
     async getClass(actor, classId) {
       assertAllowed(actor, 'events:read');
 
-      return attempt(async () => {
-        const found = await repo.getClass(actor.orgId, classId);
-        if (!found) {
-          throw new ClassNotFoundError();
-        }
+      return attempt(
+        async () => {
+          const found = await repo.getClass(actor.orgId, classId);
+          if (!found) {
+            throw new ClassNotFoundError();
+          }
 
-        return found;
-      }, await timezoneOf(actor.orgId));
+          return found;
+        },
+        await timezoneOf(actor.orgId),
+      );
     },
 
     async createClass(actor, input) {
@@ -59,17 +70,23 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
     async addSession(actor, classId, input) {
       assertAllowed(actor, 'classes:manage');
 
-      return attempt(async () => {
-        const cls = await repo.getClass(actor.orgId, classId);
-        if (!cls) {
-          throw new ClassNotFoundError();
-        }
+      return attempt(
+        async () => {
+          const cls = await repo.getClass(actor.orgId, classId);
+          if (!cls) {
+            throw new ClassNotFoundError();
+          }
 
-        return repo.addSession(actor, classId, {
-          startsAt: input.startsAt, endsAt: input.endsAt, location: input.location, instructorIds: input.instructorIds,
-          capacity: input.capacity ?? cls.capacity,
-        });
-      }, await timezoneOf(actor.orgId));
+          return repo.addSession(actor, classId, {
+            startsAt: input.startsAt,
+            endsAt: input.endsAt,
+            location: input.location,
+            instructorIds: input.instructorIds,
+            capacity: input.capacity ?? cls.capacity,
+          });
+        },
+        await timezoneOf(actor.orgId),
+      );
     },
 
     async listSessions(actor, classId) {

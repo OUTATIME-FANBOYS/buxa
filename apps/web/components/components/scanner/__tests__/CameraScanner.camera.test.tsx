@@ -23,11 +23,14 @@ beforeEach(() => {
   document.body.appendChild(host);
   root = createRoot(host);
   // A browser that can read QR codes and has a camera: the only thing left to decide is when the camera starts.
-  vi.stubGlobal('BarcodeDetector', class {
-    detect() {
-      return Promise.resolve([]);
-    }
-  });
+  vi.stubGlobal(
+    'BarcodeDetector',
+    class {
+      detect() {
+        return Promise.resolve([]);
+      }
+    },
+  );
   getUserMedia = vi.fn().mockResolvedValue({ getTracks: () => [] });
   Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia } });
   // jsdom has no media playback; the scanner calls play() once the camera is on.

@@ -9,7 +9,9 @@ import { campActor } from './campActor';
  * method, and map the two problems a person can cause (403, 400) to outcomes. Other errors are rethrown.
  */
 export async function runAttendanceAction<I, R>(
-  schema: ZodType<I>, input: unknown, call: (actor: Actor, data: I) => Promise<R>,
+  schema: ZodType<I>,
+  input: unknown,
+  call: (actor: Actor, data: I) => Promise<R>,
 ): Promise<ActionOutcome<R>> {
   const parsed = schema.safeParse(input);
   if (!parsed.success) {

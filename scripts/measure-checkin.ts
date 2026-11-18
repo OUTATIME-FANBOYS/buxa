@@ -44,11 +44,16 @@ async function discoverActionId(options: MeasureOptions): Promise<string> {
       return id;
     }
   }
-  throw new Error('Could not find the scan action in the check-in page. Pass --action-id with the id from the build, or see the procedure.');
+  throw new Error(
+    'Could not find the scan action in the check-in page. Pass --action-id with the id from the build, or see the procedure.',
+  );
 }
 
 /** One scan, as the check-in screen sends it. Returns the status and the elapsed time; the body is only checked, never printed. */
-async function scanOnce(options: MeasureOptions, actionId: string): Promise<{ elapsedMs: number; ok: boolean; status: number }> {
+async function scanOnce(
+  options: MeasureOptions,
+  actionId: string,
+): Promise<{ elapsedMs: number; ok: boolean; status: number }> {
   const started = performance.now();
   const response = await fetch(new URL(CHECK_IN_PATH, options.url), {
     method: 'POST',
@@ -73,24 +78,30 @@ async function main(): Promise<void> {
   const target = `${options.url.origin}${CHECK_IN_PATH}`;
   console.log(`Measuring scans on ${target}: ${options.runs} runs, one test badge.`);
 
-  const actionId = options.actionId ?? await discoverActionId(options);
+  const actionId = options.actionId ?? (await discoverActionId(options));
   const warm = await scanOnce(options, actionId);
   if (!warm.ok) {
-    throw new Error(`The warm-up scan failed (HTTP ${warm.status}). Check the test badge is valid and that BUXA_SESSION_COOKIE is a signed-in staff session.`);
+    throw new Error(
+      `The warm-up scan failed (HTTP ${warm.status}). Check the test badge is valid and that BUXA_SESSION_COOKIE is a signed-in staff session.`,
+    );
   }
 
   const samples: number[] = [];
   for (let run = 1; run <= options.runs; run++) {
     const result = await scanOnce(options, actionId);
     if (!result.ok) {
-      throw new Error(`Scan ${run} failed (HTTP ${result.status}). The run is stopped so the numbers are not misleading.`);
+      throw new Error(
+        `Scan ${run} failed (HTTP ${result.status}). The run is stopped so the numbers are not misleading.`,
+      );
     }
     samples.push(result.elapsedMs);
   }
 
   const summary = summarize(samples);
   console.log(formatSummary('scan to response (browser)', summary));
-  console.log(`Phone budget: ${PHONE_BUDGET_SECONDS} s from scan to the green result, on a real phone. This number is only the network and server part.`);
+  console.log(
+    `Phone budget: ${PHONE_BUDGET_SECONDS} s from scan to the green result, on a real phone. This number is only the network and server part.`,
+  );
 }
 
 main().catch((error: unknown) => {

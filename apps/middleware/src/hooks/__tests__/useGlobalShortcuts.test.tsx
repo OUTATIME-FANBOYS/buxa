@@ -32,7 +32,8 @@ describe('useGlobalShortcuts', () => {
     act(() => root.render(<Probe hasProject />));
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = '';
+    act(() => root.unmount());
+    document.body.innerHTML = '';
   });
 
   it('focuses search with ⌘K and with /', () => {

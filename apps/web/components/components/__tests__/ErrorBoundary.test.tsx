@@ -17,17 +17,34 @@ describe('ErrorBoundary', () => {
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = ''; vi.restoreAllMocks();
+    act(() => root.unmount());
+    document.body.innerHTML = '';
+    vi.restoreAllMocks();
   });
 
   it('renders its children when nothing goes wrong', () => {
-    act(() => root.render(<ErrorBoundary><p>board</p></ErrorBoundary>));
+    act(() =>
+      root.render(
+        <ErrorBoundary>
+          <p>board</p>
+        </ErrorBoundary>,
+      ),
+    );
     expect(document.body.textContent).toContain('board');
   });
   it('shows a recovery message with the error text when a child throws', () => {
-    act(() => root.render(<ErrorBoundary><Broken /></ErrorBoundary>));
+    act(() =>
+      root.render(
+        <ErrorBoundary>
+          <Broken />
+        </ErrorBoundary>,
+      ),
+    );
     expect(document.querySelector('.fatal')?.textContent).toContain('Something went wrong');
     expect(document.querySelector('.fatal pre')?.textContent).toBe('board exploded');
-    expect(Array.from(document.querySelectorAll('button')).map((b) => b.textContent)).toEqual(['Reload', 'Back to dashboard']);
+    expect(Array.from(document.querySelectorAll('button')).map(b => b.textContent)).toEqual([
+      'Reload',
+      'Back to dashboard',
+    ]);
   });
 });

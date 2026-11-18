@@ -13,7 +13,10 @@ type Layer = 'app' | 'views' | 'components' | 'elements' | 'other';
 // Frontend lives under components/: elements (smallest pieces), components (reusable composites) and views (whole screens).
 // Hooks, providers, server and the pure helpers live in the other packages, so from this app's side they are all `other`.
 const LAYER_DIRS: [string, Layer][] = [
-  ['app/', 'app'], ['components/views/', 'views'], ['components/components/', 'components'], ['components/elements/', 'elements'],
+  ['app/', 'app'],
+  ['components/views/', 'views'],
+  ['components/components/', 'components'],
+  ['components/elements/', 'elements'],
 ];
 const layerOf = (rel: string): Layer => {
   for (const [prefix, layer] of LAYER_DIRS) {
@@ -35,7 +38,9 @@ const MAY_IMPORT: Record<string, Layer[]> = {
 
 /** The export.ts of each layer's folder. Cross-layer imports must resolve to one of these. */
 const BARREL_FILES: Partial<Record<Layer, string[]>> = {
-  components: ['components/components/export.ts'], elements: ['components/elements/export.ts'], views: ['components/views/export.ts'],
+  components: ['components/components/export.ts'],
+  elements: ['components/elements/export.ts'],
+  views: ['components/views/export.ts'],
 };
 /** Deep imports that are allowed on purpose. Each one is a reason in the PR body. */
 const DEEP_ALLOWED = new Set<string>();
@@ -57,8 +62,8 @@ function walk(dir: string, out: string[] = []): string[] {
 }
 
 const rel = (abs: string) => relative(WEB, abs).split(sep).join('/');
-const files = walk(WEB).filter((f) => !rel(f).startsWith('.next'));
-const source = new Map(files.map((f) => [rel(f), readFileSync(f, 'utf8')]));
+const files = walk(WEB).filter(f => !rel(f).startsWith('.next'));
+const source = new Map(files.map(f => [rel(f), readFileSync(f, 'utf8')]));
 
 /** Runtime (non-type) static imports of a file, with the alias or relative specifier as written. */
 function importsOf(text: string): string[] {
@@ -67,7 +72,7 @@ function importsOf(text: string): string[] {
   for (const m of text.matchAll(re)) {
     // `import { type A, type B }` is type-only and erased at build time
     const named = /\{([^}]*)\}/.exec(m[2]);
-    if (named && named[1].split(',').every((x) => x.trim() === '' || x.trim().startsWith('type '))) {
+    if (named && named[1].split(',').every(x => x.trim() === '' || x.trim().startsWith('type '))) {
       continue;
     }
     out.push(m[3]);
@@ -89,7 +94,14 @@ function resolveSpec(spec: string, fromRel: string): string | null {
   } else {
     return null;
   }
-  for (const cand of [base, `${base}.ts`, `${base}.tsx`, join(base, 'index.ts'), join(base, 'index.tsx'), `${base}.server.ts`]) {
+  for (const cand of [
+    base,
+    `${base}.ts`,
+    `${base}.tsx`,
+    join(base, 'index.ts'),
+    join(base, 'index.tsx'),
+    `${base}.server.ts`,
+  ]) {
     if (existsSync(cand) && statSync(cand).isFile()) {
       return rel(cand);
     }
@@ -100,11 +112,14 @@ function resolveSpec(spec: string, fromRel: string): string | null {
 
 const edges = new Map<string, { to: string; spec: string }[]>();
 for (const [file, text] of source) {
-  edges.set(file, importsOf(text).flatMap((spec) => {
-    const to = resolveSpec(spec, file);
+  edges.set(
+    file,
+    importsOf(text).flatMap(spec => {
+      const to = resolveSpec(spec, file);
 
-    return to ? [{ to, spec }] : [];
-  }));
+      return to ? [{ to, spec }] : [];
+    }),
+  );
 }
 
 describe('layer rules', () => {
@@ -145,7 +160,11 @@ describe('layer rules', () => {
   });
 
   it('elements do not hold domain knowledge: they import no components, views, hooks or providers', () => {
-    const bad = [...edges].filter(([f]) => layerOf(f) === 'elements').flatMap(([f, l]) => l.filter((e) => ['components', 'views'].includes(layerOf(e.to))).map((e) => `${f} -> ${e.spec}`));
+    const bad = [...edges]
+      .filter(([f]) => layerOf(f) === 'elements')
+      .flatMap(([f, l]) =>
+        l.filter(e => ['components', 'views'].includes(layerOf(e.to))).map(e => `${f} -> ${e.spec}`),
+      );
     expect(bad).toEqual([]);
   });
 });
@@ -156,7 +175,8 @@ describe('cycles', () => {
     const stack: string[] = [];
     const cycles: string[] = [];
     const visit = (node: string) => {
-      state.set(node, 1); stack.push(node);
+      state.set(node, 1);
+      stack.push(node);
       for (const { to } of edges.get(node) ?? []) {
         const s = state.get(to);
         if (s === 1) {
@@ -165,7 +185,8 @@ describe('cycles', () => {
           visit(to);
         }
       }
-      stack.pop(); state.set(node, 2);
+      stack.pop();
+      state.set(node, 2);
     };
     for (const node of edges.keys()) {
       if (!state.has(node)) {
@@ -177,11 +198,16 @@ describe('cycles', () => {
 });
 
 describe('server-only code stays out of client barrels', () => {
-  const CLIENT_BARRELS = ['components/components/export.ts', 'components/elements/export.ts', 'components/views/export.ts'];
-  const isServerOnly = (file: string) => /from ['"]server-only['"]|import ['"]server-only['"]/.test(source.get(file) ?? '');
+  const CLIENT_BARRELS = [
+    'components/components/export.ts',
+    'components/elements/export.ts',
+    'components/views/export.ts',
+  ];
+  const isServerOnly = (file: string) =>
+    /from ['"]server-only['"]|import ['"]server-only['"]/.test(source.get(file) ?? '');
   const isUseServer = (file: string) => /^\s*(['"])use server\1/.test(source.get(file) ?? '');
 
-  it.each(CLIENT_BARRELS)('%s does not reach a server-only module through runtime imports', (barrel) => {
+  it.each(CLIENT_BARRELS)('%s does not reach a server-only module through runtime imports', barrel => {
     const seen = new Set<string>();
     const hits: string[] = [];
     const walkFrom = (file: string, path: string[]) => {
@@ -237,9 +263,9 @@ describe('components folders are used through their export.ts', () => {
 
   it('every folder under components/ that holds source files has an export.ts', () => {
     const folders = new Set(
-      [...source.keys()].filter((f) => f.startsWith(COMPONENTS) && !/\/__tests__\/|\.test\.tsx?$/.test(f)).map(folderOf),
+      [...source.keys()].filter(f => f.startsWith(COMPONENTS) && !/\/__tests__\/|\.test\.tsx?$/.test(f)).map(folderOf),
     );
-    const missing = [...folders].filter((folder) => !source.has(`${folder}/export.ts`));
+    const missing = [...folders].filter(folder => !source.has(`${folder}/export.ts`));
     expect(missing).toEqual([]);
   });
 });

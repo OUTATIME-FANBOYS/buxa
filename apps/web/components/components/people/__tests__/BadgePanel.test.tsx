@@ -3,10 +3,22 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { BadgePanel, type BadgePanelProps } from '@/components/components/people/export';
 import { settle } from '@buxa/domain';
 
-vi.mock('@buxa/server/composers/people/issueBadgeAction', () => ({ issueBadgeAction: () => settle(() => ({ status: 'idle' })) }));
-vi.mock('@buxa/server/composers/people/revokeBadgeAction', () => ({ revokeBadgeAction: () => settle(() => ({ status: 'idle' })) }));
+vi.mock('@buxa/server/composers/people/issueBadgeAction', () => ({
+  issueBadgeAction: () => settle(() => ({ status: 'idle' })),
+}));
+vi.mock('@buxa/server/composers/people/revokeBadgeAction', () => ({
+  revokeBadgeAction: () => settle(() => ({ status: 'idle' })),
+}));
 
-const base: BadgePanelProps = { personId: 'p-1', personName: 'Ada Lee', roleLabel: 'Camper', campName: 'Camp Birchwood', hasActiveBadge: false, archived: false, canManage: true };
+const base: BadgePanelProps = {
+  personId: 'p-1',
+  personName: 'Ada Lee',
+  roleLabel: 'Camper',
+  campName: 'Camp Birchwood',
+  hasActiveBadge: false,
+  archived: false,
+  canManage: true,
+};
 
 describe('BadgePanel', () => {
   it('says in words whether a badge is active', () => {
@@ -18,6 +30,8 @@ describe('BadgePanel', () => {
   });
   it('explains that archived people cannot have a badge, and that only admins can manage one', () => {
     expect(renderToStaticMarkup(<BadgePanel {...base} archived />)).toContain('Archived people cannot have a badge.');
-    expect(renderToStaticMarkup(<BadgePanel {...base} canManage={false} />)).toContain('Only admins can issue or revoke badges.');
+    expect(renderToStaticMarkup(<BadgePanel {...base} canManage={false} />)).toContain(
+      'Only admins can issue or revoke badges.',
+    );
   });
 });

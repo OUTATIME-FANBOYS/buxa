@@ -11,11 +11,22 @@ type Handler = (request: Request) => Response | Promise<Response>;
 
 /** Every route, addressed the way a client would: method and path. */
 const ROUTES: Record<string, Handler> = {
-  'GET /health': health, 'GET /ready': ready, 'GET /v1/me': me, 'POST /v1/orgs': createOrg,
-  'GET /v1/org': getOrg, 'PATCH /v1/org': patchOrg, 'GET /v1/members': members,
+  'GET /health': health,
+  'GET /ready': ready,
+  'GET /v1/me': me,
+  'POST /v1/orgs': createOrg,
+  'GET /v1/org': getOrg,
+  'PATCH /v1/org': patchOrg,
+  'GET /v1/members': members,
 };
 
-export interface CallOptions { token?: string | null; org?: string; body?: unknown; rawBody?: string; headers?: Record<string, string> }
+export interface CallOptions {
+  token?: string | null;
+  org?: string;
+  body?: unknown;
+  rawBody?: string;
+  headers?: Record<string, string>;
+}
 
 /** Calls a route handler with a real Web `Request`, exactly as Next.js would, and returns its `Response`. */
 export async function call(method: string, path: string, options: CallOptions = {}): Promise<Response> {

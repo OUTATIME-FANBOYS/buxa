@@ -15,7 +15,9 @@ const mocks = vi.hoisted(() => ({
   },
   rateLimiter: { hit: vi.fn() },
 }));
-vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: mocks.services, rateLimiter: mocks.rateLimiter }) }));
+vi.mock('../../../runtime', () => ({
+  getRuntime: () => ({ services: mocks.services, rateLimiter: mocks.rateLimiter }),
+}));
 vi.mock('../../../session', () => ({ requireSession: vi.fn(), getCurrentCamp: vi.fn(), toActor: vi.fn() }));
 vi.mock('../campActor', () => ({ campActor: mocks.campActor, campZone: vi.fn(() => settle(() => 'Europe/London')) }));
 
@@ -28,7 +30,16 @@ const actor: Actor = { userId: 'u1', orgId: 'o1', role: 'staff' };
 const PERSON = '6f1c2b8e-9a3d-4c5e-8f70-1a2b3c4d5e6f';
 const GUARDIAN = '0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d';
 const entry = { id: 'e1', personId: PERSON, checkedInAt: '2026-11-13T08:12:00Z' } as AttendanceEntry;
-const ada: PersonSummary = { id: PERSON, givenName: 'Ada', familyName: 'Lovelace', preferredName: null, roles: ['camper'], status: 'valid', onSite: false, archived: false };
+const ada: PersonSummary = {
+  id: PERSON,
+  givenName: 'Ada',
+  familyName: 'Lovelace',
+  preferredName: null,
+  roles: ['camper'],
+  status: 'valid',
+  onSite: false,
+  archived: false,
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -47,7 +58,10 @@ describe('scanCodeAction rate limit', () => {
   it('counts each scan against the signed-in person', async () => {
     mocks.services.credentials.scan.mockResolvedValue({ kind: 'unknown' });
     await scanCodeAction({ raw: 'anything-at-all' });
-    expect(mocks.rateLimiter.hit).toHaveBeenCalledWith(expect.objectContaining({ name: 'attendance.scan', limit: 120, windowSeconds: 60 }), actor.userId);
+    expect(mocks.rateLimiter.hit).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'attendance.scan', limit: 120, windowSeconds: 60 }),
+      actor.userId,
+    );
   });
 });
 
@@ -70,12 +84,19 @@ describe('checkInAction', () => {
   it('passes the actor and the validated input to the service', async () => {
     mocks.services.attendance.checkIn.mockResolvedValue({ ok: true, entry, overridden: true });
     await checkInAction({ personId: PERSON, method: 'search', overrideReason: 'Parent confirmed' });
-    expect(mocks.services.attendance.checkIn).toHaveBeenCalledWith(actor, { personId: PERSON, method: 'search', overrideReason: 'Parent confirmed' });
+    expect(mocks.services.attendance.checkIn).toHaveBeenCalledWith(actor, {
+      personId: PERSON,
+      method: 'search',
+      overrideReason: 'Parent confirmed',
+    });
   });
 
   it('answers forbidden when the service refuses the actor', async () => {
     mocks.services.attendance.checkIn.mockRejectedValue(forbidden('Your role cannot do this'));
-    expect(await checkInAction({ personId: PERSON, method: 'qr' })).toEqual({ kind: 'forbidden', message: 'Your role cannot do this' });
+    expect(await checkInAction({ personId: PERSON, method: 'qr' })).toEqual({
+      kind: 'forbidden',
+      message: 'Your role cannot do this',
+    });
   });
 
   it('answers invalid for a bad request from the service', async () => {
@@ -95,12 +116,17 @@ describe('checkInAction', () => {
   });
 
   it('rejects an override reason that is too long', async () => {
-    expect(await checkInAction({ personId: PERSON, method: 'qr', overrideReason: 'x'.repeat(501) })).toMatchObject({ kind: 'invalid' });
+    expect(await checkInAction({ personId: PERSON, method: 'qr', overrideReason: 'x'.repeat(501) })).toMatchObject({
+      kind: 'invalid',
+    });
   });
 
   it('answers forbidden when no camp is selected, without calling the service', async () => {
     mocks.campActor.mockResolvedValue(null);
-    expect(await checkInAction({ personId: PERSON, method: 'qr' })).toEqual({ kind: 'forbidden', message: 'Choose a camp first.' });
+    expect(await checkInAction({ personId: PERSON, method: 'qr' })).toEqual({
+      kind: 'forbidden',
+      message: 'Choose a camp first.',
+    });
     expect(mocks.services.attendance.checkIn).not.toHaveBeenCalled();
   });
 
@@ -120,7 +146,15 @@ describe('checkOutAction', () => {
     ['ok', { ok: true, entry, overridden: false }],
     ['ok with override', { ok: true, entry, overridden: true }],
     ['not_on_site', { ok: false, reason: 'not_on_site' }],
-    ['pickup_required, guardians listed', { ok: false, reason: 'pickup_required', canOverride: false, guardians: [{ personId: GUARDIAN, name: 'Grace', relationship: 'Parent' }] }],
+    [
+      'pickup_required, guardians listed',
+      {
+        ok: false,
+        reason: 'pickup_required',
+        canOverride: false,
+        guardians: [{ personId: GUARDIAN, name: 'Grace', relationship: 'Parent' }],
+      },
+    ],
     ['pickup_required, admin may override', { ok: false, reason: 'pickup_required', canOverride: true, guardians: [] }],
     ['pickup_not_authorised', { ok: false, reason: 'pickup_not_authorised', canOverride: true, guardians: [] }],
     ['override_needs_reason', { ok: false, reason: 'override_needs_reason' }],
@@ -134,12 +168,18 @@ describe('checkOutAction', () => {
   it('passes the chosen guardian and reason to the service', async () => {
     mocks.services.attendance.checkOut.mockResolvedValue({ ok: true, entry, overridden: false });
     await checkOutAction({ personId: PERSON, collectedByPersonId: GUARDIAN });
-    expect(mocks.services.attendance.checkOut).toHaveBeenCalledWith(actor, { personId: PERSON, collectedByPersonId: GUARDIAN });
+    expect(mocks.services.attendance.checkOut).toHaveBeenCalledWith(actor, {
+      personId: PERSON,
+      collectedByPersonId: GUARDIAN,
+    });
   });
 
   it('answers forbidden when the service refuses the actor', async () => {
     mocks.services.attendance.checkOut.mockRejectedValue(forbidden('Your role cannot do this'));
-    expect(await checkOutAction({ personId: PERSON })).toEqual({ kind: 'forbidden', message: 'Your role cannot do this' });
+    expect(await checkOutAction({ personId: PERSON })).toEqual({
+      kind: 'forbidden',
+      message: 'Your role cannot do this',
+    });
   });
 
   it('answers invalid for a bad guardian id, without calling the service', async () => {
@@ -162,7 +202,9 @@ describe('scanCodeAction', () => {
 
   it('answers the person with their arrival time when they are on site', async () => {
     mocks.services.credentials.scan.mockResolvedValue({ kind: 'person', person: { ...ada, onSite: true } });
-    mocks.services.attendance.onSite.mockResolvedValue([{ entry, person: ada, isMinor: true, pickupOptions: [] } satisfies OnSiteEntry]);
+    mocks.services.attendance.onSite.mockResolvedValue([
+      { entry, person: ada, isMinor: true, pickupOptions: [] } satisfies OnSiteEntry,
+    ]);
     expect(await scanCodeAction({ raw: 'bx1.token' })).toEqual({
       kind: 'ok',
       value: { kind: 'person', card: { person: { ...ada, onSite: true }, onSiteSince: '2026-11-13T08:12:00Z' } },
@@ -172,7 +214,10 @@ describe('scanCodeAction', () => {
   it('answers the person with no arrival time when they are not on site', async () => {
     mocks.services.credentials.scan.mockResolvedValue({ kind: 'person', person: ada });
     mocks.services.attendance.onSite.mockResolvedValue([]);
-    expect(await scanCodeAction({ raw: 'bx1.token' })).toEqual({ kind: 'ok', value: { kind: 'person', card: { person: ada, onSiteSince: null } } });
+    expect(await scanCodeAction({ raw: 'bx1.token' })).toEqual({
+      kind: 'ok',
+      value: { kind: 'person', card: { person: ada, onSiteSince: null } },
+    });
   });
 
   it('rejects a code longer than the limit', async () => {

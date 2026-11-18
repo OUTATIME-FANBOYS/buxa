@@ -23,13 +23,17 @@ describe('parseCampLocal (camp-local ISO times, no offset)', () => {
 
   it('refuses an offset: times are in the camp zone', () => {
     expect(parseCampLocal('2027-07-05T09:00+10:00', SYDNEY)).toEqual({
-      ok: false, message: 'Leave off the time zone. Times are in the camp\'s time zone.',
+      ok: false,
+      message: "Leave off the time zone. Times are in the camp's time zone.",
     });
     expect(parseCampLocal('2027-07-05T09:00Z', SYDNEY).ok).toBe(false);
   });
 
   it('refuses a value that is not ISO, with the format to use', () => {
-    expect(parseCampLocal('5/7/2027 9am', SYDNEY)).toEqual({ ok: false, message: 'Use the format 2027-07-05T09:00 (camp time).' });
+    expect(parseCampLocal('5/7/2027 9am', SYDNEY)).toEqual({
+      ok: false,
+      message: 'Use the format 2027-07-05T09:00 (camp time).',
+    });
     expect(parseCampLocal('2027-07-05 09:00', SYDNEY).ok).toBe(false);
   });
 

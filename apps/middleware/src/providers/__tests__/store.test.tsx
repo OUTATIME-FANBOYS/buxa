@@ -26,14 +26,22 @@ function Probe() {
 describe('StoreProvider and useStore', () => {
   let root: Root;
   beforeEach(() => {
-    api = undefined; root = createRoot(document.body.appendChild(document.createElement('div')));
+    api = undefined;
+    root = createRoot(document.body.appendChild(document.createElement('div')));
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = '';
+    act(() => root.unmount());
+    document.body.innerHTML = '';
   });
 
   it('gives the state, the actions and what is derived from them to its children', () => {
-    act(() => root.render(<StoreProvider><Probe /></StoreProvider>));
+    act(() =>
+      root.render(
+        <StoreProvider>
+          <Probe />
+        </StoreProvider>,
+      ),
+    );
     expect(requirePresent(api, 'api').s).toBe(seed);
     expect(requirePresent(api, 'api').actions).toBe(actions);
     expect(requirePresent(api, 'api').saveStatus).toBe('saved');

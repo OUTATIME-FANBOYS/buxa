@@ -7,14 +7,17 @@ import type { ActionContext } from './context';
 export function taskActions({ set }: ActionContext) {
   return {
     createTask(d: D.TaskDraft): string {
-      const id = uid(); set(s => D.createTask(s, id, d));
+      const id = uid();
+      set(s => D.createTask(s, id, d));
 
       return id;
     },
     updateTask: (id: string, patch: D.TaskPatch) => set(s => D.updateTask(s, id, patch)),
-    moveTask: (id: string, columnId: string, beforeId: string | null) => set(s => D.moveTask(s, id, columnId, beforeId)),
+    moveTask: (id: string, columnId: string, beforeId: string | null) =>
+      set(s => D.moveTask(s, id, columnId, beforeId)),
     duplicateTask(id: string): string {
-      const nid = uid(); set(s => D.duplicateTask(s, id, nid));
+      const nid = uid();
+      set(s => D.duplicateTask(s, id, nid));
 
       return nid;
     },

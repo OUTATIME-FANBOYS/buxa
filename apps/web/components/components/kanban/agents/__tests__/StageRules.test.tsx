@@ -8,7 +8,11 @@ const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 
 const seed = buildSeed();
-const agent = { ...seed.agents[0], scope: [seed.projects[0].id], moveRules: { [seed.projects[0].columns[0].id]: 'approve' } } as unknown as Agent;
+const agent = {
+  ...seed.agents[0],
+  scope: [seed.projects[0].id],
+  moveRules: { [seed.projects[0].columns[0].id]: 'approve' },
+} as unknown as Agent;
 
 describe('StageRules', () => {
   beforeEach(() => {

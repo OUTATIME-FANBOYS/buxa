@@ -24,11 +24,18 @@ describe('logger', () => {
     expect(lines[0]?.time).toEqual(expect.any(Number));
   });
   it('accepts a plain message', () => {
-    const { log, lines } = capture('info'); log.warn('careful'); expect(lines[0]).toMatchObject({ level: 40, msg: 'careful' });
+    const { log, lines } = capture('info');
+    log.warn('careful');
+    expect(lines[0]).toMatchObject({ level: 40, msg: 'careful' });
   });
   it('drops anything below the configured level, and everything when silent', () => {
-    const a = capture('warn'); a.log.info('no'); a.log.error('yes'); expect(a.lines.map(l => l.msg)).toEqual(['yes']);
-    const b = capture('silent'); b.log.fatal('never'); expect(b.lines).toEqual([]);
+    const a = capture('warn');
+    a.log.info('no');
+    a.log.error('yes');
+    expect(a.lines.map(l => l.msg)).toEqual(['yes']);
+    const b = capture('silent');
+    b.log.fatal('never');
+    expect(b.lines).toEqual([]);
   });
   it('writes errors out with type, message and stack', () => {
     const { log, lines } = capture('error');
@@ -39,7 +46,9 @@ describe('logger', () => {
   });
   it('a child adds its fields to every line without changing the parent', () => {
     const { log, lines } = capture('info');
-    log.child({ reqId: 'r-1' }).info('inside'); log.info('outside');
-    expect(lines[0]).toMatchObject({ reqId: 'r-1' }); expect(lines[1]).not.toHaveProperty('reqId');
+    log.child({ reqId: 'r-1' }).info('inside');
+    log.info('outside');
+    expect(lines[0]).toMatchObject({ reqId: 'r-1' });
+    expect(lines[1]).not.toHaveProperty('reqId');
   });
 });

@@ -3,7 +3,14 @@ import { describe, expect, it } from 'vitest';
 import { BadgeCard } from '@/components/components/badge/export';
 
 describe('BadgeCard', () => {
-  const html = renderToStaticMarkup(<BadgeCard personName="Asha Rao" roleLabel="Counsellor" campName="Camp Buxa" payload="bx1.AAAAAAAAAAAAAAAAAAAAAA" />);
+  const html = renderToStaticMarkup(
+    <BadgeCard
+      personName="Asha Rao"
+      roleLabel="Counsellor"
+      campName="Camp Buxa"
+      payload="bx1.AAAAAAAAAAAAAAAAAAAAAA"
+    />,
+  );
   it('shows name, role and camp', () => {
     expect(html).toContain('Asha Rao');
     expect(html).toContain('Counsellor');

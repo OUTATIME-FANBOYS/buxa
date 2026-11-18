@@ -58,11 +58,21 @@ beforeEach(async () => {
 describe('importClassesAction: preview (nothing is written)', () => {
   it('checks every row of the file and returns a result for each', async () => {
     const state = await importClassesAction(IMPORT_IDLE, upload(SEASON));
-    expect(state).toMatchObject({ status: 'preview', fileName: 'season.csv', counts: { create: 2, update: 0, refused: 3 } });
+    expect(state).toMatchObject({
+      status: 'preview',
+      fileName: 'season.csv',
+      counts: { create: 2, update: 0, refused: 3 },
+    });
     if (state.status !== 'preview') {
       throw new Error('expected a preview');
     }
-    expect(state.results.map(r => [r.rowNumber, r.status])).toEqual([[2, 'create'], [3, 'refused'], [4, 'refused'], [5, 'create'], [6, 'refused']]);
+    expect(state.results.map(r => [r.rowNumber, r.status])).toEqual([
+      [2, 'create'],
+      [3, 'refused'],
+      [4, 'refused'],
+      [5, 'create'],
+      [6, 'refused'],
+    ]);
   });
 
   it('gives each refused row its reason, against the column that is wrong', async () => {
@@ -73,7 +83,7 @@ describe('importClassesAction: preview (nothing is written)', () => {
     const byRow = Object.fromEntries(state.results.map(r => [r.rowNumber, r.problems]));
     expect(byRow[3]?.[0]?.message).toMatch(/clashes with row 2/i); // clashes with row 2 in the same file
     expect(byRow[4]?.[0]).toMatchObject({ field: 'class_name' }); // no class called "Ghost class"
-    expect(byRow[6]?.[0]).toMatchObject({ field: 'age_min' });    // ages do not match the class
+    expect(byRow[6]?.[0]).toMatchObject({ field: 'age_min' }); // ages do not match the class
   });
 
   it('writes nothing during the preview', async () => {
@@ -82,10 +92,16 @@ describe('importClassesAction: preview (nothing is written)', () => {
   });
 
   it('asks for a file when none is chosen, and reads only CSV-sized files', async () => {
-    expect(await importClassesAction(IMPORT_IDLE, new FormData())).toEqual({ status: 'error', message: 'Choose a CSV file to upload.' });
+    expect(await importClassesAction(IMPORT_IDLE, new FormData())).toEqual({
+      status: 'error',
+      message: 'Choose a CSV file to upload.',
+    });
     const empty = new FormData();
     empty.append('file', new File([], 'empty.csv', { type: 'text/csv' }));
-    expect(await importClassesAction(IMPORT_IDLE, empty)).toEqual({ status: 'error', message: 'Choose a CSV file to upload.' });
+    expect(await importClassesAction(IMPORT_IDLE, empty)).toEqual({
+      status: 'error',
+      message: 'Choose a CSV file to upload.',
+    });
   });
 
   it('names the missing column when the header does not match the template', async () => {
@@ -95,7 +111,10 @@ describe('importClassesAction: preview (nothing is written)', () => {
 
   it('refuses a viewer with the forbidden message and writes nothing', async () => {
     h.actor = as('viewer');
-    expect(await importClassesAction(IMPORT_IDLE, upload(SEASON))).toEqual({ status: 'error', message: 'Your role cannot do this.' });
+    expect(await importClassesAction(IMPORT_IDLE, upload(SEASON))).toEqual({
+      status: 'error',
+      message: 'Your role cannot do this.',
+    });
   });
 });
 
@@ -106,13 +125,22 @@ describe('importClassesAction: confirm (one transaction)', () => {
       throw new Error('expected a preview');
     }
     const done = await importClassesAction(preview, confirmOf(preview));
-    expect(done).toMatchObject({ status: 'done', fileName: 'season.csv', written: 2, counts: { create: 2, refused: 3 }, changedSincePreview: false });
+    expect(done).toMatchObject({
+      status: 'done',
+      fileName: 'season.csv',
+      written: 2,
+      counts: { create: 2, refused: 3 },
+      changedSincePreview: false,
+    });
     expect(await imports.listCampSessions(ORG)).toHaveLength(2);
   });
 
   it('asks the person to upload again when the preview text is missing', async () => {
     const form = new FormData();
     form.append('intent', 'confirm');
-    expect(await importClassesAction(IMPORT_IDLE, form)).toEqual({ status: 'error', message: 'Upload the file again, then confirm.' });
+    expect(await importClassesAction(IMPORT_IDLE, form)).toEqual({
+      status: 'error',
+      message: 'Upload the file again, then confirm.',
+    });
   });
 });

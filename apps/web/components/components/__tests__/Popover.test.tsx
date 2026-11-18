@@ -13,11 +13,18 @@ describe('Popover', () => {
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = '';
+    act(() => root.unmount());
+    document.body.innerHTML = '';
   });
 
   it('portals its content to the body as a labelled dialog', () => {
-    act(() => root.render(<Popover anchor={null} onClose={() => undefined} label="Filters" className="x"><p>Choose</p></Popover>));
+    act(() =>
+      root.render(
+        <Popover anchor={null} onClose={() => undefined} label="Filters" className="x">
+          <p>Choose</p>
+        </Popover>,
+      ),
+    );
     const pop = requirePresent(document.querySelector('.popover'), "document.querySelector('.popover')");
     expect(pop.getAttribute('aria-label')).toBe('Filters');
     expect(pop.classList.contains('x')).toBe(true);
@@ -28,7 +35,13 @@ describe('Popover', () => {
   it('closes on Escape and returns focus to its anchor', () => {
     const anchor = document.body.appendChild(document.createElement('button'));
     const onClose = vi.fn();
-    act(() => root.render(<Popover anchor={anchor} onClose={onClose}><p>x</p></Popover>));
+    act(() =>
+      root.render(
+        <Popover anchor={anchor} onClose={onClose}>
+          <p>x</p>
+        </Popover>,
+      ),
+    );
     act(() => {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     });
@@ -38,8 +51,17 @@ describe('Popover', () => {
   it('closes when pressing outside it, but not inside', () => {
     const onClose = vi.fn();
     const outside = document.body.appendChild(document.createElement('span'));
-    act(() => root.render(<Popover anchor={null} onClose={onClose}><button>inside</button></Popover>));
-    const inside = requirePresent(document.querySelector('.popover button'), "document.querySelector('.popover button')");
+    act(() =>
+      root.render(
+        <Popover anchor={null} onClose={onClose}>
+          <button>inside</button>
+        </Popover>,
+      ),
+    );
+    const inside = requirePresent(
+      document.querySelector('.popover button'),
+      "document.querySelector('.popover button')",
+    );
     act(() => {
       inside.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
     });

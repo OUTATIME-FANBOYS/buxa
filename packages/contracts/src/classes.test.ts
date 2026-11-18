@@ -24,14 +24,28 @@ describe('session instructor count', () => {
   const many = (n: number) => Array.from({ length: n }, (_, i) => ({ id: ID, name: `Person ${i}` }));
 
   it('allows up to the maximum on a session read, and refuses one more', () => {
-    const base = { id: 's1', classId: 'c1', className: 'Robotics', instructorIds: [], capacity: 8, seatsTaken: 0, waitlisted: 0, ...session };
+    const base = {
+      id: 's1',
+      classId: 'c1',
+      className: 'Robotics',
+      instructorIds: [],
+      capacity: 8,
+      seatsTaken: 0,
+      waitlisted: 0,
+      ...session,
+    };
     expect(SessionSchema.safeParse({ ...base, instructors: many(MAX_SESSION_INSTRUCTORS) }).success).toBe(true);
     expect(SessionSchema.safeParse({ ...base, instructors: many(MAX_SESSION_INSTRUCTORS + 1) }).success).toBe(false);
   });
 
   it('allows up to the maximum on input, and refuses one more', () => {
-    const ids = (n: number) => Array.from({ length: n }, (_, i) => `00000000-0000-4000-8000-${String(i).padStart(12, '0')}`);
-    expect(NewSessionInputSchema.safeParse({ ...session, instructorIds: ids(MAX_SESSION_INSTRUCTORS) }).success).toBe(true);
-    expect(NewSessionInputSchema.safeParse({ ...session, instructorIds: ids(MAX_SESSION_INSTRUCTORS + 1) }).success).toBe(false);
+    const ids = (n: number) =>
+      Array.from({ length: n }, (_, i) => `00000000-0000-4000-8000-${String(i).padStart(12, '0')}`);
+    expect(NewSessionInputSchema.safeParse({ ...session, instructorIds: ids(MAX_SESSION_INSTRUCTORS) }).success).toBe(
+      true,
+    );
+    expect(
+      NewSessionInputSchema.safeParse({ ...session, instructorIds: ids(MAX_SESSION_INSTRUCTORS + 1) }).success,
+    ).toBe(false);
   });
 });

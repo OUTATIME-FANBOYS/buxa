@@ -16,8 +16,15 @@ export default async function Page() {
 
   return (
     <SettingsPage
-      clock={<CampClockPanel campId={camp.orgId} clockFormat={org.clockFormat} canChange={authorize(actor, 'org:update').allow && !archived} />}
+      clock={
+        <CampClockPanel
+          campId={camp.orgId}
+          clockFormat={org.clockFormat}
+          canChange={authorize(actor, 'org:update').allow && !archived}
+        />
+      }
       camp={{ id: camp.orgId, name: org.name, canDelete: authorize(actor, 'org:delete').allow, archived }}
-      archivedCamps={archivedCamps} />
+      archivedCamps={archivedCamps}
+    />
   );
 }

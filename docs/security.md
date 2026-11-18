@@ -5,18 +5,18 @@ section 6 are done and the privacy review is signed off. This page says what is 
 
 ## 1. What we hold, and where
 
-| Data | Examples | Stored in | Who can read it | Kept for |
-|---|---|---|---|---|
-| Sign-in credentials | email, password hash, sessions | Supabase Auth (never in our database) | the user only | while the account exists |
-| Camp settings | camp name, slug, time zone | Postgres | camp members | while the camp exists |
-| Staff access | role per camp | Postgres | camp admins and owners | while the membership exists |
-| People (children, guardians, instructors) | names, roles, household links, date of birth | Postgres, row-level security per camp | staff and above; viewers see names and roles only | **not yet defined** (open item) |
-| Contact details | email, phone | Postgres | staff and above (`people:read_contact`) | not yet defined |
-| Memberships | start and end dates, revocation reason | Postgres | staff and above | not yet defined |
-| Badges | token hash only (SHA-256 of a random 128-bit token) | Postgres | nobody can read the token back | until reissued or revoked |
-| Attendance | check-in and check-out times, who checked them in | Postgres | staff and above | not yet defined |
-| Audit log | who did what, when, to which record | Postgres, append-only | admins | not yet defined |
-| Staff board tasks (browser demo) | task titles and comments | the user's browser (local storage) | the browser only | until cleared |
+| Data                                      | Examples                                            | Stored in                             | Who can read it                                   | Kept for                        |
+| ----------------------------------------- | --------------------------------------------------- | ------------------------------------- | ------------------------------------------------- | ------------------------------- |
+| Sign-in credentials                       | email, password hash, sessions                      | Supabase Auth (never in our database) | the user only                                     | while the account exists        |
+| Camp settings                             | camp name, slug, time zone                          | Postgres                              | camp members                                      | while the camp exists           |
+| Staff access                              | role per camp                                       | Postgres                              | camp admins and owners                            | while the membership exists     |
+| People (children, guardians, instructors) | names, roles, household links, date of birth        | Postgres, row-level security per camp | staff and above; viewers see names and roles only | **not yet defined** (open item) |
+| Contact details                           | email, phone                                        | Postgres                              | staff and above (`people:read_contact`)           | not yet defined                 |
+| Memberships                               | start and end dates, revocation reason              | Postgres                              | staff and above                                   | not yet defined                 |
+| Badges                                    | token hash only (SHA-256 of a random 128-bit token) | Postgres                              | nobody can read the token back                    | until reissued or revoked       |
+| Attendance                                | check-in and check-out times, who checked them in   | Postgres                              | staff and above                                   | not yet defined                 |
+| Audit log                                 | who did what, when, to which record                 | Postgres, append-only                 | admins                                            | not yet defined                 |
+| Staff board tasks (browser demo)          | task titles and comments                            | the user's browser (local storage)    | the browser only                                  | until cleared                   |
 
 **Rule:** the staff board keeps its data only in the browser. It is not sent to the Buxa server, so it must not hold real data.
 

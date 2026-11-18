@@ -24,38 +24,59 @@ export function countsLine(counts: ImportPlan['counts']): string {
 export function ImportResults({ results, counts }: { results: readonly RowResult[]; counts: ImportPlan['counts'] }) {
   return (
     <section aria-labelledby="import-results-heading" className="stack">
-      <h2 id="import-results-heading" className="people-subheading">Preview</h2>
-      <p aria-live="polite" className="muted">{countsLine(counts)} Nothing is saved until you confirm.</p>
-      <div className="table-wrap"><table className="table classes-import-table">
-        <caption className="sr-only">Every row in the file, with its result</caption>
-        <thead><tr>
-          <th scope="col">Row</th><th scope="col">Result</th><th scope="col">Class</th><th scope="col">Starts</th>
-          <th scope="col">Ends</th><th scope="col">Location</th><th scope="col">Reason</th>
-        </tr></thead>
-        <tbody>
-          {results.map(row => {
-            const status = STATUS[row.status];
+      <h2 id="import-results-heading" className="people-subheading">
+        Preview
+      </h2>
+      <p aria-live="polite" className="muted">
+        {countsLine(counts)} Nothing is saved until you confirm.
+      </p>
+      <div className="table-wrap">
+        <table className="table classes-import-table">
+          <caption className="sr-only">Every row in the file, with its result</caption>
+          <thead>
+            <tr>
+              <th scope="col">Row</th>
+              <th scope="col">Result</th>
+              <th scope="col">Class</th>
+              <th scope="col">Starts</th>
+              <th scope="col">Ends</th>
+              <th scope="col">Location</th>
+              <th scope="col">Reason</th>
+            </tr>
+          </thead>
+          <tbody>
+            {results.map(row => {
+              const status = STATUS[row.status];
 
-            return (
-              <tr key={row.rowNumber}>
-                <td>{row.rowNumber}</td>
-                <td><Pill tone={status.tone}>{status.label}</Pill></td>
-                <td>{row.className || '-'}</td>
-                <td>{row.startsAt || '-'}</td>
-                <td>{row.endsAt || '-'}</td>
-                <td>{row.location || '-'}</td>
-                <td>
-                  {row.problems.length === 0 ? <span className="muted">Matches the camp</span> : (
-                    <ul className="classes-problems">
-                      {row.problems.map((p, i) => <li key={`${p.field}-${i}`}><strong>{p.field}:</strong> {p.message}</li>)}
-                    </ul>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table></div>
+              return (
+                <tr key={row.rowNumber}>
+                  <td>{row.rowNumber}</td>
+                  <td>
+                    <Pill tone={status.tone}>{status.label}</Pill>
+                  </td>
+                  <td>{row.className || '-'}</td>
+                  <td>{row.startsAt || '-'}</td>
+                  <td>{row.endsAt || '-'}</td>
+                  <td>{row.location || '-'}</td>
+                  <td>
+                    {row.problems.length === 0 ? (
+                      <span className="muted">Matches the camp</span>
+                    ) : (
+                      <ul className="classes-problems">
+                        {row.problems.map((p, i) => (
+                          <li key={`${p.field}-${i}`}>
+                            <strong>{p.field}:</strong> {p.message}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }

@@ -26,8 +26,12 @@ describe('EnrolForm', () => {
   });
 
   it('shows the override reason only to someone allowed to override', () => {
-    expect(renderToStaticMarkup(<EnrolForm {...base} full={false} canOverride={false} />)).not.toContain('Override reason');
-    expect(renderToStaticMarkup(<EnrolForm {...base} full={false} canOverride />)).toContain('Override reason (admins only)');
+    expect(renderToStaticMarkup(<EnrolForm {...base} full={false} canOverride={false} />)).not.toContain(
+      'Override reason',
+    );
+    expect(renderToStaticMarkup(<EnrolForm {...base} full={false} canOverride />)).toContain(
+      'Override reason (admins only)',
+    );
   });
 
   it('labels the camper field and says when there is no one to choose', () => {

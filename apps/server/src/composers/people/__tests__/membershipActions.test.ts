@@ -26,25 +26,40 @@ describe('addMembershipAction', () => {
   });
 
   it('checks the dates and the plan name with the contract messages', async () => {
-    const state = await addMembershipAction(idle, formOf({ ...season, plan: '', startsOn: '2027-02-30', endsOn: '2027-01-01' }));
-    expect(state).toMatchObject({ status: 'error', fieldErrors: { plan: 'Name the plan, for example "Summer 2027".', startsOn: 'Use a real date (YYYY-MM-DD).' } });
+    const state = await addMembershipAction(
+      idle,
+      formOf({ ...season, plan: '', startsOn: '2027-02-30', endsOn: '2027-01-01' }),
+    );
+    expect(state).toMatchObject({
+      status: 'error',
+      fieldErrors: { plan: 'Name the plan, for example "Summer 2027".', startsOn: 'Use a real date (YYYY-MM-DD).' },
+    });
     expect(h.memberships.add).not.toHaveBeenCalled();
   });
 
   it('refuses an end date before the start date', async () => {
     const state = await addMembershipAction(idle, formOf({ ...season, endsOn: '2027-06-01' }));
-    expect(state).toMatchObject({ status: 'error', fieldErrors: { endsOn: 'The end date cannot be before the start date.' } });
+    expect(state).toMatchObject({
+      status: 'error',
+      fieldErrors: { endsOn: 'The end date cannot be before the start date.' },
+    });
   });
 
   it('adds the membership, refreshes the person and says so', async () => {
-    expect(await addMembershipAction(idle, formOf(season))).toEqual({ status: 'success', message: 'Membership added.' });
+    expect(await addMembershipAction(idle, formOf(season))).toEqual({
+      status: 'success',
+      message: 'Membership added.',
+    });
     expect(h.memberships.add).toHaveBeenCalledWith(h.actor, season);
     expect(h.revalidatePath).toHaveBeenCalledWith(personPath(IDS.person));
   });
 
   it('turns a 403 into a friendly state', async () => {
     h.memberships.add.mockRejectedValueOnce(forbidden('no'));
-    expect(await addMembershipAction(idle, formOf(season))).toMatchObject({ status: 'error', message: 'Your role cannot do this.' });
+    expect(await addMembershipAction(idle, formOf(season))).toMatchObject({
+      status: 'error',
+      message: 'Your role cannot do this.',
+    });
   });
 });
 
@@ -56,22 +71,32 @@ describe('revokeMembershipAction', () => {
   });
 
   it('requires a reason and does not revoke without one', async () => {
-    const state = await revokeMembershipAction(idle, formOf({ personId: IDS.person, membershipId: IDS.membership, reason: '   ' }));
+    const state = await revokeMembershipAction(
+      idle,
+      formOf({ personId: IDS.person, membershipId: IDS.membership, reason: '   ' }),
+    );
     expect(state).toMatchObject({ status: 'error', fieldErrors: { reason: 'Say why.' } });
     expect(h.memberships.revoke).not.toHaveBeenCalled();
   });
 
   it('revokes with the reason, refreshes the person and says so', async () => {
-    const state = await revokeMembershipAction(idle, formOf({ personId: IDS.person, membershipId: IDS.membership, reason: 'Left the camp' }));
+    const state = await revokeMembershipAction(
+      idle,
+      formOf({ personId: IDS.person, membershipId: IDS.membership, reason: 'Left the camp' }),
+    );
     expect(state).toEqual({ status: 'success', message: 'Membership revoked.' });
-    expect(h.memberships.revoke).toHaveBeenCalledWith(h.actor, { membershipId: IDS.membership, reason: 'Left the camp' });
+    expect(h.memberships.revoke).toHaveBeenCalledWith(h.actor, {
+      membershipId: IDS.membership,
+      reason: 'Left the camp',
+    });
     expect(h.revalidatePath).toHaveBeenCalledWith(personPath(IDS.person));
   });
 
   it('shows a staff member the forbidden message and revokes nothing', async () => {
     h.actor = { userId: 'u1', orgId: 'o1', role: 'staff' };
     h.memberships.revoke.mockRejectedValueOnce(forbidden('no'));
-    expect(await revokeMembershipAction(idle, formOf({ personId: IDS.person, membershipId: IDS.membership, reason: 'x' })))
-      .toMatchObject({ status: 'error', message: 'Your role cannot do this.' });
+    expect(
+      await revokeMembershipAction(idle, formOf({ personId: IDS.person, membershipId: IDS.membership, reason: 'x' })),
+    ).toMatchObject({ status: 'error', message: 'Your role cannot do this.' });
   });
 });

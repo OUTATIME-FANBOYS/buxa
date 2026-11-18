@@ -7,15 +7,29 @@ import { fieldError, idle } from '@buxa/shared';
 import { addSessionAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
 
-interface InstructorChoice { id: string; name: string }
+interface InstructorChoice {
+  id: string;
+  name: string;
+}
 
 /**
  * One session of a class. Times are typed in the camp's clock (the zone is shown above the fields). Instructors are chosen from the
  * people who have the instructor role; the class's ratio is shown, because it is stored on the class.
  */
-export function NewSessionForm({ classId, className, defaultCapacity, timeZone, ratio, instructors }: {
-  classId: string; className: string; defaultCapacity: number; timeZone: string;
-  ratio: { instructors: number; campers: number } | null; instructors: readonly InstructorChoice[];
+export function NewSessionForm({
+  classId,
+  className,
+  defaultCapacity,
+  timeZone,
+  ratio,
+  instructors,
+}: {
+  classId: string;
+  className: string;
+  defaultCapacity: number;
+  timeZone: string;
+  ratio: { instructors: number; campers: number } | null;
+  instructors: readonly InstructorChoice[];
 }) {
   const [state, formAction, pending] = useActionState(addSessionAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
@@ -33,14 +47,22 @@ export function NewSessionForm({ classId, className, defaultCapacity, timeZone, 
     <form ref={formRef} action={formAction} className="panel stack classes-form" aria-describedby="session-form-help">
       <input type="hidden" name="classId" value={classId} />
       <p id="session-form-help" className="muted">
-        Times are in the camp&apos;s time zone ({timeZone}), written as 2027-07-05T09:00. Fields marked with an asterisk are required.
+        Times are in the camp&apos;s time zone ({timeZone}), written as 2027-07-05T09:00. Fields marked with an asterisk
+        are required.
       </p>
       <p className="muted">
-        Class: <strong>{className}</strong>. Instructor ratio: {ratio ? `${ratio.instructors} instructor for ${ratio.campers} campers` : 'not set on this class'}.
+        Class: <strong>{className}</strong>. Instructor ratio:{' '}
+        {ratio ? `${ratio.instructors} instructor for ${ratio.campers} campers` : 'not set on this class'}.
       </p>
       <div className="form-row">
         <Field label="Starts *" error={err('startsAt')}>
-          <input name="startsAt" placeholder="2027-07-05T09:00" autoComplete="off" aria-invalid={invalid('startsAt')} autoFocus />
+          <input
+            name="startsAt"
+            placeholder="2027-07-05T09:00"
+            autoComplete="off"
+            aria-invalid={invalid('startsAt')}
+            autoFocus
+          />
         </Field>
         <Field label="Ends *" error={err('endsAt')}>
           <input name="endsAt" placeholder="2027-07-05T12:00" autoComplete="off" aria-invalid={invalid('endsAt')} />
@@ -50,7 +72,13 @@ export function NewSessionForm({ classId, className, defaultCapacity, timeZone, 
         <input name="location" maxLength={200} autoComplete="off" aria-invalid={invalid('location')} />
       </Field>
       <Field label="Places" error={err('capacity')} hint={`Leave empty to use the class default (${defaultCapacity}).`}>
-        <input name="capacity" inputMode="numeric" autoComplete="off" placeholder={String(defaultCapacity)} aria-invalid={invalid('capacity')} />
+        <input
+          name="capacity"
+          inputMode="numeric"
+          autoComplete="off"
+          placeholder={String(defaultCapacity)}
+          aria-invalid={invalid('capacity')}
+        />
       </Field>
       <fieldset className="plain">
         <legend className="field-label">Instructors</legend>
@@ -68,8 +96,12 @@ export function NewSessionForm({ classId, className, defaultCapacity, timeZone, 
       </fieldset>
       <ActionMessage state={state} />
       <div className="classes-actions">
-        <Button variant="primary" type="submit" className="classes-target" disabled={pending}>{pending ? 'Saving...' : 'Add session'}</Button>
-        <Button variant="ghost" className="classes-target" href={classPath(classId)}>Back to the class</Button>
+        <Button variant="primary" type="submit" className="classes-target" disabled={pending}>
+          {pending ? 'Saving...' : 'Add session'}
+        </Button>
+        <Button variant="ghost" className="classes-target" href={classPath(classId)}>
+          Back to the class
+        </Button>
       </div>
     </form>
   );

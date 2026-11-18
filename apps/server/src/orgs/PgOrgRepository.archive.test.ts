@@ -18,8 +18,10 @@ describe.skipIf(!url)('PgOrgRepository archive and delete', () => {
 
   beforeAll(async () => {
     await migrate(pool);
-    const users = await pool.query<{ id: string }>(`INSERT INTO users (email, name) VALUES ($1, 'Owner'), ($2, 'Admin') RETURNING id`,
-      [`owner-${tag}@repo.test`, `admin-${tag}@repo.test`]);
+    const users = await pool.query<{ id: string }>(
+      `INSERT INTO users (email, name) VALUES ($1, 'Owner'), ($2, 'Admin') RETURNING id`,
+      [`owner-${tag}@repo.test`, `admin-${tag}@repo.test`],
+    );
     [owner, admin] = users.rows.map(r => r.id);
   });
 

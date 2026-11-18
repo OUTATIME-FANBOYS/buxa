@@ -10,7 +10,15 @@ import { TextField, Button } from '@/components/elements/export';
 const FORM_ID = 'rename-camp';
 
 /** The rename dialog. The camp id travels in the form, but the server checks it against the person's memberships. */
-export function RenameCampDialog({ campId, currentName, onClose }: { campId: string; currentName: string; onClose: () => void }) {
+export function RenameCampDialog({
+  campId,
+  currentName,
+  onClose,
+}: {
+  campId: string;
+  currentName: string;
+  onClose: () => void;
+}) {
   const [state, formAction, pending] = useActionState(renameCampAction, idle);
   const [name, setName] = useState(currentName);
   const { toast } = useUi();
@@ -27,12 +35,36 @@ export function RenameCampDialog({ campId, currentName, onClose }: { campId: str
   const formMessage = state.status === 'error' && !state.fieldErrors ? state.message : undefined;
 
   return (
-    <Dialog title="Rename camp" onClose={onClose}
-      footer={<><Button type="button" onClick={onClose}>Cancel</Button><Button variant="primary" form={FORM_ID} disabled={pending}>{pending ? 'Saving…' : 'Save'}</Button></>}>
+    <Dialog
+      title="Rename camp"
+      onClose={onClose}
+      footer={
+        <>
+          <Button type="button" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="primary" form={FORM_ID} disabled={pending}>
+            {pending ? 'Saving…' : 'Save'}
+          </Button>
+        </>
+      }
+    >
       <form id={FORM_ID} action={formAction}>
         <input type="hidden" name="campId" value={campId} />
-        <TextField label="Camp name" name="name" value={name} onChange={setName} error={fieldError(state, 'name')} maxLength={120} autoFocus />
-        {formMessage && <p className="field-error" role="alert">{formMessage}</p>}
+        <TextField
+          label="Camp name"
+          name="name"
+          value={name}
+          onChange={setName}
+          error={fieldError(state, 'name')}
+          maxLength={120}
+          autoFocus
+        />
+        {formMessage && (
+          <p className="field-error" role="alert">
+            {formMessage}
+          </p>
+        )}
       </form>
     </Dialog>
   );

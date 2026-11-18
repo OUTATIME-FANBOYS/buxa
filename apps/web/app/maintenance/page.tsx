@@ -8,7 +8,9 @@ export default function MaintenancePage() {
     <main className="auth">
       <div className="auth-card">
         <h1>Buxa is down for maintenance</h1>
-        <p className="muted">The app is paused while a safety setting is checked. Nothing you do is lost. Please try again later.</p>
+        <p className="muted">
+          The app is paused while a safety setting is checked. Nothing you do is lost. Please try again later.
+        </p>
       </div>
     </main>
   );

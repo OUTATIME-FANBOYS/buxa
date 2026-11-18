@@ -7,7 +7,10 @@ describe('people action failures', () => {
     expect(expectedFailure(forbidden('no'), 'fallback')).toEqual({ status: 'error', message: FORBIDDEN });
   });
   it('other 4xx show the message the service wrote, or the fallback when it is empty', () => {
-    expect(expectedFailure(badRequest('Name is required.'), 'fallback')).toEqual({ status: 'error', message: 'Name is required.' });
+    expect(expectedFailure(badRequest('Name is required.'), 'fallback')).toEqual({
+      status: 'error',
+      message: 'Name is required.',
+    });
     expect(expectedFailure(badRequest(''), 'Could not save.')).toEqual({ status: 'error', message: 'Could not save.' });
   });
   it('rethrows server errors and anything that is not an HTTP error', () => {

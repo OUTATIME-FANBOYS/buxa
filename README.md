@@ -60,9 +60,10 @@ An admin sets or clears the pickup flag on a household link. The service checks 
 
 If a diagram disagrees with the code, the code wins. Fix the diagram in the same PR as the change, and re-export its PNG (see `docs/CONTRIBUTING.md`).
 
-
 ## Run it locally
+
 Use Node 22, as CI does.
+
 ```bash
 npm install
 docker compose up -d db                       # Postgres on 127.0.0.1:5433
@@ -71,9 +72,11 @@ npm run db:migrate
 npm run seed:mock                             # optional: the fictional Camp Birchwood (see docs/seed.md)
 npm run dev                                   # http://localhost:5173  (the web app and the API are one Next.js app)
 ```
+
 `npm run typecheck`, `npm run lint`, `npm test` (database tests need `DATABASE_URL`), `npm run build`, `npm start`. The first request to each page in dev mode compiles it, so give a fresh start a moment.
 
 ## Layout
+
 ```
 apps/web          Next.js app: app/ (routes only), actions/ (server action wrappers), components/ (elements, components, views), config/, styles/, proxy.ts
 apps/server       the backend: services, repositories, auth, http, session, rate limiting, composers (server-only)
@@ -84,9 +87,11 @@ packages/db       migrations, transactions, tenant isolation, database connectio
 packages/contracts  zod shapes shared by the server and the web app
 docs/             roadmap, ADRs, auth, deploy, security, seed data, phase specs, architecture diagrams, audit
 ```
+
 Rules for the code are in `docs/CODING_STANDARDS.md`; how to contribute is in `docs/CONTRIBUTING.md`.
 
 ## The staff task board
+
 The staff board is the Work group in the sidebar: My tasks, Projects, Boards, Calendar and Agents. Reports and Help are in the account menu. It runs in the browser and keeps its data in that browser's storage. It is not on the database yet (see the "Staff board" row in `docs/ROADMAP.md`). Its sample data and the reset are in `docs/seed.md`. The old address `/kanban` redirects to `/camp`.
 
 The old single-user server (`npm run server`, code in `apps/server/src/agents`, with an MCP endpoint for agents) is optional. To let the board sync with it, set `NEXT_PUBLIC_LEGACY_SYNC=true` and `NEXT_PUBLIC_LEGACY_SECRET` (the same value as the server's `BUXA_LEGACY_SECRET`). See `docs/security.md`.

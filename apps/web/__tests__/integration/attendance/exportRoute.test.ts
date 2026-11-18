@@ -9,9 +9,18 @@ const mocks = vi.hoisted(() => ({
   exportCsv: vi.fn(),
 }));
 vi.mock('@buxa/server/runtime', () => ({
-  getRuntime: () => ({ services: { attendance: { exportCsv: mocks.exportCsv }, orgs: { getCamp: () => settle(() => ({ timezone: mocks.timeZone })) } } }),
+  getRuntime: () => ({
+    services: {
+      attendance: { exportCsv: mocks.exportCsv },
+      orgs: { getCamp: () => settle(() => ({ timezone: mocks.timeZone })) },
+    },
+  }),
 }));
-vi.mock('@buxa/server/session/index', () => ({ requireSession: () => settle(() => ({})), getCurrentCamp: () => settle(() => ({})), toActor: () => mocks.actor }));
+vi.mock('@buxa/server/session/index', () => ({
+  requireSession: () => settle(() => ({})),
+  getCurrentCamp: () => settle(() => ({})),
+  toActor: () => mocks.actor,
+}));
 
 const { GET } = await import('../../../app/(app)/camp/(operations)/attendance/export/route');
 
@@ -30,7 +39,9 @@ describe('GET /camp/attendance/export', () => {
     const response = await GET(request('?from=2026-11-10&to=2026-11-12&personId=6f1c2b8e-9a3d-4c5e-8f70-1a2b3c4d5e6f'));
     expect(response.status).toBe(200);
     expect(response.headers.get('Content-Type')).toBe('text/csv; charset=utf-8');
-    expect(response.headers.get('Content-Disposition')).toBe('attachment; filename="attendance-2026-11-10-to-2026-11-12.csv"');
+    expect(response.headers.get('Content-Disposition')).toBe(
+      'attachment; filename="attendance-2026-11-10-to-2026-11-12.csv"',
+    );
     expect(response.headers.get('Cache-Control')).toBe('no-store');
     // Response.text() drops a byte-order mark, so read the bytes: EF BB BF, then the CSV.
     const bytes = new Uint8Array(await response.arrayBuffer());
@@ -40,7 +51,11 @@ describe('GET /camp/attendance/export', () => {
 
   it('asks the service for the filter as the actor, and passes the person on', async () => {
     await GET(request('?from=2026-11-10&to=2026-11-12&personId=6f1c2b8e-9a3d-4c5e-8f70-1a2b3c4d5e6f'));
-    expect(mocks.exportCsv).toHaveBeenCalledWith(owner, { from: '2026-11-10', to: '2026-11-12', personId: '6f1c2b8e-9a3d-4c5e-8f70-1a2b3c4d5e6f' });
+    expect(mocks.exportCsv).toHaveBeenCalledWith(owner, {
+      from: '2026-11-10',
+      to: '2026-11-12',
+      personId: '6f1c2b8e-9a3d-4c5e-8f70-1a2b3c4d5e6f',
+    });
   });
 
   it('defaults to today in the camp zone when no dates are given', async () => {

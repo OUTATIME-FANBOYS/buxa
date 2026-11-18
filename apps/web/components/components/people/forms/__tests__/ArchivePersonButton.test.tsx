@@ -15,23 +15,40 @@ vi.mock('@buxa/server/composers/people/archivePersonAction', () => ({ archivePer
 describe('ArchivePersonButton', () => {
   let root: Root;
   beforeEach(() => {
-    vi.clearAllMocks(); root = createRoot(document.body.appendChild(document.createElement('div')));
+    vi.clearAllMocks();
+    root = createRoot(document.body.appendChild(document.createElement('div')));
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = '';
+    act(() => root.unmount());
+    document.body.innerHTML = '';
   });
 
   it('asks for confirmation before archiving, and does nothing when the person says no', async () => {
-    act(() => root.render(<UiProvider Dialog={ConfirmDialog}><ArchivePersonButton personId="p-1" personName="Ada Lee" /></UiProvider>));
-    const button = requirePresent(Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Archive person'), "Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Archive person')");
+    act(() =>
+      root.render(
+        <UiProvider Dialog={ConfirmDialog}>
+          <ArchivePersonButton personId="p-1" personName="Ada Lee" />
+        </UiProvider>,
+      ),
+    );
+    const button = requirePresent(
+      Array.from(document.querySelectorAll('button')).find(b => b.textContent === 'Archive person'),
+      "Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Archive person')",
+    );
     await act(() => {
       return settle(() => {
         button.click();
       });
     });
-    const dialog = requirePresent(document.querySelector('[role="dialog"]'), "document.querySelector('[role=\"dialog\"]')");
+    const dialog = requirePresent(
+      document.querySelector('[role="dialog"]'),
+      'document.querySelector(\'[role="dialog"]\')',
+    );
     expect(dialog.getAttribute('aria-label')).toBe('Archive Ada Lee?');
-    const cancel = requirePresent(Array.from(dialog.querySelectorAll('button')).find((b) => b.textContent === 'Cancel'), "Array.from(dialog.querySelectorAll('button')).find((b) => b.textContent === 'Cancel')");
+    const cancel = requirePresent(
+      Array.from(dialog.querySelectorAll('button')).find(b => b.textContent === 'Cancel'),
+      "Array.from(dialog.querySelectorAll('button')).find((b) => b.textContent === 'Cancel')",
+    );
     await act(() => {
       return settle(() => {
         cancel.click();
@@ -42,14 +59,25 @@ describe('ArchivePersonButton', () => {
 
   it('archives once confirmed', async () => {
     h.archivePersonAction.mockResolvedValueOnce({ status: 'success' });
-    act(() => root.render(<UiProvider Dialog={ConfirmDialog}><ArchivePersonButton personId="p-1" personName="Ada Lee" /></UiProvider>));
-    const button = requirePresent(Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Archive person'), "Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Archive person')");
+    act(() =>
+      root.render(
+        <UiProvider Dialog={ConfirmDialog}>
+          <ArchivePersonButton personId="p-1" personName="Ada Lee" />
+        </UiProvider>,
+      ),
+    );
+    const button = requirePresent(
+      Array.from(document.querySelectorAll('button')).find(b => b.textContent === 'Archive person'),
+      "Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Archive person')",
+    );
     await act(() => {
       return settle(() => {
         button.click();
       });
     });
-    const confirm = Array.from(document.querySelectorAll('[role="dialog"] button')).find((b) => b.textContent === 'Archive') as HTMLButtonElement;
+    const confirm = Array.from(document.querySelectorAll('[role="dialog"] button')).find(
+      b => b.textContent === 'Archive',
+    ) as HTMLButtonElement;
     await act(() => {
       return settle(() => {
         confirm.click();

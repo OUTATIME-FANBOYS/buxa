@@ -11,40 +11,40 @@ This is a snapshot. The findings, line numbers and test counts below describe `a
 
 ## Status on develop
 
-| ID | Status | Where it stands now |
-|---|---|---|
-| S-01 | Fixed | The check-out update has `AND checked_out_at IS NULL` (`apps/web/server/attendance/PgCheckInWrites.ts`). |
-| S-02 | Fixed | Viewers no longer hold `attendance:read` (`packages/domain/src/permissions.ts`). |
-| S-03 | Fixed | Custody fields (memberships, pickup flags, badge status) are shown only with `people:read_contact` (`createPeopleService.ts`). |
-| S-04 | Open | `people:authorise_pickup` exists in the matrix, but `linkToHousehold` in `createPeopleService.ts` does not check it. |
-| S-05 | Fixed | Pages and the sign-in action check the start-up decision (`isServiceRefused`, `/maintenance`). |
-| S-06 | Partly | Request handling runs as `buxa_app`, and the privileged paths are `SECURITY DEFINER` functions (migration `0009`). The separate runtime login is an operator step in `docs/deploy.md`, not yet done. |
-| S-07 | Fixed | Rate limits on camp creation, badge scans and `/ready`, kept in Postgres (migration `0010`). |
-| S-08 | Fixed | `listMembers` returns email only to actors with `members:read_contact` (`apps/web/server/services/orgs.ts`). |
-| S-09 | Open | The conflict message in `apps/web/server/users/UserRepository.ts` is unchanged. |
-| S-10 | Fixed | "Already registered" gets the same message as a new sign-up (`apps/web/features/auth/lib/messages.ts`). |
-| S-11 | Fixed | `readBody` counts bytes as they arrive (`apps/web/server/http/parse.ts`). |
-| S-12 | Fixed | Email and phone shapes are checked in `packages/contracts` (`contact.ts`). |
-| S-13 | Fixed | A failed rollback releases the connection with an error, so it is destroyed (`packages/db/src/tenant.ts`). |
-| S-14 | Partly | A non-loopback host is refused unless `BUXA_ALLOW_REMOTE_HOST=yes`, and `/api` needs a run secret (`X-Buxa-Run-Secret`). Dev server only. |
-| S-15 | Fixed | A unique violation on reissue becomes `BadgeConflictError` (`PgCredentialRepository.ts`). |
-| S-16 | Open | `OrgNotFoundError` is still not translated to a 404. |
-| S-17 | Fixed | `next.config.ts` sets `nosniff` on static files and the icon. |
-| S-18 | Fixed | The demo sign-in form and its password are no longer in the auth code. |
-| S-19 | Unchanged | No role-management routes exist yet. |
-| S-20 | Unchanged | Logging is as described in the body. |
-| S-21 | Unchanged | The CSV export is still a GET. |
-| Deps | Open | `vitest` is `^2.1.9` on `develop`; the section 3 upgrade has not been applied. |
+| ID   | Status    | Where it stands now                                                                                                                                                                                  |
+| ---- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S-01 | Fixed     | The check-out update has `AND checked_out_at IS NULL` (`apps/web/server/attendance/PgCheckInWrites.ts`).                                                                                             |
+| S-02 | Fixed     | Viewers no longer hold `attendance:read` (`packages/domain/src/permissions.ts`).                                                                                                                     |
+| S-03 | Fixed     | Custody fields (memberships, pickup flags, badge status) are shown only with `people:read_contact` (`createPeopleService.ts`).                                                                       |
+| S-04 | Open      | `people:authorise_pickup` exists in the matrix, but `linkToHousehold` in `createPeopleService.ts` does not check it.                                                                                 |
+| S-05 | Fixed     | Pages and the sign-in action check the start-up decision (`isServiceRefused`, `/maintenance`).                                                                                                       |
+| S-06 | Partly    | Request handling runs as `buxa_app`, and the privileged paths are `SECURITY DEFINER` functions (migration `0009`). The separate runtime login is an operator step in `docs/deploy.md`, not yet done. |
+| S-07 | Fixed     | Rate limits on camp creation, badge scans and `/ready`, kept in Postgres (migration `0010`).                                                                                                         |
+| S-08 | Fixed     | `listMembers` returns email only to actors with `members:read_contact` (`apps/web/server/services/orgs.ts`).                                                                                         |
+| S-09 | Open      | The conflict message in `apps/web/server/users/UserRepository.ts` is unchanged.                                                                                                                      |
+| S-10 | Fixed     | "Already registered" gets the same message as a new sign-up (`apps/web/features/auth/lib/messages.ts`).                                                                                              |
+| S-11 | Fixed     | `readBody` counts bytes as they arrive (`apps/web/server/http/parse.ts`).                                                                                                                            |
+| S-12 | Fixed     | Email and phone shapes are checked in `packages/contracts` (`contact.ts`).                                                                                                                           |
+| S-13 | Fixed     | A failed rollback releases the connection with an error, so it is destroyed (`packages/db/src/tenant.ts`).                                                                                           |
+| S-14 | Partly    | A non-loopback host is refused unless `BUXA_ALLOW_REMOTE_HOST=yes`, and `/api` needs a run secret (`X-Buxa-Run-Secret`). Dev server only.                                                            |
+| S-15 | Fixed     | A unique violation on reissue becomes `BadgeConflictError` (`PgCredentialRepository.ts`).                                                                                                            |
+| S-16 | Open      | `OrgNotFoundError` is still not translated to a 404.                                                                                                                                                 |
+| S-17 | Fixed     | `next.config.ts` sets `nosniff` on static files and the icon.                                                                                                                                        |
+| S-18 | Fixed     | The demo sign-in form and its password are no longer in the auth code.                                                                                                                               |
+| S-19 | Unchanged | No role-management routes exist yet.                                                                                                                                                                 |
+| S-20 | Unchanged | Logging is as described in the body.                                                                                                                                                                 |
+| S-21 | Unchanged | The CSV export is still a GET.                                                                                                                                                                       |
+| Deps | Open      | `vitest` is `^2.1.9` on `develop`; the section 3 upgrade has not been applied.                                                                                                                       |
 
 ## 1. Summary
 
-| Severity | Count | IDs |
-|---|---|---|
-| Critical | 0 | |
-| High | 0 | |
-| Medium | 7 | S-01 to S-07 |
-| Low | 9 | S-08 to S-16 |
-| Info | 5 | S-17 to S-21 |
+| Severity | Count | IDs          |
+| -------- | ----- | ------------ |
+| Critical | 0     |              |
+| High     | 0     |              |
+| Medium   | 7     | S-01 to S-07 |
+| Low      | 9     | S-08 to S-16 |
+| Info     | 5     | S-17 to S-21 |
 
 **Verdict:** the security model is sound at its core (tenant isolation, token verification, badge storage, server-side permission checks). It is still **not ready for real children's data**, which agrees with `docs/security.md`. The seven medium findings are the blockers. Four of them (S-02 to S-04, S-06) concern who can see or change child data and custody records, and should be settled before the next deploy.
 
@@ -93,42 +93,49 @@ Status is one of **confirmed** (by reading the code and cited lines) or **suspec
 ### Medium
 
 #### S-01: a completed check-out can be overwritten by a concurrent one
+
 - **Severity:** medium. **Status:** confirmed by reading; needs a concurrency test. **Blocks child data:** yes.
 - **Where:** `apps/web/server/attendance/PgCheckInWrites.ts:22-27` (the `UPDATE check_ins ... WHERE id = $1` has no open-visit condition and the row count is not checked). `apps/web/server/attendance/PgAttendanceRepository.ts:34-40` (the visit is read, then closed by id).
 - **What can happen:** two check-outs for the same child that overlap both read the visit as open. The second `UPDATE` overwrites `checked_out_at`, `checked_out_by` and `collected_by_person_id` set by the first. Both write audit rows, so the log shows two check-outs with different collectors, and nothing reports the conflict. The record of who collected a child can be replaced after the fact.
 - **Minimal fix:** add `AND checked_out_at IS NULL` to the `UPDATE`, and throw `NotOnSiteError` when `rowCount` is not 1.
 
 #### S-02: viewers can read child attendance and resolve badges to children
+
 - **Severity:** medium. **Status:** confirmed. **Blocks child data:** yes.
 - **Where:** `packages/domain/src/permissions.ts:27` (viewer holds `attendance:read`). `apps/web/server/services/attendance/createAttendanceService.ts:121-168` (`onSite`, `log`, `history` check only `attendance:read`). `apps/web/server/services/credentials/createCredentialService.ts:40-41` (`scan` checks `attendance:read`). `apps/web/features/attendance/screens/AttendanceScreen.tsx:18`, `OnSiteScreen.tsx:13`. `apps/web/features/attendance/actions/scanCode.ts:10-15`.
 - **What can happen:** any viewer account can see every child's check-in and check-out times, who collected them, notes and overrides, and who is on site now. A viewer can also scan any badge and get the child's name, roles and status. `docs/security.md:17` says attendance is for "staff and above", and `docs/security.md:13` says viewers see "names and roles only". The code and the docs disagree.
 - **Minimal fix:** decide the rule first. Then remove `attendance:read` from the viewer grant, or add a names-only action for viewers. Have the scan action check `attendance:record`, not `attendance:read`.
 
 #### S-03: viewers see household pickup flags, memberships and badge status
+
 - **Severity:** medium. **Status:** confirmed. **Blocks child data:** yes (custody information).
 - **Where:** `apps/web/server/services/people/createPeopleService.ts:61-63` (memberships, households and `hasActiveBadge` returned to any reader of the person). `apps/web/server/services/shared/views.ts:39-46` (household members carry `relationship`, `isGuardian` and `canPickup` for everyone). Viewers hold `people:read` (`permissions.ts:27`).
 - **What can happen:** a viewer sees each child's membership plan and dates, revocation reasons (free text), the household relationships, and which guardians are authorised to collect the child. `docs/security.md:13` says viewers see names and roles only.
 - **Minimal fix:** in `personView` and `toHouseholds`, return memberships, relationship, pickup flags and badge status only to actors with a staff permission (for example `attendance:record` or `memberships:manage`). Viewers get names and roles.
 
 #### S-04: any staff member can authorise pickup of a child
+
 - **Severity:** medium. **Status:** confirmed. **Blocks child data:** yes (child-safety control).
 - **Where:** `packages/contracts/src/people.ts:73-77` (`canPickup` is an input). `apps/web/server/services/people/createPeopleService.ts:162-164` (`linkToHousehold` checks only `people:update`). `permissions.ts:28` (staff hold `people:update`). `apps/web/server/people/PgPeopleRepository.ts:88-96` (`link`). `apps/web/features/people/actions/linkHouseholdAction.ts:13-23`.
 - **What can happen:** a staff member, or anyone holding a staff account, can mark any guardian as able to collect a child. Check-out (`packages/domain/src/people/attendance.ts:52`) then lets that person collect. The change is audited only as `household.update` with the person id; the pickup flag is not recorded.
 - **Minimal fix:** a separate permission (for example `people:authorise_pickup`, admin and above) checked whenever `canPickup` is set or changed. Record the flags in the audit entry.
 
 #### S-05: the email-confirmation refusal is enforced only on `/v1` routes
+
 - **Severity:** medium. **Status:** confirmed. **Blocks child data:** no direct effect today. Fix before invitations exist.
 - **Where:** `apps/web/server/runtime.ts:54-61` builds `startupCheck`, which returns `refuse` when Supabase auto-confirms sign-ups in production. The only consumer is `apps/web/server/http/route.ts:50`. Pages (`app/(app)/*`) and server actions (`features/auth/actions/signUp.ts`, `signIn.ts`) never await it. `docs/deploy.md:46` says the server "refuses to serve (503)", and `docs/auth.md:52` says "the API refuses to start". Neither is true for pages.
 - **What can happen:** if "Confirm email" is turned off in production, the sign-up form and the camp pages still work. Anyone can register an address they do not own. Nothing grants access to child data from that account today, because invitations are not built.
 - **Minimal fix:** await the decision in the camp layout and in the session path (`requireSession`/`getSession`) and show a maintenance page on `refuse`. Or, if the intent is API-only, correct both docs.
 
 #### S-06: the request handling connection bypasses row-level security, and the docs say otherwise
+
 - **Severity:** medium. **Status:** confirmed by reading. The effect depends on the Supabase login used (not checked). **Blocks child data:** yes (defence in depth before real data).
 - **Where:** `docs/deploy.md:20-21` (`DATABASE_URL` and `MIGRATION_DATABASE_URL` are the same URI) and `docs/deploy.md:32` (the login must bypass row-level security, a superuser or Supabase's `postgres` role). `packages/db/migrations/0004_app_role_membership.sql:6` (`GRANT buxa_app TO CURRENT_USER`). `apps/web/server/users/PgUserRepository.ts:14-33` and `apps/web/server/orgs/PgOrgRepository.ts:14-26` (privileged pool). `apps/web/app/ready/route.ts:8`. The role switch is `packages/db/src/tenant.ts:27`.
 - **What can happen:** RLS protects tenant data only where a query goes through `withOrg`. The login the app uses owns the schema and can bypass RLS. Any future query on the pool (a new repository, a bug, or an injection) runs with those rights and can read `schema_migrations` and rows of other camps. `docs/security.md:26` says "the app connects as a restricted role. It cannot read the migration history". That is not what runs.
 - **Minimal fix:** give the request runtime its own login that is a member of `buxa_app` only (no bypass, no `CREATEROLE`). Keep the migration login separate. Move the user upsert and org creation into narrow `SECURITY DEFINER` functions. Correct `docs/security.md` section 2.
 
 #### S-07: no rate limits on any write or expensive endpoint
+
 - **Severity:** medium. **Status:** confirmed. Known open item (`docs/auth.md:49`, `docs/security.md:38` and `:62`). **Blocks child data:** yes (open item in `docs/security.md` section 6).
 - **Where:** `apps/web/app/v1/orgs/route.ts:8-11` and `apps/web/features/camp/actions/createCampAction.ts:15-22` (any signed-in user can create camps, each a database write on the privileged pool). `apps/web/features/attendance/actions/scanCode.ts:10-15` (unlimited scans). `apps/web/app/ready/route.ts:6-14` (unauthenticated database query on every call).
 - **What can happen:** a signed-in user can create unlimited camps and slugs, and anyone can drive database load through `/ready`. Scans are unlimited. Guessing a 128-bit badge token is not practical, but scan volume is unmonitored.
@@ -137,50 +144,59 @@ Status is one of **confirmed** (by reading the code and cited lines) or **suspec
 ### Low
 
 #### S-08: viewers can read staff email addresses
+
 - **Severity:** low. **Status:** confirmed. **Blocks child data:** no (staff data).
 - **Where:** `apps/web/server/orgs/PgOrgRepository.ts:47-53` returns `u.email` for every member. Viewers hold `members:read` (`permissions.ts:27`). Reached through `apps/web/app/v1/members/route.ts` and the camp Members screen.
 - **Minimal fix:** return names and roles to viewers. Return email only to admins, or drop it from the list.
 
 #### S-09: a conflict message reveals that another account owns an email
+
 - **Severity:** low. **Status:** suspected (reachable only when Supabase's email differs from the stored one; needs a test).
 - **Where:** `apps/web/server/users/UserRepository.ts:7` (message "This email address is already linked to a different account"). `apps/web/server/auth/sessionFromToken.ts:25` passes it to a 409 on the API. The cookie path treats 409 as signed out (`apps/web/server/session/index.ts:47`).
 - **Minimal fix:** return a generic conflict message on the API and log the detail on the server.
 
 #### S-10: the sign-up answer may differ for an existing address
+
 - **Severity:** low. **Status:** suspected. Needs a test against the Supabase project's sign-up settings.
 - **Where:** `apps/web/features/auth/lib/messages.ts:9-12` (every unrecognised sign-up error becomes "Could not create the account"). A successful sign-up returns `CONFIRM_EMAIL_MESSAGE` (`features/auth/actions/signUp.ts:24`). If Supabase returns "User already registered", the two answers differ and reveal the account. The sign-in message at `messages.ts:3` ("Confirm your email first") appears only after the password is checked, so it is informational.
 - **Minimal fix:** map "already registered" to `CONFIRM_EMAIL_MESSAGE`. Confirm the Supabase response with a test account.
 
 #### S-11: the body-size limit does not cover requests without `Content-Length`
+
 - **Severity:** low. **Status:** confirmed.
 - **Where:** `apps/web/server/http/route.ts:51` checks only the `Content-Length` header. `apps/web/server/http/parse.ts:6` reads the full body with `request.text()`.
 - **What can happen:** a chunked request with no `Content-Length` is read without the 1 MB limit. Vercel's platform limit reduces the impact.
 - **Minimal fix:** count bytes while reading the body and stop at the limit.
 
 #### S-12: email and phone format are not validated, so a typo becomes a 500
+
 - **Severity:** low. **Status:** confirmed.
 - **Where:** `packages/contracts/src/people.ts:49` and `:62` accept any string up to 254 characters for email. The database rejects a missing `@` (`packages/db/migrations/0007_people_checkin.sql:18`). `apps/web/server/services/shared/errors.ts:8-13` passes unknown errors through. `apps/web/features/people/actions/failures.ts:12` rethrows non-HTTP errors, so the user sees the error page.
 - **Minimal fix:** validate email and phone format in the contracts. Map Postgres `23514` (check violation) to a 400.
 
 #### S-13: a pooled connection is released even when its rollback failed
+
 - **Severity:** low. **Status:** suspected. Needs a fault-injection test.
 - **Where:** `packages/db/src/tenant.ts:13` (`ROLLBACK` error ignored) and `:16` (`db.release()` with no argument).
 - **What can happen:** if the rollback fails, the connection may still be inside a transaction with `SET LOCAL ROLE buxa_app` applied, and it goes back to the pool.
 - **Minimal fix:** call `db.release(true)` when the rollback fails, so the client is destroyed.
 
 #### S-14: the local dev server can be exposed if `HOST` is not loopback
+
 - **Severity:** low. **Status:** suspected for exposure (the code path is confirmed). Dev only.
 - **Where:** `apps/web/legacy-server/index.ts:5` (`HOST` from the environment). `apps/web/legacy-server/app.ts:39` and `:41` (Host and Origin checks, which only protect browsers). `app.ts:79` (`PUT /api/state` has no authentication). `app.ts:97` (`POST /api/agents/:id/token` issues MCP tokens with no authentication).
 - **What can happen:** with `HOST=0.0.0.0`, a non-browser client on the network can send `Host: localhost` and read or write the local kanban data or mint MCP tokens. This server is not in the Vercel build; the `next.config.ts` rewrites apply only in development.
 - **Minimal fix:** refuse a non-loopback `HOST` unless explicitly allowed, and require the `X-Buxa-Client` header on every `/api` route.
 
 #### S-15: a concurrent badge reissue returns a 500
+
 - **Severity:** low. **Status:** suspected. Needs a concurrency test.
 - **Where:** `apps/web/server/credentials/PgCredentialRepository.ts:44-48`. A second concurrent reissue waits on the partial unique index and then fails with `23505`, which is not mapped to a conflict.
 - **What can happen:** one caller gets a 500 page. No duplicate active badge is possible, because the index holds.
 - **Minimal fix:** map `23505` to `conflict` in `issue()`.
 
 #### S-16: a missing camp in the membership list becomes a 500
+
 - **Severity:** low. **Status:** confirmed (code quality).
 - **Where:** `apps/web/server/orgs/PgOrgRepository.ts:32` throws `OrgNotFoundError`. `apps/web/server/services/shared/errors.ts:8-13` does not translate it.
 - **Minimal fix:** translate `OrgNotFoundError` to a 404 in `translateRepositoryError`.
@@ -188,30 +204,36 @@ Status is one of **confirmed** (by reading the code and cited lines) or **suspec
 ### Info
 
 #### S-17: static files and the icon get no security headers
+
 - **Where:** `apps/web/proxy.ts:34` excludes `_next/static`, `_next/image` and `icon.svg` from the matcher. `apps/web/next.config.ts` has no `headers()`. These files are public and carry no data, so the impact is small.
 
 #### S-18: the demo password is shown on the sign-in page
+
 - **Where:** `apps/web/features/auth/components/DemoSignIn.tsx:27` prints `DEMO_PASSWORD` (`apps/web/features/kanban/lib/seed/ids.ts:2`, value `demo1234`). `apps/web/features/kanban/state/actions/auth.ts:15` checks it in the browser. It creates no session. Keep it that way, and never use these demo accounts in Supabase.
 
 #### S-19: role-management rules have no routes yet
+
 - **Where:** `permissions.ts:66-89` defines invite, change role, remove, leave, last owner and transfer. No route or service calls them, so there is no escalation path today (`org_members` is read-only for the app role, migration 0006). When routes are added, the new write policies must be narrow, as 0006's comment says.
 
 #### S-20: logging and error handling
+
 - **What is logged:** request id, method, path, status, duration. Rejected-token reason as an error name. Startup warnings. Unhandled errors with their stack (`route.ts:26`). Postgres messages for foreign-key and check violations carry ids or column names, not personal values.
 - **Swallowed errors:** the session reader treats any error as signed-out (`apps/web/server/session/index.ts:34`), and the refresh path returns null on error (`refresh.ts:27`). These are reasonable for availability. Consider a `warn` log so a broken identity provider is visible.
 - **Platform logs are not covered.** Vercel request logs may keep full URLs, including `?personId=` query strings, because the app does not control them.
 
 #### S-21: the CSV download is a GET with the session cookie
+
 - **Where:** `apps/web/app/(app)/camp/(ops)/attendance/export/route.ts:4-6`. A cross-site page can start a download through a top-level navigation (SameSite=Lax allows it). It cannot read the response and it changes no state. Keep the route read-only.
 
 ## 3. Dependencies
 
-| Scope | Critical | High | Moderate | Total |
-|---|---|---|---|---|
-| `npm audit --omit=dev` | 0 | 0 | 0 | 0 |
-| `npm audit` (full tree) | 2 | 1 | 3 | 6 |
+| Scope                   | Critical | High | Moderate | Total |
+| ----------------------- | -------- | ---- | -------- | ----- |
+| `npm audit --omit=dev`  | 0        | 0    | 0        | 0     |
+| `npm audit` (full tree) | 2        | 1    | 3        | 6     |
 
 Full-tree findings (all dev or test tooling; none ship in the deployed bundle):
+
 - **critical:** `vitest` at or below 4.1.10, GHSA-5xrq-8626-4rwp (arbitrary file read and execution when the Vitest UI server is listening). Direct dependency.
 - **critical:** `tinypool` at or below 2.1.1, GHSA-5gmw-xhrv-c9v3 and GHSA-85c8-ppgw-ccpr (prototype pollution leading to code execution through worker options). Pulled in by vitest.
 - **high:** `vite` at or below 6.4.3, several advisories (path traversal in optimised deps, cross-origin script execution through custom middleware, `server.fs` bypasses). Pulled in by vitest.

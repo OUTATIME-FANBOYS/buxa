@@ -8,7 +8,9 @@ export function setTheme(dark: boolean): void {
   const value = dark ? 'dark' : 'light';
   try {
     localStorage.setItem(THEME_KEY, JSON.stringify(value));
-  } catch { /* storage may be blocked */ }
+  } catch {
+    /* storage may be blocked */
+  }
   document.documentElement.dataset.theme = value;
   window.dispatchEvent(new CustomEvent(THEME_EVENT, { detail: value }));
 }

@@ -16,7 +16,9 @@ const REPORT_HEADER = ['row', 'field', 'message', 'class_name', 'starts_at', 'en
 
 /** One line per problem on each refused row, so the owner can fix the file row by row. Ready rows are left out. */
 export function importErrorReportCsv(results: readonly RowResult[]): string {
-  const lines = results.flatMap(r => r.problems.map(p => [r.rowNumber, p.field, p.message, r.className, r.startsAt, r.endsAt, r.location]));
+  const lines = results.flatMap(r =>
+    r.problems.map(p => [r.rowNumber, p.field, p.message, r.className, r.startsAt, r.endsAt, r.location]),
+  );
 
   return encodeCsv([REPORT_HEADER, ...lines]);
 }

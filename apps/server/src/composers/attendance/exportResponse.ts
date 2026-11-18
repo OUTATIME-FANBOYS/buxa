@@ -24,7 +24,10 @@ export async function attendanceExportResponse(url: string): Promise<Response> {
   try {
     const csv = await getRuntime().services.attendance.exportCsv(actor, query.filter);
 
-    return new Response(`${BYTE_ORDER_MARK}${csv}`, { status: 200, headers: csvHeaders(attendanceFileName(query.filter)) });
+    return new Response(`${BYTE_ORDER_MARK}${csv}`, {
+      status: 200,
+      headers: csvHeaders(attendanceFileName(query.filter)),
+    });
   } catch (error) {
     if (isHttpError(error)) {
       return text(error.message, error.statusCode);

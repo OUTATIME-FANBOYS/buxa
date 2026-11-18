@@ -20,20 +20,29 @@ export async function ClassList() {
 
   const actions = canManage ? (
     <>
-      <Button className="classes-target" href={ROUTES.classImport}>Import classes</Button>
+      <Button className="classes-target" href={ROUTES.classImport}>
+        Import classes
+      </Button>
       <NewClassButton />
     </>
   ) : undefined;
 
   return (
     <div className="page">
-      <PageHeader title="Classes" subtitle="The programs the camp runs, and the sessions they are scheduled in." actions={actions} />
+      <PageHeader
+        title="Classes"
+        subtitle="The programs the camp runs, and the sessions they are scheduled in."
+        actions={actions}
+      />
       {!loaded.ok ? (
         <Empty icon="alert" title="You cannot see classes" body={FORBIDDEN_READ} />
       ) : loaded.value.length === 0 ? (
-        <Empty icon="calendar" title="No classes yet"
+        <Empty
+          icon="calendar"
+          title="No classes yet"
           body={canManage ? 'Create the first class, then add its sessions.' : 'Nobody has created a class yet.'}
-          action={canManage && <NewClassButton />} />
+          action={canManage && <NewClassButton />}
+        />
       ) : (
         <ClassesTable classes={loaded.value} />
       )}

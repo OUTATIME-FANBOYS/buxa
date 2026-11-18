@@ -17,7 +17,14 @@ vi.mock('next/navigation', () => ({ redirect: h.redirect }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: { classes: h.classes, orgs: h.orgs } }) }));
 vi.mock('../../people/camp', () => ({ currentActor: () => settle(() => h.actor) }));
 
-const session = { classId: IDS.cls, startsAt: '2027-07-05T09:00', endsAt: '2027-07-05T12:00', location: 'Lab 1', capacity: '', instructorIds: [] as string[] };
+const session = {
+  classId: IDS.cls,
+  startsAt: '2027-07-05T09:00',
+  endsAt: '2027-07-05T12:00',
+  location: 'Lab 1',
+  capacity: '',
+  instructorIds: [] as string[],
+};
 
 describe('addSessionAction', () => {
   beforeEach(() => {
@@ -32,14 +39,23 @@ describe('addSessionAction', () => {
 
   it('reads the times in the camp zone, sends instants with an offset, and opens the class', async () => {
     await expect(addSessionAction(idle, formOf(session))).rejects.toThrow(`NEXT_REDIRECT ${classPath(IDS.cls)}`);
-    expect(h.classes.addSession).toHaveBeenCalledWith(h.actor, IDS.cls, expect.objectContaining({
-      startsAt: '2027-07-04T23:00:00.000Z', endsAt: '2027-07-05T02:00:00.000Z', location: 'Lab 1',
-    }));
+    expect(h.classes.addSession).toHaveBeenCalledWith(
+      h.actor,
+      IDS.cls,
+      expect.objectContaining({
+        startsAt: '2027-07-04T23:00:00.000Z',
+        endsAt: '2027-07-05T02:00:00.000Z',
+        location: 'Lab 1',
+      }),
+    );
   });
 
   it('answers a bad time with a field error, and adds nothing', async () => {
     const state = await addSessionAction(idle, formOf({ ...session, startsAt: 'tomorrow morning' }));
-    expect(state).toMatchObject({ status: 'error', fieldErrors: { startsAt: 'Use the format 2027-07-05T09:00 (camp time).' } });
+    expect(state).toMatchObject({
+      status: 'error',
+      fieldErrors: { startsAt: 'Use the format 2027-07-05T09:00 (camp time).' },
+    });
     expect(h.classes.addSession).not.toHaveBeenCalled();
   });
 
@@ -48,8 +64,14 @@ describe('addSessionAction', () => {
     expect(h.classes.addSession).not.toHaveBeenCalled();
   });
 
-  it('shows the service\'s message when the class is not in the camp', async () => {
-    h.classes.addSession.mockResolvedValue({ ok: false, failure: { reason: 'class_not_found', message: 'That class no longer exists.' } });
-    expect(await addSessionAction(idle, formOf(session))).toEqual({ status: 'error', message: 'That class no longer exists.' });
+  it("shows the service's message when the class is not in the camp", async () => {
+    h.classes.addSession.mockResolvedValue({
+      ok: false,
+      failure: { reason: 'class_not_found', message: 'That class no longer exists.' },
+    });
+    expect(await addSessionAction(idle, formOf(session))).toEqual({
+      status: 'error',
+      message: 'That class no longer exists.',
+    });
   });
 });

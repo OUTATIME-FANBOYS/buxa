@@ -2,10 +2,12 @@
 import { z } from 'zod';
 import { isValidAgeRange, isValidSpan, MAX_AGE_LIMIT } from '@buxa/domain';
 
-export const AgeRangeSchema = z.object({
-  minAge: z.number().int().min(0).max(MAX_AGE_LIMIT),
-  maxAge: z.number().int().min(0).max(MAX_AGE_LIMIT),
-}).refine(isValidAgeRange, { message: 'The youngest age cannot be above the oldest.', path: ['maxAge'] });
+export const AgeRangeSchema = z
+  .object({
+    minAge: z.number().int().min(0).max(MAX_AGE_LIMIT),
+    maxAge: z.number().int().min(0).max(MAX_AGE_LIMIT),
+  })
+  .refine(isValidAgeRange, { message: 'The youngest age cannot be above the oldest.', path: ['maxAge'] });
 export type AgeRangeInput = z.infer<typeof AgeRangeSchema>;
 
 /** "1:8" is one instructor for every eight campers. */
@@ -16,7 +18,11 @@ export const InstructorRatioSchema = z.object({
 export type InstructorRatioInput = z.infer<typeof InstructorRatioSchema>;
 
 const NameSchema = z.string().trim().min(1, 'Give the class a name.').max(120);
-const CapacitySchema = z.number().int('Capacity is a whole number of places.').min(1, 'A session needs at least one place.').max(500);
+const CapacitySchema = z
+  .number()
+  .int('Capacity is a whole number of places.')
+  .min(1, 'A session needs at least one place.')
+  .max(500);
 const InstantSchema = z.iso.datetime({ offset: true, message: 'Use a date and time with a time zone offset.' });
 
 export const ClassSchema = z.object({
@@ -64,14 +70,19 @@ export const SessionSchema = z.object({
 });
 export type Session = z.infer<typeof SessionSchema>;
 
-export const NewSessionInputSchema = z.object({
-  startsAt: InstantSchema,
-  endsAt: InstantSchema,
-  location: z.string().trim().min(1, 'Give the location.').max(200),
-  instructorIds: z.array(z.string().uuid()).max(MAX_SESSION_INSTRUCTORS).default([]),
-  /** Defaults to the class capacity when left out. */
-  capacity: CapacitySchema.optional(),
-}).refine(v => isValidSpan({ startsAt: v.startsAt, endsAt: v.endsAt }), { message: 'The session must end after it starts.', path: ['endsAt'] });
+export const NewSessionInputSchema = z
+  .object({
+    startsAt: InstantSchema,
+    endsAt: InstantSchema,
+    location: z.string().trim().min(1, 'Give the location.').max(200),
+    instructorIds: z.array(z.string().uuid()).max(MAX_SESSION_INSTRUCTORS).default([]),
+    /** Defaults to the class capacity when left out. */
+    capacity: CapacitySchema.optional(),
+  })
+  .refine(v => isValidSpan({ startsAt: v.startsAt, endsAt: v.endsAt }), {
+    message: 'The session must end after it starts.',
+    path: ['endsAt'],
+  });
 export type NewSessionInput = z.infer<typeof NewSessionInputSchema>;
 
 export const ENROLMENT_STATUSES = ['enrolled', 'waitlisted', 'cancelled'] as const;

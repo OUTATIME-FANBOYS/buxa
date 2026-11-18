@@ -34,7 +34,10 @@ export async function loadClasses(actor: Actor): Promise<Loaded<Class[]>> {
 }
 
 /** One class and its sessions. Not found when the class is not in this camp. */
-export async function loadClassPage(actor: Actor, classId: string): Promise<Loaded<{ cls: Class; sessions: Session[] }>> {
+export async function loadClassPage(
+  actor: Actor,
+  classId: string,
+): Promise<Loaded<{ cls: Class; sessions: Session[] }>> {
   return guarded(async () => {
     const services = getRuntime().services.classes;
     const cls = await services.getClass(actor, classId);
@@ -51,7 +54,10 @@ export async function loadClassPage(actor: Actor, classId: string): Promise<Load
 }
 
 /** The names of the people with one camp role (for the enrol and instructor choices). Needs people:read. */
-export async function loadPeopleWithRole(actor: Actor, role: CampRole): Promise<Loaded<{ id: string; name: string }[]>> {
+export async function loadPeopleWithRole(
+  actor: Actor,
+  role: CampRole,
+): Promise<Loaded<{ id: string; name: string }[]>> {
   return guarded(async () => {
     const people = await getRuntime().services.people.list(actor, { role });
 

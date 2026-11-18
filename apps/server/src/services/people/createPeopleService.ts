@@ -1,4 +1,11 @@
-import type { HouseholdLinkInput, NewPersonInput, Person, PersonListQuery, PersonPatchInput, PersonSummary } from '@buxa/contracts';
+import type {
+  HouseholdLinkInput,
+  NewPersonInput,
+  Person,
+  PersonListQuery,
+  PersonPatchInput,
+  PersonSummary,
+} from '@buxa/contracts';
 import { can, isMinor, MAX_SEARCH_RESULTS, type Actor, type LocalDate } from '@buxa/domain';
 import { assertAllowed } from '../../auth/authorize';
 import { badRequest, conflict, notFound } from '../../http/errors';
@@ -8,7 +15,13 @@ import { campToday } from '../shared/campDay';
 import { guard } from '../shared/errors';
 import { campZone, toHouseholds, toPersonMembership, toSummary, onSiteByPerson } from '../shared/views';
 import type { PeopleService, PeopleServiceDeps } from './PeopleService';
-import { CAMPER_NEEDS_GUARDIAN, CHOOSE_ROLE, isGuardianRole, PICKUP_NEEDS_GUARDIAN, RELATIONSHIP_NEEDED } from './rules';
+import {
+  CAMPER_NEEDS_GUARDIAN,
+  CHOOSE_ROLE,
+  isGuardianRole,
+  PICKUP_NEEDS_GUARDIAN,
+  RELATIONSHIP_NEEDED,
+} from './rules';
 
 /** Blank text means "no value" for the optional contact fields and the preferred name. */
 const blankToNull = (value: string | null): string | null => (value === null || value.trim() === '' ? null : value);
@@ -119,14 +132,24 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
         throw badRequest(CAMPER_NEEDS_GUARDIAN);
       }
 
-      return { householdId: input.householdId, relationship: requireRelationship(input.relationship), isGuardian, canPickup: false };
+      return {
+        householdId: input.householdId,
+        relationship: requireRelationship(input.relationship),
+        isGuardian,
+        canPickup: false,
+      };
     }
     if (input.newHouseholdName !== undefined) {
       if (camper) {
         throw badRequest(CAMPER_NEEDS_GUARDIAN);
       }
 
-      return { newHouseholdName: input.newHouseholdName, relationship: requireRelationship(input.relationship), isGuardian, canPickup: false };
+      return {
+        newHouseholdName: input.newHouseholdName,
+        relationship: requireRelationship(input.relationship),
+        isGuardian,
+        canPickup: false,
+      };
     }
     if (camper) {
       throw badRequest(CAMPER_NEEDS_GUARDIAN);
@@ -141,11 +164,17 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       const orgId = actor.orgId;
       const term = query?.query?.trim() ?? '';
       const role = query?.role;
-      const records = term === ''
-        ? await people.list(orgId, { role, includeArchived: query?.includeArchived === true })
-        : (await people.search(orgId, term, MAX_SEARCH_RESULTS)).filter(p => role === undefined || p.roles.includes(role));
+      const records =
+        term === ''
+          ? await people.list(orgId, { role, includeArchived: query?.includeArchived === true })
+          : (await people.search(orgId, term, MAX_SEARCH_RESULTS)).filter(
+              p => role === undefined || p.roles.includes(role),
+            );
       const [ms, onSite, today] = await Promise.all([
-        memberships.forPeople(orgId, records.map(p => p.id)),
+        memberships.forPeople(
+          orgId,
+          records.map(p => p.id),
+        ),
         onSiteByPerson(attendance, orgId),
         todayFor(orgId),
       ]);
@@ -175,11 +204,21 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
         throw badRequest('Choose an existing household or name a new one, not both.');
       }
       const link = await householdLinkFor(orgId, input);
-      const record = await guard(() => people.create(actor, {
-        givenName: input.givenName, familyName: input.familyName, preferredName: blankToNull(input.preferredName ?? null),
-        dateOfBirth: input.dateOfBirth ?? null, email: blankToNull(input.email ?? null), phone: blankToNull(input.phone ?? null),
-        roles: input.roles,
-      }, link));
+      const record = await guard(() =>
+        people.create(
+          actor,
+          {
+            givenName: input.givenName,
+            familyName: input.familyName,
+            preferredName: blankToNull(input.preferredName ?? null),
+            dateOfBirth: input.dateOfBirth ?? null,
+            email: blankToNull(input.email ?? null),
+            phone: blankToNull(input.phone ?? null),
+            roles: input.roles,
+          },
+          link,
+        ),
+      );
 
       return personView(actor, record, await todayFor(orgId));
     },
@@ -238,10 +277,15 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       if (input.canPickup || hadPickup) {
         assertAllowed(actor, 'people:authorise_pickup');
       }
-      const record = await guard(() => people.link(actor, {
-        householdId: input.householdId, personId: input.personId, relationship: input.relationship,
-        isGuardian: input.isGuardian, canPickup: input.canPickup,
-      }));
+      const record = await guard(() =>
+        people.link(actor, {
+          householdId: input.householdId,
+          personId: input.personId,
+          relationship: input.relationship,
+          isGuardian: input.isGuardian,
+          canPickup: input.canPickup,
+        }),
+      );
 
       return (await toHouseholds(people, orgId, [record], seesCustody(actor)))[0];
     },
@@ -258,7 +302,10 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
         const others = household.members.filter(m => m.personId !== personId);
         const stillGuarded = others.some(m => m.isGuardian);
         if (!stillGuarded) {
-          const companions = await people.getMany(orgId, others.map(m => m.personId));
+          const companions = await people.getMany(
+            orgId,
+            others.map(m => m.personId),
+          );
           if (companions.some(p => p.roles.includes('camper'))) {
             throw conflict('A camper needs a parent or guardian in this household. Link another guardian first.');
           }

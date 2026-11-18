@@ -28,5 +28,9 @@ export interface AttendanceService {
 }
 
 export interface AttendanceServiceDeps {
-  attendance: AttendanceRepository; people: PeopleRepository; memberships: MembershipRepository; orgs: OrgRepository; clock: Clock;
+  attendance: AttendanceRepository;
+  people: PeopleRepository;
+  memberships: MembershipRepository;
+  orgs: OrgRepository;
+  clock: Clock;
 }

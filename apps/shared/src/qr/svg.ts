@@ -3,7 +3,10 @@ import qrcode from 'qrcode-generator';
 /** Quiet zone, in modules, around the code (the QR specification asks for 4). */
 const QUIET = 4;
 
-export interface QrPath { size: number; d: string }
+export interface QrPath {
+  size: number;
+  d: string;
+}
 
 /** The code for `payload` as one SVG path (a unit square per dark module) in a `size` x `size` grid, quiet zone included. Pure, no I/O. */
 export function qrPath(payload: string): QrPath {

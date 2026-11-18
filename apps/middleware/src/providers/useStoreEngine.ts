@@ -24,12 +24,15 @@ export function useStoreEngine() {
   useTheme(state.ui.theme);
 
   const set = useCallback((fn: Updater) => {
-    const next = fn(ref.current); if (next === ref.current) {
+    const next = fn(ref.current);
+    if (next === ref.current) {
       return;
     }
-    ref.current = next; setState(next);
+    ref.current = next;
+    setState(next);
     if (syncRef.current !== 'local') {
-      pending.current.push(fn); engine.current?.changed();
+      pending.current.push(fn);
+      engine.current?.changed();
     }
   }, []);
 
@@ -38,7 +41,8 @@ export function useStoreEngine() {
     const onTheme = (event: Event) => {
       const theme = (event as CustomEvent<ThemePref>).detail;
       const next = { ...ref.current, ui: { ...ref.current.ui, theme } };
-      ref.current = next; setState(next);
+      ref.current = next;
+      setState(next);
     };
     window.addEventListener(THEME_EVENT, onTheme);
 
@@ -47,11 +51,16 @@ export function useStoreEngine() {
 
   useEffect(() => {
     const e = createSync({
-      getState: () => ref.current, commit: s => {
-        ref.current = s; setState(s);
-      }, pending: pending.current,
+      getState: () => ref.current,
+      commit: s => {
+        ref.current = s;
+        setState(s);
+      },
+      pending: pending.current,
       onStatus: (s, info) => {
-        syncRef.current = s; setSync(s); if (info) {
+        syncRef.current = s;
+        setSync(s);
+        if (info) {
           setServerInfo(info);
         }
       },
@@ -59,7 +68,8 @@ export function useStoreEngine() {
     engine.current = e;
 
     return () => {
-      e.stop(); engine.current = null;
+      e.stop();
+      engine.current = null;
     };
   }, []);
 

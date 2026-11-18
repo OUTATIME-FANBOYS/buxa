@@ -35,10 +35,13 @@ describe.skipIf(!url)('concurrent badge reissue on Postgres (S-15)', () => {
       await holder.query("SELECT set_config('app.org_id', $1, true)", [fx.actor.orgId]);
       await holder.query(
         `INSERT INTO credentials (org_id, person_id, token_hash, issued_at, issued_by) VALUES ($1, $2, $3, $4::timestamptz, $5)`,
-        [fx.actor.orgId, personId, tokenHash('winner'), at, fx.actor.userId]);
+        [fx.actor.orgId, personId, tokenHash('winner'), at, fx.actor.userId],
+      );
 
-      const loser$ = fx.repos.credentials.issue(fx.actor, personId, tokenHash('loser'), at)
-        .then(() => 'issued' as const, (error: unknown) => error);
+      const loser$ = fx.repos.credentials.issue(fx.actor, personId, tokenHash('loser'), at).then(
+        () => 'issued' as const,
+        (error: unknown) => error,
+      );
       await untilBlocked(pool, 'buxa-race-badge');
       await holder.query('COMMIT');
 
@@ -49,8 +52,17 @@ describe.skipIf(!url)('concurrent badge reissue on Postgres (S-15)', () => {
       holder.release();
     }
 
-    const active = await withOrg(pool, fx.actor.orgId, async db => (await db.query<{ n: number }>(
-      'SELECT count(*)::int AS n FROM credentials WHERE person_id = $1 AND revoked_at IS NULL', [personId])).rows[0].n);
+    const active = await withOrg(
+      pool,
+      fx.actor.orgId,
+      async db =>
+        (
+          await db.query<{ n: number }>(
+            'SELECT count(*)::int AS n FROM credentials WHERE person_id = $1 AND revoked_at IS NULL',
+            [personId],
+          )
+        ).rows[0].n,
+    );
     expect(active).toBe(1);
   });
 });

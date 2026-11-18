@@ -2,7 +2,12 @@ import type { Task } from './types';
 import { summarize, type KindOf } from './stats';
 
 /** The four task numbers Home shows. Each comes from the same rules as the boards and reports (see stats.ts). */
-export interface TaskCounts { total: number; inProgress: number; completed: number; overdue: number }
+export interface TaskCounts {
+  total: number;
+  inProgress: number;
+  completed: number;
+  overdue: number;
+}
 
 export function taskCounts(tasks: Task[], kindOf: KindOf): TaskCounts {
   const { live, active, done, overdue } = summarize(tasks, kindOf);

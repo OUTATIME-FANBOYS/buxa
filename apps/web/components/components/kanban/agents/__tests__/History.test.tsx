@@ -7,7 +7,9 @@ import { History } from '@/components/components/kanban/agents/export';
 
 const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
-vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
+vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({
+  useTaskDrawer: () => ({ openTask: () => undefined }),
+}));
 
 describe('History', () => {
   beforeEach(() => {
@@ -17,7 +19,11 @@ describe('History', () => {
 
   it('is the audit trail: filterable by outcome and agent, with an export', () => {
     const seed = buildSeed();
-    const html = renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}><History proposals={[]} agents={seed.agents} /></UiProvider>);
+    const html = renderToStaticMarkup(
+      <UiProvider Dialog={ConfirmDialog}>
+        <History proposals={[]} agents={seed.agents} />
+      </UiProvider>,
+    );
     expect(html).toContain('aria-label="Filter by outcome"');
     expect(html).toContain('>All outcomes</option>');
     expect(html).toContain('Export audit log');

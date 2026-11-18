@@ -32,23 +32,33 @@ export function BadgeActions({ personId, hasActiveBadge, personName, roleLabel, 
       <div className="row">
         <form action={issueAction}>
           <input type="hidden" name="personId" value={personId} />
-          <Button variant="primary" disabled={issuing}>{issuing ? 'Making badge…' : hasActiveBadge ? 'Reissue badge' : 'Issue badge'}</Button>
+          <Button variant="primary" disabled={issuing}>
+            {issuing ? 'Making badge…' : hasActiveBadge ? 'Reissue badge' : 'Issue badge'}
+          </Button>
         </form>
         {hasActiveBadge && (
           <form action={revokeAction}>
             <input type="hidden" name="personId" value={personId} />
-            <Button variant="danger-soft" disabled={revoking}>{revoking ? 'Revoking…' : 'Revoke badge'}</Button>
+            <Button variant="danger-soft" disabled={revoking}>
+              {revoking ? 'Revoking…' : 'Revoke badge'}
+            </Button>
           </form>
         )}
       </div>
-      {hasActiveBadge && !newBadge && <p className="muted">Reissuing replaces the current badge. The old code stops working at once.</p>}
+      {hasActiveBadge && !newBadge && (
+        <p className="muted">Reissuing replaces the current badge. The old code stops working at once.</p>
+      )}
       <FormMessage state={issued.status === 'issued' ? idle : issued} />
       <FormMessage state={revoked} />
       {newBadge && (
         <div className="stack people-badge">
-          <p role="status" className="people-message people-message-ok">New badge. It is shown once: print it now.</p>
+          <p role="status" className="people-message people-message-ok">
+            New badge. It is shown once: print it now.
+          </p>
           <BadgeCard personName={personName} roleLabel={roleLabel} campName={campName} payload={newBadge} />
-          <div><PrintButton /></div>
+          <div>
+            <PrintButton />
+          </div>
         </div>
       )}
     </div>

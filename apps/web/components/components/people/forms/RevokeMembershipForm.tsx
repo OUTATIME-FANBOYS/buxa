@@ -25,7 +25,11 @@ export function RevokeMembershipForm({ membershipId, personId }: { membershipId:
         <textarea name="reason" rows={2} maxLength={500} aria-invalid={reasonError ? true : undefined} />
       </Field>
       <FormMessage state={state} />
-      <div><Button variant="danger" disabled={pending}>{pending ? 'Revoking…' : 'Revoke membership'}</Button></div>
+      <div>
+        <Button variant="danger" disabled={pending}>
+          {pending ? 'Revoking…' : 'Revoke membership'}
+        </Button>
+      </div>
     </form>
   );
 }

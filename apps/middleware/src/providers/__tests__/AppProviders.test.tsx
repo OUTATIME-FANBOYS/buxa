@@ -14,6 +14,12 @@ function Probe() {
 
 describe('AppProviders', () => {
   it('provides the ui context (toasts, confirm, sidebar) to its children', () => {
-    expect(renderToStaticMarkup(<AppProviders Dialog={Dialog}><Probe /></AppProviders>)).toContain('<p>uses ui</p>');
+    expect(
+      renderToStaticMarkup(
+        <AppProviders Dialog={Dialog}>
+          <Probe />
+        </AppProviders>,
+      ),
+    ).toContain('<p>uses ui</p>');
   });
 });

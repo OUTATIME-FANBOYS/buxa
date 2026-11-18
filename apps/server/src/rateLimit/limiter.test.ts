@@ -3,9 +3,21 @@ import { randomBytes } from 'node:crypto';
 import pg from 'pg';
 import { migrate } from '@buxa/db';
 import { HttpError } from '../http/errors';
-import { clientAddress, createMemoryRateLimiter, createPgRateLimiter, enforceRateLimit, howLong, rateKey, type RateRule } from './limiter';
+import {
+  clientAddress,
+  createMemoryRateLimiter,
+  createPgRateLimiter,
+  enforceRateLimit,
+  howLong,
+  rateKey,
+  type RateRule,
+} from './limiter';
 
-const rule = (limit: number, windowSeconds: number): RateRule => ({ name: `test.${limit}.${windowSeconds}`, limit, windowSeconds });
+const rule = (limit: number, windowSeconds: number): RateRule => ({
+  name: `test.${limit}.${windowSeconds}`,
+  limit,
+  windowSeconds,
+});
 
 describe('rate limiter (in memory)', () => {
   it('allows the first N hits, refuses hit N+1, and resets after the window', async () => {
@@ -98,15 +110,21 @@ describe.skipIf(!url)('rate limiter (Postgres, migration 0010)', () => {
   it('stores hashed keys only, with no identity in the clear', async () => {
     const identity = `visible-${randomBytes(6).toString('hex')}`;
     await limiter.hit(rule(5, 60), identity);
-    const { rows } = await pool.query<{ key: string }>('SELECT key FROM rate_limits WHERE key = $1', [rateKey(rule(5, 60), identity)]);
+    const { rows } = await pool.query<{ key: string }>('SELECT key FROM rate_limits WHERE key = $1', [
+      rateKey(rule(5, 60), identity),
+    ]);
     expect(rows).toHaveLength(1);
     expect(rows[0].key).not.toContain(identity);
   });
 
   it('is not readable by the request role or the Data API roles', async () => {
-    const { rows } = await pool.query<{ can: boolean }>(`SELECT has_table_privilege('buxa_app', 'rate_limits', 'SELECT') AS can`);
+    const { rows } = await pool.query<{ can: boolean }>(
+      `SELECT has_table_privilege('buxa_app', 'rate_limits', 'SELECT') AS can`,
+    );
     expect(rows[0].can).toBe(false);
-    const fn = await pool.query<{ can: boolean }>(`SELECT has_function_privilege('buxa_app', 'rate_limit_hit(text,integer,integer)', 'EXECUTE') AS can`);
+    const fn = await pool.query<{ can: boolean }>(
+      `SELECT has_function_privilege('buxa_app', 'rate_limit_hit(text,integer,integer)', 'EXECUTE') AS can`,
+    );
     expect(fn.rows[0].can).toBe(true);
   });
 });

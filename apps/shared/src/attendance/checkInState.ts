@@ -38,12 +38,18 @@ export function checkInReducer(state: CheckInState, event: CheckInEvent): CheckI
     return event.type === 'answered' ? answered(state, event.outcome) : state;
   }
   switch (event.type) {
-    case 'unknown': return { phase: 'unknown' };
-    case 'error': return { phase: 'error', message: event.message };
-    case 'selected': return { phase: 'ready', card: event.card, method: event.method };
-    case 'reset': return CHECK_IN_IDLE;
-    case 'submitted': return submit(state);
-    case 'answered': return state;
+    case 'unknown':
+      return { phase: 'unknown' };
+    case 'error':
+      return { phase: 'error', message: event.message };
+    case 'selected':
+      return { phase: 'ready', card: event.card, method: event.method };
+    case 'reset':
+      return CHECK_IN_IDLE;
+    case 'submitted':
+      return submit(state);
+    case 'answered':
+      return state;
   }
 }
 
@@ -55,7 +61,10 @@ function submit(state: CheckInState): CheckInState {
   return state;
 }
 
-function answered(state: Extract<CheckInState, { phase: 'submitting' }>, outcome: ActionOutcome<CheckInResult>): CheckInState {
+function answered(
+  state: Extract<CheckInState, { phase: 'submitting' }>,
+  outcome: ActionOutcome<CheckInResult>,
+): CheckInState {
   if (outcome.kind !== 'ok') {
     return { phase: 'failed', card: state.card, method: state.method, message: outcome.message };
   }

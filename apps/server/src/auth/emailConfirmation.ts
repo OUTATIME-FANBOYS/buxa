@@ -8,10 +8,17 @@
 export type EmailConfirmation = 'required' | 'not-required' | 'unknown';
 export type StartupDecision = 'ok' | 'warn' | 'refuse';
 
-export async function readEmailConfirmation(opts: { supabaseUrl: string; publishableKey: string; fetch?: typeof fetch }): Promise<EmailConfirmation> {
+export async function readEmailConfirmation(opts: {
+  supabaseUrl: string;
+  publishableKey: string;
+  fetch?: typeof fetch;
+}): Promise<EmailConfirmation> {
   const doFetch = opts.fetch ?? fetch;
   try {
-    const response = await doFetch(`${opts.supabaseUrl.replace(/\/+$/, '')}/auth/v1/settings`, { headers: { apikey: opts.publishableKey }, signal: AbortSignal.timeout(5000) });
+    const response = await doFetch(`${opts.supabaseUrl.replace(/\/+$/, '')}/auth/v1/settings`, {
+      headers: { apikey: opts.publishableKey },
+      signal: AbortSignal.timeout(5000),
+    });
     if (!response.ok) {
       return 'unknown';
     }

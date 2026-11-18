@@ -3,7 +3,14 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { CheckInsByDay } from '@buxa/shared/camp/campHomeTypes';
 import { CheckInsPanel } from '@/components/components/kanban/home/CheckInsPanel';
-import { chartTotals, donutSegments, dayOfMonth, lastDays, shortDate, showAxisLabel } from '@/components/components/kanban/home/homeChartMath';
+import {
+  chartTotals,
+  donutSegments,
+  dayOfMonth,
+  lastDays,
+  shortDate,
+  showAxisLabel,
+} from '@/components/components/kanban/home/homeChartMath';
 
 Object.assign(globalThis, { React });
 
@@ -11,12 +18,16 @@ Object.assign(globalThis, { React });
  * Sixty days ending 17 Nov 2026, with a count per day from `counts` (the rest are zero). `minors` gives the students per day; without
  * it the split is not shown (null), as for a viewer who may not see the minor flag.
  */
-function series(counts: Record<string, number>, complete = true, minors: Record<string, number> | null = null): CheckInsByDay {
+function series(
+  counts: Record<string, number>,
+  complete = true,
+  minors: Record<string, number> | null = null,
+): CheckInsByDay {
   const days = Array.from({ length: 60 }, (_, i) => {
     const d = new Date(Date.UTC(2026, 10, 17 - (59 - i)));
     const date = d.toISOString().slice(0, 10);
 
-    return { date, count: counts[date] ?? 0, minors: minors === null ? null : minors[date] ?? 0 };
+    return { date, count: counts[date] ?? 0, minors: minors === null ? null : (minors[date] ?? 0) };
   });
 
   return { days, complete };
@@ -75,7 +86,11 @@ describe('homeChartMath', () => {
   });
 
   it('totals a range and finds its busiest day, or none when it is quiet', () => {
-    const days = [{ date: '2026-11-01', count: 2, minors: null }, { date: '2026-11-02', count: 5, minors: null }, { date: '2026-11-03', count: 5, minors: null }];
+    const days = [
+      { date: '2026-11-01', count: 2, minors: null },
+      { date: '2026-11-02', count: 5, minors: null },
+      { date: '2026-11-03', count: 5, minors: null },
+    ];
     expect(chartTotals(days)).toEqual({ total: 12, busiest: { date: '2026-11-02', count: 5, minors: null } });
     expect(chartTotals([{ date: '2026-11-01', count: 0, minors: null }]).busiest).toBeNull();
   });

@@ -6,7 +6,13 @@ import { SubtaskList } from '@/components/components/kanban/drawer/export';
 const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 
-const task = { ...buildSeed().tasks[0], subtasks: [{ id: 's1', title: 'Book bus', done: true }, { id: 's2', title: 'Print lists', done: false }] };
+const task = {
+  ...buildSeed().tasks[0],
+  subtasks: [
+    { id: 's1', title: 'Book bus', done: true },
+    { id: 's2', title: 'Print lists', done: false },
+  ],
+};
 
 describe('SubtaskList', () => {
   beforeEach(() => {

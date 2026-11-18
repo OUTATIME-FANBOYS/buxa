@@ -4,10 +4,12 @@ import { qrPath, qrSvg } from '../svg';
 
 function decode(payload: string): string | null {
   const { size, d } = qrPath(payload);
-  const scale = 8, w = size * scale;
+  const scale = 8,
+    w = size * scale;
   const data = new Uint8ClampedArray(w * w * 4).fill(255);
   for (const m of d.matchAll(/M(\d+) (\d+)h/g)) {
-    const mx = Number(m[1]), my = Number(m[2]);
+    const mx = Number(m[1]),
+      my = Number(m[2]);
     for (let y = my * scale; y < (my + 1) * scale; y++) {
       for (let x = mx * scale; x < (mx + 1) * scale; x++) {
         const i = (y * w + x) * 4;

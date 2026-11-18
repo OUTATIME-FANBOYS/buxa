@@ -10,7 +10,11 @@ export function useDarkMode(): { dark: boolean; toggle: () => void } {
     setDark(isDark());
   }, []);
 
-  return { dark, toggle: () => {
-    setTheme(!dark); setDark(!dark);
-  } };
+  return {
+    dark,
+    toggle: () => {
+      setTheme(!dark);
+      setDark(!dark);
+    },
+  };
 }

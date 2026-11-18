@@ -18,28 +18,52 @@ describe('ProjectDialog', () => {
   let root: Root;
   const seed = buildSeed();
   beforeEach(() => {
-    h.store = { actions: { createProject: vi.fn(() => 'p-new'), updateProject: vi.fn() }, workspace: seed.workspaces[0] };
+    h.store = {
+      actions: { createProject: vi.fn(() => 'p-new'), updateProject: vi.fn() },
+      workspace: seed.workspaces[0],
+    };
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = '';
+    act(() => root.unmount());
+    document.body.innerHTML = '';
   });
 
   it('titles a new project', () => {
-    act(() => root.render(<UiProvider Dialog={ConfirmDialog}><ProjectDialog onClose={() => undefined} /></UiProvider>));
+    act(() =>
+      root.render(
+        <UiProvider Dialog={ConfirmDialog}>
+          <ProjectDialog onClose={() => undefined} />
+        </UiProvider>,
+      ),
+    );
     expect(document.querySelector('[role="dialog"]')?.getAttribute('aria-label')).toBe('New project');
   });
   it('edits an existing project with its name filled in', () => {
-    act(() => root.render(<UiProvider Dialog={ConfirmDialog}><ProjectDialog project={seed.projects[0]} onClose={() => undefined} /></UiProvider>));
+    act(() =>
+      root.render(
+        <UiProvider Dialog={ConfirmDialog}>
+          <ProjectDialog project={seed.projects[0]} onClose={() => undefined} />
+        </UiProvider>,
+      ),
+    );
     expect(document.querySelector('[role="dialog"]')?.getAttribute('aria-label')).toBe('Edit project');
     // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
     expect((document.querySelector('input') as HTMLInputElement).value).toBe(seed.projects[0].name);
   });
   it('refuses a blank name before creating anything', () => {
-    act(() => root.render(<UiProvider Dialog={ConfirmDialog}><ProjectDialog onClose={() => undefined} /></UiProvider>));
+    act(() =>
+      root.render(
+        <UiProvider Dialog={ConfirmDialog}>
+          <ProjectDialog onClose={() => undefined} />
+        </UiProvider>,
+      ),
+    );
     act(() => {
       // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
-      (document.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      (document.querySelector('form') as HTMLFormElement).dispatchEvent(
+        new Event('submit', { bubbles: true, cancelable: true }),
+      );
     });
     expect(document.querySelector('.field-error')?.textContent).toBe('Give the project a name.');
     expect((h.store.actions as { createProject: ReturnType<typeof vi.fn> }).createProject).not.toHaveBeenCalled();

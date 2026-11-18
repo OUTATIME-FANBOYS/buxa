@@ -8,24 +8,33 @@ import { useTaskDrawer } from '../providers/providers';
 import { useUi } from '../providers/UiProvider';
 
 export function useTaskCommands() {
-  const { actions } = useStore(); const { toast } = useUi(); const { openTask } = useTaskDrawer();
+  const { actions } = useStore();
+  const { toast } = useUi();
+  const { openTask } = useTaskDrawer();
 
-  return useMemo(() => ({
-    open: (t: Task) => openTask(t.id),
-    moveTo(t: Task, c: Column) {
-      actions.moveTask(t.id, c.id, null); toast(`Moved to ${c.name}`);
-    },
-    duplicate(t: Task) {
-      const id = actions.duplicateTask(t.id); toast('Task duplicated', { action: { label: 'Open', run: () => openTask(id) } });
+  return useMemo(
+    () => ({
+      open: (t: Task) => openTask(t.id),
+      moveTo(t: Task, c: Column) {
+        actions.moveTask(t.id, c.id, null);
+        toast(`Moved to ${c.name}`);
+      },
+      duplicate(t: Task) {
+        const id = actions.duplicateTask(t.id);
+        toast('Task duplicated', { action: { label: 'Open', run: () => openTask(id) } });
 
-      return id;
-    },
-    toggleArchive(t: Task) {
-      actions.archiveTask(t.id, !t.archived); toast(t.archived ? 'Task restored' : 'Task archived');
-    },
-    remove(t: Task) {
-      actions.deleteTask(t.id); toast('Task deleted', { action: { label: 'Undo', run: () => actions.restoreTask(t) } });
-    },
-  }), [actions, toast, openTask]);
+        return id;
+      },
+      toggleArchive(t: Task) {
+        actions.archiveTask(t.id, !t.archived);
+        toast(t.archived ? 'Task restored' : 'Task archived');
+      },
+      remove(t: Task) {
+        actions.deleteTask(t.id);
+        toast('Task deleted', { action: { label: 'Undo', run: () => actions.restoreTask(t) } });
+      },
+    }),
+    [actions, toast, openTask],
+  );
 }
 export type TaskCommands = ReturnType<typeof useTaskCommands>;

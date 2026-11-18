@@ -19,9 +19,14 @@ export function createMembershipService(deps: MembershipServiceDeps): Membership
       if (!(await people.get(actor.orgId, input.personId))) {
         throw notFound('Person not found');
       }
-      const record = await guard(() => memberships.add(actor, {
-        personId: input.personId, plan: input.plan, startsOn: input.startsOn, endsOn: input.endsOn,
-      }));
+      const record = await guard(() =>
+        memberships.add(actor, {
+          personId: input.personId,
+          plan: input.plan,
+          startsOn: input.startsOn,
+          endsOn: input.endsOn,
+        }),
+      );
 
       return toPersonMembership(record, await todayFor(actor.orgId));
     },

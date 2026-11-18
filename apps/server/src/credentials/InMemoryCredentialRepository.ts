@@ -35,7 +35,10 @@ export class InMemoryCredentialRepository implements CredentialRepository {
         revokedAt: null,
       };
       this.db.credentials.set(credential.id, credential);
-      this.db.record(actor, 'credential.issue', 'credential', credential.id, { personId, replaces: replaced?.id ?? null });
+      this.db.record(actor, 'credential.issue', 'credential', credential.id, {
+        personId,
+        replaces: replaced?.id ?? null,
+      });
 
       return toRecord(credential);
     });
@@ -64,7 +67,9 @@ export class InMemoryCredentialRepository implements CredentialRepository {
 
   resolve(orgId: string, tokenHash: Buffer): Promise<string | null> {
     return settle(() => {
-      const match = [...this.db.credentials.values()].find(c => c.orgId === orgId && c.revokedAt === null && c.tokenHash.equals(tokenHash));
+      const match = [...this.db.credentials.values()].find(
+        c => c.orgId === orgId && c.revokedAt === null && c.tokenHash.equals(tokenHash),
+      );
 
       return match?.personId ?? null;
     });
@@ -84,6 +89,8 @@ export class InMemoryCredentialRepository implements CredentialRepository {
   }
 
   private activeOf(orgId: string, personId: string): StoredCredential | undefined {
-    return [...this.db.credentials.values()].find(c => c.orgId === orgId && c.personId === personId && c.revokedAt === null);
+    return [...this.db.credentials.values()].find(
+      c => c.orgId === orgId && c.personId === personId && c.revokedAt === null,
+    );
   }
 }

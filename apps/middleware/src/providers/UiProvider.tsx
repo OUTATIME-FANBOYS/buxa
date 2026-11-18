@@ -1,22 +1,51 @@
 'use client';
 
-import { createContext, useCallback, useContext, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentType,
+  type ReactNode,
+} from 'react';
 
 /** The props the confirm prompt needs from a dialog. The web app passes its Dialog component in, so this package never imports the web app. */
-export interface ConfirmDialogProps { title: string; onClose: () => void; footer: ReactNode; children: ReactNode }
+export interface ConfirmDialogProps {
+  title: string;
+  onClose: () => void;
+  footer: ReactNode;
+  children: ReactNode;
+}
 
-interface ToastAction { label: string; run: () => void }
-interface Toast { id: number; text: string; tone?: 'error'; action?: ToastAction }
-export interface ConfirmOpts { title: string; body?: string; confirmLabel?: string; danger?: boolean }
+interface ToastAction {
+  label: string;
+  run: () => void;
+}
+interface Toast {
+  id: number;
+  text: string;
+  tone?: 'error';
+  action?: ToastAction;
+}
+export interface ConfirmOpts {
+  title: string;
+  body?: string;
+  confirmLabel?: string;
+  danger?: boolean;
+}
 
 interface UiCtx {
   toast: (text: string, opts?: { tone?: 'error'; action?: ToastAction }) => void;
   confirm: (o: ConfirmOpts) => Promise<boolean>;
-  sidebarOpen: boolean; setSidebarOpen: (b: boolean) => void;
+  sidebarOpen: boolean;
+  setSidebarOpen: (b: boolean) => void;
 }
 const Ctx = createContext<UiCtx | null>(null);
 export const useUi = () => {
-  const c = useContext(Ctx); if (!c) {
+  const c = useContext(Ctx);
+  if (!c) {
     throw new Error('UiProvider missing');
   }
 
@@ -36,11 +65,15 @@ export function UiProvider({ children, Dialog }: { children: ReactNode; Dialog: 
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), opts?.action ? 7000 : 4000);
   }, []);
   // Concurrent confirms queue up: every promise settles, one dialog at a time.
-  const confirm = useCallback((o: ConfirmOpts) => new Promise<boolean>(resolve => setQueue(q => [...q, { ...o, resolve }])), []);
+  const confirm = useCallback(
+    (o: ConfirmOpts) => new Promise<boolean>(resolve => setQueue(q => [...q, { ...o, resolve }])),
+    [],
+  );
   const value = useMemo(() => ({ toast, confirm, sidebarOpen, setSidebarOpen }), [toast, confirm, sidebarOpen]);
 
   const done = (b: boolean) => {
-    conf?.resolve(b); setQueue(q => q.slice(1));
+    conf?.resolve(b);
+    setQueue(q => q.slice(1));
   };
 
   return (
@@ -53,17 +86,39 @@ export function UiProvider({ children, Dialog }: { children: ReactNode; Dialog: 
           return (
             <div key={t.id} className={`toast ${t.tone === 'error' ? 'toast-error' : ''}`}>
               <span>{t.text}</span>
-              {action && <button onClick={() => {
-                action.run(); setToasts(x => x.filter(y => y.id !== t.id));
-              }}>{action.label}</button>}
+              {action && (
+                <button
+                  onClick={() => {
+                    action.run();
+                    setToasts(x => x.filter(y => y.id !== t.id));
+                  }}
+                >
+                  {action.label}
+                </button>
+              )}
             </div>
           );
         })}
       </div>
       {conf && (
-        <Dialog title={conf.title} onClose={() => done(false)} footer={<>
-          <button className="btn" onClick={() => done(false)}>Cancel</button>
-          <button className={`btn ${conf.danger ? 'btn-danger' : 'btn-primary'}`} data-autofocus onClick={() => done(true)}>{conf.confirmLabel ?? 'Confirm'}</button></>}>
+        <Dialog
+          title={conf.title}
+          onClose={() => done(false)}
+          footer={
+            <>
+              <button className="btn" onClick={() => done(false)}>
+                Cancel
+              </button>
+              <button
+                className={`btn ${conf.danger ? 'btn-danger' : 'btn-primary'}`}
+                data-autofocus
+                onClick={() => done(true)}
+              >
+                {conf.confirmLabel ?? 'Confirm'}
+              </button>
+            </>
+          }
+        >
           {conf.body && <p className="muted">{conf.body}</p>}
         </Dialog>
       )}

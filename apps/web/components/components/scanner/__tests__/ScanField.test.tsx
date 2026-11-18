@@ -6,14 +6,20 @@ import { ScanField, type ScanFieldHandle } from '@/components/components/scanner
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
-interface HarnessProps { onScan: (raw: string) => void; disabled?: boolean; handle: React.RefObject<ScanFieldHandle | null> }
+interface HarnessProps {
+  onScan: (raw: string) => void;
+  disabled?: boolean;
+  handle: React.RefObject<ScanFieldHandle | null>;
+}
 
 function Harness({ onScan, disabled, handle }: HarnessProps) {
   return (
     <>
       <ScanField ref={handle} label="Scan a badge" disabled={disabled} onScan={onScan} />
       <button type="button">Elsewhere</button>
-      <div tabIndex={0} id="plain">Plain text</div>
+      <div tabIndex={0} id="plain">
+        Plain text
+      </div>
     </>
   );
 }
@@ -25,9 +31,10 @@ let root: Root;
 const field = () => host.querySelector('input') as HTMLInputElement;
 // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
 const form = () => host.querySelector('form') as HTMLFormElement;
-const flush = () => act(async () => {
-  await new Promise(resolve => setTimeout(resolve, 0));
-});
+const flush = () =>
+  act(async () => {
+    await new Promise(resolve => setTimeout(resolve, 0));
+  });
 
 function render(props: Omit<HarnessProps, 'handle'> & { handle?: React.RefObject<ScanFieldHandle | null> }) {
   const handle = props.handle ?? createRef<ScanFieldHandle>();

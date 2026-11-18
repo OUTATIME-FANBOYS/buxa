@@ -31,7 +31,12 @@ function fakeLocalStorage() {
 function setDevice({ userAgent, phone }: { userAgent: string; phone: boolean }) {
   Object.defineProperty(navigator, 'userAgent', { configurable: true, get: () => userAgent });
   Object.defineProperty(navigator, 'maxTouchPoints', { configurable: true, get: () => (phone ? 5 : 0) });
-  vi.stubGlobal('matchMedia', (query: string) => ({ matches: query.includes('max-width') ? phone : false, media: query, addEventListener() {}, removeEventListener() {} }));
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: query.includes('max-width') ? phone : false,
+    media: query,
+    addEventListener() {},
+    removeEventListener() {},
+  }));
 }
 
 function render() {

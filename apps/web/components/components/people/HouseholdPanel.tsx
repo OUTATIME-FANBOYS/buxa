@@ -1,6 +1,10 @@
 import type { Household } from '@buxa/contracts';
 import { ROUTES } from '@/config/routes';
-import { LinkHouseholdForm, type HouseholdOption, type PersonOption } from '@/components/components/people/forms/export';
+import {
+  LinkHouseholdForm,
+  type HouseholdOption,
+  type PersonOption,
+} from '@/components/components/people/forms/export';
 import { PersonFinder } from '@/components/components/people/forms/export';
 import { HouseholdMemberRow } from './HouseholdMemberRow';
 import { Button } from '@/components/elements/export';
@@ -25,20 +29,42 @@ export interface HouseholdPanelProps {
  * The households this person belongs to, with each member's guardian and pick-up status. Staff can link anyone in the camp to any
  * household: they search by name first, then choose from the matches. Adding a child starts from here too.
  */
-export function HouseholdPanel({ personId, households, householdOptions, canUpdate, canCreate, canAuthorisePickup, query, linkable }: HouseholdPanelProps) {
+export function HouseholdPanel({
+  personId,
+  households,
+  householdOptions,
+  canUpdate,
+  canCreate,
+  canAuthorisePickup,
+  query,
+  linkable,
+}: HouseholdPanelProps) {
   return (
     <section className="panel" aria-labelledby="household-heading">
-      <h2 id="household-heading" className="people-heading">Household</h2>
+      <h2 id="household-heading" className="people-heading">
+        Household
+      </h2>
       {households.length === 0 && <p className="muted">Not in a household yet.</p>}
       {households.map(household => (
         <div key={household.id} className="stack">
           <h3 className="people-subheading">{household.name}</h3>
           <ul className="people-list" aria-label={`Members of ${household.name}`}>
             {household.members.map(member => (
-              <HouseholdMemberRow key={member.personId} member={member} householdId={household.id} canUpdate={canUpdate} />
+              <HouseholdMemberRow
+                key={member.personId}
+                member={member}
+                householdId={household.id}
+                canUpdate={canUpdate}
+              />
             ))}
           </ul>
-          {canCreate && <p><Button size="sm" href={`${ROUTES.newPerson}?household=${encodeURIComponent(household.id)}`}>Add a child to this household</Button></p>}
+          {canCreate && (
+            <p>
+              <Button size="sm" href={`${ROUTES.newPerson}?household=${encodeURIComponent(household.id)}`}>
+                Add a child to this household
+              </Button>
+            </p>
+          )}
         </div>
       ))}
       {canUpdate && householdOptions.length > 0 && (
@@ -47,7 +73,13 @@ export function HouseholdPanel({ personId, households, householdOptions, canUpda
           <PersonFinder personId={personId} query={query} />
           {query === '' && <p className="muted">Search by name to find someone in the camp.</p>}
           {query !== '' && linkable.length === 0 && <p className="muted">No one matches that search.</p>}
-          {linkable.length > 0 && <LinkHouseholdForm households={householdOptions} people={linkable} canAuthorisePickup={canAuthorisePickup} />}
+          {linkable.length > 0 && (
+            <LinkHouseholdForm
+              households={householdOptions}
+              people={linkable}
+              canAuthorisePickup={canAuthorisePickup}
+            />
+          )}
         </div>
       )}
     </section>

@@ -34,13 +34,20 @@ describe('archivePersonAction', () => {
 
   it('shows why a checked-in person cannot be archived (409) and stays on the page', async () => {
     h.people.archive.mockRejectedValueOnce(conflict('They are checked in. Check them out first.'));
-    expect(await archivePersonAction(IDS.person)).toEqual({ status: 'error', message: 'They are checked in. Check them out first.', fieldErrors: undefined });
+    expect(await archivePersonAction(IDS.person)).toEqual({
+      status: 'error',
+      message: 'They are checked in. Check them out first.',
+      fieldErrors: undefined,
+    });
     expect(h.redirect).not.toHaveBeenCalled();
   });
 
   it('turns a 403 (a role without people:delete) into a friendly state', async () => {
     h.people.archive.mockRejectedValueOnce(forbidden('no'));
-    expect(await archivePersonAction(IDS.person)).toMatchObject({ status: 'error', message: 'Your role cannot do this.' });
+    expect(await archivePersonAction(IDS.person)).toMatchObject({
+      status: 'error',
+      message: 'Your role cannot do this.',
+    });
   });
 
   it('rejects an id that is not a UUID', async () => {

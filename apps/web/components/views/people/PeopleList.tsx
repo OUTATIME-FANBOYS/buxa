@@ -32,19 +32,40 @@ export async function PeopleList({ searchParams }: { searchParams: Record<string
   return (
     <div className="page">
       <header className="page-head">
-        <div className="page-title"><h1>People</h1><p className="muted">Children, families, instructors and staff who belong to the camp.</p></div>
-        {canAdd && <div className="page-actions"><AddPersonButton households={households} /></div>}
+        <div className="page-title">
+          <h1>People</h1>
+          <p className="muted">Children, families, instructors and staff who belong to the camp.</p>
+        </div>
+        {canAdd && (
+          <div className="page-actions">
+            <AddPersonButton households={households} />
+          </div>
+        )}
       </header>
       <PeopleSearch params={params} />
       {people === 'forbidden' ? (
-        <Empty icon="alert" title="You cannot see the people list" body="Ask an admin if you need to see people in this camp." />
+        <Empty
+          icon="alert"
+          title="You cannot see the people list"
+          body="Ask an admin if you need to see people in this camp."
+        />
       ) : (
         <div aria-live="polite" className="stack">
           {people.length === 0 ? (
-            filtered
-              ? <Empty icon="search" title="No one matches that search" body="Check the spelling, or try another role." />
-              : <Empty icon="users" title="No people yet" body={canAdd ? 'Add the first child, parent or staff member to start the camp list.' : 'Nobody has been added to the camp yet.'}
-                action={canAdd && <AddPersonButton households={households} />} />
+            filtered ? (
+              <Empty icon="search" title="No one matches that search" body="Check the spelling, or try another role." />
+            ) : (
+              <Empty
+                icon="users"
+                title="No people yet"
+                body={
+                  canAdd
+                    ? 'Add the first child, parent or staff member to start the camp list.'
+                    : 'Nobody has been added to the camp yet.'
+                }
+                action={canAdd && <AddPersonButton households={households} />}
+              />
+            )
           ) : (
             <>
               <p className="muted">{countLine(people.length)}</p>

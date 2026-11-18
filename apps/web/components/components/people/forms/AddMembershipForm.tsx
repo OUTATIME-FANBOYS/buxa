@@ -33,7 +33,9 @@ export function AddMembershipForm({ personId }: { personId: string }) {
         </Field>
       </div>
       <FormMessage state={state} />
-      <div><Button disabled={pending}>{pending ? 'Adding…' : 'Add membership'}</Button></div>
+      <div>
+        <Button disabled={pending}>{pending ? 'Adding…' : 'Add membership'}</Button>
+      </div>
     </form>
   );
 }

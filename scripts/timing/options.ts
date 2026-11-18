@@ -32,7 +32,9 @@ export function parseMeasureOptions(argv: readonly string[], env: Record<string,
     }
     const match = /^--(url|token|runs|action-id)(?:=(.*))?$/.exec(arg);
     if (!match) {
-      throw new Error(`Unknown option ${arg.startsWith('--') ? arg.split('=')[0] : 'argument'}. See the usage in scripts/measure-checkin.ts.`);
+      throw new Error(
+        `Unknown option ${arg.startsWith('--') ? arg.split('=')[0] : 'argument'}. See the usage in scripts/measure-checkin.ts.`,
+      );
     }
     const value = match[2] ?? argv[++i];
     if (value === undefined || value === '' || value.startsWith('--')) {
@@ -50,7 +52,9 @@ export function parseMeasureOptions(argv: readonly string[], env: Record<string,
     throw new Error('Give a test badge with --token (the bx1. code from a test person, not a real member).');
   }
   if (parseCredentialPayload(token) === null) {
-    throw new Error('That is not a Buxa badge code: it should start with bx1. and be the code printed on the test badge.');
+    throw new Error(
+      'That is not a Buxa badge code: it should start with bx1. and be the code printed on the test badge.',
+    );
   }
 
   const runs = values.has('runs') ? Number(values.get('runs')) : DEFAULT_RUNS;

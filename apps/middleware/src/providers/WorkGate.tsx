@@ -20,7 +20,11 @@ export function WorkGate({ user, children }: { user: SessionIdentity; children: 
   }, [ready, id, name, email, actions]);
 
   if (!ready) {
-    return <p className="muted" role="status" style={{ padding: 24 }}>Loading…</p>;
+    return (
+      <p className="muted" role="status" style={{ padding: 24 }}>
+        Loading…
+      </p>
+    );
   }
 
   return <>{children}</>;

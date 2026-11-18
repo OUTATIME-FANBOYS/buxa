@@ -16,26 +16,68 @@ import { requirePresent } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
-vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push() {}, replace() {}, refresh() {} }), usePathname: () => '/camp/boards' }));
+vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({
+  useTaskDrawer: () => ({ openTask: () => undefined }),
+}));
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push() {}, replace() {}, refresh() {} }),
+  usePathname: () => '/camp/boards',
+}));
 
 const seed = buildSeed();
 const member = seed.workspaces[0].members[0];
-const me = requirePresent(seed.users.find((u) => u.id === member.userId), 'seed.users.find((u) => u.id === member.userId)');
+const me = requirePresent(
+  seed.users.find(u => u.id === member.userId),
+  'seed.users.find((u) => u.id === member.userId)',
+);
 const camp: CampHome = {
-  campId: 'o1', name: 'Lake Camp', firstName: 'Priya', canRename: false,
-  people: 40, onSite: 12, checkedInToday: 20, validMemberships: 35, upcomingSessions: [],
-  checkInsByDay: { days: [{ date: '2026-11-17', count: 20, minors: 1 }], complete: true }, onSiteByAge: { adults: 11, minors: 1 },
+  campId: 'o1',
+  name: 'Lake Camp',
+  firstName: 'Priya',
+  canRename: false,
+  people: 40,
+  onSite: 12,
+  checkedInToday: 20,
+  validMemberships: 35,
+  upcomingSessions: [],
+  checkInsByDay: { days: [{ date: '2026-11-17', count: 20, minors: 1 }], complete: true },
+  onSiteByAge: { adults: 11, minors: 1 },
   membershipStatus: { valid: 35, notStarted: 0, expired: 3, none: 2 },
 };
 
 /** A store as the views see it, for a signed-in editor with the seed camp selected. */
 function store(over: Record<string, unknown> = {}) {
   return {
-    s: seed, actions: { setTheme() {}, setView() {}, selectProject() {}, setAgentsEnabled() {}, updateUser() {}, exportData: () => '{}', importData: () => null, simulateRun: () => 0 },
-    me, workspace: seed.workspaces[0], project: seed.projects[0], projects: seed.projects, wsTasks: seed.tasks, kindOf: () => 'open',
-    members: seed.workspaces[0].members.map((m) => ({ userId: m.userId, role: m.role, user: requirePresent(seed.users.find((u) => u.id === m.userId), 'seed.users.find((u) => u.id === m.userId)') })),
-    myRole: 'owner', readOnly: false, userById: (id?: string) => seed.users.find((u) => u.id === id), saveStatus: 'saved', sync: 'local',
+    s: seed,
+    actions: {
+      setTheme() {},
+      setView() {},
+      selectProject() {},
+      setAgentsEnabled() {},
+      updateUser() {},
+      exportData: () => '{}',
+      importData: () => null,
+      simulateRun: () => 0,
+    },
+    me,
+    workspace: seed.workspaces[0],
+    project: seed.projects[0],
+    projects: seed.projects,
+    wsTasks: seed.tasks,
+    kindOf: () => 'open',
+    members: seed.workspaces[0].members.map(m => ({
+      userId: m.userId,
+      role: m.role,
+      user: requirePresent(
+        seed.users.find(u => u.id === m.userId),
+        'seed.users.find((u) => u.id === m.userId)',
+      ),
+    })),
+    myRole: 'owner',
+    readOnly: false,
+    userById: (id?: string) => seed.users.find(u => u.id === id),
+    saveStatus: 'saved',
+    sync: 'local',
     ...over,
   };
 }
@@ -69,7 +111,18 @@ describe('kanban views', () => {
     expect(html).not.toContain('No workspace');
   });
   it('Home offers its own sentence for each section that has no data', () => {
-    const html = page(<Dashboard camp={{ ...camp, onSite: null, checkInsByDay: null, onSiteByAge: null, upcomingSessions: null, membershipStatus: null }} />);
+    const html = page(
+      <Dashboard
+        camp={{
+          ...camp,
+          onSite: null,
+          checkInsByDay: null,
+          onSiteByAge: null,
+          upcomingSessions: null,
+          membershipStatus: null,
+        }}
+      />,
+    );
     expect(html).toContain('Attendance is not shown for your role.');
     expect(html).toContain('Age groups are not shown for your role.');
     expect(html).toContain('Memberships are not shown for your role.');

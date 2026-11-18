@@ -34,7 +34,10 @@ describe('createPersonAction', () => {
 
   it('reports the contract messages for missing names and roles, and creates nothing', async () => {
     const state = await createPersonAction(idle, formOf({ givenName: '', familyName: '', roles: [] }));
-    expect(state).toMatchObject({ status: 'error', fieldErrors: { givenName: 'Required.', familyName: 'Required.', roles: 'Choose at least one role.' } });
+    expect(state).toMatchObject({
+      status: 'error',
+      fieldErrors: { givenName: 'Required.', familyName: 'Required.', roles: 'Choose at least one role.' },
+    });
     expect(h.people.create).not.toHaveBeenCalled();
   });
 
@@ -51,7 +54,10 @@ describe('createPersonAction', () => {
   });
 
   it('refuses both an existing household and a new one', async () => {
-    const state = await createPersonAction(idle, formOf({ ...adult, householdId: IDS.household, newHouseholdName: 'Other' }));
+    const state = await createPersonAction(
+      idle,
+      formOf({ ...adult, householdId: IDS.household, newHouseholdName: 'Other' }),
+    );
     expect(state).toMatchObject({ status: 'error', fieldErrors: { householdId: CHOOSE_ONE_HOUSEHOLD } });
   });
 
@@ -62,15 +68,21 @@ describe('createPersonAction', () => {
   });
 
   it('adds a child to an existing household, refreshes the list and opens the new person', async () => {
-    await expect(createPersonAction(idle, formOf({ ...camper, householdId: IDS.household, relationship: 'Son', email: '' })))
-      .rejects.toThrow(`NEXT_REDIRECT ${personPath(IDS.person)}`);
-    expect(h.people.create).toHaveBeenCalledWith(h.actor, expect.objectContaining({ givenName: 'Ben', roles: ['camper'], householdId: IDS.household, relationship: 'Son' }));
+    await expect(
+      createPersonAction(idle, formOf({ ...camper, householdId: IDS.household, relationship: 'Son', email: '' })),
+    ).rejects.toThrow(`NEXT_REDIRECT ${personPath(IDS.person)}`);
+    expect(h.people.create).toHaveBeenCalledWith(
+      h.actor,
+      expect.objectContaining({ givenName: 'Ben', roles: ['camper'], householdId: IDS.household, relationship: 'Son' }),
+    );
     expect(h.people.create.mock.calls[0]?.[1]).not.toHaveProperty('email');
     expect(h.revalidatePath).toHaveBeenCalledWith(ROUTES.people);
   });
 
   it('passes a new household name to the service, which creates it in the same transaction as the guardian', async () => {
-    await expect(createPersonAction(idle, formOf({ ...adult, newHouseholdName: ' Lee family ' }))).rejects.toThrow('NEXT_REDIRECT');
+    await expect(createPersonAction(idle, formOf({ ...adult, newHouseholdName: ' Lee family ' }))).rejects.toThrow(
+      'NEXT_REDIRECT',
+    );
     expect(h.people.createHousehold).not.toHaveBeenCalled();
     expect(h.people.create).toHaveBeenCalledWith(h.actor, expect.objectContaining({ newHouseholdName: 'Lee family' }));
   });

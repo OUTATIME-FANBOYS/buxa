@@ -15,14 +15,27 @@ export const IMPORT_COLUMNS = [
   'ratio_instructors',
 ] as const;
 
-const EXAMPLE_ROW = ['ROB-W1-MON', 'Robotics', '2027-06-07T09:00', '2027-06-07T12:00', 'Lab 2', '8', '12', '10', 'Priya Shah;Tom Reyes', '8', '1'];
+const EXAMPLE_ROW = [
+  'ROB-W1-MON',
+  'Robotics',
+  '2027-06-07T09:00',
+  '2027-06-07T12:00',
+  'Lab 2',
+  '8',
+  '12',
+  '10',
+  'Priya Shah;Tom Reyes',
+  '8',
+  '1',
+];
 
 export const IMPORTS_SECTION: HelpSectionContent = {
   id: 'imports',
   title: 'Imports',
   availability: {
     label: 'Not available yet',
-    detail: 'Planned for Phase 2, classes and sessions. There is no import button yet. This page describes how it will work, so you can prepare the file.',
+    detail:
+      'Planned for Phase 2, classes and sessions. There is no import button yet. This page describes how it will work, so you can prepare the file.',
   },
   intro: [
     'An import creates many sessions at once from a spreadsheet. You fill in a CSV template, check the preview, and then confirm.',
@@ -47,16 +60,32 @@ export const IMPORTS_SECTION: HelpSectionContent = {
         caption: 'Template columns, with an example row',
         headers: ['Column', 'Meaning', 'Example'],
         rows: [
-          ['external_key', 'Optional code for this session that you choose. Uploading the same key again updates the session. See External keys.', 'ROB-W1-MON'],
+          [
+            'external_key',
+            'Optional code for this session that you choose. Uploading the same key again updates the session. See External keys.',
+            'ROB-W1-MON',
+          ],
           ['class_name', 'The class this session belongs to, spelled as the class is named in the camp.', 'Robotics'],
-          ['starts_at', 'When the session starts, in camp local time, ISO format: date, T, then time.', '2027-06-07T09:00'],
-          ['ends_at', 'When the session ends, in camp local time, same format. A session may cross midnight.', '2027-06-07T12:00'],
+          [
+            'starts_at',
+            'When the session starts, in camp local time, ISO format: date, T, then time.',
+            '2027-06-07T09:00',
+          ],
+          [
+            'ends_at',
+            'When the session ends, in camp local time, same format. A session may cross midnight.',
+            '2027-06-07T12:00',
+          ],
           ['location', 'Where the session takes place. Free text.', 'Lab 2'],
           ['age_min', 'Youngest age allowed, a whole number. The limit is inclusive.', '8'],
           ['age_max', 'Oldest age allowed, a whole number. The limit is inclusive.', '12'],
           ['capacity', 'The most campers the session can take, a whole number. A hard limit.', '10'],
           ['instructor_names', 'The instructors, separated by a semicolon (;).', 'Priya Shah;Tom Reyes'],
-          ['ratio_campers', 'Campers allowed per instructor, the first number of the ratio. Stored and shown; not enforced automatically yet.', '8'],
+          [
+            'ratio_campers',
+            'Campers allowed per instructor, the first number of the ratio. Stored and shown; not enforced automatically yet.',
+            '8',
+          ],
           ['ratio_instructors', 'Instructors for that number of campers, the second number of the ratio.', '1'],
         ],
       },

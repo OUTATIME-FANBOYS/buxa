@@ -10,7 +10,11 @@ import { refreshSessionCookies } from '@buxa/server/session/refresh';
  */
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const nonce = btoa(crypto.randomUUID());
-  const policy = buildContentSecurityPolicy({ nonce, dev: process.env.NODE_ENV !== 'production', supabaseUrl: publicEnv.supabaseUrl });
+  const policy = buildContentSecurityPolicy({
+    nonce,
+    dev: process.env.NODE_ENV !== 'production',
+    supabaseUrl: publicEnv.supabaseUrl,
+  });
 
   // New tokens go on the request too, so the page being rendered sees them, and on the response, so the browser keeps them.
   const refreshed = await refreshSessionCookies(request);

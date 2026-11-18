@@ -7,10 +7,10 @@ export function fakeContext(initial: AppState): ActionContext & { get: () => App
 
   return {
     get: () => state,
-    set: (fn) => {
+    set: fn => {
       state = fn(state);
     },
-    replace: (next) => {
+    replace: next => {
       state = next;
     },
   };

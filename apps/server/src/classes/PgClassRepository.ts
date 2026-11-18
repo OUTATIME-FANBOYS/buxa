@@ -4,7 +4,15 @@ import type { Actor } from '@buxa/domain';
 import type { Class, Enrolment, NewClassInput, Session } from '@buxa/contracts';
 import type { ClassRepository, EnrolRequest, EnrolmentRule, NewSessionRecord } from './ClassRepository';
 import { cancelInTransaction, enrolInTransaction } from './PgEnrolmentWrites';
-import { getClass, getSession, listClassRows, listEnrolmentRows, listSessionRows, requireClass, requireSessionExists } from './PgClassQueries';
+import {
+  getClass,
+  getSession,
+  listClassRows,
+  listEnrolmentRows,
+  listSessionRows,
+  requireClass,
+  requireSessionExists,
+} from './PgClassQueries';
 import { insertClass, insertSession } from './PgClassWrites';
 
 /**

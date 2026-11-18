@@ -7,7 +7,9 @@ export function HelpPage() {
   return (
     <div className="page narrow help-page">
       <PageHeader title={HELP_PAGE.title} subtitle={HELP_PAGE.intro} />
-      {HELP_SECTIONS.map(section => <HelpSection key={section.id} section={section} />)}
+      {HELP_SECTIONS.map(section => (
+        <HelpSection key={section.id} section={section} />
+      ))}
     </div>
   );
 }

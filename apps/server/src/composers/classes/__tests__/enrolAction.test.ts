@@ -15,7 +15,17 @@ vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: { classes: h
 vi.mock('../../people/camp', () => ({ currentActor: () => settle(() => h.actor) }));
 
 const base = { classId: IDS.cls, sessionId: IDS.session, camperId: IDS.camper };
-const enrolled = { id: IDS.enrolment, sessionId: IDS.session, classId: IDS.cls, className: 'Robotics', camperId: IDS.camper, camperName: 'Ada Lovelace', status: 'enrolled', enrolledAt: '2027-07-01T00:00:00.000Z', overrideReason: null };
+const enrolled = {
+  id: IDS.enrolment,
+  sessionId: IDS.session,
+  classId: IDS.cls,
+  className: 'Robotics',
+  camperId: IDS.camper,
+  camperName: 'Ada Lovelace',
+  status: 'enrolled',
+  enrolledAt: '2027-07-01T00:00:00.000Z',
+  overrideReason: null,
+};
 
 describe('enrolAction', () => {
   beforeEach(() => {
@@ -25,14 +35,24 @@ describe('enrolAction', () => {
   });
 
   it('enrols the camper and says so', async () => {
-    expect(await enrolAction(idle, formOf({ ...base, intent: 'enrol' }))).toEqual({ status: 'success', message: 'Ada Lovelace is enrolled.' });
-    expect(h.classes.enrol).toHaveBeenCalledWith(h.actor, { sessionId: IDS.session, camperId: IDS.camper, waitlistIfFull: false });
+    expect(await enrolAction(idle, formOf({ ...base, intent: 'enrol' }))).toEqual({
+      status: 'success',
+      message: 'Ada Lovelace is enrolled.',
+    });
+    expect(h.classes.enrol).toHaveBeenCalledWith(h.actor, {
+      sessionId: IDS.session,
+      camperId: IDS.camper,
+      waitlistIfFull: false,
+    });
     expect(h.revalidatePath).toHaveBeenCalled();
   });
 
   it('puts the camper on the waitlist when the waitlist button is pressed', async () => {
     h.classes.enrol.mockResolvedValue({ ok: true, value: { ...enrolled, status: 'waitlisted' } });
-    expect(await enrolAction(idle, formOf({ ...base, intent: 'waitlist' }))).toEqual({ status: 'success', message: 'Ada Lovelace is on the waitlist for this session.' });
+    expect(await enrolAction(idle, formOf({ ...base, intent: 'waitlist' }))).toEqual({
+      status: 'success',
+      message: 'Ada Lovelace is on the waitlist for this session.',
+    });
     expect(h.classes.enrol).toHaveBeenCalledWith(h.actor, expect.objectContaining({ waitlistIfFull: true }));
   });
 
@@ -42,19 +62,29 @@ describe('enrolAction', () => {
     expect(await enrolAction(idle, formOf({ ...base, intent: 'enrol' }))).toEqual({ status: 'error', message });
   });
 
-  it('sends an admin\'s override reason with the enrolment', async () => {
+  it("sends an admin's override reason with the enrolment", async () => {
     h.actor = { userId: 'u1', orgId: 'o1', role: 'admin' };
     await enrolAction(idle, formOf({ ...base, intent: 'enrol', overrideReason: 'Sibling pickup' }));
-    expect(h.classes.enrol).toHaveBeenCalledWith(h.actor, expect.objectContaining({ override: { reason: 'Sibling pickup' } }));
+    expect(h.classes.enrol).toHaveBeenCalledWith(
+      h.actor,
+      expect.objectContaining({ override: { reason: 'Sibling pickup' } }),
+    );
   });
 
   it('answers a role that may not enrol with the forbidden message', async () => {
     h.classes.enrol.mockRejectedValue(forbidden('nope'));
-    expect(await enrolAction(idle, formOf({ ...base, intent: 'enrol' }))).toEqual({ status: 'error', message: 'Your role cannot do this.', fieldErrors: undefined });
+    expect(await enrolAction(idle, formOf({ ...base, intent: 'enrol' }))).toEqual({
+      status: 'error',
+      message: 'Your role cannot do this.',
+      fieldErrors: undefined,
+    });
   });
 
   it('asks for a camper, and does not call the service without one', async () => {
-    expect(await enrolAction(idle, formOf({ ...base, camperId: '', intent: 'enrol' }))).toMatchObject({ status: 'error', fieldErrors: { camperId: 'Choose a camper.' } });
+    expect(await enrolAction(idle, formOf({ ...base, camperId: '', intent: 'enrol' }))).toMatchObject({
+      status: 'error',
+      fieldErrors: { camperId: 'Choose a camper.' },
+    });
     expect(h.classes.enrol).not.toHaveBeenCalled();
   });
 });

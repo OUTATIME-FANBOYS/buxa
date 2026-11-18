@@ -8,7 +8,10 @@ import { formatLocalDate } from '@buxa/shared';
 export function ContactDetails({ person }: { person: Pick<Person, 'dateOfBirth' | 'email' | 'phone' | 'isMinor'> }) {
   const rows: { label: string; value: string }[] = [];
   if (person.dateOfBirth) {
-    rows.push({ label: 'Date of birth', value: `${formatLocalDate(person.dateOfBirth)}${person.isMinor === true ? ' (under 18)' : ''}` });
+    rows.push({
+      label: 'Date of birth',
+      value: `${formatLocalDate(person.dateOfBirth)}${person.isMinor === true ? ' (under 18)' : ''}`,
+    });
   }
   if (person.email) {
     rows.push({ label: 'Email', value: person.email });
@@ -23,7 +26,10 @@ export function ContactDetails({ person }: { person: Pick<Person, 'dateOfBirth' 
   return (
     <dl className="people-facts">
       {rows.map(row => (
-        <div key={row.label}><dt>{row.label}</dt><dd>{row.value}</dd></div>
+        <div key={row.label}>
+          <dt>{row.label}</dt>
+          <dd>{row.value}</dd>
+        </div>
       ))}
     </dl>
   );

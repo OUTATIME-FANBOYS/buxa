@@ -22,7 +22,10 @@ describe('useTheme', () => {
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = ''; delete document.documentElement.dataset.theme; vi.unstubAllGlobals();
+    act(() => root.unmount());
+    document.body.innerHTML = '';
+    delete document.documentElement.dataset.theme;
+    vi.unstubAllGlobals();
   });
 
   it('applies an explicit light or dark choice', () => {

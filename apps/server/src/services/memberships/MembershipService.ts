@@ -15,4 +15,9 @@ export interface MembershipService {
   listFor(actor: Actor, personId: string): Promise<PersonMembership[]>;
 }
 
-export interface MembershipServiceDeps { memberships: MembershipRepository; people: PeopleRepository; orgs: OrgRepository; clock: Clock }
+export interface MembershipServiceDeps {
+  memberships: MembershipRepository;
+  people: PeopleRepository;
+  orgs: OrgRepository;
+  clock: Clock;
+}

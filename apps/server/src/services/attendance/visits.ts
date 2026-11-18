@@ -9,13 +9,20 @@ import type { PickupOption } from './AttendanceService';
  * Visits as the screens show them: names resolved, one lookup for the people and one for the staff. Order is kept.
  */
 export async function toEntries(
-  deps: { people: PeopleRepository; orgs: OrgRepository }, orgId: string, records: readonly CheckInRecord[],
+  deps: { people: PeopleRepository; orgs: OrgRepository },
+  orgId: string,
+  records: readonly CheckInRecord[],
 ): Promise<AttendanceEntry[]> {
-  const personIds = records.flatMap(r => (r.collectedByPersonId === null ? [r.personId] : [r.personId, r.collectedByPersonId]));
-  const [named, staff] = await Promise.all([deps.people.getMany(orgId, [...new Set(personIds)]), deps.orgs.listMembers(orgId)]);
+  const personIds = records.flatMap(r =>
+    r.collectedByPersonId === null ? [r.personId] : [r.personId, r.collectedByPersonId],
+  );
+  const [named, staff] = await Promise.all([
+    deps.people.getMany(orgId, [...new Set(personIds)]),
+    deps.orgs.listMembers(orgId),
+  ]);
   const personNames = new Map(named.map(p => [p.id, displayName(p)] as const));
   const staffNames = new Map(staff.map(m => [m.id, m.name] as const));
-  const staffName = (id: string | null): string | null => (id === null ? null : staffNames.get(id) ?? null);
+  const staffName = (id: string | null): string | null => (id === null ? null : (staffNames.get(id) ?? null));
 
   return records.map(r => ({
     id: r.id,
@@ -26,7 +33,7 @@ export async function toEntries(
     method: r.method,
     checkedOutAt: r.checkedOutAt,
     checkedOutByName: staffName(r.checkedOutBy),
-    collectedByName: r.collectedByPersonId === null ? null : personNames.get(r.collectedByPersonId) ?? null,
+    collectedByName: r.collectedByPersonId === null ? null : (personNames.get(r.collectedByPersonId) ?? null),
     overrideReason: r.overrideReason,
     note: r.note,
   }));
@@ -36,7 +43,11 @@ export async function toEntries(
  * Who may collect a child: a guardian with can_pickup in one of the child's households, keyed by person id, with the relationship
  * the link records. The child is never their own collector.
  */
-export async function authorisedCollectors(people: PeopleRepository, orgId: string, childId: string): Promise<Map<string, string>> {
+export async function authorisedCollectors(
+  people: PeopleRepository,
+  orgId: string,
+  childId: string,
+): Promise<Map<string, string>> {
   const found = new Map<string, string>();
   for (const household of await people.householdsOf(orgId, childId)) {
     for (const member of household.members) {
@@ -50,7 +61,11 @@ export async function authorisedCollectors(people: PeopleRepository, orgId: stri
 }
 
 /** The people a child can be collected by, named and sorted by name. */
-export async function pickupOptionsFor(people: PeopleRepository, orgId: string, childId: string): Promise<PickupOption[]> {
+export async function pickupOptionsFor(
+  people: PeopleRepository,
+  orgId: string,
+  childId: string,
+): Promise<PickupOption[]> {
   const collectors = await authorisedCollectors(people, orgId, childId);
   const named = await people.getMany(orgId, [...collectors.keys()]);
 

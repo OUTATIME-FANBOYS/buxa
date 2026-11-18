@@ -27,11 +27,14 @@ export function loadState(): AppState {
   try {
     const raw = localStorage.getItem(KEY) ?? localStorage.getItem(LEGACY_KEY);
     if (raw) {
-      const s = JSON.parse(raw) as AppState; if (s.version === 1) {
+      const s = JSON.parse(raw) as AppState;
+      if (s.version === 1) {
         state = normalize(s);
       }
     }
-  } catch { /* fall through to seed */ }
+  } catch {
+    /* fall through to seed */
+  }
   const base = state ?? buildDemo();
 
   return theme ? { ...base, ui: { ...base.ui, theme } } : base;

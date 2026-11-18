@@ -57,7 +57,11 @@ describe('signUp action', () => {
   it('asks for a confirmation email when there is no session yet', async () => {
     h.signUp.mockResolvedValueOnce({ data: { session: null }, error: null });
     expect(await signUp(idle, form(valid))).toEqual({ status: 'success', message: CONFIRM_EMAIL_MESSAGE });
-    expect(h.signUp).toHaveBeenCalledWith({ email: 'ada@x.io', password: 'longenough', options: { data: { name: 'Ada' } } });
+    expect(h.signUp).toHaveBeenCalledWith({
+      email: 'ada@x.io',
+      password: 'longenough',
+      options: { data: { name: 'Ada' } },
+    });
   });
   it('goes straight to the camp when a session is returned', async () => {
     h.signUp.mockResolvedValueOnce({ data: { session: {} }, error: null });

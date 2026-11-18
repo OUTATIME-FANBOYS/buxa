@@ -27,8 +27,12 @@ export async function updatePersonAction(_previous: ActionState, form: FormData)
 
   const dateOfBirth = field(form, 'dateOfBirth');
   const parsed = parseWith(PersonPatchInputSchema, {
-    givenName: field(form, 'givenName'), familyName: field(form, 'familyName'), preferredName: field(form, 'preferredName'),
-    dateOfBirth: dateOfBirth === '' ? null : dateOfBirth, email: field(form, 'email'), phone: field(form, 'phone'),
+    givenName: field(form, 'givenName'),
+    familyName: field(form, 'familyName'),
+    preferredName: field(form, 'preferredName'),
+    dateOfBirth: dateOfBirth === '' ? null : dateOfBirth,
+    email: field(form, 'email'),
+    phone: field(form, 'phone'),
     roles: fieldAll(form, 'roles'),
   });
   if (!parsed.ok) {

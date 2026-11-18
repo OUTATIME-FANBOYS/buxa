@@ -3,7 +3,8 @@ import { repairData } from './dataSlices';
 
 /** Data saved before agents existed lacks their fields; fill them in rather than discard the user's work. */
 export function normalize(s: AppState): AppState {
-  const { acting: _drop, ...fixed } = repairData(s); void _drop;
+  const { acting: _drop, ...fixed } = repairData(s);
+  void _drop;
 
   return {
     ...fixed,

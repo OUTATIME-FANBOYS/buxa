@@ -18,7 +18,9 @@ describe('database connection TLS', () => {
   });
 
   it('checks a remote database against the Supabase root CA, and removes sslmode from the URL', () => {
-    const config = poolConfigFor('postgresql://postgres.abc:pw@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require');
+    const config = poolConfigFor(
+      'postgresql://postgres.abc:pw@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require',
+    );
     expect(config.ssl).toEqual({ ca: SUPABASE_ROOT_CA_2021, rejectUnauthorized: true });
     expect(String(config.connectionString)).not.toContain('sslmode');
   });

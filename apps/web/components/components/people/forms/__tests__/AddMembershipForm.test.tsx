@@ -3,7 +3,9 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { AddMembershipForm } from '@/components/components/people/forms/export';
 import { settle } from '@buxa/domain';
 
-vi.mock('@buxa/server/composers/people/addMembershipAction', () => ({ addMembershipAction: () => settle(() => ({ status: 'idle' })) }));
+vi.mock('@buxa/server/composers/people/addMembershipAction', () => ({
+  addMembershipAction: () => settle(() => ({ status: 'idle' })),
+}));
 
 describe('AddMembershipForm', () => {
   it('asks for a plan and the first and last camp days, for the person', () => {

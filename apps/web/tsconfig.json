@@ -9,37 +9,15 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "@buxa/shared": [
-        "../shared/src/index.ts"
-      ],
-      "@buxa/shared/*": [
-        "../shared/src/*"
-      ],
-      "@buxa/server": [
-        "../server/src/index.ts"
-      ],
-      "@buxa/server/*": [
-        "../server/src/*"
-      ],
-      "@buxa/middleware": [
-        "../middleware/src/index.ts"
-      ],
-      "@buxa/middleware/*": [
-        "../middleware/src/*"
-      ]
+      "@/*": ["./*"],
+      "@buxa/shared": ["../shared/src/index.ts"],
+      "@buxa/shared/*": ["../shared/src/*"],
+      "@buxa/server": ["../server/src/index.ts"],
+      "@buxa/server/*": ["../server/src/*"],
+      "@buxa/middleware": ["../middleware/src/index.ts"],
+      "@buxa/middleware/*": ["../middleware/src/*"]
     }
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    ".next"
-  ]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", ".next"]
 }

@@ -12,33 +12,96 @@ export const rank = (r: Role) => RANK[r];
 
 /** `resource:verb`. Add actions here first; the compiler then forces a decision for each role. */
 export const ACTIONS = [
-  'org:read', 'org:update', 'org:archive', 'org:delete', 'org:transfer_ownership',
-  'members:read', 'members:read_contact', 'members:invite', 'members:change_role', 'members:remove', 'members:leave',
+  'org:read',
+  'org:update',
+  'org:archive',
+  'org:delete',
+  'org:transfer_ownership',
+  'members:read',
+  'members:read_contact',
+  'members:invite',
+  'members:change_role',
+  'members:remove',
+  'members:leave',
   'audit:read',
-  'data:export', 'data:erase',
-  'people:read', 'people:read_contact', 'people:create', 'people:update', 'people:delete', 'people:authorise_pickup',
-  'memberships:manage', 'credentials:manage',
-  'attendance:read', 'attendance:record', 'attendance:override', 'attendance:export',
-  'events:read', 'events:create', 'events:update', 'events:delete',
+  'data:export',
+  'data:erase',
+  'people:read',
+  'people:read_contact',
+  'people:create',
+  'people:update',
+  'people:delete',
+  'people:authorise_pickup',
+  'memberships:manage',
+  'credentials:manage',
+  'attendance:read',
+  'attendance:record',
+  'attendance:override',
+  'attendance:export',
+  'events:read',
+  'events:create',
+  'events:update',
+  'events:delete',
   'classes:manage',
-  'tasks:read', 'tasks:create', 'tasks:update', 'tasks:move', 'tasks:comment', 'tasks:delete', 'tasks:manage_board',
+  'tasks:read',
+  'tasks:create',
+  'tasks:update',
+  'tasks:move',
+  'tasks:comment',
+  'tasks:delete',
+  'tasks:manage_board',
 ] as const;
 export type Action = (typeof ACTIONS)[number];
 
 const VIEWER: Action[] = ['org:read', 'members:read', 'people:read', 'events:read', 'tasks:read', 'members:leave'];
-const STAFF: Action[] = [...VIEWER, 'people:read_contact', 'people:create', 'people:update', 'attendance:read', 'attendance:record', 'classes:manage', 'tasks:create', 'tasks:update', 'tasks:move', 'tasks:comment'];
+const STAFF: Action[] = [
+  ...VIEWER,
+  'people:read_contact',
+  'people:create',
+  'people:update',
+  'attendance:read',
+  'attendance:record',
+  'classes:manage',
+  'tasks:create',
+  'tasks:update',
+  'tasks:move',
+  'tasks:comment',
+];
 const ADMIN: Action[] = [
-  ...STAFF, 'org:update', 'members:read_contact', 'members:invite', 'members:change_role', 'members:remove', 'audit:read',
-  'people:delete', 'people:authorise_pickup', 'memberships:manage', 'credentials:manage', 'attendance:override', 'attendance:export', 'events:create', 'events:update', 'events:delete', 'tasks:delete', 'tasks:manage_board',
+  ...STAFF,
+  'org:update',
+  'members:read_contact',
+  'members:invite',
+  'members:change_role',
+  'members:remove',
+  'audit:read',
+  'people:delete',
+  'people:authorise_pickup',
+  'memberships:manage',
+  'credentials:manage',
+  'attendance:override',
+  'attendance:export',
+  'events:create',
+  'events:update',
+  'events:delete',
+  'tasks:delete',
+  'tasks:manage_board',
 ];
 const OWNER: Action[] = [...ADMIN, 'org:archive', 'org:delete', 'org:transfer_ownership', 'data:export', 'data:erase'];
 
 /** What each role may attempt. Rules below can still deny an action the role has. */
 export const GRANTS: Record<Role, ReadonlySet<Action>> = {
-  viewer: new Set(VIEWER), staff: new Set(STAFF), admin: new Set(ADMIN), owner: new Set(OWNER),
+  viewer: new Set(VIEWER),
+  staff: new Set(STAFF),
+  admin: new Set(ADMIN),
+  owner: new Set(OWNER),
 };
 
-export interface Actor { userId: string; orgId: string; role: Role }
+export interface Actor {
+  userId: string;
+  orgId: string;
+  role: Role;
+}
 
 /** Context for the action. Member actions need `target`; role changes and invites need `newRole`. */
 export interface Resource {
@@ -49,7 +112,15 @@ export interface Resource {
   ownerCount?: number;
 }
 
-export type Reason = 'role_not_allowed' | 'other_org' | 'missing_context' | 'not_above_target' | 'cannot_grant_above_self' | 'self_change' | 'last_owner' | 'unknown_role';
+export type Reason =
+  | 'role_not_allowed'
+  | 'other_org'
+  | 'missing_context'
+  | 'not_above_target'
+  | 'cannot_grant_above_self'
+  | 'self_change'
+  | 'last_owner'
+  | 'unknown_role';
 export type Decision = { allow: true } | { allow: false; reason: Reason };
 const ok: Decision = { allow: true };
 const no = (reason: Reason): Decision => ({ allow: false, reason });
@@ -117,7 +188,8 @@ export function authorize(actor: Actor, action: Action, res: Resource = {}): Dec
 
       return res.target.userId === actor.userId ? no('self_change') : ok;
     }
-    default: return ok;
+    default:
+      return ok;
   }
 }
 

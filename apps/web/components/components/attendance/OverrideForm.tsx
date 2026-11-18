@@ -3,7 +3,10 @@
 import { useId, useState, type FormEvent } from 'react';
 import { Button } from '@/components/elements/export';
 
-interface Props { busy: boolean; onSubmit: (reason: string) => void }
+interface Props {
+  busy: boolean;
+  onSubmit: (reason: string) => void;
+}
 
 /** An admin's override: a written reason is required, and it is kept on the record with the check-in. */
 export function OverrideForm({ busy, onSubmit }: Props) {
@@ -22,10 +25,18 @@ export function OverrideForm({ busy, onSubmit }: Props) {
     <form className="override-form" onSubmit={submit} aria-label="Override this refusal">
       <label className="field" htmlFor={fieldId}>
         <span className="field-label">Reason for overriding (required)</span>
-        <textarea id={fieldId} rows={3} value={reason} onChange={event => setReason(event.target.value)} maxLength={500} />
+        <textarea
+          id={fieldId}
+          rows={3}
+          value={reason}
+          onChange={event => setReason(event.target.value)}
+          maxLength={500}
+        />
         <span className="field-hint">This is written on the record with the check-in.</span>
       </label>
-      <Button variant="danger" type="submit" className="att-btn-lg" disabled={busy || trimmed === ''}>Check in anyway</Button>
+      <Button variant="danger" type="submit" className="att-btn-lg" disabled={busy || trimmed === ''}>
+        Check in anyway
+      </Button>
     </form>
   );
 }

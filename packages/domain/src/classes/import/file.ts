@@ -7,11 +7,15 @@ export const MAX_IMPORT_BYTES = 1024 * 1024;
 export const MAX_IMPORT_ROWS = 1000;
 
 /** One data row: its spreadsheet row number (the header is row 1) and its cells by column name. */
-export interface ImportRow { rowNumber: number; cells: Record<ImportColumn, string> }
+export interface ImportRow {
+  rowNumber: number;
+  cells: Record<ImportColumn, string>;
+}
 
 export type ImportFile = { ok: true; rows: ImportRow[] } | { ok: false; message: string };
 
-const EMPTY_CELLS = (): Record<ImportColumn, string> => Object.fromEntries(IMPORT_COLUMNS.map(c => [c, ''])) as Record<ImportColumn, string>;
+const EMPTY_CELLS = (): Record<ImportColumn, string> =>
+  Object.fromEntries(IMPORT_COLUMNS.map(c => [c, ''])) as Record<ImportColumn, string>;
 
 /**
  * Checks an uploaded file's shape and returns its rows keyed by column name. Refusals name the column or row at fault, in plain words.

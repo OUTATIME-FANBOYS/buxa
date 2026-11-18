@@ -15,7 +15,15 @@ const OPTIONS: { value: ClockFormat; label: string; example: string }[] = [
 const SEGMENTS = OPTIONS.map(o => ({ value: o.value, label: `${o.label} (${o.example})` }));
 
 /** Chooses how every time in the camp is written. Only roles that may update the camp can change it; the server checks again. */
-export function CampClockPanel({ campId, clockFormat, canChange }: { campId: string; clockFormat: ClockFormat; canChange: boolean }) {
+export function CampClockPanel({
+  campId,
+  clockFormat,
+  canChange,
+}: {
+  campId: string;
+  clockFormat: ClockFormat;
+  canChange: boolean;
+}) {
   const [state, formAction, pending] = useActionState(updateCampClockAction, idle);
   const { toast } = useUi();
   const [format, setFormat] = useState<ClockFormat>(clockFormat);
@@ -37,11 +45,21 @@ export function CampClockPanel({ campId, clockFormat, canChange }: { campId: str
           <input type="hidden" name="campId" value={campId} />
           <input type="hidden" name="clockFormat" value={format} />
           <Segmented<ClockFormat> label="Clock" value={format} onChange={setFormat} options={SEGMENTS} />
-          {state.status === 'error' && <p className="field-error" role="alert">{state.message}</p>}
-          <div><Button variant="primary" disabled={pending}>{pending ? 'Saving…' : 'Save clock'}</Button></div>
+          {state.status === 'error' && (
+            <p className="field-error" role="alert">
+              {state.message}
+            </p>
+          )}
+          <div>
+            <Button variant="primary" disabled={pending}>
+              {pending ? 'Saving…' : 'Save clock'}
+            </Button>
+          </div>
         </form>
       ) : (
-        <p>{current.label} ({current.example}). Ask an admin to change it.</p>
+        <p>
+          {current.label} ({current.example}). Ask an admin to change it.
+        </p>
       )}
     </div>
   );

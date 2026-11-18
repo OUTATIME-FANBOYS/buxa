@@ -22,7 +22,10 @@ const consoleAllowed = [
 const typedDebtAsWarnings = Object.fromEntries(
   tseslint.configs.recommendedTypeChecked
     .flatMap(config => Object.entries(config.rules ?? {}))
-    .filter(([name, setting]) => name.startsWith('@typescript-eslint/') && (Array.isArray(setting) ? setting[0] : setting) === 'error')
+    .filter(
+      ([name, setting]) =>
+        name.startsWith('@typescript-eslint/') && (Array.isArray(setting) ? setting[0] : setting) === 'error',
+    )
     .map(([name]) => [name, 'warn']),
 );
 
@@ -109,5 +112,4 @@ export default tseslint.config(
 
   // Last: turns off the ESLint style rules that conflict with Prettier. Formatting is Prettier's job.
   eslintConfigPrettier,
-
 );

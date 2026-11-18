@@ -50,7 +50,13 @@ export async function importClassesAction(_previous: ImportState, form: FormData
     const done = await services.confirm(actor, preview);
     revalidatePath(ROUTES.classes);
 
-    return { status: 'done', fileName: done.fileName, counts: done.counts, written: done.written, changedSincePreview: done.changedSincePreview };
+    return {
+      status: 'done',
+      fileName: done.fileName,
+      counts: done.counts,
+      written: done.written,
+      changedSincePreview: done.changedSincePreview,
+    };
   } catch (error) {
     const state = expectedFailure(error, 'Could not read that file.');
 

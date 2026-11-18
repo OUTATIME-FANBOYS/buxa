@@ -21,9 +21,16 @@ describe('attempt: expected errors become outcomes, anything else is rethrown', 
   });
 
   it('describes an overlap in the camp zone and keeps the refusal', async () => {
-    const refusal = { kind: 'refuse' as const, reason: 'overlap' as const, clash: {
-      sessionId: 's2', className: 'Painting', startsAt: '2027-07-05T01:00:00.000Z', endsAt: '2027-07-05T03:00:00.000Z',
-    } };
+    const refusal = {
+      kind: 'refuse' as const,
+      reason: 'overlap' as const,
+      clash: {
+        sessionId: 's2',
+        className: 'Painting',
+        startsAt: '2027-07-05T01:00:00.000Z',
+        endsAt: '2027-07-05T03:00:00.000Z',
+      },
+    };
     const outcome = await attempt(() => {
       return settle(() => {
         throw new OverlapError(refusal);
@@ -34,10 +41,12 @@ describe('attempt: expected errors become outcomes, anything else is rethrown', 
   });
 
   it('rethrows an unexpected error', async () => {
-    await expect(attempt(() => {
-      return settle(() => {
-        throw new Error('connection lost');
-      });
-    }, 'Australia/Sydney')).rejects.toThrow('connection lost');
+    await expect(
+      attempt(() => {
+        return settle(() => {
+          throw new Error('connection lost');
+        });
+      }, 'Australia/Sydney'),
+    ).rejects.toThrow('connection lost');
   });
 });

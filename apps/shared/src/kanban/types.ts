@@ -8,51 +8,149 @@ export type DueFilter = 'any' | 'overdue' | 'today' | 'week' | 'none';
 export type ViewKind = 'board' | 'list' | 'calendar' | 'timeline';
 export type ThemePref = 'system' | 'light' | 'dark';
 
-export interface User { id: string; name: string; email: string; title?: string; pending?: boolean; agent?: boolean }
-export interface Member { userId: string; role: Role }
-export interface Workspace { id: string; name: string; members: Member[] }
-export interface Column { id: string; name: string; kind: ColumnKind }
-export interface Project {
-  id: string; workspaceId: string; name: string; description: string;
-  deadline?: string; columns: Column[]; createdAt: string;
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  title?: string;
+  pending?: boolean;
+  agent?: boolean;
 }
-export interface Subtask { id: string; title: string; done: boolean }
-export interface Comment { id: string; authorId: string; body: string; at: string }
-export interface Attachment { id: string; name: string; size: number; type: string; dataUrl?: string; at: string }
+export interface Member {
+  userId: string;
+  role: Role;
+}
+export interface Workspace {
+  id: string;
+  name: string;
+  members: Member[];
+}
+export interface Column {
+  id: string;
+  name: string;
+  kind: ColumnKind;
+}
+export interface Project {
+  id: string;
+  workspaceId: string;
+  name: string;
+  description: string;
+  deadline?: string;
+  columns: Column[];
+  createdAt: string;
+}
+export interface Subtask {
+  id: string;
+  title: string;
+  done: boolean;
+}
+export interface Comment {
+  id: string;
+  authorId: string;
+  body: string;
+  at: string;
+}
+export interface Attachment {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  dataUrl?: string;
+  at: string;
+}
 /** Provenance for a change made by an agent: which run, why, and which proposal it came from. */
-export interface Via { runId: string; proposalId: string; reason: string }
-export interface HistoryEntry { id: string; at: string; actorId: string; text: string; via?: Via }
+export interface Via {
+  runId: string;
+  proposalId: string;
+  reason: string;
+}
+export interface HistoryEntry {
+  id: string;
+  at: string;
+  actorId: string;
+  text: string;
+  via?: Via;
+}
 export interface Task {
-  id: string; projectId: string; columnId: string; title: string; description: string;
-  priority: Priority; assigneeId?: string; start?: string; due?: string; tags: string[];
-  subtasks: Subtask[]; comments: Comment[]; attachments: Attachment[]; history: HistoryEntry[];
-  archived: boolean; createdAt: string; createdBy: string; completedAt?: string;
+  id: string;
+  projectId: string;
+  columnId: string;
+  title: string;
+  description: string;
+  priority: Priority;
+  assigneeId?: string;
+  start?: string;
+  due?: string;
+  tags: string[];
+  subtasks: Subtask[];
+  comments: Comment[];
+  attachments: Attachment[];
+  history: HistoryEntry[];
+  archived: boolean;
+  createdAt: string;
+  createdBy: string;
+  completedAt?: string;
 }
 export interface ActivityItem {
-  id: string; at: string; actorId: string; projectId: string; taskId?: string;
-  taskTitle: string; verb: string; detail: string; via?: Via;
+  id: string;
+  at: string;
+  actorId: string;
+  projectId: string;
+  taskId?: string;
+  taskTitle: string;
+  verb: string;
+  detail: string;
+  via?: Via;
 }
 export interface Notice {
-  id: string; userId: string; at: string; text: string; read: boolean;
+  id: string;
+  userId: string;
+  at: string;
+  text: string;
+  read: boolean;
   kind: 'assign' | 'status' | 'comment' | 'mention' | 'complete' | 'invite';
-  taskId?: string; projectId?: string;
+  taskId?: string;
+  projectId?: string;
 }
 export interface Filter {
-  q: string; priorities: Priority[]; assignees: string[]; columns: string[];
-  due: DueFilter; tags: string[]; sort: Sort; archived: boolean;
+  q: string;
+  priorities: Priority[];
+  assignees: string[];
+  columns: string[];
+  due: DueFilter;
+  tags: string[];
+  sort: Sort;
+  archived: boolean;
 }
-export interface SavedFilter { id: string; name: string; projectId: string; filter: Filter }
+export interface SavedFilter {
+  id: string;
+  name: string;
+  projectId: string;
+  filter: Filter;
+}
 export interface UiState {
-  workspaceId: string; projectId: string; view: ViewKind; theme: ThemePref; sidebarCollapsed: boolean;
+  workspaceId: string;
+  projectId: string;
+  view: ViewKind;
+  theme: ThemePref;
+  sidebarCollapsed: boolean;
   /** Off by default: with it off the app is a plain Kanban board and shows no agent UI. */
   agentsEnabled: boolean;
 }
 export interface AppState {
   version: 1;
-  users: User[]; workspaces: Workspace[]; projects: Project[];
-  tasks: Task[]; activity: ActivityItem[]; notices: Notice[]; savedFilters: SavedFilter[];
-  agents: Agent[]; runs: AgentRun[]; proposals: Proposal[];
-  session: { userId: string | null }; ui: UiState;
+  users: User[];
+  workspaces: Workspace[];
+  projects: Project[];
+  tasks: Task[];
+  activity: ActivityItem[];
+  notices: Notice[];
+  savedFilters: SavedFilter[];
+  agents: Agent[];
+  runs: AgentRun[];
+  proposals: Proposal[];
+  session: { userId: string | null };
+  ui: UiState;
   /** Transient: set only while an agent's change is being applied, so history can record provenance. Never persisted. */
   acting?: Via;
 }
@@ -62,16 +160,32 @@ export type ProposalKind = 'create_task' | 'comment' | 'move_task' | 'complete_t
 /** auto: apply immediately · approve: queue for a human · never: block */
 export type Trust = 'auto' | 'approve' | 'never';
 export interface Agent {
-  userId: string; workspaceId: string; model: string; purpose: string;
+  userId: string;
+  workspaceId: string;
+  model: string;
+  purpose: string;
   /** Projects the agent may touch. Anything else is blocked. */
-  scope: string[]; trust: Record<ProposalKind, Trust>; paused: boolean;
+  scope: string[];
+  trust: Record<ProposalKind, Trust>;
+  paused: boolean;
   /** Per-stage override for moving a task *into* a column (column id → policy). Beats `trust` for that column. */
   moveRules: Record<string, Trust>;
   /** Kinds of change from *other* agents this agent may approve. Empty by default; never its own work. */
   approves: ProposalKind[];
 }
-export type TaskDraftChange = { projectId: string; columnId: string; title: string; description?: string; priority?: Priority; assigneeId?: string; due?: string; tags?: string[] };
-export type TaskPatchChange = Partial<Pick<Task, 'title' | 'description' | 'priority' | 'assigneeId' | 'start' | 'due' | 'tags'>>;
+export type TaskDraftChange = {
+  projectId: string;
+  columnId: string;
+  title: string;
+  description?: string;
+  priority?: Priority;
+  assigneeId?: string;
+  due?: string;
+  tags?: string[];
+};
+export type TaskPatchChange = Partial<
+  Pick<Task, 'title' | 'description' | 'priority' | 'assigneeId' | 'start' | 'due' | 'tags'>
+>;
 export type Change =
   | { kind: 'create_task'; draft: TaskDraftChange }
   | { kind: 'comment'; taskId: string; body: string }
@@ -85,24 +199,62 @@ export type Undo =
   | { kind: 'restore_fields'; taskId: string; before: TaskPatchChange; after: TaskPatchChange }
   | { kind: 'remove_comment'; taskId: string; commentId: string };
 export interface Proposal {
-  id: string; runId: string; agentId: string; projectId: string; at: string;
-  change: Change; reason: string; status: ProposalStatus;
+  id: string;
+  runId: string;
+  agentId: string;
+  projectId: string;
+  at: string;
+  change: Change;
+  reason: string;
+  status: ProposalStatus;
   /** What the task looked like when proposed; a changed task makes an approval stale. */
   basis?: string;
-  decidedAt?: string; decidedBy?: string; note?: string; undo?: Undo; taskId?: string;
+  decidedAt?: string;
+  decidedBy?: string;
+  note?: string;
+  undo?: Undo;
+  taskId?: string;
 }
-export interface AgentRun { id: string; agentId: string; label: string; at: string; simulated?: boolean; source?: 'mcp'; tokens?: number; costUsd?: number }
+export interface AgentRun {
+  id: string;
+  agentId: string;
+  label: string;
+  at: string;
+  simulated?: boolean;
+  source?: 'mcp';
+  tokens?: number;
+  costUsd?: number;
+}
 
 /* ---------- replies from the local Buxa server (sync.ts) ---------- */
 /** The server's health reply: whether it is up and where its MCP endpoint is. */
-export interface HealthReply { ok: boolean; mcpUrl: string }
+export interface HealthReply {
+  ok: boolean;
+  mcpUrl: string;
+}
 /** The server's shared copy of the data. `empty` means nothing has been stored yet. */
-export interface StateReply { version: number; empty?: boolean; data?: Data }
+export interface StateReply {
+  version: number;
+  empty?: boolean;
+  data?: Data;
+}
 /** A PUT of the shared data: the status it was answered with, and the new version when accepted. */
-export interface PutReply { status: number; version?: number }
+export interface PutReply {
+  status: number;
+  version?: number;
+}
 /** Whether an agent has a connection token, and when it was made and last used. */
-export interface TokenInfo { exists: boolean; createdAt: string | null; lastSeen: string | null }
+export interface TokenInfo {
+  exists: boolean;
+  createdAt: string | null;
+  lastSeen: string | null;
+}
 /** A freshly issued token. It is shown once and never read back. */
-export interface IssuedToken { token: string }
+export interface IssuedToken {
+  token: string;
+}
 /** The payload of a `version` event on the server's event stream. */
-export interface VersionEvent { version: number; origin: string }
+export interface VersionEvent {
+  version: number;
+  origin: string;
+}

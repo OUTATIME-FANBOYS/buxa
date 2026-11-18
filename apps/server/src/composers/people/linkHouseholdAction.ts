@@ -16,8 +16,11 @@ export async function linkHouseholdAction(_previous: ActionState, form: FormData
     return failure(NO_CAMP);
   }
   const parsed = parseWith(HouseholdLinkInputSchema, {
-    householdId: field(form, 'householdId'), personId: field(form, 'personId'), relationship: field(form, 'relationship'),
-    isGuardian: checked(form, 'isGuardian'), canPickup: checked(form, 'canPickup'),
+    householdId: field(form, 'householdId'),
+    personId: field(form, 'personId'),
+    relationship: field(form, 'relationship'),
+    isGuardian: checked(form, 'isGuardian'),
+    canPickup: checked(form, 'canPickup'),
   });
   if (!parsed.ok) {
     return parsed.state;

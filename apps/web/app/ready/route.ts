@@ -8,7 +8,11 @@ export const dynamic = 'force-dynamic';
 /** How long one database check serves every caller on this instance. */
 const CACHE_MS = 5_000;
 
-interface Answer { status: number; body: { status: string }; retryAfterSeconds?: number }
+interface Answer {
+  status: number;
+  body: { status: string };
+  retryAfterSeconds?: number;
+}
 /** The database check's result per pool, kept for CACHE_MS. Rate decisions are per address and are never cached. */
 const checked = new WeakMap<object, { at: number; status: number; body: { status: string } }>();
 
@@ -48,7 +52,11 @@ async function answerFor(request: Request, runtime: Runtime, log: Logger): Promi
 }
 
 /** If the limiter itself cannot be reached, answer anyway: the database check below then decides, as it did before limits existed. */
-async function allowAddress(limiter: RateLimiter, address: string, log: Logger): Promise<{ allowed: boolean; retryAfterSeconds?: number }> {
+async function allowAddress(
+  limiter: RateLimiter,
+  address: string,
+  log: Logger,
+): Promise<{ allowed: boolean; retryAfterSeconds?: number }> {
   try {
     return await limiter.hit(RATE_RULES.readyByAddress, address);
   } catch (err) {

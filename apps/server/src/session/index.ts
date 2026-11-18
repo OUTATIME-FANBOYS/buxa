@@ -61,7 +61,11 @@ async function loadSession(): Promise<Session | null> {
     return null;
   }
   try {
-    return await sessionFromToken(token, { verifier: runtime.verifier, users: runtime.repositories.users }, runtime.log);
+    return await sessionFromToken(
+      token,
+      { verifier: runtime.verifier, users: runtime.repositories.users },
+      runtime.log,
+    );
   } catch (error) {
     if (isHttpError(error) && (error.statusCode === 401 || error.statusCode === 409)) {
       return null;

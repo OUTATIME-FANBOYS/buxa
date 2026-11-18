@@ -7,5 +7,5 @@
  * margins). Leaving it out keeps every existing screen rendering as it did before Tailwind was added.
  * Utilities are generated only for classes that appear in the source, so the CSS stays small.
  */
-@import "tailwindcss/theme.css" layer(theme) prefix(buxa);
-@import "tailwindcss/utilities.css" layer(utilities) prefix(buxa);
+@import 'tailwindcss/theme.css' layer(theme) prefix(buxa);
+@import 'tailwindcss/utilities.css' layer(utilities) prefix(buxa);
