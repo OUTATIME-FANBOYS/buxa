@@ -32,7 +32,7 @@ const user = {
   clockFormat: '12h' as '12h' | '24h' | null,
 };
 
-/** The account menu: a first-name header, a divider, Profile, Appearance and Timezone submenus, Settings, Help, Reports, Sign out. */
+/** The account menu: a first-name header, a divider, Profile, Appearance and Time format submenus, Settings, Reports, Sign out. */
 describe('the account menu', () => {
   let root: Root;
   beforeEach(() => {
@@ -84,13 +84,19 @@ describe('the account menu', () => {
       '---',
       'Profile',
       'Appearance',
-      'Timezone',
+      'Time format',
       'Settings',
-      'Help',
       'Reports',
       '---',
       'Sign out',
     ]);
+  });
+
+  it('has no Help item and no timezone wording', () => {
+    openMenu();
+    expect(menu().textContent).not.toContain('Help');
+    expect(menu().textContent).not.toContain('Timezone');
+    expect(menu().textContent).not.toContain('Local time');
   });
 
   it('keeps the old Dark mode toggle out of the menu: Appearance replaces it', () => {
@@ -104,7 +110,6 @@ describe('the account menu', () => {
     expect(item('Profile').tagName).toBe('A');
     expect(item('Profile').getAttribute('href')).toBe(`${ROUTES.settings}#profile`);
     expect(item('Settings').getAttribute('href')).toBe(ROUTES.settings);
-    expect(item('Help').getAttribute('href')).toBe(ROUTES.help);
     expect(item('Reports').getAttribute('href')).toBe(ROUTES.reports);
   });
 
@@ -131,18 +136,30 @@ describe('the account menu', () => {
     expect(document.querySelector('[role=menu]')).toBeNull();
   });
 
-  it('opens Timezone as a submenu: the local time zone first, then 12-hour and 24-hour, with the saved clock checked', () => {
+  it('lists the Appearance choices as System, Light and Dark', () => {
     openMenu();
-    openSub('Timezone');
-    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    expect(choice(`Local time (${zone})`)?.getAttribute('aria-checked')).toBe('true');
+    openSub('Appearance');
+    const labels = Array.from(
+      document.querySelectorAll<HTMLElement>('[role=group][aria-label="Appearance"] [role=menuitemradio]'),
+    ).map(el => el.textContent?.trim());
+    expect(labels).toEqual(['System', 'Light', 'Dark']);
+  });
+
+  it('opens Time format as a submenu of 12-hour and 24-hour only, with the saved clock checked', () => {
+    openMenu();
+    openSub('Time format');
+    expect(document.querySelector('[role=group][aria-label="Time format"]')).not.toBeNull();
     expect(choice('12-hour clock')?.getAttribute('aria-checked')).toBe('true');
     expect(choice('24-hour clock')?.getAttribute('aria-checked')).toBe('false');
+    const labels = Array.from(
+      document.querySelectorAll<HTMLElement>('[role=group][aria-label="Time format"] [role=menuitemradio]'),
+    ).map(el => el.textContent?.trim());
+    expect(labels).toEqual(['12-hour clock', '24-hour clock']);
   });
 
   it('saves a 24-hour choice through the one time format action, and the menu closes', () => {
     openMenu();
-    openSub('Timezone');
+    openSub('Time format');
     act(() => {
       choice('24-hour clock')?.click();
     });
@@ -152,7 +169,7 @@ describe('the account menu', () => {
 
   it('checks one of the two clock options when the person has not chosen (the browser decides)', () => {
     openMenu({ ...user, clockFormat: null });
-    openSub('Timezone');
+    openSub('Time format');
     const twelve = choice('12-hour clock')?.getAttribute('aria-checked');
     const twentyFour = choice('24-hour clock')?.getAttribute('aria-checked');
     expect([twelve, twentyFour].sort()).toEqual(['false', 'true']);

@@ -136,13 +136,63 @@
   gap: var(--s2);
   margin-left: auto;
   width: min(320px, 34vw);
+  color: var(--text-3);
+}
+/* The field is one box: the search glyph at its left, the input, and the clear (X) at its right, shown only with text.
+ * HeroUI's own search-field CSS is not loaded in this app, so the field's parts are styled here, in the top bar only. */
+.search .search-field {
+  flex: 1;
+  min-width: 0;
+}
+.search .search-field__group {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
   height: 34px;
-  padding: 0 var(--s3);
+  padding: 0 var(--s1) 0 var(--s3);
   background: var(--surface-3);
   border-radius: var(--r-1);
   color: var(--text-3);
 }
+.search .search-field__group:focus-within {
+  outline: 2px solid var(--accent);
+}
+.search [data-slot='search-field-search-icon'] {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+.search [data-slot='search-field-clear-button'] {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.search [data-slot='search-field-clear-button']:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.search [data-slot='search-field-clear-button']:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+.search [data-slot='search-field-clear-button'] svg {
+  width: 12px;
+  height: 12px;
+}
+.search .search-field[data-empty='true'] [data-slot='search-field-clear-button'] {
+  display: none;
+}
 .search input {
+  flex: 1;
+  min-width: 0;
   border: 0;
   background: transparent;
   height: 100%;
@@ -151,9 +201,6 @@
 }
 .search input:focus-visible {
   outline: none;
-}
-.search:focus-within {
-  outline: 2px solid var(--accent);
 }
 .search-results {
   position: absolute;
@@ -214,10 +261,9 @@
   place-items: center;
   padding: 0 4px;
 }
-/* The account menu trigger is the avatar itself: no round icon box, and no hover tint behind the photo. */
+/* The account menu trigger is the avatar itself: no round icon box, and no hover tint behind the photo. It keeps the
+ * icon-button square (36px, 44px on touch), so it lines up with the Help and notifications buttons beside it. */
 .avatar-btn.button {
-  width: auto;
-  height: auto;
   padding: 0;
   border-radius: 50%;
   --button-bg-hover: transparent;

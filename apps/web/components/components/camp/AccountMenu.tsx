@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ClockFormat, User } from '@buxa/contracts';
 import type { ThemePref } from '@buxa/shared';
-import { browserClockFormat, localTimeZone } from '@buxa/shared/clockPreference';
+import { browserClockFormat } from '@buxa/shared/clockPreference';
 import { Avatar } from '@/components/elements';
 import { Menu } from '@/components/components';
 import { signOut } from '@/actions/auth';
@@ -12,24 +12,22 @@ import { useStore } from '@buxa/middleware/providers/providers';
 import { ROUTES } from '@/config/routes';
 
 const APPEARANCE: { value: ThemePref; label: string }[] = [
+  { value: 'system', label: 'System' },
   { value: 'light', label: 'Light' },
   { value: 'dark', label: 'Dark' },
-  { value: 'system', label: 'System' },
 ];
 
 /**
- * The avatar menu, headed by the person's first name: Profile, Appearance and Timezone (both submenus, as in Cloudflare), Settings,
- * Help, Reports, then Sign out. Signing out is a Server Action submitted through a form.
+ * The avatar menu, headed by the person's first name: Profile, Appearance and Time format (both submenus, as in Cloudflare),
+ * Settings, Reports, then Sign out. Signing out is a Server Action submitted through a form.
  */
 export function AccountMenu({ user }: { user: User }) {
   const { s, actions } = useStore();
   const form = useRef<HTMLFormElement>(null);
-  // The browser's clock and time zone are read after mount, because the server cannot know them.
+  // The browser's clock is read after mount, because the server cannot know it.
   const [browser, setBrowser] = useState<ClockFormat>('24h');
-  const [zone, setZone] = useState('');
   useEffect(() => {
     setBrowser(browserClockFormat());
-    setZone(localTimeZone());
   }, []);
   const clock: ClockFormat = user.clockFormat ?? browser;
 
@@ -53,10 +51,9 @@ export function AccountMenu({ user }: { user: User }) {
             })),
           },
           {
-            label: 'Timezone',
+            label: 'Time format',
             icon: 'clock',
             submenu: [
-              { label: `Local time${zone ? ` (${zone})` : ''}`, checked: true, onSelect() {} },
               {
                 label: '12-hour clock',
                 checked: clock === '12h',
@@ -70,7 +67,6 @@ export function AccountMenu({ user }: { user: User }) {
             ],
           },
           { label: 'Settings', icon: 'settings', href: ROUTES.settings },
-          { label: 'Help', icon: 'help', href: ROUTES.help },
           { label: 'Reports', icon: 'chart', href: ROUTES.reports },
           { label: '', divider: true, onSelect() {} },
           { label: 'Sign out', icon: 'logout', onSelect: () => form.current?.requestSubmit() },
