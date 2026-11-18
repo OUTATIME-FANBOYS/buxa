@@ -4,7 +4,7 @@
   min-height: 100dvh;
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-  background-color: var(--bg);
+  background-color: var(--auth-tint);
   background-image: radial-gradient(var(--auth-dots) 1px, transparent 1.5px);
   background-size: 22px 22px;
 }
