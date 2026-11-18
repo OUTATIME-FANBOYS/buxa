@@ -1,0 +1,23 @@
+name: PR board link
+# Every pull request must link the board issue it tracks, with "Closes #n", "Fixes #n" or "Refs #n".
+# A PR with no linked issue fails, so the project board can follow its status. The board's own automations
+# add the PR to the project and move the issue as the PR opens and merges.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  link:
+    name: Board issue linked
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the PR body links an issue
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if printf '%s' "$BODY" | grep -qiE '(closes|fixes|resolves|refs) +#[0-9]+'; then
+            echo "Linked issue found."
+          else
+            echo "::error::Link the board issue in the PR body, for example 'Closes #123' (or 'Refs #123' if it does not close it)."
+            exit 1
+          fi
