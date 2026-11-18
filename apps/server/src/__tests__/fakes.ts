@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { ClockFormat, CreatedOrg, Member, Membership, NewOrgInput, Org, OrgPatchInput, OrgSummary, User } from '@buxa/contracts';
-import { DEFAULT_CLOCK_FORMAT, type Role, settle } from '@buxa/domain';
+import { DEFAULT_CLOCK_FORMAT, type Role, settle, requirePresent } from '@buxa/domain';
 import type { Identity } from '../auth/identity';
 import { InMemoryAttendanceRepository } from '../attendance/InMemoryAttendanceRepository';
 import { InMemoryClassRepository } from '../classes/InMemoryClassRepository';
@@ -47,7 +47,7 @@ export class InMemoryStore implements UserRepository, OrgRepository {
   membershipsOf(userId: string): Promise<Membership[]> {
     return settle(() => {
       return this.members.filter(m => m.userId === userId).map(m => {
-        const o = this.orgs.get(m.orgId)!;
+        const o = requirePresent(this.orgs.get(m.orgId), 'this.orgs.get(m.orgId)');
 
         return { orgId: o.id, role: m.role, name: o.name, slug: o.slug };
       });
@@ -97,7 +97,7 @@ export class InMemoryStore implements UserRepository, OrgRepository {
   listMembers(orgId: string): Promise<Member[]> {
     return settle(() => {
       return this.members.filter(m => m.orgId === orgId).map(m => {
-        const u = this.users.get(m.userId)!;
+        const u = requirePresent(this.users.get(m.userId), 'this.users.get(m.userId)');
 
         return { id: u.id, name: u.name, email: u.email, role: m.role };
       });
