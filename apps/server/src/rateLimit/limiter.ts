@@ -7,9 +7,19 @@ import { settle } from '@buxa/domain';
  * Fixed-window rate limits. Every limit is a rule (its name, how many hits, how long the window is) applied to one identity: a
  * user id or a client address. The Postgres limiter keeps its counts in the database, so every serverless instance shares them.
  */
-export interface RateRule { readonly name: string; readonly limit: number; readonly windowSeconds: number }
-export interface RateDecision { allowed: boolean; remaining: number; retryAfterSeconds: number }
-export interface RateLimiter { hit(rule: RateRule, identity: string): Promise<RateDecision> }
+export interface RateRule {
+  readonly name: string;
+  readonly limit: number;
+  readonly windowSeconds: number;
+}
+export interface RateDecision {
+  allowed: boolean;
+  remaining: number;
+  retryAfterSeconds: number;
+}
+export interface RateLimiter {
+  hit(rule: RateRule, identity: string): Promise<RateDecision>;
+}
 
 /** The limits the app uses. They are documented in docs/security.md (section 2): change both together. */
 export const RATE_RULES = {
@@ -56,7 +66,11 @@ export function createMemoryRateLimiter(now: () => number = Date.now): RateLimit
         windows.set(key, current);
         const retryAfterSeconds = Math.max(Math.ceil((current.start + span - time) / 1000), 1);
 
-        return { allowed: current.count <= rule.limit, remaining: Math.max(rule.limit - current.count, 0), retryAfterSeconds };
+        return {
+          allowed: current.count <= rule.limit,
+          remaining: Math.max(rule.limit - current.count, 0),
+          retryAfterSeconds,
+        };
       });
     },
   };
@@ -68,7 +82,10 @@ export async function enforceRateLimit(limiter: RateLimiter, rule: RateRule, ide
   if (decision.allowed) {
     return;
   }
-  throw tooManyRequests(decision.retryAfterSeconds, `Too many requests. Try again in ${howLong(decision.retryAfterSeconds)}.`);
+  throw tooManyRequests(
+    decision.retryAfterSeconds,
+    `Too many requests. Try again in ${howLong(decision.retryAfterSeconds)}.`,
+  );
 }
 
 /** A short, user-facing wait: seconds below a minute and a half, then whole minutes. */
@@ -86,7 +103,10 @@ export function howLong(seconds: number): string {
  * entry is the one a client cannot forge. (The first entry is whatever the client sent.)
  */
 export function clientAddress(headers: Headers): string {
-  const hops = (headers.get('x-forwarded-for') ?? '').split(',').map(h => h.trim()).filter(Boolean);
+  const hops = (headers.get('x-forwarded-for') ?? '')
+    .split(',')
+    .map(h => h.trim())
+    .filter(Boolean);
 
   return (hops.at(-1) ?? headers.get('x-real-ip') ?? 'unknown').slice(0, 64);
 }

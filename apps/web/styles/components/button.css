@@ -42,7 +42,11 @@
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   cursor: pointer;
-  transition: transform .25s var(--ease-out), background-color .12s var(--ease), border-color .12s var(--ease), color .12s var(--ease);
+  transition:
+    transform 0.25s var(--ease-out),
+    background-color 0.12s var(--ease),
+    border-color 0.12s var(--ease),
+    color 0.12s var(--ease);
 }
 
 /* Variants: each sets the colours it uses and nothing else. Light and dark values come from the tokens. */
@@ -96,37 +100,50 @@
 
 /* Hover: only where the pointer hovers, so a tap on a phone does not leave a stuck colour. */
 @media (hover: hover) {
-  .button:hover:not(:disabled), .button[data-hovered="true"]:not([data-disabled="true"]) {
+  .button:hover:not(:disabled),
+  .button[data-hovered='true']:not([data-disabled='true']) {
     background-color: var(--button-bg-hover);
     color: var(--button-fg-hover);
   }
 }
 
 /* Pressed: a slight shrink and the hover fill. */
-.button:active:not(:disabled), .button[data-pressed="true"] {
+.button:active:not(:disabled),
+.button[data-pressed='true'] {
   background-color: var(--button-bg-hover);
-  transform: scale(.97);
-  transition-duration: .08s;
+  transform: scale(0.97);
+  transition-duration: 0.08s;
 }
 
 /* Focus: a visible ring that does not depend on the button's colour. */
-.button:focus-visible, .button[data-focus-visible="true"] {
+.button:focus-visible,
+.button[data-focus-visible='true'] {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
 /* Disabled: faded, no pointer, no hover or press. */
-.button:disabled, .button[aria-disabled="true"], .button[data-disabled="true"] {
-  opacity: .5;
+.button:disabled,
+.button[aria-disabled='true'],
+.button[data-disabled='true'] {
+  opacity: 0.5;
   cursor: default;
   pointer-events: none;
 }
 
 /* Sizes. Default (md) is the 44px control height used by inputs and selects. */
-.button--sm { height: 30px; padding: 0 var(--s3); }
+.button--sm {
+  height: 30px;
+  padding: 0 var(--s3);
+}
 /* Header actions (New project, New task, Add task, Rename): one compact size on a mouse or keyboard device. */
-.buxa-button--header { height: 36px; padding: 0 var(--s4); }
-.button--full-width { width: 100%; }
+.buxa-button--header {
+  height: 36px;
+  padding: 0 var(--s4);
+}
+.button--full-width {
+  width: 100%;
+}
 
 /* Round icon-only: a square of the button height, so the pill is a circle. Give it an aria-label. */
 .button--icon-only {
@@ -136,15 +153,33 @@
   border-radius: 50%;
   flex: none;
 }
-.button--icon-only.button--sm { width: 30px; height: 30px; }
+.button--icon-only.button--sm {
+  width: 30px;
+  height: 30px;
+}
 
 /* Touch: 44px on a coarse pointer, whatever the desktop size. */
 @media (pointer: coarse) {
-  .button--sm, .buxa-button--header, .button--icon-only { height: var(--control-touch); }
-  .button--icon-only, .button--icon-only.button--sm { width: var(--control-touch); }
+  .button--sm,
+  .buxa-button--header,
+  .button--icon-only {
+    height: var(--control-touch);
+  }
+  .button--icon-only,
+  .button--icon-only.button--sm {
+    width: var(--control-touch);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .button { transition: background-color .12s var(--ease), border-color .12s var(--ease), color .12s var(--ease); }
-  .button:active, .button[data-pressed="true"] { transform: none; }
+  .button {
+    transition:
+      background-color 0.12s var(--ease),
+      border-color 0.12s var(--ease),
+      color 0.12s var(--ease);
+  }
+  .button:active,
+  .button[data-pressed='true'] {
+    transform: none;
+  }
 }

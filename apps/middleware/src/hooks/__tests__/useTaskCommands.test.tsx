@@ -31,12 +31,27 @@ describe('useTaskCommands', () => {
   const task = seed.tasks[0] as Task;
   beforeEach(() => {
     cmd = undefined;
-    h.store = { actions: { deleteTask: vi.fn(), restoreTask: vi.fn(), moveTask: vi.fn(), archiveTask: vi.fn(), duplicateTask: vi.fn(() => 't-copy') } };
+    h.store = {
+      actions: {
+        deleteTask: vi.fn(),
+        restoreTask: vi.fn(),
+        moveTask: vi.fn(),
+        archiveTask: vi.fn(),
+        duplicateTask: vi.fn(() => 't-copy'),
+      },
+    };
     root = createRoot(document.body.appendChild(document.createElement('div')));
-    act(() => root.render(<UiProvider Dialog={StubDialog}><Probe /></UiProvider>));
+    act(() =>
+      root.render(
+        <UiProvider Dialog={StubDialog}>
+          <Probe />
+        </UiProvider>,
+      ),
+    );
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = '';
+    act(() => root.unmount());
+    document.body.innerHTML = '';
   });
 
   it('deletes a task and offers to undo', () => {
@@ -49,7 +64,10 @@ describe('useTaskCommands', () => {
   });
   it('archives or restores with a matching message', () => {
     act(() => requirePresent(cmd, 'cmd').toggleArchive(task));
-    expect((h.store.actions as { archiveTask: ReturnType<typeof vi.fn> }).archiveTask).toHaveBeenCalledWith(task.id, true);
+    expect((h.store.actions as { archiveTask: ReturnType<typeof vi.fn> }).archiveTask).toHaveBeenCalledWith(
+      task.id,
+      true,
+    );
     expect(document.body.textContent).toContain('Task archived');
   });
   it('duplicates a task and returns the copy’s id', () => {
@@ -61,7 +79,11 @@ describe('useTaskCommands', () => {
   });
   it('moves a task to another column', () => {
     act(() => requirePresent(cmd, 'cmd').moveTo(task, seed.projects[0].columns[2]));
-    expect((h.store.actions as { moveTask: ReturnType<typeof vi.fn> }).moveTask).toHaveBeenCalledWith(task.id, seed.projects[0].columns[2].id, null);
+    expect((h.store.actions as { moveTask: ReturnType<typeof vi.fn> }).moveTask).toHaveBeenCalledWith(
+      task.id,
+      seed.projects[0].columns[2].id,
+      null,
+    );
   });
   it('opens a task in the drawer', () => {
     act(() => requirePresent(cmd, 'cmd').open(task));

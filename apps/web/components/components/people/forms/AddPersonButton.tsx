@@ -16,7 +16,9 @@ export function AddPersonButton({ households }: { households: readonly Household
 
   return (
     <>
-      <Button variant="primary" type="button" aria-haspopup="dialog" onClick={() => setOpen(true)}>Add person</Button>
+      <Button variant="primary" type="button" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+        Add person
+      </Button>
       {open && (
         <Dialog title="Add person" onClose={close} className="person-dialog">
           <p className="person-helper">A child must join a household that has a parent or guardian in it.</p>

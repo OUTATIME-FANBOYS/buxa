@@ -13,7 +13,10 @@ export const metadata: Metadata = {
   // The browser tab icon. Set explicitly: a metadata icons entry stops Next from adding app/icon.svg to the page, so the tab would show nothing.
   // The home-screen icon on iPhone and iPad. Safari adds the manifest's icons itself on Android and desktop.
   icons: {
-    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }, { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
     apple: '/icons/apple-touch-icon.png',
   },
   appleWebApp: { capable: true, title: BRAND.name, statusBarStyle: 'default' },

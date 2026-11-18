@@ -17,7 +17,8 @@ export function useAutosave(state: AppState): SaveStatus {
     setStatus('saving');
     const id = setTimeout(() => {
       try {
-        storage.save(state); setStatus('saved');
+        storage.save(state);
+        setStatus('saved');
       } catch {
         setStatus('error');
       }

@@ -4,7 +4,11 @@ import { loadLogEntries, loadOnSiteEntries, loadPeopleOptions, loadVisitHistory 
 import { settle } from '@buxa/domain';
 
 const svc = vi.hoisted(() => ({
-  attendance: { onSite: vi.fn(() => settle(() => ['on'])), log: vi.fn(() => settle(() => ['log'])), history: vi.fn(() => settle(() => ['visits'])) },
+  attendance: {
+    onSite: vi.fn(() => settle(() => ['on'])),
+    log: vi.fn(() => settle(() => ['log'])),
+    history: vi.fn(() => settle(() => ['visits'])),
+  },
   people: { list: vi.fn(() => settle(() => ['people'])) },
 }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: svc }) }));

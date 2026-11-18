@@ -27,35 +27,59 @@ export interface NewPersonRecord {
 /** Only the fields present change. `roles`, when present, replaces the whole set. */
 export type PersonPatchRecord = Partial<NewPersonRecord>;
 
-export interface HouseholdMemberRecord { personId: string; relationship: string; isGuardian: boolean; canPickup: boolean }
-export interface HouseholdRecord { id: string; name: string; members: HouseholdMemberRecord[] }
-export interface HouseholdLinkRecord { householdId: string; personId: string; relationship: string; isGuardian: boolean; canPickup: boolean }
+export interface HouseholdMemberRecord {
+  personId: string;
+  relationship: string;
+  isGuardian: boolean;
+  canPickup: boolean;
+}
+export interface HouseholdRecord {
+  id: string;
+  name: string;
+  members: HouseholdMemberRecord[];
+}
+export interface HouseholdLinkRecord {
+  householdId: string;
+  personId: string;
+  relationship: string;
+  isGuardian: boolean;
+  canPickup: boolean;
+}
 
-export interface PersonFilter { role?: CampRole; includeArchived?: boolean }
+export interface PersonFilter {
+  role?: CampRole;
+  includeArchived?: boolean;
+}
 
 /**
  * Joins a new person to a household in the same transaction as the person insert. Either an existing household (`householdId`)
  * or a new one named `newHouseholdName`, which is created in that transaction too, so a refused person leaves no empty household.
  */
 export type PersonHouseholdLink = {
-  relationship: string; isGuardian: boolean; canPickup: boolean;
+  relationship: string;
+  isGuardian: boolean;
+  canPickup: boolean;
 } & ({ householdId: string; newHouseholdName?: undefined } | { householdId?: undefined; newHouseholdName: string });
 
 export class PersonNotFoundError extends Error {
   readonly kind = 'person-not-found';
   constructor() {
-    super('Person not found'); this.name = 'PersonNotFoundError';
+    super('Person not found');
+    this.name = 'PersonNotFoundError';
   }
 }
-export const isPersonNotFound = (e: unknown): e is PersonNotFoundError => e instanceof Error && (e as { kind?: unknown }).kind === 'person-not-found';
+export const isPersonNotFound = (e: unknown): e is PersonNotFoundError =>
+  e instanceof Error && (e as { kind?: unknown }).kind === 'person-not-found';
 
 export class HouseholdNotFoundError extends Error {
   readonly kind = 'household-not-found';
   constructor() {
-    super('Household not found'); this.name = 'HouseholdNotFoundError';
+    super('Household not found');
+    this.name = 'HouseholdNotFoundError';
   }
 }
-export const isHouseholdNotFound = (e: unknown): e is HouseholdNotFoundError => e instanceof Error && (e as { kind?: unknown }).kind === 'household-not-found';
+export const isHouseholdNotFound = (e: unknown): e is HouseholdNotFoundError =>
+  e instanceof Error && (e as { kind?: unknown }).kind === 'household-not-found';
 
 /**
  * Storage for people and households. Callers decide whether something may happen (permissions, rules in @buxa/domain); implementations

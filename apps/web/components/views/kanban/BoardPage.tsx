@@ -25,8 +25,10 @@ import { requirePresent } from '@buxa/domain';
 
 export function BoardPage({ projectId }: { projectId?: string }) {
   const router = useRouter();
-  const { s, actions, project, kindOf, readOnly, members } = useStore(); const { openTask } = useTaskDrawer();
-  const [filter, setFilter] = useState<Filter>(emptyFilter); const [edit, setEdit] = useState(false);
+  const { s, actions, project, kindOf, readOnly, members } = useStore();
+  const { openTask } = useTaskDrawer();
+  const [filter, setFilter] = useState<Filter>(emptyFilter);
+  const [edit, setEdit] = useState(false);
   const target = projectId ? s.projects.find(p => p.id === projectId) : project;
 
   useEffect(() => {
@@ -40,21 +42,51 @@ export function BoardPage({ projectId }: { projectId?: string }) {
 
   const all = useMemo(() => s.tasks.filter(t => t.projectId === target?.id), [s.tasks, target?.id]);
   const tags = useMemo(() => Array.from(new Set(all.flatMap(t => t.tags))).sort(), [all]);
-  const visible = useMemo(() => sortTasks(all.filter(t => matchesFilter(t, filter, kindOf(t))), filter.sort), [all, filter, kindOf]);
+  const visible = useMemo(
+    () =>
+      sortTasks(
+        all.filter(t => matchesFilter(t, filter, kindOf(t))),
+        filter.sort,
+      ),
+    [all, filter, kindOf],
+  );
 
   if (projectId && !target) {
-    return <Empty icon="alert" title="That project doesn’t exist" body="It may have been deleted." action={<Button onClick={() => router.push(ROUTES.projects)}>Back to projects</Button>} />;
+    return (
+      <Empty
+        icon="alert"
+        title="That project doesn’t exist"
+        body="It may have been deleted."
+        action={<Button onClick={() => router.push(ROUTES.projects)}>Back to projects</Button>}
+      />
+    );
   }
   if (!target) {
-    return <Empty icon="folder" title="No projects yet" body="Create a project to get your first board." action={<Button variant="primary" onClick={() => router.push(ROUTES.projects)}>Go to projects</Button>} />;
+    return (
+      <Empty
+        icon="folder"
+        title="No projects yet"
+        body="Create a project to get your first board."
+        action={
+          <Button variant="primary" onClick={() => router.push(ROUTES.projects)}>
+            Go to projects
+          </Button>
+        }
+      />
+    );
   }
 
-  const pr = progressOf(all, kindOf); const { done, total: liveCount, pct } = pr; const health = healthOf(pr, target.deadline);
+  const pr = progressOf(all, kindOf);
+  const { done, total: liveCount, pct } = pr;
+  const health = healthOf(pr, target.deadline);
   const view = s.ui.view;
   const left = target.deadline ? diffDays(target.deadline, today()) : null;
   const options: { value: ViewKind; label: string; icon: string }[] = [
-    { value: 'board', label: 'Board', icon: 'kanban' }, { value: 'list', label: 'List', icon: 'list' },
-    { value: 'calendar', label: 'Calendar', icon: 'calendar' }, { value: 'timeline', label: 'Timeline', icon: 'timeline' }];
+    { value: 'board', label: 'Board', icon: 'kanban' },
+    { value: 'list', label: 'List', icon: 'list' },
+    { value: 'calendar', label: 'Calendar', icon: 'calendar' },
+    { value: 'timeline', label: 'Timeline', icon: 'timeline' },
+  ];
 
   return (
     <div className="page page-board">
@@ -64,20 +96,47 @@ export function BoardPage({ projectId }: { projectId?: string }) {
           {target.description && <p className="muted clamp">{target.description}</p>}
           <div className="proj-meta">
             <Pill tone={HEALTH_TONE[health]}>{HEALTH_LABEL[health]}</Pill>
-            <div className="proj-progress"><Progress value={pct} tone={HEALTH_TONE[health]} label="Project completion" /><span className="small"><strong>{Math.round(pct)}%</strong> complete · {done} of {liveCount} tasks</span></div>
-            {left !== null && <span className={`small ${left < 0 ? 'text-crit' : 'muted'}`}>{left < 0 ? `Deadline passed ${-left}d ago` : left === 0 ? 'Due today' : `${left} days to ${fmt(requirePresent(target.deadline, 'target.deadline'))}`}</span>}
-            <span className="avatars" aria-label={`${members.length} members`}>{members.slice(0, 5).map(m => <Avatar key={m.userId} user={m.user} size={24} />)}</span>
-            <Button variant="ghost" size="sm" onClick={() => setEdit(true)}><Icon name="edit" size={14} />Edit</Button>
+            <div className="proj-progress">
+              <Progress value={pct} tone={HEALTH_TONE[health]} label="Project completion" />
+              <span className="small">
+                <strong>{Math.round(pct)}%</strong> complete · {done} of {liveCount} tasks
+              </span>
+            </div>
+            {left !== null && (
+              <span className={`small ${left < 0 ? 'text-crit' : 'muted'}`}>
+                {left < 0
+                  ? `Deadline passed ${-left}d ago`
+                  : left === 0
+                    ? 'Due today'
+                    : `${left} days to ${fmt(requirePresent(target.deadline, 'target.deadline'))}`}
+              </span>
+            )}
+            <span className="avatars" aria-label={`${members.length} members`}>
+              {members.slice(0, 5).map(m => (
+                <Avatar key={m.userId} user={m.user} size={24} />
+              ))}
+            </span>
+            <Button variant="ghost" size="sm" onClick={() => setEdit(true)}>
+              <Icon name="edit" size={14} />
+              Edit
+            </Button>
           </div>
         </div>
         <div className="page-actions">
           <Segmented<ViewKind> label="Board view" value={view} onChange={actions.setView} options={options} />
-          {!readOnly && <Button variant="primary" size="header" onClick={() => openTask('new', { projectId: target.id })}><Icon name="plus" size={16} />Add task</Button>}
+          {!readOnly && (
+            <Button variant="primary" size="header" onClick={() => openTask('new', { projectId: target.id })}>
+              <Icon name="plus" size={16} />
+              Add task
+            </Button>
+          )}
         </div>
       </header>
       <FilterBar filter={filter} setFilter={setFilter} project={target} tags={tags} />
       <div className="view">
-        {view === 'board' && <BoardView project={target} tasks={visible} readOnly={readOnly} manual={filter.sort === 'manual'} />}
+        {view === 'board' && (
+          <BoardView project={target} tasks={visible} readOnly={readOnly} manual={filter.sort === 'manual'} />
+        )}
         {view === 'list' && <ListView tasks={visible} projects={s.projects} readOnly={readOnly} />}
         {view === 'calendar' && <CalendarView tasks={visible} canCreate={!readOnly} projectId={target.id} />}
         {view === 'timeline' && <TimelineView tasks={visible} />}

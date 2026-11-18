@@ -22,7 +22,14 @@ describe('card drag', () => {
     const drag = createDrag(deps());
     const el = document.createElement('article');
     document.body.appendChild(el);
-    const event = { pointerType: 'mouse', button: 2, pointerId: 1, clientX: 0, clientY: 0, currentTarget: el } as unknown as React.PointerEvent<HTMLElement>;
+    const event = {
+      pointerType: 'mouse',
+      button: 2,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 0,
+      currentTarget: el,
+    } as unknown as React.PointerEvent<HTMLElement>;
     drag.grab(event, 'task-1');
     expect(drag.active()).toBe(false);
     drag.destroy();

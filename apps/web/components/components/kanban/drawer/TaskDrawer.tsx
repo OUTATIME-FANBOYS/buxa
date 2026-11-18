@@ -19,5 +19,7 @@ export function TaskDrawer() {
     return null;
   }
 
-  return <TaskForm key={drawer.id} task={task ?? null} project={target} defaults={drawer.defaults} onClose={closeTask} />;
+  return (
+    <TaskForm key={drawer.id} task={task ?? null} project={target} defaults={drawer.defaults} onClose={closeTask} />
+  );
 }

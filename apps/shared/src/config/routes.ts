@@ -50,4 +50,5 @@ export const personEditPath = (id: string): string => `${personPath(id)}/edit`;
 export const boardPath = (projectId: string): string => `${ROUTES.boards}/${encodeURIComponent(projectId)}`;
 
 /** True for the camp area and everything under it (so `/camping` does not match). */
-export const isCampPath = (pathname: string): boolean => pathname === ROUTES.camp || pathname.startsWith(`${ROUTES.camp}/`);
+export const isCampPath = (pathname: string): boolean =>
+  pathname === ROUTES.camp || pathname.startsWith(`${ROUTES.camp}/`);

@@ -1,5 +1,8 @@
 /** "1:8" is one instructor for every eight campers. Stored and reported; automatic enforcement is not built. */
-export interface InstructorRatio { instructors: number; campers: number }
+export interface InstructorRatio {
+  instructors: number;
+  campers: number;
+}
 
 export interface RatioReport {
   ratio: InstructorRatio;
@@ -13,7 +16,11 @@ export interface RatioReport {
 }
 
 /** Compares the enrolled campers with the instructors assigned to a session. Returns null when the class has no ratio. */
-export function instructorRatio(ratio: InstructorRatio | null, enrolled: number, assignedInstructors: number): RatioReport | null {
+export function instructorRatio(
+  ratio: InstructorRatio | null,
+  enrolled: number,
+  assignedInstructors: number,
+): RatioReport | null {
   if (ratio === null) {
     return null;
   }

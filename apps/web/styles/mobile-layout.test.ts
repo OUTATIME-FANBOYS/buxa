@@ -2,9 +2,13 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 /** The phone block of each stylesheet: everything inside the first `@media (max-width: 720px)` after the given marker. */
-const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
+// Prettier breaks rules over several lines, so the stylesheet text is flattened to one line before matching.
+const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8').replace(/\s+/g, ' ');
 const attendance = read('./features/attendance.css');
-const phoneBlock = attendance.slice(attendance.indexOf('@media (max-width: 720px)'), attendance.indexOf('.log-filters'));
+const phoneBlock = attendance.slice(
+  attendance.indexOf('@media (max-width: 720px)'),
+  attendance.indexOf('.log-filters'),
+);
 const tsx = (path: string) => read(`../components/components/${path}`);
 
 describe('sign-in on a phone', () => {
@@ -34,7 +38,7 @@ describe('phone layout for check-in, on site and the log', () => {
 
   it('the log stacks each visit, with a label in front of each value', () => {
     expect(phoneBlock).toContain('.log-table thead { display: none; }');
-    expect(phoneBlock).toContain("content: attr(data-label);");
+    expect(phoneBlock).toContain('content: attr(data-label);');
     const log = tsx('attendance/LogTable.tsx');
     for (const label of ['In', 'Out', 'Checked in by', 'Checked out by', 'Collected by', 'Method', 'Override reason']) {
       expect(log).toContain(`data-label="${label}"`);
@@ -56,9 +60,11 @@ describe('phone layout for check-in, on site and the log', () => {
 describe('Add person form on a touch screen', () => {
   const people = read('./features/people.css');
   it('uses the touch target height and 16px inputs on a coarse pointer', () => {
-    expect(people).toContain('@media (pointer: coarse) {\n  /* Touch');
+    expect(people).toContain('@media (pointer: coarse) { /* Touch');
     expect(people).toContain('form.person-form { --control-h: var(--control-touch); }');
-    expect(people).toMatch(/\.person-form input:not\(\[type=checkbox\]\), \.person-form select \{ font-size: 16px; \}/);
+    expect(people).toMatch(
+      /\.person-form input:not\(\[type='checkbox'\]\), \.person-form select \{ font-size: 16px; \}/,
+    );
     expect(read('./tokens.css')).toContain('--control-touch: 44px');
   });
 });
@@ -67,14 +73,20 @@ describe('settings grid', () => {
   it('is one column on a phone and widens in steps, with no fixed page width', () => {
     const settings = read('./features/settings.css');
     expect(settings).toContain('.settings-grid { display: grid; grid-template-columns: minmax(0, 1fr);');
-    expect(settings).toContain('@media (min-width: 900px) { .settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }');
-    expect(settings).toContain('@media (min-width: 1280px) { .settings-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }');
+    expect(settings).toContain(
+      '@media (min-width: 900px) { .settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }',
+    );
+    expect(settings).toContain(
+      '@media (min-width: 1280px) { .settings-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }',
+    );
     expect(settings).toContain('.page.settings-page { max-width: none; }');
   });
 
   it('keeps the segmented controls (theme, clock) inside their card at every width', () => {
     const settings = read('./features/settings.css');
-    expect(settings).toContain('.settings-page .segmented { display: flex; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }');
+    expect(settings).toContain(
+      '.settings-page .segmented { display: flex; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }',
+    );
     expect(settings).toContain('.settings-page .segmented button { flex: 1 1 0; min-width: 0;');
     expect(settings).toContain('overflow-wrap: anywhere;');
   });

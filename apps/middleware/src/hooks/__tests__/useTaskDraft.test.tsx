@@ -33,33 +33,62 @@ describe('useTaskDraft', () => {
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = '';
+    act(() => root.unmount());
+    document.body.innerHTML = '';
   });
 
   it('starts a new task in the column it was opened from, assigned to the signed-in person', () => {
-    act(() => root.render(<UiProvider Dialog={StubDialog}><Probe task={null} /></UiProvider>));
+    act(() =>
+      root.render(
+        <UiProvider Dialog={StubDialog}>
+          <Probe task={null} />
+        </UiProvider>,
+      ),
+    );
     expect(requirePresent(d, 'd').isNew).toBe(true);
     expect(requirePresent(d, 'd').columnId).toBe(project.columns[1].id);
     expect(requirePresent(d, 'd').assignee).toBe(seed.users[0].id);
   });
   it('will not create a task without a title, and says why', () => {
-    act(() => root.render(<UiProvider Dialog={StubDialog}><Probe task={null} /></UiProvider>));
+    act(() =>
+      root.render(
+        <UiProvider Dialog={StubDialog}>
+          <Probe task={null} />
+        </UiProvider>,
+      ),
+    );
     act(() => requirePresent(d, 'd').create());
     expect(requirePresent(d, 'd').errs.title).toBeTruthy();
     expect((h.store.actions as { createTask: ReturnType<typeof vi.fn> }).createTask).not.toHaveBeenCalled();
   });
   it('creates a task with the entered title and opens it', () => {
-    act(() => root.render(<UiProvider Dialog={StubDialog}><Probe task={null} /></UiProvider>));
+    act(() =>
+      root.render(
+        <UiProvider Dialog={StubDialog}>
+          <Probe task={null} />
+        </UiProvider>,
+      ),
+    );
     act(() => requirePresent(d, 'd').setTitle('Pack the first-aid kit'));
     act(() => requirePresent(d, 'd').create());
-    expect((h.store.actions as { createTask: ReturnType<typeof vi.fn> }).createTask).toHaveBeenCalledWith(expect.objectContaining({ title: 'Pack the first-aid kit', projectId: project.id }));
+    expect((h.store.actions as { createTask: ReturnType<typeof vi.fn> }).createTask).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Pack the first-aid kit', projectId: project.id }),
+    );
     expect(h.openTask).toHaveBeenCalledWith('t-new');
   });
   it('writes a saved task’s title through to the store when it is left', () => {
     const task = seed.tasks[0];
-    act(() => root.render(<UiProvider Dialog={StubDialog}><Probe task={task} /></UiProvider>));
+    act(() =>
+      root.render(
+        <UiProvider Dialog={StubDialog}>
+          <Probe task={task} />
+        </UiProvider>,
+      ),
+    );
     act(() => requirePresent(d, 'd').setTitle('A new title'));
     act(() => requirePresent(d, 'd').commitTitle());
-    expect((h.store.actions as { updateTask: ReturnType<typeof vi.fn> }).updateTask).toHaveBeenCalledWith(task.id, { title: 'A new title' });
+    expect((h.store.actions as { updateTask: ReturnType<typeof vi.fn> }).updateTask).toHaveBeenCalledWith(task.id, {
+      title: 'A new title',
+    });
   });
 });

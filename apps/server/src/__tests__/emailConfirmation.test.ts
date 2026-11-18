@@ -2,14 +2,19 @@ import { describe, expect, it, vi } from 'vitest';
 import { decideStartup, readEmailConfirmation } from '../auth/emailConfirmation';
 import { settle } from '@buxa/domain';
 
-const reply = (body: unknown, status = 200) => vi.fn(() => settle(() => new Response(JSON.stringify(body), { status }))) as unknown as typeof fetch;
-const read = (f: typeof fetch) => readEmailConfirmation({ supabaseUrl: 'https://p.supabase.co/', publishableKey: 'sb_publishable_x', fetch: f });
+const reply = (body: unknown, status = 200) =>
+  vi.fn(() => settle(() => new Response(JSON.stringify(body), { status }))) as unknown as typeof fetch;
+const read = (f: typeof fetch) =>
+  readEmailConfirmation({ supabaseUrl: 'https://p.supabase.co/', publishableKey: 'sb_publishable_x', fetch: f });
 
 describe('reading the Supabase email-confirmation setting', () => {
-  it('required when sign-ups are not auto-confirmed', async () => expect(await read(reply({ mailer_autoconfirm: false }))).toBe('required'));
-  it('not-required when they are auto-confirmed', async () => expect(await read(reply({ mailer_autoconfirm: true }))).toBe('not-required'));
+  it('required when sign-ups are not auto-confirmed', async () =>
+    expect(await read(reply({ mailer_autoconfirm: false }))).toBe('required'));
+  it('not-required when they are auto-confirmed', async () =>
+    expect(await read(reply({ mailer_autoconfirm: true }))).toBe('not-required'));
   it('asks the right place with the key, tolerating a trailing slash', async () => {
-    const f = reply({ mailer_autoconfirm: false }); await read(f);
+    const f = reply({ mailer_autoconfirm: false });
+    await read(f);
     const [url, init] = (f as unknown as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
     expect(url).toBe('https://p.supabase.co/auth/v1/settings');
     expect((init.headers as Record<string, string>).apikey).toBe('sb_publishable_x');
@@ -18,11 +23,15 @@ describe('reading the Supabase email-confirmation setting', () => {
     expect(await read(reply({}, 401))).toBe('unknown');
     expect(await read(reply({ other: 1 }))).toBe('unknown');
     expect(await read(reply('nope'))).toBe('unknown');
-    expect(await read(vi.fn(() => {
-      return settle(() => {
-        throw new TypeError('offline');
-      });
-    }) as unknown as typeof fetch)).toBe('unknown');
+    expect(
+      await read(
+        vi.fn(() => {
+          return settle(() => {
+            throw new TypeError('offline');
+          });
+        }) as unknown as typeof fetch,
+      ),
+    ).toBe('unknown');
   });
 });
 

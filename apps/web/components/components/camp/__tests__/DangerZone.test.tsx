@@ -20,9 +20,13 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: h.push, refresh: h
 
 const NAME = 'Camp Birchwood';
 
-const button = (text: string) => Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find(b => b.textContent?.trim() === text);
+const button = (text: string) =>
+  Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find(b => b.textContent?.trim() === text);
 /** Buttons inside the open dialog only: the danger zone has its own buttons with the same names. */
-const dlg = (text: string) => Array.from(document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')).find(b => b.textContent?.trim() === text);
+const dlg = (text: string) =>
+  Array.from(document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')).find(
+    b => b.textContent?.trim() === text,
+  );
 const field = () => document.querySelector<HTMLInputElement>('input[name="confirmName"]');
 /** React listens for the input event, so set the value through the native setter. */
 const typeInto = (input: HTMLInputElement, value: string) => {
@@ -38,12 +42,20 @@ describe('the danger zone', () => {
   beforeEach(() => {
     h.archiveCamp.mockReset().mockResolvedValue({ ok: true });
     h.deleteCamp.mockReset().mockResolvedValue({ ok: true });
-    h.push.mockReset(); h.refresh.mockReset();
+    h.push.mockReset();
+    h.refresh.mockReset();
     root = createRoot(document.body.appendChild(document.createElement('div')));
-    act(() => root.render(<UiProvider Dialog={ConfirmDialog}><DangerZone campId="o-1" campName={NAME} /></UiProvider>));
+    act(() =>
+      root.render(
+        <UiProvider Dialog={ConfirmDialog}>
+          <DangerZone campId="o-1" campName={NAME} />
+        </UiProvider>,
+      ),
+    );
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = '';
+    act(() => root.unmount());
+    document.body.innerHTML = '';
   });
 
   it('archives the camp after one confirm, calling archiveCamp with the camp id', async () => {
@@ -90,9 +102,11 @@ describe('the danger zone', () => {
 
   it('disables the buttons while the request runs', async () => {
     let finish: (v: { ok: true }) => void = () => undefined;
-    h.archiveCamp.mockReturnValue(new Promise(resolve => {
-      finish = resolve;
-    }));
+    h.archiveCamp.mockReturnValue(
+      new Promise(resolve => {
+        finish = resolve;
+      }),
+    );
     act(() => button('Archive camp')?.click());
     act(() => {
       dlg('Archive camp')?.click();

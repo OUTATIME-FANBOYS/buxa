@@ -5,13 +5,18 @@ import { isDark, setTheme } from '../theme';
 
 // Node 22+ ships its own localStorage global that shadows jsdom's, so the store is stubbed for these tests.
 const store = new Map<string, string>();
-vi.stubGlobal('localStorage', { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => {
-  store.set(k, v);
-}, clear: () => store.clear() });
+vi.stubGlobal('localStorage', {
+  getItem: (k: string) => store.get(k) ?? null,
+  setItem: (k: string, v: string) => {
+    store.set(k, v);
+  },
+  clear: () => store.clear(),
+});
 
 describe('theme', () => {
   afterEach(() => {
-    delete document.documentElement.dataset.theme; store.clear();
+    delete document.documentElement.dataset.theme;
+    store.clear();
   });
   it('setTheme sets the document theme and stores the choice under the shared key', () => {
     setTheme(true);

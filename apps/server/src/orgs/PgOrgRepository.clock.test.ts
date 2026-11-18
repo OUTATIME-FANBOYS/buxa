@@ -15,7 +15,10 @@ describe.skipIf(!url)('PgOrgRepository clock format', () => {
 
   beforeAll(async () => {
     await migrate(pool);
-    const { rows } = await pool.query<{ id: string }>(`INSERT INTO users (email, name) VALUES ($1, 'Clock owner') RETURNING id`, [`clock-${tag}@example.test`]);
+    const { rows } = await pool.query<{ id: string }>(
+      `INSERT INTO users (email, name) VALUES ($1, 'Clock owner') RETURNING id`,
+      [`clock-${tag}@example.test`],
+    );
     ownerId = rows[0].id;
   });
   afterAll(async () => {
@@ -23,13 +26,22 @@ describe.skipIf(!url)('PgOrgRepository clock format', () => {
   });
 
   it('defaults to 24-hour for a new camp', async () => {
-    const created = await repo.createWithOwner({ name: 'Clock default', slug: `clock-default-${tag}`, timezone: 'Europe/London' }, ownerId);
+    const created = await repo.createWithOwner(
+      { name: 'Clock default', slug: `clock-default-${tag}`, timezone: 'Europe/London' },
+      ownerId,
+    );
     expect((await repo.get(created.id)).clockFormat).toBe('24h');
   });
 
   it('saves the camp clock and reads it back for that camp only', async () => {
-    const camp = await repo.createWithOwner({ name: 'Clock saved', slug: `clock-saved-${tag}`, timezone: 'Europe/London' }, ownerId);
-    const other = await repo.createWithOwner({ name: 'Clock other', slug: `clock-other-${tag}`, timezone: 'Europe/London' }, ownerId);
+    const camp = await repo.createWithOwner(
+      { name: 'Clock saved', slug: `clock-saved-${tag}`, timezone: 'Europe/London' },
+      ownerId,
+    );
+    const other = await repo.createWithOwner(
+      { name: 'Clock other', slug: `clock-other-${tag}`, timezone: 'Europe/London' },
+      ownerId,
+    );
     const actor = { userId: ownerId, orgId: camp.id, role: 'owner' as const };
 
     await repo.rename(actor, { clockFormat: '12h' });
@@ -41,7 +53,8 @@ describe.skipIf(!url)('PgOrgRepository clock format', () => {
   });
 
   it('refuses a value other than 12h or 24h', async () => {
-    await expect(pool.query(`INSERT INTO orgs (name, slug, clock_format) VALUES ('Bad clock', $1, '13h')`, [`clock-bad-${tag}`]))
-      .rejects.toThrow(/clock_format/);
+    await expect(
+      pool.query(`INSERT INTO orgs (name, slug, clock_format) VALUES ('Bad clock', $1, '13h')`, [`clock-bad-${tag}`]),
+    ).rejects.toThrow(/clock_format/);
   });
 });

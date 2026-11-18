@@ -16,12 +16,13 @@ export function SidebarNav({ groups }: { groups: readonly NavGroup[] }) {
           {group.label && <h2 className="nav-group-label">{group.label}</h2>}
           <ul>
             {group.items.map(item => {
-              const active = isActive(pathname ?? "", item);
+              const active = isActive(pathname ?? '', item);
 
               return (
                 <li key={item.href}>
                   <Link href={item.href} className={active ? 'active' : ''} aria-current={active ? 'page' : undefined}>
-                    <Icon name={item.icon} size={18} /><span className="collapsible">{item.label}</span>
+                    <Icon name={item.icon} size={18} />
+                    <span className="collapsible">{item.label}</span>
                   </Link>
                 </li>
               );

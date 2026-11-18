@@ -15,19 +15,26 @@ import { assertLocalDatabase } from './seed-mock/guard';
 import type { SeedOptions } from './seed-mock/run';
 
 const FLAGS: Record<string, keyof Omit<SeedOptions, 'reset'>> = {
-  '--owner-email': 'owner', '--admin-email': 'admin', '--staff-email': 'staff', '--viewer-email': 'viewer',
+  '--owner-email': 'owner',
+  '--admin-email': 'admin',
+  '--staff-email': 'staff',
+  '--viewer-email': 'viewer',
 };
 
-export interface CliOptions extends SeedOptions { yes: boolean }
+export interface CliOptions extends SeedOptions {
+  yes: boolean;
+}
 
 export function parseArgs(argv: readonly string[]): CliOptions {
   const options: CliOptions = { reset: false, yes: false };
   for (const arg of argv) {
     if (arg === '--reset') {
-      options.reset = true; continue;
+      options.reset = true;
+      continue;
     }
     if (arg === '--yes') {
-      options.yes = true; continue;
+      options.yes = true;
+      continue;
     }
     const [flag, value] = arg.split('=', 2);
     const key = FLAGS[flag];
@@ -54,7 +61,7 @@ async function main(): Promise<void> {
       const plan = await planReset(pool);
       if (plan !== null) {
         console.log(describeReset(plan));
-        if (!options.yes && !await confirmReset()) {
+        if (!options.yes && !(await confirmReset())) {
           console.log('Not confirmed. Nothing was deleted. (Without a terminal, pass --yes.)');
           process.exitCode = 1;
 
@@ -69,7 +76,9 @@ async function main(): Promise<void> {
       return;
     }
     const c = result.counts;
-    console.log(`Camp Birchwood seeded: ${c.people} people, ${c.households} households, ${c.memberships} memberships, ${c.badges} badges, ${c.checkIns} check-ins.`);
+    console.log(
+      `Camp Birchwood seeded: ${c.people} people, ${c.households} households, ${c.memberships} memberships, ${c.badges} badges, ${c.checkIns} check-ins.`,
+    );
   } finally {
     await pool.end();
   }

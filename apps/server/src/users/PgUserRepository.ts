@@ -14,9 +14,12 @@ export class PgUserRepository implements UserRepository {
 
   async upsertFromIdentity(identity: Identity): Promise<User> {
     try {
-      const { rows } = await withOrg(this.pool, null, db => db.query<User>(
-        'SELECT user_id AS id, user_email AS email, user_name AS name FROM buxa_upsert_user($1, $2, $3)',
-        [identity.authId, identity.email, identity.name]));
+      const { rows } = await withOrg(this.pool, null, db =>
+        db.query<User>(
+          'SELECT user_id AS id, user_email AS email, user_name AS name FROM buxa_upsert_user($1, $2, $3)',
+          [identity.authId, identity.email, identity.name],
+        ),
+      );
 
       return rows[0];
     } catch (error) {
@@ -27,7 +30,9 @@ export class PgUserRepository implements UserRepository {
   membershipsOf(userId: string): Promise<Membership[]> {
     return withOrg(this.pool, null, async db => {
       const { rows } = await db.query<Membership>(
-        'SELECT member_org_id AS "orgId", member_role AS role, org_name AS name, org_slug AS slug FROM buxa_memberships_of($1)', [userId]);
+        'SELECT member_org_id AS "orgId", member_role AS role, org_name AS name, org_slug AS slug FROM buxa_memberships_of($1)',
+        [userId],
+      );
 
       return rows;
     });

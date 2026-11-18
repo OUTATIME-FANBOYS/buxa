@@ -29,7 +29,9 @@ describe('useAutosave', () => {
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = ''; vi.useRealTimers();
+    act(() => root.unmount());
+    document.body.innerHTML = '';
+    vi.useRealTimers();
   });
 
   it('does not save on the first render', () => {

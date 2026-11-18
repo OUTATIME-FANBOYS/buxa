@@ -9,17 +9,33 @@ const env = vi.hoisted(() => {
 });
 
 vi.mock('next/headers', () => ({ cookies: () => settle(() => env.store) }));
-vi.mock('next/navigation', () => ({ redirect: (url: string) => {
-  throw new Error(`REDIRECT ${url}`);
-} }));
+vi.mock('next/navigation', () => ({
+  redirect: (url: string) => {
+    throw new Error(`REDIRECT ${url}`);
+  },
+}));
 
 import { ROUTES } from '@buxa/shared/config/routes';
 import { installRuntime } from '@buxa/server/runtime';
 import { InMemoryStore } from '@buxa/server/__tests__/fakes';
 import { ISSUER, createTestIdentityProvider } from '@buxa/server/__tests__/tokens';
 import { startRuntime } from '@buxa/server/__tests__/runtimeHarness';
-import { CAMP_COOKIE, getCurrentCamp, getSession, rememberCamp, requireSession, toActor } from '@buxa/server/session/index';
-import { FakeCookieStore, SESSION_COOKIE, personWithCamps, sessionCookieValue, tampered, unsignedToken } from '@buxa/server/session/__tests__/support';
+import {
+  CAMP_COOKIE,
+  getCurrentCamp,
+  getSession,
+  rememberCamp,
+  requireSession,
+  toActor,
+} from '@buxa/server/session/index';
+import {
+  FakeCookieStore,
+  SESSION_COOKIE,
+  personWithCamps,
+  sessionCookieValue,
+  tampered,
+  unsignedToken,
+} from '@buxa/server/session/__tests__/support';
 import { settle } from '@buxa/domain';
 
 let idp: Awaited<ReturnType<typeof createTestIdentityProvider>>;
@@ -38,7 +54,9 @@ beforeEach(async () => {
   env.store = new FakeCookieStore();
 });
 afterEach(async () => {
-  await runtime.stop(); installRuntime(undefined); vi.unstubAllEnvs();
+  await runtime.stop();
+  installRuntime(undefined);
+  vi.unstubAllEnvs();
 });
 
 describe('getSession', () => {
@@ -69,7 +87,7 @@ describe('getSession', () => {
     ['expired', (i: typeof idp) => i.token({ sub, expiresIn: '-1h' })],
     ['issued by another issuer', (i: typeof idp) => i.token({ sub, issuer: 'https://evil.example/auth/v1' })],
     ['meant for another audience', (i: typeof idp) => i.token({ sub, audience: 'someone-else' })],
-    ['signed with a stranger\'s key', (i: typeof idp) => i.token({ sub, signWith: i.strangerKey })],
+    ["signed with a stranger's key", (i: typeof idp) => i.token({ sub, signWith: i.strangerKey })],
     ['unsigned (alg none)', () => settle(() => unsignedToken(sub, ISSUER))],
     ['tampered after signing', async (i: typeof idp) => tampered(await i.token({ sub }))],
   ])('refuses a token that is %s', async (_label, make) => {
@@ -126,15 +144,21 @@ describe('getCurrentCamp', () => {
 
 describe('rememberCamp', () => {
   it('writes an HttpOnly, SameSite=Lax cookie for the whole site', async () => {
-    const store = new FakeCookieStore(); env.store = store;
+    const store = new FakeCookieStore();
+    env.store = store;
     await rememberCamp('org-1');
     expect(store.writes).toHaveLength(1);
-    expect(store.writes[0]).toMatchObject({ name: CAMP_COOKIE, value: 'org-1', options: { httpOnly: true, sameSite: 'lax', path: '/', secure: false } });
+    expect(store.writes[0]).toMatchObject({
+      name: CAMP_COOKIE,
+      value: 'org-1',
+      options: { httpOnly: true, sameSite: 'lax', path: '/', secure: false },
+    });
   });
 
   it('is Secure in production', async () => {
     vi.stubEnv('NODE_ENV', 'production');
-    const store = new FakeCookieStore(); env.store = store;
+    const store = new FakeCookieStore();
+    env.store = store;
     await rememberCamp('org-1');
     expect(store.writes[0].options.secure).toBe(true);
   });
@@ -143,6 +167,10 @@ describe('rememberCamp', () => {
 describe('toActor', () => {
   it('describes the person in the chosen camp', () => {
     const camp = { orgId: 'o', role: 'admin' as const, name: 'N', slug: 's' };
-    expect(toActor({ user: { id: 'u', email: 'a@b.c', name: 'A' }, memberships: [camp] }, camp)).toEqual({ userId: 'u', orgId: 'o', role: 'admin' });
+    expect(toActor({ user: { id: 'u', email: 'a@b.c', name: 'A' }, memberships: [camp] }, camp)).toEqual({
+      userId: 'u',
+      orgId: 'o',
+      role: 'admin',
+    });
   });
 });

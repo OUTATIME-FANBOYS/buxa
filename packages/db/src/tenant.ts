@@ -20,7 +20,9 @@ export async function transaction<T>(pool: Pool, work: (db: PoolClient) => Promi
       await db.query('ROLLBACK');
     } catch (rollbackError) {
       db.release(rollbackError instanceof Error ? rollbackError : new Error(String(rollbackError)));
-      throw new Error(`Rollback failed and the database connection was discarded: ${errorMessage(rollbackError)}`, { cause: error });
+      throw new Error(`Rollback failed and the database connection was discarded: ${errorMessage(rollbackError)}`, {
+        cause: error,
+      });
     }
     db.release();
     throw error;

@@ -12,13 +12,19 @@ const SHOWN = 5;
 export function YourTasksPanel({ tasks }: { tasks: readonly Task[] }) {
   return (
     <section className="panel" aria-labelledby="your-tasks-title">
-      <div className="panel-head"><h2 id="your-tasks-title">Your tasks</h2></div>
+      <div className="panel-head">
+        <h2 id="your-tasks-title">Your tasks</h2>
+      </div>
       {tasks.length === 0 ? (
         <p className="muted">No tasks are assigned to you.</p>
       ) : (
         <ul className="plain-list">
           {tasks.slice(0, SHOWN).map(t => (
-            <li key={t.id}><Link className="link" href={boardPath(t.projectId)}>{t.title}</Link></li>
+            <li key={t.id}>
+              <Link className="link" href={boardPath(t.projectId)}>
+                {t.title}
+              </Link>
+            </li>
           ))}
         </ul>
       )}

@@ -5,7 +5,11 @@ import { CameraScanner } from '@/components/components/scanner/export';
 import { ScanField, type ScanFieldHandle } from '@/components/components/scanner/export';
 import { Button } from '@/components/elements/export';
 
-interface Props { scanRef: RefObject<ScanFieldHandle | null>; disabled: boolean; onCode: (raw: string) => void }
+interface Props {
+  scanRef: RefObject<ScanFieldHandle | null>;
+  disabled: boolean;
+  onCode: (raw: string) => void;
+}
 
 /** The one scan field (handheld scanner or typing), and the camera toggle that opens the phone's camera scanner. */
 export function ScanPanel({ scanRef, disabled, onCode }: Props) {
@@ -20,15 +24,26 @@ export function ScanPanel({ scanRef, disabled, onCode }: Props) {
   return (
     <div className="scan-panel">
       <ScanField ref={scanRef} label="Scan a badge, or type a code" disabled={disabled} onScan={onCode} />
-      <Button variant="primary" ref={toggle} type="button" className="btn-camera att-btn-lg" aria-expanded={camera} aria-controls="camera-scanner"
-        onClick={() => (camera ? closeCamera() : setCamera(true))}>
+      <Button
+        variant="primary"
+        ref={toggle}
+        type="button"
+        className="btn-camera att-btn-lg"
+        aria-expanded={camera}
+        aria-controls="camera-scanner"
+        onClick={() => (camera ? closeCamera() : setCamera(true))}
+      >
         {camera ? 'Close camera' : 'Scan with camera'}
       </Button>
       {camera && (
         <div id="camera-scanner" className="camera-slot">
-          <CameraScanner onScan={raw => {
-            onCode(raw); closeCamera();
-          }} onClose={closeCamera} />
+          <CameraScanner
+            onScan={raw => {
+              onCode(raw);
+              closeCamera();
+            }}
+            onClose={closeCamera}
+          />
         </div>
       )}
     </div>

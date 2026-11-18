@@ -25,10 +25,14 @@ export const idleDnd: BoardDnd = { mode: 'idle' };
 /** Events that do not fit the current mode (a stray "over" after the drop) are ignored. */
 export function boardDndReducer(s: BoardDnd, a: BoardDndAction): BoardDnd {
   switch (a.type) {
-    case 'taskGrabbed': return { mode: 'task', id: a.id, over: null };
-    case 'columnGrabbed': return { mode: 'column', id: a.id, over: null };
-    case 'cleared': return idleDnd;
-    case 'taskOver': return s.mode === 'task' ? { ...s, over: a.over } : s;
+    case 'taskGrabbed':
+      return { mode: 'task', id: a.id, over: null };
+    case 'columnGrabbed':
+      return { mode: 'column', id: a.id, over: null };
+    case 'cleared':
+      return idleDnd;
+    case 'taskOver':
+      return s.mode === 'task' ? { ...s, over: a.over } : s;
     case 'columnOver': {
       if (s.mode !== 'column' || s.id === a.over.id) {
         return s;
@@ -36,6 +40,7 @@ export function boardDndReducer(s: BoardDnd, a: BoardDndAction): BoardDnd {
 
       return s.over?.id === a.over.id && s.over.side === a.over.side ? s : { ...s, over: a.over };
     }
-    case 'columnLeft': return s.mode === 'column' && s.over?.id === a.id ? { ...s, over: null } : s;
+    case 'columnLeft':
+      return s.mode === 'column' && s.over?.id === a.id ? { ...s, over: null } : s;
   }
 }

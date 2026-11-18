@@ -15,26 +15,39 @@ export const CAMPER_CY = '00000000-0000-4000-8000-0000000000c3';
 export const as = (role: Role, orgId = ORG, userId = `user-${role}`): Actor => ({ userId, orgId, role });
 
 export const robotics: NewClassInput = {
-  name: 'Robotics', description: 'Build and program small robots.', ageRange: { minAge: 8, maxAge: 12 }, capacity: 2,
+  name: 'Robotics',
+  description: 'Build and program small robots.',
+  ageRange: { minAge: 8, maxAge: 12 },
+  capacity: 2,
   instructorRatio: { instructors: 1, campers: 8 },
 };
 export const painting: NewClassInput = {
-  name: 'Painting', description: '', ageRange: { minAge: 6, maxAge: 14 }, capacity: 10, instructorRatio: null,
+  name: 'Painting',
+  description: '',
+  ageRange: { minAge: 6, maxAge: 14 },
+  capacity: 10,
+  instructorRatio: null,
 };
 
 /** Monday 5 July 2027, 09:00-12:00 in Sydney (UTC+10 in July). */
 export const monday9to12: NewSessionInput = {
-  startsAt: '2027-07-05T09:00:00+10:00', endsAt: '2027-07-05T12:00:00+10:00', location: 'Lab 1', instructorIds: [],
+  startsAt: '2027-07-05T09:00:00+10:00',
+  endsAt: '2027-07-05T12:00:00+10:00',
+  location: 'Lab 1',
+  instructorIds: [],
 };
 /** Overlaps Monday 9-12 by two hours. */
 export const monday11to13: NewSessionInput = {
-  startsAt: '2027-07-05T11:00:00+10:00', endsAt: '2027-07-05T13:00:00+10:00', location: 'Art room', instructorIds: [],
+  startsAt: '2027-07-05T11:00:00+10:00',
+  endsAt: '2027-07-05T13:00:00+10:00',
+  location: 'Art room',
+  instructorIds: [],
 };
 
 export function setup() {
   const repo = new InMemoryClassRepository(() => new Date('2027-07-01T00:00:00Z'));
   const service = createClassService({ repo, timezoneOf: () => settle(() => CAMP_TZ) });
-  repo.seedCamper(ORG, CAMPER_ADA, 'Ada Lovelace', '2016-03-01');   // 11 in July 2027
+  repo.seedCamper(ORG, CAMPER_ADA, 'Ada Lovelace', '2016-03-01'); // 11 in July 2027
   repo.seedCamper(ORG, CAMPER_BEN, 'Ben Carter', '2016-03-01');
   repo.seedCamper(ORG, CAMPER_CY, 'Cy Dunn', '2016-03-01');
 
@@ -42,7 +55,11 @@ export function setup() {
 }
 
 /** Creates a class and a session as an admin, returning their ids. */
-export async function classWithSession(service: ReturnType<typeof createClassService>, cls: NewClassInput = robotics, session: NewSessionInput = monday9to12) {
+export async function classWithSession(
+  service: ReturnType<typeof createClassService>,
+  cls: NewClassInput = robotics,
+  session: NewSessionInput = monday9to12,
+) {
   const created = await service.createClass(as('admin'), cls);
   if (!created.ok) {
     throw new Error(created.failure.message);

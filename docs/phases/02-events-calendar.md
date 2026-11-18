@@ -60,6 +60,7 @@ Public class pages, iCal feed, payments, waitlist promotion, automatic ratio enf
 A camp season can have dozens of camps and many sessions a day, so staff create them in bulk from a spreadsheet.
 
 ### Decisions
+
 1. **CSV template, not PDF.** The app provides a downloadable template (opens in Excel or Google Sheets). A printed or scanned PDF is not parsed. A fillable PDF with the same fields may come later.
 2. **Preview before save.** An upload is checked row by row and saved only when the owner confirms. Nothing is written during preview.
 3. **Each row gets its own result:** ready, or an exact error naming the row, the field and the clash (for example "Robotics 9:00-12:00 overlaps Art 10:00-12:00 for the same camper group").
@@ -69,9 +70,11 @@ A camp season can have dozens of camps and many sessions a day, so staff create 
 7. **Audit.** One audit entry for the upload (who, when, file name, row counts) and one per saved session.
 
 ### Template columns
+
 `external_key`, `class_name`, `starts_at`, `ends_at` (camp local time, ISO format), `location`, `age_min`, `age_max`, `capacity`, `instructor_names` (semicolon separated), `ratio_campers`, `ratio_instructors`.
 
 ### Acceptance criteria
+
 - Staff with `classes:manage` can download the template, upload a filled file, see a preview with every row's result, and confirm.
 - A file with 300 rows previews in under 5 seconds and saves in one transaction.
 - Re-uploading the same file with keys creates no new sessions.
@@ -79,6 +82,7 @@ A camp season can have dozens of camps and many sessions a day, so staff create 
 - A failed confirm saves nothing.
 
 ### Exit tests (added to this phase's list)
+
 - Preview refuses overlaps within the file and against existing sessions (table-driven, including sessions that touch and cross midnight).
 - Re-upload with the same external keys is idempotent.
 - Confirm is atomic: a database error mid-file leaves zero new rows.
@@ -86,4 +90,5 @@ A camp season can have dozens of camps and many sessions a day, so staff create 
 - A viewer cannot upload (403).
 
 ### Not in this feature
+
 Room and instructor double-booking across the whole day (phase 5), PDF parsing, and images of schedules.

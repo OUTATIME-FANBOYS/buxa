@@ -13,89 +13,238 @@
  * agent = anything an AI agent did. The agent hue is never a chart series next to brand (they merge for some viewers).
  */
 :root {
-  --bg: #e7ecef; --surface: #f0f3f6; --surface-2: #e8ecf0; --surface-3: #e0e6eb; --hover: #e4e9ee;
-  --line: #c9d1d8; --line-strong: #adb8c2; --control: #6b7480;
-  --text: #272932; --text-2: #4a4e5c; --text-3: #5a5f6e;
-  --accent: #0f7173; --accent-soft: #d3eaea; --accent-deep: #0a4f51; --f-brand: #0f7173;
-  --ok: #096d4c; --ok-soft: #dcefe6; --ok-ink: #065f46; --f-ok: #0e9f6e;
-  --warn: #a34a07; --warn-soft: #fdf0d5; --warn-ink: #8f3f0a; --f-warn: #d17a00;
-  --crit: #a3282b; --crit-soft: #fbe4e4; --crit-ink: #7f1d20; --f-crit: #f05d5e;
-  --agent: #4f2d66; --agent-soft: #efe7f4; --agent-ink: #36213e; --f-agent: #7b5597;
-  --f-neutral: #6b7480; --neutral-soft: #e0e6eb; --neutral-ink: #4a4e5c;
+  --bg: #e7ecef;
+  --surface: #f0f3f6;
+  --surface-2: #e8ecf0;
+  --surface-3: #e0e6eb;
+  --hover: #e4e9ee;
+  --line: #c9d1d8;
+  --line-strong: #adb8c2;
+  --control: #6b7480;
+  --text: #272932;
+  --text-2: #4a4e5c;
+  --text-3: #5a5f6e;
+  --accent: #0f7173;
+  --accent-soft: #d3eaea;
+  --accent-deep: #0a4f51;
+  --f-brand: #0f7173;
+  --ok: #096d4c;
+  --ok-soft: #dcefe6;
+  --ok-ink: #065f46;
+  --f-ok: #0e9f6e;
+  --warn: #a34a07;
+  --warn-soft: #fdf0d5;
+  --warn-ink: #8f3f0a;
+  --f-warn: #d17a00;
+  --crit: #a3282b;
+  --crit-soft: #fbe4e4;
+  --crit-ink: #7f1d20;
+  --f-crit: #f05d5e;
+  --agent: #4f2d66;
+  --agent-soft: #efe7f4;
+  --agent-ink: #36213e;
+  --f-agent: #7b5597;
+  --f-neutral: #6b7480;
+  --neutral-soft: #e0e6eb;
+  --neutral-ink: #4a4e5c;
   /* Role pills only: viewer is blue, teacher (planned, phase 3) is green-blue. Text on soft is 4.5:1 or better. */
-  --role-viewer: #1d4f8c; --role-viewer-soft: #dbe8f7;
-  --role-teacher: #0b5a5e; --role-teacher-soft: #d5eeee;
-  --accent-ink: #ffffff; --on-solid: #ffffff; --on-inverse-accent: #9fd6d7;
-  --coral: #f05d5e; --on-coral: #14161c; --on-fill: #14161c;
-  --hero-bg: #eef1f4; --hero-fg: #272932; --hero-fg-2: #4a4e5c;
+  --role-viewer: #1d4f8c;
+  --role-viewer-soft: #dbe8f7;
+  --role-teacher: #0b5a5e;
+  --role-teacher-soft: #d5eeee;
+  --accent-ink: #ffffff;
+  --on-solid: #ffffff;
+  --on-inverse-accent: #9fd6d7;
+  --coral: #f05d5e;
+  --on-coral: #14161c;
+  --on-fill: #14161c;
+  --hero-bg: #eef1f4;
+  --hero-fg: #272932;
+  --hero-fg-2: #4a4e5c;
   /* Sign-in backgrounds (layout/auth.css): a pale coral glow from the top-left, a pale teal tint behind the dot grid on the form side, and darker teal stars on the hero. */
-  --auth-glow: radial-gradient(120% 90% at 0% 0%, rgba(240,93,94,.20) 0%, rgba(240,93,94,0) 60%);
+  --auth-glow: radial-gradient(120% 90% at 0% 0%, rgba(240, 93, 94, 0.2) 0%, rgba(240, 93, 94, 0) 60%);
   --auth-stars:
-    radial-gradient(1.5px 1.5px at 14% 22%, rgba(10,79,81,.6) 0, transparent 2px),
-    radial-gradient(1px 1px at 38% 12%, rgba(10,79,81,.5) 0, transparent 2px),
-    radial-gradient(1.5px 1.5px at 72% 28%, rgba(10,79,81,.6) 0, transparent 2px),
-    radial-gradient(1px 1px at 58% 64%, rgba(10,79,81,.5) 0, transparent 2px),
-    radial-gradient(1px 1px at 22% 80%, rgba(10,79,81,.45) 0, transparent 2px),
-    radial-gradient(1.5px 1.5px at 86% 58%, rgba(10,79,81,.55) 0, transparent 2px);
+    radial-gradient(1.5px 1.5px at 14% 22%, rgba(10, 79, 81, 0.6) 0, transparent 2px),
+    radial-gradient(1px 1px at 38% 12%, rgba(10, 79, 81, 0.5) 0, transparent 2px),
+    radial-gradient(1.5px 1.5px at 72% 28%, rgba(10, 79, 81, 0.6) 0, transparent 2px),
+    radial-gradient(1px 1px at 58% 64%, rgba(10, 79, 81, 0.5) 0, transparent 2px),
+    radial-gradient(1px 1px at 22% 80%, rgba(10, 79, 81, 0.45) 0, transparent 2px),
+    radial-gradient(1.5px 1.5px at 86% 58%, rgba(10, 79, 81, 0.55) 0, transparent 2px);
   --auth-tint: #d6eeeb;
   --auth-dots: #c9d1d8;
-  --p-low: var(--text-3); --p-medium: var(--accent); --p-high: var(--warn); --p-critical: var(--crit);
-  --track: #c9d1d8; --grid: #d8dee4;
-  --shadow-1: 0 1px 2px rgba(39,41,50,.06);
-  --shadow: 0 1px 2px rgba(39,41,50,.06), 0 12px 32px rgba(39,41,50,.12);
-  --r-1: 6px; --r-2: 8px; --r-3: 12px;
-  --s1: .25rem; --s2: .5rem; --s3: .75rem; --s4: 1rem; --s5: 1.5rem; --s6: 2rem; --s7: 3rem;
-  --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
-  --fs-s: .75rem; --fs-b: .875rem; --fs-h: 1.375rem; --fs-n: 1.75rem;
+  --p-low: var(--text-3);
+  --p-medium: var(--accent);
+  --p-high: var(--warn);
+  --p-critical: var(--crit);
+  --track: #c9d1d8;
+  --grid: #d8dee4;
+  --shadow-1: 0 1px 2px rgba(39, 41, 50, 0.06);
+  --shadow: 0 1px 2px rgba(39, 41, 50, 0.06), 0 12px 32px rgba(39, 41, 50, 0.12);
+  --r-1: 6px;
+  --r-2: 8px;
+  --r-3: 12px;
+  --s1: 0.25rem;
+  --s2: 0.5rem;
+  --s3: 0.75rem;
+  --s4: 1rem;
+  --s5: 1.5rem;
+  --s6: 2rem;
+  --s7: 3rem;
+  --font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+  --fs-s: 0.75rem;
+  --fs-b: 0.875rem;
+  --fs-h: 1.375rem;
+  --fs-n: 1.75rem;
   --control-h: 44px; /* one height for inputs, selects and buttons; 44px is also the touch target */
   --control-compact: 36px; /* denser controls on a mouse or keyboard device (the Add person form); coarse pointers keep 44px */
   --control-touch: 44px;
-  --ease: cubic-bezier(.2,.7,.2,1); --ease-out: cubic-bezier(.22,1,.36,1);
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --material: color-mix(in srgb, var(--surface) 78%, transparent);
   color-scheme: light;
 }
-[data-theme="dark"] {
-  --bg: #1e2026; --surface: #272932; --surface-2: #2e313b; --surface-3: #373a46; --hover: #31343f;
-  --line: #3a3e4b; --line-strong: #4d5263; --control: #8a90a0;
-  --text: #e7ecef; --text-2: #b9bec9; --text-3: #9ea4b0;
-  --accent: #ff8a5c; --accent-soft: #4a2820; --accent-deep: #ffc4a8; --f-brand: #ffa06b;
-  --ok: #3fcf8e; --ok-soft: #12342a; --ok-ink: #6fe0ae; --f-ok: #22ae80;
-  --warn: #f2b045; --warn-soft: #3a2c12; --warn-ink: #f7c570; --f-warn: #bd8a10;
-  --crit: #ff8a8b; --crit-soft: #3d2227; --crit-ink: #ffb3b4; --f-crit: #f05d5e;
-  --agent: #c9b2d9; --agent-soft: #34263f; --agent-ink: #e0d0ee; --f-agent: #9b7bb8;
-  --f-neutral: #8a90a0; --neutral-soft: #373a46; --neutral-ink: #b9bec9;
-  --role-viewer: #9cc3f0; --role-viewer-soft: #1a2b43;
-  --role-teacher: #7fd6d0; --role-teacher-soft: #173a3b;
-  --accent-ink: #1e2026; --on-solid: #1e2026; --on-inverse-accent: #7a2e12;
-  --coral: #f05d5e; --on-coral: #14161c; --on-fill: #14161c;
-  --hero-bg: #1b1f29; --hero-fg: #e7ecef; --hero-fg-2: #b9bec9;
+[data-theme='dark'] {
+  --bg: #1e2026;
+  --surface: #272932;
+  --surface-2: #2e313b;
+  --surface-3: #373a46;
+  --hover: #31343f;
+  --line: #3a3e4b;
+  --line-strong: #4d5263;
+  --control: #8a90a0;
+  --text: #e7ecef;
+  --text-2: #b9bec9;
+  --text-3: #9ea4b0;
+  --accent: #ff8a5c;
+  --accent-soft: #4a2820;
+  --accent-deep: #ffc4a8;
+  --f-brand: #ffa06b;
+  --ok: #3fcf8e;
+  --ok-soft: #12342a;
+  --ok-ink: #6fe0ae;
+  --f-ok: #22ae80;
+  --warn: #f2b045;
+  --warn-soft: #3a2c12;
+  --warn-ink: #f7c570;
+  --f-warn: #bd8a10;
+  --crit: #ff8a8b;
+  --crit-soft: #3d2227;
+  --crit-ink: #ffb3b4;
+  --f-crit: #f05d5e;
+  --agent: #c9b2d9;
+  --agent-soft: #34263f;
+  --agent-ink: #e0d0ee;
+  --f-agent: #9b7bb8;
+  --f-neutral: #8a90a0;
+  --neutral-soft: #373a46;
+  --neutral-ink: #b9bec9;
+  --role-viewer: #9cc3f0;
+  --role-viewer-soft: #1a2b43;
+  --role-teacher: #7fd6d0;
+  --role-teacher-soft: #173a3b;
+  --accent-ink: #1e2026;
+  --on-solid: #1e2026;
+  --on-inverse-accent: #7a2e12;
+  --coral: #f05d5e;
+  --on-coral: #14161c;
+  --on-fill: #14161c;
+  --hero-bg: #1b1f29;
+  --hero-fg: #e7ecef;
+  --hero-fg-2: #b9bec9;
   /* Sign-in backgrounds (layout/auth.css): a coral glow from the top-left, a few faint stars, a dark coral-orange tint behind the dot grid, and a faint dot grid. */
-  --auth-glow: radial-gradient(120% 90% at 0% 0%, rgba(240,93,94,.30) 0%, rgba(240,93,94,0) 60%);
+  --auth-glow: radial-gradient(120% 90% at 0% 0%, rgba(240, 93, 94, 0.3) 0%, rgba(240, 93, 94, 0) 60%);
   --auth-stars:
-    radial-gradient(1.5px 1.5px at 14% 22%, rgba(231,236,239,.75) 0, transparent 2px),
-    radial-gradient(1px 1px at 38% 12%, rgba(231,236,239,.55) 0, transparent 2px),
-    radial-gradient(1.5px 1.5px at 72% 28%, rgba(231,236,239,.65) 0, transparent 2px),
-    radial-gradient(1px 1px at 58% 64%, rgba(231,236,239,.5) 0, transparent 2px),
-    radial-gradient(1px 1px at 22% 80%, rgba(231,236,239,.45) 0, transparent 2px),
-    radial-gradient(1.5px 1.5px at 86% 58%, rgba(231,236,239,.6) 0, transparent 2px);
+    radial-gradient(1.5px 1.5px at 14% 22%, rgba(231, 236, 239, 0.75) 0, transparent 2px),
+    radial-gradient(1px 1px at 38% 12%, rgba(231, 236, 239, 0.55) 0, transparent 2px),
+    radial-gradient(1.5px 1.5px at 72% 28%, rgba(231, 236, 239, 0.65) 0, transparent 2px),
+    radial-gradient(1px 1px at 58% 64%, rgba(231, 236, 239, 0.5) 0, transparent 2px),
+    radial-gradient(1px 1px at 22% 80%, rgba(231, 236, 239, 0.45) 0, transparent 2px),
+    radial-gradient(1.5px 1.5px at 86% 58%, rgba(231, 236, 239, 0.6) 0, transparent 2px);
   --auth-tint: #3d2619;
-  --auth-dots: rgba(231,236,239,.08);
-  --track: #3a3e4b; --grid: #31343f;
-  --shadow-1: 0 1px 2px rgba(0,0,0,.35);
-  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.5);
+  --auth-dots: rgba(231, 236, 239, 0.08);
+  --track: #3a3e4b;
+  --grid: #31343f;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.5);
   color-scheme: dark;
 }
 /* Tones: one class sets the four steps, components read them. */
-.tone-neutral, .pill-neutral { --tone: var(--text-2); --tone-soft: var(--neutral-soft); --tone-ink: var(--neutral-ink); --tone-f: var(--f-neutral); }
-.tone-brand, .pill-brand { --tone: var(--accent); --tone-soft: var(--accent-soft); --tone-ink: var(--accent-deep); --tone-f: var(--f-brand); }
-.tone-ok, .pill-ok { --tone: var(--ok); --tone-soft: var(--ok-soft); --tone-ink: var(--ok-ink); --tone-f: var(--f-ok); }
-.tone-warn, .pill-warn { --tone: var(--warn); --tone-soft: var(--warn-soft); --tone-ink: var(--warn-ink); --tone-f: var(--f-warn); }
-.tone-crit, .pill-crit { --tone: var(--crit); --tone-soft: var(--crit-soft); --tone-ink: var(--crit-ink); --tone-f: var(--f-crit); }
-.tone-agent, .pill-agent { --tone: var(--agent); --tone-soft: var(--agent-soft); --tone-ink: var(--agent-ink); --tone-f: var(--f-agent); }
+.tone-neutral,
+.pill-neutral {
+  --tone: var(--text-2);
+  --tone-soft: var(--neutral-soft);
+  --tone-ink: var(--neutral-ink);
+  --tone-f: var(--f-neutral);
+}
+.tone-brand,
+.pill-brand {
+  --tone: var(--accent);
+  --tone-soft: var(--accent-soft);
+  --tone-ink: var(--accent-deep);
+  --tone-f: var(--f-brand);
+}
+.tone-ok,
+.pill-ok {
+  --tone: var(--ok);
+  --tone-soft: var(--ok-soft);
+  --tone-ink: var(--ok-ink);
+  --tone-f: var(--f-ok);
+}
+.tone-warn,
+.pill-warn {
+  --tone: var(--warn);
+  --tone-soft: var(--warn-soft);
+  --tone-ink: var(--warn-ink);
+  --tone-f: var(--f-warn);
+}
+.tone-crit,
+.pill-crit {
+  --tone: var(--crit);
+  --tone-soft: var(--crit-soft);
+  --tone-ink: var(--crit-ink);
+  --tone-f: var(--f-crit);
+}
+.tone-agent,
+.pill-agent {
+  --tone: var(--agent);
+  --tone-soft: var(--agent-soft);
+  --tone-ink: var(--agent-ink);
+  --tone-f: var(--f-agent);
+}
 /* Camp roles on the Team access page: owner violet, admin orange (warn), staff green (ok), viewer blue. */
-.tone-role-owner, .pill-role-owner { --tone: var(--agent); --tone-soft: var(--agent-soft); --tone-ink: var(--agent-ink); --tone-f: var(--f-agent); }
-.tone-role-admin, .pill-role-admin { --tone: var(--warn); --tone-soft: var(--warn-soft); --tone-ink: var(--warn-ink); --tone-f: var(--f-warn); }
-.tone-role-staff, .pill-role-staff { --tone: var(--ok); --tone-soft: var(--ok-soft); --tone-ink: var(--ok-ink); --tone-f: var(--f-ok); }
-.tone-role-viewer, .pill-role-viewer { --tone: var(--role-viewer); --tone-soft: var(--role-viewer-soft); --tone-ink: var(--role-viewer); --tone-f: var(--role-viewer); }
+.tone-role-owner,
+.pill-role-owner {
+  --tone: var(--agent);
+  --tone-soft: var(--agent-soft);
+  --tone-ink: var(--agent-ink);
+  --tone-f: var(--f-agent);
+}
+.tone-role-admin,
+.pill-role-admin {
+  --tone: var(--warn);
+  --tone-soft: var(--warn-soft);
+  --tone-ink: var(--warn-ink);
+  --tone-f: var(--f-warn);
+}
+.tone-role-staff,
+.pill-role-staff {
+  --tone: var(--ok);
+  --tone-soft: var(--ok-soft);
+  --tone-ink: var(--ok-ink);
+  --tone-f: var(--f-ok);
+}
+.tone-role-viewer,
+.pill-role-viewer {
+  --tone: var(--role-viewer);
+  --tone-soft: var(--role-viewer-soft);
+  --tone-ink: var(--role-viewer);
+  --tone-f: var(--role-viewer);
+}
 /* hero: the same violet family, for highlights that are not AI activity */
-.tone-hero, .pill-hero { --tone: var(--agent); --tone-soft: var(--agent-soft); --tone-ink: var(--agent-ink); --tone-f: var(--f-agent); }
+.tone-hero,
+.pill-hero {
+  --tone: var(--agent);
+  --tone-soft: var(--agent-soft);
+  --tone-ink: var(--agent-ink);
+  --tone-f: var(--f-agent);
+}

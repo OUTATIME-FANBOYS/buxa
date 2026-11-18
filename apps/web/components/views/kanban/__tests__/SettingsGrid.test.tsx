@@ -8,14 +8,23 @@ import { buildSeed } from '@buxa/shared';
 import { SettingsPage } from '@/components/views/kanban/export';
 import { CampClockPanel } from '@/components/components/camp/export';
 
-vi.mock('@/actions/camp', () => ({ updateCampClockAction: async () => ({ status: 'idle' }), archiveCamp: async () => ({ ok: true }), deleteCamp: async () => ({ ok: true }) }));
+vi.mock('@/actions/camp', () => ({
+  updateCampClockAction: async () => ({ status: 'idle' }),
+  archiveCamp: async () => ({ ok: true }),
+  deleteCamp: async () => ({ ok: true }),
+}));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
-vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push() {}, replace() {}, refresh() {} }), usePathname: () => '/camp/settings' }));
+vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({
+  useTaskDrawer: () => ({ openTask: () => undefined }),
+}));
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push() {}, replace() {}, refresh() {} }),
+  usePathname: () => '/camp/settings',
+}));
 
 const seed = buildSeed();
 /** The cards every camp's settings show, in order. The danger zone is added below only for the owner of a live camp. */
@@ -29,19 +38,40 @@ describe('the settings grid', () => {
   beforeEach(() => {
     updateProfile = vi.fn();
     h.store = {
-      s: { ...seed, ui: { ...seed.ui, agentsEnabled: false, theme: 'system' } }, agents: [], actions: { updateProfile, exportData: () => '{}', setTheme() {}, setAgentsEnabled() {} },
-      me: { id: 'u-1', name: 'Rosa Delgado', title: 'Coordinator', email: 'rosa@example.com' }, workspace: null, project: null, projects: [], wsTasks: [],
-      kindOf: () => 'open', members: [], myRole: 'owner', readOnly: false, userById: () => undefined, saveStatus: 'saved', sync: 'local',
+      s: { ...seed, ui: { ...seed.ui, agentsEnabled: false, theme: 'system' } },
+      agents: [],
+      actions: { updateProfile, exportData: () => '{}', setTheme() {}, setAgentsEnabled() {} },
+      me: { id: 'u-1', name: 'Rosa Delgado', title: 'Coordinator', email: 'rosa@example.com' },
+      workspace: null,
+      project: null,
+      projects: [],
+      wsTasks: [],
+      kindOf: () => 'open',
+      members: [],
+      myRole: 'owner',
+      readOnly: false,
+      userById: () => undefined,
+      saveStatus: 'saved',
+      sync: 'local',
     };
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = '';
+    act(() => root.unmount());
+    document.body.innerHTML = '';
   });
 
-  const render = (clock?: ReactNode, extra: { camp?: typeof OWNER_CAMP; archivedCamps?: { id: string; name: string; archivedAt: string }[] } = {}) => act(() => root.render(
-    <UiProvider Dialog={ConfirmDialog}><SettingsPage clock={clock} camp={extra.camp} archivedCamps={extra.archivedCamps} /></UiProvider>,
-  ));
+  const render = (
+    clock?: ReactNode,
+    extra: { camp?: typeof OWNER_CAMP; archivedCamps?: { id: string; name: string; archivedAt: string }[] } = {},
+  ) =>
+    act(() =>
+      root.render(
+        <UiProvider Dialog={ConfirmDialog}>
+          <SettingsPage clock={clock} camp={extra.camp} archivedCamps={extra.archivedCamps} />
+        </UiProvider>,
+      ),
+    );
   const cards = () => Array.from(document.querySelectorAll('.settings-grid > section.panel'));
   const appearance = () => cards().find(card => card.querySelector('h2')?.textContent === 'Appearance') as HTMLElement;
 
@@ -53,7 +83,11 @@ describe('the settings grid', () => {
   });
 
   it('puts the camp clock inside the Appearance card, not in a card of its own', () => {
-    render(<section className="panel"><h2>Camp clock</h2></section>);
+    render(
+      <section className="panel">
+        <h2>Camp clock</h2>
+      </section>,
+    );
     expect(cards().map(card => card.querySelector('h2')?.textContent)).toEqual(CARDS);
     expect(appearance().textContent).toContain('Camp clock');
   });
@@ -68,7 +102,9 @@ describe('the settings grid', () => {
     expect(group).not.toBeNull();
     expect(clock.querySelector('fieldset')).toBeNull();
     expect(clock.querySelector<HTMLInputElement>('input[name="clockFormat"]')?.value).toBe('24h');
-    const checked = Array.from(group?.querySelectorAll('[role="radio"]') ?? []).find(b => b.getAttribute('aria-checked') === 'true');
+    const checked = Array.from(group?.querySelectorAll('[role="radio"]') ?? []).find(
+      b => b.getAttribute('aria-checked') === 'true',
+    );
     expect(checked?.textContent).toBe('24-hour (09:05)');
     expect(Array.from(clock.querySelectorAll('button')).find(b => b.textContent === 'Save clock')).toBeDefined();
   });
@@ -76,7 +112,9 @@ describe('the settings grid', () => {
   it('switches the clock format on the segmented control without submitting the form', () => {
     render(<CampClockPanel campId="c-1" clockFormat="24h" canChange />);
     const clock = appearance();
-    const twelve = Array.from(clock.querySelectorAll<HTMLButtonElement>('[role="radio"]')).find(b => b.textContent === '12-hour (9:05 AM)');
+    const twelve = Array.from(clock.querySelectorAll<HTMLButtonElement>('[role="radio"]')).find(
+      b => b.textContent === '12-hour (9:05 AM)',
+    );
     act(() => {
       twelve?.click();
     });
@@ -106,7 +144,9 @@ describe('the settings grid', () => {
     render(undefined, { camp: OWNER_CAMP });
     expect(cards().map(card => card.querySelector('h2')?.textContent)).toEqual([...CARDS, 'Danger zone']);
     expect(cards().at(-1)?.querySelector('h2')?.textContent).toBe('Danger zone');
-    expect(Array.from(document.querySelectorAll('button')).map(b => b.textContent)).toEqual(expect.arrayContaining(['Archive camp', 'Delete camp']));
+    expect(Array.from(document.querySelectorAll('button')).map(b => b.textContent)).toEqual(
+      expect.arrayContaining(['Archive camp', 'Delete camp']),
+    );
   });
 
   it('hides the danger zone from a camp admin who is not the owner', () => {

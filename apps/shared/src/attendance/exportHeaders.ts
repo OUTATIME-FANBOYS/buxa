@@ -3,7 +3,8 @@
 const PLAIN_HEADERS = { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' };
 
 /** A short plain-text answer for the cases where there is no file to send. */
-export const plainText = (message: string, status: number): Response => new Response(message, { status, headers: PLAIN_HEADERS });
+export const plainText = (message: string, status: number): Response =>
+  new Response(message, { status, headers: PLAIN_HEADERS });
 
 /** Written first in a CSV so spreadsheet programs read accented names correctly. */
 export const BYTE_ORDER_MARK = '﻿';

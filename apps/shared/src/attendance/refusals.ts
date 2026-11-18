@@ -7,7 +7,10 @@ export type CheckInRefusal = Extract<CheckInResult, { ok: false }>;
 export type CheckOutRefusal = Extract<CheckOutResult, { ok: false }>;
 
 /** A refusal in plain words: a title for the person, and what to do next. */
-export interface Copy { title: string; body: string }
+export interface Copy {
+  title: string;
+  body: string;
+}
 
 const OVERRIDE_HINT = 'An admin can check them in anyway with a written reason.';
 const REASON_NEEDED = 'An override needs a written reason, so it is on record.';
@@ -16,7 +19,10 @@ const REASON_NEEDED = 'An override needs a written reason, so it is on record.';
 export function checkInRefusalCopy(refusal: CheckInRefusal, timeZone: string, clockFormat: ClockFormat): Copy {
   switch (refusal.reason) {
     case 'already_on_site':
-      return { title: 'Already on site', body: `Checked in at ${formatCampTime(refusal.since, timeZone, clockFormat)}. Nothing to do.` };
+      return {
+        title: 'Already on site',
+        body: `Checked in at ${formatCampTime(refusal.since, timeZone, clockFormat)}. Nothing to do.`,
+      };
     case 'not_valid': {
       const label = STATUS_DISPLAY[refusal.status].label;
       const why: Record<typeof refusal.status, string> = {
@@ -26,7 +32,10 @@ export function checkInRefusalCopy(refusal: CheckInRefusal, timeZone: string, cl
         none: 'They have no membership for this camp.',
       };
 
-      return { title: label, body: refusal.canOverride ? `${why[refusal.status]} ${OVERRIDE_HINT}` : why[refusal.status] };
+      return {
+        title: label,
+        body: refusal.canOverride ? `${why[refusal.status]} ${OVERRIDE_HINT}` : why[refusal.status],
+      };
     }
     case 'override_needs_reason':
       return { title: 'Write a reason', body: REASON_NEEDED };
@@ -43,9 +52,15 @@ export function checkOutRefusalCopy(refusal: CheckOutRefusal): Copy {
     case 'pickup_required':
       return refusal.guardians.length > 0
         ? { title: 'Choose who is collecting', body: 'A child can only leave with a guardian who may collect them.' }
-        : { title: 'No guardian to collect', body: `No guardian who may collect this child is linked. ${refusal.canOverride ? 'An admin can check them out with a written reason.' : 'Ask an admin.'}` };
+        : {
+            title: 'No guardian to collect',
+            body: `No guardian who may collect this child is linked. ${refusal.canOverride ? 'An admin can check them out with a written reason.' : 'Ask an admin.'}`,
+          };
     case 'pickup_not_authorised':
-      return { title: 'Not an authorised guardian', body: 'That person may not collect this child. Choose another guardian.' };
+      return {
+        title: 'Not an authorised guardian',
+        body: 'That person may not collect this child. Choose another guardian.',
+      };
     case 'override_needs_reason':
       return { title: 'Write a reason', body: REASON_NEEDED };
   }

@@ -3,7 +3,15 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import type { PersonSummary } from '@buxa/contracts';
 import { PeopleTable } from '@/components/components/people/export';
 
-const person = { id: 'p-1', givenName: 'Ada', familyName: 'Lee', preferredName: 'Annie', roles: [], status: 'valid', onSite: true } as unknown as PersonSummary;
+const person = {
+  id: 'p-1',
+  givenName: 'Ada',
+  familyName: 'Lee',
+  preferredName: 'Annie',
+  roles: [],
+  status: 'valid',
+  onSite: true,
+} as unknown as PersonSummary;
 
 describe('PeopleTable', () => {
   it('links each person by name, with the preferred name in brackets', () => {

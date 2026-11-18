@@ -26,7 +26,11 @@ function inRoundRect(x, y, [rx0, ry0, w, h, r]) {
 }
 
 /** The mark: the teal tile (or square) and three white bars, as in icon.svg. */
-const BARS = [[8, 8, 4, 12, 2], [14, 8, 4, 16, 2], [20, 8, 4, 8, 2]];
+const BARS = [
+  [8, 8, 4, 12, 2],
+  [14, 8, 4, 16, 2],
+  [20, 8, 4, 8, 2],
+];
 
 function render(size, { rounded }) {
   const scale = 32 / size;
@@ -34,7 +38,10 @@ function render(size, { rounded }) {
   const tile = rounded ? [0, 0, 32, 32, 8] : [0, 0, 32, 32, 0];
   for (let py = 0; py < size; py++) {
     for (let px = 0; px < size; px++) {
-      let r = 0, g = 0, b = 0, a = 0;
+      let r = 0,
+        g = 0,
+        b = 0,
+        a = 0;
       for (let sy = 0; sy < SAMPLES; sy++) {
         for (let sx = 0; sx < SAMPLES; sx++) {
           const x = (px + (sx + 0.5) / SAMPLES) * scale;
@@ -44,7 +51,10 @@ function render(size, { rounded }) {
           }
           const bar = BARS.some(bar => inRoundRect(x, y, bar));
           const colour = bar ? WHITE : TEAL;
-          r += colour[0]; g += colour[1]; b += colour[2]; a += 255;
+          r += colour[0];
+          g += colour[1];
+          b += colour[2];
+          a += 255;
         }
       }
       const n = SAMPLES * SAMPLES;
@@ -52,7 +62,9 @@ function render(size, { rounded }) {
       if (a > 0) {
         // Colour is averaged over covered samples only, so edges do not darken.
         const covered = a / 255;
-        data[i] = Math.round(r / covered); data[i + 1] = Math.round(g / covered); data[i + 2] = Math.round(b / covered);
+        data[i] = Math.round(r / covered);
+        data[i + 1] = Math.round(g / covered);
+        data[i + 2] = Math.round(b / covered);
       }
       data[i + 3] = Math.round(a / n);
     }
@@ -90,7 +102,8 @@ function chunk(type, body) {
 
 function encodePng(size, rgba) {
   const header = Buffer.alloc(13);
-  header.writeUInt32BE(size, 0); header.writeUInt32BE(size, 4);
+  header.writeUInt32BE(size, 0);
+  header.writeUInt32BE(size, 4);
   header[8] = 8; // bit depth
   header[9] = 6; // RGBA
   const raw = Buffer.alloc((size * 4 + 1) * size);
@@ -100,7 +113,9 @@ function encodePng(size, rgba) {
 
   return Buffer.concat([
     Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    chunk('IHDR', header), chunk('IDAT', deflateSync(raw, { level: 9 })), chunk('IEND', Buffer.alloc(0)),
+    chunk('IHDR', header),
+    chunk('IDAT', deflateSync(raw, { level: 9 })),
+    chunk('IEND', Buffer.alloc(0)),
   ]);
 }
 

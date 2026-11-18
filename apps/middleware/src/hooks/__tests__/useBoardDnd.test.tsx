@@ -18,7 +18,11 @@ let api: Api | undefined;
 const seed = buildSeed();
 
 function Probe() {
-  api = useBoardDnd(seed.projects[0], seed.tasks.filter((t) => t.projectId === seed.projects[0].id), true);
+  api = useBoardDnd(
+    seed.projects[0],
+    seed.tasks.filter(t => t.projectId === seed.projects[0].id),
+    true,
+  );
 
   return null;
 }
@@ -29,10 +33,17 @@ describe('useBoardDnd', () => {
     api = undefined;
     h.store = { actions: { moveTask: vi.fn(), moveColumn: vi.fn() } };
     root = createRoot(document.body.appendChild(document.createElement('div')));
-    act(() => root.render(<UiProvider Dialog={StubDialog}><Probe /></UiProvider>));
+    act(() =>
+      root.render(
+        <UiProvider Dialog={StubDialog}>
+          <Probe />
+        </UiProvider>,
+      ),
+    );
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = '';
+    act(() => root.unmount());
+    document.body.innerHTML = '';
   });
 
   it('starts idle, with a scroller and handlers for cards and columns', () => {

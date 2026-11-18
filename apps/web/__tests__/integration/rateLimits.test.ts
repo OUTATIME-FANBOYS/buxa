@@ -3,27 +3,40 @@ import { ErrorBodySchema } from '@buxa/contracts';
 import { InMemoryStore } from '@buxa/server/__tests__/fakes';
 import { call, startRuntime } from './harness';
 import { createTestIdentityProvider } from '@buxa/server/__tests__/tokens';
-import { createMemoryRateLimiter, RATE_RULES, type RateDecision, type RateLimiter } from '@buxa/server/rateLimit/limiter';
+import {
+  createMemoryRateLimiter,
+  RATE_RULES,
+  type RateDecision,
+  type RateLimiter,
+} from '@buxa/server/rateLimit/limiter';
 import { GET as ready } from '../../app/ready/route';
 import { settle } from '@buxa/domain';
 
 const idp = await createTestIdentityProvider();
 let env: ReturnType<typeof startRuntime> | undefined;
 afterEach(async () => {
-  await env?.stop(); env = undefined; vi.restoreAllMocks();
+  await env?.stop();
+  env = undefined;
+  vi.restoreAllMocks();
 });
 
 /** A limiter that refuses everything: the client must see a 429 and no work may happen. */
-const refusing: RateLimiter = { hit(): Promise<RateDecision> {
-  return settle(() => {
-    return { allowed: false, remaining: 0, retryAfterSeconds: 42 };
-  });
-} };
+const refusing: RateLimiter = {
+  hit(): Promise<RateDecision> {
+    return settle(() => {
+      return { allowed: false, remaining: 0, retryAfterSeconds: 42 };
+    });
+  },
+};
 
 describe('POST /v1/orgs is rate limited per person', () => {
   it('lets the limit many camps through, refuses the next one with 429 and Retry-After, and does not write it', async () => {
     const store = new InMemoryStore();
-    env = startRuntime({ repositories: store.asRepositories(), verifier: idp.verifier, rateLimiter: createMemoryRateLimiter() });
+    env = startRuntime({
+      repositories: store.asRepositories(),
+      verifier: idp.verifier,
+      rateLimiter: createMemoryRateLimiter(),
+    });
     const token = await idp.token();
     const { limit } = RATE_RULES.createCamp;
     for (let i = 1; i <= limit; i++) {
@@ -38,7 +51,11 @@ describe('POST /v1/orgs is rate limited per person', () => {
   });
 
   it('counts a second person separately', async () => {
-    env = startRuntime({ repositories: new InMemoryStore().asRepositories(), verifier: idp.verifier, rateLimiter: refusing });
+    env = startRuntime({
+      repositories: new InMemoryStore().asRepositories(),
+      verifier: idp.verifier,
+      rateLimiter: refusing,
+    });
     const token = await idp.token();
     expect((await call('POST', '/v1/orgs', { token, body: { name: 'Blocked', slug: 'blocked' } })).status).toBe(429);
   });
@@ -64,11 +81,13 @@ describe('/ready', () => {
   });
 
   it('answers 503 when the limiter and the database are both unreachable, without leaking details', async () => {
-    const broken: RateLimiter = { hit() {
-      return settle(() => {
-        throw new Error('connection refused 10.0.0.5');
-      });
-    } };
+    const broken: RateLimiter = {
+      hit() {
+        return settle(() => {
+          throw new Error('connection refused 10.0.0.5');
+        });
+      },
+    };
     env = startRuntime({ verifier: idp.verifier, rateLimiter: broken });
     const r = await ready(new Request('http://localhost/ready'));
     expect(r.status).toBe(503);

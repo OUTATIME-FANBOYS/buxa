@@ -20,7 +20,10 @@ function Probe() {
   return null;
 }
 
-const card = { person: { id: 'p-1', givenName: 'Ada', familyName: 'Lee', preferredName: null, status: 'valid' }, onSiteSince: null } as unknown as PersonCard;
+const card = {
+  person: { id: 'p-1', givenName: 'Ada', familyName: 'Lee', preferredName: null, status: 'valid' },
+  onSiteSince: null,
+} as unknown as PersonCard;
 
 describe('useCheckIn', () => {
   let root: Root;
@@ -31,7 +34,8 @@ describe('useCheckIn', () => {
     act(() => root.render(<Probe />));
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = '';
+    act(() => root.unmount());
+    document.body.innerHTML = '';
   });
 
   it('starts idle', () => {
@@ -55,7 +59,11 @@ describe('useCheckIn', () => {
     await act(async () => {
       await requirePresent(api, 'api').checkIn(card, 'qr', 'Early pickup agreed');
     });
-    expect(h.checkInAction).toHaveBeenCalledWith({ personId: 'p-1', method: 'qr', overrideReason: 'Early pickup agreed' });
+    expect(h.checkInAction).toHaveBeenCalledWith({
+      personId: 'p-1',
+      method: 'qr',
+      overrideReason: 'Early pickup agreed',
+    });
   });
   it('clears back to idle', () => {
     act(() => requirePresent(api, 'api').pickPerson(card));

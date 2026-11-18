@@ -6,10 +6,18 @@ import type { ActionState } from '@buxa/shared';
  */
 export function ActionMessage({ state }: { state: ActionState }) {
   if (state.status === 'success') {
-    return state.message ? <p role="status" className="people-message people-message-ok">{state.message}</p> : null;
+    return state.message ? (
+      <p role="status" className="people-message people-message-ok">
+        {state.message}
+      </p>
+    ) : null;
   }
   if (state.status === 'error' && !state.fieldErrors) {
-    return <p role="alert" className="field-error">{state.message}</p>;
+    return (
+      <p role="alert" className="field-error">
+        {state.message}
+      </p>
+    );
   }
 
   return null;

@@ -7,7 +7,15 @@ import { ActionMessage } from './ActionMessage';
 import { Button } from '@/components/elements/export';
 
 /** Cancels one enrolment. The label names the camper, so a screen reader user knows which row the button belongs to. */
-export function CancelEnrolmentButton({ classId, enrolmentId, camperName }: { classId: string; enrolmentId: string; camperName: string }) {
+export function CancelEnrolmentButton({
+  classId,
+  enrolmentId,
+  camperName,
+}: {
+  classId: string;
+  enrolmentId: string;
+  camperName: string;
+}) {
   const [state, formAction, pending] = useActionState(cancelEnrolmentAction, idle);
 
   return (

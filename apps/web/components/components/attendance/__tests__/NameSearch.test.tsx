@@ -3,7 +3,9 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { NameSearch } from '@/components/components/attendance/export';
 import { settle } from '@buxa/domain';
 
-vi.mock('@buxa/server/composers/attendance/searchPeople', () => ({ searchPeopleAction: () => settle(() => ({ kind: 'ok', value: [] })) }));
+vi.mock('@buxa/server/composers/attendance/searchPeople', () => ({
+  searchPeopleAction: () => settle(() => ({ kind: 'ok', value: [] })),
+}));
 
 describe('NameSearch', () => {
   it('starts with an empty search field and asks for a name', () => {

@@ -37,16 +37,30 @@ export async function AttendanceScreen({ searchParams }: { searchParams: SearchP
   const canExport = authorize(actor, 'attendance:export').allow;
   const values = parsed.ok
     ? { from: parsed.filter.from, to: parsed.filter.to, personId: parsed.filter.personId ?? '' }
-    : { from: readValue(searchParams, 'from'), to: readValue(searchParams, 'to'), personId: readValue(searchParams, 'personId') };
+    : {
+        from: readValue(searchParams, 'from'),
+        to: readValue(searchParams, 'to'),
+        personId: readValue(searchParams, 'personId'),
+      };
 
   return (
     <div className="page">
-      <PageHeader title="Attendance" subtitle="Who came in and out, in camp time." actions={<Button href={helpLink('exports')}>{HELP_LINK_LABEL}</Button>} />
+      <PageHeader
+        title="Attendance"
+        subtitle="Who came in and out, in camp time."
+        actions={<Button href={helpLink('exports')}>{HELP_LINK_LABEL}</Button>}
+      />
       <LogFilters values={values} people={people}>
-        {parsed.ok && canExport && <Button className="log-export" href={attendanceExportPath(parsed.filter)} download>Download CSV</Button>}
+        {parsed.ok && canExport && (
+          <Button className="log-export" href={attendanceExportPath(parsed.filter)} download>
+            Download CSV
+          </Button>
+        )}
       </LogFilters>
       {!parsed.ok && <Notice tone="crit" title="Check the dates" body={parsed.message} />}
-      {parsed.ok && entries.length === 0 && <Empty icon="list" title="No visits for these days" body="Try a wider range, or another person." />}
+      {parsed.ok && entries.length === 0 && (
+        <Empty icon="list" title="No visits for these days" body="Try a wider range, or another person." />
+      )}
       {parsed.ok && entries.length > 0 && <LogTable entries={entries} timeZone={timeZone} clockFormat={clockFormat} />}
     </div>
   );

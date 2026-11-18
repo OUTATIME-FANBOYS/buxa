@@ -23,7 +23,12 @@ export async function NewPerson({ householdId }: { householdId?: string }) {
     return (
       <div className="page">
         <PageHeader title="Add person" />
-        <Empty icon="alert" title="Your role cannot add people" body="Ask a staff member or admin to add them." action={<Button href={ROUTES.people}>Back to people</Button>} />
+        <Empty
+          icon="alert"
+          title="Your role cannot add people"
+          body="Ask a staff member or admin to add them."
+          action={<Button href={ROUTES.people}>Back to people</Button>}
+        />
       </div>
     );
   }
@@ -32,8 +37,14 @@ export async function NewPerson({ householdId }: { householdId?: string }) {
 
   return (
     <div className="page narrow">
-      <PageHeader title="Add person"
-        subtitle={household ? `Adding to the ${household.name} household.` : 'A child must join a household that has a parent or guardian in it.'} />
+      <PageHeader
+        title="Add person"
+        subtitle={
+          household
+            ? `Adding to the ${household.name} household.`
+            : 'A child must join a household that has a parent or guardian in it.'
+        }
+      />
       <NewPersonForm household={household ? { id: household.id, name: household.name } : null} households={choices} />
     </div>
   );

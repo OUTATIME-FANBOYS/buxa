@@ -12,7 +12,11 @@ import { CheckOutPanel } from './CheckOutPanel';
 /** The list's id that receives focus after a check-out, since the row it came from leaves the list. */
 export const ON_SITE_LIST_ID = 'on-site-list';
 
-interface Props { row: OnSiteRowView; canRecord: boolean; canOverride: boolean }
+interface Props {
+  row: OnSiteRowView;
+  canRecord: boolean;
+  canOverride: boolean;
+}
 
 /**
  * One person on site: name, a Minor mark, the check-in time and the check-out time. The list only holds people nobody has checked out yet,
@@ -35,7 +39,8 @@ export function OnSiteRow({ row, canRecord, canOverride }: Props) {
 
   // Cancel, Escape and the close button all come here: close the form, then give focus back to the trigger.
   const cancel = () => {
-    close(); toggle.current?.focus();
+    close();
+    toggle.current?.focus();
   };
 
   return (
@@ -43,7 +48,11 @@ export function OnSiteRow({ row, canRecord, canOverride }: Props) {
       <div className="onsite-head">
         <div className="onsite-who">
           <span className="onsite-name">{row.name}</span>
-          {row.isMinor === true && <Pill tone="warn" dot={false}>Minor</Pill>}
+          {row.isMinor === true && (
+            <Pill tone="warn" dot={false}>
+              Minor
+            </Pill>
+          )}
         </div>
       </div>
       <div className="onsite-times">
@@ -51,15 +60,30 @@ export function OnSiteRow({ row, canRecord, canOverride }: Props) {
         <p>Checked out: —</p>
       </div>
       {canRecord && (
-        <Button variant="primary" ref={toggle} type="button" className="onsite-btn" aria-haspopup="dialog" aria-expanded={panelOpen}
-          aria-controls={panelOpen ? panelId : undefined} onClick={open}>
+        <Button
+          variant="primary"
+          ref={toggle}
+          type="button"
+          className="onsite-btn"
+          aria-haspopup="dialog"
+          aria-expanded={panelOpen}
+          aria-controls={panelOpen ? panelId : undefined}
+          onClick={open}
+        >
           Check out
         </Button>
       )}
-      {state.phase === 'done' && <p role="status" className="ok-ink">Checked out.</p>}
+      {state.phase === 'done' && (
+        <p role="status" className="ok-ink">
+          Checked out.
+        </p>
+      )}
       {panelOpen && (
         <Dialog title={`Check out ${row.name}`} onClose={cancel}>
-          <CheckOutPanel id={panelId} row={row} canOverride={canOverride}
+          <CheckOutPanel
+            id={panelId}
+            row={row}
+            canOverride={canOverride}
             draft={'draft' in state ? state.draft : { collectedBy: null, overrideReason: null }}
             busy={state.phase === 'submitting'}
             refusal={state.phase === 'refused' ? state.refusal : null}
@@ -70,7 +94,8 @@ export function OnSiteRow({ row, canRecord, canOverride }: Props) {
               if ('draft' in state) {
                 void submit(state.draft);
               }
-            }} />
+            }}
+          />
         </Dialog>
       )}
     </li>

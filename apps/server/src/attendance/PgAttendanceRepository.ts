@@ -5,7 +5,16 @@ import { PersonNotFoundError } from '../people/PeopleRepository';
 import { personExists, requirePerson } from '../people/PgPersonQueries';
 import { closeVisit, insertCheckIn } from './PgCheckInWrites';
 import { openVisit, queryCheckIns, requireCheckIn } from './PgCheckInQueries';
-import { AlreadyCheckedInError, MAX_LOG_ROWS, NotOnSiteError, type AttendanceQuery, type AttendanceRepository, type CheckInRecord, type NewCheckIn, type NewCheckOut } from './AttendanceRepository';
+import {
+  AlreadyCheckedInError,
+  MAX_LOG_ROWS,
+  NotOnSiteError,
+  type AttendanceQuery,
+  type AttendanceRepository,
+  type CheckInRecord,
+  type NewCheckIn,
+  type NewCheckOut,
+} from './AttendanceRepository';
 
 /** Postgres adapter for check-ins. The partial unique index is the final guard against a second open visit, even under a race. */
 export class PgAttendanceRepository implements AttendanceRepository {
@@ -16,7 +25,9 @@ export class PgAttendanceRepository implements AttendanceRepository {
   }
 
   onSite(orgId: string): Promise<CheckInRecord[]> {
-    return withOrg(this.pool, orgId, db => queryCheckIns(db, 'WHERE checked_out_at IS NULL', [], 'ORDER BY checked_in_at, id'));
+    return withOrg(this.pool, orgId, db =>
+      queryCheckIns(db, 'WHERE checked_out_at IS NULL', [], 'ORDER BY checked_in_at, id'),
+    );
   }
 
   async checkIn(actor: Actor, input: NewCheckIn): Promise<CheckInRecord> {
@@ -54,14 +65,16 @@ export class PgAttendanceRepository implements AttendanceRepository {
       return Promise.resolve([]);
     }
 
-    return withOrg(this.pool, orgId, db => queryCheckIns(
-      db,
-      `WHERE checked_in_at >= $1::timestamptz AND checked_in_at < $2::timestamptz
+    return withOrg(this.pool, orgId, db =>
+      queryCheckIns(
+        db,
+        `WHERE checked_in_at >= $1::timestamptz AND checked_in_at < $2::timestamptz
          AND ($3::uuid IS NULL OR person_id = $3::uuid)
          AND (NOT $4::boolean OR checked_out_at IS NULL)`,
-      [query.from, query.to, query.personId ?? null, query.onSiteOnly === true],
-      'ORDER BY checked_in_at DESC, id DESC',
-      MAX_LOG_ROWS,
-    ));
+        [query.from, query.to, query.personId ?? null, query.onSiteOnly === true],
+        'ORDER BY checked_in_at DESC, id DESC',
+        MAX_LOG_ROWS,
+      ),
+    );
   }
 }

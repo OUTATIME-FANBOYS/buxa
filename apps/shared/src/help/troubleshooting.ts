@@ -37,9 +37,7 @@ export const TROUBLESHOOTING_SECTION: HelpSectionContent = {
     },
     {
       heading: '“The export says there are too many visits”',
-      paragraphs: [
-        'An export of 5000 visits or more is refused. Choose a shorter date range and export each part.',
-      ],
+      paragraphs: ['An export of 5000 visits or more is refused. Choose a shorter date range and export each part.'],
     },
   ],
 };

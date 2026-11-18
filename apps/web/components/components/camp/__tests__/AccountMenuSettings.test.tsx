@@ -19,7 +19,8 @@ describe('the account menu', () => {
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = '';
+    act(() => root.unmount());
+    document.body.innerHTML = '';
   });
 
   const openMenu = () => {
@@ -41,7 +42,14 @@ describe('the account menu', () => {
 
   it('lists Profile, Settings, Help, Reports, the theme toggle, then Sign out', () => {
     const items = openMenu();
-    expect(items.map(item => item.textContent)).toEqual(['Profile', 'Settings', 'Help', 'Reports', 'Dark mode', 'Sign out']);
+    expect(items.map(item => item.textContent)).toEqual([
+      'Profile',
+      'Settings',
+      'Help',
+      'Reports',
+      'Dark mode',
+      'Sign out',
+    ]);
   });
 
   it('links Profile to the Profile section of Settings, and the others to their pages', () => {

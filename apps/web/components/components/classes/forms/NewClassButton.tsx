@@ -15,7 +15,15 @@ export function NewClassButton() {
 
   return (
     <>
-      <Button variant="primary" type="button" className="classes-target" aria-haspopup="dialog" onClick={() => setOpen(true)}>New class</Button>
+      <Button
+        variant="primary"
+        type="button"
+        className="classes-target"
+        aria-haspopup="dialog"
+        onClick={() => setOpen(true)}
+      >
+        New class
+      </Button>
       {open && (
         <Dialog title="New class" onClose={close} className="class-dialog">
           <NewClassForm variant="dialog" onCancel={close} />

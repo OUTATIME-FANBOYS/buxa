@@ -26,7 +26,9 @@ export function createCredentialService(deps: CredentialServiceDeps): Credential
 
       // The token exists only here and in the response: storage gets its hash. The repository revokes any previous badge in the same step.
       const token = generateCredentialToken();
-      const record = await guard(() => credentials.issue(actor, personId, hashCredentialToken(token), clock().toISOString()));
+      const record = await guard(() =>
+        credentials.issue(actor, personId, hashCredentialToken(token), clock().toISOString()),
+      );
 
       return {
         credentialId: record.id,

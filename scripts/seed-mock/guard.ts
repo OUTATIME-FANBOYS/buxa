@@ -18,6 +18,8 @@ export function assertLocalDatabase(url: string | undefined): void {
   const hosts = [parsed.hostname, ...(overridden === null ? [] : [overridden])];
   const remote = hosts.find(host => !LOCAL_HOSTS.has(host));
   if (remote !== undefined) {
-    throw new Error(`Refusing to seed: DATABASE_URL points at "${remote}", not localhost. The mock seed only runs against a local database.`);
+    throw new Error(
+      `Refusing to seed: DATABASE_URL points at "${remote}", not localhost. The mock seed only runs against a local database.`,
+    );
   }
 }

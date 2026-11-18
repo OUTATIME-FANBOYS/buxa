@@ -1,7 +1,16 @@
 import type { Actor } from '@buxa/domain';
 import { PersonNotFoundError } from '../people/PeopleRepository';
 import { compareText, instant, newId, type InMemoryDatabase, type StoredCheckIn } from '../people/InMemoryDatabase';
-import { AlreadyCheckedInError, MAX_LOG_ROWS, NotOnSiteError, type AttendanceQuery, type AttendanceRepository, type CheckInRecord, type NewCheckIn, type NewCheckOut } from './AttendanceRepository';
+import {
+  AlreadyCheckedInError,
+  MAX_LOG_ROWS,
+  NotOnSiteError,
+  type AttendanceQuery,
+  type AttendanceRepository,
+  type CheckInRecord,
+  type NewCheckIn,
+  type NewCheckOut,
+} from './AttendanceRepository';
 import { settle } from '@buxa/domain';
 
 const toRecord = (v: StoredCheckIn): CheckInRecord => ({
@@ -60,9 +69,16 @@ export class InMemoryAttendanceRepository implements AttendanceRepository {
         note: input.note,
       };
       this.db.checkIns.set(visit.id, visit);
-      this.db.record(actor, 'attendance.check_in', 'check_in', visit.id, { personId: input.personId, method: input.method });
+      this.db.record(actor, 'attendance.check_in', 'check_in', visit.id, {
+        personId: input.personId,
+        method: input.method,
+      });
       if (input.overrideReason !== null) {
-        this.db.record(actor, 'attendance.override', 'check_in', visit.id, { personId: input.personId, phase: 'check_in', reason: input.overrideReason });
+        this.db.record(actor, 'attendance.override', 'check_in', visit.id, {
+          personId: input.personId,
+          phase: 'check_in',
+          reason: input.overrideReason,
+        });
       }
 
       return toRecord(visit);
@@ -75,7 +91,10 @@ export class InMemoryAttendanceRepository implements AttendanceRepository {
       if (!visit) {
         throw new NotOnSiteError();
       }
-      if (input.collectedByPersonId !== null && !this.db.inOrg(this.db.people, actor.orgId, input.collectedByPersonId)) {
+      if (
+        input.collectedByPersonId !== null &&
+        !this.db.inOrg(this.db.people, actor.orgId, input.collectedByPersonId)
+      ) {
         throw new PersonNotFoundError();
       }
       const at = instant(input.at);
@@ -87,9 +106,16 @@ export class InMemoryAttendanceRepository implements AttendanceRepository {
       visit.collectedByPersonId = input.collectedByPersonId;
       visit.overrideReason = input.overrideReason ?? visit.overrideReason;
       visit.note = input.note ?? visit.note;
-      this.db.record(actor, 'attendance.check_out', 'check_in', visit.id, { personId: input.personId, collectedByPersonId: input.collectedByPersonId });
+      this.db.record(actor, 'attendance.check_out', 'check_in', visit.id, {
+        personId: input.personId,
+        collectedByPersonId: input.collectedByPersonId,
+      });
       if (input.overrideReason !== null) {
-        this.db.record(actor, 'attendance.override', 'check_in', visit.id, { personId: input.personId, phase: 'check_out', reason: input.overrideReason });
+        this.db.record(actor, 'attendance.override', 'check_in', visit.id, {
+          personId: input.personId,
+          phase: 'check_out',
+          reason: input.overrideReason,
+        });
       }
 
       return toRecord(visit);
@@ -102,10 +128,14 @@ export class InMemoryAttendanceRepository implements AttendanceRepository {
       const to = instant(query.to);
 
       return [...this.db.checkIns.values()]
-        .filter(v => v.orgId === orgId
-          && v.checkedInAt >= from && v.checkedInAt < to
-          && (query.personId === undefined || v.personId === query.personId)
-          && (query.onSiteOnly !== true || v.checkedOutAt === null))
+        .filter(
+          v =>
+            v.orgId === orgId &&
+            v.checkedInAt >= from &&
+            v.checkedInAt < to &&
+            (query.personId === undefined || v.personId === query.personId) &&
+            (query.onSiteOnly !== true || v.checkedOutAt === null),
+        )
         .sort((a, b) => compareText(b.checkedInAt, a.checkedInAt) || compareText(b.id, a.id))
         .slice(0, MAX_LOG_ROWS)
         .map(toRecord);
@@ -113,6 +143,8 @@ export class InMemoryAttendanceRepository implements AttendanceRepository {
   }
 
   private openVisit(orgId: string, personId: string): StoredCheckIn | undefined {
-    return [...this.db.checkIns.values()].find(v => v.orgId === orgId && v.personId === personId && v.checkedOutAt === null);
+    return [...this.db.checkIns.values()].find(
+      v => v.orgId === orgId && v.personId === personId && v.checkedOutAt === null,
+    );
   }
 }

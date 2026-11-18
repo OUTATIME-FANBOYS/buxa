@@ -17,16 +17,20 @@ const CEDAR = { id: 'o-9', name: 'Camp Cedar', archivedAt: '2026-10-02T09:00:00.
 describe('CampSwitcher with archived camps', () => {
   let root: Root;
   beforeEach(() => {
-    h.select.mockClear(); h.push.mockClear(); h.refresh.mockClear();
+    h.select.mockClear();
+    h.push.mockClear();
+    h.refresh.mockClear();
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = '';
+    act(() => root.unmount());
+    document.body.innerHTML = '';
   });
 
-  const open = () => act(() => {
-    document.querySelector<HTMLButtonElement>('button[aria-label="Switch camp"]')?.click();
-  });
+  const open = () =>
+    act(() => {
+      document.querySelector<HTMLButtonElement>('button[aria-label="Switch camp"]')?.click();
+    });
   const labels = () => Array.from(document.querySelectorAll('[role="menuitem"]')).map(i => i.textContent?.trim());
 
   it('lists archived camps under an "Archived" label, after the live camps', () => {
@@ -42,7 +46,9 @@ describe('CampSwitcher with archived camps', () => {
   it('opens an archived camp by selecting it, the same way as a live camp', async () => {
     act(() => root.render(<CampSwitcher camps={[live]} current={live} archivedCamps={[CEDAR]} />));
     open();
-    const cedar = Array.from(document.querySelectorAll<HTMLElement>('[role="menuitem"]')).find(i => i.textContent?.trim() === 'Camp Cedar');
+    const cedar = Array.from(document.querySelectorAll<HTMLElement>('[role="menuitem"]')).find(
+      i => i.textContent?.trim() === 'Camp Cedar',
+    );
     await act(async () => {
       cedar?.click();
     });

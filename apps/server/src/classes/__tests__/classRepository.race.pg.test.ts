@@ -71,7 +71,9 @@ describe.skipIf(!url)('enrolment races on Postgres', () => {
         expect(losses[0], `trial ${trial}`).toBeInstanceOf(OverlapError);
 
         const live = await fx.pool.query<{ n: number }>(
-          `SELECT count(*)::int AS n FROM enrolments WHERE person_id = $1 AND status = 'enrolled'`, [camper]);
+          `SELECT count(*)::int AS n FROM enrolments WHERE person_id = $1 AND status = 'enrolled'`,
+          [camper],
+        );
         expect(live.rows[0].n, `trial ${trial}`).toBe(1);
       }
     } finally {

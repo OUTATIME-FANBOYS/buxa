@@ -5,13 +5,14 @@ import { actorsFor, createCamp, findCampId, resetCamp, type AccountChoice } from
 import { seedRoster, type RosterCounts } from './people';
 import { seedVisits } from './visits';
 
-export interface SeedOptions extends AccountChoice { reset: boolean }
+export interface SeedOptions extends AccountChoice {
+  reset: boolean;
+}
 
 const ACCOUNT_KEYS: (keyof AccountChoice)[] = ['owner', 'admin', 'staff', 'viewer'];
 
 export type SeedResult =
-  | { status: 'already-seeded' }
-  | { status: 'seeded'; counts: RosterCounts & { checkIns: number } };
+  { status: 'already-seeded' } | { status: 'seeded'; counts: RosterCounts & { checkIns: number } };
 
 /** How many people the camp has. A camp with none is treated as not seeded, so a failed run can simply be run again. */
 async function peopleCount(pool: pg.Pool, orgId: string): Promise<number> {
@@ -28,16 +29,18 @@ async function peopleCount(pool: pg.Pool, orgId: string): Promise<number> {
 export async function seedMock(pool: pg.Pool, options: SeedOptions, now: Date = new Date()): Promise<SeedResult> {
   const existing = await findCampId(pool);
   if (existing !== null && ACCOUNT_KEYS.some(key => options[key] !== undefined)) {
-    throw new Error('The account options only apply when the camp is first created. Drop them, or drop the camp to choose new accounts.');
+    throw new Error(
+      'The account options only apply when the camp is first created. Drop them, or drop the camp to choose new accounts.',
+    );
   }
-  if (existing !== null && !options.reset && await peopleCount(pool, existing) > 0) {
+  if (existing !== null && !options.reset && (await peopleCount(pool, existing)) > 0) {
     return { status: 'already-seeded' };
   }
 
   let at = now;
   const repos = createPgRepositories(pool);
   const services = createServices(repos, () => new Date(at.getTime()));
-  const orgId = existing ?? await createCamp(pool, services, repos, options);
+  const orgId = existing ?? (await createCamp(pool, services, repos, options));
   try {
     await resetCamp(pool, orgId);
     const actors = await actorsFor(pool, orgId);

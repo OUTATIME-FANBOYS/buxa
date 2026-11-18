@@ -6,14 +6,27 @@ import { fieldError, idle } from '@buxa/shared';
 import { enrolAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
 
-interface CamperChoice { id: string; name: string }
+interface CamperChoice {
+  id: string;
+  name: string;
+}
 
 /**
  * Enrol one camper in one session. When the session is full only the waitlist button is offered: a full session never takes a
  * place. An override reason is shown to admins only (the service checks the permission again).
  */
-export function EnrolForm({ classId, sessionId, campers, full, canOverride }: {
-  classId: string; sessionId: string; campers: readonly CamperChoice[]; full: boolean; canOverride: boolean;
+export function EnrolForm({
+  classId,
+  sessionId,
+  campers,
+  full,
+  canOverride,
+}: {
+  classId: string;
+  sessionId: string;
+  campers: readonly CamperChoice[];
+  full: boolean;
+  canOverride: boolean;
 }) {
   const [state, formAction, pending] = useActionState(enrolAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
@@ -29,18 +42,30 @@ export function EnrolForm({ classId, sessionId, campers, full, canOverride }: {
   const noCampers = campers.length === 0;
 
   return (
-    <form ref={formRef} action={formAction} className="panel stack classes-enrol" aria-label="Enrol a camper in this session">
+    <form
+      ref={formRef}
+      action={formAction}
+      className="panel stack classes-enrol"
+      aria-label="Enrol a camper in this session"
+    >
       <input type="hidden" name="classId" value={classId} />
       <input type="hidden" name="sessionId" value={sessionId} />
       <Field label="Camper *" error={camperError}>
         <select name="camperId" defaultValue="" aria-invalid={camperError ? true : undefined} disabled={noCampers}>
           <option value="">{noCampers ? 'No campers in the camp yet' : 'Choose a camper'}</option>
-          {campers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          {campers.map(c => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
         </select>
       </Field>
       {canOverride && (
-        <Field label="Override reason (admins only)" error={fieldError(state, 'override')}
-          hint="Needed only to place a camper who clashes with another session. The reason is kept in the audit log.">
+        <Field
+          label="Override reason (admins only)"
+          error={fieldError(state, 'override')}
+          hint="Needed only to place a camper who clashes with another session. The reason is kept in the audit log."
+        >
           <input name="overrideReason" maxLength={500} autoComplete="off" />
         </Field>
       )}
@@ -48,9 +73,25 @@ export function EnrolForm({ classId, sessionId, campers, full, canOverride }: {
         {full ? (
           <p className="muted">This session is full. A camper can join the waitlist instead.</p>
         ) : (
-          <Button variant="primary" type="submit" name="intent" value="enrol" className="classes-target" disabled={pending || noCampers}>Enrol camper</Button>
+          <Button
+            variant="primary"
+            type="submit"
+            name="intent"
+            value="enrol"
+            className="classes-target"
+            disabled={pending || noCampers}
+          >
+            Enrol camper
+          </Button>
         )}
-        <Button type="submit" name="intent" value="waitlist" variant={full ? 'primary' : 'secondary'} className="classes-target" disabled={pending || noCampers}>
+        <Button
+          type="submit"
+          name="intent"
+          value="waitlist"
+          variant={full ? 'primary' : 'secondary'}
+          className="classes-target"
+          disabled={pending || noCampers}
+        >
           Add to waitlist
         </Button>
       </div>

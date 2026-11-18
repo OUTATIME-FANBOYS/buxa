@@ -2,12 +2,34 @@ import type { Filter, Priority, Task, ColumnKind } from './types';
 import { addDays, diffDays, today } from '../dates';
 
 export const PRIORITIES: Priority[] = ['low', 'medium', 'high', 'critical'];
-export const PRIORITY_LABEL: Record<Priority, string> = { low: 'Low', medium: 'Medium', high: 'High', critical: 'Critical' };
+export const PRIORITY_LABEL: Record<Priority, string> = {
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High',
+  critical: 'Critical',
+};
 export const PRIORITY_RANK: Record<Priority, number> = { low: 1, medium: 2, high: 3, critical: 4 };
 
-export const emptyFilter: Filter = { q: '', priorities: [], assignees: [], columns: [], due: 'any', tags: [], sort: 'manual', archived: false };
+export const emptyFilter: Filter = {
+  q: '',
+  priorities: [],
+  assignees: [],
+  columns: [],
+  due: 'any',
+  tags: [],
+  sort: 'manual',
+  archived: false,
+};
 export const isFilterActive = (f: Filter) =>
-  !!(f.q || f.priorities.length || f.assignees.length || f.columns.length || f.due !== 'any' || f.tags.length || f.archived);
+  !!(
+    f.q ||
+    f.priorities.length ||
+    f.assignees.length ||
+    f.columns.length ||
+    f.due !== 'any' ||
+    f.tags.length ||
+    f.archived
+  );
 
 export type DueTone = 'overdue' | 'soon' | 'normal' | 'done';
 export function dueInfo(due: string | undefined, kind: ColumnKind): { label: string; tone: DueTone } | null {
@@ -94,4 +116,5 @@ export function sortTasks(tasks: Task[], sort: Filter['sort']): Task[] {
 export const subtaskProgress = (t: Task) => ({ done: t.subtasks.filter(s => s.done).length, total: t.subtasks.length });
 export const soonDate = () => addDays(today(), 7);
 export const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-3);
-export const fmtSize = (n: number) => n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(0)} KB` : `${(n / 1048576).toFixed(1)} MB`;
+export const fmtSize = (n: number) =>
+  n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(0)} KB` : `${(n / 1048576).toFixed(1)} MB`;

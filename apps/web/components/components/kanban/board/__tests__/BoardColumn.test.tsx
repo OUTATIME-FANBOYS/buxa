@@ -5,16 +5,31 @@ import { BoardColumn, type BoardColumnProps } from '@/components/components/kanb
 
 const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
-vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
-vi.mock('@buxa/middleware/hooks/useTaskCommands', () => ({ useTaskCommands: () => ({ open() {}, duplicate() {}, moveTo() {}, toggleArchive() {}, remove() {} }) }));
+vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({
+  useTaskDrawer: () => ({ openTask: () => undefined }),
+}));
+vi.mock('@buxa/middleware/hooks/useTaskCommands', () => ({
+  useTaskCommands: () => ({ open() {}, duplicate() {}, moveTo() {}, toggleArchive() {}, remove() {} }),
+}));
 
 const seed = buildSeed();
 const project = seed.projects[0];
 const column = project.columns[0];
 const noop = () => undefined;
 const base: BoardColumnProps = {
-  col: column, index: 0, project, items: [], readOnly: false, dnd: { mode: null, over: null, id: null } as never, adding: false,
-  columnDrag: { over: noop, drop: noop, leave: noop, start: noop, end: noop }, onGrab: noop, onAdd: noop, onStopAdding: noop, onEdit: noop, onRemove: noop,
+  col: column,
+  index: 0,
+  project,
+  items: [],
+  readOnly: false,
+  dnd: { mode: null, over: null, id: null } as never,
+  adding: false,
+  columnDrag: { over: noop, drop: noop, leave: noop, start: noop, end: noop },
+  onGrab: noop,
+  onAdd: noop,
+  onStopAdding: noop,
+  onEdit: noop,
+  onRemove: noop,
 };
 
 describe('BoardColumn', () => {

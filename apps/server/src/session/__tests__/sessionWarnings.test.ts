@@ -9,9 +9,11 @@ const env = vi.hoisted(() => {
 });
 
 vi.mock('next/headers', () => ({ cookies: () => settle(() => env.store) }));
-vi.mock('next/navigation', () => ({ redirect: (url: string) => {
-  throw new Error(`REDIRECT ${url}`);
-} }));
+vi.mock('next/navigation', () => ({
+  redirect: (url: string) => {
+    throw new Error(`REDIRECT ${url}`);
+  },
+}));
 // The Supabase client itself fails on request: a real throwing cookie store would also fail in the client's background load.
 const broken = vi.hoisted(() => ({ on: false }));
 vi.mock('@buxa/server/session/supabaseClient', async importOriginal => {
@@ -19,13 +21,18 @@ vi.mock('@buxa/server/session/supabaseClient', async importOriginal => {
 
   return {
     ...actual,
-    createSessionClient: (store: Parameters<typeof actual.createSessionClient>[0]) => (broken.on
-      ? { auth: { getSession: () => {
-        return settle(() => {
-          throw Object.assign(new Error(`cannot decode ${TOKEN} for ${EMAIL}`), { name: 'CookieDecodeError' });
-        });
-      } } }
-      : actual.createSessionClient(store)) as unknown as ReturnType<typeof actual.createSessionClient>,
+    createSessionClient: (store: Parameters<typeof actual.createSessionClient>[0]) =>
+      (broken.on
+        ? {
+            auth: {
+              getSession: () => {
+                return settle(() => {
+                  throw Object.assign(new Error(`cannot decode ${TOKEN} for ${EMAIL}`), { name: 'CookieDecodeError' });
+                });
+              },
+            },
+          }
+        : actual.createSessionClient(store)) as unknown as ReturnType<typeof actual.createSessionClient>,
   };
 });
 
@@ -42,7 +49,10 @@ const TOKEN = 'eyJhbGciOiJFUzI1NiJ9.secret-payload';
 let runtime: ReturnType<typeof startRuntime> | undefined;
 
 afterEach(async () => {
-  await runtime?.stop(); runtime = undefined; installRuntime(undefined); vi.unstubAllEnvs();
+  await runtime?.stop();
+  runtime = undefined;
+  installRuntime(undefined);
+  vi.unstubAllEnvs();
 });
 
 describe('the session reader warns when it cannot read the session (audit S-20)', () => {

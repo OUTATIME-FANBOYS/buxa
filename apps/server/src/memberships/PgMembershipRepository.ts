@@ -18,9 +18,16 @@ export class PgMembershipRepository implements MembershipRepository {
       }
       const { rows } = await db.query<{ id: string }>(
         'INSERT INTO memberships (org_id, person_id, plan, starts_on, ends_on) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-        [actor.orgId, input.personId, input.plan, input.startsOn, input.endsOn]);
+        [actor.orgId, input.personId, input.plan, input.startsOn, input.endsOn],
+      );
       const id = rows[0].id;
-      await recordAudit(db, { actor, action: 'membership.create', entity: 'membership', entityId: id, data: { personId: input.personId } });
+      await recordAudit(db, {
+        actor,
+        action: 'membership.create',
+        entity: 'membership',
+        entityId: id,
+        data: { personId: input.personId },
+      });
 
       return requireMembership(db, id);
     });
@@ -30,8 +37,18 @@ export class PgMembershipRepository implements MembershipRepository {
     return withOrg(this.pool, actor.orgId, async db => {
       const current = await requireMembership(db, id);
       if (current.revokedAt === null) {
-        await db.query('UPDATE memberships SET revoked_at = $2::timestamptz, revoked_reason = $3 WHERE id = $1', [id, at, reason]);
-        await recordAudit(db, { actor, action: 'membership.revoke', entity: 'membership', entityId: id, data: { reason } });
+        await db.query('UPDATE memberships SET revoked_at = $2::timestamptz, revoked_reason = $3 WHERE id = $1', [
+          id,
+          at,
+          reason,
+        ]);
+        await recordAudit(db, {
+          actor,
+          action: 'membership.revoke',
+          entity: 'membership',
+          entityId: id,
+          data: { reason },
+        });
       }
 
       return requireMembership(db, id);

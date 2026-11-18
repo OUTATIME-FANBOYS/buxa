@@ -20,8 +20,16 @@ export function FormMessage({ state }: { state: ActionState }) {
     return null;
   }
   if (state.status === 'success') {
-    return state.message ? <p ref={ref} tabIndex={-1} role="status" className="people-message people-message-ok">{state.message}</p> : null;
+    return state.message ? (
+      <p ref={ref} tabIndex={-1} role="status" className="people-message people-message-ok">
+        {state.message}
+      </p>
+    ) : null;
   }
 
-  return <p ref={ref} tabIndex={-1} role="alert" className="field-error">{state.message}</p>;
+  return (
+    <p ref={ref} tabIndex={-1} role="alert" className="field-error">
+      {state.message}
+    </p>
+  );
 }

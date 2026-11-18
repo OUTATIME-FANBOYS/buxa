@@ -11,7 +11,7 @@ const host = (statuses: SyncState[]): Host => {
     getState: () => state,
     commit: () => undefined,
     pending: [],
-    onStatus: (s) => {
+    onStatus: s => {
       statuses.push(s);
     },
   };
@@ -35,17 +35,35 @@ describe('createSync without the legacy server', () => {
 describe('serverApi', () => {
   afterEach(() => vi.unstubAllGlobals());
   it('health fails when the server refuses the run secret', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => settle(() => new Response('{}', { status: 401, headers: { 'content-type': 'application/json' } }))));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => settle(() => new Response('{}', { status: 401, headers: { 'content-type': 'application/json' } }))),
+    );
     await expect(serverApi.health()).rejects.toThrow(/refused the run secret/);
   });
   it('rejects a reply that is not JSON, such as a static page', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => settle(() => new Response('<html></html>', { status: 200, headers: { 'content-type': 'text/html' } }))));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        settle(() => new Response('<html></html>', { status: 200, headers: { 'content-type': 'text/html' } })),
+      ),
+    );
     await expect(serverApi.getState()).rejects.toThrow(/not the Buxa server/);
   });
   it('reads the state as JSON and sends the version with a put', async () => {
-    const fetchMock = vi.fn((_url: string, init?: RequestInit) => settle(() => (init?.method === 'PUT'
-      ? new Response(JSON.stringify({ version: 3 }), { status: 200, headers: { 'content-type': 'application/json' } })
-      : new Response(JSON.stringify({ version: 2, empty: true }), { status: 200, headers: { 'content-type': 'application/json' } }))));
+    const fetchMock = vi.fn((_url: string, init?: RequestInit) =>
+      settle(() =>
+        init?.method === 'PUT'
+          ? new Response(JSON.stringify({ version: 3 }), {
+              status: 200,
+              headers: { 'content-type': 'application/json' },
+            })
+          : new Response(JSON.stringify({ version: 2, empty: true }), {
+              status: 200,
+              headers: { 'content-type': 'application/json' },
+            }),
+      ),
+    );
     vi.stubGlobal('fetch', fetchMock);
     expect(await serverApi.getState()).toEqual({ version: 2, empty: true });
     expect(await serverApi.putState(2, {} as never)).toEqual({ status: 200, version: 3 });

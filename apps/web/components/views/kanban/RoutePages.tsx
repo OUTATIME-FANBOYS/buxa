@@ -35,12 +35,29 @@ export function BoardsPage() {
   const router = useRouter();
   const { projects, project } = useStore();
   const target = project ?? projects[0];
-  useEffect(() => { if (target) router.replace(boardPath(target.id)); }, [target?.id, router]); // eslint-disable-line
+  useEffect(() => {
+    if (target) router.replace(boardPath(target.id));
+  }, [target?.id, router]); // eslint-disable-line
   if (target) {
-    return <p className="muted" role="status" style={{ padding: 24 }}>Opening board…</p>;
+    return (
+      <p className="muted" role="status" style={{ padding: 24 }}>
+        Opening board…
+      </p>
+    );
   }
 
-  return <Empty icon="folder" title="No projects yet" body="Create a project to get your first board." action={<Button variant="primary" href={ROUTES.projects}>Go to projects</Button>} />;
+  return (
+    <Empty
+      icon="folder"
+      title="No projects yet"
+      body="Create a project to get your first board."
+      action={
+        <Button variant="primary" href={ROUTES.projects}>
+          Go to projects
+        </Button>
+      }
+    />
+  );
 }
 
 export function BoardRoutePage({ projectId }: { projectId: string }) {
@@ -58,13 +75,28 @@ export function AgentsPage() {
     return <Agents />;
   }
 
-  return <Empty icon="agent" title="Agents are turned off" body="Turn them on in Settings to let AI agents propose work for you to approve." action={<Button href={ROUTES.settings}>Open settings</Button>} />;
+  return (
+    <Empty
+      icon="agent"
+      title="Agents are turned off"
+      body="Turn them on in Settings to let AI agents propose work for you to approve."
+      action={<Button href={ROUTES.settings}>Open settings</Button>}
+    />
+  );
 }
 
 export function ReportsPage() {
   return <Reports />;
 }
 
-export function SettingsPage({ clock, camp, archivedCamps }: { clock?: ReactNode; camp?: SettingsCamp; archivedCamps?: readonly ArchivedCamp[] }) {
+export function SettingsPage({
+  clock,
+  camp,
+  archivedCamps,
+}: {
+  clock?: ReactNode;
+  camp?: SettingsCamp;
+  archivedCamps?: readonly ArchivedCamp[];
+}) {
   return <Settings clock={clock} camp={camp} archivedCamps={archivedCamps} />;
 }

@@ -25,7 +25,12 @@ function chunkedBody(chunks: number) {
 }
 
 const request = (body: ReadableStream<Uint8Array>) =>
-  new Request('http://localhost/x', { method: 'POST', body, duplex: 'half', headers: { 'content-type': 'application/json' } } as RequestInit);
+  new Request('http://localhost/x', {
+    method: 'POST',
+    body,
+    duplex: 'half',
+    headers: { 'content-type': 'application/json' },
+  } as RequestInit);
 
 describe('request body limit', () => {
   it('stops reading a chunked body without Content-Length once it passes the limit', async () => {
@@ -48,7 +53,9 @@ describe('request body limit', () => {
       const { stream } = chunkedBody(100);
       const response = await route(request(stream));
       expect(response.status).toBe(413);
-      expect(await response.json()).toMatchObject({ error: { code: 'payload_too_large', message: 'Request body too large' } });
+      expect(await response.json()).toMatchObject({
+        error: { code: 'payload_too_large', message: 'Request body too large' },
+      });
     } finally {
       await env.stop();
     }
@@ -69,9 +76,11 @@ describe('request body limit', () => {
   });
 
   it('treats an empty body as no body', async () => {
-    const stream = new ReadableStream<Uint8Array>({ start(c) {
-      c.close();
-    } });
+    const stream = new ReadableStream<Uint8Array>({
+      start(c) {
+        c.close();
+      },
+    });
     expect(await readJson(request(stream))).toBeUndefined();
   });
 });

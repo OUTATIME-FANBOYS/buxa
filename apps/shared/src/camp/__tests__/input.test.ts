@@ -22,7 +22,11 @@ describe('parseInput', () => {
     const result = parseInput(schema, { name: '' });
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.state).toMatchObject({ status: 'error', message: 'Check the highlighted fields.', fieldErrors: { name: 'Name is required.' } });
+      expect(result.state).toMatchObject({
+        status: 'error',
+        message: 'Check the highlighted fields.',
+        fieldErrors: { name: 'Name is required.' },
+      });
     }
   });
 });

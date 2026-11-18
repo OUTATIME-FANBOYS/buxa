@@ -23,7 +23,9 @@ describe('credential tokens', () => {
     expect(h.toString('base64url')).not.toContain(t);
   });
   it('gives different tokens different hashes', () => {
-    expect(hashCredentialToken(generateCredentialToken()).equals(hashCredentialToken(generateCredentialToken()))).toBe(false);
+    expect(hashCredentialToken(generateCredentialToken()).equals(hashCredentialToken(generateCredentialToken()))).toBe(
+      false,
+    );
   });
 });
 

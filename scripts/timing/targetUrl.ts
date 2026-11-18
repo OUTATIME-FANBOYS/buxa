@@ -19,7 +19,9 @@ export function assertTargetUrl(raw: string, allowRemote: boolean): URL {
     throw new Error('The target must be an http:// or https:// URL.');
   }
   if (!LOCAL_HOSTS.has(url.hostname) && !allowRemote) {
-    throw new Error(`Refusing to measure ${url.host}: it is not localhost. Pass --allow-remote to measure a deployed site on purpose.`);
+    throw new Error(
+      `Refusing to measure ${url.host}: it is not localhost. Pass --allow-remote to measure a deployed site on purpose.`,
+    );
   }
 
   return url;

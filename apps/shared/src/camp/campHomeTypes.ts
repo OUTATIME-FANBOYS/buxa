@@ -1,20 +1,37 @@
 /** One session on the Home page's upcoming list. */
-export interface UpcomingSession { id: string; className: string; startsAt: string; location: string }
+export interface UpcomingSession {
+  id: string;
+  className: string;
+  startsAt: string;
+  location: string;
+}
 
 /**
  * People checked in on one camp-local day. `count` is every person once; `minors` is how many of them are students (minors), or null
  * when this viewer may not see the minor flag.
  */
-export interface DayCount { date: string; count: number; minors: number | null }
+export interface DayCount {
+  date: string;
+  count: number;
+  minors: number | null;
+}
 
 /**
  * The check-in chart's data: one entry per camp-local day, oldest first, ending today. `complete` is false when the camp had more
  * visits in the window than one read returns, so the older days may be short.
  */
-export interface CheckInsByDay { days: DayCount[]; complete: boolean }
+export interface CheckInsByDay {
+  days: DayCount[];
+  complete: boolean;
+}
 
 /** Everyone on the camp list by membership status. `none` includes revoked memberships. */
-export interface MembershipStatusCounts { valid: number; notStarted: number; expired: number; none: number }
+export interface MembershipStatusCounts {
+  valid: number;
+  notStarted: number;
+  expired: number;
+  none: number;
+}
 
 /** What the camp Home shows. A fact is null when the viewer's role may not read it, so the page never shows a number its own page would refuse. */
 export interface CampHome {

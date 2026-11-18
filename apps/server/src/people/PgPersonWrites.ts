@@ -5,14 +5,19 @@ async function insertRoles(db: Db, orgId: string, personId: string, roles: reado
   if (roles.length === 0) {
     return;
   }
-  await db.query('INSERT INTO person_roles (org_id, person_id, role) SELECT $1, $2, unnest($3::text[])', [orgId, personId, roles]);
+  await db.query('INSERT INTO person_roles (org_id, person_id, role) SELECT $1, $2, unnest($3::text[])', [
+    orgId,
+    personId,
+    roles,
+  ]);
 }
 
 export async function insertPerson(db: Db, orgId: string, input: NewPersonRecord): Promise<string> {
   const { rows } = await db.query<{ id: string }>(
     `INSERT INTO people (org_id, given_name, family_name, preferred_name, date_of_birth, email, phone)
      VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-    [orgId, input.givenName, input.familyName, input.preferredName, input.dateOfBirth, input.email, input.phone]);
+    [orgId, input.givenName, input.familyName, input.preferredName, input.dateOfBirth, input.email, input.phone],
+  );
   const id = rows[0].id;
   await insertRoles(db, orgId, id, input.roles);
 

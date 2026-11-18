@@ -8,9 +8,11 @@ import { UiProvider } from '@buxa/middleware/providers/providers';
 import { forbidden } from '@buxa/server/http/errors';
 import { settle } from '@buxa/domain';
 
-const notFound = vi.hoisted(() => vi.fn(() => {
-  throw new Error('NEXT_NOT_FOUND');
-}));
+const notFound = vi.hoisted(() =>
+  vi.fn(() => {
+    throw new Error('NEXT_NOT_FOUND');
+  }),
+);
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Kept: the compiler needs this assertion to type the value; removing it fails typecheck.
 const session = vi.hoisted(() => ({ role: 'staff' as Role | null }));
 const services = vi.hoisted(() => ({
@@ -37,17 +39,38 @@ const ADA = '33333333-3333-4333-8333-333333333333';
 const INSTRUCTOR_ID = '66666666-6666-4666-8666-666666666666';
 
 const cls: Class = {
-  id: CLASS_ID, name: 'Robotics', description: 'Build and program small robots.', ageRange: { minAge: 8, maxAge: 12 },
-  capacity: 12, instructorRatio: { instructors: 1, campers: 8 }, createdAt: '2027-07-01T00:00:00.000Z',
+  id: CLASS_ID,
+  name: 'Robotics',
+  description: 'Build and program small robots.',
+  ageRange: { minAge: 8, maxAge: 12 },
+  capacity: 12,
+  instructorRatio: { instructors: 1, campers: 8 },
+  createdAt: '2027-07-01T00:00:00.000Z',
 };
 // Full: two places, both taken, and one on the waitlist. Monday 5 July 2027, 09:00 to 12:00 in Sydney.
 const full: Session = {
-  id: SESSION_ID, classId: CLASS_ID, className: 'Robotics', startsAt: '2027-07-04T23:00:00.000Z', endsAt: '2027-07-05T02:00:00.000Z',
-  location: 'Lab 1', instructorIds: [INSTRUCTOR_ID], instructors: [{ id: INSTRUCTOR_ID, name: 'Ivy Chen' }], capacity: 2, seatsTaken: 2, waitlisted: 1,
+  id: SESSION_ID,
+  classId: CLASS_ID,
+  className: 'Robotics',
+  startsAt: '2027-07-04T23:00:00.000Z',
+  endsAt: '2027-07-05T02:00:00.000Z',
+  location: 'Lab 1',
+  instructorIds: [INSTRUCTOR_ID],
+  instructors: [{ id: INSTRUCTOR_ID, name: 'Ivy Chen' }],
+  capacity: 2,
+  seatsTaken: 2,
+  waitlisted: 1,
 };
 const enrolment: Enrolment = {
-  id: '44444444-4444-4444-8444-444444444444', sessionId: SESSION_ID, classId: CLASS_ID, className: 'Robotics', camperId: ADA,
-  camperName: 'Ada Lovelace', status: 'enrolled', enrolledAt: '2027-07-01T00:00:00.000Z', overrideReason: null,
+  id: '44444444-4444-4444-8444-444444444444',
+  sessionId: SESSION_ID,
+  classId: CLASS_ID,
+  className: 'Robotics',
+  camperId: ADA,
+  camperName: 'Ada Lovelace',
+  status: 'enrolled',
+  enrolledAt: '2027-07-01T00:00:00.000Z',
+  overrideReason: null,
 };
 
 const render = (node: ReactNode) => renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}>{node}</UiProvider>);
@@ -134,18 +157,23 @@ describe('ClassPage', () => {
   });
 
   it('is not found when the class is not in this camp', async () => {
-    services.classes.getClass.mockResolvedValue({ ok: false, failure: { reason: 'class_not_found', message: 'That class no longer exists.' } });
+    services.classes.getClass.mockResolvedValue({
+      ok: false,
+      failure: { reason: 'class_not_found', message: 'That class no longer exists.' },
+    });
     await expect(ClassPage({ classId: CLASS_ID, searchParams: {} })).rejects.toThrow('NEXT_NOT_FOUND');
   });
 
-  it('ignores a session id that is not one of this class\'s sessions', async () => {
-    const html = render(await ClassPage({ classId: CLASS_ID, searchParams: { session: '99999999-9999-4999-8999-999999999999' } }));
+  it("ignores a session id that is not one of this class's sessions", async () => {
+    const html = render(
+      await ClassPage({ classId: CLASS_ID, searchParams: { session: '99999999-9999-4999-8999-999999999999' } }),
+    );
     expect(html).not.toContain('id="enrolments"');
   });
 });
 
 describe('ClassPage session instructors', () => {
-  it('shows the selected session\'s instructors by name, in the session details', async () => {
+  it("shows the selected session's instructors by name, in the session details", async () => {
     const html = render(await ClassPage({ classId: CLASS_ID, searchParams: { session: SESSION_ID } }));
     expect(html).toContain('aria-label="Session details"');
     expect(html).toContain('<dt>Instructors</dt><dd>Ivy Chen</dd>');

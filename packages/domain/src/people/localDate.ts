@@ -42,5 +42,7 @@ export function isTimeZone(value: unknown): value is string {
 /** The calendar day it is at `instant` in `timeZone`. */
 export function toLocalDate(instant: Date, timeZone: string): LocalDate {
   // en-CA formats as YYYY-MM-DD.
-  return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(instant);
+  return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(
+    instant,
+  );
 }

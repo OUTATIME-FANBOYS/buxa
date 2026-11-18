@@ -9,9 +9,11 @@ const env = vi.hoisted(() => {
 });
 
 vi.mock('next/headers', () => ({ cookies: () => settle(() => env.store) }));
-vi.mock('next/navigation', () => ({ redirect: (url: string) => {
-  throw new Error(`REDIRECT ${url}`);
-} }));
+vi.mock('next/navigation', () => ({
+  redirect: (url: string) => {
+    throw new Error(`REDIRECT ${url}`);
+  },
+}));
 
 import { ROUTES } from '@buxa/shared/config/routes';
 import { idle } from '@buxa/shared';
@@ -20,14 +22,20 @@ import { startRuntime } from '../../../__tests__/runtimeHarness';
 import { createTestIdentityProvider } from '../../../__tests__/tokens';
 import { CAMP_COOKIE, getSession } from '../../../session';
 import { gotrue, stubIdentityProvider } from '../../../session/__tests__/gotrue';
-import { FakeCookieStore, SESSION_COOKIE, personWithCamps, sessionCookieValue } from '../../../session/__tests__/support';
+import {
+  FakeCookieStore,
+  SESSION_COOKIE,
+  personWithCamps,
+  sessionCookieValue,
+} from '../../../session/__tests__/support';
 import { signIn } from '../signIn';
 import { signOut } from '../signOut';
 import { signUp } from '../signUp';
 import { settle } from '@buxa/domain';
 
 const form = (fields: Record<string, string>): FormData => {
-  const data = new FormData(); for (const [k, v] of Object.entries(fields)) {
+  const data = new FormData();
+  for (const [k, v] of Object.entries(fields)) {
     data.set(k, v);
   }
 
@@ -43,17 +51,22 @@ beforeEach(async () => {
   idp = await createTestIdentityProvider();
   data = new InMemoryStore();
   runtime = startRuntime({ verifier: idp.verifier, repositories: data.asRepositories() });
-  store = new FakeCookieStore(); env.store = store;
+  store = new FakeCookieStore();
+  env.store = store;
 });
 afterEach(async () => {
-  await runtime.stop(); vi.unstubAllGlobals();
+  await runtime.stop();
+  vi.unstubAllGlobals();
 });
 
 describe('signIn', () => {
   it('refuses empty fields without calling the identity provider', async () => {
     const calls = stubIdentityProvider({});
     const result = await signIn(idle, form({ email: 'nope', password: '' }));
-    expect(result).toMatchObject({ status: 'error', fieldErrors: { email: 'Enter a valid email address.', password: 'Enter your password.' } });
+    expect(result).toMatchObject({
+      status: 'error',
+      fieldErrors: { email: 'Enter a valid email address.', password: 'Enter your password.' },
+    });
     expect(calls).toHaveLength(0);
   });
 
@@ -64,7 +77,11 @@ describe('signIn', () => {
     ['unexpected_failure', 'something odd', 'Could not sign in. Please try again.'],
   ])('maps the provider error %s to a friendly message', async (code, raw, shown) => {
     stubIdentityProvider({ '/auth/v1/token': gotrue.error(400, code, raw) });
-    expect(await signIn(idle, form({ email: 'a@camp.test', password: 'secret-pass' }))).toEqual({ status: 'error', message: shown, fieldErrors: undefined });
+    expect(await signIn(idle, form({ email: 'a@camp.test', password: 'secret-pass' }))).toEqual({
+      status: 'error',
+      message: shown,
+      fieldErrors: undefined,
+    });
     expect(store.writes).toHaveLength(0);
   });
 
@@ -72,7 +89,9 @@ describe('signIn', () => {
     await personWithCamps(data, sub, ['Pine Lake']);
     const access = await idp.token({ sub });
     stubIdentityProvider({ '/auth/v1/token': { body: gotrue.session(access, sub) } });
-    await expect(signIn(idle, form({ email: 'a@camp.test', password: 'secret-pass' }))).rejects.toThrow(`REDIRECT ${ROUTES.camp}`);
+    await expect(signIn(idle, form({ email: 'a@camp.test', password: 'secret-pass' }))).rejects.toThrow(
+      `REDIRECT ${ROUTES.camp}`,
+    );
 
     expect(store.writes.length).toBeGreaterThan(0);
     for (const write of store.writes) {
@@ -88,12 +107,22 @@ describe('signUp', () => {
 
   it('checks each field', async () => {
     const result = await signUp(idle, form({ name: ' ', email: 'x', password: 'short' }));
-    expect(result).toMatchObject({ status: 'error', fieldErrors: { name: 'Tell us what to call you.', email: 'Enter a valid email address.', password: 'Use at least 8 characters.' } });
+    expect(result).toMatchObject({
+      status: 'error',
+      fieldErrors: {
+        name: 'Tell us what to call you.',
+        email: 'Enter a valid email address.',
+        password: 'Use at least 8 characters.',
+      },
+    });
   });
 
   it('asks the person to confirm their email when no session comes back', async () => {
     stubIdentityProvider({ '/auth/v1/signup': { body: gotrue.unconfirmedUser(sub) } });
-    expect(await signUp(idle, form(fields))).toEqual({ status: 'success', message: 'Check your email for a confirmation link, then sign in.' });
+    expect(await signUp(idle, form(fields))).toEqual({
+      status: 'success',
+      message: 'Check your email for a confirmation link, then sign in.',
+    });
     for (const write of store.writes) {
       expect(write.options).toMatchObject({ httpOnly: true });
     } // e.g. the sign-up verifier cookie
@@ -122,14 +151,22 @@ describe('signUp', () => {
   });
 
   it('maps a weak-password error', async () => {
-    stubIdentityProvider({ '/auth/v1/signup': gotrue.error(422, 'weak_password', 'Password should be at least 8 characters') });
-    expect(await signUp(idle, form(fields))).toMatchObject({ status: 'error', message: 'Choose a stronger password (at least 8 characters).' });
+    stubIdentityProvider({
+      '/auth/v1/signup': gotrue.error(422, 'weak_password', 'Password should be at least 8 characters'),
+    });
+    expect(await signUp(idle, form(fields))).toMatchObject({
+      status: 'error',
+      message: 'Choose a stronger password (at least 8 characters).',
+    });
   });
 });
 
 describe('signOut', () => {
   it('clears the session cookies (HttpOnly), forgets the camp and goes to sign-in', async () => {
-    store = new FakeCookieStore({ [SESSION_COOKIE]: sessionCookieValue(await idp.token({ sub })), [CAMP_COOKIE]: 'org-1' });
+    store = new FakeCookieStore({
+      [SESSION_COOKIE]: sessionCookieValue(await idp.token({ sub })),
+      [CAMP_COOKIE]: 'org-1',
+    });
     env.store = store;
     stubIdentityProvider({ '/auth/v1/logout': { status: 204 } });
     await expect(signOut()).rejects.toThrow(`REDIRECT ${ROUTES.signIn}`);

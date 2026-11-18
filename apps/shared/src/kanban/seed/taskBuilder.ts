@@ -14,20 +14,44 @@ type Extras = {
   done?: number;
 };
 export type TaskSpec = {
-  project: ProjectId; slot: ColumnSlot; title: string; priority: Priority; who: string | undefined;
-  start: number | null; due: number | null; tags: string[]; extras: Extras;
+  project: ProjectId;
+  slot: ColumnSlot;
+  title: string;
+  priority: Priority;
+  who: string | undefined;
+  start: number | null;
+  due: number | null;
+  tags: string[];
+  extras: Extras;
 };
 
 /** Dates are days from today; null means "not set". */
 export const spec = (
-  project: ProjectId, slot: ColumnSlot, title: string, priority: Priority, who: string | undefined,
-  start: number | null, due: number | null, tags: string[], extras: Extras = {},
+  project: ProjectId,
+  slot: ColumnSlot,
+  title: string,
+  priority: Priority,
+  who: string | undefined,
+  start: number | null,
+  due: number | null,
+  tags: string[],
+  extras: Extras = {},
 ): TaskSpec => ({ project, slot, title, priority, who, start, due, tags, extras });
 
 /** A finished task: `finishedDaysAgo` is negative, and the start/due dates are derived around it. */
 export const doneSpec = (
-  project: ProjectId, title: string, priority: Priority, who: string, finishedDaysAgo: number, tags: string[], createdOffset = 5,
-): TaskSpec => spec(project, 4, title, priority, who, finishedDaysAgo - 6, finishedDaysAgo + 1, tags, { created: finishedDaysAgo - createdOffset, done: finishedDaysAgo });
+  project: ProjectId,
+  title: string,
+  priority: Priority,
+  who: string,
+  finishedDaysAgo: number,
+  tags: string[],
+  createdOffset = 5,
+): TaskSpec =>
+  spec(project, 4, title, priority, who, finishedDaysAgo - 6, finishedDaysAgo + 1, tags, {
+    created: finishedDaysAgo - createdOffset,
+    done: finishedDaysAgo,
+  });
 
 export function buildTasks(specs: TaskSpec[], projects: Project[]): Task[] {
   const columnId = (projectId: string, slot: ColumnSlot) => {
@@ -45,14 +69,34 @@ export function buildTasks(specs: TaskSpec[], projects: Project[]): Task[] {
     const id = 't-' + (i + 1);
 
     return {
-      id, projectId: s.project, columnId: columnId(s.project, s.slot), title: s.title,
-      description: s.extras.desc ?? '', priority: s.priority, assigneeId: s.who,
-      start: s.start === null ? undefined : addDays(today(), s.start), due: s.due === null ? undefined : addDays(today(), s.due),
-      tags: s.tags, subtasks: (s.extras.subs ?? []).map(([title, done], n) => ({ id: `${id}-sub-${n}`, title, done })),
-      comments: (s.extras.comments ?? []).map(([authorId, body], n) => ({ id: `${id}-com-${n}`, authorId, body, at: iso(-(n + 1), 9 + n) })),
-      attachments: (s.extras.files ?? []).map((name, n) => ({ id: `${id}-file-${n}`, name, size: 184000, type: 'application/pdf', at: iso(-2) })),
+      id,
+      projectId: s.project,
+      columnId: columnId(s.project, s.slot),
+      title: s.title,
+      description: s.extras.desc ?? '',
+      priority: s.priority,
+      assigneeId: s.who,
+      start: s.start === null ? undefined : addDays(today(), s.start),
+      due: s.due === null ? undefined : addDays(today(), s.due),
+      tags: s.tags,
+      subtasks: (s.extras.subs ?? []).map(([title, done], n) => ({ id: `${id}-sub-${n}`, title, done })),
+      comments: (s.extras.comments ?? []).map(([authorId, body], n) => ({
+        id: `${id}-com-${n}`,
+        authorId,
+        body,
+        at: iso(-(n + 1), 9 + n),
+      })),
+      attachments: (s.extras.files ?? []).map((name, n) => ({
+        id: `${id}-file-${n}`,
+        name,
+        size: 184000,
+        type: 'application/pdf',
+        at: iso(-2),
+      })),
       history: [{ id: `${id}-hist`, at: iso(created), actorId: USER.hannah, text: 'created this' }],
-      archived: false, createdAt: iso(created), createdBy: USER.hannah,
+      archived: false,
+      createdAt: iso(created),
+      createdBy: USER.hannah,
       completedAt: s.extras.done !== undefined ? iso(s.extras.done, 16) : undefined,
     };
   });

@@ -21,10 +21,17 @@ describe('TaskDrawerContext', () => {
   beforeEach(() => {
     api = undefined;
     root = createRoot(document.body.appendChild(document.createElement('div')));
-    act(() => root.render(<TaskDrawerProvider><Probe /></TaskDrawerProvider>));
+    act(() =>
+      root.render(
+        <TaskDrawerProvider>
+          <Probe />
+        </TaskDrawerProvider>,
+      ),
+    );
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = '';
+    act(() => root.unmount());
+    document.body.innerHTML = '';
   });
 
   it('starts with no task open', () => {
@@ -44,7 +51,8 @@ describe('TaskDrawerContext', () => {
         useTaskDrawer();
 
         return null;
-      } act(() => createRoot(document.createElement('div')).render(<Bare />));
+      }
+      act(() => createRoot(document.createElement('div')).render(<Bare />));
     }).toThrow();
   });
 });

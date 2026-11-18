@@ -18,9 +18,19 @@ export async function NewClass() {
   return (
     <div className="page">
       <PageHeader title="New class" subtitle="A class is a program. Its sessions are added after it is saved." />
-      {allowed ? <NewClassForm /> : (
-        <Empty icon="alert" title="You cannot create classes" body={FORBIDDEN_MANAGE}
-          action={<Button className="classes-target" href={ROUTES.classes}>Back to classes</Button>} />
+      {allowed ? (
+        <NewClassForm />
+      ) : (
+        <Empty
+          icon="alert"
+          title="You cannot create classes"
+          body={FORBIDDEN_MANAGE}
+          action={
+            <Button className="classes-target" href={ROUTES.classes}>
+              Back to classes
+            </Button>
+          }
+        />
       )}
     </div>
   );

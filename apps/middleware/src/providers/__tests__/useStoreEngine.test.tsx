@@ -35,7 +35,8 @@ describe('useStoreEngine', () => {
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = '';
+    act(() => root.unmount());
+    document.body.innerHTML = '';
   });
 
   it('starts from the saved state and reports the autosave status', () => {

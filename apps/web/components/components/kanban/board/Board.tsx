@@ -9,8 +9,19 @@ import { useBoardDnd } from '@buxa/middleware/hooks/hooks';
 import { ColumnDialog } from '@/components/components/kanban/dialogs/export';
 import { BoardColumn } from './BoardColumn';
 
-export function BoardView({ project, tasks, readOnly, manual }: { project: Project; tasks: Task[]; readOnly: boolean; manual: boolean }) {
-  const { actions } = useStore(); const { confirm, toast } = useUi();
+export function BoardView({
+  project,
+  tasks,
+  readOnly,
+  manual,
+}: {
+  project: Project;
+  tasks: Task[];
+  readOnly: boolean;
+  manual: boolean;
+}) {
+  const { actions } = useStore();
+  const { confirm, toast } = useUi();
   const { dnd, scroller, grab, columnDrag } = useBoardDnd(project, tasks, manual);
   const [adding, setAdding] = useState<string | null>(null);
   const [colDlg, setColDlg] = useState<{ column?: Column } | null>(null);
@@ -21,7 +32,14 @@ export function BoardView({ project, tasks, readOnly, manual }: { project: Proje
       return toast('A board needs at least one column.', { tone: 'error' });
     }
     const n = tasks.filter(t => t.columnId === col.id).length;
-    if (await confirm({ title: `Delete “${col.name}”?`, body: n ? `Its ${n} task${n === 1 ? '' : 's'} will move to “${others[0].name}”.` : 'This column is empty.', confirmLabel: 'Delete column', danger: true })) {
+    if (
+      await confirm({
+        title: `Delete “${col.name}”?`,
+        body: n ? `Its ${n} task${n === 1 ? '' : 's'} will move to “${others[0].name}”.` : 'This column is empty.',
+        confirmLabel: 'Delete column',
+        danger: true,
+      })
+    ) {
       actions.deleteColumn(project.id, col.id, others[0].id);
     }
   };
@@ -29,11 +47,28 @@ export function BoardView({ project, tasks, readOnly, manual }: { project: Proje
   return (
     <div className="board" ref={scroller}>
       {project.columns.map((col, i) => (
-        <BoardColumn key={col.id} col={col} index={i} project={project} items={tasks.filter(t => t.columnId === col.id)} readOnly={readOnly} dnd={dnd}
-          adding={adding === col.id} columnDrag={columnDrag} onGrab={grab} onAdd={() => setAdding(col.id)} onStopAdding={() => setAdding(null)}
-          onEdit={() => setColDlg({ column: col })} onRemove={() => removeColumn(col)} />
+        <BoardColumn
+          key={col.id}
+          col={col}
+          index={i}
+          project={project}
+          items={tasks.filter(t => t.columnId === col.id)}
+          readOnly={readOnly}
+          dnd={dnd}
+          adding={adding === col.id}
+          columnDrag={columnDrag}
+          onGrab={grab}
+          onAdd={() => setAdding(col.id)}
+          onStopAdding={() => setAdding(null)}
+          onEdit={() => setColDlg({ column: col })}
+          onRemove={() => removeColumn(col)}
+        />
       ))}
-      {!readOnly && <button className="add-column" onClick={() => setColDlg({})}><Icon name="plus" size={16} /> Add column</button>}
+      {!readOnly && (
+        <button className="add-column" onClick={() => setColDlg({})}>
+          <Icon name="plus" size={16} /> Add column
+        </button>
+      )}
       {colDlg && <ColumnDialog projectId={project.id} column={colDlg.column} onClose={() => setColDlg(null)} />}
     </div>
   );

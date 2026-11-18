@@ -50,7 +50,7 @@ describe('classErrorReportResponse', () => {
   it('neutralises a spreadsheet formula in the downloaded report', async () => {
     const response = await classErrorReportResponse(form(fileOf(FORMULA_ROW)));
     const text = await response.text();
-    expect(text).toContain('\'=HYPERLINK(');
+    expect(text).toContain("'=HYPERLINK(");
     expect(text).not.toMatch(/(^|,)"?=HYPERLINK/m);
   });
 

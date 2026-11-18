@@ -34,7 +34,9 @@ export function TaskTopBar({ account }: { account: ReactNode }) {
   return (
     <>
       <GlobalSearch inputRef={searchRef} />
-      <span className={`save-state save-${sync === 'offline' ? 'error' : saveStatus}`} role="status">{label}</span>
+      <span className={`save-state save-${sync === 'offline' ? 'error' : saveStatus}`} role="status">
+        {label}
+      </span>
       <Notifications />
       {account}
     </>

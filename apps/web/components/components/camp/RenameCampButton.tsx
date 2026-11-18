@@ -14,7 +14,9 @@ export function RenameCampButton({ campId, currentName }: { campId: string; curr
 
   return (
     <>
-      <Button type="button" size="header" onClick={() => setOpen(true)}>Rename</Button>
+      <Button type="button" size="header" onClick={() => setOpen(true)}>
+        Rename
+      </Button>
       {open && <RenameCampDialog campId={campId} currentName={currentName} onClose={close} />}
     </>
   );

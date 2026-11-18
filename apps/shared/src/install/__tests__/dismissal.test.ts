@@ -5,9 +5,13 @@ import { INSTALL_HINT_KEY, readDismissed, writeDismissed, type KeyValueStore } f
 function memoryStore(): KeyValueStore & { data: Map<string, string> } {
   const data = new Map<string, string>();
 
-  return { data, getItem: key => data.get(key) ?? null, setItem: (key, value) => {
-    data.set(key, value);
-  } };
+  return {
+    data,
+    getItem: key => data.get(key) ?? null,
+    setItem: (key, value) => {
+      data.set(key, value);
+    },
+  };
 }
 
 /** A store that throws on every access, as a private window or blocked site data does. */

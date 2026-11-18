@@ -35,7 +35,13 @@ export const toCheckIn = (row: CheckInRow): CheckInRecord => ({
 });
 
 /** Runs a visit query. The limit, when given, is the last parameter. */
-export async function queryCheckIns(db: Db, where: string, params: unknown[], order: string, limit?: number): Promise<CheckInRecord[]> {
+export async function queryCheckIns(
+  db: Db,
+  where: string,
+  params: unknown[],
+  order: string,
+  limit?: number,
+): Promise<CheckInRecord[]> {
   const values = limit === undefined ? params : [...params, limit];
   const limitClause = limit === undefined ? '' : `LIMIT $${values.length}`;
   const { rows } = await db.query<CheckInRow>(`${SELECT_CHECK_INS} ${where} ${order} ${limitClause}`, values);

@@ -4,7 +4,11 @@ import { NewPersonInputSchema, PersonPatchInputSchema } from './people';
 
 describe('email format', () => {
   it.each([
-    'name@example.com', 'first.last+camp@sub.example.co.uk', "o'brien@example.org", 'a-b_c@x-y.io', 'x@example.museum',
+    'name@example.com',
+    'first.last+camp@sub.example.co.uk',
+    "o'brien@example.org",
+    'a-b_c@x-y.io',
+    'x@example.museum',
   ])('accepts %s', email => expect(isPlausibleEmail(email)).toBe(true));
 
   it.each([
@@ -24,12 +28,19 @@ describe('email format', () => {
 });
 
 describe('phone format', () => {
-  it.each(['+44 20 7946 0958', '020 7946 0958', '(555) 123-4567', '+1.555.123.4567', '07700900123', '+4915112345678'])('accepts %s', phone =>
-    expect(isPlausiblePhone(phone)).toBe(true));
+  it.each(['+44 20 7946 0958', '020 7946 0958', '(555) 123-4567', '+1.555.123.4567', '07700900123', '+4915112345678'])(
+    'accepts %s',
+    phone => expect(isPlausiblePhone(phone)).toBe(true),
+  );
 
   it.each([
-    ['letters', 'call me'], ['too few digits', '12345'], ['too many digits', '+1234567890123456'],
-    ['a plus in the middle', '020+7946 0958'], ['a leading space before the digits', ' 0207946'], ['a URL', 'tel:+4420'], ['over 32 characters', '1'.repeat(33)],
+    ['letters', 'call me'],
+    ['too few digits', '12345'],
+    ['too many digits', '+1234567890123456'],
+    ['a plus in the middle', '020+7946 0958'],
+    ['a leading space before the digits', ' 0207946'],
+    ['a URL', 'tel:+4420'],
+    ['over 32 characters', '1'.repeat(33)],
   ])('refuses %s', (_, phone) => expect(isPlausiblePhone(phone)).toBe(false));
 });
 
@@ -44,7 +55,9 @@ describe('shared schemas used by people', () => {
   it('new person: rejects a bad email with the field named, and accepts a good one', () => {
     const base = { givenName: 'Ada', familyName: 'Lovelace', roles: ['camper'] };
     expect(NewPersonInputSchema.safeParse({ ...base, email: 'ada@example' }).success).toBe(false);
-    expect(NewPersonInputSchema.safeParse({ ...base, email: 'ada@example.com', phone: '+44 20 7946 0958' }).success).toBe(true);
+    expect(
+      NewPersonInputSchema.safeParse({ ...base, email: 'ada@example.com', phone: '+44 20 7946 0958' }).success,
+    ).toBe(true);
   });
 
   it('patch: an empty value is still passed on, and a non-empty bad value is refused', () => {

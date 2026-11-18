@@ -3,7 +3,11 @@ import { METHOD_LABEL } from '@buxa/shared';
 import { formatCampDateTime } from '@buxa/shared';
 import type { ClockFormat } from '@buxa/domain';
 
-interface Props { entries: readonly AttendanceEntry[]; timeZone: string; clockFormat: ClockFormat }
+interface Props {
+  entries: readonly AttendanceEntry[];
+  timeZone: string;
+  clockFormat: ClockFormat;
+}
 
 const dash = (value: string | null) => value ?? '—';
 
@@ -29,8 +33,12 @@ export function LogTable({ entries, timeZone, clockFormat }: Props) {
           {entries.map(entry => (
             <tr key={entry.id}>
               <th scope="row">{entry.personName}</th>
-              <td className="num" data-label="In">{formatCampDateTime(entry.checkedInAt, timeZone, clockFormat)}</td>
-              <td className="num" data-label="Out">{entry.checkedOutAt ? formatCampDateTime(entry.checkedOutAt, timeZone, clockFormat) : 'On site'}</td>
+              <td className="num" data-label="In">
+                {formatCampDateTime(entry.checkedInAt, timeZone, clockFormat)}
+              </td>
+              <td className="num" data-label="Out">
+                {entry.checkedOutAt ? formatCampDateTime(entry.checkedOutAt, timeZone, clockFormat) : 'On site'}
+              </td>
               <td data-label="Checked in by">{dash(entry.checkedInByName)}</td>
               <td data-label="Checked out by">{dash(entry.checkedOutByName)}</td>
               <td data-label="Collected by">{dash(entry.collectedByName)}</td>

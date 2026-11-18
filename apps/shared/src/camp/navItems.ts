@@ -52,9 +52,7 @@ export const CAMP_NAV_GROUPS: readonly NavGroup[] = [
   },
   {
     label: 'Admin',
-    items: [
-      { href: ROUTES.members, label: 'Team access', icon: 'user', requires: 'members:read' },
-    ],
+    items: [{ href: ROUTES.members, label: 'Team access', icon: 'user', requires: 'members:read' }],
   },
 ];
 
@@ -67,7 +65,9 @@ export const navFor = (role: Role | null, items: readonly NavItem[] = CAMP_NAV):
 
 /** The groups a person may see, with the items they may see. A group with nothing visible is dropped. */
 export const navGroupsFor = (role: Role | null, groups: readonly NavGroup[] = CAMP_NAV_GROUPS): readonly NavGroup[] =>
-  groups.map(group => ({ label: group.label, items: navFor(role, group.items) })).filter(group => group.items.length > 0);
+  groups
+    .map(group => ({ label: group.label, items: navFor(role, group.items) }))
+    .filter(group => group.items.length > 0);
 
 export const isActive = (pathname: string, item: Pick<NavItem, 'href' | 'exact'>): boolean =>
   pathname === item.href || (!item.exact && pathname.startsWith(`${item.href}/`));

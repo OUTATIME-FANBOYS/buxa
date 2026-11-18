@@ -3,7 +3,10 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'components', 'popover-menu-dialog.css'), 'utf8');
+// Prettier breaks rules over several lines and uses single quotes, so the text is flattened before matching.
+const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'components', 'popover-menu-dialog.css'), 'utf8')
+  .replace(/\s+/g, ' ')
+  .replace(/['"]/g, '');
 
 describe('menu items', () => {
   it('lays out link items like button items (links are rendered for navigation items such as Settings)', () => {

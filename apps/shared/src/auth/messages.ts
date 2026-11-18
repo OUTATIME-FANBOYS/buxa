@@ -28,7 +28,8 @@ export function describeSignUpError(message: string): string {
 export const CONFIRM_EMAIL_MESSAGE = 'Check your email for a confirmation link, then sign in.';
 
 /** Supabase's answer when the address already has an account. It gets the same answer as a new address (audit S-10). */
-export const isAlreadyRegistered = (message: string): boolean => /already (been )?registered|already exists|user_already_exists/i.test(message);
+export const isAlreadyRegistered = (message: string): boolean =>
+  /already (been )?registered|already exists|user_already_exists/i.test(message);
 
 /** Shown instead of the forms while the app is refusing to serve (see server/availability.ts). */
 export const MAINTENANCE_MESSAGE = 'Sign-in is paused for maintenance. Please try again later.';

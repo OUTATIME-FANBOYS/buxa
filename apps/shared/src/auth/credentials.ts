@@ -13,8 +13,13 @@ const text = (data: FormData, key: string): string => {
 };
 const failed = (errors: FieldErrors<CredentialField>): boolean => Object.keys(errors).length > 0;
 
-export interface SignInInput { email: string; password: string }
-export interface SignUpInput extends SignInInput { name: string }
+export interface SignInInput {
+  email: string;
+  password: string;
+}
+export interface SignUpInput extends SignInInput {
+  name: string;
+}
 
 export function parseSignIn(data: FormData): CredentialParsed<SignInInput> {
   const email = text(data, 'email').trim();

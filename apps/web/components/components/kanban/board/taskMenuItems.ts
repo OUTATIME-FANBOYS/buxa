@@ -11,7 +11,9 @@ export function taskMenuItems(t: Task, project: Project, readOnly: boolean, cmd:
   return [
     { label: 'Open', icon: 'edit', onSelect: () => cmd.open(t) },
     { label: 'Duplicate', icon: 'copy', onSelect: () => cmd.duplicate(t) },
-    ...project.columns.filter(c => c.id !== t.columnId).map(c => ({ label: `Move to ${c.name}`, icon: 'arrowRight', onSelect: () => cmd.moveTo(t, c) })),
+    ...project.columns
+      .filter(c => c.id !== t.columnId)
+      .map(c => ({ label: `Move to ${c.name}`, icon: 'arrowRight', onSelect: () => cmd.moveTo(t, c) })),
     { label: t.archived ? 'Restore' : 'Archive', icon: 'archive', onSelect: () => cmd.toggleArchive(t) },
     { label: 'Delete', icon: 'trash', danger: true, onSelect: () => cmd.remove(t) },
   ];

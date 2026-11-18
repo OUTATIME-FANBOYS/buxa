@@ -14,14 +14,21 @@ async function setUp() {
   const store = new InMemoryStore();
   const service = createOrgService(store);
   const created = await store.createWithOwner({ name: NAME, slug: 'lake-camp', timezone: 'UTC' }, OWNER);
-  store.members.push({ orgId: created.id, userId: ADMIN, role: 'admin' }, { orgId: created.id, userId: VIEWER, role: 'viewer' });
+  store.members.push(
+    { orgId: created.id, userId: ADMIN, role: 'admin' },
+    { orgId: created.id, userId: VIEWER, role: 'viewer' },
+  );
   const as = (userId: string, role: Actor['role']): Actor => ({ userId, orgId: created.id, role });
 
   return { store, service, orgId: created.id, as };
 }
 
 /** The error a call throws, or undefined when it succeeds. */
-const refusal = (promise: Promise<unknown>) => promise.then(() => undefined, (e: unknown) => e);
+const refusal = (promise: Promise<unknown>) =>
+  promise.then(
+    () => undefined,
+    (e: unknown) => e,
+  );
 
 describe('archive camp', () => {
   it('lets the owner archive, and the camp keeps its members and its audit history', async () => {
@@ -35,7 +42,10 @@ describe('archive camp', () => {
     expect(store.members.filter(m => m.orgId === orgId)).toHaveLength(3);
   });
 
-  it.each([['admin', ADMIN], ['viewer', VIEWER]] as const)('refuses a %s, and the camp stays active', async (role, userId) => {
+  it.each([
+    ['admin', ADMIN],
+    ['viewer', VIEWER],
+  ] as const)('refuses a %s, and the camp stays active', async (role, userId) => {
     const { store, service, orgId, as } = await setUp();
 
     const error = await refusal(service.archiveCamp(as(userId, role), orgId));
@@ -69,7 +79,9 @@ describe('archive camp', () => {
 
     expect((await store.membershipsOf(OWNER)).map(m => m.orgId)).not.toContain(orgId);
 
-    expect(await service.listArchivedCamps(OWNER)).toEqual([expect.objectContaining({ id: orgId, name: NAME, role: 'owner' })]);
+    expect(await service.listArchivedCamps(OWNER)).toEqual([
+      expect.objectContaining({ id: orgId, name: NAME, role: 'owner' }),
+    ]);
     expect(await service.listArchivedCamps(ADMIN)).toEqual([expect.objectContaining({ id: orgId, role: 'admin' })]);
     expect(await service.listArchivedCamps(VIEWER)).toEqual([expect.objectContaining({ id: orgId, role: 'viewer' })]);
   });
@@ -89,7 +101,10 @@ describe('archive camp', () => {
 });
 
 describe('delete camp', () => {
-  it.each([['admin', ADMIN], ['viewer', VIEWER]] as const)('refuses a %s, and deletes nothing', async (role, userId) => {
+  it.each([
+    ['admin', ADMIN],
+    ['viewer', VIEWER],
+  ] as const)('refuses a %s, and deletes nothing', async (role, userId) => {
     const { store, service, orgId, as } = await setUp();
 
     const error = await refusal(service.deleteCamp(as(userId, role), orgId, NAME));

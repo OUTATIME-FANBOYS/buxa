@@ -4,7 +4,8 @@ import { periodChange } from '../homeCards';
 
 /** A series of consecutive days, oldest first, with one count per day. */
 const series = (counts: number[], complete = true): CheckInsByDay => ({
-  days: counts.map((count, i) => ({ date: `2026-10-${String(i + 1).padStart(2, '0')}`, count, minors: null })), complete,
+  days: counts.map((count, i) => ({ date: `2026-10-${String(i + 1).padStart(2, '0')}`, count, minors: null })),
+  complete,
 });
 
 describe('periodChange', () => {

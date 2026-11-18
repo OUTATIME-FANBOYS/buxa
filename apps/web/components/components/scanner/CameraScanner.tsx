@@ -5,10 +5,17 @@ import { createScanDeduper } from '@buxa/shared';
 import { Button } from '@/components/elements/export';
 
 /** Reads a QR code with the phone camera and calls `onScan` once per distinct code. The camera starts only when asked. */
-interface CameraScannerProps { onScan: (raw: string) => void; onClose: () => void }
+interface CameraScannerProps {
+  onScan: (raw: string) => void;
+  onClose: () => void;
+}
 
-interface Detector { detect(source: HTMLVideoElement): Promise<{ rawValue: string }[]> }
-interface DetectorCtor { new (options: { formats: string[] }): Detector }
+interface Detector {
+  detect(source: HTMLVideoElement): Promise<{ rawValue: string }[]>;
+}
+interface DetectorCtor {
+  new (options: { formats: string[] }): Detector;
+}
 type Phase = 'idle' | 'starting' | 'scanning' | 'denied' | 'failed';
 
 const detectorCtor = (): DetectorCtor | null => {
@@ -30,7 +37,8 @@ export function CameraScanner({ onScan, onClose }: CameraScannerProps) {
   }, []);
 
   const stop = () => {
-    stream.current?.getTracks().forEach(t => t.stop()); stream.current = null;
+    stream.current?.getTracks().forEach(t => t.stop());
+    stream.current = null;
   };
   useEffect(() => stop, []);
 
@@ -56,7 +64,9 @@ export function CameraScanner({ onScan, onClose }: CameraScannerProps) {
           if (code && dedupe.accept(code)) {
             onScanRef.current(code);
           }
-        } catch { /* a frame that cannot be read is skipped */ }
+        } catch {
+          /* a frame that cannot be read is skipped */
+        }
         await new Promise(r => setTimeout(r, 250));
       }
     };
@@ -70,7 +80,10 @@ export function CameraScanner({ onScan, onClose }: CameraScannerProps) {
   async function start() {
     setPhase('starting');
     try {
-      stream.current = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+      stream.current = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+        audio: false,
+      });
       setPhase('scanning');
     } catch (err) {
       const name = err instanceof DOMException ? err.name : '';
@@ -79,7 +92,8 @@ export function CameraScanner({ onScan, onClose }: CameraScannerProps) {
   }
 
   function close() {
-    stop(); onClose();
+    stop();
+    onClose();
   }
 
   return (
@@ -88,7 +102,15 @@ export function CameraScanner({ onScan, onClose }: CameraScannerProps) {
         <p role="status">Use the scanner field or type the name. This browser cannot read QR codes with the camera.</p>
       ) : (
         <>
-          {phase === 'scanning' && <video ref={video} className="camera-video" playsInline muted aria-label="Camera view for scanning a badge" />}
+          {phase === 'scanning' && (
+            <video
+              ref={video}
+              className="camera-video"
+              playsInline
+              muted
+              aria-label="Camera view for scanning a badge"
+            />
+          )}
           {(phase === 'idle' || phase === 'denied' || phase === 'failed') && (
             <Button variant="primary" type="button" onClick={() => void start()}>
               {phase === 'idle' ? 'Start camera' : 'Try the camera again'}
@@ -110,7 +132,9 @@ export function CameraScanner({ onScan, onClose }: CameraScannerProps) {
           </p>
         </>
       )}
-      <Button type="button" onClick={close}>Close camera</Button>
+      <Button type="button" onClick={close}>
+        Close camera
+      </Button>
     </div>
   );
 }

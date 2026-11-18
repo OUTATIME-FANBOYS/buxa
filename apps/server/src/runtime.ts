@@ -73,26 +73,50 @@ export function createRuntime(options: RuntimeOptions = {}): Runtime {
   const rateLimiter = options.rateLimiter ?? createPgRateLimiter(pool);
   const base = config.supabaseUrl?.replace(/\/+$/, '');
 
-  const verifier: Verifier | undefined = options.verifier === null ? undefined : options.verifier
-    ?? (base ? createVerifier({ issuer: `${base}/auth/v1`, keys: createRemoteJWKSet(new URL(`${base}/auth/v1/.well-known/jwks.json`)) }) : undefined);
+  const verifier: Verifier | undefined =
+    options.verifier === null
+      ? undefined
+      : (options.verifier ??
+        (base
+          ? createVerifier({
+              issuer: `${base}/auth/v1`,
+              keys: createRemoteJWKSet(new URL(`${base}/auth/v1/.well-known/jwks.json`)),
+            })
+          : undefined));
 
   const startupCheck = (async (): Promise<StartupDecision> => {
     if (!base || options.verifier !== undefined) {
       return 'ok';
     }
-    const confirmation = config.supabasePublishableKey ? await readEmailConfirmation({ supabaseUrl: base, publishableKey: config.supabasePublishableKey }) : 'unknown';
+    const confirmation = config.supabasePublishableKey
+      ? await readEmailConfirmation({ supabaseUrl: base, publishableKey: config.supabasePublishableKey })
+      : 'unknown';
     const decision = decideStartup(confirmation, config.env);
     if (decision === 'refuse') {
-      log.fatal('Supabase is set to auto-confirm sign-ups. Turn on "Confirm email" (Authentication > Providers > Email) before running in production.');
+      log.fatal(
+        'Supabase is set to auto-confirm sign-ups. Turn on "Confirm email" (Authentication > Providers > Email) before running in production.',
+      );
     }
     if (decision === 'warn') {
-      log.warn({ confirmation }, 'could not verify that Supabase requires email confirmation; check Authentication > Providers > Email');
+      log.warn(
+        { confirmation },
+        'could not verify that Supabase requires email confirmation; check Authentication > Providers > Email',
+      );
     }
 
     return decision;
   })();
 
-  return { config, log, pool, repositories, verifier, rateLimiter, services: createServices(repositories, options.clock ?? systemClock), startupCheck };
+  return {
+    config,
+    log,
+    pool,
+    repositories,
+    verifier,
+    rateLimiter,
+    services: createServices(repositories, options.clock ?? systemClock),
+    startupCheck,
+  };
 }
 
 /** Services are built from repositories and a clock only, so tests can assemble them without a runtime. */

@@ -25,7 +25,8 @@ export default async function WorkLayout({ children }: { children: ReactNode }) 
         role={camp?.role ?? null}
         archived={archived}
         topBarStart={<CampSwitcher camps={session.memberships} current={camp} archivedCamps={archivedCamps} />}
-        topBarEnd={<TaskTopBar account={<AccountMenu user={session.user} />} />}>
+        topBarEnd={<TaskTopBar account={<AccountMenu user={session.user} />} />}
+      >
         {children}
       </WorkFrame>
     </WorkArea>

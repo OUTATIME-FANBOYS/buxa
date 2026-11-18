@@ -26,14 +26,14 @@ describe('sign-in background tokens', () => {
   });
 
   it('the dark theme ([data-theme="dark"]) defines the same tokens, so the page switches with the theme', () => {
-    const dark = block('[data-theme="dark"]');
+    const dark = block("[data-theme='dark']");
     for (const token of BACKGROUND_TOKENS) {
       expect(dark, token).toContain(`${token}:`);
     }
   });
 
   it('the dark hero is a deep grey-navy, not the violet it was', () => {
-    expect(block('[data-theme="dark"]')).toContain('--hero-bg: #1b1f29;');
+    expect(block("[data-theme='dark']")).toContain('--hero-bg: #1b1f29;');
     expect(block(':root')).toContain('--hero-bg: #eef1f4;');
   });
 

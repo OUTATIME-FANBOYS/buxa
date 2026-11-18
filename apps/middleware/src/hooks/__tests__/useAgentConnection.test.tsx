@@ -25,10 +25,18 @@ describe('useAgentConnection', () => {
     api = undefined;
     vi.spyOn(serverApi, 'tokenInfo').mockResolvedValue({ exists: false, createdAt: null, lastSeen: null });
     root = createRoot(document.body.appendChild(document.createElement('div')));
-    act(() => root.render(<UiProvider Dialog={StubDialog}><Probe /></UiProvider>));
+    act(() =>
+      root.render(
+        <UiProvider Dialog={StubDialog}>
+          <Probe />
+        </UiProvider>,
+      ),
+    );
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = ''; vi.restoreAllMocks();
+    act(() => root.unmount());
+    document.body.innerHTML = '';
+    vi.restoreAllMocks();
   });
 
   it('loads the agent’s token status when it mounts', async () => {

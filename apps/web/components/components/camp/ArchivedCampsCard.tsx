@@ -5,11 +5,17 @@ export function ArchivedCampsCard({ camps }: { camps: readonly ArchivedCamp[] })
   return (
     <section className="panel" id="archived-camps">
       <h2>Archived camps</h2>
-      {camps.length === 0
-        ? <p className="muted">No archived camps.</p>
-        : <ul className="archived-list">{camps.map(camp => (
-          <li key={camp.id}><span>{camp.name}</span> <span className="muted">Archived {formatDate(camp.archivedAt)}</span></li>
-        ))}</ul>}
+      {camps.length === 0 ? (
+        <p className="muted">No archived camps.</p>
+      ) : (
+        <ul className="archived-list">
+          {camps.map(camp => (
+            <li key={camp.id}>
+              <span>{camp.name}</span> <span className="muted">Archived {formatDate(camp.archivedAt)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

@@ -24,15 +24,22 @@ export async function EditPerson({ id }: { id: string }) {
     return (
       <div className="page">
         <PageHeader title="Edit person" />
-        <Empty icon="alert" title="Your role cannot change people's details" body="Ask a staff member or admin to make the change."
-          action={<Button href={personPath(person.id)}>Back to {displayName(person)}</Button>} />
+        <Empty
+          icon="alert"
+          title="Your role cannot change people's details"
+          body="Ask a staff member or admin to make the change."
+          action={<Button href={personPath(person.id)}>Back to {displayName(person)}</Button>}
+        />
       </div>
     );
   }
 
   return (
     <div className="page narrow">
-      <PageHeader title={`Edit ${displayName(person)}`} subtitle="Changes are saved to the camp record and shown to everyone who can see this person." />
+      <PageHeader
+        title={`Edit ${displayName(person)}`}
+        subtitle="Changes are saved to the camp record and shown to everyone who can see this person."
+      />
       <EditPersonForm person={person} />
     </div>
   );

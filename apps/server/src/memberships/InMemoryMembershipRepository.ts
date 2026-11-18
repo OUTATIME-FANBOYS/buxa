@@ -1,7 +1,12 @@
 import type { Actor } from '@buxa/domain';
 import { PersonNotFoundError } from '../people/PeopleRepository';
 import { compareText, instant, newId, type InMemoryDatabase, type StoredMembership } from '../people/InMemoryDatabase';
-import { MembershipNotFoundError, type MembershipRecord, type MembershipRepository, type NewMembershipRecord } from './MembershipRepository';
+import {
+  MembershipNotFoundError,
+  type MembershipRecord,
+  type MembershipRepository,
+  type NewMembershipRecord,
+} from './MembershipRepository';
 import { settle } from '@buxa/domain';
 
 const toRecord = (m: StoredMembership): MembershipRecord => ({

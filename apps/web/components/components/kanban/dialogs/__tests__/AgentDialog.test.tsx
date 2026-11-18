@@ -21,11 +21,18 @@ describe('AgentDialog', () => {
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = '';
+    act(() => root.unmount());
+    document.body.innerHTML = '';
   });
 
   it('asks for a name, what the agent is for, and which projects it may touch', () => {
-    act(() => root.render(<UiProvider Dialog={ConfirmDialog}><AgentDialog onClose={() => undefined} /></UiProvider>));
+    act(() =>
+      root.render(
+        <UiProvider Dialog={ConfirmDialog}>
+          <AgentDialog onClose={() => undefined} />
+        </UiProvider>,
+      ),
+    );
     // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
     const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
     expect(dialog.getAttribute('aria-label')).toBe('Add an agent');
@@ -33,7 +40,13 @@ describe('AgentDialog', () => {
     expect(dialog.textContent).toContain('Projects it may touch');
   });
   it('will not add an agent without a name', () => {
-    act(() => root.render(<UiProvider Dialog={ConfirmDialog}><AgentDialog onClose={() => undefined} /></UiProvider>));
+    act(() =>
+      root.render(
+        <UiProvider Dialog={ConfirmDialog}>
+          <AgentDialog onClose={() => undefined} />
+        </UiProvider>,
+      ),
+    );
     // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
     const form = document.querySelector('form') as HTMLFormElement;
     act(() => {

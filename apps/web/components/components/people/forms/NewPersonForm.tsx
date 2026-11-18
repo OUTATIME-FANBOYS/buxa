@@ -10,7 +10,10 @@ import { CAMPER_NEEDS_HOUSEHOLD } from '@buxa/shared';
 import { householdChoiceLabel, type HouseholdChoice } from '@buxa/shared';
 import { FormMessage } from './FormMessage';
 
-interface HouseholdTarget { id: string; name: string }
+interface HouseholdTarget {
+  id: string;
+  name: string;
+}
 
 /**
  * Add a person. With `household` (from the guardian's page) the person joins that household. Otherwise the form offers the camp's
@@ -18,8 +21,16 @@ interface HouseholdTarget { id: string; name: string }
  * `variant` says where it renders: on its own page (a panel, with a Cancel link back to People) or in the People page's dialog
  * (no panel, with a Cancel button that closes the dialog through `onCancel`). The fields, validation and action are the same.
  */
-export function NewPersonForm({ household, households, variant = 'page', onCancel }: {
-  household: HouseholdTarget | null; households: readonly HouseholdChoice[]; variant?: 'page' | 'dialog'; onCancel?: () => void;
+export function NewPersonForm({
+  household,
+  households,
+  variant = 'page',
+  onCancel,
+}: {
+  household: HouseholdTarget | null;
+  households: readonly HouseholdChoice[];
+  variant?: 'page' | 'dialog';
+  onCancel?: () => void;
 }) {
   const [state, formAction, pending] = useActionState(createPersonAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
@@ -36,19 +47,37 @@ export function NewPersonForm({ household, households, variant = 'page', onCance
   const invalid = (name: string) => (err(name) ? true : undefined);
 
   return (
-    <form ref={formRef} action={formAction} className={`${inDialog ? '' : 'panel '}people-form person-form`} aria-describedby="people-form-help">
-      <p id="people-form-help" className="person-helper">Fields marked with an asterisk are required.</p>
+    <form
+      ref={formRef}
+      action={formAction}
+      className={`${inDialog ? '' : 'panel '}people-form person-form`}
+      aria-describedby="people-form-help"
+    >
+      <p id="people-form-help" className="person-helper">
+        Fields marked with an asterisk are required.
+      </p>
 
       <fieldset className="plain person-section">
         <legend className="person-legend">Name</legend>
         <div className="people-form-grid">
           <Field label="First name *" error={err('givenName')}>
-            <input name="givenName" autoComplete="off" maxLength={80} aria-invalid={invalid('givenName')} data-autofocus autoFocus={!inDialog} />
+            <input
+              name="givenName"
+              autoComplete="off"
+              maxLength={80}
+              aria-invalid={invalid('givenName')}
+              data-autofocus
+              autoFocus={!inDialog}
+            />
           </Field>
           <Field label="Family name *" error={err('familyName')}>
             <input name="familyName" autoComplete="off" maxLength={80} aria-invalid={invalid('familyName')} />
           </Field>
-          <Field label="Preferred name" error={err('preferredName')} hint="The name people use, if it is not the first name.">
+          <Field
+            label="Preferred name"
+            error={err('preferredName')}
+            hint="The name people use, if it is not the first name."
+          >
             <input name="preferredName" autoComplete="off" maxLength={80} aria-invalid={invalid('preferredName')} />
           </Field>
         </div>
@@ -64,7 +93,11 @@ export function NewPersonForm({ household, households, variant = 'page', onCance
             </label>
           ))}
         </div>
-        {err('roles') && <p className="field-error" role="alert">{err('roles')}</p>}
+        {err('roles') && (
+          <p className="field-error" role="alert">
+            {err('roles')}
+          </p>
+        )}
       </fieldset>
 
       <fieldset className="plain person-section">
@@ -72,28 +105,56 @@ export function NewPersonForm({ household, households, variant = 'page', onCance
         {household ? (
           <>
             <input type="hidden" name="householdId" value={household.id} />
-            <p>This person joins the <strong>{household.name}</strong> household.</p>
+            <p>
+              This person joins the <strong>{household.name}</strong> household.
+            </p>
           </>
         ) : (
           <>
             {households.length > 0 && (
-              <Field label="Existing household" error={err('householdId')} hint="Join a household already in the camp. A child needs one with a parent or guardian in it.">
+              <Field
+                label="Existing household"
+                error={err('householdId')}
+                hint="Join a household already in the camp. A child needs one with a parent or guardian in it."
+              >
                 <select name="householdId" defaultValue="" aria-invalid={invalid('householdId')}>
                   <option value="">Not an existing household</option>
-                  {households.map(h => <option key={h.id} value={h.id}>{householdChoiceLabel(h)}</option>)}
+                  {households.map(h => (
+                    <option key={h.id} value={h.id}>
+                      {householdChoiceLabel(h)}
+                    </option>
+                  ))}
                 </select>
               </Field>
             )}
-            <Field label="New household name" error={err('newHouseholdName') ?? (households.length === 0 ? err('householdId') : undefined)}
-              hint={CAMPER_NEEDS_HOUSEHOLD}>
-              <input name="newHouseholdName" autoComplete="off" maxLength={120} aria-invalid={invalid('newHouseholdName') ?? (households.length === 0 ? invalid('householdId') : undefined)} />
+            <Field
+              label="New household name"
+              error={err('newHouseholdName') ?? (households.length === 0 ? err('householdId') : undefined)}
+              hint={CAMPER_NEEDS_HOUSEHOLD}
+            >
+              <input
+                name="newHouseholdName"
+                autoComplete="off"
+                maxLength={120}
+                aria-invalid={
+                  invalid('newHouseholdName') ?? (households.length === 0 ? invalid('householdId') : undefined)
+                }
+              />
             </Field>
           </>
         )}
-        <Field label="How they are related" error={err('relationship')} hint="For example: son, daughter, mother, father. Needed when they join a household.">
+        <Field
+          label="How they are related"
+          error={err('relationship')}
+          hint="For example: son, daughter, mother, father. Needed when they join a household."
+        >
           <input name="relationship" autoComplete="off" maxLength={40} aria-invalid={invalid('relationship')} />
         </Field>
-        {household && err('householdId') && <p className="field-error" role="alert">{err('householdId')}</p>}
+        {household && err('householdId') && (
+          <p className="field-error" role="alert">
+            {err('householdId')}
+          </p>
+        )}
       </fieldset>
 
       <fieldset className="plain person-section">
@@ -113,10 +174,16 @@ export function NewPersonForm({ household, households, variant = 'page', onCance
 
       <FormMessage state={state} />
       <div className="person-actions">
-        {inDialog
-          ? <Button type="button" onClick={onCancel}>Cancel</Button>
-          : <Button href={ROUTES.people}>Cancel</Button>}
-        <Button variant="primary" disabled={pending}>{pending ? 'Adding…' : 'Add person'}</Button>
+        {inDialog ? (
+          <Button type="button" onClick={onCancel}>
+            Cancel
+          </Button>
+        ) : (
+          <Button href={ROUTES.people}>Cancel</Button>
+        )}
+        <Button variant="primary" disabled={pending}>
+          {pending ? 'Adding…' : 'Add person'}
+        </Button>
       </div>
     </form>
   );

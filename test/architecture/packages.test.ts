@@ -30,8 +30,13 @@ const BANNED_EXTERNAL: Partial<Record<Pkg, RegExp>> = {
 };
 
 const PKG_DIRS: [string, Pkg][] = [
-  ['apps/web/', 'web'], ['apps/middleware/src/', 'middleware'], ['apps/shared/src/', 'shared'], ['apps/server/src/', 'server'],
-  ['packages/domain/', 'domain'], ['packages/contracts/', 'contracts'], ['packages/db/', 'db'],
+  ['apps/web/', 'web'],
+  ['apps/middleware/src/', 'middleware'],
+  ['apps/shared/src/', 'shared'],
+  ['apps/server/src/', 'server'],
+  ['packages/domain/', 'domain'],
+  ['packages/contracts/', 'contracts'],
+  ['packages/db/', 'db'],
 ];
 const pkgOf = (rel: string): Pkg => {
   for (const [prefix, pkg] of PKG_DIRS) {
@@ -64,8 +69,8 @@ function walk(dir: string, out: string[] = []): string[] {
 
 const rel = (abs: string) => relative(ROOT, abs).split(sep).join('/');
 const isTest = (file: string) => /\/__tests__\/|\.test\.tsx?$/.test(file);
-const files = SRC_ROOTS.flatMap((r) => walk(join(ROOT, r))).map(rel);
-const source = new Map(files.map((f) => [f, readFileSync(join(ROOT, f), 'utf8')]));
+const files = SRC_ROOTS.flatMap(r => walk(join(ROOT, r))).map(rel);
+const source = new Map(files.map(f => [f, readFileSync(join(ROOT, f), 'utf8')]));
 
 /** A runtime import: `import type` and imports whose named bindings are all types are erased, so they are skipped. */
 function runtimeSpecs(text: string): string[] {
@@ -75,7 +80,7 @@ function runtimeSpecs(text: string): string[] {
       continue;
     }
     const named = /\{([^}]*)\}/.exec(m[3]);
-    if (named && named[1].split(',').every((x) => x.trim() === '' || x.trim().startsWith('type '))) {
+    if (named && named[1].split(',').every(x => x.trim() === '' || x.trim().startsWith('type '))) {
       continue;
     }
     out.push(m[4]);
@@ -115,7 +120,9 @@ function resolveSpec(spec: string, from: string): { file?: string; pkg?: Pkg; ex
   }
   const m = /^@buxa\/(shared|server|middleware)(\/.*)?$/.exec(spec);
   if (m) {
-    const dir = { shared: 'apps/shared/src', server: 'apps/server/src', middleware: 'apps/middleware/src' }[m[1] as 'shared' | 'server' | 'middleware'];
+    const dir = { shared: 'apps/shared/src', server: 'apps/server/src', middleware: 'apps/middleware/src' }[
+      m[1] as 'shared' | 'server' | 'middleware'
+    ];
     const sub = (m[2] ?? '').slice(1);
     const file = firstExisting(join(ROOT, dir, sub));
 
@@ -129,7 +136,11 @@ function resolveSpec(spec: string, from: string): { file?: string; pkg?: Pkg; ex
   return { external: true };
 }
 
-interface Edge { to: Pkg; spec: string; file?: string }
+interface Edge {
+  to: Pkg;
+  spec: string;
+  file?: string;
+}
 const edges = new Map<string, Edge[]>();
 for (const [file, text] of source) {
   const list: Edge[] = [];
@@ -209,7 +220,7 @@ describe('package dependency direction', () => {
       }
       for (const { to } of list) {
         if (to !== from) {
-requirePresent(graph.get(from), 'graph.get(from)').add(to);
+          requirePresent(graph.get(from), 'graph.get(from)').add(to);
         }
       }
     }
@@ -217,7 +228,8 @@ requirePresent(graph.get(from), 'graph.get(from)').add(to);
     const stack: Pkg[] = [];
     const cycles: string[] = [];
     const visit = (node: Pkg) => {
-      state.set(node, 1); stack.push(node);
+      state.set(node, 1);
+      stack.push(node);
       for (const next of graph.get(node) ?? []) {
         const s = state.get(next);
         if (s === 1) {
@@ -226,7 +238,8 @@ requirePresent(graph.get(from), 'graph.get(from)').add(to);
           visit(next);
         }
       }
-      stack.pop(); state.set(node, 2);
+      stack.pop();
+      state.set(node, 2);
     };
     for (const node of graph.keys()) {
       if (!state.has(node)) {
@@ -242,12 +255,14 @@ describe('client code never reaches the server package', () => {
   // A 'use server' file is a boundary: its body runs on the server, and the client only holds a reference to it.
   const isUseClient = (file: string) => /^\s*['"]use client['"]/m.test(source.get(file) ?? '');
   const isUseServer = (file: string) => /^\s*['"]use server['"]/m.test(source.get(file) ?? '');
-  const roots = [...source.keys()].filter((f) => !isTest(f) && (pkgOf(f) === 'middleware' || (pkgOf(f) === 'web' && isUseClient(f))));
+  const roots = [...source.keys()].filter(
+    f => !isTest(f) && (pkgOf(f) === 'middleware' || (pkgOf(f) === 'web' && isUseClient(f))),
+  );
 
   it('no module reachable from client code imports @buxa/server or a server-only module', () => {
     const seen = new Set<string>();
     const hits: string[] = [];
-    const queue: { file: string; path: string[] }[] = roots.map((file) => ({ file, path: [] }));
+    const queue: { file: string; path: string[] }[] = roots.map(file => ({ file, path: [] }));
     while (queue.length) {
       const { file, path } = requirePresent(queue.shift(), 'queue.shift()');
       if (seen.has(file)) {
@@ -257,7 +272,8 @@ describe('client code never reaches the server package', () => {
       const here = [...path, file];
       for (const { to, spec, file: target } of edges.get(file) ?? []) {
         if (to === 'server') {
-          hits.push(`${here.join(' -> ')} -> ${spec}`); continue;
+          hits.push(`${here.join(' -> ')} -> ${spec}`);
+          continue;
         }
         if (!target || isUseServer(target)) {
           continue;
@@ -283,7 +299,9 @@ describe('workspace packages', () => {
   it('each package has a package.json with its name, and the root workspaces list includes them', () => {
     const root = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')) as { workspaces: string[] };
     const expected: [string, string][] = [
-      ['apps/shared', '@buxa/shared'], ['apps/server', '@buxa/server'], ['apps/middleware', '@buxa/middleware'],
+      ['apps/shared', '@buxa/shared'],
+      ['apps/server', '@buxa/server'],
+      ['apps/middleware', '@buxa/middleware'],
     ];
     for (const [dir, name] of expected) {
       expect(root.workspaces).toContain(dir);

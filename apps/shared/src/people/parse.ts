@@ -48,7 +48,10 @@ export function parseWith<T>(schema: ZodType<T>, values: unknown): PersonParsed<
       fieldErrors[name] ??= issue.message;
     }
   }
-  const message = Object.keys(fieldErrors).length > 0 ? 'Check the highlighted fields.' : (result.error.issues[0]?.message ?? 'Check the form.');
+  const message =
+    Object.keys(fieldErrors).length > 0
+      ? 'Check the highlighted fields.'
+      : (result.error.issues[0]?.message ?? 'Check the form.');
 
   return { ok: false, state: failure(message, fieldErrors) };
 }

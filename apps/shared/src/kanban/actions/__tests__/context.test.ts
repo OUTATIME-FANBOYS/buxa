@@ -6,11 +6,15 @@ import { uiActions } from '../ui';
 describe('ActionContext', () => {
   it('is the three operations every action group uses: set, get and replace', () => {
     let state = buildSeed();
-    const ctx: ActionContext = { set: (fn) => {
-      state = fn(state);
-    }, get: () => state, replace: (s) => {
-      state = s;
-    } };
+    const ctx: ActionContext = {
+      set: fn => {
+        state = fn(state);
+      },
+      get: () => state,
+      replace: s => {
+        state = s;
+      },
+    };
     uiActions(ctx).setView('board');
     expect(ctx.get().ui.view).toBe('board');
     ctx.replace({ ...state, ui: { ...state.ui, view: 'list' } });

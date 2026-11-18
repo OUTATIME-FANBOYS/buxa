@@ -11,7 +11,11 @@ const bearerToken = (header: string | null): string => (header?.startsWith('Bear
  * Turns the request's token into a session, or throws. The token comes only from the Authorization header, never the URL.
  * Failures say only "invalid or expired": never why, and never the token.
  */
-export async function authenticate(headers: Headers, deps: { verifier?: Verifier; users: UserRepository }, log: Logger): Promise<Session> {
+export async function authenticate(
+  headers: Headers,
+  deps: { verifier?: Verifier; users: UserRepository },
+  log: Logger,
+): Promise<Session> {
   if (!deps.verifier) {
     throw new HttpError(503, 'Sign-in is not configured');
   }

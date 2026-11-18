@@ -13,7 +13,13 @@ export type SetTime = (at: Date) => void;
  * collected by a guardian earlier today, and one closed visit from yesterday. Times are set relative to `base` (the run time,
  * a few hours back), so the on-site list has the same shape on every run. Returns the number of check-ins made.
  */
-export async function seedVisits(services: Services, staff: Actor, ids: RosterIds, base: Date, setTime: SetTime): Promise<number> {
+export async function seedVisits(
+  services: Services,
+  staff: Actor,
+  ids: RosterIds,
+  base: Date,
+  setTime: SetTime,
+): Promise<number> {
   const at = (offsetMs: number): Date => new Date(base.getTime() + offsetMs);
   // Roster order: family 0 has campers 0 and 1, family 1 has camper 2, family 2 has campers 3 and 4.
   const [camperA, camperB, camperC, camperD] = ids.campers;

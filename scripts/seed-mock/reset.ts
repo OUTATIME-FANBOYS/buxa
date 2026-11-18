@@ -2,9 +2,21 @@ import type pg from 'pg';
 import { findCampId } from './camp';
 
 /** How many rows a reset would delete from the mock camp. Everything else in the database is left alone. */
-export interface ResetPlan { people: number; households: number; memberships: number; badges: number; checkIns: number }
+export interface ResetPlan {
+  people: number;
+  households: number;
+  memberships: number;
+  badges: number;
+  checkIns: number;
+}
 
-interface CountRow { people: number; households: number; memberships: number; badges: number; check_ins: number }
+interface CountRow {
+  people: number;
+  households: number;
+  memberships: number;
+  badges: number;
+  check_ins: number;
+}
 
 /**
  * Counts the mock camp's rows before a reset, so the operator can see what will go. Null when the camp does not exist yet,
@@ -21,11 +33,18 @@ export async function planReset(pool: pg.Pool): Promise<ResetPlan | null> {
             (SELECT count(*) FROM memberships WHERE org_id = $1)::int AS memberships,
             (SELECT count(*) FROM credentials WHERE org_id = $1)::int AS badges,
             (SELECT count(*) FROM check_ins WHERE org_id = $1)::int AS check_ins`,
-    [orgId]);
+    [orgId],
+  );
   const row = rows[0];
   if (!row) {
     throw new Error('Could not count the camp rows.');
   }
 
-  return { people: row.people, households: row.households, memberships: row.memberships, badges: row.badges, checkIns: row.check_ins };
+  return {
+    people: row.people,
+    households: row.households,
+    memberships: row.memberships,
+    badges: row.badges,
+    checkIns: row.check_ins,
+  };
 }

@@ -9,7 +9,13 @@ import * as A from '@buxa/shared';
 import { Store, Tokens } from './store';
 import { buildMcp } from './mcp';
 
-export interface AppOptions { dataDir: string; port?: number; host?: string; staticDir?: string; /** The per-run secret every /api request must send. Generated when not given. */ secret?: string }
+export interface AppOptions {
+  dataDir: string;
+  port?: number;
+  host?: string;
+  staticDir?: string;
+  /** The per-run secret every /api request must send. Generated when not given. */ secret?: string;
+}
 const LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])$/i;
 /** The addresses that only this machine can reach. Anything else needs BUXA_ALLOW_REMOTE_HOST=yes. */
 const LOOPBACK = /^(localhost|127\.0\.0\.1|::1|\[::1\])$/i;
@@ -30,19 +36,32 @@ const sameSecret = (sent: string | undefined, expected: string): boolean => {
   if (!sent) {
     return false;
   }
-  const a = Buffer.from(sent), b = Buffer.from(expected);
+  const a = Buffer.from(sent),
+    b = Buffer.from(expected);
 
   return a.length === b.length && timingSafeEqual(a, b);
 };
-const MIME: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png', '.ico': 'image/x-icon', '.woff2': 'font/woff2' };
+const MIME: Record<string, string> = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript',
+  '.css': 'text/css',
+  '.svg': 'image/svg+xml',
+  '.json': 'application/json',
+  '.png': 'image/png',
+  '.ico': 'image/x-icon',
+  '.woff2': 'font/woff2',
+};
 
 /** Read a request body, refusing anything larger than `limit` bytes. */
 function body(req: http.IncomingMessage, limit: number): Promise<unknown> {
   return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = []; let size = 0;
+    const chunks: Buffer[] = [];
+    let size = 0;
     req.on('data', (c: Buffer) => {
-      size += c.length; if (size > limit) {
-        reject(Object.assign(new Error('Request too large.'), { status: 413 })); req.destroy();
+      size += c.length;
+      if (size > limit) {
+        reject(Object.assign(new Error('Request too large.'), { status: 413 }));
+        req.destroy();
       } else {
         chunks.push(c);
       }
@@ -58,11 +77,13 @@ function body(req: http.IncomingMessage, limit: number): Promise<unknown> {
   });
 }
 const send = (res: http.ServerResponse, status: number, value: unknown, headers: Record<string, string> = {}) => {
-  res.writeHead(status, { 'content-type': 'application/json', 'cache-control': 'no-store', ...headers }); res.end(JSON.stringify(value));
+  res.writeHead(status, { 'content-type': 'application/json', 'cache-control': 'no-store', ...headers });
+  res.end(JSON.stringify(value));
 };
 
 export function createApp(opts: AppOptions) {
-  const store = new Store(opts.dataDir); const tokens = new Tokens(opts.dataDir);
+  const store = new Store(opts.dataDir);
+  const tokens = new Tokens(opts.dataDir);
   const secret = opts.secret ?? newRunSecret();
   const sse = new Set<http.ServerResponse>();
   store.subscribe((version, origin) => {
@@ -74,7 +95,8 @@ export function createApp(opts: AppOptions) {
     for (const r of sse) {
       r.write(': keep-alive\n\n');
     }
-  }, 25_000); beat.unref();
+  }, 25_000);
+  beat.unref();
 
   const server = http.createServer(async (req, res) => {
     try {
@@ -101,9 +123,16 @@ export function createApp(opts: AppOptions) {
       if (url.pathname.startsWith('/api/')) {
         // Anything on the network can reach a 0.0.0.0 listener, and the Host and Origin checks above do not stop a plain client.
         const header = req.headers[SECRET_HEADER];
-        const sent = typeof header === 'string' ? header : url.pathname === '/api/events' ? (url.searchParams.get('run_secret') ?? undefined) : undefined;
+        const sent =
+          typeof header === 'string'
+            ? header
+            : url.pathname === '/api/events'
+              ? (url.searchParams.get('run_secret') ?? undefined)
+              : undefined;
         if (!sameSecret(sent, secret)) {
-          return send(res, 401, { error: `Missing or wrong ${SECRET_HEADER}. Use the secret printed when the server started.` });
+          return send(res, 401, {
+            error: `Missing or wrong ${SECRET_HEADER}. Use the secret printed when the server started.`,
+          });
         }
 
         return await api(req, res, url);
@@ -127,18 +156,37 @@ export function createApp(opts: AppOptions) {
     const agentId = m ? tokens.verify(m[1]) : null;
     const snap = store.snapshot;
     if (!agentId || (snap && !A.agentOf(snap, agentId))) {
-      return send(res, 401, { jsonrpc: '2.0', error: { code: -32001, message: 'Unauthorized. Create a connection for this agent in Buxa and send its token as a Bearer token.' }, id: null }, { 'www-authenticate': 'Bearer' });
+      return send(
+        res,
+        401,
+        {
+          jsonrpc: '2.0',
+          error: {
+            code: -32001,
+            message: 'Unauthorized. Create a connection for this agent in Buxa and send its token as a Bearer token.',
+          },
+          id: null,
+        },
+        { 'www-authenticate': 'Bearer' },
+      );
     }
     if (req.method !== 'POST') {
-      return send(res, 405, { jsonrpc: '2.0', error: { code: -32000, message: 'Method not allowed.' }, id: null }, { allow: 'POST' });
+      return send(
+        res,
+        405,
+        { jsonrpc: '2.0', error: { code: -32000, message: 'Method not allowed.' }, id: null },
+        { allow: 'POST' },
+      );
     }
     const parsed = await body(req, 256 * 1024);
     const mcpServer = buildMcp(store, agentId);
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
     res.on('close', () => {
-      void transport.close(); void mcpServer.close();
+      void transport.close();
+      void mcpServer.close();
     });
-    await mcpServer.connect(transport); await transport.handleRequest(req, res, parsed);
+    await mcpServer.connect(transport);
+    await transport.handleRequest(req, res, parsed);
   }
 
   /* ---------- API for the app ---------- */
@@ -151,12 +199,21 @@ export function createApp(opts: AppOptions) {
     const client = String(req.headers['x-buxa-client'] ?? 'anon').slice(0, 40);
 
     if (url.pathname === '/api/health') {
-      return send(res, 200, { ok: true, hasData: store.hasData, version: store.version, mcpUrl: `http://localhost:${port()}/mcp` });
+      return send(res, 200, {
+        ok: true,
+        hasData: store.hasData,
+        version: store.version,
+        mcpUrl: `http://localhost:${port()}/mcp`,
+      });
     }
 
     if (url.pathname === '/api/state') {
       if (req.method === 'GET') {
-        return send(res, 200, store.hasData ? { version: store.version, data: store.data } : { version: store.version, empty: true });
+        return send(
+          res,
+          200,
+          store.hasData ? { version: store.version, data: store.data } : { version: store.version, empty: true },
+        );
       }
       if (req.method === 'PUT') {
         const b = (await body(req, 40 * 1024 * 1024)) as { baseVersion?: number; data?: unknown } | undefined;
@@ -165,21 +222,29 @@ export function createApp(opts: AppOptions) {
         }
         const v = store.put(b.baseVersion, b.data, client);
 
-        return v === null ? send(res, 409, { error: 'The server has newer data.', version: store.version }) : send(res, 200, { version: v });
+        return v === null
+          ? send(res, 409, { error: 'The server has newer data.', version: store.version })
+          : send(res, 200, { version: v });
       }
     }
 
     if (url.pathname === '/api/events' && req.method === 'GET') {
-      res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive' });
+      res.writeHead(200, {
+        'content-type': 'text/event-stream',
+        'cache-control': 'no-store',
+        connection: 'keep-alive',
+      });
       res.write(`event: version\ndata: ${JSON.stringify({ version: store.version, origin: 'hello' })}\n\n`);
-      sse.add(res); req.on('close', () => sse.delete(res));
+      sse.add(res);
+      req.on('close', () => sse.delete(res));
 
       return;
     }
 
     const t = /^\/api\/agents\/([^/]+)\/token$/.exec(url.pathname);
     if (t) {
-      const agentId = decodeURIComponent(t[1]); const snap = store.snapshot;
+      const agentId = decodeURIComponent(t[1]);
+      const snap = store.snapshot;
       if (!snap || !A.agentOf(snap, agentId)) {
         return send(res, 404, { error: 'No such agent.' });
       }
@@ -211,17 +276,26 @@ export function createApp(opts: AppOptions) {
     if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) {
       file = path.join(root, 'index.html');
     }
-    res.writeHead(200, { 'content-type': MIME[path.extname(file)] ?? 'application/octet-stream', 'cache-control': file.includes('/assets/') ? 'public, max-age=31536000, immutable' : 'no-cache' });
+    res.writeHead(200, {
+      'content-type': MIME[path.extname(file)] ?? 'application/octet-stream',
+      'cache-control': file.includes('/assets/') ? 'public, max-age=31536000, immutable' : 'no-cache',
+    });
     fs.createReadStream(file).pipe(res);
   }
 
   const port = () => (server.address() as AddressInfo | null)?.port ?? opts.port ?? 0;
-  const listen = () => new Promise<number>(r => server.listen(opts.port ?? 0, opts.host ?? '127.0.0.1', () => r(port())));
+  const listen = () =>
+    new Promise<number>(r => server.listen(opts.port ?? 0, opts.host ?? '127.0.0.1', () => r(port())));
   const close = async () => {
-    clearInterval(beat); for (const r of sse) {
+    clearInterval(beat);
+    for (const r of sse) {
       r.end();
-    } store.flush(); tokens.flush(); await new Promise<void>(r => {
-      server.close(() => r()); server.closeAllConnections();
+    }
+    store.flush();
+    tokens.flush();
+    await new Promise<void>(r => {
+      server.close(() => r());
+      server.closeAllConnections();
     });
   };
 

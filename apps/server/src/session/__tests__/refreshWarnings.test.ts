@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NextRequest } from 'next/server';
 
-const outcome = vi.hoisted(() => ({ next: (): Promise<unknown> => settle(() => ({ data: { session: null }, error: null })) }));
+const outcome = vi.hoisted(() => ({
+  next: (): Promise<unknown> => settle(() => ({ data: { session: null }, error: null })),
+}));
 vi.mock('../supabaseClient', () => ({
   createSessionClient: () => ({ auth: { getSession: () => outcome.next() } }),
 }));
@@ -12,7 +14,9 @@ import { settle } from '@buxa/domain';
 
 const EMAIL = 'maya.camp@example.test';
 const TOKEN = 'eyJhbGciOiJFUzI1NiJ9.secret-payload';
-const request = { cookies: { getAll: () => [{ name: 'sb-127-auth-token', value: `base64-${TOKEN}` }] } } as unknown as NextRequest;
+const request = {
+  cookies: { getAll: () => [{ name: 'sb-127-auth-token', value: `base64-${TOKEN}` }] },
+} as unknown as NextRequest;
 
 let lines: string[];
 beforeEach(() => {
@@ -22,7 +26,11 @@ const log = () => createLogger('warn', line => lines.push(line));
 
 describe('the refresh path warns when the identity provider fails (audit S-20)', () => {
   it('an error returned by the client is logged by name, and the page is still served', async () => {
-    outcome.next = () => settle(() => ({ data: { session: null }, error: Object.assign(new Error(`refresh failed for ${EMAIL} ${TOKEN}`), { name: 'AuthRetryableFetchError' }) }));
+    outcome.next = () =>
+      settle(() => ({
+        data: { session: null },
+        error: Object.assign(new Error(`refresh failed for ${EMAIL} ${TOKEN}`), { name: 'AuthRetryableFetchError' }),
+      }));
     expect(await refreshSessionCookies(request, 1000, log())).toBeNull();
     const text = lines.join('\n');
     expect(text).toContain('AuthRetryableFetchError');

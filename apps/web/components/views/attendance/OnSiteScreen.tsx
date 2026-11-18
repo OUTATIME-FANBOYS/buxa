@@ -34,7 +34,9 @@ export async function OnSiteScreen() {
       ) : (
         <div id={ON_SITE_LIST_ID} tabIndex={-1} className="onsite-wrap">
           <ul className="onsite-list" aria-label="People on site">
-            {rows.map(row => <OnSiteRow key={row.personId} row={row} canRecord={canRecord} canOverride={canOverride} />)}
+            {rows.map(row => (
+              <OnSiteRow key={row.personId} row={row} canRecord={canRecord} canOverride={canOverride} />
+            ))}
           </ul>
         </div>
       )}

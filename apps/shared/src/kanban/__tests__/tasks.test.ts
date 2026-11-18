@@ -1,11 +1,38 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Filter, Task } from '../types';
-import { PRIORITIES, PRIORITY_LABEL, PRIORITY_RANK, dueInfo, emptyFilter, fmtSize, isFilterActive, matchesFilter, sortTasks, subtaskProgress, uid } from '../tasks';
+import {
+  PRIORITIES,
+  PRIORITY_LABEL,
+  PRIORITY_RANK,
+  dueInfo,
+  emptyFilter,
+  fmtSize,
+  isFilterActive,
+  matchesFilter,
+  sortTasks,
+  subtaskProgress,
+  uid,
+} from '../tasks';
 
 const task = (over: Partial<Task> = {}): Task => ({
-  id: 't', projectId: 'p', columnId: 'c', title: 'Write the form', description: 'Family questions', priority: 'medium',
-  tags: ['family'], subtasks: [{ id: 's1', title: 'a', done: true }, { id: 's2', title: 'b', done: false }], comments: [], attachments: [],
-  history: [], archived: false, createdAt: '2027-07-01T00:00:00.000Z', createdBy: 'u', ...over,
+  id: 't',
+  projectId: 'p',
+  columnId: 'c',
+  title: 'Write the form',
+  description: 'Family questions',
+  priority: 'medium',
+  tags: ['family'],
+  subtasks: [
+    { id: 's1', title: 'a', done: true },
+    { id: 's2', title: 'b', done: false },
+  ],
+  comments: [],
+  attachments: [],
+  history: [],
+  archived: false,
+  createdAt: '2027-07-01T00:00:00.000Z',
+  createdBy: 'u',
+  ...over,
 });
 
 describe('task priorities', () => {
@@ -18,7 +45,8 @@ describe('task priorities', () => {
 
 describe('dueInfo', () => {
   beforeEach(() => {
-    vi.useFakeTimers(); vi.setSystemTime(new Date(2027, 6, 10, 12));
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2027, 6, 10, 12));
   });
   afterEach(() => vi.useRealTimers());
   it('has no info without a due date', () => {
@@ -38,7 +66,8 @@ describe('dueInfo', () => {
 
 describe('matchesFilter', () => {
   beforeEach(() => {
-    vi.useFakeTimers(); vi.setSystemTime(new Date(2027, 6, 10, 12));
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2027, 6, 10, 12));
   });
   afterEach(() => vi.useRealTimers());
   const f = (over: Partial<Filter>): Filter => ({ ...emptyFilter, ...over });
@@ -77,9 +106,9 @@ describe('filter state and sorting', () => {
     const b = task({ id: 'b', createdAt: '2027-07-05', priority: 'critical', due: '2027-07-02' });
     const c = task({ id: 'c', createdAt: '2027-07-03', priority: 'high', due: undefined });
     expect(sortTasks([a, b, c], 'manual')).toEqual([a, b, c]);
-    expect(sortTasks([a, b, c], 'created').map((t) => t.id)).toEqual(['b', 'c', 'a']);
-    expect(sortTasks([a, b, c], 'priority').map((t) => t.id)).toEqual(['b', 'c', 'a']);
-    expect(sortTasks([a, b, c], 'due').map((t) => t.id)).toEqual(['b', 'a', 'c']);
+    expect(sortTasks([a, b, c], 'created').map(t => t.id)).toEqual(['b', 'c', 'a']);
+    expect(sortTasks([a, b, c], 'priority').map(t => t.id)).toEqual(['b', 'c', 'a']);
+    expect(sortTasks([a, b, c], 'due').map(t => t.id)).toEqual(['b', 'a', 'c']);
   });
 });
 

@@ -8,9 +8,11 @@ import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { forbidden, notFound as notFoundError } from '@buxa/server/http/errors';
 import { settle } from '@buxa/domain';
 
-const notFound = vi.hoisted(() => vi.fn(() => {
-  throw new Error('NEXT_NOT_FOUND');
-}));
+const notFound = vi.hoisted(() =>
+  vi.fn(() => {
+    throw new Error('NEXT_NOT_FOUND');
+  }),
+);
 const session = vi.hoisted(() => ({ camp: null as Membership | null }));
 const services = vi.hoisted(() => ({
   people: { list: vi.fn(), get: vi.fn(), getHousehold: vi.fn(), listHouseholds: vi.fn() },
@@ -22,7 +24,8 @@ vi.mock('next/navigation', () => ({ notFound, redirect: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('@buxa/server/runtime', () => ({ getRuntime: () => ({ services }) }));
 vi.mock('@buxa/server/session/index', () => ({
-  requireSession: () => settle(() => ({ user: { id: 'u1', email: 'a@example.test', name: 'Ana' }, memberships: [session.camp] })),
+  requireSession: () =>
+    settle(() => ({ user: { id: 'u1', email: 'a@example.test', name: 'Ana' }, memberships: [session.camp] })),
   getCurrentCamp: () => settle(() => session.camp),
   toActor: (_s: unknown, camp: Membership) => ({ userId: 'u1', orgId: camp.orgId, role: camp.role }),
 }));
@@ -32,29 +35,76 @@ const { NewPerson } = await import('@/components/views/people/export');
 const { PersonScreen } = await import('@/components/views/people/export');
 const { EditPerson } = await import('@/components/views/people/export');
 
-const ID = { ben: '22222222-2222-4222-8222-222222222222', anna: '55555555-5555-4555-8555-555555555555', household: '11111111-1111-4111-8111-111111111111', membership: '33333333-3333-4333-8333-333333333333' };
+const ID = {
+  ben: '22222222-2222-4222-8222-222222222222',
+  anna: '55555555-5555-4555-8555-555555555555',
+  household: '11111111-1111-4111-8111-111111111111',
+  membership: '33333333-3333-4333-8333-333333333333',
+};
 
 const as = (role: Role) => {
   session.camp = { orgId: 'o1', role, name: 'Sunrise', slug: 'sunrise' };
 };
-const render = (node: ReactNode) =>renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}>{node}</UiProvider>);
+const render = (node: ReactNode) => renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}>{node}</UiProvider>);
 
 const summary = (over: Partial<PersonSummary> = {}): PersonSummary => ({
-  id: ID.ben, givenName: 'Ben', familyName: 'Lee', preferredName: null, roles: ['camper'], status: 'valid', onSite: true, archived: false, ...over,
+  id: ID.ben,
+  givenName: 'Ben',
+  familyName: 'Lee',
+  preferredName: null,
+  roles: ['camper'],
+  status: 'valid',
+  onSite: true,
+  archived: false,
+  ...over,
 });
 
 const household: Household = {
-  id: ID.household, name: 'Lee family',
+  id: ID.household,
+  name: 'Lee family',
   members: [
-    { personId: ID.anna, givenName: 'Anna', familyName: 'Lee', roles: ['guardian'], relationship: 'Mother', isGuardian: true, canPickup: true },
-    { personId: ID.ben, givenName: 'Ben', familyName: 'Lee', roles: ['camper'], relationship: 'Son', isGuardian: false, canPickup: false },
+    {
+      personId: ID.anna,
+      givenName: 'Anna',
+      familyName: 'Lee',
+      roles: ['guardian'],
+      relationship: 'Mother',
+      isGuardian: true,
+      canPickup: true,
+    },
+    {
+      personId: ID.ben,
+      givenName: 'Ben',
+      familyName: 'Lee',
+      roles: ['camper'],
+      relationship: 'Son',
+      isGuardian: false,
+      canPickup: false,
+    },
   ],
 };
 
 const person = (over: Partial<Person> = {}): Person => ({
-  ...summary(), dateOfBirth: null, email: null, phone: null, isMinor: true,
-  memberships: [{ id: ID.membership, personId: ID.ben, plan: 'Summer 2027', startsOn: '2027-07-01', endsOn: '2027-08-20', revokedAt: null, revokedReason: null, status: 'valid' }],
-  households: [household], hasActiveBadge: true, ...over,
+  ...summary(),
+  dateOfBirth: null,
+  email: null,
+  phone: null,
+  isMinor: true,
+  memberships: [
+    {
+      id: ID.membership,
+      personId: ID.ben,
+      plan: 'Summer 2027',
+      startsOn: '2027-07-01',
+      endsOn: '2027-08-20',
+      revokedAt: null,
+      revokedReason: null,
+      status: 'valid',
+    },
+  ],
+  households: [household],
+  hasActiveBadge: true,
+  ...over,
 });
 
 beforeEach(() => {
@@ -62,12 +112,22 @@ beforeEach(() => {
   notFound.mockImplementation(() => {
     throw new Error('NEXT_NOT_FOUND');
   });
-  services.people.list.mockResolvedValue([summary(), summary({ id: ID.anna, givenName: 'Anna', roles: ['guardian'], status: 'none', onSite: false })]);
+  services.people.list.mockResolvedValue([
+    summary(),
+    summary({ id: ID.anna, givenName: 'Anna', roles: ['guardian'], status: 'none', onSite: false }),
+  ]);
   services.people.get.mockResolvedValue(person());
   services.people.getHousehold.mockResolvedValue(household);
   services.people.listHouseholds.mockResolvedValue([household]);
   services.attendance.history.mockResolvedValue([]);
-  services.orgs.getCamp.mockResolvedValue({ id: 'o1', name: 'Sunrise', slug: 'sunrise', timezone: 'Asia/Kolkata', createdAt: '2026-03-04T10:00:00Z', memberCount: 2 });
+  services.orgs.getCamp.mockResolvedValue({
+    id: 'o1',
+    name: 'Sunrise',
+    slug: 'sunrise',
+    timezone: 'Asia/Kolkata',
+    createdAt: '2026-03-04T10:00:00Z',
+    memberCount: 2,
+  });
   as('staff');
 });
 
@@ -92,7 +152,10 @@ describe('PeopleList', () => {
 
   it('passes the search and role from the address to the service, and keeps them in the form', async () => {
     const html = render(await PeopleList({ searchParams: { q: ' Ben ', role: 'camper' } }));
-    expect(services.people.list).toHaveBeenCalledWith({ userId: 'u1', orgId: 'o1', role: 'staff' }, { query: 'Ben', role: 'camper' });
+    expect(services.people.list).toHaveBeenCalledWith(
+      { userId: 'u1', orgId: 'o1', role: 'staff' },
+      { query: 'Ben', role: 'camper' },
+    );
     expect(html).toContain('value="Ben"');
   });
 
@@ -192,7 +255,9 @@ describe('PersonScreen', () => {
   });
 
   it('shows contact details that exist, and never the word null', async () => {
-    services.people.get.mockResolvedValueOnce(person({ email: 'ben@example.test', phone: null, dateOfBirth: '2016-05-02' }));
+    services.people.get.mockResolvedValueOnce(
+      person({ email: 'ben@example.test', phone: null, dateOfBirth: '2016-05-02' }),
+    );
     const html = render(await PersonScreen({ id: ID.ben }));
     expect(html).toContain('ben@example.test');
     expect(html).toContain('Date of birth');
@@ -242,10 +307,21 @@ describe('PersonScreen', () => {
   });
 
   it('lists visits for staff, naming the staff member', async () => {
-    services.attendance.history.mockResolvedValueOnce([{
-      id: 'v1', personId: ID.ben, personName: 'Ben Lee', checkedInAt: '2027-07-02T09:12:00Z', checkedInByName: 'Maya Chen', method: 'qr',
-      checkedOutAt: null, checkedOutByName: null, collectedByName: null, overrideReason: null, note: null,
-    }]);
+    services.attendance.history.mockResolvedValueOnce([
+      {
+        id: 'v1',
+        personId: ID.ben,
+        personName: 'Ben Lee',
+        checkedInAt: '2027-07-02T09:12:00Z',
+        checkedInByName: 'Maya Chen',
+        method: 'qr',
+        checkedOutAt: null,
+        checkedOutByName: null,
+        collectedByName: null,
+        overrideReason: null,
+        note: null,
+      },
+    ]);
     const html = render(await PersonScreen({ id: ID.ben }));
     expect(html).toContain('Maya Chen');
     expect(html).toContain('On site');
@@ -266,7 +342,10 @@ describe('PersonScreen', () => {
   });
 
   it('searches the camp by name for someone to link, and offers only the matches (never the person themselves)', async () => {
-    services.people.list.mockResolvedValueOnce([summary(), summary({ id: ID.anna, givenName: 'Anna', roles: ['guardian'], status: 'none', onSite: false })]);
+    services.people.list.mockResolvedValueOnce([
+      summary(),
+      summary({ id: ID.anna, givenName: 'Anna', roles: ['guardian'], status: 'none', onSite: false }),
+    ]);
     const html = render(await PersonScreen({ id: ID.ben, searchParams: { q: ' Anna ' } }));
     expect(services.people.list).toHaveBeenCalledWith({ userId: 'u1', orgId: 'o1', role: 'staff' }, { query: 'Anna' });
     expect(html).toContain('value="Anna"');
@@ -282,22 +361,38 @@ describe('PersonScreen', () => {
 
   it('says so when a search matches nobody', async () => {
     services.people.list.mockResolvedValueOnce([]);
-    expect(render(await PersonScreen({ id: ID.ben, searchParams: { q: 'zzz' } }))).toContain('No one matches that search.');
+    expect(render(await PersonScreen({ id: ID.ben, searchParams: { q: 'zzz' } }))).toContain(
+      'No one matches that search.',
+    );
   });
 
   it('offers every household in the camp for linking, not only the ones this person is in', async () => {
     const stone = { id: '66666666-6666-4666-8666-666666666666', name: 'Stone family', members: [] };
     services.people.listHouseholds.mockResolvedValueOnce([household, stone]);
-    services.people.list.mockResolvedValueOnce([summary({ id: ID.anna, givenName: 'Anna', roles: ['guardian'], status: 'none', onSite: false })]);
+    services.people.list.mockResolvedValueOnce([
+      summary({ id: ID.anna, givenName: 'Anna', roles: ['guardian'], status: 'none', onSite: false }),
+    ]);
     const html = render(await PersonScreen({ id: ID.ben, searchParams: { q: 'Anna' } }));
     expect(html).toContain(`<option value="${stone.id}">Stone family</option>`);
   });
 
   it('shows a membership revoke time in the camp zone, not the server zone', async () => {
-    services.people.get.mockResolvedValueOnce(person({
-      memberships: [{ id: ID.membership, personId: ID.ben, plan: 'Summer 2027', startsOn: '2027-07-01', endsOn: '2027-08-20',
-        revokedAt: '2027-07-02T23:30:00Z', revokedReason: 'Refund', status: 'revoked' }],
-    }));
+    services.people.get.mockResolvedValueOnce(
+      person({
+        memberships: [
+          {
+            id: ID.membership,
+            personId: ID.ben,
+            plan: 'Summer 2027',
+            startsOn: '2027-07-01',
+            endsOn: '2027-08-20',
+            revokedAt: '2027-07-02T23:30:00Z',
+            revokedReason: 'Refund',
+            status: 'revoked',
+          },
+        ],
+      }),
+    );
     as('admin');
     const html = render(await PersonScreen({ id: ID.ben }));
     // 23:30 UTC is 05:00 the next day in Asia/Kolkata (UTC+5:30).

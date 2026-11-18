@@ -3,9 +3,12 @@
  * application typed and starting. Nothing in a release may use it (the noPlaceholders test fails if any call remains).
  */
 export function unimplemented<T extends object>(name: string): T {
-  return new Proxy({}, {
-    get: (_target, method) => () => {
-      throw new Error(`${name}.${String(method)} is not implemented yet`);
+  return new Proxy(
+    {},
+    {
+      get: (_target, method) => () => {
+        throw new Error(`${name}.${String(method)} is not implemented yet`);
+      },
     },
-  }) as T;
+  ) as T;
 }

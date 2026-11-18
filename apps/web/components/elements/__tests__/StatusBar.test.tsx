@@ -3,7 +3,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { StatusBar } from '@/components/elements/export';
 
 describe('StatusBar', () => {
-  const parts = [{ name: 'done', value: 3, tone: 'ok' as const }, { name: 'late', value: 1, tone: 'crit' as const }, { name: 'none', value: 0, tone: 'neutral' as const }];
+  const parts = [
+    { name: 'done', value: 3, tone: 'ok' as const },
+    { name: 'late', value: 1, tone: 'crit' as const },
+    { name: 'none', value: 0, tone: 'neutral' as const },
+  ];
   it('names every part with its count in the image label', () => {
     const html = renderToStaticMarkup(<StatusBar parts={parts} ariaLabel="Tasks" />);
     expect(html).toContain('aria-label="Tasks: 3 done, 1 late, 0 none"');

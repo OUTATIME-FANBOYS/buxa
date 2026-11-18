@@ -20,7 +20,10 @@ describe('CampSwitcher', () => {
     const html = renderToStaticMarkup(<CampSwitcher camps={[current]} current={current} />);
     expect(html).toMatch(/<button[^>]*class="[^"]*\bcamp-switch\b[^"]*"[^>]*aria-label="Switch camp"/);
     expect(html).toContain('>Camp Birchwood Riverside Outdoor Centre</span>');
-    const css = readFileSync(new URL('../../../../styles/features/camp.css', import.meta.url), 'utf8');
+    // Prettier breaks rules over several lines and uses single quotes, so the text is flattened before matching.
+    const css = readFileSync(new URL('../../../../styles/features/camp.css', import.meta.url), 'utf8')
+      .replace(/\s+/g, ' ')
+      .replace(/['"]/g, '');
     expect(css).toContain('.crumb.camp-switch { width: auto;');
   });
   it('says there is no camp yet when the person has none', () => {

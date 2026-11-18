@@ -13,7 +13,11 @@ describe('CommentComposer', () => {
   });
 
   it('is a labelled comment box that hints at mentions and the send shortcut, and cannot send yet', () => {
-    const html = renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}><CommentComposer taskId="t-1" members={[]} /></UiProvider>);
+    const html = renderToStaticMarkup(
+      <UiProvider Dialog={ConfirmDialog}>
+        <CommentComposer taskId="t-1" members={[]} />
+      </UiProvider>,
+    );
     expect(html).toContain('aria-label="Write a comment"');
     expect(html).toContain('Use @ to mention');
     expect(html).toContain('⌘ Enter to send');

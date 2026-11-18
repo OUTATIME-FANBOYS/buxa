@@ -22,15 +22,31 @@ export function createEnrolmentMethods({ repo, timezoneOf }: ClassServiceDeps): 
     async cancelEnrolment(actor, input) {
       assertAllowed(actor, 'classes:manage');
 
-      return attempt(() => repo.cancelEnrolment(actor, input.enrolmentId, input.note ?? null), await timezoneOf(actor.orgId));
+      return attempt(
+        () => repo.cancelEnrolment(actor, input.enrolmentId, input.note ?? null),
+        await timezoneOf(actor.orgId),
+      );
     },
   };
 }
 
 /** Binds the domain rule to this request: the actor's override permission, the waitlist choice and the camp's day. */
-function enrolmentRule({ actor, input, timeZone }: { actor: Actor; input: EnrolInput; timeZone: string }): EnrolmentRule {
-  return facts => decideEnrolment(
-    { ...facts, sessionDay: toLocalDate(new Date(facts.session.startsAt), timeZone) },
-    { waitlistIfFull: input.waitlistIfFull, override: input.override ?? null, actorCanOverride: can(actor, 'attendance:override') },
-  );
+function enrolmentRule({
+  actor,
+  input,
+  timeZone,
+}: {
+  actor: Actor;
+  input: EnrolInput;
+  timeZone: string;
+}): EnrolmentRule {
+  return facts =>
+    decideEnrolment(
+      { ...facts, sessionDay: toLocalDate(new Date(facts.session.startsAt), timeZone) },
+      {
+        waitlistIfFull: input.waitlistIfFull,
+        override: input.override ?? null,
+        actorCanOverride: can(actor, 'attendance:override'),
+      },
+    );
 }

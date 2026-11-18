@@ -4,7 +4,10 @@ import type { CheckOutRefusal } from './refusals';
 import type { CheckOutResult } from './types';
 
 /** What the person has chosen so far in one row's check-out panel. Kept across a refusal so a retry does not start again. */
-export interface CheckOutDraft { collectedBy: string | null; overrideReason: string | null }
+export interface CheckOutDraft {
+  collectedBy: string | null;
+  overrideReason: string | null;
+}
 
 export const EMPTY_DRAFT: CheckOutDraft = { collectedBy: null, overrideReason: null };
 
@@ -38,15 +41,20 @@ export function checkOutReducer(state: CheckOutState, event: CheckOutEvent): Che
     return event.type === 'answered' ? answered(state.draft, event.outcome) : state;
   }
   switch (event.type) {
-    case 'open': return state.phase === 'closed' || state.phase === 'done' ? { phase: 'open', draft: EMPTY_DRAFT } : state;
-    case 'close': return CHECK_OUT_CLOSED;
-    case 'draft': return state.phase === 'closed' || state.phase === 'done'
-      ? state
-      : { phase: 'open', draft: { ...draftOf(state), ...event.patch } };
-    case 'submitted': return state.phase === 'open' || state.phase === 'refused' || state.phase === 'failed'
-      ? { phase: 'submitting', draft: state.draft }
-      : state;
-    case 'answered': return state;
+    case 'open':
+      return state.phase === 'closed' || state.phase === 'done' ? { phase: 'open', draft: EMPTY_DRAFT } : state;
+    case 'close':
+      return CHECK_OUT_CLOSED;
+    case 'draft':
+      return state.phase === 'closed' || state.phase === 'done'
+        ? state
+        : { phase: 'open', draft: { ...draftOf(state), ...event.patch } };
+    case 'submitted':
+      return state.phase === 'open' || state.phase === 'refused' || state.phase === 'failed'
+        ? { phase: 'submitting', draft: state.draft }
+        : state;
+    case 'answered':
+      return state;
   }
 }
 

@@ -1,5 +1,15 @@
 import { matchesName, MAX_SEARCH_RESULTS, normalizeForSearch, type Actor, type CampRole, settle } from '@buxa/domain';
-import { PersonNotFoundError, type HouseholdLinkRecord, type HouseholdRecord, type NewPersonRecord, type PeopleRepository, type PersonFilter, type PersonHouseholdLink, type PersonPatchRecord, type PersonRecord } from './PeopleRepository';
+import {
+  PersonNotFoundError,
+  type HouseholdLinkRecord,
+  type HouseholdRecord,
+  type NewPersonRecord,
+  type PeopleRepository,
+  type PersonFilter,
+  type PersonHouseholdLink,
+  type PersonPatchRecord,
+  type PersonRecord,
+} from './PeopleRepository';
 import { compareText, newId, instant, type InMemoryDatabase, type StoredPerson } from './InMemoryDatabase';
 import { InMemoryHouseholds } from './InMemoryHouseholds';
 
@@ -7,9 +17,11 @@ const sortRoles = (roles: readonly CampRole[]): CampRole[] => [...roles].sort(co
 
 /** Same order as the Postgres adapter: family name, given name, then id, all compared case-insensitively. */
 export function comparePeople(a: StoredPerson, b: StoredPerson): number {
-  return compareText(a.familyName.toLowerCase(), b.familyName.toLowerCase())
-    || compareText(a.givenName.toLowerCase(), b.givenName.toLowerCase())
-    || compareText(a.id, b.id);
+  return (
+    compareText(a.familyName.toLowerCase(), b.familyName.toLowerCase()) ||
+    compareText(a.givenName.toLowerCase(), b.givenName.toLowerCase()) ||
+    compareText(a.id, b.id)
+  );
 }
 
 const toRecord = (p: StoredPerson): PersonRecord => ({
@@ -29,25 +41,32 @@ const toRecord = (p: StoredPerson): PersonRecord => ({
 function applyPatch(person: StoredPerson, patch: PersonPatchRecord): string[] {
   const changed: string[] = [];
   if (patch.givenName !== undefined) {
-    person.givenName = patch.givenName; changed.push('givenName');
+    person.givenName = patch.givenName;
+    changed.push('givenName');
   }
   if (patch.familyName !== undefined) {
-    person.familyName = patch.familyName; changed.push('familyName');
+    person.familyName = patch.familyName;
+    changed.push('familyName');
   }
   if (patch.preferredName !== undefined) {
-    person.preferredName = patch.preferredName; changed.push('preferredName');
+    person.preferredName = patch.preferredName;
+    changed.push('preferredName');
   }
   if (patch.dateOfBirth !== undefined) {
-    person.dateOfBirth = patch.dateOfBirth; changed.push('dateOfBirth');
+    person.dateOfBirth = patch.dateOfBirth;
+    changed.push('dateOfBirth');
   }
   if (patch.email !== undefined) {
-    person.email = patch.email; changed.push('email');
+    person.email = patch.email;
+    changed.push('email');
   }
   if (patch.phone !== undefined) {
-    person.phone = patch.phone; changed.push('phone');
+    person.phone = patch.phone;
+    changed.push('phone');
   }
   if (patch.roles !== undefined) {
-    person.roles = sortRoles(patch.roles); changed.push('roles');
+    person.roles = sortRoles(patch.roles);
+    changed.push('roles');
   }
 
   return changed;
@@ -79,8 +98,17 @@ export class InMemoryPeopleRepository implements PeopleRepository {
       this.db.people.set(person.id, person);
       this.db.record(actor, 'person.create', 'person', person.id);
       if (household) {
-        const householdId = household.householdId !== undefined ? household.householdId : this.households.create(actor, household.newHouseholdName).id;
-        this.households.link(actor, { householdId, personId: person.id, relationship: household.relationship, isGuardian: household.isGuardian, canPickup: household.canPickup });
+        const householdId =
+          household.householdId !== undefined
+            ? household.householdId
+            : this.households.create(actor, household.newHouseholdName).id;
+        this.households.link(actor, {
+          householdId,
+          personId: person.id,
+          relationship: household.relationship,
+          isGuardian: household.isGuardian,
+          canPickup: household.canPickup,
+        });
       }
 
       return toRecord(person);
@@ -125,8 +153,12 @@ export class InMemoryPeopleRepository implements PeopleRepository {
 
   list(orgId: string, filter: PersonFilter): Promise<PersonRecord[]> {
     return settle(() => {
-      return this.visible(orgId, p =>
-        (filter.includeArchived === true || p.archivedAt === null) && (filter.role === undefined || p.roles.includes(filter.role)));
+      return this.visible(
+        orgId,
+        p =>
+          (filter.includeArchived === true || p.archivedAt === null) &&
+          (filter.role === undefined || p.roles.includes(filter.role)),
+      );
     });
   }
 

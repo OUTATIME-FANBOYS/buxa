@@ -3,7 +3,15 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import type { Person } from '@buxa/contracts';
 import { PersonHeader } from '@/components/components/people/export';
 
-const person = { givenName: 'Ada', familyName: 'Lee', preferredName: null, roles: [], status: 'valid', onSite: false, archived: false } as unknown as Person;
+const person = {
+  givenName: 'Ada',
+  familyName: 'Lee',
+  preferredName: null,
+  roles: [],
+  status: 'valid',
+  onSite: false,
+  archived: false,
+} as unknown as Person;
 
 describe('PersonHeader', () => {
   it('shows the name and the membership status in words', () => {

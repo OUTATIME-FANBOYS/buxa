@@ -7,13 +7,18 @@ import type { RepositoryFixture } from './fixture';
 
 async function insertOrg(pool: Pool, slug: string): Promise<string> {
   const { rows } = await pool.query<{ id: string }>(
-    `INSERT INTO orgs (name, slug, timezone) VALUES ('Test camp', $1, 'Europe/London') RETURNING id`, [slug]);
+    `INSERT INTO orgs (name, slug, timezone) VALUES ('Test camp', $1, 'Europe/London') RETURNING id`,
+    [slug],
+  );
 
   return rows[0].id;
 }
 
 async function insertUser(pool: Pool, email: string): Promise<string> {
-  const { rows } = await pool.query<{ id: string }>(`INSERT INTO users (email, name) VALUES ($1, 'Test staff') RETURNING id`, [email]);
+  const { rows } = await pool.query<{ id: string }>(
+    `INSERT INTO users (email, name) VALUES ($1, 'Test staff') RETURNING id`,
+    [email],
+  );
 
   return rows[0].id;
 }
@@ -36,11 +41,12 @@ export async function createPgFixture(pool: Pool): Promise<RepositoryFixture> {
     repos: createPgRepositories(pool),
     actor,
     otherActor,
-    auditActions: () => withOrg(pool, orgA, async db => {
-      const { rows } = await db.query<{ action: string }>('SELECT action FROM audit_log ORDER BY id');
+    auditActions: () =>
+      withOrg(pool, orgA, async db => {
+        const { rows } = await db.query<{ action: string }>('SELECT action FROM audit_log ORDER BY id');
 
-      return rows.map(r => r.action);
-    }),
+        return rows.map(r => r.action);
+      }),
     close: async () => {
       await pool.query('DELETE FROM orgs WHERE id = ANY($1::uuid[])', [[orgA, orgB]]).catch(() => undefined);
       await pool.query('DELETE FROM users WHERE id = ANY($1::uuid[])', [[userA, userB]]).catch(() => undefined);

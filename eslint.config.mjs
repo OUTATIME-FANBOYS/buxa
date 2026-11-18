@@ -5,6 +5,7 @@
 import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
+import eslintConfigPrettier from 'eslint-config-prettier/flat';
 
 // Scripts, tests and command-line entry points may write to stdout and stderr; product code may only use console.warn and console.error (server logs).
 const consoleAllowed = [
@@ -21,7 +22,10 @@ const consoleAllowed = [
 const typedDebtAsWarnings = Object.fromEntries(
   tseslint.configs.recommendedTypeChecked
     .flatMap(config => Object.entries(config.rules ?? {}))
-    .filter(([name, setting]) => name.startsWith('@typescript-eslint/') && (Array.isArray(setting) ? setting[0] : setting) === 'error')
+    .filter(
+      ([name, setting]) =>
+        name.startsWith('@typescript-eslint/') && (Array.isArray(setting) ? setting[0] : setting) === 'error',
+    )
     .map(([name]) => [name, 'warn']),
 );
 
@@ -106,4 +110,6 @@ export default tseslint.config(
     rules: { 'no-console': 'off' },
   },
 
+  // Last: turns off the ESLint style rules that conflict with Prettier. Formatting is Prettier's job.
+  eslintConfigPrettier,
 );

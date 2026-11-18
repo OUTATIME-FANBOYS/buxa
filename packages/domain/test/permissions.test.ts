@@ -7,16 +7,44 @@ const as = (role: Role, userId = 'me'): Actor => ({ userId, orgId: ORG, role });
 // The matrix, written out so a reviewer can read it. Y = allowed, . = denied.
 //                          viewer staff admin owner
 const MATRIX: Record<Action, string> = {
-  'org:read': 'YYYY', 'org:update': '..YY', 'org:archive': '...Y', 'org:delete': '...Y', 'org:transfer_ownership': '...Y',
-  'members:read': 'YYYY', 'members:read_contact': '..YY', 'members:invite': '..YY', 'members:change_role': '..YY', 'members:remove': '..YY', 'members:leave': 'YYYY',
-  'audit:read': '..YY', 'data:export': '...Y', 'data:erase': '...Y',
-  'people:read': 'YYYY', 'people:read_contact': '.YYY', 'people:create': '.YYY', 'people:update': '.YYY',
-  'people:delete': '..YY', 'people:authorise_pickup': '..YY', 'memberships:manage': '..YY', 'credentials:manage': '..YY',
-  'attendance:read': '.YYY', 'attendance:record': '.YYY', 'attendance:override': '..YY', 'attendance:export': '..YY',
-  'events:read': 'YYYY', 'events:create': '..YY', 'events:update': '..YY', 'events:delete': '..YY',
+  'org:read': 'YYYY',
+  'org:update': '..YY',
+  'org:archive': '...Y',
+  'org:delete': '...Y',
+  'org:transfer_ownership': '...Y',
+  'members:read': 'YYYY',
+  'members:read_contact': '..YY',
+  'members:invite': '..YY',
+  'members:change_role': '..YY',
+  'members:remove': '..YY',
+  'members:leave': 'YYYY',
+  'audit:read': '..YY',
+  'data:export': '...Y',
+  'data:erase': '...Y',
+  'people:read': 'YYYY',
+  'people:read_contact': '.YYY',
+  'people:create': '.YYY',
+  'people:update': '.YYY',
+  'people:delete': '..YY',
+  'people:authorise_pickup': '..YY',
+  'memberships:manage': '..YY',
+  'credentials:manage': '..YY',
+  'attendance:read': '.YYY',
+  'attendance:record': '.YYY',
+  'attendance:override': '..YY',
+  'attendance:export': '..YY',
+  'events:read': 'YYYY',
+  'events:create': '..YY',
+  'events:update': '..YY',
+  'events:delete': '..YY',
   'classes:manage': '.YYY',
-  'tasks:read': 'YYYY', 'tasks:create': '.YYY', 'tasks:update': '.YYY', 'tasks:move': '.YYY',
-  'tasks:comment': '.YYY', 'tasks:delete': '..YY', 'tasks:manage_board': '..YY',
+  'tasks:read': 'YYYY',
+  'tasks:create': '.YYY',
+  'tasks:update': '.YYY',
+  'tasks:move': '.YYY',
+  'tasks:comment': '.YYY',
+  'tasks:delete': '..YY',
+  'tasks:manage_board': '..YY',
 };
 
 describe('role grants', () => {
@@ -49,11 +77,17 @@ describe('fail closed', () => {
     }
   });
   it('denies an unknown role', () => {
-    expect(authorize({ userId: 'x', orgId: ORG, role: 'god' as Role }, 'org:read')).toEqual({ allow: false, reason: 'unknown_role' });
+    expect(authorize({ userId: 'x', orgId: ORG, role: 'god' as Role }, 'org:read')).toEqual({
+      allow: false,
+      reason: 'unknown_role',
+    });
   });
   it('denies member actions when context is missing', () => {
     expect(authorize(as('owner'), 'members:invite')).toEqual({ allow: false, reason: 'missing_context' });
-    expect(authorize(as('owner'), 'members:change_role', { newRole: 'staff' })).toEqual({ allow: false, reason: 'missing_context' });
+    expect(authorize(as('owner'), 'members:change_role', { newRole: 'staff' })).toEqual({
+      allow: false,
+      reason: 'missing_context',
+    });
     expect(authorize(as('owner'), 'members:remove')).toEqual({ allow: false, reason: 'missing_context' });
     expect(authorize(as('owner'), 'members:leave')).toEqual({ allow: false, reason: 'missing_context' });
     expect(authorize(as('owner'), 'org:transfer_ownership')).toEqual({ allow: false, reason: 'missing_context' });
@@ -66,7 +100,10 @@ describe('fail closed', () => {
 
 describe('inviting', () => {
   it('cannot invite above your own role', () => {
-    expect(authorize(as('admin'), 'members:invite', { newRole: 'owner' })).toEqual({ allow: false, reason: 'cannot_grant_above_self' });
+    expect(authorize(as('admin'), 'members:invite', { newRole: 'owner' })).toEqual({
+      allow: false,
+      reason: 'cannot_grant_above_self',
+    });
     expect(can(as('admin'), 'members:invite', { newRole: 'admin' })).toBe(true);
     expect(can(as('owner'), 'members:invite', { newRole: 'owner' })).toBe(true);
   });
@@ -77,25 +114,43 @@ describe('changing roles and removing people', () => {
 
   it('nobody changes their own role', () => {
     for (const r of ['admin', 'owner'] as Role[]) {
-      expect(authorize(as(r), 'members:change_role', { target: t(r, 'me'), newRole: 'viewer' })).toEqual({ allow: false, reason: 'self_change' });
+      expect(authorize(as(r), 'members:change_role', { target: t(r, 'me'), newRole: 'viewer' })).toEqual({
+        allow: false,
+        reason: 'self_change',
+      });
     }
   });
   it('admins manage only people below them', () => {
     expect(can(as('admin'), 'members:change_role', { target: t('staff'), newRole: 'admin' })).toBe(true);
-    expect(authorize(as('admin'), 'members:change_role', { target: t('admin'), newRole: 'viewer' })).toEqual({ allow: false, reason: 'not_above_target' });
-    expect(authorize(as('admin'), 'members:change_role', { target: t('owner'), newRole: 'viewer' })).toEqual({ allow: false, reason: 'not_above_target' });
-    expect(authorize(as('admin'), 'members:remove', { target: t('admin') })).toEqual({ allow: false, reason: 'not_above_target' });
+    expect(authorize(as('admin'), 'members:change_role', { target: t('admin'), newRole: 'viewer' })).toEqual({
+      allow: false,
+      reason: 'not_above_target',
+    });
+    expect(authorize(as('admin'), 'members:change_role', { target: t('owner'), newRole: 'viewer' })).toEqual({
+      allow: false,
+      reason: 'not_above_target',
+    });
+    expect(authorize(as('admin'), 'members:remove', { target: t('admin') })).toEqual({
+      allow: false,
+      reason: 'not_above_target',
+    });
     expect(can(as('admin'), 'members:remove', { target: t('staff') })).toBe(true);
   });
   it('admins cannot promote anyone to owner', () => {
-    expect(authorize(as('admin'), 'members:change_role', { target: t('staff'), newRole: 'owner' })).toEqual({ allow: false, reason: 'cannot_grant_above_self' });
+    expect(authorize(as('admin'), 'members:change_role', { target: t('staff'), newRole: 'owner' })).toEqual({
+      allow: false,
+      reason: 'cannot_grant_above_self',
+    });
   });
   it('owners can manage other owners', () => {
     expect(can(as('owner'), 'members:change_role', { target: t('owner'), newRole: 'admin' })).toBe(true);
     expect(can(as('owner'), 'members:remove', { target: t('owner') })).toBe(true);
   });
   it('removing yourself goes through leave, not remove', () => {
-    expect(authorize(as('owner'), 'members:remove', { target: { userId: 'me', role: 'owner' } })).toEqual({ allow: false, reason: 'self_change' });
+    expect(authorize(as('owner'), 'members:remove', { target: { userId: 'me', role: 'owner' } })).toEqual({
+      allow: false,
+      reason: 'self_change',
+    });
   });
 });
 
@@ -114,7 +169,10 @@ describe('leaving', () => {
 describe('transferring ownership', () => {
   it('only an owner, and not to themselves', () => {
     expect(can(as('owner'), 'org:transfer_ownership', { target: { userId: 'them', role: 'admin' } })).toBe(true);
-    expect(authorize(as('owner'), 'org:transfer_ownership', { target: { userId: 'me', role: 'owner' } })).toEqual({ allow: false, reason: 'self_change' });
+    expect(authorize(as('owner'), 'org:transfer_ownership', { target: { userId: 'me', role: 'owner' } })).toEqual({
+      allow: false,
+      reason: 'self_change',
+    });
     expect(can(as('admin'), 'org:transfer_ownership', { target: { userId: 'them', role: 'staff' } })).toBe(false);
   });
 });

@@ -8,14 +8,18 @@ export function useGlobalShortcuts(searchRef: RefObject<HTMLInputElement | null>
   const { openTask } = useTaskDrawer();
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
-      const el = e.target as HTMLElement; const typing = /INPUT|TEXTAREA|SELECT/.test(el.tagName) || el.isContentEditable;
+      const el = e.target as HTMLElement;
+      const typing = /INPUT|TEXTAREA|SELECT/.test(el.tagName) || el.isContentEditable;
       const bare = !typing && !e.metaKey && !e.ctrlKey && !e.altKey;
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault(); searchRef.current?.focus();
+        e.preventDefault();
+        searchRef.current?.focus();
       } else if (bare && e.key === '/') {
-        e.preventDefault(); searchRef.current?.focus();
+        e.preventDefault();
+        searchRef.current?.focus();
       } else if (bare && e.key.toLowerCase() === 'c' && hasProject && !document.querySelector('[role=dialog]')) {
-        e.preventDefault(); openTask('new');
+        e.preventDefault();
+        openTask('new');
       }
     };
     addEventListener('keydown', k);

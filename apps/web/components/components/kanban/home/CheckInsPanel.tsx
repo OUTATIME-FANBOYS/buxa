@@ -4,7 +4,15 @@ import { useState } from 'react';
 import type { CheckInsByDay } from '@buxa/shared/camp/campHomeTypes';
 import { periodChange } from '@buxa/shared/kanban/homeCards';
 import { Pill, Segmented } from '@/components/elements/export';
-import { CHECK_IN_RANGES, type CheckInRange, chartTotals, dayOfMonth, lastDays, shortDate, showAxisLabel } from './homeChartMath';
+import {
+  CHECK_IN_RANGES,
+  type CheckInRange,
+  chartTotals,
+  dayOfMonth,
+  lastDays,
+  shortDate,
+  showAxisLabel,
+} from './homeChartMath';
 import { PARENTS_LABEL, STUDENTS_LABEL } from './ageGroups';
 
 /**
@@ -18,7 +26,9 @@ export function CheckInsPanel({ series }: { series: CheckInsByDay | null }) {
   if (series === null) {
     return (
       <section className="panel" aria-labelledby="check-ins-title">
-        <div className="panel-head"><h2 id="check-ins-title">Check-ins per day</h2></div>
+        <div className="panel-head">
+          <h2 id="check-ins-title">Check-ins per day</h2>
+        </div>
         <p className="muted">Attendance is not shown for your role.</p>
       </section>
     );
@@ -50,11 +60,16 @@ export function CheckInsPanel({ series }: { series: CheckInsByDay | null }) {
           {total} {total === 1 ? 'person' : 'people'} checked in from {shortDate(first.date)} to {shortDate(last.date)}.
           {busiest ? ` Busiest day: ${shortDate(busiest.date)}, ${busiest.count}.` : ''}
         </p>
-        {change && <Pill tone={change.tone} dot={false}>{change.text}</Pill>}
+        {change && (
+          <Pill tone={change.tone} dot={false}>
+            {change.text}
+          </Pill>
+        )}
       </div>
       {!series.complete && (
         <p className="home-note small">
-          This camp has more visits in the last {series.days.length} days than the page can count, so the older days may be short. The Attendance log shows every visit.
+          This camp has more visits in the last {series.days.length} days than the page can count, so the older days may
+          be short. The Attendance log shows every visit.
         </p>
       )}
       {total === 0 ? (
@@ -62,7 +77,13 @@ export function CheckInsPanel({ series }: { series: CheckInsByDay | null }) {
       ) : (
         <>
           <div className="home-stack">
-            <svg className="home-band" viewBox={`0 0 ${n} 100`} preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <svg
+              className="home-band"
+              viewBox={`0 0 ${n} 100`}
+              preserveAspectRatio="none"
+              aria-hidden="true"
+              focusable="false"
+            >
               <polygon points={band} />
             </svg>
             <ol className="home-bars" aria-label={`Check-ins per day, last ${range} days`}>
@@ -71,7 +92,9 @@ export function CheckInsPanel({ series }: { series: CheckInsByDay | null }) {
 
                 return (
                   <li key={day.date} className="home-bar">
-                    <span className="home-bar-value" aria-hidden="true">{day.count > 0 ? day.count : ''}</span>
+                    <span className="home-bar-value" aria-hidden="true">
+                      {day.count > 0 ? day.count : ''}
+                    </span>
                     <span className="home-bar-track">
                       <span className="home-stack-col" style={{ height: `${(day.count / peak) * 100}%` }}>
                         {day.minors !== null && day.minors > 0 && (
@@ -80,7 +103,9 @@ export function CheckInsPanel({ series }: { series: CheckInsByDay | null }) {
                         {adults > 0 && <span className="home-seg home-seg-parents" style={{ flexGrow: adults }} />}
                       </span>
                     </span>
-                    <span className="home-bar-label" aria-hidden="true">{showAxisLabel(i, days.length) ? dayOfMonth(day.date) : ''}</span>
+                    <span className="home-bar-label" aria-hidden="true">
+                      {showAxisLabel(i, days.length) ? dayOfMonth(day.date) : ''}
+                    </span>
                     <span className="sr-only">
                       {shortDate(day.date)}: {day.count} {day.count === 1 ? 'person' : 'people'}
                       {day.minors !== null && ` (${PARENTS_LABEL} ${adults}, ${STUDENTS_LABEL} ${day.minors})`}
@@ -91,28 +116,62 @@ export function CheckInsPanel({ series }: { series: CheckInsByDay | null }) {
             </ol>
           </div>
           <ul className="home-chart-legend" aria-label="Legend">
-            <li><span className="home-sw home-seg-parents" aria-hidden="true" />{PARENTS_LABEL}</li>
-            {split && <li><span className="home-sw home-seg-students" aria-hidden="true" />{STUDENTS_LABEL}</li>}
+            <li>
+              <span className="home-sw home-seg-parents" aria-hidden="true" />
+              {PARENTS_LABEL}
+            </li>
+            {split && (
+              <li>
+                <span className="home-sw home-seg-students" aria-hidden="true" />
+                {STUDENTS_LABEL}
+              </li>
+            )}
           </ul>
-          {!split && <p className="muted small">The split between {PARENTS_LABEL} and {STUDENTS_LABEL} is not shown for your role.</p>}
+          {!split && (
+            <p className="muted small">
+              The split between {PARENTS_LABEL} and {STUDENTS_LABEL} is not shown for your role.
+            </p>
+          )}
           <details className="home-table-alt">
             <summary className="link">Show as a table</summary>
             <table className="home-table">
               <caption className="sr-only">Check-ins per day, last {range} days</caption>
               {split ? (
                 <>
-                  <thead><tr><th scope="col">Day</th><th scope="col">{PARENTS_LABEL}</th><th scope="col">{STUDENTS_LABEL}</th><th scope="col">Total</th></tr></thead>
+                  <thead>
+                    <tr>
+                      <th scope="col">Day</th>
+                      <th scope="col">{PARENTS_LABEL}</th>
+                      <th scope="col">{STUDENTS_LABEL}</th>
+                      <th scope="col">Total</th>
+                    </tr>
+                  </thead>
                   <tbody>
                     {days.map(day => (
-                      <tr key={day.date}><td>{shortDate(day.date)}</td><td>{day.count - (day.minors ?? 0)}</td><td>{day.minors ?? 0}</td><td>{day.count}</td></tr>
+                      <tr key={day.date}>
+                        <td>{shortDate(day.date)}</td>
+                        <td>{day.count - (day.minors ?? 0)}</td>
+                        <td>{day.minors ?? 0}</td>
+                        <td>{day.count}</td>
+                      </tr>
                     ))}
                   </tbody>
                 </>
               ) : (
                 <>
-                  <thead><tr><th scope="col">Day</th><th scope="col">People checked in</th></tr></thead>
+                  <thead>
+                    <tr>
+                      <th scope="col">Day</th>
+                      <th scope="col">People checked in</th>
+                    </tr>
+                  </thead>
                   <tbody>
-                    {days.map(day => <tr key={day.date}><td>{shortDate(day.date)}</td><td>{day.count}</td></tr>)}
+                    {days.map(day => (
+                      <tr key={day.date}>
+                        <td>{shortDate(day.date)}</td>
+                        <td>{day.count}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </>
               )}

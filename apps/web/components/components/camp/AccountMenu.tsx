@@ -15,7 +15,11 @@ export function AccountMenu({ user }: { user: User }) {
 
   return (
     <>
-      <Menu label="Account" className="avatar-btn" trigger={<Avatar user={user} size={30} />} header={user.name}
+      <Menu
+        label="Account"
+        className="avatar-btn"
+        trigger={<Avatar user={user} size={30} />}
+        header={user.name}
         items={[
           { label: 'Profile', icon: 'user', href: `${ROUTES.settings}#profile` },
           { label: 'Settings', icon: 'settings', href: ROUTES.settings },
@@ -24,7 +28,8 @@ export function AccountMenu({ user }: { user: User }) {
           { label: dark ? 'Light mode' : 'Dark mode', icon: dark ? 'sun' : 'moon', onSelect: toggle },
           { label: '', divider: true, onSelect() {} },
           { label: 'Sign out', icon: 'logout', onSelect: () => form.current?.requestSubmit() },
-        ]} />
+        ]}
+      />
       <form ref={form} action={signOut} hidden />
     </>
   );

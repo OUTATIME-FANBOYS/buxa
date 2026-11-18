@@ -38,7 +38,11 @@ export function ArchivePersonButton({ personId, personName }: { personId: string
       <Button variant="danger-soft" type="button" onClick={onClick} disabled={pending}>
         {pending ? 'Archiving…' : 'Archive person'}
       </Button>
-      {error && <p className="field-error" role="alert">{error}</p>}
+      {error && (
+        <p className="field-error" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

@@ -12,9 +12,17 @@ import { CAMP, STAFF_ACCOUNTS } from './roster';
  * and the accounts still goes through the services and repositories, so the audit rows the app writes are written here too.
  */
 
-export interface AccountChoice { owner?: string; admin?: string; staff?: string; viewer?: string }
+export interface AccountChoice {
+  owner?: string;
+  admin?: string;
+  staff?: string;
+  viewer?: string;
+}
 
-export interface CampRef { orgId: string; actors: Record<'owner' | 'staff', Actor> }
+export interface CampRef {
+  orgId: string;
+  actors: Record<'owner' | 'staff', Actor>;
+}
 
 /** The camp's id if it already exists. */
 export async function findCampId(pool: pg.Pool): Promise<string | null> {
@@ -34,9 +42,18 @@ export function fictionalAuthId(email: string): string {
 }
 
 /** An account the operator named by email (it must have signed in once), or a fictional one the seed creates. */
-async function accountFor(pool: pg.Pool, repos: Repositories, email: string | undefined, fictional: { name: string; email: string }): Promise<string> {
+async function accountFor(
+  pool: pg.Pool,
+  repos: Repositories,
+  email: string | undefined,
+  fictional: { name: string; email: string },
+): Promise<string> {
   if (email === undefined) {
-    const user = await repos.users.upsertFromIdentity({ authId: fictionalAuthId(fictional.email), email: fictional.email, name: fictional.name });
+    const user = await repos.users.upsertFromIdentity({
+      authId: fictionalAuthId(fictional.email),
+      email: fictional.email,
+      name: fictional.name,
+    });
 
     return user.id;
   }
@@ -49,7 +66,12 @@ async function accountFor(pool: pg.Pool, repos: Repositories, email: string | un
 }
 
 /** Creates the camp through the service (so `org.create` is audited) and adds the other members. */
-export async function createCamp(pool: pg.Pool, services: Services, repos: Repositories, choice: AccountChoice): Promise<string> {
+export async function createCamp(
+  pool: pg.Pool,
+  services: Services,
+  repos: Repositories,
+  choice: AccountChoice,
+): Promise<string> {
   const ownerId = await accountFor(pool, repos, choice.owner, STAFF_ACCOUNTS.owner);
   const camp = await services.orgs.createCamp(ownerId, { name: CAMP.name, slug: CAMP.slug, timezone: CAMP.timezone });
   const others: [Role, string | undefined, { name: string; email: string }][] = [
@@ -60,7 +82,11 @@ export async function createCamp(pool: pg.Pool, services: Services, repos: Repos
   for (const [role, email, fictional] of others) {
     const userId = await accountFor(pool, repos, email, fictional);
     // Direct insert: the seed has no invite flow, so membership is added here, outside any request. Not audited.
-    await pool.query('INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING', [camp.id, userId, role]);
+    await pool.query('INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING', [
+      camp.id,
+      userId,
+      role,
+    ]);
   }
 
   return camp.id;
@@ -69,7 +95,9 @@ export async function createCamp(pool: pg.Pool, services: Services, repos: Repos
 /** The actors the seed acts as, read from the camp's members. */
 export async function actorsFor(pool: pg.Pool, orgId: string): Promise<CampRef['actors']> {
   const { rows } = await pool.query<{ user_id: string; role: 'owner' | 'staff' }>(
-    `SELECT user_id, role FROM org_members WHERE org_id = $1 AND role IN ('owner', 'staff')`, [orgId]);
+    `SELECT user_id, role FROM org_members WHERE org_id = $1 AND role IN ('owner', 'staff')`,
+    [orgId],
+  );
   const find = (role: 'owner' | 'staff'): Actor => {
     const row = rows.find(r => r.role === role);
     if (!row) {

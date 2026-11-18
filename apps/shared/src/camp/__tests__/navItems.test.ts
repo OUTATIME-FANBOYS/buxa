@@ -38,9 +38,15 @@ describe('the sidebar groups', () => {
   it('gives Work and Admin items without a permission, and camp items the permission they had before', () => {
     const requires = Object.fromEntries(CAMP_NAV.map(item => [item.label, item.requires]));
     expect(requires).toMatchObject({
-      'Check-in': 'attendance:record', 'On site': 'attendance:read', People: 'people:read', Attendance: 'attendance:read',
-      Classes: 'events:read', 'Team access': 'members:read',
-      Home: undefined, 'My tasks': undefined, Projects: undefined,
+      'Check-in': 'attendance:record',
+      'On site': 'attendance:read',
+      People: 'people:read',
+      Attendance: 'attendance:read',
+      Classes: 'events:read',
+      'Team access': 'members:read',
+      Home: undefined,
+      'My tasks': undefined,
+      Projects: undefined,
     });
   });
 });
@@ -55,7 +61,14 @@ describe('navFor', () => {
   });
 
   it('shows only items needing no permission when there is no camp yet', () => {
-    expect(hrefs(null)).toEqual([ROUTES.camp, ROUTES.tasks, ROUTES.projects, ROUTES.boards, ROUTES.calendar, ROUTES.agents]);
+    expect(hrefs(null)).toEqual([
+      ROUTES.camp,
+      ROUTES.tasks,
+      ROUTES.projects,
+      ROUTES.boards,
+      ROUTES.calendar,
+      ROUTES.agents,
+    ]);
   });
 
   it('hides an item from a role that lacks its permission, and keeps the rest', () => {

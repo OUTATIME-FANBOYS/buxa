@@ -6,7 +6,15 @@ import { recordAudit } from '../audit/recordAudit';
 import { conflict, forbidden } from '../http/errors';
 import { OrgNotFoundError, SlugTakenError, type ArchivedCampRecord, type OrgRepository } from './OrgRepository';
 
-interface OrgRow { id: string; name: string; slug: string; created_at: Date; member_count: number; timezone: string; clock_format: ClockFormat }
+interface OrgRow {
+  id: string;
+  name: string;
+  slug: string;
+  created_at: Date;
+  member_count: number;
+  timezone: string;
+  clock_format: ClockFormat;
+}
 
 export class PgOrgRepository implements OrgRepository {
   constructor(private readonly pool: Pool) {}
@@ -17,9 +25,12 @@ export class PgOrgRepository implements OrgRepository {
    */
   async createWithOwner(input: NewOrgInput, ownerId: string): Promise<CreatedOrg> {
     try {
-      const { rows } = await withOrg(this.pool, null, db => db.query<OrgSummary>(
-        'SELECT org_id AS id, org_name AS name, org_slug AS slug FROM buxa_create_org($1, $2, $3, $4)',
-        [input.name, input.slug, input.timezone, ownerId]));
+      const { rows } = await withOrg(this.pool, null, db =>
+        db.query<OrgSummary>(
+          'SELECT org_id AS id, org_name AS name, org_slug AS slug FROM buxa_create_org($1, $2, $3, $4)',
+          [input.name, input.slug, input.timezone, ownerId],
+        ),
+      );
 
       return { ...rows[0], role: 'owner' };
     } catch (error) {
@@ -30,13 +41,22 @@ export class PgOrgRepository implements OrgRepository {
   get(orgId: string): Promise<Org> {
     return withOrg(this.pool, orgId, async db => {
       const { rows } = await db.query<OrgRow>(
-        `SELECT id, name, slug, timezone, clock_format, created_at, (SELECT count(*)::int FROM org_members) AS member_count FROM orgs`);
+        `SELECT id, name, slug, timezone, clock_format, created_at, (SELECT count(*)::int FROM org_members) AS member_count FROM orgs`,
+      );
       if (!rows[0]) {
         throw new OrgNotFoundError();
       }
       const row = rows[0];
 
-      return { id: row.id, name: row.name, slug: row.slug, createdAt: row.created_at.toISOString(), memberCount: row.member_count, timezone: row.timezone, clockFormat: row.clock_format };
+      return {
+        id: row.id,
+        name: row.name,
+        slug: row.slug,
+        createdAt: row.created_at.toISOString(),
+        memberCount: row.member_count,
+        timezone: row.timezone,
+        clockFormat: row.clock_format,
+      };
     });
   }
 
@@ -45,15 +65,22 @@ export class PgOrgRepository implements OrgRepository {
       const { rows } = await db.query<OrgSummary>(
         `UPDATE orgs SET name = coalesce($1, name), timezone = coalesce($2, timezone), clock_format = coalesce($3, clock_format)
          WHERE id = $4 RETURNING id, name, slug`,
-        [input.name ?? null, input.timezone ?? null, input.clockFormat ?? null, actor.orgId]);
+        [input.name ?? null, input.timezone ?? null, input.clockFormat ?? null, actor.orgId],
+      );
       if (!rows[0]) {
         throw new OrgNotFoundError();
       }
-      await recordAudit(db, { actor, action: 'org.update', entity: 'org', entityId: actor.orgId, data: {
-        ...(input.name !== undefined && { name: input.name }),
-        ...(input.timezone !== undefined && { timezone: input.timezone }),
-        ...(input.clockFormat !== undefined && { clockFormat: input.clockFormat }),
-      } });
+      await recordAudit(db, {
+        actor,
+        action: 'org.update',
+        entity: 'org',
+        entityId: actor.orgId,
+        data: {
+          ...(input.name !== undefined && { name: input.name }),
+          ...(input.timezone !== undefined && { timezone: input.timezone }),
+          ...(input.clockFormat !== undefined && { clockFormat: input.clockFormat }),
+        },
+      });
 
       return rows[0];
     });
@@ -62,7 +89,8 @@ export class PgOrgRepository implements OrgRepository {
   listMembers(orgId: string): Promise<Member[]> {
     return withOrg(this.pool, orgId, async db => {
       const { rows } = await db.query<Member>(
-        `SELECT u.id, u.name, u.email, m.role FROM org_members m JOIN users u ON u.id = m.user_id ORDER BY u.name`);
+        `SELECT u.id, u.name, u.email, m.role FROM org_members m JOIN users u ON u.id = m.user_id ORDER BY u.name`,
+      );
 
       return rows;
     });
@@ -72,7 +100,10 @@ export class PgOrgRepository implements OrgRepository {
   async archive(actor: Actor): Promise<{ archivedAt: string }> {
     try {
       return await withOrg(this.pool, actor.orgId, async db => {
-        const { rows } = await db.query<{ archived_at: Date }>('SELECT buxa_archive_camp($1, $2) AS archived_at', [actor.orgId, actor.userId]);
+        const { rows } = await db.query<{ archived_at: Date }>('SELECT buxa_archive_camp($1, $2) AS archived_at', [
+          actor.orgId,
+          actor.userId,
+        ]);
 
         return { archivedAt: rows[0].archived_at.toISOString() };
       });
@@ -84,7 +115,9 @@ export class PgOrgRepository implements OrgRepository {
   /** buxa_delete_camp (migration 0013) checks the owner role and the exact name, then deletes the camp; the rows go with it. */
   async deleteCamp(actor: Actor, confirmName: string): Promise<void> {
     try {
-      await withOrg(this.pool, actor.orgId, db => db.query('SELECT buxa_delete_camp($1, $2, $3)', [actor.orgId, actor.userId, confirmName]));
+      await withOrg(this.pool, actor.orgId, db =>
+        db.query('SELECT buxa_delete_camp($1, $2, $3)', [actor.orgId, actor.userId, confirmName]),
+      );
     } catch (error) {
       throw mapCampFunctionError(error);
     }
@@ -94,7 +127,9 @@ export class PgOrgRepository implements OrgRepository {
   archivedCampsOf(userId: string): Promise<ArchivedCampRecord[]> {
     return withOrg(this.pool, null, async db => {
       const { rows } = await db.query<{ id: string; name: string; archived_at: Date; role: Role }>(
-        'SELECT camp_id AS id, camp_name AS name, camp_archived_at AS archived_at, camp_role AS role FROM buxa_archived_camps_of($1)', [userId]);
+        'SELECT camp_id AS id, camp_name AS name, camp_archived_at AS archived_at, camp_role AS role FROM buxa_archived_camps_of($1)',
+        [userId],
+      );
 
       return rows.map(r => ({ id: r.id, name: r.name, archivedAt: r.archived_at.toISOString(), role: r.role }));
     });
@@ -106,9 +141,13 @@ function mapCampFunctionError(error: unknown): unknown {
   const code = (error as { code?: unknown } | null)?.code;
   const message = errorMessage(error);
   switch (code) {
-    case '42501': return forbidden(message);
-    case 'P0002': return new OrgNotFoundError();
-    case '22023': return conflict(message);
-    default: return error;
+    case '42501':
+      return forbidden(message);
+    case 'P0002':
+      return new OrgNotFoundError();
+    case '22023':
+      return conflict(message);
+    default:
+      return error;
   }
 }

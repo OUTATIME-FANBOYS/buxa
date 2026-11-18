@@ -10,7 +10,9 @@ export async function untilBlocked(pool: Pool, applicationName: string, timeoutM
   for (;;) {
     const { rows } = await pool.query<{ n: number }>(
       `SELECT count(*)::int AS n FROM pg_stat_activity
-        WHERE wait_event_type = 'Lock' AND datname = current_database() AND application_name = $1`, [applicationName]);
+        WHERE wait_event_type = 'Lock' AND datname = current_database() AND application_name = $1`,
+      [applicationName],
+    );
     if (rows[0].n > 0) {
       return;
     }

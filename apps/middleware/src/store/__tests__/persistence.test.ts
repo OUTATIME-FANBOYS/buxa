@@ -19,14 +19,15 @@ const stub = {
 
 describe('state persistence', () => {
   beforeEach(() => {
-    vi.stubGlobal('localStorage', stub); store.clear();
+    vi.stubGlobal('localStorage', stub);
+    store.clear();
   });
   afterEach(() => vi.unstubAllGlobals());
 
   it('loads the saved state, normalised, when the current version is stored', () => {
     const seed = buildSeed();
     store.set('buxa.state.v1', JSON.stringify(seed));
-    expect(loadState().tasks.map((t) => t.id)).toEqual(seed.tasks.map((t) => t.id));
+    expect(loadState().tasks.map(t => t.id)).toEqual(seed.tasks.map(t => t.id));
   });
   it('reads the state saved under the app’s previous name', () => {
     store.set('tessera.state.v1', JSON.stringify(buildSeed()));

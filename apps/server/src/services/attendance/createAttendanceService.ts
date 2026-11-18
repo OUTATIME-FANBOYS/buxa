@@ -3,18 +3,38 @@ import { can, decideCheckIn, decideCheckOut, isMinor, personAccess, toLocalDate 
 import { encodeCsv, type CsvCell } from '@buxa/shared';
 import { assertAllowed } from '../../auth/authorize';
 import { badRequest, notFound } from '../../http/errors';
-import { isAlreadyCheckedIn, isNotOnSite, MAX_LOG_ROWS, type AttendanceQuery, type CheckInRecord } from '../../attendance/AttendanceRepository';
+import {
+  isAlreadyCheckedIn,
+  isNotOnSite,
+  MAX_LOG_ROWS,
+  type AttendanceQuery,
+  type CheckInRecord,
+} from '../../attendance/AttendanceRepository';
 import { localDaysWindow } from '../shared/campDay';
 import { campZone, onSiteByPerson, toSummary } from '../shared/views';
 import { toEntries, authorisedCollectors, pickupOptionsFor } from './visits';
-import type { AttendanceService, AttendanceServiceDeps, CheckInResult, CheckOutResult, OnSiteEntry } from './AttendanceService';
+import type {
+  AttendanceService,
+  AttendanceServiceDeps,
+  CheckInResult,
+  CheckOutResult,
+  OnSiteEntry,
+} from './AttendanceService';
 
 /** Wide enough to hold every visit a person can have. */
 const EARLIEST = '1900-01-01T00:00:00.000Z';
 const LATEST = '9999-12-31T23:59:59.999Z';
 
 const EXPORT_HEADER: CsvCell[] = [
-  'Person', 'Checked in', 'Checked in by', 'Method', 'Checked out', 'Checked out by', 'Collected by', 'Override reason', 'Note',
+  'Person',
+  'Checked in',
+  'Checked in by',
+  'Method',
+  'Checked out',
+  'Checked out by',
+  'Collected by',
+  'Override reason',
+  'Note',
 ];
 
 export function createAttendanceService(deps: AttendanceServiceDeps): AttendanceService {
@@ -22,7 +42,11 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
 
   /** Records for the filter's camp-local days, newest first. */
   async function recordsFor(orgId: string, filter: AttendanceFilter, timeZone: string): Promise<CheckInRecord[]> {
-    const query: AttendanceQuery = { ...localDaysWindow(filter.from, filter.to, timeZone), personId: filter.personId, onSiteOnly: filter.onSiteOnly };
+    const query: AttendanceQuery = {
+      ...localDaysWindow(filter.from, filter.to, timeZone),
+      personId: filter.personId,
+      onSiteOnly: filter.onSiteOnly,
+    };
 
     return attendance.log(orgId, query);
   }
@@ -41,7 +65,10 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
 
       const timeZone = await campZone(orgs, orgId);
       const now = clock();
-      const [open, ms] = await Promise.all([attendance.openFor(orgId, input.personId), memberships.forPerson(orgId, input.personId)]);
+      const [open, ms] = await Promise.all([
+        attendance.openFor(orgId, input.personId),
+        memberships.forPerson(orgId, input.personId),
+      ]);
       const decision = decideCheckIn({
         status: personAccess(ms, toLocalDate(now, timeZone)).status,
         onSiteSince: open?.checkedInAt ?? null,
@@ -64,7 +91,9 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       const at = now.toISOString();
       try {
         const record = await attendance.checkIn(actor, {
-          personId: input.personId, at, method: input.method,
+          personId: input.personId,
+          at,
+          method: input.method,
           overrideReason: decision.kind === 'allow_override' ? decision.reason : null,
           note: input.note ?? null,
         });
@@ -174,7 +203,13 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
         const minor = seeContact ? isMinor(person, today) : null;
         result.push({
           entry: entries[index],
-          person: toSummary(person, groups.filter(m => m.personId === person.id), onSite.has(person.id), today, true),
+          person: toSummary(
+            person,
+            groups.filter(m => m.personId === person.id),
+            onSite.has(person.id),
+            today,
+            true,
+          ),
           isMinor: minor,
           pickupOptions: minor === true ? await pickupOptionsFor(people, orgId, person.id) : [],
         });
@@ -219,6 +254,14 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
 /** One visit as CSV cells. The times are instants (ISO), so a spreadsheet and a reader agree on them. */
 function exportRow(e: AttendanceEntry): CsvCell[] {
   return [
-    e.personName, e.checkedInAt, e.checkedInByName, e.method, e.checkedOutAt, e.checkedOutByName, e.collectedByName, e.overrideReason, e.note,
+    e.personName,
+    e.checkedInAt,
+    e.checkedInByName,
+    e.method,
+    e.checkedOutAt,
+    e.checkedOutByName,
+    e.collectedByName,
+    e.overrideReason,
+    e.note,
   ];
 }

@@ -11,7 +11,8 @@
  *
  * Contrast (text on each background, WCAG 2.x) is checked for both themes in the button tests and in the commit notes.
  */
-:root, [data-theme="dark"] {
+:root,
+[data-theme='dark'] {
   /* Canvas and surfaces */
   --background: var(--bg);
   --foreground: var(--text);

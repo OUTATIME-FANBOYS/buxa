@@ -23,7 +23,21 @@ describe('Icon', () => {
 
 describe('ICONS', () => {
   it('maps the names the screens use to lucide components', () => {
-    for (const name of ['plus', 'search', 'kanban', 'calendar', 'users', 'agent', 'dashboard', 'camp', 'help', 'logout', 'sun', 'moon', 'settings']) {
+    for (const name of [
+      'plus',
+      'search',
+      'kanban',
+      'calendar',
+      'users',
+      'agent',
+      'dashboard',
+      'camp',
+      'help',
+      'logout',
+      'sun',
+      'moon',
+      'settings',
+    ]) {
       expect(ICONS[name], name).toBeTruthy();
     }
   });

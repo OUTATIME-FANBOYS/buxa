@@ -47,7 +47,9 @@ describe('a conflicting identity (audit S-09)', () => {
         throw Object.assign(new Error(`bad signature for ${EMAIL} token eyJsecret`), { name: 'JWTExpired' });
       });
     };
-    await expect(sessionFromToken('eyJsecret', { verifier, users: store.asRepositories().users }, log)).rejects.toMatchObject({ statusCode: 401 });
+    await expect(
+      sessionFromToken('eyJsecret', { verifier, users: store.asRepositories().users }, log),
+    ).rejects.toMatchObject({ statusCode: 401 });
     expect(text()).toContain('JWTExpired');
     expect(text()).not.toContain(EMAIL);
     expect(text()).not.toContain('eyJsecret');

@@ -20,7 +20,10 @@ export async function revokeMembershipAction(_previous: ActionState, form: FormD
   if (!isUuid(personId)) {
     return failure('That person is not valid.');
   }
-  const parsed = parseWith(RevokeMembershipInputSchema, { membershipId: field(form, 'membershipId'), reason: field(form, 'reason') });
+  const parsed = parseWith(RevokeMembershipInputSchema, {
+    membershipId: field(form, 'membershipId'),
+    reason: field(form, 'reason'),
+  });
   if (!parsed.ok) {
     return parsed.state;
   }

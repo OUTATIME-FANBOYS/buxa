@@ -8,7 +8,10 @@ import { settle, requirePresent } from '@buxa/domain';
 
 // A stand-in for the web app's Dialog: the same role and label, so the confirm prompt can be tested here.
 const Dialog: ComponentType<ConfirmDialogProps> = ({ title, footer, children }) => (
-  <div role="dialog" aria-label={title}>{children}{footer}</div>
+  <div role="dialog" aria-label={title}>
+    {children}
+    {footer}
+  </div>
 );
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -27,10 +30,18 @@ describe('UiProvider', () => {
   beforeEach(() => {
     api = undefined;
     root = createRoot(document.body.appendChild(document.createElement('div')));
-    act(() => root.render(<UiProvider Dialog={Dialog}><Probe /><p>app</p></UiProvider>));
+    act(() =>
+      root.render(
+        <UiProvider Dialog={Dialog}>
+          <Probe />
+          <p>app</p>
+        </UiProvider>,
+      ),
+    );
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = '';
+    act(() => root.unmount());
+    document.body.innerHTML = '';
   });
 
   it('shows a toast with its text in the status region', () => {
@@ -45,14 +56,22 @@ describe('UiProvider', () => {
   it('asks for confirmation and resolves true when confirmed', async () => {
     let answer: boolean | undefined;
     act(() => {
-      void requirePresent(api, 'api').confirm({ title: 'Delete task?', body: 'This cannot be undone.', confirmLabel: 'Delete', danger: true }).then((b) => {
-        answer = b;
-      });
+      void requirePresent(api, 'api')
+        .confirm({ title: 'Delete task?', body: 'This cannot be undone.', confirmLabel: 'Delete', danger: true })
+        .then(b => {
+          answer = b;
+        });
     });
-    const dialog = requirePresent(document.querySelector('[role="dialog"]'), "document.querySelector('[role=\"dialog\"]')");
+    const dialog = requirePresent(
+      document.querySelector('[role="dialog"]'),
+      'document.querySelector(\'[role="dialog"]\')',
+    );
     expect(dialog.getAttribute('aria-label')).toBe('Delete task?');
     expect(dialog.textContent).toContain('This cannot be undone.');
-    const confirm = requirePresent(Array.from(dialog.querySelectorAll('button')).find((b) => b.textContent === 'Delete'), "Array.from(dialog.querySelectorAll('button')).find((b) => b.textContent === 'Delete')");
+    const confirm = requirePresent(
+      Array.from(dialog.querySelectorAll('button')).find(b => b.textContent === 'Delete'),
+      "Array.from(dialog.querySelectorAll('button')).find((b) => b.textContent === 'Delete')",
+    );
     expect(confirm.className).toContain('btn-danger');
     await act(() => {
       return settle(() => {
@@ -64,11 +83,16 @@ describe('UiProvider', () => {
   it('resolves false when cancelled', async () => {
     let answer: boolean | undefined;
     act(() => {
-      void requirePresent(api, 'api').confirm({ title: 'Leave?' }).then((b) => {
-        answer = b;
-      });
+      void requirePresent(api, 'api')
+        .confirm({ title: 'Leave?' })
+        .then(b => {
+          answer = b;
+        });
     });
-    const cancel = requirePresent(Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Cancel'), "Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Cancel')");
+    const cancel = requirePresent(
+      Array.from(document.querySelectorAll('button')).find(b => b.textContent === 'Cancel'),
+      "Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Cancel')",
+    );
     await act(() => {
       return settle(() => {
         cancel.click();
@@ -86,7 +110,8 @@ describe('UiProvider', () => {
         useUi();
 
         return null;
-      } act(() => createRoot(document.createElement('div')).render(<Bare />));
+      }
+      act(() => createRoot(document.createElement('div')).render(<Bare />));
     }).toThrow();
   });
 });

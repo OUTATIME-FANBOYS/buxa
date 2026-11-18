@@ -6,7 +6,13 @@ vi.mock('next/navigation', () => ({ usePathname: () => '/camp/members' }));
 
 const groups = [
   { label: '', items: [{ href: '/camp', label: 'Home', icon: 'dashboard' }] },
-  { label: 'People', items: [{ href: '/camp/members', label: 'Members', icon: 'users' }, { href: '/camp/people', label: 'People', icon: 'users' }] },
+  {
+    label: 'People',
+    items: [
+      { href: '/camp/members', label: 'Members', icon: 'users' },
+      { href: '/camp/people', label: 'People', icon: 'users' },
+    ],
+  },
 ] as never;
 
 describe('SidebarNav', () => {

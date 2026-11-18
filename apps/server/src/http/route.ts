@@ -7,8 +7,15 @@ import { HttpError, errorBody, isHttpError, payloadTooLarge } from './errors';
 import { MAX_BODY_BYTES } from './parse';
 import { generateRequestId } from './requestId';
 
-export interface ApiContext { request: Request; requestId: string; log: Logger; runtime: Runtime }
-export interface AuthedContext extends ApiContext { session: Session }
+export interface ApiContext {
+  request: Request;
+  requestId: string;
+  log: Logger;
+  runtime: Runtime;
+}
+export interface AuthedContext extends ApiContext {
+  session: Session;
+}
 /** A handler returns data (sent as 200 JSON) or a ready-made Response when it needs another status. */
 type Reply = Response | object;
 export type RouteFunction = (request: Request) => Promise<Response>;
@@ -49,7 +56,8 @@ async function run(request: Request, work: (base: ApiContext) => Promise<Reply>)
   let runtime: Runtime;
   try {
     runtime = getRuntime();
-  } catch (error) { // configuration is invalid: say so in the server log, tell the client nothing
+  } catch (error) {
+    // configuration is invalid: say so in the server log, tell the client nothing
     console.error(error instanceof Error ? error.message : error);
 
     return finish(Response.json(errorBody(500, 'Something went wrong', requestId), { status: 500 }), requestId);
@@ -72,14 +80,36 @@ async function run(request: Request, work: (base: ApiContext) => Promise<Reply>)
   }
   finish(response, requestId);
   // Path only: query strings can carry tokens, so they are never logged.
-  log.info({ method: request.method, path: new URL(request.url).pathname, status: response.status, ms: Math.round(performance.now() - started) }, 'request completed');
+  log.info(
+    {
+      method: request.method,
+      path: new URL(request.url).pathname,
+      status: response.status,
+      ms: Math.round(performance.now() - started),
+    },
+    'request completed',
+  );
 
   return response;
 }
 
 /** A route anyone may call. */
-export const publicRoute = (handler: (ctx: ApiContext) => Promise<Reply>): RouteFunction => request => run(request, handler);
+export const publicRoute =
+  (handler: (ctx: ApiContext) => Promise<Reply>): RouteFunction =>
+  request =>
+    run(request, handler);
 
 /** A route that needs a signed-in person. `ctx.session` is always set. */
-export const authedRoute = (handler: (ctx: AuthedContext) => Promise<Reply>): RouteFunction =>
-  request => run(request, async base => handler({ ...base, session: await authenticate(base.request.headers, { verifier: base.runtime.verifier, users: base.runtime.repositories.users }, base.log) }));
+export const authedRoute =
+  (handler: (ctx: AuthedContext) => Promise<Reply>): RouteFunction =>
+  request =>
+    run(request, async base =>
+      handler({
+        ...base,
+        session: await authenticate(
+          base.request.headers,
+          { verifier: base.runtime.verifier, users: base.runtime.repositories.users },
+          base.log,
+        ),
+      }),
+    );

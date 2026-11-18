@@ -29,7 +29,11 @@ export async function updateCampClockAction(...args: Parameters<typeof updateCam
 // Archive and delete. The server composers return the same CampResult shape as the other camp actions.
 
 export type CampActionResult = { ok: true } | { ok: false; message: string };
-export interface ArchivedCamp { id: string; name: string; archivedAt: string }
+export interface ArchivedCamp {
+  id: string;
+  name: string;
+  archivedAt: string;
+}
 
 /** Archives the camp (owner only). It is hidden from the switcher, and its data is kept. */
 export async function archiveCamp(input: { orgId: string }): Promise<CampActionResult> {

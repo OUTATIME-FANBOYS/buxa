@@ -6,10 +6,17 @@ import { createSessionClient } from './supabaseClient';
 /** The proxy runs without the app's configuration, so it logs warnings to stdout directly. */
 const proxyLog = createLogger('warn');
 
-export interface CookieWrite { name: string; value: string; options: CookieOptions }
+export interface CookieWrite {
+  name: string;
+  value: string;
+  options: CookieOptions;
+}
 const REFRESH_TIMEOUT_MS = 2500;
 
-export interface Refreshed { cookies: CookieWrite[]; headers: Record<string, string> }
+export interface Refreshed {
+  cookies: CookieWrite[];
+  headers: Record<string, string>;
+}
 
 /**
  * Renews the session cookies when the access token is close to expiring (a Server Component cannot write cookies, so this runs in
@@ -19,7 +26,11 @@ export interface Refreshed { cookies: CookieWrite[]; headers: Record<string, str
  * If the identity provider is slow or down the page is served anyway after `timeoutMs`: the library retries network errors for
  * a long time, and no page should wait for that.
  */
-export async function refreshSessionCookies(request: NextRequest, timeoutMs = REFRESH_TIMEOUT_MS, log: Logger = proxyLog): Promise<Refreshed | null> {
+export async function refreshSessionCookies(
+  request: NextRequest,
+  timeoutMs = REFRESH_TIMEOUT_MS,
+  log: Logger = proxyLog,
+): Promise<Refreshed | null> {
   if (!request.cookies.getAll().some(cookie => cookie.name.startsWith('sb-'))) {
     return null;
   } // signed-out visitors cost nothing
@@ -27,7 +38,8 @@ export async function refreshSessionCookies(request: NextRequest, timeoutMs = RE
   const client = createSessionClient({
     getAll: () => request.cookies.getAll(),
     setAll(cookies, headers) {
-      result.cookies.push(...cookies); Object.assign(result.headers, headers);
+      result.cookies.push(...cookies);
+      Object.assign(result.headers, headers);
     },
   });
   if (!client) {

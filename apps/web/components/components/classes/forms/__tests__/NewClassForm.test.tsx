@@ -8,7 +8,15 @@ describe('NewClassForm', () => {
   const html = renderToStaticMarkup(<NewClassForm />);
 
   it('ties every label to its input, so each field has a name for assistive technology', () => {
-    for (const label of ['Class name *', 'Description', 'Youngest age *', 'Oldest age *', 'Default places *', 'Instructors', 'Campers']) {
+    for (const label of [
+      'Class name *',
+      'Description',
+      'Youngest age *',
+      'Oldest age *',
+      'Default places *',
+      'Instructors',
+      'Campers',
+    ]) {
       expect(html).toContain(`<span class="field-label">${label}</span>`);
     }
     expect(html).toContain('name="name"');

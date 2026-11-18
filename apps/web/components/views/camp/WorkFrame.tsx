@@ -19,7 +19,11 @@ interface Props {
 export function WorkFrame({ role, topBarStart, topBarEnd, archived = false, children }: Props) {
   return (
     <Shell nav={navGroupsFor(role)} brandHref={ROUTES.camp} topBarStart={topBarStart} topBarEnd={topBarEnd}>
-      {archived && <p className="camp-archived-banner" role="status">This camp is archived. You can view it, but you can’t make changes.</p>}
+      {archived && (
+        <p className="camp-archived-banner" role="status">
+          This camp is archived. You can view it, but you can’t make changes.
+        </p>
+      )}
       {children}
     </Shell>
   );

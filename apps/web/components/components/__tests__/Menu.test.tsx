@@ -12,11 +12,14 @@ describe('Menu', () => {
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = '';
+    act(() => root.unmount());
+    document.body.innerHTML = '';
   });
 
   it('starts closed with its label on the trigger', () => {
-    act(() => root.render(<Menu label="Task actions" trigger="⋯" items={[{ label: 'Rename', onSelect: () => undefined }]} />));
+    act(() =>
+      root.render(<Menu label="Task actions" trigger="⋯" items={[{ label: 'Rename', onSelect: () => undefined }]} />),
+    );
     // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
     const trigger = document.querySelector('button[aria-label="Task actions"]') as HTMLButtonElement;
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
@@ -25,13 +28,25 @@ describe('Menu', () => {
 
   it('opens on click, lists the items, and runs the chosen one', () => {
     const onRename = vi.fn();
-    act(() => root.render(<Menu label="Task actions" trigger="⋯" items={[{ label: 'Rename', onSelect: onRename }, false, { label: 'Delete', danger: true, onSelect: () => undefined }]} />));
+    act(() =>
+      root.render(
+        <Menu
+          label="Task actions"
+          trigger="⋯"
+          items={[
+            { label: 'Rename', onSelect: onRename },
+            false,
+            { label: 'Delete', danger: true, onSelect: () => undefined },
+          ]}
+        />,
+      ),
+    );
     // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
     const trigger = document.querySelector('button[aria-label="Task actions"]') as HTMLButtonElement;
     act(() => trigger.click());
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
     const items = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'));
-    expect(items.map((i) => i.textContent)).toEqual(['Rename', 'Delete']);
+    expect(items.map(i => i.textContent)).toEqual(['Rename', 'Delete']);
     expect(items[1].className).toBe('danger');
     act(() => items[0].click());
     expect(onRename).toHaveBeenCalledTimes(1);

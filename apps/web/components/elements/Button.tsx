@@ -48,13 +48,21 @@ function buxaClasses(size: ButtonSize): string[] {
  * The class string for a button, for markup that cannot be a Button: a <summary> that toggles a disclosure.
  * Prefer <Button>; this exists only where the element itself is fixed by the markup.
  */
-export function buttonClassName({ variant = 'secondary', size = 'md', fullWidth = false, iconOnly = false }: { variant?: ButtonVariant; size?: ButtonSize; fullWidth?: boolean; iconOnly?: boolean } = {}): string {
+export function buttonClassName({
+  variant = 'secondary',
+  size = 'md',
+  fullWidth = false,
+  iconOnly = false,
+}: { variant?: ButtonVariant; size?: ButtonSize; fullWidth?: boolean; iconOnly?: boolean } = {}): string {
   const heroui = buttonVariants({ variant, size: HEROUI_SIZE[size], isIconOnly: iconOnly, fullWidth });
 
   return [heroui, ...buxaClasses(size)].join(' ');
 }
 
-type NativeButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className' | 'children' | 'onClick' | 'disabled' | 'type' | 'value'>;
+type NativeButtonProps = Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  'className' | 'children' | 'onClick' | 'disabled' | 'type' | 'value'
+>;
 
 interface CommonButtonProps extends NativeButtonProps {
   variant?: ButtonVariant;
@@ -100,7 +108,25 @@ interface IconOnlyProps {
 
 export type ButtonProps = CommonButtonProps & (LabelledProps | IconOnlyProps);
 
-export function Button({ variant = 'secondary', size = 'md', fullWidth = false, className, icon, iconOnly = false, children, onClick, onPress, disabled, type, href, download, target, rel, ref, ...rest }: ButtonProps) {
+export function Button({
+  variant = 'secondary',
+  size = 'md',
+  fullWidth = false,
+  className,
+  icon,
+  iconOnly = false,
+  children,
+  onClick,
+  onPress,
+  disabled,
+  type,
+  href,
+  download,
+  target,
+  rel,
+  ref,
+  ...rest
+}: ButtonProps) {
   const extra = className ? [className] : [];
   const press = onPress ?? (onClick ? () => onClick() : undefined);
   const content = (
@@ -112,13 +138,26 @@ export function Button({ variant = 'secondary', size = 'md', fullWidth = false, 
 
   if (href !== undefined) {
     const classes = [buttonClassName({ variant, size, fullWidth, iconOnly }), ...extra].join(' ');
-    const linkProps = { ...(rest as AnchorHTMLAttributes<HTMLAnchorElement>), target, rel, onClick: onClick ? () => onClick() : undefined };
+    const linkProps = {
+      ...(rest as AnchorHTMLAttributes<HTMLAnchorElement>),
+      target,
+      rel,
+      onClick: onClick ? () => onClick() : undefined,
+    };
 
     if (download !== undefined) {
-      return <a {...linkProps} ref={ref as Ref<HTMLAnchorElement>} href={href} download={download} className={classes}>{content}</a>;
+      return (
+        <a {...linkProps} ref={ref as Ref<HTMLAnchorElement>} href={href} download={download} className={classes}>
+          {content}
+        </a>
+      );
     }
 
-    return <Link {...linkProps} ref={ref as Ref<HTMLAnchorElement>} href={href} className={classes}>{content}</Link>;
+    return (
+      <Link {...linkProps} ref={ref as Ref<HTMLAnchorElement>} href={href} className={classes}>
+        {content}
+      </Link>
+    );
   }
 
   const classes = [...buxaClasses(size), ...extra].join(' ');

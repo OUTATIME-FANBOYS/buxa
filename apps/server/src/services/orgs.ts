@@ -60,7 +60,9 @@ export function createOrgService(orgs: OrgRepository): OrgService {
       assertAllowed(actor, 'org:delete', { orgId });
       const camp = await guard(() => orgs.get(actor.orgId));
       if (confirmName !== camp.name) {
-        throw badRequest('To delete the camp, type its name exactly as it is written, capitals included. Nothing was deleted.');
+        throw badRequest(
+          'To delete the camp, type its name exactly as it is written, capitals included. Nothing was deleted.',
+        );
       }
       await guard(() => orgs.deleteCamp(actor, confirmName));
     },

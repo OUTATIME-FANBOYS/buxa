@@ -12,7 +12,16 @@ export const buildUsers = (): User[] => [
 ];
 
 export const buildWorkspaces = (): Workspace[] => [
-  { id: WORKSPACE.camp, name: 'Camp Birchwood', members: [
-    { userId: USER.rosa, role: 'owner' }, { userId: USER.tom, role: 'admin' }, { userId: USER.hannah, role: 'member' },
-    { userId: USER.sam, role: 'member' }, { userId: USER.nia, role: 'member' }, { userId: AGENT_ID, role: 'member' }] },
+  {
+    id: WORKSPACE.camp,
+    name: 'Camp Birchwood',
+    members: [
+      { userId: USER.rosa, role: 'owner' },
+      { userId: USER.tom, role: 'admin' },
+      { userId: USER.hannah, role: 'member' },
+      { userId: USER.sam, role: 'member' },
+      { userId: USER.nia, role: 'member' },
+      { userId: AGENT_ID, role: 'member' },
+    ],
+  },
 ];

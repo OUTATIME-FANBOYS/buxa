@@ -24,7 +24,14 @@ describe.skipIf(!url)('authentication and organisation access', () => {
 
   async function token(over: Override = {}) {
     const sub = over.sub ?? uid();
-    const options: TokenOptions = { sub, email: over.email ?? `${sub.slice(0, 8)}-${tag}@camp.test`, issuer: over.iss, audience: over.aud, expiresIn: over.exp, signWith: over.key };
+    const options: TokenOptions = {
+      sub,
+      email: over.email ?? `${sub.slice(0, 8)}-${tag}@camp.test`,
+      issuer: over.iss,
+      audience: over.aud,
+      expiresIn: over.exp,
+      signWith: over.key,
+    };
 
     return idp.token(options);
   }
@@ -46,17 +53,22 @@ describe.skipIf(!url)('authentication and organisation access', () => {
     await migrate(pool);
     idp = await createTestIdentityProvider();
     other = idp.strangerKey;
-    env = startRuntime({ env: { DATABASE_URL: requirePresent(url, 'url'), LOG_LEVEL: 'silent' }, verifier: idp.verifier });
+    env = startRuntime({
+      env: { DATABASE_URL: requirePresent(url, 'url'), LOG_LEVEL: 'silent' },
+      verifier: idp.verifier,
+    });
   });
   afterAll(async () => {
     await pool.query('DELETE FROM orgs WHERE id = ANY($1)', [made.orgs]);
     await pool.query(`DELETE FROM users WHERE email LIKE $1`, [`%-${tag}@camp.test`]);
-    await env.stop(); await pool.end();
+    await env.stop();
+    await pool.end();
   });
 
   async function makeOrg(t: string, slug: string) {
     const r = await call(t, { method: 'POST', url: '/v1/orgs', payload: { name: slug, slug: `${slug}-${tag}` } });
-    expect(r.statusCode).toBe(201); made.orgs.push(r.json(IdBody).id);
+    expect(r.statusCode).toBe(201);
+    made.orgs.push(r.json(IdBody).id);
 
     return r.json(IdBody).id;
   }
@@ -69,7 +81,8 @@ describe.skipIf(!url)('authentication and organisation access', () => {
   describe('tokens', () => {
     it('no token → 401', async () => {
       const r = await call(null, { url: '/v1/me' });
-      expect(r.statusCode).toBe(401); expect(r.headers['www-authenticate']).toBe('Bearer');
+      expect(r.statusCode).toBe(401);
+      expect(r.headers['www-authenticate']).toBe('Bearer');
       expect(r.json(ErrorBodySchema).error.code).toBe('unauthorized');
     });
     it('garbage → 401', async () => {
@@ -82,7 +95,9 @@ describe.skipIf(!url)('authentication and organisation access', () => {
       expect((await call(await token({ exp: '-1h' }), { url: '/v1/me' })).statusCode).toBe(401);
     });
     it('wrong issuer → 401', async () => {
-      expect((await call(await token({ iss: 'https://evil.supabase.co/auth/v1' }), { url: '/v1/me' })).statusCode).toBe(401);
+      expect((await call(await token({ iss: 'https://evil.supabase.co/auth/v1' }), { url: '/v1/me' })).statusCode).toBe(
+        401,
+      );
     });
     it('wrong audience → 401', async () => {
       expect((await call(await token({ aud: 'anon' }), { url: '/v1/me' })).statusCode).toBe(401);
@@ -105,10 +120,13 @@ describe.skipIf(!url)('authentication and organisation access', () => {
 
   describe('accounts', () => {
     it('first sign-in creates our user, second reuses it', async () => {
-      const sub = uid(); const t = await token({ sub });
+      const sub = uid();
+      const t = await token({ sub });
       const a = (await call(t, { url: '/v1/me' })).json(MeSchema);
       const b = (await call(t, { url: '/v1/me' })).json(MeSchema);
-      expect(a.user.id).toBe(b.user.id); expect(a.orgs).toEqual([]); expect(a.user.name).toBe('Test Person');
+      expect(a.user.id).toBe(b.user.id);
+      expect(a.orgs).toEqual([]);
+      expect(a.user.name).toBe('Test Person');
     });
     it('is linked by provider id, not email: a new identity cannot claim an existing email', async () => {
       const email = `shared-${tag}@camp.test`;
@@ -121,20 +139,30 @@ describe.skipIf(!url)('authentication and organisation access', () => {
 
   describe('organisations', () => {
     it('creating one makes you its owner and writes an audit row', async () => {
-      const t = await token(); const id = await makeOrg(t, 'alpha');
+      const t = await token();
+      const id = await makeOrg(t, 'alpha');
       const me = (await call(t, { url: '/v1/me' })).json(MeSchema);
       expect(me.orgs).toEqual([expect.objectContaining({ orgId: id, role: 'owner' })]);
       const a = await pool.query<{ action: string }>(`SELECT action FROM audit_log WHERE org_id = $1`, [id]);
       expect(a.rows.map(r => r.action)).toEqual(['org.create']);
     });
     it('duplicate address → 409, bad address → 400', async () => {
-      const t = await token(); await makeOrg(t, 'dupe');
-      expect((await call(t, { method: 'POST', url: '/v1/orgs', payload: { name: 'x', slug: `dupe-${tag}` } })).statusCode).toBe(409);
-      expect((await call(t, { method: 'POST', url: '/v1/orgs', payload: { name: 'x', slug: 'Bad Slug!' } })).statusCode).toBe(400);
-      expect((await call(t, { method: 'POST', url: '/v1/orgs', payload: { name: '', slug: 'okay-slug' } })).statusCode).toBe(400);
+      const t = await token();
+      await makeOrg(t, 'dupe');
+      expect(
+        (await call(t, { method: 'POST', url: '/v1/orgs', payload: { name: 'x', slug: `dupe-${tag}` } })).statusCode,
+      ).toBe(409);
+      expect(
+        (await call(t, { method: 'POST', url: '/v1/orgs', payload: { name: 'x', slug: 'Bad Slug!' } })).statusCode,
+      ).toBe(400);
+      expect(
+        (await call(t, { method: 'POST', url: '/v1/orgs', payload: { name: '', slug: 'okay-slug' } })).statusCode,
+      ).toBe(400);
     });
     it('a user in two organisations sees only the one they select', async () => {
-      const t = await token(); const a = await makeOrg(t, 'one'); const b = await makeOrg(t, 'two');
+      const t = await token();
+      const a = await makeOrg(t, 'one');
+      const b = await makeOrg(t, 'two');
       const parsed = (await call(t, { url: '/v1/org', org: a })).json(OrgSchema); // the Postgres adapter honours the contract
       expect(parsed).toMatchObject({ id: a, memberCount: 1 });
       expect((await call(t, { url: '/v1/me' })).json(MeSchema).orgs).toHaveLength(2);
@@ -143,13 +171,17 @@ describe.skipIf(!url)('authentication and organisation access', () => {
       expect(m).toHaveLength(1);
     });
     it('a forged organisation id is refused, and looks the same as one that does not exist', async () => {
-      const owner = await token(); const orgB = await makeOrg(owner, 'secret');
+      const owner = await token();
+      const orgB = await makeOrg(owner, 'secret');
       const intruder = await token();
       const forged = await call(intruder, { url: '/v1/org', org: orgB });
       const missing = await call(intruder, { url: '/v1/org', org: uid() });
-      expect(forged.statusCode).toBe(403); expect(missing.statusCode).toBe(403);
+      expect(forged.statusCode).toBe(403);
+      expect(missing.statusCode).toBe(403);
       expect(forged.json(ErrorBodySchema).error.message).toBe(missing.json(ErrorBodySchema).error.message);
-      expect((await call(intruder, { method: 'PATCH', url: '/v1/org', org: orgB, payload: { name: 'pwned' } })).statusCode).toBe(403);
+      expect(
+        (await call(intruder, { method: 'PATCH', url: '/v1/org', org: orgB, payload: { name: 'pwned' } })).statusCode,
+      ).toBe(403);
       expect((await call(intruder, { url: '/v1/members', org: orgB })).statusCode).toBe(403);
     });
     it('requires a well-formed x-org-id', async () => {
@@ -161,12 +193,19 @@ describe.skipIf(!url)('authentication and organisation access', () => {
 
   describe('roles are enforced', () => {
     it('viewer reads, staff cannot rename, admin can, and renaming is audited', async () => {
-      const owner = await token(); const org = await makeOrg(owner, 'roles');
-      const v = await token(), s = await token(), a = await token();
+      const owner = await token();
+      const org = await makeOrg(owner, 'roles');
+      const v = await token(),
+        s = await token(),
+        a = await token();
       for (const t of [v, s, a]) {
         await call(t, { url: '/v1/me' });
       }
-      for (const [t, role] of [[v, 'viewer'], [s, 'staff'], [a, 'admin']] as const) {
+      for (const [t, role] of [
+        [v, 'viewer'],
+        [s, 'staff'],
+        [a, 'admin'],
+      ] as const) {
         const email = (await call(t, { url: '/v1/me' })).json(MeSchema).user.email;
         await addMember(org, email.slice(0, 12), role);
       }
@@ -175,8 +214,12 @@ describe.skipIf(!url)('authentication and organisation access', () => {
       expect((await call(s, { method: 'PATCH', url: '/v1/org', org, payload: { name: 'x' } })).statusCode).toBe(403);
       expect((await call(s, { url: '/v1/members', org })).json(MembersSchema).members).toHaveLength(4);
       const ok = await call(a, { method: 'PATCH', url: '/v1/org', org, payload: { name: 'Renamed' } });
-      expect(ok.statusCode).toBe(200); expect(ok.json(NameBody).name).toBe('Renamed');
-      const log = await pool.query<{ action: string; data: unknown }>(`SELECT action, data FROM audit_log WHERE org_id = $1 AND action = 'org.update'`, [org]);
+      expect(ok.statusCode).toBe(200);
+      expect(ok.json(NameBody).name).toBe('Renamed');
+      const log = await pool.query<{ action: string; data: unknown }>(
+        `SELECT action, data FROM audit_log WHERE org_id = $1 AND action = 'org.update'`,
+        [org],
+      );
       expect(log.rows).toEqual([{ action: 'org.update', data: { name: 'Renamed' } }]);
     });
   });

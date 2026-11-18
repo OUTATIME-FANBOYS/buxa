@@ -5,13 +5,22 @@ const ok = { DATABASE_URL: 'postgres://x/y', NEXT_PUBLIC_SUPABASE_URL: 'https://
 
 describe('server config', () => {
   it('applies defaults and reads the shared public Supabase values', () => {
-    expect(loadConfig(ok)).toEqual({ env: 'development', databaseUrl: 'postgres://x/y', supabaseUrl: 'https://a.supabase.co', supabasePublishableKey: undefined, dbPoolMax: 10, logLevel: 'info' });
+    expect(loadConfig(ok)).toEqual({
+      env: 'development',
+      databaseUrl: 'postgres://x/y',
+      supabaseUrl: 'https://a.supabase.co',
+      supabasePublishableKey: undefined,
+      dbPoolMax: 10,
+      logLevel: 'info',
+    });
   });
   it('requires DATABASE_URL, with a message that says where to look', () => {
     expect(() => loadConfig({})).toThrow(/DATABASE_URL: is required \(see apps\/web\/\.env\.example\)/);
   });
   it('requires the Supabase address in production only', () => {
-    expect(() => loadConfig({ DATABASE_URL: 'postgres://x/y', NODE_ENV: 'production' })).toThrow(/NEXT_PUBLIC_SUPABASE_URL: is required/);
+    expect(() => loadConfig({ DATABASE_URL: 'postgres://x/y', NODE_ENV: 'production' })).toThrow(
+      /NEXT_PUBLIC_SUPABASE_URL: is required/,
+    );
     expect(loadConfig({ DATABASE_URL: 'postgres://x/y', NODE_ENV: 'test' }).supabaseUrl).toBeUndefined();
   });
   it('lists every problem and never echoes a secret', () => {
@@ -21,7 +30,9 @@ describe('server config', () => {
     } catch (e) {
       message = (e as Error).message;
     }
-    expect(message).toMatch(/DB_POOL_MAX/); expect(message).toMatch(/DATABASE_URL/); expect(message).not.toContain('hunter2');
+    expect(message).toMatch(/DB_POOL_MAX/);
+    expect(message).toMatch(/DATABASE_URL/);
+    expect(message).not.toContain('hunter2');
   });
   it('bounds the pool size and the log level', () => {
     expect(loadConfig({ ...ok, DB_POOL_MAX: '5' }).dbPoolMax).toBe(5);

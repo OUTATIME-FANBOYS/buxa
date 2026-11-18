@@ -5,11 +5,23 @@ import type { PersonCard } from '@buxa/shared';
 import { ResultPanel } from '@/components/components/attendance/export';
 import { settle } from '@buxa/domain';
 
-vi.mock('@buxa/server/composers/attendance/checkIn', () => ({ checkInAction: () => settle(() => ({ kind: 'ok', value: { ok: false, reason: 'archived' } })) }));
+vi.mock('@buxa/server/composers/attendance/checkIn', () => ({
+  checkInAction: () => settle(() => ({ kind: 'ok', value: { ok: false, reason: 'archived' } })),
+}));
 
-const card = { person: { id: 'p-1', givenName: 'Ada', familyName: 'Lee', preferredName: null, status: 'valid', roles: [] }, onSiteSince: null } as unknown as PersonCard;
-const props = { timeZone: 'Europe/London', clockFormat: '24h' as const, canOverride: false, onCheckIn: () => undefined, onClear: () => undefined };
-const render = (state: CheckInState, extra: Partial<typeof props> = {}) => renderToStaticMarkup(<ResultPanel state={state} {...props} {...extra} />);
+const card = {
+  person: { id: 'p-1', givenName: 'Ada', familyName: 'Lee', preferredName: null, status: 'valid', roles: [] },
+  onSiteSince: null,
+} as unknown as PersonCard;
+const props = {
+  timeZone: 'Europe/London',
+  clockFormat: '24h' as const,
+  canOverride: false,
+  onCheckIn: () => undefined,
+  onClear: () => undefined,
+};
+const render = (state: CheckInState, extra: Partial<typeof props> = {}) =>
+  renderToStaticMarkup(<ResultPanel state={state} {...props} {...extra} />);
 
 describe('ResultPanel', () => {
   it('waits for the next person when idle', () => {
@@ -29,11 +41,21 @@ describe('ResultPanel', () => {
     expect(render({ phase: 'submitting', card, method: 'qr' })).toContain('Checking in…');
   });
   it('shows a refusal with a way to clear for the next person', () => {
-    const html = render({ phase: 'refused', card, method: 'qr', refusal: { reason: 'archived' } } as unknown as CheckInState);
+    const html = render({
+      phase: 'refused',
+      card,
+      method: 'qr',
+      refusal: { reason: 'archived' },
+    } as unknown as CheckInState);
     expect(html).toContain('Clear and scan the next person');
   });
   it('confirms a check-in and says whether an override is on record', () => {
-    const state = { phase: 'done', card, entry: { checkedInAt: '2027-07-03T09:00:00.000Z' }, overridden: true } as unknown as CheckInState;
+    const state = {
+      phase: 'done',
+      card,
+      entry: { checkedInAt: '2027-07-03T09:00:00.000Z' },
+      overridden: true,
+    } as unknown as CheckInState;
     const html = render(state);
     expect(html).toContain('Ada Lee checked in');
     expect(html).toContain('with an override on record');

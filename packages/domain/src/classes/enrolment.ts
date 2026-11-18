@@ -37,7 +37,11 @@ export interface EnrolmentOptions {
 }
 
 export type EnrolmentDecision =
-  | { kind: 'allow'; status: 'enrolled' | 'waitlisted'; overrode: { reason: string; clash: ActiveEnrolmentFacts } | null }
+  | {
+      kind: 'allow';
+      status: 'enrolled' | 'waitlisted';
+      overrode: { reason: string; clash: ActiveEnrolmentFacts } | null;
+    }
   | { kind: 'refuse'; reason: 'age_unknown' }
   | { kind: 'refuse'; reason: 'age_out_of_range'; age: number; range: AgeRange }
   | { kind: 'refuse'; reason: 'overlap'; clash: ActiveEnrolmentFacts }

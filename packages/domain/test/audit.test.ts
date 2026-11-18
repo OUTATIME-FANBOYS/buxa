@@ -14,9 +14,13 @@ describe('audit action names', () => {
   });
 
   it.each<AuditAction>([
-    'class.create', 'class.update',
-    'session.create', 'session.update',
-    'enrolment.create', 'enrolment.override', 'enrolment.cancel',
+    'class.create',
+    'class.update',
+    'session.create',
+    'session.update',
+    'enrolment.create',
+    'enrolment.override',
+    'enrolment.cancel',
     'import.upload',
   ])('includes %s, the phase 2 write', action => {
     expect(AUDIT_ACTIONS).toContain(action);

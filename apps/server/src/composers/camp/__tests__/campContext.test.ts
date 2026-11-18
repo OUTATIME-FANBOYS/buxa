@@ -2,9 +2,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Membership } from '@buxa/contracts';
 import { settle } from '@buxa/domain';
 
-const notFound = vi.hoisted(() => vi.fn(() => {
-  throw new Error('NEXT_NOT_FOUND');
-}));
+const notFound = vi.hoisted(() =>
+  vi.fn(() => {
+    throw new Error('NEXT_NOT_FOUND');
+  }),
+);
 const session = vi.hoisted(() => ({ camp: null as Membership | null }));
 
 vi.mock('next/navigation', () => ({ notFound }));
@@ -19,7 +21,8 @@ const { campContext, findCampContext } = await import('../campContext');
 const camp: Membership = { orgId: 'o1', role: 'staff', name: 'Sunrise', slug: 'sunrise' };
 
 beforeEach(() => {
-  vi.clearAllMocks(); session.camp = camp;
+  vi.clearAllMocks();
+  session.camp = camp;
 });
 
 describe('findCampContext', () => {

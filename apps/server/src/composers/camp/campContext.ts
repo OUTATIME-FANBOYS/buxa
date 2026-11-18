@@ -4,7 +4,11 @@ import { getCurrentCamp, requireSession, toActor } from '../../session';
 import type { Session } from '../../auth/session';
 import type { Actor } from '@buxa/domain';
 
-export interface CampContext { session: Session; camp: Membership; actor: Actor }
+export interface CampContext {
+  session: Session;
+  camp: Membership;
+  actor: Actor;
+}
 
 /**
  * Who is asking, and which camp they are working in. Null when no camp is selected, for callers that answer in their own way

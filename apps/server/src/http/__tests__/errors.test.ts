@@ -16,9 +16,15 @@ describe('errors survive being loaded twice', () => {
   });
 
   it('the domain errors are recognised across copies too', async () => {
-    const a = { users: await import('@buxa/server/users/UserRepository'), orgs: await import('@buxa/server/orgs/OrgRepository') };
+    const a = {
+      users: await import('@buxa/server/users/UserRepository'),
+      orgs: await import('@buxa/server/orgs/OrgRepository'),
+    };
     vi.resetModules();
-    const b = { users: await import('@buxa/server/users/UserRepository'), orgs: await import('@buxa/server/orgs/OrgRepository') };
+    const b = {
+      users: await import('@buxa/server/users/UserRepository'),
+      orgs: await import('@buxa/server/orgs/OrgRepository'),
+    };
     expect(b.users.isEmailInUse(new a.users.EmailInUseError())).toBe(true);
     expect(b.orgs.isSlugTaken(new a.orgs.SlugTakenError())).toBe(true);
     expect(b.orgs.isSlugTaken(new a.users.EmailInUseError())).toBe(false);

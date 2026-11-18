@@ -27,8 +27,12 @@ export async function loadCampHome(): Promise<CampHome> {
   const canAttendance = authorize(actor, 'attendance:read').allow;
   const canEvents = authorize(actor, 'events:read').allow;
 
-  const people: Promise<PersonSummary[] | null> = authorize(actor, 'people:read').allow ? services.people.list(actor) : Promise.resolve(null);
-  const onSite: Promise<OnSiteEntry[] | null> = canAttendance ? services.attendance.onSite(actor) : Promise.resolve(null);
+  const people: Promise<PersonSummary[] | null> = authorize(actor, 'people:read').allow
+    ? services.people.list(actor)
+    : Promise.resolve(null);
+  const onSite: Promise<OnSiteEntry[] | null> = canAttendance
+    ? services.attendance.onSite(actor)
+    : Promise.resolve(null);
   // One read covers the whole chart window. Each visit is bucketed by the camp-local day it happened on.
   const visits = canAttendance
     ? services.attendance.log(actor, { from: daysBefore(today, CHART_DAYS - 1), to: today })
@@ -37,9 +41,14 @@ export async function loadCampHome(): Promise<CampHome> {
 
   const [list, onSiteEntries, visitEntries, sessions] = await Promise.all([people, onSite, visits, upcoming]);
   // The minor flag is contact-level: only roles that may read contact details get the split. Everyone else gets the totals alone.
-  const minors = visitEntries && can(actor, 'people:read_contact')
-    ? await minorsAmong(actor.orgId, visitEntries.map(v => v.personId), today)
-    : null;
+  const minors =
+    visitEntries && can(actor, 'people:read_contact')
+      ? await minorsAmong(
+          actor.orgId,
+          visitEntries.map(v => v.personId),
+          today,
+        )
+      : null;
   const checkInsByDay = visitEntries
     ? checkInsPerDay(visitEntries, today, org.timezone, visitEntries.length < MAX_LOG_ROWS, minors)
     : null;
@@ -82,7 +91,10 @@ async function minorsAmong(orgId: string, personIds: readonly string[], today: L
  * or null when the viewer may not see the minor flag (then every day's `minors` is null).
  */
 export function checkInsPerDay(
-  visits: readonly { personId: string; checkedInAt: string }[], today: LocalDate, timeZone: string, complete: boolean,
+  visits: readonly { personId: string; checkedInAt: string }[],
+  today: LocalDate,
+  timeZone: string,
+  complete: boolean,
   minorIds: ReadonlySet<string> | null,
 ): CheckInsByDay {
   const byDay = new Map<LocalDate, Set<string>>();
@@ -142,13 +154,16 @@ async function upcomingSessions(actor: Actor): Promise<UpcomingSession[]> {
     return [];
   }
   const now = Date.now();
-  const perClass = await Promise.all(listed.value.map(async cls => {
-    const sessions = await classes.listSessions(actor, cls.id);
+  const perClass = await Promise.all(
+    listed.value.map(async cls => {
+      const sessions = await classes.listSessions(actor, cls.id);
 
-    return sessions.ok ? sessions.value : [];
-  }));
+      return sessions.ok ? sessions.value : [];
+    }),
+  );
 
-  return perClass.flat()
+  return perClass
+    .flat()
     .filter((s: Session) => Date.parse(s.startsAt) >= now)
     .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt))
     .slice(0, UPCOMING_LIMIT)

@@ -28,7 +28,8 @@ describe('useCheckOut', () => {
     act(() => root.render(<Probe />));
   });
   afterEach(() => {
-    act(() => root.unmount()); document.body.innerHTML = '';
+    act(() => root.unmount());
+    document.body.innerHTML = '';
   });
 
   it('starts closed and opens its panel on request', () => {

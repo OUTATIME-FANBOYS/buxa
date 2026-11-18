@@ -7,7 +7,9 @@ import { Inbox } from '@/components/components/kanban/agents/export';
 
 const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
-vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ openTask: () => undefined }) }));
+vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({
+  useTaskDrawer: () => ({ openTask: () => undefined }),
+}));
 
 describe('Inbox', () => {
   beforeEach(() => {
@@ -16,7 +18,11 @@ describe('Inbox', () => {
   });
 
   it('says nothing is waiting when no proposal needs a decision', () => {
-    const html = renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}><Inbox proposals={[]} /></UiProvider>);
+    const html = renderToStaticMarkup(
+      <UiProvider Dialog={ConfirmDialog}>
+        <Inbox proposals={[]} />
+      </UiProvider>,
+    );
     expect(html).toContain('Nothing waiting for you');
   });
 });

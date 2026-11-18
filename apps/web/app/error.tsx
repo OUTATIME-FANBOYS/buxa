@@ -7,11 +7,15 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
   console.error(error);
 
   return (
-    <main className="auth"><div className="auth-card">
-      <h1>Something went wrong</h1>
-      <p className="muted">Reloading usually fixes this. If it keeps happening, tell us what you were doing.</p>
-      {error.digest && <p className="muted small">Reference: {error.digest}</p>}
-      <Button variant="primary" onClick={reset}>Try again</Button>
-    </div></main>
+    <main className="auth">
+      <div className="auth-card">
+        <h1>Something went wrong</h1>
+        <p className="muted">Reloading usually fixes this. If it keeps happening, tell us what you were doing.</p>
+        {error.digest && <p className="muted small">Reference: {error.digest}</p>}
+        <Button variant="primary" onClick={reset}>
+          Try again
+        </Button>
+      </div>
+    </main>
   );
 }

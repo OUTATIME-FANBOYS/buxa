@@ -32,7 +32,14 @@ export function chartTotals(days: readonly DayCount[]): { total: number; busiest
 export const showAxisLabel = (index: number, count: number): boolean =>
   index === count - 1 || index % (count > 14 ? 3 : 1) === 0;
 
-export interface DonutSegment { key: keyof MembershipStatusCounts; label: string; count: number; percent: number; dash: number; offset: number }
+export interface DonutSegment {
+  key: keyof MembershipStatusCounts;
+  label: string;
+  count: number;
+  percent: number;
+  dash: number;
+  offset: number;
+}
 
 /** The donut's segments in a fixed order, skipping empty ones. `length` is the ring's circumference; dash and offset are in the same units. */
 export function donutSegments(counts: MembershipStatusCounts, length: number): DonutSegment[] {

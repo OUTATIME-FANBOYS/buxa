@@ -5,7 +5,9 @@ export function Icon({ name, size = 16, className }: { name: string; size?: numb
   const Glyph = ICONS[name];
 
   if (!Glyph) {
-    return <svg className={className} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false" />;
+    return (
+      <svg className={className} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false" />
+    );
   }
 
   return <Glyph className={className} size={size} strokeWidth={1.75} aria-hidden="true" focusable="false" />;

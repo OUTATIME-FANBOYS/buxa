@@ -19,7 +19,12 @@ const MAX_LOCATION = 200;
 const MAX_KEY = 100;
 const MAX_INSTRUCTORS = 50;
 
-export interface ClassRef { id: string; name: string; ageRange: AgeRange; capacity: number }
+export interface ClassRef {
+  id: string;
+  name: string;
+  ageRange: AgeRange;
+  capacity: number;
+}
 
 /** A session already in the camp, with its times as ISO instants (any offset). */
 export interface ExistingSession {
@@ -34,10 +39,18 @@ export interface ExistingSession {
   externalKey: string | null;
 }
 
-export interface PlanInput { rows: ImportRow[]; classes: ClassRef[]; sessions: ExistingSession[]; timeZone: string }
+export interface PlanInput {
+  rows: ImportRow[];
+  classes: ClassRef[];
+  sessions: ExistingSession[];
+  timeZone: string;
+}
 
 export type RowStatus = 'create' | 'update' | 'refused';
-export interface RowProblem { field: ImportColumn; message: string }
+export interface RowProblem {
+  field: ImportColumn;
+  message: string;
+}
 
 export interface RowResult {
   rowNumber: number;
@@ -80,8 +93,14 @@ const problem = (field: ImportColumn, message: string): RowProblem => ({ field, 
 interface Checked {
   problems: RowProblem[];
   parsed: null | {
-    cls: ClassRef; startsAt: string; endsAt: string; location: string; capacity: number; key: string | null;
-    instructorNames: string[]; ratio: { instructors: number; campers: number } | null;
+    cls: ClassRef;
+    startsAt: string;
+    endsAt: string;
+    location: string;
+    capacity: number;
+    key: string | null;
+    instructorNames: string[];
+    ratio: { instructors: number; campers: number } | null;
   };
 }
 
@@ -96,9 +115,16 @@ function checkFields(row: ImportRow, classes: ClassRef[], timeZone: string): Che
   } else {
     const matches = classes.filter(x => sameText(x.name, c.class_name));
     if (matches.length === 0) {
-      problems.push(problem('class_name', `There is no class called "${c.class_name}". Create the class first: an import does not create classes.`));
+      problems.push(
+        problem(
+          'class_name',
+          `There is no class called "${c.class_name}". Create the class first: an import does not create classes.`,
+        ),
+      );
     } else if (matches.length > 1) {
-      problems.push(problem('class_name', `More than one class is called "${c.class_name}". Rename one of them first.`));
+      problems.push(
+        problem('class_name', `More than one class is called "${c.class_name}". Rename one of them first.`),
+      );
     } else {
       cls = matches[0];
     }
@@ -133,9 +159,16 @@ function checkFields(row: ImportRow, classes: ClassRef[], timeZone: string): Che
   if (minAge !== null && maxAge !== null) {
     if (!isValidAgeRange({ minAge, maxAge })) {
       const outOfBounds = minAge > MAX_AGE_LIMIT || maxAge > MAX_AGE_LIMIT;
-      problems.push(problem('age_max', outOfBounds ? `Ages must be between 0 and ${MAX_AGE_LIMIT}.` : 'The youngest age cannot be above the oldest.'));
+      problems.push(
+        problem(
+          'age_max',
+          outOfBounds ? `Ages must be between 0 and ${MAX_AGE_LIMIT}.` : 'The youngest age cannot be above the oldest.',
+        ),
+      );
     } else if (cls && (cls.ageRange.minAge !== minAge || cls.ageRange.maxAge !== maxAge)) {
-      problems.push(problem('age_min', `${cls.name} is for ages ${cls.ageRange.minAge} to ${cls.ageRange.maxAge}. Use those ages.`));
+      problems.push(
+        problem('age_min', `${cls.name} is for ages ${cls.ageRange.minAge} to ${cls.ageRange.maxAge}. Use those ages.`),
+      );
     }
   }
 
@@ -146,7 +179,9 @@ function checkFields(row: ImportRow, classes: ClassRef[], timeZone: string): Che
 
   const instructorNames = c.instructor_names === '' ? [] : c.instructor_names.split(';').map(n => n.trim());
   if (instructorNames.some(n => n === '')) {
-    problems.push(problem('instructor_names', 'Each instructor needs a name between the semicolons. Remove the empty one.'));
+    problems.push(
+      problem('instructor_names', 'Each instructor needs a name between the semicolons. Remove the empty one.'),
+    );
   }
 
   let ratio: { instructors: number; campers: number } | null = null;
@@ -182,13 +217,26 @@ function checkFields(row: ImportRow, classes: ClassRef[], timeZone: string): Che
   return {
     problems,
     parsed: {
-      cls, startsAt: start.instant, endsAt: end.instant, location: c.location, capacity,
-      key: c.external_key === '' ? null : c.external_key, instructorNames, ratio,
+      cls,
+      startsAt: start.instant,
+      endsAt: end.instant,
+      location: c.location,
+      capacity,
+      key: c.external_key === '' ? null : c.external_key,
+      instructorNames,
+      ratio,
     },
   };
 }
 
-interface Accepted { rowNumber: number; classId: string; className: string; location: string; startsAt: string; endsAt: string }
+interface Accepted {
+  rowNumber: number;
+  classId: string;
+  className: string;
+  location: string;
+  startsAt: string;
+  endsAt: string;
+}
 
 export function planImport({ rows, classes, sessions, timeZone }: PlanInput): ImportPlan {
   const results: RowResult[] = [];
@@ -200,20 +248,29 @@ export function planImport({ rows, classes, sessions, timeZone }: PlanInput): Im
 
   const refuse = (row: ImportRow, problems: RowProblem[]): void => {
     results.push({
-      rowNumber: row.rowNumber, status: 'refused', externalKey: row.cells.external_key === '' ? null : row.cells.external_key,
-      className: row.cells.class_name, startsAt: row.cells.starts_at, endsAt: row.cells.ends_at, location: row.cells.location, problems,
+      rowNumber: row.rowNumber,
+      status: 'refused',
+      externalKey: row.cells.external_key === '' ? null : row.cells.external_key,
+      className: row.cells.class_name,
+      startsAt: row.cells.starts_at,
+      endsAt: row.cells.ends_at,
+      location: row.cells.location,
+      problems,
     });
   };
 
   for (const row of rows) {
     const { problems, parsed } = checkFields(row, classes, timeZone);
     if (!parsed) {
-      refuse(row, problems); continue;
+      refuse(row, problems);
+      continue;
     }
     const { cls, startsAt, endsAt, location, capacity, key, instructorNames, ratio } = parsed;
 
     if (key !== null && keyRows.has(key)) {
-      refuse(row, [problem('external_key', `External key "${key}" is also on row ${keyRows.get(key)}. Use each key once.`)]);
+      refuse(row, [
+        problem('external_key', `External key "${key}" is also on row ${keyRows.get(key)}. Use each key once.`),
+      ]);
       continue;
     }
     const target = key === null ? undefined : sessions.find(s => s.externalKey === key);
@@ -223,39 +280,63 @@ export function planImport({ rows, classes, sessions, timeZone }: PlanInput): Im
     const fileProblem = ((): RowProblem | null => {
       if (!target) {
         const same = (s: { classId: string; startsAt: string; endsAt: string; location: string }): boolean =>
-          s.classId === cls.id && Date.parse(s.startsAt) === Date.parse(startsAt) && Date.parse(s.endsAt) === Date.parse(endsAt)
-          && sameText(s.location, location);
+          s.classId === cls.id &&
+          Date.parse(s.startsAt) === Date.parse(startsAt) &&
+          Date.parse(s.endsAt) === Date.parse(endsAt) &&
+          sameText(s.location, location);
         const existing = others.find(same);
         if (existing) {
-          return problem('starts_at', `This session is already in the camp (${existing.className}, ${formatClash(existing, timeZone)}). Nothing to add.`);
+          return problem(
+            'starts_at',
+            `This session is already in the camp (${existing.className}, ${formatClash(existing, timeZone)}). Nothing to add.`,
+          );
         }
         const earlier = accepted.find(same);
         if (earlier) {
           return problem('starts_at', `The same session is on row ${earlier.rowNumber} of this file.`);
         }
       } else if (target.seatsTaken > capacity) {
-        return problem('capacity', `${target.seatsTaken} campers are enrolled in this session, so the capacity cannot go below that.`);
+        return problem(
+          'capacity',
+          `${target.seatsTaken} campers are enrolled in this session, so the capacity cannot go below that.`,
+        );
       }
       const clashing = findClash(span, others);
       if (clashing) {
-        return problem('starts_at', `Clashes with ${clashing.className}, ${formatClash(clashing, timeZone)}, which is already in the camp. Choose other times, or change that session.`);
+        return problem(
+          'starts_at',
+          `Clashes with ${clashing.className}, ${formatClash(clashing, timeZone)}, which is already in the camp. Choose other times, or change that session.`,
+        );
       }
       const clashRow = findClash(span, accepted);
       if (clashRow) {
-        return problem('starts_at', `Clashes with row ${clashRow.rowNumber} of this file (${clashRow.className}, ${formatClash(clashRow, timeZone)}).`);
+        return problem(
+          'starts_at',
+          `Clashes with row ${clashRow.rowNumber} of this file (${clashRow.className}, ${formatClash(clashRow, timeZone)}).`,
+        );
       }
 
       return null;
     })();
 
     if (fileProblem) {
-      refuse(row, [fileProblem]); continue;
+      refuse(row, [fileProblem]);
+      continue;
     }
 
     const status: RowStatus = target ? 'update' : 'create';
     writes.push({
-      rowNumber: row.rowNumber, kind: status === 'update' ? 'update' : 'create', sessionId: target?.id ?? null, classId: cls.id,
-      startsAt, endsAt, location, capacity, externalKey: key, instructorNames, ratio,
+      rowNumber: row.rowNumber,
+      kind: status === 'update' ? 'update' : 'create',
+      sessionId: target?.id ?? null,
+      classId: cls.id,
+      startsAt,
+      endsAt,
+      location,
+      capacity,
+      externalKey: key,
+      instructorNames,
+      ratio,
     });
     accepted.push({ rowNumber: row.rowNumber, classId: cls.id, className: cls.name, location, startsAt, endsAt });
     if (target) {
@@ -265,8 +346,14 @@ export function planImport({ rows, classes, sessions, timeZone }: PlanInput): Im
       keyRows.set(key, row.rowNumber);
     }
     results.push({
-      rowNumber: row.rowNumber, status, externalKey: key, className: cls.name, startsAt: row.cells.starts_at,
-      endsAt: row.cells.ends_at, location, problems: [],
+      rowNumber: row.rowNumber,
+      status,
+      externalKey: key,
+      className: cls.name,
+      startsAt: row.cells.starts_at,
+      endsAt: row.cells.ends_at,
+      location,
+      problems: [],
     });
   }
 

@@ -11,7 +11,19 @@ import { TaskDrawerProvider } from './TaskDrawerContext';
  * The task store and drawer for every work page, acting as the signed-in person. The state lives in localStorage.
  * `drawer` is the task drawer; the screens layer passes it in so providers do not depend on components.
  */
-export function WorkProviders({ user, campRole = null, archived = false, children, drawer }: { user: SessionIdentity; campRole?: Role | null; archived?: boolean; children: ReactNode; drawer?: ReactNode }) {
+export function WorkProviders({
+  user,
+  campRole = null,
+  archived = false,
+  children,
+  drawer,
+}: {
+  user: SessionIdentity;
+  campRole?: Role | null;
+  archived?: boolean;
+  children: ReactNode;
+  drawer?: ReactNode;
+}) {
   return (
     <StoreProvider campRole={campRole} archived={archived}>
       <TaskDrawerProvider>
