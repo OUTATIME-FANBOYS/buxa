@@ -42,5 +42,16 @@ Tests sit in `__tests__/` folders beside the code (`src/__tests__/`, `src/kanban
 
 ## Diagrams
 
-- [Folders and main imports](docs/diagrams/shared-structure.html)
-- [From the saved state to the kanban view](docs/diagrams/shared-state-derivation.html)
+Each preview links to the interactive diagram, which you can explore in the browser. The standalone HTML files are in `docs/diagrams/` if you want to download them.
+
+### Folders and main imports
+
+[![Folders and main imports, preview](docs/diagrams/shared-structure.png)](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/apps/shared/docs/diagrams/shared-structure.html)
+
+[Open the interactive diagram](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/apps/shared/docs/diagrams/shared-structure.html)
+
+### From the saved state to the kanban view
+
+[![From the saved state to the kanban view, preview](docs/diagrams/shared-state-derivation.png)](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/apps/shared/docs/diagrams/shared-state-derivation.html)
+
+[Open the interactive diagram](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/apps/shared/docs/diagrams/shared-state-derivation.html)
