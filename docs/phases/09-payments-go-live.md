@@ -46,7 +46,7 @@ This part is the gate. Real data is stored only after every item below is done. 
 - [ ] Automated backups with a tested restore.
 - [ ] Separate production Supabase project and Vercel environment; previews never connect to it.
 - [ ] Error and security monitoring with alerts.
-- [ ] Every finding of the 2026 audit (`docs/audit/2026-security-and-code-audit.md`) marked fixed or accepted with a reason.
+- [ ] Every finding of the 2026 audit (`docs/audits/Security-and-Code-Audit-2026.md`) marked fixed or accepted with a reason.
 - [ ] Secrets review: no keys in the repository or build logs; a rotation plan.
 - [ ] External penetration test, with findings fixed.
 

@@ -9,32 +9,34 @@
 
 This is a snapshot. The findings, line numbers and test counts below describe `a9dc389`. The status table shows what changed on `develop` after that, checked by reading the code on the `v0.1.1` docs branch. Re-check a row before relying on it.
 
-## Status on develop
+## Status on Phase2 (checked 2026-11-18)
 
-| ID   | Status    | Where it stands now                                                                                                                                                                                  |
-| ---- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S-01 | Fixed     | The check-out update has `AND checked_out_at IS NULL` (`apps/web/server/attendance/PgCheckInWrites.ts`).                                                                                             |
-| S-02 | Fixed     | Viewers no longer hold `attendance:read` (`packages/domain/src/permissions.ts`).                                                                                                                     |
-| S-03 | Fixed     | Custody fields (memberships, pickup flags, badge status) are shown only with `people:read_contact` (`createPeopleService.ts`).                                                                       |
-| S-04 | Open      | `people:authorise_pickup` exists in the matrix, but `linkToHousehold` in `createPeopleService.ts` does not check it.                                                                                 |
-| S-05 | Fixed     | Pages and the sign-in action check the start-up decision (`isServiceRefused`, `/maintenance`).                                                                                                       |
-| S-06 | Partly    | Request handling runs as `buxa_app`, and the privileged paths are `SECURITY DEFINER` functions (migration `0009`). The separate runtime login is an operator step in `docs/deploy.md`, not yet done. |
-| S-07 | Fixed     | Rate limits on camp creation, badge scans and `/ready`, kept in Postgres (migration `0010`).                                                                                                         |
-| S-08 | Fixed     | `listMembers` returns email only to actors with `members:read_contact` (`apps/web/server/services/orgs.ts`).                                                                                         |
-| S-09 | Open      | The conflict message in `apps/web/server/users/UserRepository.ts` is unchanged.                                                                                                                      |
-| S-10 | Fixed     | "Already registered" gets the same message as a new sign-up (`apps/web/features/auth/lib/messages.ts`).                                                                                              |
-| S-11 | Fixed     | `readBody` counts bytes as they arrive (`apps/web/server/http/parse.ts`).                                                                                                                            |
-| S-12 | Fixed     | Email and phone shapes are checked in `packages/contracts` (`contact.ts`).                                                                                                                           |
-| S-13 | Fixed     | A failed rollback releases the connection with an error, so it is destroyed (`packages/db/src/tenant.ts`).                                                                                           |
-| S-14 | Partly    | A non-loopback host is refused unless `BUXA_ALLOW_REMOTE_HOST=yes`, and `/api` needs a run secret (`X-Buxa-Run-Secret`). Dev server only.                                                            |
-| S-15 | Fixed     | A unique violation on reissue becomes `BadgeConflictError` (`PgCredentialRepository.ts`).                                                                                                            |
-| S-16 | Open      | `OrgNotFoundError` is still not translated to a 404.                                                                                                                                                 |
-| S-17 | Fixed     | `next.config.ts` sets `nosniff` on static files and the icon.                                                                                                                                        |
-| S-18 | Fixed     | The demo sign-in form and its password are no longer in the auth code.                                                                                                                               |
-| S-19 | Unchanged | No role-management routes exist yet.                                                                                                                                                                 |
-| S-20 | Unchanged | Logging is as described in the body.                                                                                                                                                                 |
-| S-21 | Unchanged | The CSV export is still a GET.                                                                                                                                                                       |
-| Deps | Open      | `vitest` is `^2.1.9` on `develop`; the section 3 upgrade has not been applied.                                                                                                                       |
+The table below is the current status, checked against the `Phase2` branch. Each row says whether it was re-checked in the code or carried over from the `develop` status, and rows marked "Fixed on develop" have not been re-checked. The findings body below is the dated record of `a9dc389` and is unchanged.
+
+| ID   | Status           | Where it stands now                                                                                                                                                                   |
+| ---- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S-01 | Fixed            | Check-out update is conditional on `checked_out_at IS NULL` (`apps/server/src/attendance/PgCheckInWrites.ts`). Re-checked.                                                            |
+| S-02 | Fixed            | Viewers do not hold `attendance:read` (`packages/domain/src/permissions.ts`). Re-checked.                                                                                             |
+| S-03 | Fixed            | Custody fields are gated on `people:read_contact` in the people and attendance services. Checked by search.                                                                           |
+| S-04 | Fixed            | `linkToHousehold` checks `people:authorise_pickup` before linking (`apps/server/src/services/people/createPeopleService.ts`, line 278). Re-checked.                                   |
+| S-05 | Fixed            | Startup decision enforced in the session and availability code (`apps/server/src/session/index.ts`, `apps/server/src/availability.ts`). Checked by search.                            |
+| S-06 | Partly           | Request handling runs as `buxa_app` and privileged paths are `SECURITY DEFINER` functions (migration 0009). The separate runtime login is still an operator step in `docs/deploy.md`. |
+| S-07 | Fixed            | Rate limits kept in Postgres (`apps/server/src/rateLimit/limiter.ts`, migration 0010). Checked by search.                                                                             |
+| S-08 | Fixed on develop | Email is returned only to `members:read_contact`. The file has moved; not re-checked on Phase2.                                                                                       |
+| S-09 | Open             | The conflict message is unchanged (`apps/server/src/users/UserRepository.ts`). Re-checked.                                                                                            |
+| S-10 | Fixed on develop | Same message for a new sign-up and an existing account. Not re-checked on Phase2.                                                                                                     |
+| S-11 | Fixed            | Body size is counted as bytes arrive (`apps/server/src/http/parse.ts`). Checked by search.                                                                                            |
+| S-12 | Fixed on develop | Email and phone shapes checked in `packages/contracts`. Not re-checked on Phase2.                                                                                                     |
+| S-13 | Fixed on develop | A failed rollback destroys the connection (`packages/db/src/tenant.ts`). Not re-checked on Phase2.                                                                                    |
+| S-14 | Partly           | A non-loopback host is refused unless `BUXA_ALLOW_REMOTE_HOST=yes`, and the run secret header is checked (`apps/server/src/agents/app.ts`). Dev server only. Re-checked.              |
+| S-15 | Fixed            | Unique violation on reissue becomes `BadgeConflictError` (`apps/server/src/credentials/PgCredentialRepository.ts`). Checked by search.                                                |
+| S-16 | Open             | `OrgNotFoundError` is defined (`apps/server/src/orgs/OrgRepository.ts`) but no 404 mapping was found for it. Partly re-checked.                                                       |
+| S-17 | Fixed            | `nosniff` set on static files and the icon (`apps/web/next.config.ts`). Checked by search.                                                                                            |
+| S-18 | Fixed on develop | Demo sign-in form and password removed from the auth code. Not re-checked on Phase2.                                                                                                  |
+| S-19 | Unchanged        | No role-management route exists (no change-role action or route in `apps/server` or `apps/web/app`). Re-checked.                                                                      |
+| S-20 | Unchanged        | Logging as described in the body. Not re-checked.                                                                                                                                     |
+| S-21 | Open             | The attendance export is still a GET (`apps/web/app/(app)/camp/(operations)/attendance/export/route.ts`). Re-checked.                                                                 |
+| Deps | Open             | `vitest` is `^2.1.9` in `package.json`; the section 3 upgrade has not been applied. Re-checked.                                                                                       |
 
 ## 1. Summary
 
