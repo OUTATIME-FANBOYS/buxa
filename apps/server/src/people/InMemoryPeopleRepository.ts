@@ -1,4 +1,4 @@
-import { matchesName, MAX_SEARCH_RESULTS, normalizeForSearch, type Actor, type CampRole } from '@buxa/domain';
+import { matchesName, MAX_SEARCH_RESULTS, normalizeForSearch, type Actor, type CampRole, settle } from '@buxa/domain';
 import { PersonNotFoundError, type HouseholdLinkRecord, type HouseholdRecord, type NewPersonRecord, type PeopleRepository, type PersonFilter, type PersonHouseholdLink, type PersonPatchRecord, type PersonRecord } from './PeopleRepository';
 import { compareText, newId, instant, type InMemoryDatabase, type StoredPerson } from './InMemoryDatabase';
 import { InMemoryHouseholds } from './InMemoryHouseholds';
@@ -61,95 +61,121 @@ export class InMemoryPeopleRepository implements PeopleRepository {
     this.households = new InMemoryHouseholds(db);
   }
 
-  async create(actor: Actor, input: NewPersonRecord, household?: PersonHouseholdLink): Promise<PersonRecord> {
-    const person: StoredPerson = {
-      id: newId(),
-      orgId: actor.orgId,
-      givenName: input.givenName,
-      familyName: input.familyName,
-      preferredName: input.preferredName,
-      dateOfBirth: input.dateOfBirth,
-      email: input.email,
-      phone: input.phone,
-      roles: sortRoles(input.roles),
-      archivedAt: null,
-      createdAt: new Date().toISOString(),
-    };
-    this.db.people.set(person.id, person);
-    this.db.record(actor, 'person.create', 'person', person.id);
-    if (household) {
-      const householdId = household.householdId !== undefined ? household.householdId : this.households.create(actor, household.newHouseholdName).id;
-      this.households.link(actor, { householdId, personId: person.id, relationship: household.relationship, isGuardian: household.isGuardian, canPickup: household.canPickup });
-    }
+  create(actor: Actor, input: NewPersonRecord, household?: PersonHouseholdLink): Promise<PersonRecord> {
+    return settle(() => {
+      const person: StoredPerson = {
+        id: newId(),
+        orgId: actor.orgId,
+        givenName: input.givenName,
+        familyName: input.familyName,
+        preferredName: input.preferredName,
+        dateOfBirth: input.dateOfBirth,
+        email: input.email,
+        phone: input.phone,
+        roles: sortRoles(input.roles),
+        archivedAt: null,
+        createdAt: new Date().toISOString(),
+      };
+      this.db.people.set(person.id, person);
+      this.db.record(actor, 'person.create', 'person', person.id);
+      if (household) {
+        const householdId = household.householdId !== undefined ? household.householdId : this.households.create(actor, household.newHouseholdName).id;
+        this.households.link(actor, { householdId, personId: person.id, relationship: household.relationship, isGuardian: household.isGuardian, canPickup: household.canPickup });
+      }
 
-    return toRecord(person);
+      return toRecord(person);
+    });
   }
 
-  async update(actor: Actor, id: string, patch: PersonPatchRecord): Promise<PersonRecord> {
-    const person = this.require(actor.orgId, id);
-    const fields = applyPatch(person, patch);
-    this.db.record(actor, 'person.update', 'person', id, { fields });
+  update(actor: Actor, id: string, patch: PersonPatchRecord): Promise<PersonRecord> {
+    return settle(() => {
+      const person = this.require(actor.orgId, id);
+      const fields = applyPatch(person, patch);
+      this.db.record(actor, 'person.update', 'person', id, { fields });
 
-    return toRecord(person);
+      return toRecord(person);
+    });
   }
 
-  async archive(actor: Actor, id: string, at: string): Promise<PersonRecord> {
-    const person = this.require(actor.orgId, id);
-    if (person.archivedAt === null) {
-      person.archivedAt = instant(at);
-      this.db.record(actor, 'person.archive', 'person', id);
-    }
+  archive(actor: Actor, id: string, at: string): Promise<PersonRecord> {
+    return settle(() => {
+      const person = this.require(actor.orgId, id);
+      if (person.archivedAt === null) {
+        person.archivedAt = instant(at);
+        this.db.record(actor, 'person.archive', 'person', id);
+      }
 
-    return toRecord(person);
+      return toRecord(person);
+    });
   }
 
-  async get(orgId: string, id: string): Promise<PersonRecord | null> {
-    const person = this.db.inOrg(this.db.people, orgId, id);
+  get(orgId: string, id: string): Promise<PersonRecord | null> {
+    return settle(() => {
+      const person = this.db.inOrg(this.db.people, orgId, id);
 
-    return person ? toRecord(person) : null;
+      return person ? toRecord(person) : null;
+    });
   }
 
-  async getMany(orgId: string, ids: readonly string[]): Promise<PersonRecord[]> {
-    return this.visible(orgId, p => ids.includes(p.id));
+  getMany(orgId: string, ids: readonly string[]): Promise<PersonRecord[]> {
+    return settle(() => {
+      return this.visible(orgId, p => ids.includes(p.id));
+    });
   }
 
-  async list(orgId: string, filter: PersonFilter): Promise<PersonRecord[]> {
-    return this.visible(orgId, p =>
-      (filter.includeArchived === true || p.archivedAt === null) && (filter.role === undefined || p.roles.includes(filter.role)));
+  list(orgId: string, filter: PersonFilter): Promise<PersonRecord[]> {
+    return settle(() => {
+      return this.visible(orgId, p =>
+        (filter.includeArchived === true || p.archivedAt === null) && (filter.role === undefined || p.roles.includes(filter.role)));
+    });
   }
 
-  async search(orgId: string, query: string, limit: number): Promise<PersonRecord[]> {
-    const max = Math.min(Math.max(0, Math.floor(limit)), MAX_SEARCH_RESULTS);
-    if (normalizeForSearch(query) === '' || max === 0) {
-      return [];
-    }
-    const found = this.visible(orgId, p => p.archivedAt === null && matchesName(p, query));
+  search(orgId: string, query: string, limit: number): Promise<PersonRecord[]> {
+    return settle(() => {
+      const max = Math.min(Math.max(0, Math.floor(limit)), MAX_SEARCH_RESULTS);
+      if (normalizeForSearch(query) === '' || max === 0) {
+        return [];
+      }
+      const found = this.visible(orgId, p => p.archivedAt === null && matchesName(p, query));
 
-    return found.slice(0, max);
+      return found.slice(0, max);
+    });
   }
 
-  async createHousehold(actor: Actor, name: string): Promise<HouseholdRecord> {
-    return this.households.create(actor, name);
+  createHousehold(actor: Actor, name: string): Promise<HouseholdRecord> {
+    return settle(() => {
+      return this.households.create(actor, name);
+    });
   }
 
-  async getHousehold(orgId: string, id: string): Promise<HouseholdRecord | null> {
-    return this.households.get(orgId, id);
+  getHousehold(orgId: string, id: string): Promise<HouseholdRecord | null> {
+    return settle(() => {
+      return this.households.get(orgId, id);
+    });
   }
 
-  async listHouseholds(orgId: string): Promise<HouseholdRecord[]> {
-    return this.households.list(orgId);
+  listHouseholds(orgId: string): Promise<HouseholdRecord[]> {
+    return settle(() => {
+      return this.households.list(orgId);
+    });
   }
 
-  async householdsOf(orgId: string, personId: string): Promise<HouseholdRecord[]> {
-    return this.households.householdsOf(orgId, personId);
+  householdsOf(orgId: string, personId: string): Promise<HouseholdRecord[]> {
+    return settle(() => {
+      return this.households.householdsOf(orgId, personId);
+    });
   }
 
-  async link(actor: Actor, link: HouseholdLinkRecord): Promise<HouseholdRecord> {
-    return this.households.link(actor, link);
+  link(actor: Actor, link: HouseholdLinkRecord): Promise<HouseholdRecord> {
+    return settle(() => {
+      return this.households.link(actor, link);
+    });
   }
 
-  async unlink(actor: Actor, householdId: string, personId: string): Promise<HouseholdRecord> {
-    return this.households.unlink(actor, householdId, personId);
+  unlink(actor: Actor, householdId: string, personId: string): Promise<HouseholdRecord> {
+    return settle(() => {
+      return this.households.unlink(actor, householdId, personId);
+    });
   }
 
   private require(orgId: string, id: string): StoredPerson {

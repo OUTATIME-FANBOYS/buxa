@@ -8,13 +8,14 @@ import { createImportService } from '../../../classes/import/ImportService';
 import { CAMP_TZ, ORG, as, painting, robotics } from '../../../classes/__tests__/fixtures';
 import { importClassesAction } from '../importClassesAction';
 import { IMPORT_IDLE, type ImportState } from '@buxa/shared';
+import { settle } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({
   actor: null as null | Actor,
   services: {},
 }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: h.services }) }));
-vi.mock('../../people/camp', () => ({ currentActor: async () => h.actor }));
+vi.mock('../../people/camp', () => ({ currentActor: () => settle(() => h.actor) }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 
 /** The real fixture: a Robotics pair that clashes within the file, an unknown class, an age mismatch, and two ready rows. */
@@ -49,8 +50,8 @@ beforeEach(async () => {
   await classes.createClass(as('admin'), painting);
   h.actor = as('admin');
   h.services = {
-    imports: createImportService({ classes, imports, timezoneOf: async () => CAMP_TZ }),
-    classes: createClassService({ repo: classes, timezoneOf: async () => CAMP_TZ }),
+    imports: createImportService({ classes, imports, timezoneOf: () => settle(() => CAMP_TZ) }),
+    classes: createClassService({ repo: classes, timezoneOf: () => settle(() => CAMP_TZ) }),
   };
 });
 

@@ -5,6 +5,7 @@ import { forbidden } from '../../../http/errors';
 import { addMembershipAction } from '../addMembershipAction';
 import { revokeMembershipAction } from '../revokeMembershipAction';
 import { formOf, IDS } from './form';
+import { settle } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({
   actor: null as null | { userId: string; orgId: string; role: 'owner' | 'admin' | 'staff' | 'viewer' },
@@ -13,7 +14,7 @@ const h = vi.hoisted(() => ({
 }));
 vi.mock('next/cache', () => ({ revalidatePath: h.revalidatePath }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: { memberships: h.memberships } }) }));
-vi.mock('../camp', () => ({ currentActor: async () => h.actor }));
+vi.mock('../camp', () => ({ currentActor: () => settle(() => h.actor) }));
 
 const season = { personId: IDS.person, plan: 'Summer 2027', startsOn: '2027-07-01', endsOn: '2027-08-20' };
 

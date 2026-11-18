@@ -2,8 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Actor } from '@buxa/domain';
 import { loadHouseholdList, loadPeople, loadPeopleOrForbidden, loadPersonMatches } from '../loadPersonPage';
 import { HttpError } from '../../../http/errors';
+import { settle } from '@buxa/domain';
 
-const svc = vi.hoisted(() => ({ people: { list: vi.fn(async () => ['people']), listHouseholds: vi.fn(async () => ['houses']) } }));
+const svc = vi.hoisted(() => ({ people: { list: vi.fn(() => settle(() => ['people'])), listHouseholds: vi.fn(() => settle(() => ['houses'])) } }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: svc }) }));
 
 const ACTOR = { userId: 'u-1' } as unknown as Actor;

@@ -2,32 +2,33 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Membership, PersonSummary, Session } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
 import { MAX_LOG_ROWS } from '../../../attendance/AttendanceRepository';
+import { settle } from '@buxa/domain';
 
 const notFound = vi.hoisted(() => vi.fn(() => {
   throw new Error('NEXT_NOT_FOUND');
 }));
 const session = vi.hoisted(() => ({ current: null as null | { user: { id: string; email: string; name: string }; memberships: Membership[] }, camp: null as Membership | null }));
 const services = vi.hoisted(() => ({
-  orgs: { getCamp: vi.fn(async () => ({ id: 'o1', name: 'Lake Camp', slug: 'lake', createdAt: '2026-03-04T10:00:00Z', memberCount: 3, timezone: 'UTC' })) },
-  people: { list: vi.fn(async (): Promise<PersonSummary[]> => []) },
+  orgs: { getCamp: vi.fn(() => settle(() => ({ id: 'o1', name: 'Lake Camp', slug: 'lake', createdAt: '2026-03-04T10:00:00Z', memberCount: 3, timezone: 'UTC' }))) },
+  people: { list: vi.fn((): Promise<PersonSummary[]> => settle(() => [])) },
   attendance: {
-    onSite: vi.fn(async (): Promise<{ personId: string; isMinor: boolean | null }[]> => []),
-    log: vi.fn<(actor: unknown, filter: { from: string; to: string }) => Promise<{ personId: string; checkedInAt: string }[]>>(async () => []),
+    onSite: vi.fn((): Promise<{ personId: string; isMinor: boolean | null }[]> => settle(() => [])),
+    log: vi.fn<(actor: unknown, filter: { from: string; to: string }) => Promise<{ personId: string; checkedInAt: string }[]>>(() => settle(() => [])),
   },
   classes: {
-    listClasses: vi.fn(async () => ({ ok: true as const, value: [] as { id: string }[] })),
-    listSessions: vi.fn<(actor: unknown, classId: string) => Promise<{ ok: true; value: Session[] }>>(async () => ({ ok: true, value: [] })),
+    listClasses: vi.fn(() => settle(() => ({ ok: true as const, value: [] as { id: string }[] }))),
+    listSessions: vi.fn<(actor: unknown, classId: string) => Promise<{ ok: true; value: Session[] }>>(() => settle(() => ({ ok: true, value: [] }))),
   },
 }));
 
 vi.mock('next/navigation', () => ({ notFound }));
 const repositories = vi.hoisted(() => ({
-  people: { getMany: vi.fn(async (): Promise<{ id: string; dateOfBirth: string | null; roles: string[] }[]> => []) },
+  people: { getMany: vi.fn((): Promise<{ id: string; dateOfBirth: string | null; roles: string[] }[]> => settle(() => [])) },
 }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services, repositories }) }));
 vi.mock('../../../session', () => ({
-  requireSession: async () => session.current,
-  getCurrentCamp: async () => session.camp,
+  requireSession: () => settle(() => session.current),
+  getCurrentCamp: () => settle(() => session.camp),
   toActor: (s: { user: { id: string } }, camp: Membership) => ({ userId: s.user.id, orgId: camp.orgId, role: camp.role }),
 }));
 
@@ -102,12 +103,12 @@ describe('loadCampHome', () => {
   it('lists the next sessions across classes, soonest first, and drops past ones', async () => {
     as('staff');
     services.classes.listClasses.mockResolvedValue({ ok: true, value: [{ id: 'k1' }, { id: 'k2' }] });
-    services.classes.listSessions.mockImplementation(async (_actor, classId) => ({
+    services.classes.listSessions.mockImplementation((_actor, classId) => settle(() => ({
       ok: true as const,
       value: classId === 'k1'
         ? [session_('s-late', 'k1', '2999-01-03T09:00:00Z'), session_('s-past', 'k1', '2000-01-01T09:00:00Z')]
         : [session_('s-soon', 'k2', '2999-01-02T09:00:00Z', 'Lake')],
-    }));
+    })));
     const home = await loadCampHome();
     expect(home.upcomingSessions?.map(s => s.id)).toEqual(['s-soon', 's-late']);
     expect(home.upcomingSessions?.[0]).toEqual({ id: 's-soon', className: 'Class k2', startsAt: '2999-01-02T09:00:00Z', location: 'Lake' });
