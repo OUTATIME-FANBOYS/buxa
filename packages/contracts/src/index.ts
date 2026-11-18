@@ -36,7 +36,6 @@ export const OrgSchema = z.object({
   createdAt: z.string(),
   memberCount: z.number().int(),
   timezone: z.string(),
-  clockFormat: ClockFormatSchema,
 });
 export type Org = z.infer<typeof OrgSchema>;
 
@@ -72,9 +71,8 @@ export const OrgPatchInputSchema = z
   .object({
     name: NameSchema.optional(),
     timezone: TimeZoneSchema.optional(),
-    clockFormat: ClockFormatSchema.optional(),
   })
-  .refine(v => v.name !== undefined || v.timezone !== undefined || v.clockFormat !== undefined, 'Nothing to change.');
+  .refine(v => v.name !== undefined || v.timezone !== undefined, 'Nothing to change.');
 export type OrgPatchInput = z.infer<typeof OrgPatchInputSchema>;
 
 /** The signed-in person's first and last name, from the Update display name dialog. The first name is required. */

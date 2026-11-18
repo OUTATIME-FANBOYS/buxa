@@ -237,9 +237,6 @@ export class InMemoryStore implements UserRepository, OrgRepository {
     if (input.timezone !== undefined) {
       o.timezone = input.timezone;
     }
-    if (input.clockFormat !== undefined) {
-      o.clockFormat = input.clockFormat;
-    }
     this.database.record(actor, 'org.update', 'org', o.id);
 
     return { id: o.id, name: o.name, slug: o.slug };

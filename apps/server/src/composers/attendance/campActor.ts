@@ -16,7 +16,7 @@ export async function campZone(actor: Actor): Promise<string> {
 
 /**
  * The camp's zone and the clock (12 or 24 hour) for a screen that shows times. The clock is always the signed-in person's own
- * choice; when they have not chosen (null) it is 24 hour. The camp's clock (`orgs.clock_format`) is ignored here.
+ * choice; when they have not chosen (null) it is 24 hour.
  */
 export async function campClock(actor: Actor): Promise<{ timeZone: string; clockFormat: ClockFormat }> {
   const [camp, session] = await Promise.all([getRuntime().services.orgs.getCamp(actor), requireSession()]);
