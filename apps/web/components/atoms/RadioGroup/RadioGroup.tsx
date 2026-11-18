@@ -1,15 +1,10 @@
 'use client';
 
-import { Description } from '@heroui/react/description';
-import { FieldError } from '@heroui/react/field-error';
-import { Label } from '@heroui/react/label';
-import { Radio } from '@heroui/react/radio';
-import { RadioGroup as HeroRadioGroup } from '@heroui/react/radio-group';
-import type { ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 
 /*
- * A set of mutually exclusive choices, each with its label and an optional note. The group is one labelled fieldset,
- * so arrow keys move between the choices and a screen reader announces the question first. `name` submits the chosen value.
+ * A set of mutually exclusive choices. Plain HTML (a fieldset of native radio inputs), so the app's own radio styling applies
+ * and it needs no HeroUI styles. Arrow keys move between the choices, and the legend is the question a screen reader announces.
  */
 export interface RadioOption {
   value: string;
@@ -26,7 +21,7 @@ export interface RadioGroupProps {
   value?: string | null;
   defaultValue?: string | null;
   onChange?: (value: string) => void;
-  error?: string | null;
+  error?: string;
   isRequired?: boolean;
   isDisabled?: boolean;
 }
@@ -42,29 +37,40 @@ export function RadioGroup({
   isRequired,
   isDisabled,
 }: RadioGroupProps) {
+  const groupName = useId();
+  const [own, setOwn] = useState<string | null>(defaultValue ?? null);
+  const current = value !== undefined ? value : own;
+
   return (
-    <HeroRadioGroup
-      name={name}
-      value={value}
-      defaultValue={defaultValue}
-      onChange={next => onChange?.(next)}
-      isInvalid={Boolean(error)}
-      isRequired={isRequired}
-      isDisabled={isDisabled}
-    >
-      <Label>{label}</Label>
+    <fieldset className="plain radio-group" aria-invalid={Boolean(error) || undefined} disabled={isDisabled}>
+      <legend className="field-label">
+        {label}
+        {isRequired ? ' *' : null}
+      </legend>
       {options.map(option => (
-        <Radio key={option.value} value={option.value} isDisabled={option.isDisabled}>
-          <Radio.Control>
-            <Radio.Indicator />
-          </Radio.Control>
-          <Radio.Content>
+        <label key={option.value} className="radio-option">
+          <input
+            type="radio"
+            name={name ?? groupName}
+            value={option.value}
+            checked={current === option.value}
+            disabled={isDisabled || option.isDisabled}
+            onChange={() => {
+              setOwn(option.value);
+              onChange?.(option.value);
+            }}
+          />
+          <span>
             {option.label}
-            {option.description ? <Description>{option.description}</Description> : null}
-          </Radio.Content>
-        </Radio>
+            {option.description ? <span className="field-hint">{option.description}</span> : null}
+          </span>
+        </label>
       ))}
-      {error ? <FieldError>{error}</FieldError> : null}
-    </HeroRadioGroup>
+      {error ? (
+        <p className="field-error" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </fieldset>
   );
 }
