@@ -4,7 +4,6 @@
  */
 import type { Column, Task } from './types';
 import { haptic, reduceMotion, springAnimate, VelocityTracker } from '../motion';
-import { requirePresent } from '@buxa/domain';
 
 /* ---------- Pointer-driven card drag: 1:1 tracking, velocity handoff, interruptible ---------- */
 export type Drag = { kind: 'task' | 'column'; id: string } | null;
@@ -37,7 +36,7 @@ export function createDrag(d: DragDeps) {
     const dist = (c: HTMLElement) => {
       const r = c.getBoundingClientRect();
 
-      return requirePresent(s, 's').x < r.left ? r.left - requirePresent(s, 's').x : requirePresent(s, 's').x > r.right ? requirePresent(s, 's').x - r.right : 0;
+      return s!.x < r.left ? r.left - s!.x : s!.x > r.right ? s!.x - r.right : 0;
     };
     const col = cols.reduce((a, b) => (dist(b) < dist(a) ? b : a)); s.colEl = col;
     let before: string | null = null;
@@ -47,12 +46,12 @@ export function createDrag(d: DragDeps) {
           continue;
         }
         const r = el.getBoundingClientRect(); if (s.y < r.top + r.height / 2) {
-          before = requirePresent(el.dataset.cardId, 'el.dataset.cardId'); break;
+          before = el.dataset.cardId!; break;
         }
       }
     }
 
-    return { columnId: requirePresent(col.dataset.colId, 'col.dataset.colId'), beforeId: before };
+    return { columnId: col.dataset.colId!, beforeId: before };
   };
   const refresh = () => {
     const o = findOver(); if (!o || !s) {

@@ -29,8 +29,8 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
   let b: Seeded;
 
   /** One person, a guardian, a household, a membership, a badge and an open check-in, all in one organisation. */
-  function seed(org: string, user: string, label: string): Promise<Seeded> {
-    return Promise.resolve(withOrg(pool, org, async db => {
+  async function seed(org: string, user: string, label: string): Promise<Seeded> {
+    return withOrg(pool, org, async db => {
       const person = (await db.query<{ id: string }>(
         `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, $2, 'Test') RETURNING id`, [org, label])).rows[0].id;
       const guardian = (await db.query<{ id: string }>(
@@ -54,7 +54,7 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
          VALUES ($1, $2, '2027-07-01T09:00:00Z', $3, 'qr') RETURNING id`, [org, person, user])).rows[0].id;
 
       return { person, guardian, household, membership, credential, checkIn };
-    }));
+    });
   }
 
   beforeAll(async () => {
@@ -217,8 +217,8 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
       expect(r.rows[0].can).toBe(true);
     });
 
-    function asDelete(table: string, id: string): Promise<unknown> {
-      return Promise.resolve(withOrg(pool, orgA, db => db.query(`DELETE FROM ${table} WHERE id = $1`, [id])));
+    async function asDelete(table: string, id: string): Promise<unknown> {
+      return withOrg(pool, orgA, db => db.query(`DELETE FROM ${table} WHERE id = $1`, [id]));
     }
   });
 

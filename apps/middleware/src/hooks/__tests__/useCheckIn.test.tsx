@@ -4,7 +4,6 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import type { PersonCard } from '@buxa/shared';
 import { useCheckIn } from '../useCheckIn';
-import { requirePresent } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({ checkInAction: vi.fn(), scanCodeAction: vi.fn() }));
 
@@ -35,31 +34,31 @@ describe('useCheckIn', () => {
   });
 
   it('starts idle', () => {
-    expect(requirePresent(api, 'api').state.phase).toBe('idle');
+    expect(api!.state.phase).toBe('idle');
   });
   it('moves to a ready person when a name is picked, by search', () => {
-    act(() => requirePresent(api, 'api').pickPerson(card));
-    expect(requirePresent(api, 'api').state).toMatchObject({ phase: 'ready', method: 'search' });
+    act(() => api!.pickPerson(card));
+    expect(api!.state).toMatchObject({ phase: 'ready', method: 'search' });
   });
   it('checks the person in with the validated input and records the answer', async () => {
     h.checkInAction.mockResolvedValueOnce({ kind: 'forbidden', message: 'No.' });
-    act(() => requirePresent(api, 'api').pickPerson(card));
+    act(() => api!.pickPerson(card));
     await act(async () => {
-      await requirePresent(api, 'api').checkIn(card, 'search');
+      await api!.checkIn(card, 'search');
     });
     expect(h.checkInAction).toHaveBeenCalledWith({ personId: 'p-1', method: 'search' });
-    expect(requirePresent(api, 'api').state.phase).toBe('failed');
+    expect(api!.state.phase).toBe('failed');
   });
   it('passes an override reason through when given', async () => {
     h.checkInAction.mockResolvedValueOnce({ kind: 'forbidden', message: 'No.' });
     await act(async () => {
-      await requirePresent(api, 'api').checkIn(card, 'qr', 'Early pickup agreed');
+      await api!.checkIn(card, 'qr', 'Early pickup agreed');
     });
     expect(h.checkInAction).toHaveBeenCalledWith({ personId: 'p-1', method: 'qr', overrideReason: 'Early pickup agreed' });
   });
-  it('clears back to idle', () => {
-    act(() => requirePresent(api, 'api').pickPerson(card));
-    act(() => requirePresent(api, 'api').clear());
-    expect(requirePresent(api, 'api').state.phase).toBe('idle');
+  it('clears back to idle', async () => {
+    act(() => api!.pickPerson(card));
+    act(() => api!.clear());
+    expect(api!.state.phase).toBe('idle');
   });
 });

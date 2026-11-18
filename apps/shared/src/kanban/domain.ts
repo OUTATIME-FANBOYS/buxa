@@ -11,7 +11,6 @@ import type { AppState, Attachment, Column, ColumnKind, Filter, Notice, Project,
 import { defaultColumns } from './seed/projects';
 import { fmt } from '../dates';
 import { PRIORITY_LABEL, uid } from './tasks';
-import { requirePresent } from '@buxa/domain';
 
 export const clock = { now: () => new Date().toISOString(), id: uid };
 
@@ -80,8 +79,7 @@ export function updateTask(s: AppState, id: string, patch: TaskPatch): AppState 
     n = log(n, id, 'edited the description of');
   }
   if ('priority' in patch && patch.priority !== old.priority) {
-    const priorityLabel = patch.priority === undefined ? undefined : PRIORITY_LABEL[patch.priority];
-    n = log(n, id, 'changed priority of', `to ${priorityLabel}`);
+    n = log(n, id, 'changed priority of', `to ${PRIORITY_LABEL[patch.priority!]}`);
   }
   if ('assigneeId' in patch && patch.assigneeId !== old.assigneeId) {
     if (patch.assigneeId) {
@@ -96,7 +94,7 @@ export function updateTask(s: AppState, id: string, patch: TaskPatch): AppState 
   if ('start' in patch && patch.start !== old.start) {
     n = log(n, id, patch.start ? 'set the start date of' : 'cleared the start date of', patch.start ? `to ${fmt(patch.start)}` : '');
   }
-  if ('tags' in patch && requirePresent(patch.tags, 'patch.tags').join() !== old.tags.join()) {
+  if ('tags' in patch && patch.tags!.join() !== old.tags.join()) {
     n = log(n, id, 'updated tags on');
   }
 
@@ -234,7 +232,7 @@ export function invite(s: AppState, workspaceId: string, email: string, role: Ro
     return { state: s, error: 'Workspace not found.' };
   }
   let user: User | undefined = s.users.find(u => u.email.toLowerCase() === e); let users = s.users;
-  if (user && ws.members.some(m => m.userId === user?.id)) {
+  if (user && ws.members.some(m => m.userId === user!.id)) {
     return { state: s, error: 'That person is already in this workspace.' };
   }
   if (!user) {

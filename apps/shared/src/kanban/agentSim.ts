@@ -9,7 +9,6 @@ import { diffDays, isoDay, today } from '../dates';
 import { PRIORITIES } from './tasks';
 import { isOverdue } from './stats';
 import * as A from './agents';
-import { requirePresent } from '@buxa/domain';
 
 const MAX_PER_RULE = 2;
 
@@ -39,7 +38,7 @@ export function simulateRun(s: AppState, agentId: string, projectId: string): { 
   open.filter(t => isOverdue(t, () => kindOf(t.columnId)) && t.priority !== 'critical').slice(0, MAX_PER_RULE).forEach(t => {
     const next: Priority = PRIORITIES[Math.min(PRIORITIES.length - 1, PRIORITIES.indexOf(t.priority) + 1)];
     if (!waiting('update_task', t.id)) {
-      items.push({ change: { kind: 'update_task', taskId: t.id, patch: { priority: next } }, reason: `Overdue by ${diffDays(today(), requirePresent(t.due, 't.due'))} day${diffDays(today(), requirePresent(t.due, 't.due')) === 1 ? '' : 's'}.` });
+      items.push({ change: { kind: 'update_task', taskId: t.id, patch: { priority: next } }, reason: `Overdue by ${diffDays(today(), t.due!)} day${diffDays(today(), t.due!) === 1 ? '' : 's'}.` });
     }
   });
 
@@ -57,7 +56,7 @@ export function simulateRun(s: AppState, agentId: string, projectId: string): { 
   if (started) {
     open.filter(t => kindOf(t.columnId) === 'open' && t.due && diffDays(t.due, today()) >= 0 && diffDays(t.due, today()) <= 5).slice(0, MAX_PER_RULE).forEach(t => {
       if (!waiting('move_task', t.id)) {
-        items.push({ change: { kind: 'move_task', taskId: t.id, columnId: started.id }, reason: `Due in ${diffDays(requirePresent(t.due, 't.due'), today())} day${diffDays(requirePresent(t.due, 't.due'), today()) === 1 ? '' : 's'} and not started.` });
+        items.push({ change: { kind: 'move_task', taskId: t.id, columnId: started.id }, reason: `Due in ${diffDays(t.due!, today())} day${diffDays(t.due!, today()) === 1 ? '' : 's'} and not started.` });
       }
     });
   }

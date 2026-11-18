@@ -5,13 +5,12 @@ import * as D from '../domain';
 import * as A from '../agents';
 import { simulateRun } from '../agentSim';
 import type { AppState, Change } from '../types';
-import { requirePresent } from '@buxa/domain';
 
 let s: AppState; let runId: string;
 const as = (state: AppState, userId: string | null): AppState => ({ ...state, session: { userId } });
-const proj = () => requirePresent(s.projects.find(p => p.id === PROJECT.registration), 's.projects.find(p => p.id === PROJECT.registration)');
-const col = (name: string) => requirePresent(proj().columns.find(c => c.name === name), 'proj().columns.find(c => c.name === name)').id;
-const task = (id: string) => requirePresent(s.tasks.find(t => t.id === id), 's.tasks.find(t => t.id === id)');
+const proj = () => s.projects.find(p => p.id === PROJECT.registration)!;
+const col = (name: string) => proj().columns.find(c => c.name === name)!.id;
+const task = (id: string) => s.tasks.find(t => t.id === id)!;
 const last = () => s.proposals[0];
 const propose = (c: Change, reason = 'because') => {
   s = A.submit(s, AGENT_ID, runId, c, reason);
@@ -28,7 +27,7 @@ describe('trust policy', () => {
   it('applies an automatic change at once, as the agent, with provenance', () => {
     const p = propose({ kind: 'create_task', draft: { projectId: PROJECT.registration, columnId: col('Backlog'), title: 'Agent task' } }, 'found a gap');
     expect(p.status).toBe('applied');
-    const t = requirePresent(s.tasks.find(x => x.title === 'Agent task'), "s.tasks.find(x => x.title === 'Agent task')");
+    const t = s.tasks.find(x => x.title === 'Agent task')!;
     expect(t.createdBy).toBe(AGENT_ID);
     expect(t.history[0].via).toMatchObject({ runId, reason: 'found a gap' });
     expect(s.session.userId).toBe(USER.rosa); expect(s.acting).toBeUndefined();
@@ -80,9 +79,9 @@ describe('deciding', () => {
   it('lets only non-viewer members of the workspace decide, and never an agent', () => {
     const p = propose({ kind: 'move_task', taskId: 't-4', columnId: col('In Review') });
     s = D.setRole(s, WORKSPACE.camp, USER.nia, 'viewer');
-    expect(requirePresent(A.decide(as(s, USER.nia), p.id, 'approve').proposals.find(x => x.id === p.id), "A.decide(as(s, USER.nia), p.id, 'approve').proposals.find(x => x.id === p.id)").status).toBe('pending');
-    expect(requirePresent(A.decide(as(s, AGENT_ID), p.id, 'approve').proposals.find(x => x.id === p.id), "A.decide(as(s, AGENT_ID), p.id, 'approve').proposals.find(x => x.id === p.id)").status).toBe('pending');
-    expect(requirePresent(A.decide(as(s, USER.hannah), p.id, 'approve').proposals.find(x => x.id === p.id), "A.decide(as(s, USER.hannah), p.id, 'approve').proposals.find(x => x.id === p.id)").status).toBe('approved');
+    expect(A.decide(as(s, USER.nia), p.id, 'approve').proposals.find(x => x.id === p.id)!.status).toBe('pending');
+    expect(A.decide(as(s, AGENT_ID), p.id, 'approve').proposals.find(x => x.id === p.id)!.status).toBe('pending');
+    expect(A.decide(as(s, USER.hannah), p.id, 'approve').proposals.find(x => x.id === p.id)!.status).toBe('approved');
   });
   it('cannot decide twice', () => {
     const p = propose({ kind: 'move_task', taskId: 't-4', columnId: col('In Review') });
@@ -108,11 +107,11 @@ describe('revertRun', () => {
     s = A.setTrust(s, AGENT_ID, 'update_task', 'auto');
     propose({ kind: 'update_task', taskId: 't-4', patch: { priority: 'critical' } });
     propose({ kind: 'create_task', draft: { projectId: PROJECT.registration, columnId: col('Backlog'), title: 'Mine now' } });
-    const id = requirePresent(s.tasks.find(t => t.title === 'Mine now'), "s.tasks.find(t => t.title === 'Mine now')").id;
+    const id = s.tasks.find(t => t.title === 'Mine now')!.id;
     s = D.updateTask(s, 't-4', { priority: 'low' }); s = D.addComment(s, id, 'I am on it');
     const r = A.revertRun(s, runId);
     expect(r.reverted).toBe(0); expect(r.skipped).toBe(2);
-    expect(r.state.tasks.some(t => t.id === id)).toBe(true); expect(requirePresent(r.state.tasks.find(t => t.id === 't-4'), "r.state.tasks.find(t => t.id === 't-4')").priority).toBe('low');
+    expect(r.state.tasks.some(t => t.id === id)).toBe(true); expect(r.state.tasks.find(t => t.id === 't-4')!.priority).toBe('low');
     expect(r.state.proposals.every(p => p.status === 'applied' && /Not reverted/.test(p.note ?? ''))).toBe(true);
   });
 });
@@ -173,13 +172,13 @@ describe('agents approving agents', () => {
   let pid: string;
   beforeEach(() => {
     s = A.addAgent(s, WORKSPACE.camp, 'Reviewer', 'Claude', '', [PROJECT.registration]);
-    const rid = requirePresent(s.agents.at(-1), 's.agents.at(-1)').userId;
+    const rid = s.agents.at(-1)!.userId;
     s = { ...s, users: s.users.map(u => (u.id === rid ? { ...u, id: REVIEWER } : u)), agents: s.agents.map(a => (a.userId === rid ? { ...a, userId: REVIEWER } : a)) };
     pid = propose({ kind: 'move_task', taskId: 't-4', columnId: col('In Review') }).id;
   });
   it('cannot approve anything by default', () => {
     s = A.decideAs(s, REVIEWER, pid, 'approve');
-    expect(requirePresent(s.proposals.find(p => p.id === pid), 's.proposals.find(p => p.id === pid)').status).toBe('pending');
+    expect(s.proposals.find(p => p.id === pid)!.status).toBe('pending');
   });
   it('can approve only the kinds it was granted, and the decision is attributed to it', () => {
     s = A.setApproves(s, REVIEWER, ['move_task']);
@@ -187,16 +186,16 @@ describe('agents approving agents', () => {
     expect(s.proposals.find(p => p.id === pid)).toMatchObject({ status: 'approved', decidedBy: REVIEWER });
     expect(s.session.userId).toBe(USER.rosa);
     const q = propose({ kind: 'move_task', taskId: 't-5', columnId: col('Done') }); // "mark done" was not granted
-    expect(requirePresent(A.decideAs(s, REVIEWER, q.id, 'approve').proposals.find(p => p.id === q.id), "A.decideAs(s, REVIEWER, q.id, 'approve').proposals.find(p => p.id === q.id)").status).toBe('pending');
+    expect(A.decideAs(s, REVIEWER, q.id, 'approve').proposals.find(p => p.id === q.id)!.status).toBe('pending');
   });
   it('never approves its own work, outside its projects, or while paused', () => {
     s = A.setApproves(s, REVIEWER, ['move_task', 'complete_task', 'create_task', 'comment', 'update_task']);
     s = A.setApproves(s, AGENT_ID, ['move_task']);
-    expect(requirePresent(A.decideAs(s, AGENT_ID, pid, 'approve').proposals.find(p => p.id === pid), "A.decideAs(s, AGENT_ID, pid, 'approve').proposals.find(p => p.id === pid)").status).toBe('pending'); // own
+    expect(A.decideAs(s, AGENT_ID, pid, 'approve').proposals.find(p => p.id === pid)!.status).toBe('pending'); // own
     s = A.updateAgent(s, REVIEWER, { paused: true });
-    expect(requirePresent(A.decideAs(s, REVIEWER, pid, 'approve').proposals.find(p => p.id === pid), "A.decideAs(s, REVIEWER, pid, 'approve').proposals.find(p => p.id === pid)").status).toBe('pending'); // paused
+    expect(A.decideAs(s, REVIEWER, pid, 'approve').proposals.find(p => p.id === pid)!.status).toBe('pending'); // paused
     s = A.updateAgent(s, REVIEWER, { paused: false, scope: [PROJECT.facilities] });
-    expect(requirePresent(A.decideAs(s, REVIEWER, pid, 'approve').proposals.find(p => p.id === pid), "A.decideAs(s, REVIEWER, pid, 'approve').proposals.find(p => p.id === pid)").status).toBe('pending'); // other project
+    expect(A.decideAs(s, REVIEWER, pid, 'approve').proposals.find(p => p.id === pid)!.status).toBe('pending'); // other project
   });
   it('cannot revert runs: reverting is for people', () => {
     s = A.setTrust(s, AGENT_ID, 'comment', 'auto'); propose({ kind: 'comment', taskId: 't-4', body: 'x' });

@@ -11,7 +11,6 @@
 import type { AppState, Change, Priority, Proposal, ProposalStatus, Task } from '..';
 import * as A from '..';
 import { PRIORITIES } from '..';
-import { requirePresent } from '@buxa/domain';
 
 export type Out<T> = { state: AppState; value?: T; error?: string };
 const fail = (state: AppState, error: string): Out<never> => ({ state, error });
@@ -72,7 +71,7 @@ export function whoami(s: AppState, agentId: string) {
 
   return {
     name: nameOf(s, agentId), model: a.model, purpose: a.purpose, paused: a.paused,
-    projects: a.scope.map(id => s.projects.find(p => p.id === id)).filter(Boolean).map(p => ({ id: requirePresent(p, 'p').id, name: requirePresent(p, 'p').name })),
+    projects: a.scope.map(id => s.projects.find(p => p.id === id)).filter(Boolean).map(p => ({ id: p!.id, name: p!.name })),
     permissions: Object.fromEntries(A.PROPOSAL_KINDS.map(k => [k, a.trust[k] === 'auto' ? 'allowed' : a.trust[k] === 'approve' ? 'needs approval' : 'blocked'])),
     stageRules: Object.fromEntries(Object.entries(a.moveRules).map(([colId, lvl]) => {
       const col = a.scope.flatMap(colNames).find(c => c.id === colId);
@@ -227,7 +226,7 @@ export function updateTask(s: AppState, agentId: string, i: TaskEdits): Out<Retu
         add({ assigneeId: undefined });
       }
     } else {
-      const u = userRef(s, requirePresent(s.projects.find(p => p.id === t.projectId), 's.projects.find(p => p.id === t.projectId)').workspaceId, i.assignee); if (!u) {
+      const u = userRef(s, s.projects.find(p => p.id === t.projectId)!.workspaceId, i.assignee); if (!u) {
         return bad(s, `No member matches “${i.assignee}”.`);
       } if (u.id !== t.assigneeId) {
         add({ assigneeId: u.id });
@@ -253,7 +252,7 @@ export function updateTask(s: AppState, agentId: string, i: TaskEdits): Out<Retu
   for (const c of patches) {
     const r = propose(n, agentId, c, i.reason); if (r.error) {
       return r as Out<never>;
-    } n = r.state; outs.push(requirePresent(r.value, 'r.value'));
+    } n = r.state; outs.push(r.value!);
   }
 
   return { state: n, value: outs };
@@ -263,7 +262,7 @@ export function moveTask(s: AppState, agentId: string, i: { taskId: string; colu
   const t = visibleTask(s, agentId, i.taskId); if (!t) {
     return bad(s, 'No such task in your scope.');
   }
-  const p = requirePresent(s.projects.find(x => x.id === t.projectId), 's.projects.find(x => x.id === t.projectId)'); const col = columnOf(p, i.column);
+  const p = s.projects.find(x => x.id === t.projectId)!; const col = columnOf(p, i.column);
   if (!col) {
     return bad(s, `No column “${i.column}” in ${p.name}. Columns: ${p.columns.map(c => c.name).join(', ')}.`);
   }
@@ -304,5 +303,5 @@ export function review(s: AppState, agentId: string, i: { proposalId: string; ve
   }
   const n = A.decideAs(s, agentId, p.id, i.verdict);
 
-  return { state: n, value: proposalView(n, requirePresent(n.proposals.find(x => x.id === p.id), 'n.proposals.find(x => x.id === p.id)')) };
+  return { state: n, value: proposalView(n, n.proposals.find(x => x.id === p.id)!) };
 }

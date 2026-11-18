@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { useDarkMode } from '../useDarkMode';
-import { requirePresent } from '@buxa/domain';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -36,9 +35,9 @@ describe('useDarkMode', () => {
   });
 
   it('reads the page’s theme after mount and toggles it', () => {
-    expect(requirePresent(api, 'api').dark).toBe(false);
-    act(() => requirePresent(api, 'api').toggle());
-    expect(requirePresent(api, 'api').dark).toBe(true);
+    expect(api!.dark).toBe(false);
+    act(() => api!.toggle());
+    expect(api!.dark).toBe(true);
     expect(document.documentElement.dataset.theme).toBe('dark');
   });
 });
