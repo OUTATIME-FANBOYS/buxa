@@ -4,70 +4,65 @@ import { Button as HeroButton } from '@heroui/react/button';
 import { buttonVariants } from '@heroui/styles';
 import Link from 'next/link';
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ComponentProps, ReactNode, Ref } from 'react';
+import { Icon } from './Icon';
 
 /*
  * The one button for the app. Call sites write <Button variant="primary">; they do not import HeroUI.
+ * Every button is a pill. The variants are HeroUI's names, and each one's colours come from the Buxa tokens:
  *
  *   primary      filled with the accent: the main action on a screen or in a form
- *   secondary    outlined on the surface: the default (Cancel, Export, Import)
- *   ghost        text only, quiet: navigation-like actions and Clear
+ *   secondary    filled surface with an edge: the default (Cancel, Export, Import)
+ *   tertiary     a quieter filled surface, secondary text
+ *   outline      border only, on whatever surface it sits on
+ *   ghost        text only: navigation-like actions, Clear
  *   danger       filled with the destructive red: confirm a delete or a revoke
- *   danger-ghost text only, in the destructive red: Revoke, Disconnect, Reset demo data
- *   icon         round, icon only: more, close, settings, delete. Give it an aria-label.
+ *   danger-soft  tinted red with red text: Revoke, Disconnect, Reset demo data
  *
- * Sizes: md (44px, the default, the height of inputs), sm (30px, dense rows and panels), header (36px on a mouse or
- * keyboard device, for page-header actions). On a coarse pointer every size is 44px (styles/components/button.css).
+ * `icon` puts a lucide icon (by name, see icons.tsx) before the label. `iconOnly` makes a round button of just the
+ * icon; it needs an aria-label, because the icon alone has no name. Use it where a label would repeat the context
+ * (search, close, more). Keep a visible label where the action is not obvious.
+ *
+ * Sizes: md (44px, the default, the height of inputs), sm (30px, dense rows and panels), header (36px on a mouse
+ * or keyboard device, for page-header actions). On a coarse pointer every size is 44px (styles/components/button.css).
  *
  * With `href` it renders a link (next/link, or a plain <a> when it downloads), styled the same way.
  * With `onClick` it runs on press (HeroUI's press handling covers mouse, touch and keyboard).
  * `type` defaults to "submit", as a native button does, so a button inside a form keeps submitting it.
  */
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'danger-ghost' | 'icon';
+export type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'outline' | 'ghost' | 'danger' | 'danger-soft';
 export type ButtonSize = 'sm' | 'md' | 'header';
 
-/** Buxa variant to the HeroUI variant whose classes and colours it uses. */
-const HEROUI_VARIANT = {
-  primary: 'primary',
-  secondary: 'outline',
-  ghost: 'ghost',
-  danger: 'danger',
-  'danger-ghost': 'ghost',
-  icon: 'ghost',
-} as const;
+/** Icon size inside a button: the label's cap height, smaller on the dense size. */
+const ICON_SIZE: Record<ButtonSize, number> = { sm: 14, md: 16, header: 16 };
 
 /** Buxa size to the HeroUI size class. The heights themselves are in styles/components/button.css. */
 const HEROUI_SIZE = { sm: 'sm', md: 'md', header: 'md' } as const;
 
-/** The Buxa-only classes for a variant and size (the HeroUI classes come from buttonVariants). */
-function buxaClasses(variant: ButtonVariant, size: ButtonSize): string[] {
-  return [
-    variant === 'danger-ghost' && 'buxa-button--danger-text',
-    variant === 'icon' && 'buxa-button--icon',
-    size === 'header' && 'buxa-button--header',
-  ].filter((c): c is string => typeof c === 'string');
+/** The Buxa-only classes for a size and icon form (the HeroUI classes come from buttonVariants). */
+function buxaClasses(size: ButtonSize): string[] {
+  return [size === 'header' && 'buxa-button--header'].filter((c): c is string => typeof c === 'string');
 }
 
 /**
  * The class string for a button, for markup that cannot be a Button: a <summary> that toggles a disclosure.
  * Prefer <Button>; this exists only where the element itself is fixed by the markup.
  */
-export function buttonClassName({ variant = 'secondary', size = 'md', fullWidth = false }: { variant?: ButtonVariant; size?: ButtonSize; fullWidth?: boolean } = {}): string {
-  const heroui = buttonVariants({ variant: HEROUI_VARIANT[variant], size: HEROUI_SIZE[size], isIconOnly: variant === 'icon', fullWidth });
+export function buttonClassName({ variant = 'secondary', size = 'md', fullWidth = false, iconOnly = false }: { variant?: ButtonVariant; size?: ButtonSize; fullWidth?: boolean; iconOnly?: boolean } = {}): string {
+  const heroui = buttonVariants({ variant, size: HEROUI_SIZE[size], isIconOnly: iconOnly, fullWidth });
 
-  return [heroui, ...buxaClasses(variant, size)].join(' ');
+  return [heroui, ...buxaClasses(size)].join(' ');
 }
 
 type NativeButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className' | 'children' | 'onClick' | 'disabled' | 'type' | 'value'>;
 
-export interface ButtonProps extends NativeButtonProps {
+interface CommonButtonProps extends NativeButtonProps {
   variant?: ButtonVariant;
   size?: ButtonSize;
   /** Stretches to the width of its container (the sign-in and form submit buttons). */
   fullWidth?: boolean;
   /** Extra classes for a layout that only one screen needs. */
   className?: string;
-  children?: ReactNode;
   /** Runs on press. It takes no event: use a closure for anything the handler needs. */
   onClick?: () => void;
   /** Runs on press with HeroUI's press event, for a handler that must stop propagation (a menu trigger inside a card). */
@@ -86,37 +81,62 @@ export interface ButtonProps extends NativeButtonProps {
   ref?: Ref<HTMLElement>;
 }
 
-export function Button({ variant = 'secondary', size = 'md', fullWidth = false, className, children, onClick, onPress, disabled, type, href, download, target, rel, ref, ...rest }: ButtonProps) {
+/** A label-led button takes its text as children and may lead with an icon. */
+interface LabelledProps {
+  /** A lucide icon name (icons.tsx) shown before the label. */
+  icon?: string;
+  iconOnly?: false;
+  children?: ReactNode;
+  'aria-label'?: string;
+}
+
+/** A round, icon-only button. Its content is the icon (or a trigger, or an overlay such as a badge), so the accessible name is required. */
+interface IconOnlyProps {
+  icon?: string;
+  iconOnly: true;
+  children?: ReactNode;
+  'aria-label': string;
+}
+
+export type ButtonProps = CommonButtonProps & (LabelledProps | IconOnlyProps);
+
+export function Button({ variant = 'secondary', size = 'md', fullWidth = false, className, icon, iconOnly = false, children, onClick, onPress, disabled, type, href, download, target, rel, ref, ...rest }: ButtonProps) {
   const extra = className ? [className] : [];
   const press = onPress ?? (onClick ? () => onClick() : undefined);
+  const content = (
+    <>
+      {icon !== undefined && <Icon name={icon} size={ICON_SIZE[size]} />}
+      {children}
+    </>
+  );
 
   if (href !== undefined) {
-    const classes = [buttonClassName({ variant, size, fullWidth }), ...extra].join(' ');
+    const classes = [buttonClassName({ variant, size, fullWidth, iconOnly }), ...extra].join(' ');
     const linkProps = { ...(rest as AnchorHTMLAttributes<HTMLAnchorElement>), target, rel, onClick: onClick ? () => onClick() : undefined };
 
     if (download !== undefined) {
-      return <a {...linkProps} ref={ref as Ref<HTMLAnchorElement>} href={href} download={download} className={classes}>{children}</a>;
+      return <a {...linkProps} ref={ref as Ref<HTMLAnchorElement>} href={href} download={download} className={classes}>{content}</a>;
     }
 
-    return <Link {...linkProps} ref={ref as Ref<HTMLAnchorElement>} href={href} className={classes}>{children}</Link>;
+    return <Link {...linkProps} ref={ref as Ref<HTMLAnchorElement>} href={href} className={classes}>{content}</Link>;
   }
 
-  const classes = [...buxaClasses(variant, size), ...extra].join(' ');
+  const classes = [...buxaClasses(size), ...extra].join(' ');
 
   return (
     <HeroButton
       {...(rest as ComponentProps<typeof HeroButton>)}
       ref={ref as Ref<HTMLButtonElement>}
       type={type ?? 'submit'}
-      variant={HEROUI_VARIANT[variant]}
+      variant={variant}
       size={HEROUI_SIZE[size]}
-      isIconOnly={variant === 'icon'}
+      isIconOnly={iconOnly}
       fullWidth={fullWidth}
       isDisabled={disabled}
       className={classes}
       onPress={press}
     >
-      {children}
+      {content}
     </HeroButton>
   );
 }

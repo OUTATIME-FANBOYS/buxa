@@ -16,8 +16,8 @@ export function AttachmentList({ task, ro }: { task: Task; ro: boolean }) {
       <ul className="files">
         {task.attachments.map(a => (
           <li key={a.id}><Icon name="clip" size={15} /><span className="file-name">{a.name}</span><span className="muted small">{fmtSize(a.size)}</span>
-            {a.dataUrl && <Button variant="icon" href={a.dataUrl} download={a.name} aria-label={`Download ${a.name}`}><Icon name="download" size={15} /></Button>}
-            {!ro && <Button variant="icon" aria-label={`Remove ${a.name}`} onClick={() => actions.removeAttachment(task.id, a.id)}><Icon name="x" size={14} /></Button>}</li>
+            {a.dataUrl && <Button iconOnly icon="download" href={a.dataUrl} download={a.name} aria-label={`Download ${a.name}`} />}
+            {!ro && <Button iconOnly icon="x" aria-label={`Remove ${a.name}`} onClick={() => actions.removeAttachment(task.id, a.id)} />}</li>
         ))}
       </ul>
     </section>

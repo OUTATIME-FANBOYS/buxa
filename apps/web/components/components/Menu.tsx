@@ -41,7 +41,7 @@ export function Menu({ label, trigger, items, align = 'end', className, header }
   return (
     <>
       {/* onPress stops the press from reaching a card or row the menu sits in, as the old stopPropagation did. */}
-      <Button ref={btn} variant="icon" className={className} aria-label={label} aria-haspopup="menu" aria-expanded={open}
+      <Button ref={btn} iconOnly className={className} aria-label={label} aria-haspopup="menu" aria-expanded={open}
         onPress={() => setOpen(o => !o)}
         onKeyDown={e => {
           if (e.key === 'ArrowDown' && !open) {

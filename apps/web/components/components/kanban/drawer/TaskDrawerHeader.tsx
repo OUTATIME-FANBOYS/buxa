@@ -16,7 +16,7 @@ export function TaskDrawerHeader({ task, project, readOnly, onClose, onDelete }:
         { label: 'Duplicate', icon: 'copy', onSelect: () => openTask(cmd.duplicate(task)) },
         { label: task.archived ? 'Restore' : 'Archive', icon: 'archive', onSelect: () => cmd.toggleArchive(task) },
         { label: '', divider: true, onSelect() {} }, { label: 'Delete', icon: 'trash', danger: true, onSelect: onDelete }]} />}
-      <Button variant="icon" onClick={onClose} aria-label="Close task"><Icon name="x" /></Button>
+      <Button iconOnly icon="x" onClick={onClose} aria-label="Close task" />
     </div>
   );
 }

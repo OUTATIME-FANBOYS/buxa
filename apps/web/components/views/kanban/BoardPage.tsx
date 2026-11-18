@@ -72,7 +72,7 @@ export function BoardPage({ projectId }: { projectId?: string }) {
         </div>
         <div className="page-actions">
           <Segmented<ViewKind> label="Board view" value={view} onChange={actions.setView} options={options} />
-          {!readOnly && <Button variant="primary" onClick={() => openTask('new', { projectId: target.id })}><Icon name="plus" size={16} />Add task</Button>}
+          {!readOnly && <Button variant="primary" size="header" onClick={() => openTask('new', { projectId: target.id })}><Icon name="plus" size={16} />Add task</Button>}
         </div>
       </header>
       <FilterBar filter={filter} setFilter={setFilter} project={target} tags={tags} />

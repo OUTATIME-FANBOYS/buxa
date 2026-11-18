@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type Poin
 import { createPortal } from 'react-dom';
 import { project, reduceMotion, rubberband, springAnimate, VelocityTracker } from '@buxa/shared';
 import { FOCUSABLE } from '@buxa/shared';
-import { Icon, Button } from '@/components/elements/export';
+import { Button } from '@/components/elements/export';
 
 interface Swipe { id: number; x0: number; x: number; on: boolean; vel: VelocityTracker; cancel?: () => void }
 
@@ -124,7 +124,7 @@ export function Dialog({ title, onClose, children, footer, drawer = false, wide 
       <div ref={ref} role="dialog" aria-modal="true" aria-label={labelledBy ? undefined : title} aria-labelledby={labelledBy}
         className={`${drawer ? 'drawer' : 'dialog'} ${wide ? 'dialog-wide' : ''} ${className} ${leaving ? 'leaving' : ''}`} onKeyDown={onKey}
         onPointerDown={onPD} onPointerMove={onPM} onPointerUp={onPU} onPointerCancel={onPU}>
-        {title && !drawer && <header className="dialog-head"><h2>{title}</h2><Button variant="icon" onClick={close} aria-label="Close"><Icon name="x" /></Button></header>}
+        {title && !drawer && <header className="dialog-head"><h2>{title}</h2><Button iconOnly icon="x" onClick={close} aria-label="Close" /></header>}
         <div className={drawer ? 'drawer-body' : 'dialog-body'}>{typeof children === 'function' ? children(close) : children}</div>
         {footer && <footer className="dialog-foot">{footer}</footer>}
       </div>
