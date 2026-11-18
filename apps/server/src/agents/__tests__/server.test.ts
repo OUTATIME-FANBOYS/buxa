@@ -12,6 +12,7 @@ import { pickData } from '@buxa/shared';
 import * as A from '@buxa/shared';
 import type { AppState, Data } from '@buxa/shared';
 import { OutcomeBody, ProposalListBody, StateBody, TokenBody, VersionBody, WhoAmIBody } from '../types';
+import { requirePresent } from '@buxa/domain';
 
 let dir: string; let app: ReturnType<typeof createApp>; let base: string;
 const SECRET = 'test-run-secret-0123456789';
@@ -65,7 +66,7 @@ afterEach(async () => {
 describe('network safety', () => {
   it('refuses requests addressed to any host other than localhost', async () => {
     const status = await new Promise<number>(res => {
-      const r = http.request({ host: '127.0.0.1', port: new URL(base).port, path: '/api/health', headers: { host: 'evil.example' } }, x => res(x.statusCode!)); r.end();
+      const r = http.request({ host: '127.0.0.1', port: new URL(base).port, path: '/api/health', headers: { host: 'evil.example' } }, x => res(requirePresent(x.statusCode, 'x.statusCode'))); r.end();
     });
     expect(status).toBe(403);
   });
@@ -170,7 +171,7 @@ describe('MCP endpoint', () => {
 
   it('pushes a version event to the app when an agent writes', async () => {
     const events: string[] = []; const ac = new AbortController();
-    const r = await fetch(base + `/api/events?run_secret=${SECRET}`, { signal: ac.signal }); const reader = r.body!.getReader(); const dec = new TextDecoder();
+    const r = await fetch(base + `/api/events?run_secret=${SECRET}`, { signal: ac.signal }); const reader = requirePresent(r.body, 'r.body').getReader(); const dec = new TextDecoder();
     const pump = (async () => {
       try {
         for (;;) {

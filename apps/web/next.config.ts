@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next';
 import { fileURLToPath } from 'node:url';
+import { settle } from '@buxa/domain';
 
 const dev = process.env.NODE_ENV !== 'production';
 const LOCAL_SERVER = process.env.BUXA_SERVER ?? 'http://127.0.0.1:8787'; // the local agent server (`npm run server`)
@@ -18,27 +19,33 @@ const config: NextConfig = {
   turbopack: { root: fileURLToPath(new URL('../..', import.meta.url)) },
   // /kanban redirects to /camp. Links with a #/ hash never reach the server, so this redirect only covers plain /kanban paths.
   // The destination is ROUTES.camp (config/routes.ts); written out here because Next loads this file without importing app modules.
-  async redirects() {
-    return [
-      { source: '/kanban', destination: '/camp', permanent: false },
-      { source: '/kanban/:path*', destination: '/camp', permanent: false },
-    ];
+  redirects() {
+    return settle(() => {
+      return [
+        { source: '/kanban', destination: '/camp', permanent: false },
+        { source: '/kanban/:path*', destination: '/camp', permanent: false },
+      ];
+    });
   },
   // proxy.ts skips these paths (its matcher excludes them), so they get their headers here. Only nosniff: the page CSP and the
   // other security headers are for pages. Caching is left to Next.js, which sets Cache-Control on these files itself.
-  async headers() {
-    return STATIC_HEADERS;
+  headers() {
+    return settle(() => {
+      return STATIC_HEADERS;
+    });
   },
   // Development only: the browser reaches the local agent server (`npm run server`) through this /api rewrite.
-  async rewrites() {
-    if (!dev) {
-      return [];
-    }
+  rewrites() {
+    return settle(() => {
+      if (!dev) {
+        return [];
+      }
 
-    return [
-      { source: '/api/:path*', destination: `${LOCAL_SERVER}/api/:path*` },
-      { source: '/mcp', destination: `${LOCAL_SERVER}/mcp` },
-    ];
+      return [
+        { source: '/api/:path*', destination: `${LOCAL_SERVER}/api/:path*` },
+        { source: '/mcp', destination: `${LOCAL_SERVER}/mcp` },
+      ];
+    });
   },
 };
 

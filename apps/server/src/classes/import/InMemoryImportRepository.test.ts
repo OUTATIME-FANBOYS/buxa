@@ -4,16 +4,19 @@ import type { Actor, ExistingSession, PlannedWrite } from '@buxa/domain';
 import { InMemoryClassRepository } from '../InMemoryClassRepository';
 import { InMemoryImportRepository } from './InMemoryImportRepository';
 import { importRepositoryContract } from './importRepository.contract';
+import { settle } from '@buxa/domain';
 
 const ORG = '11111111-1111-4111-8111-111111111111';
 const actor: Actor = { userId: 'user-admin', orgId: ORG, role: 'admin' };
 const upload = { fileName: 'season.csv', rows: 2, created: 2, updated: 0, refused: 0 };
 
-importRepositoryContract(async () => {
-  const classes = new InMemoryClassRepository(() => new Date('2027-07-01T00:00:00Z'));
-  const repo = new InMemoryImportRepository(classes);
+importRepositoryContract(() => {
+  return settle(() => {
+    const classes = new InMemoryClassRepository(() => new Date('2027-07-01T00:00:00Z'));
+    const repo = new InMemoryImportRepository(classes);
 
-  return { repo, classes, actor, close: async () => {} };
+    return { repo, classes, actor, close: async () => {} };
+  });
 });
 
 /** A class, created through the class repository so the import can read its name. */

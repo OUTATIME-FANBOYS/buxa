@@ -3,6 +3,7 @@ import path from 'node:path';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import type { AppState } from '@buxa/shared';
 import { isData, pickData, repairData, type Data } from '@buxa/shared';
+import { requirePresent } from '@buxa/domain';
 
 /** Atomic, debounced JSON file writer: a crash mid-write can never leave a half-written file. */
 class JsonFile<T> {
@@ -79,7 +80,7 @@ export class Store {
     return this.commit(origin);
   }
   private commit(origin: string) {
-    this.version += 1; this.disk.write({ version: this.version, data: pickData(this.state!) });
+    this.version += 1; this.disk.write({ version: this.version, data: pickData(requirePresent(this.state, 'this.state')) });
     this.listeners.forEach(l => l(this.version, origin));
 
     return this.version;

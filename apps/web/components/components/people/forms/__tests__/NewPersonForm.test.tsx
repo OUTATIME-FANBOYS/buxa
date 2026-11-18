@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { NewPersonForm } from '@/components/components/people/forms/export';
+import { settle } from '@buxa/domain';
 
-vi.mock('@buxa/server/composers/people/createPersonAction', () => ({ createPersonAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/people/createPersonAction', () => ({ createPersonAction: () => settle(() => ({ status: 'idle' })) }));
 
 describe('NewPersonForm', () => {
   it('joins the person to the household they came from when given one', () => {

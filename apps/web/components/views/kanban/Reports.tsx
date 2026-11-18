@@ -18,12 +18,13 @@ import { Avatar } from '@/components/elements/export';
 import { Pill } from '@/components/elements/export';
 import { HEALTH_LABEL, HEALTH_TONE, healthOf, isOverdue, progressOf, summarize } from '@buxa/shared';
 import { AgentSummary } from '@/components/components/kanban/export';
+import { requirePresent } from '@buxa/domain';
 
 export function Reports() {
   const { wsTasks, projects, kindOf, members, workspace } = useStore();
   const [range, setRange] = useState<'14' | '30' | '90'>('30');
   const { live, done, open, overdue, progress } = summarize(wsTasks, kindOf); const rate = progress.pct;
-  const durations = done.filter(t => t.completedAt).map(t => Math.max(0, diffDays(isoDay(t.completedAt!), isoDay(t.createdAt))));
+  const durations = done.filter(t => t.completedAt).map(t => Math.max(0, diffDays(isoDay(requirePresent(t.completedAt, 't.completedAt')), isoDay(t.createdAt))));
   const avg = durations.length ? durations.reduce((a, b) => a + b, 0) / durations.length : 0;
 
   const series = useMemo(() => {

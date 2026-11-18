@@ -7,8 +7,9 @@ import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { buildSeed } from '@buxa/shared';
 import { SettingsPage } from '@/components/views/kanban/export';
 import { CampClockPanel } from '@/components/components/camp/export';
+import { settle } from '@buxa/domain';
 
-vi.mock('@/actions/camp', () => ({ updateCampClockAction: async () => ({ status: 'idle' }) }));
+vi.mock('@/actions/camp', () => ({ updateCampClockAction: () => settle(() => ({ status: 'idle' })) }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
