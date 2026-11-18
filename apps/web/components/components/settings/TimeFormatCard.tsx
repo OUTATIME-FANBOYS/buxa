@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import type { ClockFormat } from '@buxa/contracts';
-import { browserClockFormat, localTimeZone } from '@buxa/shared/clockPreference';
-import { Select } from '@/components/atoms';
+import { browserClockFormat } from '@buxa/shared/clockPreference';
+import { RadioGroup } from '@/components/atoms';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { updateTimeFormatAction } from '@/actions/account';
 
 const TIME_FORMATS: { value: ClockFormat; label: string }[] = [
-  { value: '12h', label: '12-hour (9:05 AM)' },
-  { value: '24h', label: '24-hour (09:05)' },
+  { value: '24h', label: '24-hour' },
+  { value: '12h', label: '12-hour' },
 ];
 
 /**
@@ -28,11 +28,9 @@ export function TimeFormatCard({
 }) {
   const { toast } = useUi();
   const [browser, setBrowser] = useState<ClockFormat>('24h');
-  const [zone, setZone] = useState('');
   const [format, setFormat] = useState<ClockFormat | undefined>(clockFormat);
   useEffect(() => {
     setBrowser(browserClockFormat());
-    setZone(localTimeZone());
   }, []);
   useEffect(() => {
     setFormat(clockFormat);
@@ -57,19 +55,15 @@ export function TimeFormatCard({
     <section className={`panel settings-tile settings-choice ${className ?? ''}`} aria-labelledby="time-format-title">
       <div className="settings-choice__text">
         <h2 id="time-format-title">Time format</h2>
-        <p className="muted">
-          How times show for you. Until you choose, your browser’s setting is used
-          {zone ? ` (${zone}).` : '.'}
-        </p>
+        <p className="muted">How times show for you. Until you choose, your browser’s setting is used.</p>
       </div>
       <div className="settings-choice__control">
-      <Select
-        label="Time format"
-        hideLabel
-        value={shown}
-        onChange={value => value && void choose(value as ClockFormat)}
-        options={TIME_FORMATS}
-      />
+        <RadioGroup
+          label="Format"
+          value={shown}
+          onChange={value => void choose(value as ClockFormat)}
+          options={TIME_FORMATS}
+        />
       </div>
     </section>
   );
