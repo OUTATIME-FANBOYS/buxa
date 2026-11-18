@@ -2,11 +2,10 @@ import 'server-only';
 import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import type { Membership } from '@buxa/contracts';
 import type { Actor } from '@buxa/domain';
 import { ROUTES } from '@buxa/shared/config/routes';
 import { publicEnv } from '@buxa/shared/config/env';
-import type { Session } from '../auth/session';
+import { openableCamps, type CampMembership, type Session } from '../auth/session';
 import { sessionFromToken } from '../auth/sessionFromToken';
 import { MAINTENANCE_PATH, isServiceRefused } from '../availability';
 import { isHttpError } from '../http/errors';
@@ -106,13 +105,14 @@ export async function requireSession(): Promise<Session> {
 }
 
 /**
- * The camp to work in: the selected one if the person still belongs to it, otherwise their first, otherwise null (they have no camp yet).
- * Reads the CAMP_COOKIE; the cookie is validated against `session.memberships`.
+ * The camp to work in: the selected one if the person still belongs to it (active or archived), otherwise their first active camp,
+ * otherwise null (they have no camp yet). Reads the CAMP_COOKIE; the cookie is validated against the session's memberships.
  */
-export async function getCurrentCamp(session: Session): Promise<Membership | null> {
+export async function getCurrentCamp(session: Session): Promise<CampMembership | null> {
   const selected = (await cookies()).get(CAMP_COOKIE)?.value;
+  const camps = openableCamps(session);
 
-  return session.memberships.find(membership => membership.orgId === selected) ?? session.memberships[0] ?? null;
+  return camps.find(camp => camp.orgId === selected) ?? camps.find(camp => !camp.archived) ?? null;
 }
 
 /** Remember the selected camp. Only callable from a Server Action or Route Handler (it writes a cookie). */
@@ -120,7 +120,10 @@ export async function rememberCamp(orgId: string): Promise<void> {
   (await cookies()).set(CAMP_COOKIE, orgId, hardenCookie({ maxAge: ONE_YEAR_SECONDS }));
 }
 
-/** The Actor the permission rules and services expect. Pure. */
-export function toActor(session: Session, camp: Membership): Actor {
-  return { userId: session.user.id, orgId: camp.orgId, role: camp.role };
+/**
+ * The Actor the permission rules and services expect. Pure. This is the one place a camp context becomes an Actor for the
+ * services, so the archived flag is set here (the domain refuses every write while it is set).
+ */
+export function toActor(session: Session, camp: CampMembership): Actor {
+  return { userId: session.user.id, orgId: camp.orgId, role: camp.role, archived: camp.archived };
 }

@@ -1,12 +1,11 @@
 import { notFound } from 'next/navigation';
-import type { Membership } from '@buxa/contracts';
 import { getCurrentCamp, requireSession, toActor } from '../../session';
-import type { Session } from '../../auth/session';
+import type { CampMembership, Session } from '../../auth/session';
 import type { Actor } from '@buxa/domain';
 
 export interface CampContext {
   session: Session;
-  camp: Membership;
+  camp: CampMembership;
   actor: Actor;
 }
 

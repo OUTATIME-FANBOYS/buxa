@@ -6,7 +6,7 @@ import { SLUG_TAKEN, expectedCampFailure, membershipOf } from '../failures';
 describe('camp action failures', () => {
   it('finds a posted camp only among the signed-in person’s memberships', () => {
     const session = { memberships: [{ orgId: 'o-1', role: 'owner' }] } as unknown as Session;
-    expect(membershipOf(session, 'o-1')).toEqual({ orgId: 'o-1', role: 'owner' });
+    expect(membershipOf(session, 'o-1')).toEqual({ orgId: 'o-1', role: 'owner', archived: false });
     expect(membershipOf(session, 'o-2')).toBeNull();
   });
   it('turns a taken address into a field error on the slug', () => {

@@ -69,6 +69,15 @@ export class InMemoryStore implements UserRepository, OrgRepository {
         return { orgId: o.id, role: m.role, name: o.name, slug: o.slug };
       });
   }
+  async archivedMembershipsOf(userId: string): Promise<Membership[]> {
+    return this.members
+      .filter(m => m.userId === userId && this.orgs.get(m.orgId)!.archivedAt)
+      .map(m => {
+        const o = this.orgs.get(m.orgId)!;
+
+        return { orgId: o.id, role: m.role, name: o.name, slug: o.slug };
+      });
+  }
   async archive(actor: { userId: string; orgId: string }): Promise<{ archivedAt: string }> {
     const o = this.orgs.get(actor.orgId);
     if (!o) {

@@ -6,25 +6,29 @@ import { AccountMenu } from '@/components/components/camp/export';
 import { CampSwitcher } from '@/components/components/camp/export';
 import { InstallHint } from '@/components/components/install/export';
 import { navGroupsFor } from '@buxa/shared';
-import { Shell } from '@/components/components/camp/export';
+import { ArchivedBanner, Shell } from '@/components/components/camp/export';
+import type { ArchivedCamp } from '@/actions/camp';
 import type { CampFrameElement } from './types';
 
 interface Props {
   user: User;
   camps: readonly Membership[];
-  current: Membership | null;
+  /** The camp being worked in. `archived` shows it read-only, with the banner. */
+  current: (Membership & { archived?: boolean }) | null;
+  archivedCamps?: readonly ArchivedCamp[];
   children: ReactNode;
 }
 
 /** The signed-in frame around camp operations pages. With no camp yet, first-run setup is the only page, whatever address was asked for. */
-export function CampFrame({ user, camps, current, children }: Props): CampFrameElement {
+export function CampFrame({ user, camps, current, archivedCamps = [], children }: Props): CampFrameElement {
   return (
     <Shell
       nav={navGroupsFor(current?.role ?? null)}
       brandHref={ROUTES.camp}
-      topBarStart={<CampSwitcher camps={camps} current={current} />}
+      topBarStart={<CampSwitcher camps={camps} current={current} archivedCamps={archivedCamps} />}
       topBarEnd={<AccountMenu user={user} />}
     >
+      {current?.archived && <ArchivedBanner />}
       {current ? children : <NewCampForm first />}
       <InstallHint />
     </Shell>
