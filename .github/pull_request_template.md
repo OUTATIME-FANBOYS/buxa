@@ -1,3 +1,7 @@
+<!-- Link the board issue this PR tracks. Use 'Closes #123' to close it on merge, or 'Refs #123' if it does not. A PR without one fails the PR board link check. -->
+
+**Board issue:** Closes #
+
 ## 🎯 What are we fixing?
 
 <!-- One or two sentences. Name the feature, bug or area in plain words. -->
