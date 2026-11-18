@@ -13,7 +13,7 @@
 
 .camera-scanner { display: grid; gap: var(--s3); justify-items: start; }
 .camera-video { width: 100%; max-width: 480px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r-1); background: #000; }
-.camera-scanner .btn { min-height: 48px; }
+.camera-scanner .button { min-height: 48px; }
 
 @media print {
   @page { size: 86mm 54mm; margin: 0; }

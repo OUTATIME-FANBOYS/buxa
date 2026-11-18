@@ -6,4 +6,4 @@
 .install-hint-title { display: flex; align-items: center; gap: var(--s2); font-weight: 600; }
 .install-hint p { margin: 0; }
 .install-hint-actions { display: flex; gap: var(--s2); justify-content: flex-end; flex-wrap: wrap; }
-.install-hint .btn { min-height: 44px; }
+.install-hint .button { min-height: 44px; }

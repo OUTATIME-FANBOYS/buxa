@@ -23,7 +23,7 @@
 .result-name { font-size: 28px; line-height: 1.2; margin: 0; overflow-wrap: anywhere; }
 .result-since { margin: 0; font-weight: 600; color: var(--text-2); }
 .result-action { display: grid; }
-.result-action .btn { width: 100%; }
+.result-action .button { width: 100%; }
 
 .notice { border-radius: var(--r-3); padding: var(--s3) var(--s4); display: grid; gap: var(--s1); background: var(--tone-soft); color: var(--tone-ink); border: 1px solid var(--tone); }
 .notice p { margin: 0; }
@@ -57,7 +57,7 @@
   .scan-panel input { font-size: 16px; }
   .result-card { padding: var(--s4); }
   .result-name { font-size: 24px; }
-  .checkout-actions .btn { flex: 1 1 0; }
+  .checkout-actions .button { flex: 1 1 0; }
   .onsite-who { flex-wrap: wrap; overflow-wrap: anywhere; }
   .notice-title { font-size: 18px; }
   /* The log stacks: each visit is a block, with each cell's label in front of its value. */

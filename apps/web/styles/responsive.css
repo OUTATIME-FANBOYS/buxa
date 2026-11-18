@@ -32,7 +32,7 @@
   *, *::before, *::after { transition-duration: .01ms !important; scroll-behavior: auto !important; }
   .popover, .dialog, .drawer, .toast, .scrim, .card-ghost { animation: fade .15s linear both !important; }
   .dialog.leaving, .drawer.leaving, .scrim.leaving { animation: fadeOut .12s linear forwards !important; }
-  .project-card:hover, .btn:active, .chip:active, .card:active { transform: none !important; }
+  .project-card:hover, .button:active, .chip:active, .card:active { transform: none !important; }
   .progress span { transition: none; }
 }
 @media (prefers-reduced-transparency: reduce) {

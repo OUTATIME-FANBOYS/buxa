@@ -11,7 +11,7 @@
 .classes-enrolments { padding-top: var(--s4); border-top: 1px solid var(--line); }
 @media (max-width: 720px) {
   .classes-form .form-row > .field, .classes-enrol .form-row > .field { flex-basis: 100%; }
-  .classes-actions .btn { flex: 1 1 100%; }
+  .classes-actions .button { flex: 1 1 100%; }
 }
 
 /* ---------- New class: the page and the dialog share one layout (the same scale as Add person) ----------
@@ -27,7 +27,7 @@ form.class-form { display: grid; gap: var(--s5); align-content: start; min-width
 .class-form .field { gap: var(--s2); }
 .class-form .field-label { font-size: var(--fs-b); font-weight: 600; color: var(--text); }
 .class-form .form-row { gap: var(--s4); }
-.class-form .btn { font-size: var(--fs-b); }
+.class-form .button { font-size: var(--fs-b); }
 .class-form .classes-actions { justify-content: flex-end; padding-top: var(--s4); border-top: 1px solid var(--line); }
 @media (pointer: coarse) {
   /* Touch: the touch target again, and 16px text so iOS does not zoom into an input. */
