@@ -26,6 +26,9 @@ app.listen().then(p => {
   console.log(`  Run secret    ${secret}`);
   console.log(`                Sent as X-Buxa-Run-Secret on /api. The app reads it from NEXT_PUBLIC_LEGACY_SECRET.`);
   console.log(`\n  Open the app, then Agents → your agent → Connect, to get a token for Claude.\n`);
+}).catch((err: unknown) => {
+  console.error(err);
+  process.exit(1);
 });
 const stop = () => {
   void app.close().then(() => process.exit(0));
