@@ -23,6 +23,7 @@ const services = vi.hoisted(() => ({
 
 vi.mock('next/navigation', () => ({ notFound, redirect: vi.fn() }));
 vi.mock('@buxa/server/runtime', () => ({ getRuntime: () => ({ services }) }));
+vi.mock('@buxa/server/session/index', () => ({ requireSession: async () => ({ user: { clockFormat: null } }) }));
 vi.mock('@buxa/server/composers/people/camp', () => ({
   currentActor: () => settle(() => (session.role ? { userId: 'u1', orgId: 'o1', role: session.role } : null)),
 }));
