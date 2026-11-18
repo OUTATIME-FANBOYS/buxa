@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { Dialog } from '@/components/components/export';
-import { Button, Field } from '@/components/elements/export';
+import { Button } from '@/components/elements/export';
+import { TextField } from '@/components/atoms';
 import { updateProfileAction } from '@/actions/account';
 
 /** The first and last name the person saved, as the server returns them. */
@@ -61,15 +62,24 @@ export function UpdateDisplayNameDialog({
           void save();
         }}
       >
-        <Field label="First name" error={errors.firstName}>
-          <input value={first} onChange={e => setFirst(e.target.value)} maxLength={60} autoComplete="given-name" />
-        </Field>
-        <Field label="Last name" hint="Optional." error={errors.lastName}>
-          <input value={last} onChange={e => setLast(e.target.value)} maxLength={60} autoComplete="family-name" />
-        </Field>
-        <Field label="Role or title">
-          <input value={role} onChange={e => setRole(e.target.value)} maxLength={60} />
-        </Field>
+        <TextField
+          label="First name"
+          error={errors.firstName}
+          value={first}
+          onChange={setFirst}
+          maxLength={60}
+          autoComplete="given-name"
+        />
+        <TextField
+          label="Last name"
+          hint="Optional."
+          error={errors.lastName}
+          value={last}
+          onChange={setLast}
+          maxLength={60}
+          autoComplete="family-name"
+        />
+        <TextField label="Role or title" value={role} onChange={setRole} maxLength={60} />
         {errors.form && (
           <p className="field-error" role="alert">
             {errors.form}

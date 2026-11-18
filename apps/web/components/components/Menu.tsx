@@ -31,7 +31,8 @@ function SubMenu({ item, onChosen }: { item: MenuItem & { submenu: MenuItem[] };
 
   return (
     <>
-      <button
+      <Button
+        variant="ghost"
         type="button"
         role="menuitem"
         aria-haspopup="menu"
@@ -43,12 +44,13 @@ function SubMenu({ item, onChosen }: { item: MenuItem & { submenu: MenuItem[] };
         {item.icon ? <Icon name={item.icon} size={15} /> : <span style={{ width: 15 }} />}
         <span>{item.label}</span>
         <Icon name="right" size={14} className={`menu-chev${open ? ' is-open' : ''}`} />
-      </button>
+      </Button>
       {open && (
         <div id={panel} role="group" aria-label={item.label} className="menu-sub">
           {item.submenu.map((choice, j) => (
-            <button
+            <Button
               key={j}
+              variant="ghost"
               type="button"
               role="menuitemradio"
               aria-checked={!!choice.checked}
@@ -60,7 +62,7 @@ function SubMenu({ item, onChosen }: { item: MenuItem & { submenu: MenuItem[] };
             >
               <span>{choice.label}</span>
               {choice.checked && <Icon name="check" size={14} className="menu-check" />}
-            </button>
+            </Button>
           ))}
         </div>
       )}

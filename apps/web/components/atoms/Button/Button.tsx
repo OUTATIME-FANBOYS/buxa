@@ -88,7 +88,7 @@ interface CommonButtonProps extends NativeButtonProps {
   rel?: string;
   ref?: Ref<HTMLElement>;
   /** A widget role the button plays (menuitem, radio, tab). HeroUI drops it, so the atom sets it on the element. */
-  role?: 'menuitem' | 'radio' | 'tab';
+  role?: 'menuitem' | 'menuitemradio' | 'radio' | 'tab';
   'aria-checked'?: boolean;
   'aria-selected'?: boolean;
 }
