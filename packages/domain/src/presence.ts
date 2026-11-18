@@ -6,5 +6,6 @@ export function requirePresent<T>(value: T | null | undefined, label: string): T
   if (value === undefined || value === null) {
     throw new Error(`Expected ${label} to be present`);
   }
+
   return value;
 }
