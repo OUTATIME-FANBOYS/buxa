@@ -8,6 +8,7 @@
  */
 import type { AppState, HealthReply, IssuedToken, PutReply, StateReply, TokenInfo, VersionEvent } from './types';
 import { pickData, type Data, DATA_KEYS, isData } from './dataSlices';
+import { requirePresent } from '@buxa/domain';
 
 export type SyncState = 'local' | 'connecting' | 'synced' | 'offline';
 export type Updater = (s: AppState) => AppState;
@@ -123,7 +124,7 @@ export function createSync(h: Host) {
       return;
     }
     if (res.status === 200) {
-      version = res.version!; last = data; h.pending.splice(0, n); h.onStatus('synced'); if (h.pending.length) {
+      version = requirePresent(res.version, 'res.version'); last = data; h.pending.splice(0, n); h.onStatus('synced'); if (h.pending.length) {
         return flushNow();
       }
     } else if (res.status === 409) {
@@ -197,7 +198,7 @@ export function createSync(h: Host) {
       if (r.empty || !r.data) { // first run: this browser's data becomes the server's
         const data = pickData(h.getState()); const put = await serverApi.putState(r.version, data);
         if (put.status === 200) {
-          version = put.version!; last = data; h.pending.length = 0;
+          version = requirePresent(put.version, 'put.version'); last = data; h.pending.length = 0;
         } else {
           await pull();
         }

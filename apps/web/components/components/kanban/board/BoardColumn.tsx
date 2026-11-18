@@ -27,7 +27,7 @@ export function BoardColumn({ col, index, project, items, readOnly, dnd, adding,
         {!readOnly && <span className="grip" aria-hidden="true"><Icon name="grip" size={14} /></span>}
         <i className={`kind-dot kind-${col.kind}`} aria-hidden="true" /><h2>{col.name}</h2><span className="count" aria-label={`${items.length} tasks`}>{items.length}</span>
         <span className="grow" />
-        {!readOnly && <Button variant="icon" aria-label={`Add task to ${col.name}`} onClick={onAdd}><Icon name="plus" /></Button>}
+        {!readOnly && <Button iconOnly icon="plus" aria-label={`Add task to ${col.name}`} onClick={onAdd} />}
         {!readOnly && <Menu label={`Column options for ${col.name}`} trigger={<Icon name="more" />} items={[
           { label: 'Edit column', icon: 'edit', onSelect: onEdit },
           { label: 'Move left', icon: 'arrowLeft', disabled: index === 0, onSelect: () => actions.moveColumn(project.id, col.id, project.columns[index - 1].id) },
@@ -47,7 +47,7 @@ export function BoardColumn({ col, index, project, items, readOnly, dnd, adding,
         {items.length === 0 && !over && !adding && <div className="col-empty">{readOnly ? 'Nothing here' : 'Drop tasks here'}</div>}
         {adding && <QuickAdd project={project} column={col} onDone={onStopAdding} />}
       </div>
-      {!readOnly && !adding && <button className="col-add" onClick={onAdd}><Icon name="plus" size={14} /> Add task</button>}
+      {!readOnly && !adding && <Button variant="ghost" size="sm" icon="plus" fullWidth onClick={onAdd}>Add task</Button>}
     </section>
   );
 }

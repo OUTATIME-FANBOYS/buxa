@@ -1,5 +1,5 @@
 import type { CreatedOrg, Member, NewOrgInput, Org, OrgPatchInput, OrgSummary } from '@buxa/contracts';
-import type { Actor } from '@buxa/domain';
+import type { Actor, Role } from '@buxa/domain';
 
 /** Raised when another organisation already uses the requested address. */
 export class SlugTakenError extends Error {
@@ -32,4 +32,12 @@ export interface OrgRepository {
   get(orgId: string): Promise<Org>;
   rename(actor: Actor, input: OrgPatchInput): Promise<OrgSummary>;
   listMembers(orgId: string): Promise<Member[]>;
+  /** Sets the camp's archive time and records the audit entry, atomically. Refuses a camp that is already archived. */
+  archive(actor: Actor): Promise<{ archivedAt: string }>;
+  /** Deletes the camp and everything in it. The caller has checked the owner role and the exact name. */
+  deleteCamp(actor: Actor, confirmName: string): Promise<void>;
+  /** The archived camps `userId` belongs to, with their role there (the role decides who may delete). */
+  archivedCampsOf(userId: string): Promise<ArchivedCampRecord[]>;
 }
+
+export interface ArchivedCampRecord { id: string; name: string; archivedAt: string; role: Role }

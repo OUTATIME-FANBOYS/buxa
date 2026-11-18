@@ -10,6 +10,7 @@ import { Popover } from '@/components/components/export';
 import { Avatar } from '@/components/elements/export';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { PRIORITIES, emptyFilter, isFilterActive } from '@buxa/shared';
+import { requirePresent } from '@buxa/domain';
 
 function Chip({ label, count, children, width = 220 }: { label: string; count: number; children: ReactNode; width?: number }) {
   const [open, setOpen] = useState(false); const ref = useRef<HTMLButtonElement>(null);
@@ -44,7 +45,7 @@ export function FilterBar({ filter, setFilter, project, tags, showStatus = true 
     <div className="filters" role="group" aria-label="Filters and sorting">
       <div className="search-local"><Icon name="search" size={15} />
         <input value={filter.q} onChange={e => set({ q: e.target.value })} placeholder="Filter tasks" aria-label="Filter tasks by title or description" />
-        {filter.q && <Button variant="icon" aria-label="Clear search" onClick={() => set({ q: '' })}><Icon name="x" size={13} /></Button>}</div>
+        {filter.q && <Button iconOnly icon="x" aria-label="Clear search" onClick={() => set({ q: '' })} />}</div>
       <Chip label="Priority" count={filter.priorities.length}>
         {PRIORITIES.slice().reverse().map(p => <Check key={p} checked={filter.priorities.includes(p)} onChange={() => set({ priorities: toggle(filter.priorities, p) })}><PriorityMark priority={p} label /></Check>)}
       </Chip>
@@ -62,7 +63,7 @@ export function FilterBar({ filter, setFilter, project, tags, showStatus = true 
         {tags.length === 0 && <p className="muted small pad">No tags yet.</p>}
         {tags.map(t => <Check key={t} checked={filter.tags.includes(t)} onChange={() => set({ tags: toggle(filter.tags, t) })}>{t}</Check>)}
       </Chip>
-      <Menu label="Sort tasks" className="chip" align="start" trigger={<><Icon name="timeline" size={13} />{SORT.find(x => x.v === filter.sort)!.l}<Icon name="down" size={13} /></>}
+      <Menu label="Sort tasks" className="chip" align="start" trigger={<><Icon name="timeline" size={13} />{requirePresent(SORT.find(x => x.v === filter.sort), 'SORT.find(x => x.v === filter.sort)').l}<Icon name="down" size={13} /></>}
         items={SORT.map(x => ({ label: x.l, checked: filter.sort === x.v, onSelect: () => set({ sort: x.v }) }))} />
       <label className="chip chip-check"><input type="checkbox" checked={filter.archived} onChange={e => set({ archived: e.target.checked })} /> Archived</label>
       <span className="grow" />

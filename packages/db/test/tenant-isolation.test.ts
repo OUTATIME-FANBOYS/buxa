@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
-import { ROLES } from '@buxa/domain';
+import { ROLES, settle } from '@buxa/domain';
 import { migrate, withOrg } from '../src';
 import type { Row } from '../types';
 
@@ -80,7 +80,7 @@ describe.skipIf(!url)('tenant isolation (row-level security)', () => {
   });
 
   it('rejects a malformed organisation id before it reaches SQL', async () => {
-    await expect(withOrg(pool, `'; DROP TABLE orgs; --`, async () => 1)).rejects.toThrow(/Invalid organisation id/);
+    await expect(withOrg(pool, `'; DROP TABLE orgs; --`, () => settle(() => 1))).rejects.toThrow(/Invalid organisation id/);
   });
 
   it('database roles match the permissions module (no drift)', async () => {

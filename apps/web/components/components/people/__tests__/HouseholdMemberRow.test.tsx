@@ -2,8 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { HouseholdMember } from '@buxa/contracts';
 import { HouseholdMemberRow } from '@/components/components/people/export';
+import { settle } from '@buxa/domain';
 
-vi.mock('@buxa/server/composers/people/unlinkHouseholdAction', () => ({ unlinkHouseholdAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/people/unlinkHouseholdAction', () => ({ unlinkHouseholdAction: () => settle(() => ({ status: 'idle' })) }));
 
 const member = { personId: 'p-2', givenName: 'Jo', familyName: 'Cole', relationship: 'Mother', isGuardian: true, canPickup: true } as unknown as HouseholdMember;
 

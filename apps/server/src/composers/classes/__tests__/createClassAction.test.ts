@@ -4,6 +4,7 @@ import { idle } from '@buxa/shared';
 import { forbidden } from '../../../http/errors';
 import { createClassAction } from '../createClassAction';
 import { formOf } from './form';
+import { settle } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({
   actor: null as null | { userId: string; orgId: string; role: 'owner' | 'admin' | 'staff' | 'viewer' },
@@ -14,7 +15,7 @@ const h = vi.hoisted(() => ({
 vi.mock('next/cache', () => ({ revalidatePath: h.revalidatePath }));
 vi.mock('next/navigation', () => ({ redirect: h.redirect }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: { classes: h.classes } }) }));
-vi.mock('../../people/camp', () => ({ currentActor: async () => h.actor }));
+vi.mock('../../people/camp', () => ({ currentActor: () => settle(() => h.actor) }));
 
 const CLASS_ID = '44444444-4444-4444-8444-444444444444';
 const valid = { name: 'Robotics', description: 'Build robots.', minAge: '8', maxAge: '12', capacity: '12', ratioInstructors: '', ratioCampers: '' };

@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { NewPersonForm } from '@/components/components/people/forms/export';
+import { settle } from '@buxa/domain';
 
-vi.mock('@buxa/server/composers/people/createPersonAction', () => ({ createPersonAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/people/createPersonAction', () => ({ createPersonAction: () => settle(() => ({ status: 'idle' })) }));
 
 describe('NewPersonForm', () => {
   it('joins the person to the household they came from when given one', () => {
@@ -31,6 +32,6 @@ describe('NewPersonForm', () => {
     const html = renderToStaticMarkup(<NewPersonForm household={null} households={[]} variant="dialog" />);
     expect(html).toContain('class="people-form person-form"');
     expect(html).not.toContain('href="/camp/people"');
-    expect(html).toMatch(/<button[^>]*class="button button--md button--outline"[^>]*type="button"[^>]*>Cancel<\/button>/);
+    expect(html).toMatch(/<button[^>]*class="button button--md button--secondary"[^>]*type="button"[^>]*>Cancel<\/button>/);
   });
 });

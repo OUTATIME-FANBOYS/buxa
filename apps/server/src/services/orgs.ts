@@ -1,7 +1,8 @@
+import type { ArchivedCampRecord } from '../orgs/OrgRepository';
 import type { CreatedOrg, Members, NewOrgInput, Org, OrgPatchInput, OrgSummary } from '@buxa/contracts';
 import { can, type Actor } from '@buxa/domain';
 import { assertAllowed } from '../auth/authorize';
-import { conflict } from '../http/errors';
+import { badRequest, conflict } from '../http/errors';
 import { isSlugTaken, type OrgRepository } from '../orgs/OrgRepository';
 import { guard } from './shared/errors';
 
@@ -14,6 +15,12 @@ export interface OrgService {
   getCamp(actor: Actor): Promise<Org>;
   renameCamp(actor: Actor, input: OrgPatchInput): Promise<OrgSummary>;
   listMembers(actor: Actor): Promise<Members>;
+  /** Owner only. Hides the camp and keeps all its data. There is no unarchive yet. */
+  archiveCamp(actor: Actor, orgId: string): Promise<{ archivedAt: string }>;
+  /** Owner only. Removes the camp and everything in it. `confirmName` must equal the camp's name exactly (capitals included). */
+  deleteCamp(actor: Actor, orgId: string, confirmName: string): Promise<void>;
+  /** The archived camps this person belongs to. Read-only; any role may see them. */
+  listArchivedCamps(userId: string): Promise<ArchivedCampRecord[]>;
 }
 
 export function createOrgService(orgs: OrgRepository): OrgService {
@@ -43,6 +50,22 @@ export function createOrgService(orgs: OrgRepository): OrgService {
       const seeEmail = can(actor, 'members:read_contact');
 
       return { members: members.map(m => ({ ...m, email: seeEmail ? m.email : null })) };
+    },
+    async archiveCamp(actor, orgId) {
+      assertAllowed(actor, 'org:archive', { orgId });
+
+      return guard(() => orgs.archive(actor));
+    },
+    async deleteCamp(actor, orgId, confirmName) {
+      assertAllowed(actor, 'org:delete', { orgId });
+      const camp = await guard(() => orgs.get(actor.orgId));
+      if (confirmName !== camp.name) {
+        throw badRequest('To delete the camp, type its name exactly as it is written, capitals included. Nothing was deleted.');
+      }
+      await guard(() => orgs.deleteCamp(actor, confirmName));
+    },
+    async listArchivedCamps(userId) {
+      return guard(() => orgs.archivedCampsOf(userId));
     },
   };
 }

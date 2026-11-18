@@ -8,6 +8,6 @@ vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => ({ actions:
 
 describe('ResetDemoButton', () => {
   it('is a danger-styled button to reset the browser demo, which asks before it acts', () => {
-    expect(renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}><ResetDemoButton /></UiProvider>)).toMatch(/<button[^>]*class="[^"]*buxa-button--danger-text[^"]*"[^>]*>Reset demo data<\/button>/);
+    expect(renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}><ResetDemoButton /></UiProvider>)).toMatch(/<button[^>]*class="[^"]*button--danger-soft[^"]*"[^>]*>Reset demo data<\/button>/);
   });
 });

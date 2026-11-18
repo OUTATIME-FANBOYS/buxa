@@ -29,8 +29,8 @@ export function Notifications() {
 
   return (
     <>
-      <Button variant="icon" ref={btn} className="bell" aria-label={`Notifications${unread ? `, ${unread} need attention` : ''}`} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(o => !o)}>
-        <Icon name="bell" />{unread > 0 && <span className="badge">{unread > 9 ? '9+' : unread}</span>}
+      <Button iconOnly icon="bell" ref={btn} className="bell" aria-label={`Notifications${unread ? `, ${unread} need attention` : ''}`} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(o => !o)}>
+        {unread > 0 && <span className="badge">{unread > 9 ? '9+' : unread}</span>}
       </Button>
       {open && (
         <Popover anchor={btn.current} onClose={close} align="end" width={360} label="Notifications" className="notif">

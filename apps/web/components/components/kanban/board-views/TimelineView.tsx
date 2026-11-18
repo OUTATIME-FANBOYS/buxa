@@ -6,7 +6,6 @@ import { useStore } from '@buxa/middleware/providers/providers';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
 import { Avatar, Button } from '@/components/elements/export';
 import { Empty } from '@/components/components/export';
-import { Icon } from '@/components/elements/export';
 import { subtaskProgress } from '@buxa/shared';
 import { addDays, diffDays, fmt, parse, today } from '@buxa/shared';
 
@@ -65,8 +64,8 @@ export function TimelineView({ tasks }: { tasks: Task[] }) {
       <div className="cal-head">
         <h2>{fmt(base)} – {fmt(addDays(base, DAYS - 1), true)}</h2><span className="grow" />
         <Button size="sm" onClick={() => setOffset(0)}>Today</Button>
-        <Button variant="icon" aria-label="Earlier" onClick={() => setOffset(o => o - 2)}><Icon name="left" /></Button>
-        <Button variant="icon" aria-label="Later" onClick={() => setOffset(o => o + 2)}><Icon name="right" /></Button>
+        <Button iconOnly icon="left" aria-label="Earlier" onClick={() => setOffset(o => o - 2)} />
+        <Button iconOnly icon="right" aria-label="Later" onClick={() => setOffset(o => o + 2)} />
       </div>
       <div className="tl-scroll">
         <div className="tl" style={{ width: 240 + DAYS * DAYW }}>

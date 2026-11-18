@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
 import { TEST_SUPABASE_URL } from './support';
+import { settle } from '@buxa/domain';
 
 /** What the identity provider (GoTrue) answers. Only the shapes the Supabase library reads. */
 export const gotrue = {
@@ -17,19 +18,21 @@ export interface Call { method: string; path: string }
 /** Replaces `fetch` with a fake identity provider that answers by path, and records what was asked. No network is touched. */
 export function stubIdentityProvider(replies: Record<string, Reply>): Call[] {
   const calls: Call[] = [];
-  vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
-    const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url);
-    const call = { method: init?.method ?? 'GET', path: url.pathname };
-    calls.push(call);
-    if (url.origin !== TEST_SUPABASE_URL) {
-      throw new Error(`unexpected request to ${url.origin}`);
-    }
-    const reply = replies[url.pathname];
-    if (!reply) {
-      throw new Error(`unexpected request ${call.method} ${call.path}`);
-    }
+  vi.stubGlobal('fetch', (input: RequestInfo | URL, init?: RequestInit) => {
+    return settle(() => {
+      const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url);
+      const call = { method: init?.method ?? 'GET', path: url.pathname };
+      calls.push(call);
+      if (url.origin !== TEST_SUPABASE_URL) {
+        throw new Error(`unexpected request to ${url.origin}`);
+      }
+      const reply = replies[url.pathname];
+      if (!reply) {
+        throw new Error(`unexpected request ${call.method} ${call.path}`);
+      }
 
-    return new Response(reply.status === 204 ? null : JSON.stringify(reply.body ?? {}), { status: reply.status ?? 200, headers: { 'content-type': 'application/json' } });
+      return new Response(reply.status === 204 ? null : JSON.stringify(reply.body ?? {}), { status: reply.status ?? 200, headers: { 'content-type': 'application/json' } });
+    });
   });
 
   return calls;

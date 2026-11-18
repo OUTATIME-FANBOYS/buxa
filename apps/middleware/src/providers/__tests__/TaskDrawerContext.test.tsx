@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { TaskDrawerProvider, useTaskDrawer } from '../TaskDrawerContext';
+import { requirePresent } from '@buxa/domain';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -27,15 +28,15 @@ describe('TaskDrawerContext', () => {
   });
 
   it('starts with no task open', () => {
-    expect(api!.drawer).toBeNull();
+    expect(requirePresent(api, 'api').drawer).toBeNull();
   });
   it('opens an existing task or a new one with its starting values, and closes again', () => {
-    act(() => api!.openTask('t-1'));
-    expect(api!.drawer).toEqual({ id: 't-1', defaults: undefined });
-    act(() => api!.openTask('new', { columnId: 'c-1', due: '2027-07-10' }));
-    expect(api!.drawer).toEqual({ id: 'new', defaults: { columnId: 'c-1', due: '2027-07-10' } });
-    act(() => api!.closeTask());
-    expect(api!.drawer).toBeNull();
+    act(() => requirePresent(api, 'api').openTask('t-1'));
+    expect(requirePresent(api, 'api').drawer).toEqual({ id: 't-1', defaults: undefined });
+    act(() => requirePresent(api, 'api').openTask('new', { columnId: 'c-1', due: '2027-07-10' }));
+    expect(requirePresent(api, 'api').drawer).toEqual({ id: 'new', defaults: { columnId: 'c-1', due: '2027-07-10' } });
+    act(() => requirePresent(api, 'api').closeTask());
+    expect(requirePresent(api, 'api').drawer).toBeNull();
   });
   it('refuses to be used outside its provider', () => {
     expect(() => {

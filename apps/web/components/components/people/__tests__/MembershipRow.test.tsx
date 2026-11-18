@@ -2,8 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { PersonMembership } from '@buxa/contracts';
 import { MembershipRow } from '@/components/components/people/export';
+import { settle } from '@buxa/domain';
 
-vi.mock('@buxa/server/composers/people/revokeMembershipAction', () => ({ revokeMembershipAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/people/revokeMembershipAction', () => ({ revokeMembershipAction: () => settle(() => ({ status: 'idle' })) }));
 
 const membership = { id: 'm-1', plan: 'Full season', startsOn: '2027-06-01', endsOn: '2027-08-31', status: 'valid', revokedAt: null, revokedReason: null } as unknown as PersonMembership;
 

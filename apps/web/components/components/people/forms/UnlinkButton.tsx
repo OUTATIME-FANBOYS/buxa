@@ -14,7 +14,7 @@ export function UnlinkButton({ householdId, personId, name }: { householdId: str
     <form action={formAction} className="people-inline">
       <input type="hidden" name="householdId" value={householdId} />
       <input type="hidden" name="personId" value={personId} />
-      <Button variant="danger-ghost" size="sm" disabled={pending} aria-label={`Remove ${name} from this household`}>
+      <Button variant="danger-soft" size="sm" disabled={pending} aria-label={`Remove ${name} from this household`}>
         {pending ? 'Removing…' : 'Remove'}
       </Button>
       {state.status === 'error' && <FormMessage state={state} />}

@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import type { Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
-import { Icon, Button } from '@/components/elements/export';
+import { Button } from '@/components/elements/export';
 import { fmt, parse, toISO, today } from '@buxa/shared';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -45,8 +45,8 @@ export function CalendarView({ tasks, canCreate, projectId }: { tasks: Task[]; c
         <h2>{cursor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</h2>
         <span className="grow" />
         <Button size="sm" onClick={() => setCursor(monthStart(new Date()))}>Today</Button>
-        <Button variant="icon" aria-label="Previous month" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}><Icon name="left" /></Button>
-        <Button variant="icon" aria-label="Next month" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}><Icon name="right" /></Button>
+        <Button iconOnly icon="left" aria-label="Previous month" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))} />
+        <Button iconOnly icon="right" aria-label="Next month" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))} />
       </div>
       <div className="cal-grid" role="grid" aria-label="Task deadlines">
         {WEEKDAYS.map(d => <div key={d} className="cal-dow" role="columnheader">{d}</div>)}
@@ -56,7 +56,7 @@ export function CalendarView({ tasks, canCreate, projectId }: { tasks: Task[]; c
           return (
             <div key={day} role="gridcell" className={`cal-cell ${d.getMonth() !== month ? 'out' : ''} ${day === t0 ? 'today' : ''}`}>
               <div className="cal-num"><span>{d.getDate()}</span>
-                {canCreate && projectId && <Button variant="icon" className="add-day" aria-label={`Add task due ${fmt(day)}`} onClick={() => openTask('new', { due: day, projectId })}><Icon name="plus" size={13} /></Button>}</div>
+                {canCreate && projectId && <Button iconOnly icon="plus" className="add-day" aria-label={`Add task due ${fmt(day)}`} onClick={() => openTask('new', { due: day, projectId })} />}</div>
               {shown.map(t => (
                 <button key={t.id} className={`cal-task prio-bg-${t.priority} ${kindOf(t) === 'done' ? 'is-done' : ''}`} onClick={() => openTask(t.id)} title={t.title}>
                   <span className="cal-dot" /><span className="cal-title">{t.title}</span></button>

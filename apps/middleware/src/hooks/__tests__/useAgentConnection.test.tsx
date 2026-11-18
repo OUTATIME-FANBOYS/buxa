@@ -6,6 +6,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { UiProvider } from '../../providers/UiProvider';
 import { serverApi } from '@buxa/shared';
 import { useAgentConnection } from '../useAgentConnection';
+import { requirePresent } from '@buxa/domain';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -35,7 +36,7 @@ describe('useAgentConnection', () => {
       await Promise.resolve();
     });
     expect(serverApi.tokenInfo).toHaveBeenCalledWith('u-agent-triage');
-    expect(api!.conn.phase).toBe('ready');
+    expect(requirePresent(api, 'api').conn.phase).toBe('ready');
   });
   it('issues a token and shows it once', async () => {
     await act(async () => {
@@ -43,9 +44,9 @@ describe('useAgentConnection', () => {
     });
     vi.spyOn(serverApi, 'issueToken').mockResolvedValueOnce({ token: 'tok-123' });
     await act(async () => {
-      await api!.issue();
+      await requirePresent(api, 'api').issue();
     });
     expect(serverApi.issueToken).toHaveBeenCalledWith('u-agent-triage');
-    expect(JSON.stringify(api!.conn)).toContain('tok-123');
+    expect(JSON.stringify(requirePresent(api, 'api').conn)).toContain('tok-123');
   });
 });

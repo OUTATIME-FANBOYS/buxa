@@ -4,6 +4,7 @@ import type { Identity } from '../auth/identity';
 import { createLogger } from '../log';
 import { isHttpError } from '../http/errors';
 import { InMemoryStore } from './fakes';
+import { settle } from '@buxa/domain';
 
 const EMAIL = 'maya.camp@example.test';
 const identity = (authId: string, email = EMAIL): Identity => ({ authId, email, name: 'Maya' });
@@ -21,7 +22,7 @@ describe('a conflicting identity (audit S-09)', () => {
     await users.upsertFromIdentity(identity('auth-first'));
 
     const { log, text, lines } = capture();
-    const attempt = sessionFromToken('token', { verifier: async () => identity('auth-second'), users }, log);
+    const attempt = sessionFromToken('token', { verifier: () => settle(() => identity('auth-second')), users }, log);
     const error: unknown = await attempt.catch((e: unknown) => e);
 
     expect(isHttpError(error)).toBe(true);
@@ -41,8 +42,10 @@ describe('a conflicting identity (audit S-09)', () => {
   it('a rejected token is logged by error name only, without the token text', async () => {
     const store = new InMemoryStore();
     const { log, text } = capture();
-    const verifier = async () => {
-      throw Object.assign(new Error(`bad signature for ${EMAIL} token eyJsecret`), { name: 'JWTExpired' });
+    const verifier = () => {
+      return settle(() => {
+        throw Object.assign(new Error(`bad signature for ${EMAIL} token eyJsecret`), { name: 'JWTExpired' });
+      });
     };
     await expect(sessionFromToken('eyJsecret', { verifier, users: store.asRepositories().users }, log)).rejects.toMatchObject({ statusCode: 401 });
     expect(text()).toContain('JWTExpired');

@@ -2,6 +2,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { requirePresent } from '@buxa/domain';
 
 // Rules for the four packages (apps/web, apps/middleware, apps/shared, apps/server) and the three shared libraries in packages/.
 // Dependencies point one way: web -> middleware -> shared, and web -> server -> shared. Client code never reaches the server package.
@@ -208,7 +209,7 @@ describe('package dependency direction', () => {
       }
       for (const { to } of list) {
         if (to !== from) {
-graph.get(from)!.add(to);
+requirePresent(graph.get(from), 'graph.get(from)').add(to);
         }
       }
     }
@@ -248,7 +249,7 @@ describe('client code never reaches the server package', () => {
     const hits: string[] = [];
     const queue: { file: string; path: string[] }[] = roots.map((file) => ({ file, path: [] }));
     while (queue.length) {
-      const { file, path } = queue.shift()!;
+      const { file, path } = requirePresent(queue.shift(), 'queue.shift()');
       if (seen.has(file)) {
         continue;
       }

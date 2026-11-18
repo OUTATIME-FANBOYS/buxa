@@ -50,7 +50,7 @@ describe('CheckOutPanel guardian wording', () => {
 
   it('puts Cancel and Check out in one row, Cancel first', () => {
     const html = panel({ row: row({ isMinor: false }), onCancel: () => {} });
-    expect(html).toMatch(/<div class="checkout-actions"><button[^>]*class="button button--md button--outline onsite-btn"[^>]*type="button"[^>]*>Cancel<\/button><button[^>]*type="submit"[^>]*>Check out<\/button><\/div>/);
+    expect(html).toMatch(/<div class="checkout-actions"><button[^>]*class="button button--md button--secondary onsite-btn"[^>]*type="button"[^>]*>Cancel<\/button><button[^>]*type="submit"[^>]*>Check out<\/button><\/div>/);
   });
 
   it('has no Cancel button when no cancel handler is given', () => {

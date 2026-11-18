@@ -5,6 +5,7 @@ import { conflict, forbidden } from '../../../http/errors';
 import { issueBadgeAction } from '../issueBadgeAction';
 import { revokeBadgeAction } from '../revokeBadgeAction';
 import { formOf, IDS } from './form';
+import { settle } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({
   actor: null as null | { userId: string; orgId: string; role: 'owner' | 'admin' | 'staff' | 'viewer' },
@@ -13,7 +14,7 @@ const h = vi.hoisted(() => ({
 }));
 vi.mock('next/cache', () => ({ revalidatePath: h.revalidatePath }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: { credentials: h.credentials } }) }));
-vi.mock('../camp', () => ({ currentActor: async () => h.actor }));
+vi.mock('../camp', () => ({ currentActor: () => settle(() => h.actor) }));
 
 const SECRET_TOKEN = 'TOKEN-SHOULD-NOT-LEAVE-THE-SERVER';
 

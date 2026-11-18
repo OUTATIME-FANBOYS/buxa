@@ -14,7 +14,7 @@ export function CancelEnrolmentButton({ classId, enrolmentId, camperName }: { cl
     <form action={formAction} className="classes-inline">
       <input type="hidden" name="classId" value={classId} />
       <input type="hidden" name="enrolmentId" value={enrolmentId} />
-      <Button variant="danger-ghost" type="submit" className="classes-target" disabled={pending}>
+      <Button variant="danger-soft" type="submit" className="classes-target" disabled={pending}>
         Cancel enrolment<span className="sr-only"> for {camperName}</span>
       </Button>
       <ActionMessage state={state} />

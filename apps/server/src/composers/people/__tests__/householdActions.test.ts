@@ -5,6 +5,7 @@ import { conflict, forbidden } from '../../../http/errors';
 import { linkHouseholdAction } from '../linkHouseholdAction';
 import { unlinkHouseholdAction } from '../unlinkHouseholdAction';
 import { formOf, IDS } from './form';
+import { settle } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({
   actor: null as null | { userId: string; orgId: string; role: 'owner' | 'admin' | 'staff' | 'viewer' },
@@ -13,7 +14,7 @@ const h = vi.hoisted(() => ({
 }));
 vi.mock('next/cache', () => ({ revalidatePath: h.revalidatePath }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: { people: h.people } }) }));
-vi.mock('../camp', () => ({ currentActor: async () => h.actor }));
+vi.mock('../camp', () => ({ currentActor: () => settle(() => h.actor) }));
 
 const link = { householdId: IDS.household, personId: IDS.person, relationship: 'Mother', isGuardian: 'on' };
 

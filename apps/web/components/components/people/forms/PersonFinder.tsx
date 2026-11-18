@@ -14,7 +14,7 @@ export function PersonFinder({ personId, query }: PersonFinderProps) {
         <span className="field-label">Find someone by name</span>
         <input type="search" name="q" defaultValue={query} maxLength={80} autoComplete="off" />
       </label>
-      <Button type="submit">Search</Button>
+      <Button type="submit" iconOnly icon="search" aria-label="Search people by name" />
     </form>
   );
 }

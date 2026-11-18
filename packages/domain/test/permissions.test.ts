@@ -7,7 +7,7 @@ const as = (role: Role, userId = 'me'): Actor => ({ userId, orgId: ORG, role });
 // The matrix, written out so a reviewer can read it. Y = allowed, . = denied.
 //                          viewer staff admin owner
 const MATRIX: Record<Action, string> = {
-  'org:read': 'YYYY', 'org:update': '..YY', 'org:delete': '...Y', 'org:transfer_ownership': '...Y',
+  'org:read': 'YYYY', 'org:update': '..YY', 'org:archive': '...Y', 'org:delete': '...Y', 'org:transfer_ownership': '...Y',
   'members:read': 'YYYY', 'members:read_contact': '..YY', 'members:invite': '..YY', 'members:change_role': '..YY', 'members:remove': '..YY', 'members:leave': 'YYYY',
   'audit:read': '..YY', 'data:export': '...Y', 'data:erase': '...Y',
   'people:read': 'YYYY', 'people:read_contact': '.YYY', 'people:create': '.YYY', 'people:update': '.YYY',
