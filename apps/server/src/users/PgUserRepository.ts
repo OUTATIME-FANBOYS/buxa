@@ -37,4 +37,15 @@ export class PgUserRepository implements UserRepository {
       return rows;
     });
   }
+
+  archivedMembershipsOf(userId: string): Promise<Membership[]> {
+    return withOrg(this.pool, null, async db => {
+      const { rows } = await db.query<Membership>(
+        'SELECT member_org_id AS "orgId", member_role AS role, org_name AS name, org_slug AS slug FROM buxa_archived_memberships_of($1)',
+        [userId],
+      );
+
+      return rows;
+    });
+  }
 }

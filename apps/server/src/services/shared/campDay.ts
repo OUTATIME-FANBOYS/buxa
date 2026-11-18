@@ -41,7 +41,7 @@ function zoneOffsetMs(ms: number, timeZone: string): number {
  */
 export function localDayStart(day: LocalDate, timeZone: string): string {
   if (!isLocalDate(day)) {
-    throw new Error(`Not a local date: ${day}`);
+    throw new Error(`Not a local date: ${String(day)}`);
   }
   const [y, m, d] = day.split('-').map(Number);
   const wall = Date.UTC(y, m - 1, d);

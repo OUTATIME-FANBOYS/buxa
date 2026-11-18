@@ -59,7 +59,7 @@ describe('AddPersonButton (the People page)', () => {
   it('closes on Escape, returns focus to the button, and leaves no dialog behind', async () => {
     act(() => root.render(<AddPersonButton households={[]} />));
     await open();
-    act(() =>
+    await act(() =>
       requirePresent(dialog(), 'dialog()').dispatchEvent(
         new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
       ),

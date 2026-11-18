@@ -17,7 +17,8 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const camp = await getCurrentCamp(session);
   const user = { id: session.user.id, name: session.user.name, email: session.user.email };
   const archivedCamps = await listArchivedCamps();
-  const archived = !!camp && archivedCamps.some(c => c.id === camp.orgId);
+  // An archived camp opens read-only: the store and the services refuse every write, and the page shows the banner.
+  const archived = camp?.archived ?? false;
 
   return (
     <WorkArea user={user} archived={archived}>

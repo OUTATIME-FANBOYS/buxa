@@ -19,4 +19,6 @@ export interface UserRepository {
   upsertFromIdentity(identity: Identity): Promise<User>;
   /** Every organisation the user belongs to, with their role in each. */
   membershipsOf(userId: string): Promise<Membership[]>;
+  /** The archived organisations the user belongs to, read-only. Used to open an archived camp; never to write to it. */
+  archivedMembershipsOf(userId: string): Promise<Membership[]>;
 }

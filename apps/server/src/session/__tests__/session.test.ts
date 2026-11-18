@@ -127,6 +127,22 @@ describe('getCurrentCamp', () => {
     expect(camp?.name).toBe('Mine');
   });
 
+  it('opens an archived camp read-only when the cookie selects it, and never as the default', async () => {
+    const { memberships } = await personWithCamps(data, sub, ['Active']);
+    const archived = { orgId: crypto.randomUUID(), role: 'staff' as const, name: 'Old Camp', slug: 'old-camp' };
+    const session = { user: { id: 'u', email: 'a@b.c', name: 'A' }, memberships, archivedMemberships: [archived] };
+
+    env.store = new FakeCookieStore({ [CAMP_COOKIE]: archived.orgId });
+    expect(await getCurrentCamp(session)).toEqual({ ...archived, archived: true });
+
+    env.store = new FakeCookieStore();
+    expect((await getCurrentCamp(session))?.name).toBe('Active');
+
+    const onlyArchived = { user: session.user, memberships: [], archivedMemberships: [archived] };
+    env.store = new FakeCookieStore();
+    expect(await getCurrentCamp(onlyArchived)).toBeNull();
+  });
+
   it('falls back to the first camp when the cookie is junk or missing', async () => {
     const { memberships } = await personWithCamps(data, sub, ['First', 'Second']);
     const session = { user: { id: 'u', email: 'a@b.c', name: 'A' }, memberships };
@@ -166,11 +182,17 @@ describe('rememberCamp', () => {
 
 describe('toActor', () => {
   it('describes the person in the chosen camp', () => {
-    const camp = { orgId: 'o', role: 'admin' as const, name: 'N', slug: 's' };
+    const camp = { orgId: 'o', role: 'admin' as const, name: 'N', slug: 's', archived: false };
     expect(toActor({ user: { id: 'u', email: 'a@b.c', name: 'A' }, memberships: [camp] }, camp)).toEqual({
       userId: 'u',
       orgId: 'o',
       role: 'admin',
+      archived: false,
     });
+  });
+
+  it('marks the actor of an archived camp, so every write is refused', () => {
+    const camp = { orgId: 'o', role: 'owner' as const, name: 'N', slug: 's', archived: true };
+    expect(toActor({ user: { id: 'u', email: 'a@b.c', name: 'A' }, memberships: [] }, camp).archived).toBe(true);
   });
 });

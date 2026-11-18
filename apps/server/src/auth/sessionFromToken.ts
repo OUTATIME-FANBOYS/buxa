@@ -29,7 +29,12 @@ export async function sessionFromToken(
   try {
     const user = await deps.users.upsertFromIdentity(identity);
 
-    return { user, memberships: await deps.users.membershipsOf(user.id) };
+    const [memberships, archivedMemberships] = await Promise.all([
+      deps.users.membershipsOf(user.id),
+      deps.users.archivedMembershipsOf(user.id),
+    ]);
+
+    return { user, memberships, archivedMemberships };
   } catch (error) {
     if (!isEmailInUse(error)) {
       throw error;

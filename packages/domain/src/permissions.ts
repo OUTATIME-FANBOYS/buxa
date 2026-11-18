@@ -101,7 +101,16 @@ export interface Actor {
   userId: string;
   orgId: string;
   role: Role;
+  /** True for an archived camp. Such a camp is read-only: only reads and the owner's delete are allowed. */
+  archived?: boolean;
 }
+
+/** What may still be done in an archived camp: reading it, and the owner deleting it. Everything else is refused. */
+const readOnlyWhileArchived = (action: Action): boolean =>
+  action.endsWith(':read') ||
+  action.endsWith(':read_contact') ||
+  action === 'attendance:export' ||
+  action === 'org:delete';
 
 /** Context for the action. Member actions need `target`; role changes and invites need `newRole`. */
 export interface Resource {
@@ -120,7 +129,8 @@ export type Reason =
   | 'cannot_grant_above_self'
   | 'self_change'
   | 'last_owner'
-  | 'unknown_role';
+  | 'unknown_role'
+  | 'archived_camp';
 export type Decision = { allow: true } | { allow: false; reason: Reason };
 const ok: Decision = { allow: true };
 const no = (reason: Reason): Decision => ({ allow: false, reason });
@@ -131,6 +141,9 @@ export function authorize(actor: Actor, action: Action, res: Resource = {}): Dec
   }
   if (res.orgId !== undefined && res.orgId !== actor.orgId) {
     return no('other_org');
+  }
+  if (actor.archived && !readOnlyWhileArchived(action)) {
+    return no('archived_camp');
   }
   if (!GRANTS[actor.role].has(action)) {
     return no('role_not_allowed');

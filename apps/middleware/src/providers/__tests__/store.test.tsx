@@ -48,6 +48,26 @@ describe('StoreProvider and useStore', () => {
     expect(requirePresent(api, 'api').sync).toBe('local');
     expect(requirePresent(api, 'api').myRole).toBe('viewer');
   });
+  it('is read-only for an archived camp, whatever the role, and writable for a live one', () => {
+    act(() =>
+      root.render(
+        <StoreProvider campRole="owner" archived>
+          <Probe />
+        </StoreProvider>,
+      ),
+    );
+    expect(requirePresent(api, 'api').readOnly).toBe(true);
+    expect(requirePresent(api, 'api').myRole).toBe('owner');
+
+    act(() =>
+      root.render(
+        <StoreProvider campRole="owner">
+          <Probe />
+        </StoreProvider>,
+      ),
+    );
+    expect(requirePresent(api, 'api').readOnly).toBe(false);
+  });
   it('refuses to be used outside its provider', () => {
     expect(() => {
       act(() => root.render(<Probe />));

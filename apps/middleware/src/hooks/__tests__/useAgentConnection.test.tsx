@@ -1,6 +1,6 @@
 import { StubDialog } from '../../providers/__tests__/stubDialog';
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { UiProvider } from '../../providers/UiProvider';
@@ -21,9 +21,10 @@ function Probe() {
 
 describe('useAgentConnection', () => {
   let root: Root;
+  let tokenInfo: MockInstance;
   beforeEach(() => {
     api = undefined;
-    vi.spyOn(serverApi, 'tokenInfo').mockResolvedValue({ exists: false, createdAt: null, lastSeen: null });
+    tokenInfo = vi.spyOn(serverApi, 'tokenInfo').mockResolvedValue({ exists: false, createdAt: null, lastSeen: null });
     root = createRoot(document.body.appendChild(document.createElement('div')));
     act(() =>
       root.render(
@@ -43,18 +44,18 @@ describe('useAgentConnection', () => {
     await act(async () => {
       await Promise.resolve();
     });
-    expect(serverApi.tokenInfo).toHaveBeenCalledWith('u-agent-triage');
+    expect(tokenInfo).toHaveBeenCalledWith('u-agent-triage');
     expect(requirePresent(api, 'api').conn.phase).toBe('ready');
   });
   it('issues a token and shows it once', async () => {
     await act(async () => {
       await Promise.resolve();
     });
-    vi.spyOn(serverApi, 'issueToken').mockResolvedValueOnce({ token: 'tok-123' });
+    const issueToken = vi.spyOn(serverApi, 'issueToken').mockResolvedValueOnce({ token: 'tok-123' });
     await act(async () => {
       await requirePresent(api, 'api').issue();
     });
-    expect(serverApi.issueToken).toHaveBeenCalledWith('u-agent-triage');
+    expect(issueToken).toHaveBeenCalledWith('u-agent-triage');
     expect(JSON.stringify(requirePresent(api, 'api').conn)).toContain('tok-123');
   });
 });

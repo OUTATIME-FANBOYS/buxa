@@ -41,7 +41,7 @@ export function TaskForm({ task, project, defaults, onClose }: TaskFormProps) {
     <Dialog drawer onClose={onClose} labelledBy="drawer-title">
       {close => (
         <>
-          <TaskDrawerHeader task={task} project={project} readOnly={ro} onClose={close} onDelete={del} />
+          <TaskDrawerHeader task={task} project={project} readOnly={ro} onClose={close} onDelete={() => void del()} />
           <fieldset disabled={ro} className="plain">
             <div className="drawer-title">
               <label className="sr-only" htmlFor="drawer-title">
