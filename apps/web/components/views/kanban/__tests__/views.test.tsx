@@ -88,11 +88,12 @@ describe('kanban views', () => {
     h.store = store();
   });
 
-  it('Settings lists the profile, appearance, agents, data and shortcuts sections', () => {
+  it('Settings lists the name and email, time format, agents, data and shortcuts sections, with no Appearance', () => {
     const html = page(<Settings />);
-    for (const heading of ['Profile', 'Appearance', 'Agents', 'Your data', 'Keyboard shortcuts']) {
-      expect(html).toContain(`<h2>${heading}</h2>`);
+    for (const heading of ['Name and email', 'Time format', 'Agents', 'Your data', 'Keyboard shortcuts']) {
+      expect(html).toContain(heading);
     }
+    expect(html).not.toContain('Appearance');
     expect(html).toContain('>Export JSON</button>');
   });
   it('Projects offers to start the first project when there are none', () => {

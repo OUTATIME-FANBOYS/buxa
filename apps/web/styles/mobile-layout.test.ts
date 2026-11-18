@@ -76,9 +76,7 @@ describe('settings grid', () => {
     expect(settings).toContain(
       '@media (min-width: 900px) { .settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }',
     );
-    expect(settings).toContain(
-      '@media (min-width: 1280px) { .settings-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }',
-    );
+    expect(settings).not.toContain('min-width: 1280px');
     expect(settings).toContain('.page.settings-page { max-width: none; }');
   });
 

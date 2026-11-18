@@ -7,6 +7,7 @@ import { useStore } from '@buxa/middleware/providers/providers';
 import type { TaskDraft } from '@buxa/middleware/hooks/hooks';
 import { Field } from '@/components/elements/export';
 import { PRIORITIES, PRIORITY_LABEL } from '@buxa/shared';
+import { firstNameOf } from '@buxa/shared/names';
 import { TagInput } from './TagInput';
 
 /** Status, priority, assignee, dates and tags. For a saved task each change is written straight through. */
@@ -59,7 +60,7 @@ export function TaskProperties({ task, project, d }: { task: Task | null; projec
           <option value="">Unassigned</option>
           {members.map(m => (
             <option key={m.userId} value={m.userId}>
-              {m.user.name}
+              {firstNameOf(m.user.name)}
             </option>
           ))}
         </select>

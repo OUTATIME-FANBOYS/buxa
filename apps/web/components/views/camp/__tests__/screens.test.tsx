@@ -81,7 +81,7 @@ const labels = (groups: readonly { items: readonly { label: string }[] }[]) =>
   groups.flatMap(g => g.items.map(i => i.label));
 
 describe('CampFrame', () => {
-  const user = { id: 'u1', email: 'maya@example.com', name: 'Maya Chen' };
+  const user = { id: 'u1', email: 'maya@example.com', name: 'Maya Chen', firstName: 'Maya', lastName: 'Chen', clockFormat: null };
   const camp: Membership = { orgId: 'o1', role: 'owner', name: 'Sunrise', slug: 'sunrise' };
 
   it('shows the page inside the frame when there is a camp', () => {

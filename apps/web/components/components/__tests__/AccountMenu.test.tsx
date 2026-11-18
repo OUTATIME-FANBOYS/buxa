@@ -6,11 +6,14 @@ import { AccountMenu } from '@/components/components/camp/export';
 import { HomeHeader } from '@/components/components/kanban/home/export';
 
 vi.mock('@/actions/auth', () => ({ signOut: () => Promise.resolve(undefined) }));
-vi.mock('@buxa/middleware/hooks/hooks', () => ({ useDarkMode: () => ({ dark: false, toggle: () => undefined }) }));
+vi.mock('@/actions/account', () => ({ updateTimeFormatAction: () => Promise.resolve({ status: 'success', message: '' }) }));
+vi.mock('@buxa/middleware/providers/providers', () => ({
+  useStore: () => ({ s: { ui: { theme: 'light' } }, actions: { setTheme: () => undefined } }),
+}));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-/** The account menu is given the signed-in person from the session, so the name it shows is the saved account name. */
+/** The account menu is given the signed-in person from the session: its header shows the first name, never the email. */
 describe('AccountMenu', () => {
   let root: Root;
 
@@ -22,20 +25,33 @@ describe('AccountMenu', () => {
     document.body.innerHTML = '';
   });
 
-  it('shows the saved account name in the menu header and on the avatar', () => {
-    act(() => root.render(<AccountMenu user={{ id: 'u-1', name: 'Test User', email: 'test@example.com' }} />));
+  it('shows the first name in the menu header and the saved name on the avatar', () => {
+    act(() =>
+      root.render(
+        <AccountMenu
+          user={{
+            id: 'u-1',
+            name: 'Test User',
+            firstName: 'Test',
+            lastName: 'User',
+            email: 'test@example.com',
+            clockFormat: null,
+          }}
+        />,
+      ),
+    );
     expect(document.querySelector('[aria-label="Test User"]')).not.toBeNull();
 
     act(() => {
       document.querySelector<HTMLButtonElement>('button[aria-label="Account"]')?.click();
     });
-    expect(document.querySelector('.menu-head')?.textContent).toBe('Test User');
-    expect(document.body.textContent).not.toContain('testuser1');
+    expect(document.querySelector('.menu-head')?.textContent).toBe('Test');
+    expect(document.body.textContent).not.toContain('test@example.com');
   });
 });
 
 describe('HomeHeader greeting', () => {
-  it('greets the person by the first word of the saved name', () => {
+  it('greets the person by the first name', () => {
     const container = document.createElement('div');
     const root = createRoot(container);
     act(() => root.render(<HomeHeader firstName="Test" camp={null} />));

@@ -44,7 +44,7 @@ describe('TaskCard', () => {
     expect(html).toContain('data-card-id="t-1"');
     expect(html).toContain('tabindex="0"');
     expect(html).toContain(
-      `aria-label="Send welcome email. ${project.columns[1].name}. high priority. Assigned to ${seed.users[0].name}."`,
+      `aria-label="Send welcome email. ${project.columns[1].name}. high priority. Assigned to ${seed.users[0].name.split(' ')[0]}."`,
     );
     expect(html).toContain('<h3>Send welcome email</h3>');
   });
