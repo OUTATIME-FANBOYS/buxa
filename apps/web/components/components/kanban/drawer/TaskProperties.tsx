@@ -7,7 +7,7 @@ import { useStore } from '@buxa/middleware/providers/providers';
 import type { TaskDraft } from '@buxa/middleware/hooks/hooks';
 import { Field } from '@/components/elements';
 import { PRIORITIES, PRIORITY_LABEL } from '@buxa/shared';
-import { DatePicker, formatLocalDate, parseLocalDate, Select } from '@/components/atoms';
+import { DatePicker, Select } from '@/components/atoms';
 import { firstNameOf } from '@buxa/shared/names';
 import { TagInput } from './TagInput';
 
@@ -68,16 +68,12 @@ export function TaskProperties({ task, project, d }: { task: Task | null; projec
           ...members.map(m => ({ value: m.userId, label: firstNameOf(m.user.name) })),
         ]}
       />
-      <DatePicker
-        label="Start date"
-        value={parseLocalDate(d.start)}
-        onChange={value => d.changeDates(formatLocalDate(value), d.due, 'start')}
-      />
+      <DatePicker label="Start date" value={d.start} onChange={value => d.changeDates(value ?? '', d.due, 'start')} />
       <DatePicker
         label="Due date"
         error={d.errs.due}
-        value={parseLocalDate(d.due)}
-        onChange={value => d.changeDates(d.start, formatLocalDate(value), 'due')}
+        value={d.due}
+        onChange={value => d.changeDates(d.start, value ?? '', 'due')}
       />
       <Field label="Tags">
         <TagInput

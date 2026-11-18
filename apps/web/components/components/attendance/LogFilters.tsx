@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import type { PersonSummary } from '@buxa/contracts';
 import { ROUTES } from '@/config/routes';
 import { attendanceDisplayName } from '@buxa/shared';
-import { Button, DatePicker, parseLocalDate, Select } from '@/components/atoms';
+import { Button, DatePicker, Select } from '@/components/atoms';
 
 interface LogFilterValues {
   from: string;
@@ -28,8 +28,8 @@ export function LogFilters({
       role="search"
       aria-label="Filter the log"
     >
-      <DatePicker label="From" name="from" defaultValue={parseLocalDate(values.from)} isRequired />
-      <DatePicker label="To" name="to" defaultValue={parseLocalDate(values.to)} isRequired />
+      <DatePicker label="From" name="from" defaultValue={values.from} isRequired />
+      <DatePicker label="To" name="to" defaultValue={values.to} isRequired />
       <Select
         label="Person"
         name="personId"
