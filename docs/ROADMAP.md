@@ -38,7 +38,7 @@ app-store review, and a native app is revisited only if the PWA cannot meet the 
 Mobile check-in needs a connection; offline check-in stays out of scope (see `docs/phases/06-comms-extras.md`).
 
 **Status:** the manifest and the install hint were built in #82 and are on `develop`, but they are not part of phase 1's
-exit. The owner's checks for them (phone timing, install and sign-in from a phone) are tracked in phase 2 and phase 6.
+exit. The owner's checks for them (phone timing, install and sign-in from a phone) run after phase 4, in `docs/phases/owner-acceptance.md`.
 
 ## Decisions that must be made early (from the roadmap)
 

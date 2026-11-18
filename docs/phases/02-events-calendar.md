@@ -35,16 +35,9 @@ This spec covers the first slice of that row: classes (the roadmap's "programs")
 - Database: row-level security keeps one camp's classes and enrolments invisible to another camp.
 - UI: a full session shows a waitlist option instead of enrolling; a blocked overlap explains which other session it clashes with.
 
-## Carried over from phase 1
+## Owner checks
 
-Phase 1 is closed in the code. These owner checks did not need code, so they run in this phase. Each needs the owner's device or test account.
-
-- **Phone timing.** Staff check in a member in under 5 seconds on a real phone: 10 runs on iOS Safari and 10 on Android Chrome. The procedure and the results tables are in `docs/phases/01-check-in-timing.md`. The owner fills in the tables; nobody else writes results into them.
-- **Install and sign in from a phone.** Staff install the app to the home screen on iOS and Android, then sign in from it.
-- **Signed-in walkthrough on the production build.** Add a person, a membership, a badge, a scan, a check-in, an on-site entry, a check-out, and the export. Then check the viewer role.
-- **Phase 2 screen check.** The classes and on-site screens at 390px and 1280px, signed in.
-
-Done when all four are recorded in this phase's docs.
+The owner checks that were carried over from phase 1 (phone timing, install and sign-in from a phone, the production walkthrough, and the 390px and 1280px screen check) moved to one pass after phase 4: see `docs/phases/owner-acceptance.md`. Phase 2 is not blocked on them.
 
 ## Not in this phase
 
