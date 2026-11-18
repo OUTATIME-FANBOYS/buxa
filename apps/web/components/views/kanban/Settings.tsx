@@ -1,17 +1,18 @@
 'use client';
 
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import type { ClockFormat, User } from '@buxa/contracts';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Field, Button } from '@/components/elements/export';
-import { Segmented } from '@/components/elements/export';
+import { Button, Segmented } from '@/components/elements/export';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { ROUTES } from '@/config/routes';
 import { AgentDialog } from '@/components/components/kanban/dialogs/export';
 import { ResetDemoButton } from '@/components/components/kanban/export';
-import { ArchivedCampsCard, DangerZone } from '@/components/components/camp/export';
+import { ArchivedCampsCard, DangerZone, UpdateDisplayNameDialog } from '@/components/components/camp/export';
 import type { ArchivedCamp } from '@/actions/camp';
-import { updateProfileAction } from '@/actions/account';
-import type { ThemePref } from '@buxa/shared';
+import { updateTimeFormatAction } from '@/actions/account';
+import { browserClockFormat, localTimeZone } from '@buxa/shared/clockPreference';
+import { fullNameOf } from '@buxa/shared/names';
 
 /** The camp the settings are for. `canDelete` is the owner's right (org:delete); an archived camp shows no danger zone. */
 export interface SettingsCamp {
@@ -21,39 +22,54 @@ export interface SettingsCamp {
   archived: boolean;
 }
 
-/** Every setting is a card in one grid: the cards fill the page and reflow by width (see styles/features/settings.css). `clock` is the camp clock, shown inside the Appearance card. */
+const TIME_FORMATS: { value: ClockFormat; label: string }[] = [
+  { value: '12h', label: '12-hour (9:05 AM)' },
+  { value: '24h', label: '24-hour (09:05)' },
+];
+
+/**
+ * Every setting is a tile in one grid. The name and email tile spans the full width, the time format and camp clock tiles share
+ * a row, and the danger zone spans the bottom (see styles/features/settings.css). On a phone every tile stacks.
+ * Appearance (light, dark, system) is not here: it is in the account menu. `clock` is the camp clock panel.
+ */
 export function Settings({
   clock,
   camp,
+  user,
   archivedCamps = [],
 }: {
   clock?: ReactNode;
   camp?: SettingsCamp;
+  user?: User;
   archivedCamps?: readonly ArchivedCamp[];
 }) {
   const { s, actions, me, readOnly } = useStore();
   const { toast } = useUi();
-  const [name, setName] = useState(me?.name ?? '');
-  const [title, setTitle] = useState(me?.title ?? '');
-  const [err, setErr] = useState<string | null>(null);
   const file = useRef<HTMLInputElement>(null);
   const [addAgent, setAddAgent] = useState(false);
+  const [editName, setEditName] = useState(false);
+  const [browser, setBrowser] = useState<ClockFormat>('24h');
+  const [zone, setZone] = useState('');
+  useEffect(() => {
+    setBrowser(browserClockFormat());
+    setZone(localTimeZone());
+  }, [setBrowser, setZone]);
   const on = s.ui.agentsEnabled;
   const hasAgents = s.agents.length > 0;
+  const firstName = user?.firstName ?? me?.name.split(' ')[0] ?? '';
+  const lastName = user?.lastName ?? null;
+  const fullName = user ? fullNameOf(user.firstName, user.lastName) : (me?.name ?? '');
+  const clockFormat: ClockFormat = user?.clockFormat ?? browser;
+
   // The name is saved to the signed-in account first: the greeting, the account menu and the team list read it from there.
   // Only then does the board's own copy change, so it never shows a name the account does not have.
-  const saveProfile = async () => {
-    const trimmed = name.trim();
-    if (!trimmed) {
-      return setErr('Name can’t be empty.');
-    }
-    const saved = await updateProfileAction({ name: trimmed });
-    if (saved.status === 'error') {
-      return setErr(saved.fieldErrors?.name ?? saved.message);
-    }
-    actions.updateProfile({ name: trimmed, title: title.trim() || undefined });
-    setErr(null);
+  const savedName = (saved: { firstName: string; lastName: string | null }, title: string) => {
+    actions.updateProfile({ name: fullNameOf(saved.firstName, saved.lastName), title: title.trim() || undefined });
     toast('Profile saved');
+  };
+  const chooseTimeFormat = async (format: ClockFormat) => {
+    const saved = await updateTimeFormatAction({ clockFormat: format });
+    toast(saved.status === 'error' ? saved.message : 'Time format saved', saved.status === 'error' ? { tone: 'error' } : undefined);
   };
   const exportJson = () => {
     const url = URL.createObjectURL(new Blob([actions.exportData()], { type: 'application/json' }));
@@ -72,47 +88,52 @@ export function Settings({
         </div>
       </header>
       <div className="settings-grid">
-        <section className="panel" id="profile">
-          <h2>Profile</h2>
-          <form
-            className="stack"
-            noValidate
-            onSubmit={e => {
-              e.preventDefault();
-              void saveProfile();
-            }}
-          >
-            <Field label="Name" error={err}>
-              <input value={name} onChange={e => setName(e.target.value)} maxLength={60} />
-            </Field>
-            <Field label="Role or title">
-              <input value={title} onChange={e => setTitle(e.target.value)} maxLength={60} />
-            </Field>
-            <Field label="Email">
-              <input value={me?.email ?? ''} disabled />
-            </Field>
+        <section className="panel settings-tile settings-tile--full" id="profile" aria-labelledby="name-email-title">
+          <h2 id="name-email-title">Name and email</h2>
+          <dl className="settings-facts">
             <div>
-              <Button variant="primary" icon="save">
-                Save profile
-              </Button>
+              <dt>Name</dt>
+              <dd>{fullName || '—'}</dd>
             </div>
-          </form>
+            <div>
+              <dt>Email</dt>
+              <dd>
+                {user?.email ?? me?.email ?? ''}
+                <span className="muted settings-note">
+                  {' '}
+                  Your email comes from your sign-in and can’t be changed here.
+                </span>
+              </dd>
+            </div>
+          </dl>
+          <div>
+            <Button onClick={() => setEditName(true)}>Update display name</Button>
+          </div>
+          {editName && user && (
+            <UpdateDisplayNameDialog
+              firstName={firstName}
+              lastName={lastName}
+              title={me?.title ?? ''}
+              onClose={() => setEditName(false)}
+              onSaved={(saved, title) => savedName(saved, title)}
+            />
+          )}
         </section>
-        <section className="panel">
-          <h2>Appearance</h2>
-          <Segmented<ThemePref>
-            label="Theme"
-            value={s.ui.theme}
-            onChange={actions.setTheme}
-            options={[
-              { value: 'system', label: 'System' },
-              { value: 'light', label: 'Light', icon: 'sun' },
-              { value: 'dark', label: 'Dark', icon: 'moon' },
-            ]}
+        <section className="panel settings-tile settings-tile--half" aria-labelledby="time-format-title">
+          <h2 id="time-format-title">Time format</h2>
+          <p className="muted">
+            How times show for you. Until you choose, your browser’s setting is used
+            {zone ? ` (${zone}).` : '.'}
+          </p>
+          <Segmented<ClockFormat>
+            label="Time format"
+            value={clockFormat}
+            onChange={format => void chooseTimeFormat(format)}
+            options={TIME_FORMATS}
           />
-          {clock && <div className="settings-sub">{clock}</div>}
         </section>
-        <section className="panel">
+        {clock && <section className="panel settings-tile settings-tile--half">{clock}</section>}
+        <section className="panel settings-tile">
           <h2>Agents</h2>
           <p className="muted">
             Let AI agents add and update tasks on your boards. Their changes can wait for your approval, and every one
@@ -134,7 +155,7 @@ export function Settings({
           )}
           {addAgent && <AgentDialog onClose={() => setAddAgent(false)} />}
         </section>
-        <section className="panel">
+        <section className="panel settings-tile">
           <h2>Your data</h2>
           <p className="muted">
             Everything lives in this browser’s storage. Export a copy to back it up or move it to another device.
@@ -166,7 +187,7 @@ export function Settings({
             )}
           </div>
         </section>
-        <section className="panel">
+        <section className="panel settings-tile">
           <h2>Keyboard shortcuts</h2>
           <dl className="keys">
             <div>

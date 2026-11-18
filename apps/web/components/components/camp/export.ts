@@ -12,6 +12,7 @@ export * from './Sidebar';
 export * from './SidebarNav';
 export * from './SidebarToggle';
 export * from './TopBar';
+export * from './UpdateDisplayNameDialog';
 export * from './ArchivedCampsCard';
 export * from './DangerZone';
 export * from './DeleteCampButton';

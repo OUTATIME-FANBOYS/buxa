@@ -4,6 +4,7 @@ import { PriorityMark } from '@/components/elements/export';
 import { memo } from 'react';
 import type { Project, Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
+import { firstNameOf } from '@buxa/shared/names';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
 import { Avatar } from '@/components/elements/export';
 import { Icon } from '@/components/elements/export';
@@ -70,7 +71,7 @@ export const TaskCard = memo(function TaskCard({ task, project, readOnly, draggi
           move(idx + 1);
         }
       }}
-      aria-label={`${task.title}. ${project.columns[idx]?.name}. ${task.priority} priority.${user ? ' Assigned to ' + user.name + '.' : ''}`}
+      aria-label={`${task.title}. ${project.columns[idx]?.name}. ${task.priority} priority.${user ? ' Assigned to ' + firstNameOf(user.name) + '.' : ''}`}
     >
       <div className="card-top">
         <h3>{task.title}</h3>

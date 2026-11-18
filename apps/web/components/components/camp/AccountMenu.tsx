@@ -1,17 +1,37 @@
 'use client';
 
-import { useRef } from 'react';
-import type { User } from '@buxa/contracts';
+import { useEffect, useRef, useState } from 'react';
+import type { ClockFormat, User } from '@buxa/contracts';
+import type { ThemePref } from '@buxa/shared';
+import { browserClockFormat, localTimeZone } from '@buxa/shared/clockPreference';
 import { Avatar } from '@/components/elements/export';
 import { Menu } from '@/components/components/export';
 import { signOut } from '@/actions/auth';
-import { useDarkMode } from '@buxa/middleware/hooks/hooks';
+import { updateTimeFormatAction } from '@/actions/account';
+import { useStore } from '@buxa/middleware/providers/providers';
 import { ROUTES } from '@/config/routes';
 
-/** The avatar menu, headed by the user's name: profile, settings, help, reports, light/dark, sign out. Signing out is a Server Action submitted through a form. */
+const APPEARANCE: { value: ThemePref; label: string }[] = [
+  { value: 'light', label: 'Light' },
+  { value: 'dark', label: 'Dark' },
+  { value: 'system', label: 'System' },
+];
+
+/**
+ * The avatar menu, headed by the person's first name: Profile, Appearance and Timezone (both submenus, as in Cloudflare), Settings,
+ * Help, Reports, then Sign out. Signing out is a Server Action submitted through a form.
+ */
 export function AccountMenu({ user }: { user: User }) {
-  const { dark, toggle } = useDarkMode();
+  const { s, actions } = useStore();
   const form = useRef<HTMLFormElement>(null);
+  // The browser's clock and time zone are read after mount, because the server cannot know them.
+  const [browser, setBrowser] = useState<ClockFormat>('24h');
+  const [zone, setZone] = useState('');
+  useEffect(() => {
+    setBrowser(browserClockFormat());
+    setZone(localTimeZone());
+  }, []);
+  const clock: ClockFormat = user.clockFormat ?? browser;
 
   return (
     <>
@@ -19,13 +39,31 @@ export function AccountMenu({ user }: { user: User }) {
         label="Account"
         className="avatar-btn"
         trigger={<Avatar user={user} size={30} />}
-        header={user.name}
+        header={user.firstName}
         items={[
+          { label: '', divider: true, onSelect() {} },
           { label: 'Profile', icon: 'user', href: `${ROUTES.settings}#profile` },
+          {
+            label: 'Appearance',
+            icon: 'sun',
+            submenu: APPEARANCE.map(a => ({
+              label: a.label,
+              checked: s.ui.theme === a.value,
+              onSelect: () => actions.setTheme(a.value),
+            })),
+          },
+          {
+            label: 'Timezone',
+            icon: 'clock',
+            submenu: [
+              { label: `Local time${zone ? ` (${zone})` : ''}`, checked: true, onSelect() {} },
+              { label: '12-hour clock', checked: clock === '12h', onSelect: () => void updateTimeFormatAction({ clockFormat: '12h' }) },
+              { label: '24-hour clock', checked: clock === '24h', onSelect: () => void updateTimeFormatAction({ clockFormat: '24h' }) },
+            ],
+          },
           { label: 'Settings', icon: 'settings', href: ROUTES.settings },
           { label: 'Help', icon: 'help', href: ROUTES.help },
           { label: 'Reports', icon: 'chart', href: ROUTES.reports },
-          { label: dark ? 'Light mode' : 'Dark mode', icon: dark ? 'sun' : 'moon', onSelect: toggle },
           { label: '', divider: true, onSelect() {} },
           { label: 'Sign out', icon: 'logout', onSelect: () => form.current?.requestSubmit() },
         ]}

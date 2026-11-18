@@ -9,13 +9,14 @@ export const metadata: Metadata = { title: 'Settings' };
 
 /** Settings for the camp. An archived camp is read-only: no clock change, no danger zone. Only the owner may delete. */
 export default async function Page() {
-  const { actor, camp } = await campContext();
+  const { actor, camp, session } = await campContext();
   const org = await loadCampProfile(actor);
   const archivedCamps = await listArchivedCamps();
   const archived = archivedCamps.some(c => c.id === camp.orgId);
 
   return (
     <SettingsPage
+      user={session.user}
       clock={
         <CampClockPanel
           campId={camp.orgId}

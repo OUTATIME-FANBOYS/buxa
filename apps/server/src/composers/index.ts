@@ -6,6 +6,7 @@ export * from './auth/signIn';
 export * from './auth/signOut';
 export * from './auth/signUp';
 export * from './account/updateProfileAction';
+export * from './account/updateTimeFormatAction';
 export * from './camp/archiveCamp';
 export * from './camp/createCampAction';
 export * from './camp/deleteCamp';

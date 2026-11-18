@@ -1,5 +1,5 @@
 import type { Pool } from 'pg';
-import type { Membership, User } from '@buxa/contracts';
+import type { ClockFormat, Membership, User } from '@buxa/contracts';
 import { isUniqueViolation, withOrg } from '@buxa/db';
 import type { Identity } from '../auth/identity';
 import { EmailInUseError, type UserRepository } from './UserRepository';
@@ -9,6 +9,10 @@ import { EmailInUseError, type UserRepository } from './UserRepository';
  * them). Both are SECURITY DEFINER functions (migration 0009), called as the request role with no organisation set, so
  * this adapter never uses a login that bypasses row-level security. See docs/security.md, section 2.
  */
+/** The columns every user read returns, with the names the User type uses. The SQL functions return the same columns. */
+const USER_COLUMNS = `user_id AS id, user_email AS email, user_name AS name, user_first_name AS "firstName",
+  user_last_name AS "lastName", user_clock_format AS "clockFormat"`;
+
 export class PgUserRepository implements UserRepository {
   constructor(private readonly pool: Pool) {}
 
@@ -16,7 +20,7 @@ export class PgUserRepository implements UserRepository {
     try {
       const { rows } = await withOrg(this.pool, null, db =>
         db.query<User>(
-          'SELECT user_id AS id, user_email AS email, user_name AS name FROM buxa_upsert_user($1, $2, $3)',
+          `SELECT ${USER_COLUMNS} FROM buxa_upsert_user($1, $2, $3)`,
           [identity.authId, identity.email, identity.name],
         ),
       );
@@ -38,15 +42,23 @@ export class PgUserRepository implements UserRepository {
     });
   }
 
-  async updateName(userId: string, name: string): Promise<User> {
+  async updateName(userId: string, name: { firstName: string; lastName: string | null }): Promise<User> {
     const { rows } = await withOrg(this.pool, null, db =>
-      db.query<User>('SELECT user_id AS id, user_email AS email, user_name AS name FROM buxa_set_user_name($1, $2)', [
-        userId,
-        name,
-      ]),
+      db.query<User>(`SELECT ${USER_COLUMNS} FROM buxa_set_user_name($1, $2, $3)`, [userId, name.firstName, name.lastName]),
     );
     if (!rows[0]) {
       throw new Error('no user to rename');
+    }
+
+    return rows[0];
+  }
+
+  async setClockFormat(userId: string, clockFormat: ClockFormat): Promise<User> {
+    const { rows } = await withOrg(this.pool, null, db =>
+      db.query<User>(`SELECT ${USER_COLUMNS} FROM buxa_set_user_clock_format($1, $2)`, [userId, clockFormat]),
+    );
+    if (!rows[0]) {
+      throw new Error('no user to update');
     }
 
     return rows[0];
@@ -60,9 +72,9 @@ export class PgUserRepository implements UserRepository {
     return rows[0]?.role ?? null;
   }
 
-  async renameMember(orgId: string, userId: string, name: string): Promise<User | null> {
+  async renameMember(orgId: string, userId: string, name: string): Promise<Pick<User, 'id' | 'email' | 'name'> | null> {
     const { rows } = await withOrg(this.pool, orgId, db =>
-      db.query<User>('SELECT user_id AS id, user_email AS email, user_name AS name FROM buxa_rename_member($1, $2, $3)', [
+      db.query<Pick<User, 'id' | 'email' | 'name'>>('SELECT user_id AS id, user_email AS email, user_name AS name FROM buxa_rename_member($1, $2, $3)', [
         orgId,
         userId,
         name,

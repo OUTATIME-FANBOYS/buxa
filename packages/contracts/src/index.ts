@@ -6,8 +6,21 @@ import { z } from 'zod';
 import { CLOCK_FORMATS, ROLES, SLUG_HINT, isSlug, isTimeZone, DEFAULT_TIMEZONE } from '@buxa/domain';
 
 export const RoleSchema = z.enum(ROLES);
+export const ClockFormatSchema = z.enum(CLOCK_FORMATS);
+export type ClockFormat = z.infer<typeof ClockFormatSchema>;
 
-export const UserSchema = z.object({ id: z.string(), email: z.string(), name: z.string() });
+/**
+ * The signed-in person. `name` is the full name; `firstName` and `lastName` are its split (the first word, and the rest).
+ * `clockFormat` is the person's own 12-hour or 24-hour choice, or null to follow the browser.
+ */
+export const UserSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  name: z.string(),
+  firstName: z.string(),
+  lastName: z.string().nullable(),
+  clockFormat: ClockFormatSchema.nullable(),
+});
 export type User = z.infer<typeof UserSchema>;
 
 export const MembershipSchema = z.object({ orgId: z.string(), role: RoleSchema, name: z.string(), slug: z.string() });
@@ -15,9 +28,6 @@ export type Membership = z.infer<typeof MembershipSchema>;
 
 export const MeSchema = z.object({ user: UserSchema, orgs: z.array(MembershipSchema) });
 export type Me = z.infer<typeof MeSchema>;
-
-export const ClockFormatSchema = z.enum(CLOCK_FORMATS);
-export type ClockFormat = z.infer<typeof ClockFormatSchema>;
 
 export const OrgSchema = z.object({
   id: z.string(),
@@ -67,7 +77,23 @@ export const OrgPatchInputSchema = z
   .refine(v => v.name !== undefined || v.timezone !== undefined || v.clockFormat !== undefined, 'Nothing to change.');
 export type OrgPatchInput = z.infer<typeof OrgPatchInputSchema>;
 
-/** The signed-in person's own name, from their profile. One field for now; the first and last name split comes later. */
+/** The signed-in person's first and last name, from the Update display name dialog. The first name is required. */
+export const ProfileInputSchema = z.object({
+  firstName: z.string().trim().min(1, 'Enter your first name.').max(60, 'Keep your first name to 60 characters or fewer.'),
+  lastName: z
+    .string()
+    .trim()
+    .max(60, 'Keep your last name to 60 characters or fewer.')
+    .default('')
+    .transform(v => v || null),
+});
+export type ProfileInput = z.input<typeof ProfileInputSchema>;
+
+/** The person's own 12-hour or 24-hour clock, saved from the account menu or from Settings. */
+export const TimeFormatInputSchema = z.object({ clockFormat: ClockFormatSchema });
+export type TimeFormatInput = z.infer<typeof TimeFormatInputSchema>;
+
+/** A single name, used by the admin rename of a camp member. */
 export const ProfileNameInputSchema = z.object({
   name: z.string().trim().min(1, 'Enter your name.').max(60, 'Keep your name to 60 characters or fewer.'),
 });
