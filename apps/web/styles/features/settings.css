@@ -1,6 +1,5 @@
-/* Settings: every setting is a card in one grid that fills the content area.
- * One column on a phone, two from 900px (the sidebar is still open). Cards share .panel, so padding and style match.
- * Cards in a row stretch to the same height. */
+/* Settings: every setting is a full-width card, stacked in one column, as Cloudflare's account settings. Cards share .panel,
+ * so padding and style match. */
 .page.settings-page {
   max-width: none;
 }
@@ -30,24 +29,8 @@
   gap: var(--s5);
   align-items: stretch;
 }
-/* From 900px a tile is half the width (two columns). Below that every tile stacks, so the half tiles fill the phone width. */
-@media (min-width: 900px) {
-  .settings-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-/* Full-width tiles span both columns: the name and email tile. */
-.settings-grid > .settings-tile--full {
-  grid-column: 1 / -1;
-}
-/* Half-width tiles take one column each from 900px. */
-.settings-grid > .settings-tile--half {
-  grid-column: auto;
-  min-width: 0;
-}
-/* Danger zone: spans the whole grid row at the bottom, with the destructive colour on its border. */
+/* Danger zone: the destructive colour on its border, last in the column. */
 .settings-grid > .danger-zone {
-  grid-column: 1 / -1;
   border-color: var(--danger);
 }
 /* Name and email: rows in one card. Each row is a column: its label, then its value or inputs, all on one left edge.
@@ -94,4 +77,32 @@
   padding: 0;
   display: grid;
   gap: var(--s2);
+}
+
+/* Every card's heading and description share one size, so the cards read as one set. */
+.settings-page .settings-tile h2 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.3;
+}
+.settings-page .settings-tile > p.muted {
+  margin: var(--s1) 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+/* A title and description on the left, the control on the right: Time format and Appearance. */
+.settings-choice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  flex-wrap: wrap;
+}
+.settings-choice__text {
+  min-width: 0;
+  flex: 1 1 260px;
+}
+.settings-choice .select {
+  flex: 0 0 220px;
+  max-width: 100%;
 }

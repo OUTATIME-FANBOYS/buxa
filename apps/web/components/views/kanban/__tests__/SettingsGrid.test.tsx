@@ -23,7 +23,7 @@ const saveTime = vi.hoisted(() =>
   ),
 );
 vi.mock('@/actions/account', () => ({ updateProfileAction: saveName, updateTimeFormatAction: saveTime }));
-const appearance = vi.hoisted(() => ({ theme: 'system' as 'system' | 'light' | 'dark', choose: vi.fn() }));
+const appearance = vi.hoisted(() => ({ theme: 'system', choose: vi.fn() }));
 vi.mock('@/components/components/camp/useAppearance', () => ({
   useAppearance: () => [appearance.theme, appearance.choose],
 }));
@@ -145,12 +145,12 @@ describe('the settings page', () => {
     expect(titles()).not.toContain('Timezone');
   });
 
-  it('lays out name and email full width, and time format and appearance side by side as halves', () => {
+  it('lays out every card in one column, with time format and appearance as title and dropdown rows', () => {
     render();
-    expect(tile('Name and email').classList).toContain('settings-tile--full');
-    expect(tile('Time format').classList).toContain('settings-tile--half');
-    expect(tile('Appearance').classList).toContain('settings-tile--half');
-    expect(tile('Agents').classList).not.toContain('settings-tile--full');
+    expect(tile('Name and email').className).toContain('settings-tile');
+    expect(tile('Time format').className).toContain('settings-choice');
+    expect(tile('Appearance').className).toContain('settings-choice');
+    expect(tile('Time format').className).not.toContain('settings-tile--half');
   });
 
   it('puts Appearance straight after Time format', () => {
@@ -204,17 +204,9 @@ describe('the settings page', () => {
     expect(document.body.textContent).toContain('Enter your first name.');
   });
 
-  it('saves the time format at once when a choice is made, and shows the choice', async () => {
+  it('shows the time format as a dropdown with the saved choice', () => {
     render();
-    const group = tile('Time format').querySelector('[role="radiogroup"]');
-    const radios = Array.from(group?.querySelectorAll<HTMLInputElement>('input[type="radio"]') ?? []);
-    expect(radios.find(r => r.checked)?.value).toBe('12h');
-    const twentyFour = radios.find(r => r.value === '24h');
-    await act(async () => {
-      twentyFour?.click();
-    });
-    expect(saveTime).toHaveBeenCalledWith({ clockFormat: '24h' });
-    expect(radios.find(r => r.value === '24h')?.checked).toBe(true);
+    expect(tile('Time format').textContent).toContain('12-hour (9:05 AM)');
   });
 
   it('has no Save button in the time format card', () => {
@@ -223,16 +215,9 @@ describe('the settings page', () => {
     expect(buttonIn(tile('Time format'), 'Save time format')).toBeUndefined();
   });
 
-  it('offers System, Light and Dark in the appearance card, applied at once through the theme action', async () => {
+  it('shows the appearance as a dropdown, with the saved theme', () => {
     render();
-    const group = tile('Appearance').querySelector('[role="radiogroup"]');
-    const radios = Array.from(group?.querySelectorAll<HTMLInputElement>('input[type="radio"]') ?? []);
-    expect(radios.map(r => r.value)).toEqual(['system', 'light', 'dark']);
-    expect(radios.find(r => r.checked)?.value).toBe('system');
-    await act(async () => {
-      radios.find(r => r.value === 'dark')?.click();
-    });
-    expect(appearance.choose).toHaveBeenCalledWith('dark');
+    expect(tile('Appearance').textContent).toContain('System');
   });
 
   it('keeps the Agents, data and shortcut cards', () => {
@@ -301,13 +286,13 @@ describe('the settings layout styles', () => {
   // Vitest runs from the repository root (npm test), so the stylesheet is read from there.
   const css = readFileSync(resolve(process.cwd(), 'apps/web/styles/features/settings.css'), 'utf8');
 
-  it('defines the full-width and half-width tile classes', () => {
-    expect(css).toMatch(/\.settings-grid > \.settings-tile--full\s*{[^}]*grid-column:\s*1 \/ -1/);
-    expect(css).toMatch(/\.settings-grid > \.settings-tile--half\s*{/);
+  it('defines one full-width column, with no half-width tiles', () => {
+    expect(css).toMatch(/\.settings-grid\s*{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+    expect(css).not.toContain('settings-tile--half');
   });
 
-  it('puts tiles side by side from 900px, and stacks them below it', () => {
-    expect(css).toMatch(/@media \(min-width: 900px\)\s*{\s*\.settings-grid\s*{\s*grid-template-columns:\s*repeat\(2,/);
+  it('keeps the cards stacked at every width', () => {
+    expect(css).not.toMatch(/repeat\(2,/);
     expect(css).not.toContain('min-width: 1280px');
   });
 });

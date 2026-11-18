@@ -75,8 +75,8 @@ export function Settings({
           email={email}
           onSaved={savedName}
         />
-        <TimeFormatCard className="settings-tile--half" clockFormat={user?.clockFormat ?? undefined} />
-        <AppearanceCard className="settings-tile--half" />
+        <TimeFormatCard clockFormat={user?.clockFormat ?? undefined} />
+        <AppearanceCard />
         <section className="panel settings-tile">
           <h2>Agents</h2>
           <p className="muted">

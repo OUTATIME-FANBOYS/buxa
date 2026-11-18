@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { ClockFormat } from '@buxa/contracts';
 import { browserClockFormat, localTimeZone } from '@buxa/shared/clockPreference';
-import { RadioGroup } from '@/components/atoms';
+import { Select } from '@/components/atoms';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { updateTimeFormatAction } from '@/actions/account';
 
@@ -54,16 +54,19 @@ export function TimeFormatCard({
   };
 
   return (
-    <section className={`panel settings-tile ${className ?? ''}`} aria-labelledby="time-format-title">
-      <h2 id="time-format-title">Time format</h2>
-      <p className="muted">
-        How times show for you. Until you choose, your browser’s setting is used
-        {zone ? ` (${zone}).` : '.'}
-      </p>
-      <RadioGroup
-        label="Format"
+    <section className={`panel settings-tile settings-choice ${className ?? ''}`} aria-labelledby="time-format-title">
+      <div className="settings-choice__text">
+        <h2 id="time-format-title">Time format</h2>
+        <p className="muted">
+          How times show for you. Until you choose, your browser’s setting is used
+          {zone ? ` (${zone}).` : '.'}
+        </p>
+      </div>
+      <Select
+        label="Time format"
+        hideLabel
         value={shown}
-        onChange={value => void choose(value as ClockFormat)}
+        onChange={value => value && void choose(value as ClockFormat)}
         options={TIME_FORMATS}
       />
     </section>

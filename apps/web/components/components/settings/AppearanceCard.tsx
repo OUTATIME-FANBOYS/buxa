@@ -2,7 +2,7 @@
 
 import type { ThemePref } from '@buxa/shared';
 import { useAppearance } from '@/components/components/camp';
-import { RadioGroup } from '@/components/atoms';
+import { Select } from '@/components/atoms';
 
 const APPEARANCE: { value: ThemePref; label: string }[] = [
   { value: 'system', label: 'System' },
@@ -17,10 +17,18 @@ export function AppearanceCard({ className }: { className?: string }) {
   const [theme, setTheme] = useAppearance();
 
   return (
-    <section className={`panel settings-tile ${className ?? ''}`} aria-labelledby="appearance-title">
-      <h2 id="appearance-title">Appearance</h2>
-      <p className="muted">Light or dark, or follow your device’s setting.</p>
-      <RadioGroup label="Theme" value={theme} onChange={value => setTheme(value as ThemePref)} options={APPEARANCE} />
+    <section className={`panel settings-tile settings-choice ${className ?? ''}`} aria-labelledby="appearance-title">
+      <div className="settings-choice__text">
+        <h2 id="appearance-title">Appearance</h2>
+        <p className="muted">Light or dark, or follow your device’s setting.</p>
+      </div>
+      <Select
+        label="Appearance"
+        hideLabel
+        value={theme}
+        onChange={value => value && setTheme(value as ThemePref)}
+        options={APPEARANCE}
+      />
     </section>
   );
 }
