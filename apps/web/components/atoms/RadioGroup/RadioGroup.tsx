@@ -60,9 +60,9 @@ export function RadioGroup({
               onChange?.(option.value);
             }}
           />
-          <span>
-            {option.label}
-            {option.description ? <span className="field-hint">{option.description}</span> : null}
+          <span className="radio-option__text">
+            <span className="radio-option__label">{option.label}</span>
+            {option.description ? <span className="radio-option__note">{option.description}</span> : null}
           </span>
         </label>
       ))}

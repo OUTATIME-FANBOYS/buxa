@@ -104,9 +104,24 @@ fieldset.plain {
   gap: var(--s2);
   cursor: pointer;
 }
-.radio-group .radio-option > span {
-  display: grid;
-  gap: var(--s1);
+.radio-group {
+  gap: var(--s3);
+}
+/* The name, with its note on the line below in a smaller, muted size. */
+.radio-option__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.radio-option__label {
+  font-size: var(--fs-m, 15px);
+  line-height: 1.4;
+}
+.radio-option__note {
+  font-size: var(--fs-s, 13px);
+  line-height: 1.4;
+  color: var(--muted);
 }
 .radio-group legend.field-label {
   padding: 0;
