@@ -2,7 +2,6 @@
 import { selectCampAction as selectCampActionImpl } from '@buxa/server/composers/camp/selectCampAction';
 import { createCampAction as createCampActionImpl } from '@buxa/server/composers/camp/createCampAction';
 import { renameCampAction as renameCampActionImpl } from '@buxa/server/composers/camp/renameCampAction';
-import { updateCampClockAction as updateCampClockActionImpl } from '@buxa/server/composers/camp/updateCampClockAction';
 import { archiveCamp as archiveCampImpl } from '@buxa/server/composers/camp/archiveCamp';
 import { deleteCamp as deleteCampImpl } from '@buxa/server/composers/camp/deleteCamp';
 import { unarchiveCamp as unarchiveCampImpl } from '@buxa/server/composers/camp/unarchiveCamp';
@@ -21,10 +20,6 @@ export async function createCampAction(...args: Parameters<typeof createCampActi
 
 export async function renameCampAction(...args: Parameters<typeof renameCampActionImpl>) {
   return renameCampActionImpl(...args);
-}
-
-export async function updateCampClockAction(...args: Parameters<typeof updateCampClockActionImpl>) {
-  return updateCampClockActionImpl(...args);
 }
 
 // Archive and delete. The server composers return the same CampResult shape as the other camp actions.

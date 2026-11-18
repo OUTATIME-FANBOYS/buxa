@@ -13,7 +13,6 @@ interface OrgRow {
   created_at: Date;
   member_count: number;
   timezone: string;
-  clock_format: ClockFormat;
 }
 
 export class PgOrgRepository implements OrgRepository {
@@ -41,7 +40,7 @@ export class PgOrgRepository implements OrgRepository {
   get(orgId: string): Promise<Org> {
     return withOrg(this.pool, orgId, async db => {
       const { rows } = await db.query<OrgRow>(
-        `SELECT id, name, slug, timezone, clock_format, created_at, (SELECT count(*)::int FROM org_members) AS member_count FROM orgs`,
+        `SELECT id, name, slug, timezone, created_at, (SELECT count(*)::int FROM org_members) AS member_count FROM orgs`,
       );
       if (!rows[0]) {
         throw new OrgNotFoundError();
@@ -55,7 +54,6 @@ export class PgOrgRepository implements OrgRepository {
         createdAt: row.created_at.toISOString(),
         memberCount: row.member_count,
         timezone: row.timezone,
-        clockFormat: row.clock_format,
       };
     });
   }
@@ -63,9 +61,9 @@ export class PgOrgRepository implements OrgRepository {
   rename(actor: Actor, input: OrgPatchInput): Promise<OrgSummary> {
     return withOrg(this.pool, actor.orgId, async db => {
       const { rows } = await db.query<OrgSummary>(
-        `UPDATE orgs SET name = coalesce($1, name), timezone = coalesce($2, timezone), clock_format = coalesce($3, clock_format)
-         WHERE id = $4 RETURNING id, name, slug`,
-        [input.name ?? null, input.timezone ?? null, input.clockFormat ?? null, actor.orgId],
+        `UPDATE orgs SET name = coalesce($1, name), timezone = coalesce($2, timezone)
+         WHERE id = $3 RETURNING id, name, slug`,
+        [input.name ?? null, input.timezone ?? null, actor.orgId],
       );
       if (!rows[0]) {
         throw new OrgNotFoundError();
@@ -78,7 +76,6 @@ export class PgOrgRepository implements OrgRepository {
         data: {
           ...(input.name !== undefined && { name: input.name }),
           ...(input.timezone !== undefined && { timezone: input.timezone }),
-          ...(input.clockFormat !== undefined && { clockFormat: input.clockFormat }),
         },
       });
 
