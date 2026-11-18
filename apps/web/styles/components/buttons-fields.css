@@ -170,3 +170,17 @@ fieldset.plain {
 .search-field__clear:hover {
   background: var(--hover);
 }
+
+/* Dropdowns: a field-height select with the app's chevron, the label above it, and the same width as its column. */
+.select-field {
+  display: grid;
+  gap: var(--s2);
+  min-width: 0;
+}
+.select-field__input {
+  width: 100%;
+  min-width: 0;
+  height: var(--control-h);
+  padding-left: var(--s3);
+  box-sizing: border-box;
+}
