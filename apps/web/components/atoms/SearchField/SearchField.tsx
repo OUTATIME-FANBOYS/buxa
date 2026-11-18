@@ -1,14 +1,13 @@
 'use client';
 
-import { Label } from '@heroui/react/label';
-import { SearchField as HeroSearchField } from '@heroui/react/search-field';
-import type { FocusEvent, KeyboardEvent, Ref } from 'react';
+import { useId, useState, type FocusEvent, type KeyboardEvent, type Ref } from 'react';
+import { Icon } from '../Icon';
 
 /*
- * A search box with a search glyph and a clear button. Give it a visible `label` where the box needs one; otherwise
- * `aria-label` names it for assistive technology and `placeholder` tells sighted users what it searches.
- * `inputRef`, `inputProps` and the keyboard and focus handlers are for a parent that runs its own results list (a
- * combobox): they reach the <input> itself and nothing else.
+ * A search box with a search glyph and a clear button. Plain HTML, so the app's own input styling applies and it needs no
+ * HeroUI styles. Give it a visible `label` where the box needs one; otherwise `aria-label` names it, and `placeholder` tells
+ * sighted users what it searches. `inputRef`, `inputProps` and the keyboard and focus handlers reach the <input> itself, for
+ * a parent that runs its own results list (a combobox).
  */
 export interface SearchFieldProps {
   label?: string;
@@ -52,31 +51,49 @@ export function SearchField({
   maxLength,
   autoComplete,
 }: SearchFieldProps) {
+  const generated = useId();
+  const inputId = id ?? generated;
+  const [own, setOwn] = useState(defaultValue ?? '');
+  const current = value ?? own;
+  const set = (next: string) => {
+    setOwn(next);
+    onChange?.(next);
+  };
+
   return (
-    <HeroSearchField
-      id={id}
-      name={name}
-      aria-label={label ? undefined : ariaLabel}
-      value={value}
-      defaultValue={defaultValue}
-      onChange={onChange}
-      autoFocus={autoFocus}
-      isDisabled={isDisabled}
-      className={className}
-      fullWidth
-    >
-      {label ? <Label>{label}</Label> : null}
-      <HeroSearchField.Group>
-        <HeroSearchField.SearchIcon />
-        <HeroSearchField.Input
-          placeholder={placeholder}
-          ref={inputRef}
-          maxLength={maxLength}
-          autoComplete={autoComplete}
+    <div className={`search-field ${className ?? ''}`}>
+      {label ? (
+        <label className="field-label" htmlFor={inputId}>
+          {label}
+        </label>
+      ) : null}
+      <div className="search-field__box">
+        <span className="search-field__icon" aria-hidden="true">
+          <Icon name="search" size={16} />
+        </span>
+        <input
           {...inputProps}
+          ref={inputRef}
+          id={inputId}
+          name={name}
+          type="search"
+          role={inputProps?.role}
+          aria-label={label ? undefined : ariaLabel}
+          placeholder={placeholder}
+          value={current}
+          maxLength={maxLength}
+          autoComplete={autoComplete ?? 'off'}
+          autoFocus={autoFocus}
+          disabled={isDisabled}
+          onChange={e => set(e.target.value)}
+          className="search-field__input"
         />
-        <HeroSearchField.ClearButton />
-      </HeroSearchField.Group>
-    </HeroSearchField>
+        {current && !isDisabled ? (
+          <button type="button" className="search-field__clear" aria-label="Clear search" onClick={() => set('')}>
+            <Icon name="close" size={14} />
+          </button>
+        ) : null}
+      </div>
+    </div>
   );
 }
