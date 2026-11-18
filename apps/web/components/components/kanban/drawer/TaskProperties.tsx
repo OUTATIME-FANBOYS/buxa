@@ -63,7 +63,10 @@ export function TaskProperties({ task, project, d }: { task: Task | null; projec
             d.setAssignee(assignee);
           }
         }}
-        options={[{ value: '', label: 'Unassigned' }, ...members.map(m => ({ value: m.userId, label: firstNameOf(m.user.name) }))]}
+        options={[
+          { value: '', label: 'Unassigned' },
+          ...members.map(m => ({ value: m.userId, label: firstNameOf(m.user.name) })),
+        ]}
       />
       <DatePicker
         label="Start date"

@@ -3,8 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Icon, Button } from '@/components/elements/export';
-import { Avatar } from '@/components/elements/export';
+import { Avatar, Button } from '@/components/elements/export';
 import { Empty } from '@/components/components/export';
 import { Progress } from '@/components/elements/export';
 import { Segmented } from '@/components/elements/export';
