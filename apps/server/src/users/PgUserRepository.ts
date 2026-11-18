@@ -38,6 +38,20 @@ export class PgUserRepository implements UserRepository {
     });
   }
 
+  async updateName(userId: string, name: string): Promise<User> {
+    const { rows } = await withOrg(this.pool, null, db =>
+      db.query<User>('SELECT user_id AS id, user_email AS email, user_name AS name FROM buxa_set_user_name($1, $2)', [
+        userId,
+        name,
+      ]),
+    );
+    if (!rows[0]) {
+      throw new Error('no user to rename');
+    }
+
+    return rows[0];
+  }
+
   archivedMembershipsOf(userId: string): Promise<Membership[]> {
     return withOrg(this.pool, null, async db => {
       const { rows } = await db.query<Membership>(

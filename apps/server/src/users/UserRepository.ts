@@ -21,4 +21,6 @@ export interface UserRepository {
   membershipsOf(userId: string): Promise<Membership[]>;
   /** The archived organisations the user belongs to, read-only. Used to open an archived camp; never to write to it. */
   archivedMembershipsOf(userId: string): Promise<Membership[]>;
+  /** Saves the person's own name. The caller passes only the signed-in person's id. Sign-in never overwrites a saved name. */
+  updateName(userId: string, name: string): Promise<User>;
 }
