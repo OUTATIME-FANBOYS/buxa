@@ -10,8 +10,8 @@ import type { SessionIdentity } from '@buxa/shared/kanban/actions/auth';
 // The task drawer is composed here, in the screens layer, so the providers do not import components.
 export const WorkArea = dynamic(
   () => import('@buxa/middleware/providers/providers').then((m) => ({
-    default: ({ user, campRole, children }: { user: SessionIdentity; campRole?: Role | null; children: ReactNode }) => (
-      <m.WorkProviders user={user} campRole={campRole} drawer={<TaskDrawer />}>{children}</m.WorkProviders>
+    default: ({ user, campRole, archived, children }: { user: SessionIdentity; campRole?: Role | null; archived?: boolean; children: ReactNode }) => (
+      <m.WorkProviders user={user} campRole={campRole} archived={archived} drawer={<TaskDrawer />}>{children}</m.WorkProviders>
     ),
   })),
   {

@@ -22,3 +22,28 @@ export async function renameCampAction(...args: Parameters<typeof renameCampActi
 export async function updateCampClockAction(...args: Parameters<typeof updateCampClockActionImpl>) {
   return updateCampClockActionImpl(...args);
 }
+
+// Archive and delete. The contract is fixed; the server side (issue #266, branch v0.2/feat/camp-archive-server) replaces these stubs.
+// STUB until server issue #266 merges: nothing is archived or deleted, and no camp is listed as archived. Replace the bodies with the server composers.
+
+export type CampActionResult = { ok: true } | { ok: false; message: string };
+export interface ArchivedCamp { id: string; name: string; archivedAt: string }
+
+/** STUB (server issue #266): archives the camp. It is hidden from the switcher, and its data is kept. */
+export async function archiveCamp(_input: { orgId: string }): Promise<CampActionResult> {
+  void _input;
+
+  return { ok: false, message: 'Archiving is not available yet.' };
+}
+
+/** STUB (server issue #266): deletes the camp and everything in it. `confirmName` must match the camp name exactly. */
+export async function deleteCamp(_input: { orgId: string; confirmName: string }): Promise<CampActionResult> {
+  void _input;
+
+  return { ok: false, message: 'Deleting is not available yet.' };
+}
+
+/** STUB (server issue #266): the person's archived camps. */
+export async function listArchivedCamps(): Promise<ArchivedCamp[]> {
+  return [];
+}

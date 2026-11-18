@@ -12,7 +12,8 @@ import { Dashboard } from './Dashboard';
 import { MyTasks } from './MyTasks';
 import { Projects } from './Projects';
 import { Reports } from './Reports';
-import { Settings } from './Settings';
+import { Settings, type SettingsCamp } from './Settings';
+import type { ArchivedCamp } from '@/actions/camp';
 import { WorkspaceCalendar } from './WorkspaceCalendar';
 import { Button } from '@/components/elements/export';
 
@@ -64,6 +65,6 @@ export function ReportsPage() {
   return <Reports />;
 }
 
-export function SettingsPage({ clock }: { clock?: ReactNode }) {
-  return <Settings clock={clock} />;
+export function SettingsPage({ clock, camp, archivedCamps }: { clock?: ReactNode; camp?: SettingsCamp; archivedCamps?: readonly ArchivedCamp[] }) {
+  return <Settings clock={clock} camp={camp} archivedCamps={archivedCamps} />;
 }

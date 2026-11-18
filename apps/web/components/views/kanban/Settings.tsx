@@ -8,11 +8,16 @@ import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { ROUTES } from '@/config/routes';
 import { AgentDialog } from '@/components/components/kanban/dialogs/export';
 import { ResetDemoButton } from '@/components/components/kanban/export';
+import { ArchivedCampsCard, DangerZone } from '@/components/components/camp/export';
+import type { ArchivedCamp } from '@/actions/camp';
 import type { ThemePref } from '@buxa/shared';
 
+/** The camp the settings are for. `canDelete` is the owner's right (org:delete); an archived camp shows no danger zone. */
+export interface SettingsCamp { id: string; name: string; canDelete: boolean; archived: boolean }
+
 /** Every setting is a card in one grid: the cards fill the page and reflow by width (see styles/features/settings.css). `clock` is the camp clock, shown inside the Appearance card. */
-export function Settings({ clock }: { clock?: ReactNode }) {
-  const { s, actions, me } = useStore(); const { toast } = useUi();
+export function Settings({ clock, camp, archivedCamps = [] }: { clock?: ReactNode; camp?: SettingsCamp; archivedCamps?: readonly ArchivedCamp[] }) {
+  const { s, actions, me, readOnly } = useStore(); const { toast } = useUi();
   const [name, setName] = useState(me?.name ?? ''); const [title, setTitle] = useState(me?.title ?? ''); const [err, setErr] = useState<string | null>(null);
   const file = useRef<HTMLInputElement>(null); const [addAgent, setAddAgent] = useState(false);
   const on = s.ui.agentsEnabled; const hasAgents = s.agents.length > 0;
@@ -43,23 +48,27 @@ export function Settings({ clock }: { clock?: ReactNode }) {
         <section className="panel"><h2>Agents</h2>
           <p className="muted">Let AI agents add and update tasks on your boards. Their changes can wait for your approval, and every one is recorded. Leave this off and Buxa is a plain Kanban board.</p>
           <label className="check-row"><input type="checkbox" checked={on} onChange={e => actions.setAgentsEnabled(e.target.checked)} /><span>Turn on agents</span></label>
-          {on && <div className="row"><Button onClick={() => setAddAgent(true)}>Add an agent</Button>{hasAgents && <Button variant="ghost" href={ROUTES.agents}>Open Agents</Button>}</div>}
+          {on && <div className="row">{!readOnly && <Button onClick={() => setAddAgent(true)}>Add an agent</Button>}{hasAgents && <Button variant="ghost" href={ROUTES.agents}>Open Agents</Button>}</div>}
           {addAgent && <AgentDialog onClose={() => setAddAgent(false)} />}
         </section>
         <section className="panel"><h2>Your data</h2>
           <p className="muted">Everything lives in this browser’s storage. Export a copy to back it up or move it to another device.</p>
           <div className="row"><Button onClick={exportJson}>Export JSON</Button>
-            <Button onClick={() => file.current?.click()}>Import JSON</Button>
-            <input ref={file} type="file" accept="application/json" hidden onChange={async e => {
-              const f = e.target.files?.[0]; if (!f) {
-                return;
-              } const m = actions.importData(await f.text()); toast(m ?? 'Data imported', m ? { tone: 'error' } : undefined); e.target.value = '';
-            }} />
-            <ResetDemoButton /></div>
+            {!readOnly && <>
+              <Button onClick={() => file.current?.click()}>Import JSON</Button>
+              <input ref={file} type="file" accept="application/json" hidden onChange={async e => {
+                const f = e.target.files?.[0]; if (!f) {
+                  return;
+                } const m = actions.importData(await f.text()); toast(m ?? 'Data imported', m ? { tone: 'error' } : undefined); e.target.value = '';
+              }} />
+              <ResetDemoButton />
+            </>}</div>
         </section>
         <section className="panel"><h2>Keyboard shortcuts</h2>
           <dl className="keys"><div><dt><kbd className="kbd">C</kbd></dt><dd>Create a task</dd></div><div><dt><kbd className="kbd">/</kbd> or <kbd className="kbd">⌘K</kbd></dt><dd>Search</dd></div>
             <div><dt><kbd className="kbd">Alt</kbd> <kbd className="kbd">←</kbd> <kbd className="kbd">→</kbd></dt><dd>Move a focused card between columns</dd></div><div><dt><kbd className="kbd">Esc</kbd></dt><dd>Close menus and panels</dd></div></dl></section>
+        <ArchivedCampsCard camps={archivedCamps} />
+        {camp?.canDelete && !camp.archived && <DangerZone campId={camp.id} campName={camp.name} />}
       </div>
     </div>
   );

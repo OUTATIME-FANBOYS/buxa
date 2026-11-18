@@ -5,3 +5,5 @@
 .abilities li { display: flex; gap: var(--s2); align-items: center; }
 .abilities li.yes { color: var(--ok-ink); } .abilities li.no { color: var(--text-3); }
 @media (max-width: 760px) { .grid-3 { grid-template-columns: 1fr; } }
+/* An archived camp: a quiet notice above the page, so people know nothing here can change. */
+.camp-archived-banner { margin: 0 0 var(--s4); padding: var(--s3) var(--s4); border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface-2); font-weight: 600; }
