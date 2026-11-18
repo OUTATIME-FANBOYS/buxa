@@ -15,10 +15,10 @@ const block = (selector: string): string => {
   return tokens.slice(start, end);
 };
 
-const BACKGROUND_TOKENS = ['--hero-bg', '--hero-fg', '--hero-fg-2', '--auth-glow', '--auth-stars', '--auth-tint', '--auth-dots'];
+const BACKGROUND_TOKENS = ['--hero-bg', '--hero-fg', '--hero-fg-2', '--auth-glow', '--auth-stars', '--auth-tint'];
 
 describe('sign-in background tokens', () => {
-  it('the light theme (:root) defines the hero background, its text, the coral glow and the dot grid', () => {
+  it('the light theme (:root) defines the hero background, its text, the glows and the stars', () => {
     const root = block(':root');
     for (const token of BACKGROUND_TOKENS) {
       expect(root, token).toContain(`${token}:`);
@@ -39,11 +39,13 @@ describe('sign-in background tokens', () => {
 
   it('the layout reads the tokens in CSS, not inline', () => {
     expect(auth).toContain('var(--auth-glow), var(--auth-stars), var(--hero-bg)');
-    expect(auth).toContain('radial-gradient(var(--auth-dots) 1px');
+    expect(auth).not.toContain('background-image');
+    expect(auth).not.toContain('--auth-dots');
     expect(auth).toContain('background-color: var(--auth-tint)');
   });
 
   it('the light theme tints the form side teal and draws darker teal stars, the dark theme tints it coral-orange', () => {
+    expect(block(':root')).toContain('rgba(11, 90, 94, 0.18)');
     expect(block(':root')).toContain('--auth-tint: #d6eeeb;');
     expect(block(':root')).toContain('rgba(10, 79, 81, 0.6)');
     expect(block("[data-theme='dark']")).toContain('--auth-tint: #3d2619;');
