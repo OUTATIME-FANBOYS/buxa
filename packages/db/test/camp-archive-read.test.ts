@@ -16,9 +16,10 @@ describe.skipIf(!url)('viewing an archived camp (0014)', () => {
 
   beforeAll(async () => {
     await migrate(pool);
-    const user = await pool.query<{ id: string }>(`INSERT INTO users (email, name) VALUES ($1, 'Member') RETURNING id`, [
-      `member-${tag}@archive-read.test`,
-    ]);
+    const user = await pool.query<{ id: string }>(
+      `INSERT INTO users (email, name) VALUES ($1, 'Member') RETURNING id`,
+      [`member-${tag}@archive-read.test`],
+    );
     member = user.rows[0].id;
     const archived = await pool.query<{ id: string }>(
       `INSERT INTO orgs (name, slug, archived_at) VALUES ($1, $2, now()) RETURNING id`,

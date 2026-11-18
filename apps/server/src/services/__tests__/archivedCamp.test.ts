@@ -28,7 +28,8 @@ describe('an archived camp is read-only', () => {
     const orgs = createOrgService(camp.store);
 
     await expect(orgs.getCamp(as(role))).resolves.toMatchObject({ id: camp.orgId, name: 'Summer Camp' });
-    await expect(orgs.listMembers(as(role))).resolves.toMatchObject({ members: expect.any(Array) });
+    const { members } = await orgs.listMembers(as(role));
+    expect(members.length).toBeGreaterThan(0);
   });
 
   it('staff can still see who is on site in an archived camp', async () => {
@@ -56,7 +57,9 @@ describe('an archived camp is read-only', () => {
       expect(isHttpError(error) && error.statusCode).toBe(403);
       expect(error).toMatchObject({ message: ARCHIVED_CAMP_MESSAGE });
     }
-    expect(camp.store.orgs.get(camp.orgId)!.name).toBe('Summer Camp');
+    const camps = camp.store.orgs.get(camp.orgId);
+    expect(camps?.name).toBe('Summer Camp');
+    expect(camps?.archivedAt).not.toBeNull();
   });
 
   it('the owner can still delete the archived camp, with its name typed exactly', async () => {
