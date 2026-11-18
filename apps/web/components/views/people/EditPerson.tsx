@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { personPath } from '@/config/routes';
@@ -8,6 +7,7 @@ import { EditPersonForm } from '@/components/components/people/forms/export';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { displayName } from '@buxa/shared';
 import { loadPerson } from '@buxa/server/composers/index.server';
+import { Button } from '@/components/elements/export';
 
 /** Change one person's details. Only people:update may; everyone else is told so, without a form to fill in. */
 export async function EditPerson({ id }: { id: string }) {
@@ -25,7 +25,7 @@ export async function EditPerson({ id }: { id: string }) {
       <div className="page">
         <PageHeader title="Edit person" />
         <Empty icon="alert" title="Your role cannot change people's details" body="Ask a staff member or admin to make the change."
-          action={<Link className="btn" href={personPath(person.id)}>Back to {displayName(person)}</Link>} />
+          action={<Button href={personPath(person.id)}>Back to {displayName(person)}</Button>} />
       </div>
     );
   }

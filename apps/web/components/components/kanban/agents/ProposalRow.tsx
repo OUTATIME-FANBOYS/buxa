@@ -1,4 +1,4 @@
-import { Icon } from '@/components/elements/export';
+import { Icon, Button } from '@/components/elements/export';
 import { Pill } from '@/components/elements/export';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { useStore } from '@buxa/middleware/providers/providers';
@@ -23,10 +23,10 @@ export function ProposalRow({ p, actions: showActions }: { p: Proposal; actions:
       </div>
       {p.status === 'pending' && showActions
         ? <div className="row prop-actions">
-          <button className="btn btn-sm" onClick={() => actions.decide(p.id, 'reject')} aria-label={`Reject: ${d.text}`}>Reject</button>
-          <button className="btn btn-sm btn-primary" onClick={() => {
+          <Button size="sm" onClick={() => actions.decide(p.id, 'reject')} aria-label={`Reject: ${d.text}`}>Reject</Button>
+          <Button variant="primary" size="sm" onClick={() => {
             actions.decide(p.id, 'approve'); toast('Approved');
-          }} aria-label={`Approve: ${d.text}`}>Approve</button></div>
+          }} aria-label={`Approve: ${d.text}`}>Approve</Button></div>
         : <span className="outcome"><Pill tone={STATUS_TONE[p.status]}>{STATUS_LABEL[p.status]}{decider && p.status !== 'applied' ? ` by ${decider}` : ''}</Pill></span>}
     </li>
   );

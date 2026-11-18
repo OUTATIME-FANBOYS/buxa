@@ -17,7 +17,7 @@ describe('AttachmentList', () => {
     expect(html).toContain('<span class="file-name">form.pdf</span>');
     expect(html).toContain('2 KB');
     expect(html).toContain('aria-label="Remove form.pdf"');
-    expect(html).toContain('btn btn-sm');
+    expect(html).toContain('button--sm');
   });
   it('is read-only for viewers, and says so when there are no files', () => {
     h.store = { actions: {} };

@@ -25,7 +25,7 @@ describe('ColumnDialog', () => {
   it('titles a new column and offers to create it', () => {
     act(() => root.render(<ColumnDialog projectId={seed.projects[0].id} onClose={() => undefined} />));
     expect(document.querySelector('[role="dialog"]')?.getAttribute('aria-label')).toBe('New column');
-    expect(document.querySelector('form button.btn-primary')).not.toBeNull();
+    expect(document.querySelector('form button.button--primary')).not.toBeNull();
   });
   it('edits an existing column with its current name and kind', () => {
     const column = seed.projects[0].columns[0];

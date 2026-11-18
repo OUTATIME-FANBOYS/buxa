@@ -1,6 +1,7 @@
 import { CAMP_ROLES, CAMP_ROLE_LABELS } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
 import type { ListParams } from '@buxa/shared';
+import { Button } from '@/components/elements/export';
 
 /** A plain GET form: works without JavaScript, and the search is bookmarkable (`?q=` and `?role=`). */
 export function PeopleSearch({ params }: { params: ListParams }) {
@@ -17,7 +18,7 @@ export function PeopleSearch({ params }: { params: ListParams }) {
           {CAMP_ROLES.map(role => <option key={role} value={role}>{CAMP_ROLE_LABELS[role]}</option>)}
         </select>
       </label>
-      <button className="btn" type="submit">Search</button>
+      <Button type="submit">Search</Button>
     </form>
   );
 }

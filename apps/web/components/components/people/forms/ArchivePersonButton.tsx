@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { archivePersonAction } from '@/actions/people';
+import { Button } from '@/components/elements/export';
 
 /**
  * Archive behind a confirmation. Archiving hides the person from search and revokes their badge. A refusal (checked in right now) is
@@ -34,9 +35,9 @@ export function ArchivePersonButton({ personId, personName }: { personId: string
 
   return (
     <div className="stack">
-      <button type="button" className="btn btn-danger-ghost btn-ghost" onClick={onClick} disabled={pending}>
+      <Button variant="danger-ghost" type="button" onClick={onClick} disabled={pending}>
         {pending ? 'Archiving…' : 'Archive person'}
-      </button>
+      </Button>
       {error && <p className="field-error" role="alert">{error}</p>}
     </div>
   );

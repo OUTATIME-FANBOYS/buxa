@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { Dialog } from '@/components/components/Dialog';
 import type { HouseholdChoice } from '@buxa/shared';
 import { NewPersonForm } from './NewPersonForm';
+import { Button } from '@/components/elements/export';
 
 /**
  * The People page's Add person button. It opens the add form in a dialog, so the list stays in view; the dialog closes on Escape,
@@ -15,7 +16,7 @@ export function AddPersonButton({ households }: { households: readonly Household
 
   return (
     <>
-      <button type="button" className="btn btn-primary" aria-haspopup="dialog" onClick={() => setOpen(true)}>Add person</button>
+      <Button variant="primary" type="button" aria-haspopup="dialog" onClick={() => setOpen(true)}>Add person</Button>
       {open && (
         <Dialog title="Add person" onClose={close} className="person-dialog">
           <p className="person-helper">A child must join a household that has a parent or guardian in it.</p>

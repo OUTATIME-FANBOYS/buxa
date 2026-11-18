@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createScanDeduper } from '@buxa/shared';
+import { Button } from '@/components/elements/export';
 
 /** Reads a QR code with the phone camera and calls `onScan` once per distinct code. The camera starts only when asked. */
 interface CameraScannerProps { onScan: (raw: string) => void; onClose: () => void }
@@ -89,9 +90,9 @@ export function CameraScanner({ onScan, onClose }: CameraScannerProps) {
         <>
           {phase === 'scanning' && <video ref={video} className="camera-video" playsInline muted aria-label="Camera view for scanning a badge" />}
           {(phase === 'idle' || phase === 'denied' || phase === 'failed') && (
-            <button type="button" className="btn btn-primary" onClick={() => void start()}>
+            <Button variant="primary" type="button" onClick={() => void start()}>
               {phase === 'idle' ? 'Start camera' : 'Try the camera again'}
-            </button>
+            </Button>
           )}
           {(phase === 'denied' || phase === 'failed') && (
             <p className="notice tone-crit" role="alert">
@@ -109,7 +110,7 @@ export function CameraScanner({ onScan, onClose }: CameraScannerProps) {
           </p>
         </>
       )}
-      <button type="button" className="btn" onClick={close}>Close camera</button>
+      <Button type="button" onClick={close}>Close camera</Button>
     </div>
   );
 }

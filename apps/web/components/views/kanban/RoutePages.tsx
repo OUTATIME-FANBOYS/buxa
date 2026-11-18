@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 import type { CampHome } from '@buxa/shared/camp/campHomeTypes';
@@ -15,6 +14,7 @@ import { Projects } from './Projects';
 import { Reports } from './Reports';
 import { Settings } from './Settings';
 import { WorkspaceCalendar } from './WorkspaceCalendar';
+import { Button } from '@/components/elements/export';
 
 /** Home: one page for the camp (when there is one) and its staff tasks. */
 export function HomePage({ camp }: { camp: CampHome }) {
@@ -39,7 +39,7 @@ export function BoardsPage() {
     return <p className="muted" role="status" style={{ padding: 24 }}>Opening board…</p>;
   }
 
-  return <Empty icon="folder" title="No projects yet" body="Create a project to get your first board." action={<Link className="btn btn-primary" href={ROUTES.projects}>Go to projects</Link>} />;
+  return <Empty icon="folder" title="No projects yet" body="Create a project to get your first board." action={<Button variant="primary" href={ROUTES.projects}>Go to projects</Button>} />;
 }
 
 export function BoardRoutePage({ projectId }: { projectId: string }) {
@@ -57,7 +57,7 @@ export function AgentsPage() {
     return <Agents />;
   }
 
-  return <Empty icon="agent" title="Agents are turned off" body="Turn them on in Settings to let AI agents propose work for you to approve." action={<Link className="btn" href={ROUTES.settings}>Open settings</Link>} />;
+  return <Empty icon="agent" title="Agents are turned off" body="Turn them on in Settings to let AI agents propose work for you to approve." action={<Button href={ROUTES.settings}>Open settings</Button>} />;
 }
 
 export function ReportsPage() {

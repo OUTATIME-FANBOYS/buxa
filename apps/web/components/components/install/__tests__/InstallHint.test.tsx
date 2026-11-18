@@ -72,7 +72,7 @@ describe('install hint', () => {
   it('"Not now" hides it and remembers the choice in this browser', () => {
     setDevice({ userAgent: IPHONE, phone: true });
     render();
-    act(() => host.querySelector<HTMLButtonElement>('.btn-ghost')?.click());
+    act(() => host.querySelector<HTMLButtonElement>('.button--ghost')?.click());
     expect(host.querySelector('.install-hint')).toBeNull();
     expect(values.get(INSTALL_HINT_KEY)).toBe('1');
   });

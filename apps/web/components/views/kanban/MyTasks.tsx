@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
 import { Empty } from '@/components/components/export';
-import { Segmented } from '@/components/elements/export';
+import { Segmented, Button } from '@/components/elements/export';
 import { ListView } from '@/components/components/kanban/board-views/export';
 import { Icon } from '@/components/elements/export';
 import { diffDays, today } from '@buxa/shared';
@@ -27,7 +27,7 @@ export function MyTasks() {
   return (
     <div className="page">
       <header className="page-head"><div className="page-title"><h1>My tasks</h1><p className="muted">{open.length} open · {done.length} done</p></div>
-        <div className="page-actions">{!readOnly && projects.length > 0 && <button className="btn btn-primary" onClick={() => openTask('new')}><Icon name="plus" size={16} />New task</button>}<div className="search-local"><Icon name="search" size={15} /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search my tasks" aria-label="Search my tasks" /></div>
+        <div className="page-actions">{!readOnly && projects.length > 0 && <Button variant="primary" size="header" onClick={() => openTask('new')}><Icon name="plus" size={16} />New task</Button>}<div className="search-local"><Icon name="search" size={15} /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search my tasks" aria-label="Search my tasks" /></div>
           <Segmented label="Show" value={show} onChange={setShow} options={[{ value: 'open', label: 'Open' }, { value: 'done', label: 'Done' }, { value: 'all', label: 'All' }]} /></div></header>
       {mine.length === 0 ? <Empty icon="tasks" title={q ? 'No matching tasks' : 'No tasks assigned to you'} body={q ? 'Try a different search.' : 'Tasks assigned to you across every project will show up here.'} /> : (
         <>

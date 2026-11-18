@@ -7,6 +7,7 @@ import { checkOutRefusalCopy, type CheckOutRefusal } from '@buxa/shared';
 import { canSubmitCheckOut } from '@buxa/shared';
 import type { CheckOutDraft } from '@buxa/shared';
 import { PickupChoices } from './PickupChoices';
+import { Button } from '@/components/elements/export';
 
 export interface CheckOutPanelProps {
   id: string;
@@ -57,10 +58,10 @@ export function CheckOutPanel(props: CheckOutPanelProps) {
       {copy && <Notice tone="crit" title={copy.title} body={copy.body} />}
       {failure && <Notice tone="crit" title="Not checked out" body={failure} />}
       <div className="checkout-actions">
-        {onCancel && <button type="button" className="btn onsite-btn" onClick={onCancel}>Cancel</button>}
-        <button type="submit" className="btn btn-primary onsite-btn" disabled={!submittable}>
+        {onCancel && <Button type="button" className="onsite-btn" onClick={onCancel}>Cancel</Button>}
+        <Button variant="primary" type="submit" className="onsite-btn" disabled={!submittable}>
           {busy ? 'Checking out…' : 'Check out'}
-        </button>
+        </Button>
       </div>
     </form>
   );

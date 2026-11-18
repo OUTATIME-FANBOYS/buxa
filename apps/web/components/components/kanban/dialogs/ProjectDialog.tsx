@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dialog } from '@/components/components/export';
-import { Field } from '@/components/elements/export';
+import { Field, Button } from '@/components/elements/export';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { boardPath } from '@/config/routes';
 import { useStore } from '@buxa/middleware/providers/providers';
@@ -38,7 +38,7 @@ export function ProjectDialog({ project, onClose }: { project?: Project; onClose
         }} data-autofocus placeholder="e.g. Summer 2028 Registration" /></Field>
         <Field label="Description"><textarea rows={3} value={desc} onChange={e => setDesc(e.target.value)} maxLength={300} placeholder="What is this project for?" /></Field>
         <Field label="Deadline"><input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} /></Field>
-        <div className="row-end"><button type="button" className="btn" onClick={onClose}>Cancel</button><button className="btn btn-primary">{project ? 'Save' : 'Create project'}</button></div>
+        <div className="row-end"><Button type="button" onClick={onClose}>Cancel</Button><Button variant="primary">{project ? 'Save' : 'Create project'}</Button></div>
       </form>
     </Dialog>
   );

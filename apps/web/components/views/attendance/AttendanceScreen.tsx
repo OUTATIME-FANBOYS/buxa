@@ -10,6 +10,7 @@ import { campActor, campClock } from '@buxa/server/composers/index.server';
 import { attendanceExportPath } from '@buxa/shared';
 import { parseLogFilter } from '@buxa/shared';
 import { HELP_LINK_LABEL, helpLink } from '@buxa/shared';
+import { Button } from '@/components/elements/export';
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>;
 
@@ -40,9 +41,9 @@ export async function AttendanceScreen({ searchParams }: { searchParams: SearchP
 
   return (
     <div className="page">
-      <PageHeader title="Attendance" subtitle="Who came in and out, in camp time." actions={<a className="btn" href={helpLink('exports')}>{HELP_LINK_LABEL}</a>} />
+      <PageHeader title="Attendance" subtitle="Who came in and out, in camp time." actions={<Button href={helpLink('exports')}>{HELP_LINK_LABEL}</Button>} />
       <LogFilters values={values} people={people}>
-        {parsed.ok && canExport && <a className="btn log-export" href={attendanceExportPath(parsed.filter)} download>Download CSV</a>}
+        {parsed.ok && canExport && <Button className="log-export" href={attendanceExportPath(parsed.filter)} download>Download CSV</Button>}
       </LogFilters>
       {!parsed.ok && <Notice tone="crit" title="Check the dates" body={parsed.message} />}
       {parsed.ok && entries.length === 0 && <Empty icon="list" title="No visits for these days" body="Try a wider range, or another person." />}

@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can, IMPORT_COLUMNS, MAX_IMPORT_ROWS } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
@@ -6,6 +5,7 @@ import { Empty, PageHeader } from '@/components/components/export';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_MANAGE } from '@buxa/shared';
 import { ImportForm } from '@/components/components/classes/forms/export';
+import { Button } from '@/components/elements/export';
 
 /**
  * Bulk import: download the template, fill it in a spreadsheet, upload it, read the preview, then confirm. Viewers get the forbidden
@@ -21,7 +21,7 @@ export async function ImportClasses() {
       <div className="page">
         <PageHeader title="Import classes" />
         <Empty icon="alert" title="You cannot import sessions" body={FORBIDDEN_MANAGE}
-          action={<Link className="btn classes-target" href={ROUTES.classes}>Back to classes</Link>} />
+          action={<Button className="classes-target" href={ROUTES.classes}>Back to classes</Button>} />
       </div>
     );
   }
@@ -31,7 +31,7 @@ export async function ImportClasses() {
       <PageHeader
         title="Import classes and sessions"
         subtitle="Create many sessions from a spreadsheet. Every row is checked the same way as a manual entry."
-        actions={<a className="btn classes-target" href={ROUTES.classImportTemplate} download>Download the template (CSV)</a>}
+        actions={<Button className="classes-target" href={ROUTES.classImportTemplate} download>Download the template (CSV)</Button>}
       />
       <section aria-labelledby="columns-heading" className="panel stack">
         <h2 id="columns-heading" className="people-subheading">Columns</h2>

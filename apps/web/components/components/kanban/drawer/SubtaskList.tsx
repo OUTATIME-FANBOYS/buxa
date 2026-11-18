@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Icon } from '@/components/elements/export';
+import { Icon, Button } from '@/components/elements/export';
 import { Progress } from '@/components/elements/export';
 import { subtaskProgress } from '@buxa/shared';
 
@@ -19,7 +19,7 @@ export function SubtaskList({ task, ro }: { task: Task; ro: boolean }) {
         {task.subtasks.map(st => (
           <li key={st.id}>
             <label><input type="checkbox" checked={st.done} disabled={ro} onChange={() => actions.toggleSubtask(task.id, st.id)} /><span className={st.done ? 'done' : ''}>{st.title}</span></label>
-            {!ro && <button className="icon-btn" aria-label={`Remove subtask ${st.title}`} onClick={() => actions.removeSubtask(task.id, st.id)}><Icon name="x" size={14} /></button>}
+            {!ro && <Button variant="icon" aria-label={`Remove subtask ${st.title}`} onClick={() => actions.removeSubtask(task.id, st.id)}><Icon name="x" size={14} /></Button>}
           </li>
         ))}
       </ul>
@@ -28,7 +28,7 @@ export function SubtaskList({ task, ro }: { task: Task; ro: boolean }) {
           actions.addSubtask(task.id, t); setSub('');
         }
       }}>
-        <input value={sub} onChange={e => setSub(e.target.value)} placeholder="Add a subtask" aria-label="New subtask" maxLength={140} /><button className="btn btn-sm" disabled={!sub.trim()}>Add</button></form>}
+        <input value={sub} onChange={e => setSub(e.target.value)} placeholder="Add a subtask" aria-label="New subtask" maxLength={140} /><Button size="sm" disabled={!sub.trim()}>Add</Button></form>}
     </section>
   );
 }

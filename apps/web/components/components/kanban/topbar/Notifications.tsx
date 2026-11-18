@@ -4,7 +4,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
 import { Empty } from '@/components/components/export';
-import { Icon } from '@/components/elements/export';
+import { Icon, Button } from '@/components/elements/export';
 import { Popover } from '@/components/components/export';
 import { ago, diffDays, today } from '@buxa/shared';
 
@@ -29,9 +29,9 @@ export function Notifications() {
 
   return (
     <>
-      <button ref={btn} className="icon-btn bell" aria-label={`Notifications${unread ? `, ${unread} need attention` : ''}`} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(o => !o)}>
+      <Button variant="icon" ref={btn} className="bell" aria-label={`Notifications${unread ? `, ${unread} need attention` : ''}`} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(o => !o)}>
         <Icon name="bell" />{unread > 0 && <span className="badge">{unread > 9 ? '9+' : unread}</span>}
-      </button>
+      </Button>
       {open && (
         <Popover anchor={btn.current} onClose={close} align="end" width={360} label="Notifications" className="notif">
           <div className="notif-head"><strong>Notifications</strong><button className="link" onClick={actions.markAllRead} disabled={!mine.some(n => !n.read)}>Mark all read</button></div>

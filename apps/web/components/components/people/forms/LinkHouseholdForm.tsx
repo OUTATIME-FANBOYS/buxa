@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useRef } from 'react';
-import { Field } from '@/components/elements/export';
+import { Field, Button } from '@/components/elements/export';
 import { fieldError, idle } from '@buxa/shared';
 import { linkHouseholdAction } from '@/actions/people';
 import { FormMessage } from './FormMessage';
@@ -47,7 +47,7 @@ export function LinkHouseholdForm({ households, people, canAuthorisePickup }: { 
       </div>
       {err('canPickup') && <p className="field-error" role="alert">{err('canPickup')}</p>}
       <FormMessage state={state} />
-      <div><button className="btn" disabled={pending}>{pending ? 'Linking…' : 'Link to household'}</button></div>
+      <div><Button disabled={pending}>{pending ? 'Linking…' : 'Link to household'}</Button></div>
     </form>
   );
 }

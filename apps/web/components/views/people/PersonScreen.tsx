@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can, CAMP_ROLE_LABELS, type Actor, type CampRole } from '@buxa/domain';
 import { personEditPath } from '@/config/routes';
@@ -15,6 +14,7 @@ import { PersonHeader } from '@/components/components/people/export';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { readListParams } from '@buxa/shared';
 import { loadPerson } from '@buxa/server/composers/index.server';
+import { Button } from '@/components/elements/export';
 
 /**
  * One person. What is shown follows the role: contact details come back null for viewers (and are then left out), link and
@@ -51,7 +51,7 @@ export async function PersonScreen({ id, searchParams = {} }: { id: string; sear
           <h2 id="details-heading" className="people-heading">Details</h2>
           <ContactDetails person={person} />
           <div className="row">
-            {canUpdate && <Link className="btn btn-sm" href={personEditPath(person.id)}>Edit details</Link>}
+            {canUpdate && <Button size="sm" href={personEditPath(person.id)}>Edit details</Button>}
             {canArchive && !person.archived && <ArchivePersonButton personId={person.id} personName={`${person.givenName} ${person.familyName}`} />}
           </div>
         </section>

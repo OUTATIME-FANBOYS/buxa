@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Dialog } from '@/components/components/export';
-import { Field } from '@/components/elements/export';
+import { Field, Button } from '@/components/elements/export';
 import { useStore } from '@buxa/middleware/providers/providers';
 import type { Column, ColumnKind } from '@buxa/shared';
 
@@ -35,7 +35,7 @@ export function ColumnDialog({ projectId, column, onClose }: { projectId: string
             <option value="open">Not started</option><option value="active">In progress</option><option value="done">Done</option>
           </select>
         </Field>
-        <div className="row-end"><button type="button" className="btn" onClick={onClose}>Cancel</button><button className="btn btn-primary">{column ? 'Save' : 'Add column'}</button></div>
+        <div className="row-end"><Button type="button" onClick={onClose}>Cancel</Button><Button variant="primary">{column ? 'Save' : 'Add column'}</Button></div>
       </form>
     </Dialog>
   );

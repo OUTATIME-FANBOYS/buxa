@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
@@ -8,6 +7,7 @@ import { FORBIDDEN_READ } from '@buxa/shared';
 import { loadClasses } from '@buxa/server/composers/index.server';
 import { ClassesTable } from '@/components/components/classes/export';
 import { NewClassButton } from '@/components/components/classes/forms/export';
+import { Button } from '@/components/elements/export';
 
 /** The camp's classes. Anyone who can read classes sees them; only staff with classes:manage see the create and import buttons. */
 export async function ClassList() {
@@ -20,7 +20,7 @@ export async function ClassList() {
 
   const actions = canManage ? (
     <>
-      <Link className="btn classes-target" href={ROUTES.classImport}>Import classes</Link>
+      <Button className="classes-target" href={ROUTES.classImport}>Import classes</Button>
       <NewClassButton />
     </>
   ) : undefined;

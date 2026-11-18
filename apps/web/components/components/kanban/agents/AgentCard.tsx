@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Avatar } from '@/components/elements/export';
+import { Avatar, Button } from '@/components/elements/export';
 import { Icon } from '@/components/elements/export';
 import { Pill } from '@/components/elements/export';
 import { Segmented } from '@/components/elements/export';
@@ -22,11 +22,11 @@ export function AgentCard({ agent, canManage }: { agent: Agent; canManage: boole
         <Avatar user={user} size={40} />
         <div className="grow"><strong>{user?.name}</strong><span className="muted small block">{agent.model}</span></div>
         <Pill tone={agent.paused ? 'warn' : 'ok'}>{agent.paused ? 'Paused' : 'Active'}</Pill>
-        {canManage && <button className="btn btn-sm" onClick={() => actions.updateAgent(agent.userId, { paused: !agent.paused })} aria-pressed={agent.paused}>{agent.paused ? 'Resume' : 'Pause'}</button>}
+        {canManage && <Button size="sm" onClick={() => actions.updateAgent(agent.userId, { paused: !agent.paused })} aria-pressed={agent.paused}>{agent.paused ? 'Resume' : 'Pause'}</Button>}
       </div>
       {agent.purpose && <p className="muted">{agent.purpose}</p>}
       {sync === 'synced'
-        ? <div className="row"><button className="btn btn-sm" onClick={() => setConnect(true)} disabled={!canManage}><Icon name="agent" size={15} />Connect to Claude</button></div>
+        ? <div className="row"><Button size="sm" onClick={() => setConnect(true)} disabled={!canManage}><Icon name="agent" size={15} />Connect to Claude</Button></div>
         : <p className="muted small">To connect a real agent, run <code>npm run server</code> and reload. {sync === 'offline' ? 'The server is not answering right now.' : 'Until then only the simulated agent is available.'}</p>}
       {connect && user && <ConnectAgentDialog agentId={agent.userId} name={user.name} onClose={() => setConnect(false)} />}
       <dl className="agent-stats">

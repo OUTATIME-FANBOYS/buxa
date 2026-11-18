@@ -1,9 +1,9 @@
-import Link from 'next/link';
 import type { Session } from '@buxa/contracts';
 import { classPath } from '@/config/routes';
 import { formatCampDateTime } from '@buxa/shared';
 import { SessionStatus } from './SessionStatus';
 import type { ClockFormat } from '@buxa/domain';
+import { Button } from '@/components/elements/export';
 
 /** The session's instructors by name, comma separated. A session with none says so. */
 export const instructorNames = (session: Pick<Session, 'instructors'>): string =>
@@ -38,11 +38,11 @@ export function SessionTable({ classId, sessions, timeZone, clockFormat, selecte
               <td>{session.waitlisted}</td>
               <td><SessionStatus session={session} /></td>
               <td>
-                <Link className="btn btn-ghost classes-target" aria-current={selected ? 'true' : undefined}
+                <Button variant="ghost" className="classes-target" aria-current={selected ? 'true' : undefined}
                   href={`${classPath(classId)}?session=${encodeURIComponent(session.id)}#enrolments`}>
                   {selected ? 'Showing enrolments' : 'Enrolments'}
                   <span className="sr-only"> for the session starting {formatCampDateTime(session.startsAt, timeZone, clockFormat)}</span>
-                </Link>
+                </Button>
               </td>
             </tr>
           );

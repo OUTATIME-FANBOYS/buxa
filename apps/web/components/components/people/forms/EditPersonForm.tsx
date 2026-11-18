@@ -1,11 +1,10 @@
 'use client';
 
-import Link from 'next/link';
 import { useActionState, useEffect, useRef } from 'react';
 import type { Person } from '@buxa/contracts';
 import { CAMP_ROLES, CAMP_ROLE_LABELS } from '@buxa/domain';
 import { personPath } from '@/config/routes';
-import { Field } from '@/components/elements/export';
+import { Field, Button } from '@/components/elements/export';
 import { fieldError, idle } from '@buxa/shared';
 import { updatePersonAction } from '@/actions/people';
 import { FormMessage } from './FormMessage';
@@ -81,8 +80,8 @@ export function EditPersonForm({ person }: { person: EditablePerson }) {
 
       <FormMessage state={state} />
       <div className="row">
-        <button className="btn btn-primary" disabled={pending}>{pending ? 'Saving…' : 'Save changes'}</button>
-        <Link className="btn" href={personPath(person.id)}>Cancel</Link>
+        <Button variant="primary" disabled={pending}>{pending ? 'Saving…' : 'Save changes'}</Button>
+        <Button href={personPath(person.id)}>Cancel</Button>
       </div>
     </form>
   );

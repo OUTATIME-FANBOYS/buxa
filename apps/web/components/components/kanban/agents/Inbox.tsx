@@ -1,4 +1,4 @@
-import { Avatar } from '@/components/elements/export';
+import { Avatar, Button } from '@/components/elements/export';
 import { Empty } from '@/components/components/export';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { useStore } from '@buxa/middleware/providers/providers';
@@ -27,12 +27,12 @@ export function Inbox({ proposals }: { proposals: Proposal[] }) {
               <Avatar user={s.users.find(u => u.id === agentId)} size={32} />
               <div className="grow"><strong>{run?.label ?? 'Agent run'}</strong><span className="muted small block">{s.users.find(u => u.id === agentId)?.name} · {ago(g.at)}{run?.simulated ? ' · simulated' : ''}</span></div>
               {can && g.items.length > 1 && <div className="row">
-                <button className="btn btn-sm" onClick={() => {
+                <Button size="sm" onClick={() => {
                   actions.decideMany(ids, 'reject'); toast(`Rejected ${ids.length} proposals`);
-                }}>Reject all</button>
-                <button className="btn btn-sm btn-primary" onClick={() => {
+                }}>Reject all</Button>
+                <Button variant="primary" size="sm" onClick={() => {
                   actions.decideMany(ids, 'approve'); toast(`Approved ${ids.length} proposals`);
-                }}>Approve all</button></div>}
+                }}>Approve all</Button></div>}
             </div>
             <ul className="prop-list">{g.items.map(p => <ProposalRow key={p.id} p={p} actions={can} />)}</ul>
           </section>);

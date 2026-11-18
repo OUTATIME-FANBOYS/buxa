@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import type { Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
-import { Avatar } from '@/components/elements/export';
+import { Avatar, Button } from '@/components/elements/export';
 import { Empty } from '@/components/components/export';
 import { Icon } from '@/components/elements/export';
 import { subtaskProgress } from '@buxa/shared';
@@ -64,9 +64,9 @@ export function TimelineView({ tasks }: { tasks: Task[] }) {
     <div className="timeline">
       <div className="cal-head">
         <h2>{fmt(base)} – {fmt(addDays(base, DAYS - 1), true)}</h2><span className="grow" />
-        <button className="btn btn-sm" onClick={() => setOffset(0)}>Today</button>
-        <button className="icon-btn" aria-label="Earlier" onClick={() => setOffset(o => o - 2)}><Icon name="left" /></button>
-        <button className="icon-btn" aria-label="Later" onClick={() => setOffset(o => o + 2)}><Icon name="right" /></button>
+        <Button size="sm" onClick={() => setOffset(0)}>Today</Button>
+        <Button variant="icon" aria-label="Earlier" onClick={() => setOffset(o => o - 2)}><Icon name="left" /></Button>
+        <Button variant="icon" aria-label="Later" onClick={() => setOffset(o => o + 2)}><Icon name="right" /></Button>
       </div>
       <div className="tl-scroll">
         <div className="tl" style={{ width: 240 + DAYS * DAYW }}>

@@ -12,6 +12,7 @@ import type { PersonCard } from '@buxa/shared';
 import { attendanceDisplayName } from '@buxa/shared';
 import type { CheckInState } from '@buxa/shared';
 import type { ClockFormat } from '@buxa/domain';
+import { Button } from '@/components/elements/export';
 
 interface Props {
   state: CheckInState;
@@ -56,10 +57,10 @@ export function ResultPanel({ state, timeZone, clockFormat, canOverride, onCheck
       return (
         <div className="stack">
           <PersonCardView card={card} timeZone={timeZone} clockFormat={clockFormat}>
-            <button ref={primary} type="button" className="btn btn-primary att-btn-lg" disabled={!canSubmit}
+            <Button variant="primary" ref={primary} type="button" className="att-btn-lg" disabled={!canSubmit}
               onClick={() => onCheckIn(card, state.method)}>
               {busy ? 'Checking in…' : 'Check in'}
-            </button>
+            </Button>
           </PersonCardView>
           {copy && <Notice tone="crit" title={copy.title} body={copy.body} />}
           {state.phase === 'failed' && <Notice tone="crit" title="Not checked in" body={state.message} />}
@@ -67,7 +68,7 @@ export function ResultPanel({ state, timeZone, clockFormat, canOverride, onCheck
             <OverrideForm busy={busy} onSubmit={reason => onCheckIn(card, state.method, reason)} />
           )}
           {(state.phase === 'refused' || state.phase === 'failed') && (
-            <button type="button" className="btn btn-ghost att-btn-lg" onClick={onClear}>Clear and scan the next person</button>
+            <Button variant="ghost" type="button" className="att-btn-lg" onClick={onClear}>Clear and scan the next person</Button>
           )}
         </div>
       );

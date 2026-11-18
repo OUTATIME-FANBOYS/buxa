@@ -9,7 +9,7 @@ describe('AccountMenu', () => {
     const user = { id: 'u-1', name: 'Rosa Delgado', email: 'rosa@example.com' };
     const html = renderToStaticMarkup(<AccountMenu user={user} />);
     expect(html).toContain('aria-label="Account"');
-    expect(html).toContain('class="avatar-btn"');
+    expect(html).toMatch(/class="[^"]*\bavatar-btn\b[^"]*"/);
     expect(html).toMatch(/<form[^>]*hidden=""/);
   });
 });

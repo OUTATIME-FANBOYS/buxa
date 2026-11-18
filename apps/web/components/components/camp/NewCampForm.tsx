@@ -1,12 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import { useActionState, useEffect, useState } from 'react';
 import { suggestSlug } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
 import { fieldError, idle } from '@buxa/shared';
 import { createCampAction } from '@/actions/camp';
-import { TextField } from '@/components/elements/export';
+import { TextField, Button } from '@/components/elements/export';
 
 /** Where the address came from: made from the name until the person types their own. */
 interface Draft { name: string; slug: string; slugSource: 'suggested' | 'typed' }
@@ -37,8 +36,8 @@ export function NewCampForm({ first }: { first: boolean }) {
             hint="Used in links to your camp. Lowercase letters, numbers and dashes." />
           {formMessage && <p className="field-error" role="alert">{formMessage}</p>}
           <div className="row">
-            <button className="btn btn-primary" disabled={pending}>{pending ? 'Creating…' : 'Create camp'}</button>
-            {!first && <Link className="btn" href={ROUTES.camp}>Cancel</Link>}
+            <Button variant="primary" disabled={pending}>{pending ? 'Creating…' : 'Create camp'}</Button>
+            {!first && <Button href={ROUTES.camp}>Cancel</Button>}
           </div>
         </form>
       </div>

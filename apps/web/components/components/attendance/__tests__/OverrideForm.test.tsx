@@ -7,6 +7,6 @@ describe('OverrideForm', () => {
     const html = renderToStaticMarkup(<OverrideForm busy={false} onSubmit={() => undefined} />);
     expect(html).toContain('Reason for overriding (required)');
     expect(html).toContain('aria-label="Override this refusal"');
-    expect(html).toMatch(/<button type="submit"[^>]*disabled=""/);
+    expect(html).toMatch(/<button[^>]*type="submit"[^>]*disabled=""/);
   });
 });

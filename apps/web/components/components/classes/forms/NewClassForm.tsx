@@ -1,8 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import { useActionState, useEffect, useRef } from 'react';
-import { Field } from '@/components/elements/export';
+import { Field, Button } from '@/components/elements/export';
 import { ROUTES } from '@/config/routes';
 import { fieldError, idle } from '@buxa/shared';
 import { createClassAction } from '@/actions/classes';
@@ -62,11 +61,11 @@ export function NewClassForm({ variant = 'page', onCancel }: { variant?: 'page' 
       <ActionMessage state={state} />
       <div className="classes-actions">
         {inDialog
-          ? <button type="button" className="btn" onClick={onCancel}>Cancel</button>
-          : <Link className="btn btn-ghost classes-target" href={ROUTES.classes}>Cancel</Link>}
-        <button type="submit" className={inDialog ? 'btn btn-primary' : 'btn btn-primary classes-target'} disabled={pending}>
+          ? <Button type="button" onClick={onCancel}>Cancel</Button>
+          : <Button variant="ghost" className="classes-target" href={ROUTES.classes}>Cancel</Button>}
+        <Button type="submit" variant="primary" className={inDialog ? undefined : 'classes-target'} disabled={pending}>
           {pending ? 'Saving...' : 'Create class'}
-        </button>
+        </Button>
       </div>
     </form>
   );

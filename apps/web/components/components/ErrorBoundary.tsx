@@ -3,6 +3,7 @@
 import { Component, type ReactNode } from 'react';
 import { Empty } from './Empty';
 import { ROUTES } from '@/config/routes';
+import { Button } from '@/components/elements/export';
 
 export class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null as Error | null };
@@ -16,10 +17,10 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { error: E
 
     return (
       <div className="fatal"><Empty icon="alert" title="Something went wrong" body="Your data is safe in this browser. Reloading usually fixes this."
-        action={<div className="row"><button className="btn btn-primary" onClick={() => location.reload()}>Reload</button>
-          <button className="btn" onClick={() => {
+        action={<div className="row"><Button variant="primary" onClick={() => location.reload()}>Reload</Button>
+          <Button onClick={() => {
             location.assign(ROUTES.camp);
-          }}>Back to dashboard</button></div>} />
+          }}>Back to dashboard</Button></div>} />
       <pre className="muted small">{this.state.error.message}</pre></div>
     );
   }

@@ -59,7 +59,7 @@ export const TaskCard = memo(function TaskCard({ task, project, readOnly, draggi
       aria-label={`${task.title}. ${project.columns[idx]?.name}. ${task.priority} priority.${user ? ' Assigned to ' + user.name + '.' : ''}`}>
       <div className="card-top">
         <h3>{task.title}</h3>
-        <Menu label={`Actions for ${task.title}`} className="icon-btn card-menu" trigger={<Icon name="more" />} items={taskMenuItems(task, project, readOnly, cmd)} />
+        <Menu label={`Actions for ${task.title}`} className="card-menu" trigger={<Icon name="more" />} items={taskMenuItems(task, project, readOnly, cmd)} />
       </div>
       {task.tags.length > 0 && <div className="tags">{task.tags.slice(0, 3).map(t => <span key={t} className={`tag hue-${tagHue(t)}`}>{t}</span>)}{task.tags.length > 3 && <span className="tag">+{task.tags.length - 3}</span>}</div>}
       <div className="card-meta">

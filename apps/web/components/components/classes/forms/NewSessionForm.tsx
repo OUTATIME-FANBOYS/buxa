@@ -1,8 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import { useActionState, useEffect, useRef } from 'react';
-import { Field } from '@/components/elements/export';
+import { Field, Button } from '@/components/elements/export';
 import { classPath } from '@/config/routes';
 import { fieldError, idle } from '@buxa/shared';
 import { addSessionAction } from '@/actions/classes';
@@ -69,8 +68,8 @@ export function NewSessionForm({ classId, className, defaultCapacity, timeZone, 
       </fieldset>
       <ActionMessage state={state} />
       <div className="classes-actions">
-        <button type="submit" className="btn btn-primary classes-target" disabled={pending}>{pending ? 'Saving...' : 'Add session'}</button>
-        <Link className="btn btn-ghost classes-target" href={classPath(classId)}>Back to the class</Link>
+        <Button variant="primary" type="submit" className="classes-target" disabled={pending}>{pending ? 'Saving...' : 'Add session'}</Button>
+        <Button variant="ghost" className="classes-target" href={classPath(classId)}>Back to the class</Button>
       </div>
     </form>
   );

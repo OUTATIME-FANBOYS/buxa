@@ -1,5 +1,6 @@
 import { useStore } from '@buxa/middleware/providers/providers';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
+import { Button } from '@/components/elements/export';
 
 /**
  * Restores the browser demo (the Camp Birchwood staff sample) from the single seed source, after a confirmation. It changes only this
@@ -22,5 +23,5 @@ export function ResetDemoButton() {
     toast('Demo data restored');
   };
 
-  return <button className="btn btn-danger-ghost" onClick={reset}>Reset demo data</button>;
+  return <Button variant="danger-ghost" onClick={reset}>Reset demo data</Button>;
 }

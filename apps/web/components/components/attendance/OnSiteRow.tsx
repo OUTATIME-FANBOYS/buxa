@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dialog } from '@/components/components/export';
-import { Pill } from '@/components/elements/export';
+import { Pill, Button } from '@/components/elements/export';
 import type { OnSiteRowView } from '@buxa/shared';
 import { useCheckOut } from '@buxa/middleware/hooks/hooks';
 import * as attendance from '@/actions/attendance';
@@ -51,10 +51,10 @@ export function OnSiteRow({ row, canRecord, canOverride }: Props) {
         <p>Checked out: —</p>
       </div>
       {canRecord && (
-        <button ref={toggle} type="button" className="btn btn-primary onsite-btn" aria-haspopup="dialog" aria-expanded={panelOpen}
+        <Button variant="primary" ref={toggle} type="button" className="onsite-btn" aria-haspopup="dialog" aria-expanded={panelOpen}
           aria-controls={panelOpen ? panelId : undefined} onClick={open}>
           Check out
-        </button>
+        </Button>
       )}
       {state.phase === 'done' && <p role="status" className="ok-ink">Checked out.</p>}
       {panelOpen && (

@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useState, type ChangeEvent } from 'react';
-import { Field } from '@/components/elements/export';
+import { Field, Button } from '@/components/elements/export';
 import { fieldError, idle, type ActionState } from '@buxa/shared';
 import { signIn, signUp } from '@/actions/auth';
 
@@ -23,7 +23,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       <Field label="Password" error={fieldError(state, 'password')}><input type="password" {...bind('password')} autoComplete={isSignIn ? 'current-password' : 'new-password'} /></Field>
       {state.status === 'error' && <p className="field-error" role="alert">{state.message}</p>}
       {state.status === 'success' && state.message && <p className="muted" role="status">{state.message}</p>}
-      <button className="btn btn-primary btn-block" disabled={pending || state.status === 'success'}>{pending ? 'One moment…' : isSignIn ? 'Sign in' : 'Create account'}</button>
+      <Button variant="primary" fullWidth disabled={pending || state.status === 'success'}>{pending ? 'One moment…' : isSignIn ? 'Sign in' : 'Create account'}</Button>
     </form>
   );
 }

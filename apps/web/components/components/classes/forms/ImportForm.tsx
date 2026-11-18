@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useRef } from 'react';
-import { Field } from '@/components/elements/export';
+import { Field, Button } from '@/components/elements/export';
 import { IMPORT_IDLE } from '@buxa/shared';
 import { importClassesAction } from '@/actions/classes';
 import { ImportResults } from './ImportResults';
@@ -25,7 +25,7 @@ export function ImportForm() {
         </Field>
         <input type="hidden" name="intent" value="preview" />
         <div className="classes-actions">
-          <button type="submit" className="btn btn-primary classes-target" disabled={pending}>{pending ? 'Checking...' : 'Check the file'}</button>
+          <Button variant="primary" type="submit" className="classes-target" disabled={pending}>{pending ? 'Checking...' : 'Check the file'}</Button>
         </div>
       </form>
 
@@ -39,9 +39,9 @@ export function ImportForm() {
             <input type="hidden" name="intent" value="confirm" />
             <input type="hidden" name="fileName" value={state.fileName} />
             <input type="hidden" name="csv" value={state.text} />
-            <button type="submit" className="btn btn-primary classes-target" disabled={pending || state.counts.create + state.counts.update === 0}>
+            <Button variant="primary" type="submit" className="classes-target" disabled={pending || state.counts.create + state.counts.update === 0}>
               {pending ? 'Saving...' : `Save ${state.counts.create + state.counts.update} ready rows`}
-            </button>
+            </Button>
             <span className="muted">Refused rows are not saved. Fix them in the file and check it again.</span>
           </form>
         </div>

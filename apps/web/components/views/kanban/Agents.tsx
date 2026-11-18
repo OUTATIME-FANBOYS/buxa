@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { Empty } from '@/components/components/export';
-import { Icon } from '@/components/elements/export';
+import { Icon, Button } from '@/components/elements/export';
 import { Segmented } from '@/components/elements/export';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { useStore } from '@buxa/middleware/providers/providers';
@@ -34,22 +34,22 @@ export function Agents() {
         <div className="page-title"><h1>Agents</h1><p className="muted">Agents propose work. You decide what happens, and everything is recorded.</p></div>
         <div className="page-actions">
           {sim && project && sim.scope.includes(project.id) && !readOnly && (
-            <button className="btn" onClick={() => {
+            <Button onClick={() => {
               const n = actions.simulateRun(sim.userId, project.id); toast(n ? `${simName} made ${n} proposal${n === 1 ? '' : 's'} on ${project.name}` : `${simName} found nothing new on ${project.name}`); if (n) {
                 setTab('inbox');
               }
             }}
             title="A scripted stand-in for a real agent, to try the approval flow">
               <Icon name="agent" size={16} />Try a simulated run
-            </button>)}
-          {canManage && <button className="btn btn-primary" onClick={() => setAdding(true)}><Icon name="plus" size={16} />Add agent</button>}
+            </Button>)}
+          {canManage && <Button variant="primary" onClick={() => setAdding(true)}><Icon name="plus" size={16} />Add agent</Button>}
         </div>
       </header>
       <Segmented<Tab> label="Agents section" value={tab} onChange={setTab} options={[{ value: 'inbox', label: pending.length ? `Inbox (${pending.length})` : 'Inbox' }, { value: 'history', label: 'History' }, { value: 'agents', label: 'Agents' }]} />
       {tab === 'inbox' && <Inbox proposals={pending} />}
       {tab === 'history' && <History proposals={proposals} agents={agents} />}
       {tab === 'agents' && (agents.length === 0
-        ? <Empty icon="agent" title="No agents yet" body="Add one to let it propose tasks, comments and changes. It starts out asking before it changes anything." action={canManage ? <button className="btn btn-primary" onClick={() => setAdding(true)}>Add agent</button> : undefined} />
+        ? <Empty icon="agent" title="No agents yet" body="Add one to let it propose tasks, comments and changes. It starts out asking before it changes anything." action={canManage ? <Button variant="primary" onClick={() => setAdding(true)}>Add agent</Button> : undefined} />
         : <div className="agent-list">{agents.map(a => <AgentCard key={a.userId} agent={a} canManage={canManage} />)}</div>)}
       {adding && <AgentDialog onClose={() => setAdding(false)} />}
       {tab !== 'agents' && agents.length > 1 && sim && (
