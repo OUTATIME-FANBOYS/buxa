@@ -15,6 +15,7 @@ import type { Identity } from '../auth/identity';
 import { InMemoryAttendanceRepository } from '../attendance/InMemoryAttendanceRepository';
 import { conflict } from '../http/errors';
 import { InMemoryClassRepository } from '../classes/InMemoryClassRepository';
+import { InMemoryImportRepository } from '../classes/import/InMemoryImportRepository';
 import { InMemoryCredentialRepository } from '../credentials/InMemoryCredentialRepository';
 import { InMemoryMembershipRepository } from '../memberships/InMemoryMembershipRepository';
 import { OrgNotFoundError, SlugTakenError, type ArchivedCampRecord, type OrgRepository } from '../orgs/OrgRepository';
@@ -254,6 +255,7 @@ export class InMemoryStore implements UserRepository, OrgRepository {
   }
   asRepositories(): Repositories {
     const db = this.database;
+    const classes = new InMemoryClassRepository();
 
     return {
       users: this,
@@ -262,7 +264,8 @@ export class InMemoryStore implements UserRepository, OrgRepository {
       memberships: new InMemoryMembershipRepository(db),
       credentials: new InMemoryCredentialRepository(db),
       attendance: new InMemoryAttendanceRepository(db),
-      classes: new InMemoryClassRepository(),
+      classes,
+      imports: new InMemoryImportRepository(classes),
     };
   }
 }

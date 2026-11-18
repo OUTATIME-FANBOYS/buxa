@@ -13,7 +13,6 @@ import { createAttendanceService } from './services/attendance/createAttendanceS
 import { createClassService, type ClassService } from './classes/ClassService';
 import { createCredentialService } from './services/credentials/createCredentialService';
 import { createImportService, type ImportService } from './classes/import/ImportService';
-import type { ImportRepository } from './classes/import/ImportRepository';
 import { createMembershipService } from './services/memberships/createMembershipService';
 import { createOrgService, type OrgService } from './services/orgs';
 import { createPeopleService } from './services/people/createPeopleService';
@@ -22,7 +21,6 @@ import { type AttendanceService } from './services/attendance/AttendanceService'
 import { type CredentialService } from './services/credentials/CredentialService';
 import { type MembershipService } from './services/memberships/MembershipService';
 import { type PeopleService } from './services/people/PeopleService';
-import { unimplemented } from './unimplemented';
 
 export interface Runtime {
   config: Config;
@@ -133,18 +131,14 @@ export function createServices(repositories: Repositories, clock: Clock): Servic
   };
 }
 
-/**
- * Classes, sessions, enrolments and the bulk import. Class storage is the Postgres adapter in `repositories.classes`. Import
- * storage has no Postgres adapter yet, so the import port stays a placeholder that throws a clear "not implemented" error.
- */
+/** Classes, sessions, enrolments and the bulk import. Both storages come from `repositories` (Postgres in production). */
 function createClassServices(repositories: Repositories): Pick<Services, 'classes' | 'imports'> {
   const timezoneOf = async (orgId: string): Promise<string> => (await repositories.orgs.get(orgId)).timezone;
   const classes = repositories.classes;
-  const imports = unimplemented<ImportRepository>('ImportRepository');
 
   return {
     classes: createClassService({ repo: classes, timezoneOf }),
-    imports: createImportService({ classes, imports, timezoneOf }),
+    imports: createImportService({ classes, imports: repositories.imports, timezoneOf }),
   };
 }
 
