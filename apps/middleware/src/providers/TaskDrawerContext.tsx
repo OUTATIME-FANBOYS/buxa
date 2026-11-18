@@ -4,7 +4,8 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 
 /** Which task the drawer shows: an existing id, or `'new'` with optional starting values. */
 export interface TaskDrawerState {
-  id: string | 'new';
+  /** A task id, or the literal `'new'` (a string, so it needs no union of its own). */
+  id: string;
   defaults?: { columnId?: string; due?: string; projectId?: string };
 }
 

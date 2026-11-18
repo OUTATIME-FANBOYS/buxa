@@ -14,7 +14,7 @@ export function AttachmentList({ task, ro }: { task: Task; ro: boolean }) {
         <h3>Attachments</h3>
         {!ro && (
           <>
-            <input ref={input} type="file" multiple hidden onChange={e => upload(e.target.files)} />
+            <input ref={input} type="file" multiple hidden onChange={e => void upload(e.target.files)} />
             <Button size="sm" disabled={busy} onClick={() => input.current?.click()}>
               <Icon name="clip" size={14} />
               {busy ? 'Uploading…' : 'Attach'}

@@ -61,7 +61,7 @@ describe('NewClassButton (the Classes page)', () => {
   it('closes on Escape, returns focus to the button, and leaves no dialog behind', async () => {
     act(() => root.render(<NewClassButton />));
     await open();
-    act(() =>
+    await act(() =>
       requirePresent(dialog(), 'dialog()').dispatchEvent(
         new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
       ),

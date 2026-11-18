@@ -61,7 +61,7 @@ export interface ImportServiceDeps {
   classes: ClassRepository;
   imports: ImportRepository;
   /** The camp's IANA zone (orgs.timezone): the zone the file's times are written in. */
-  timezoneOf(orgId: string): Promise<string>;
+  timezoneOf: (orgId: string) => Promise<string>;
 }
 
 export function createImportService({ classes, imports, timezoneOf }: ImportServiceDeps): ImportService {

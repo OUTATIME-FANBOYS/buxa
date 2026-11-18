@@ -96,7 +96,7 @@ export function Projects() {
                         { label: 'Open board', icon: 'kanban', onSelect: () => router.push(boardPath(p.id)) },
                         { label: 'Edit details', icon: 'edit', onSelect: () => setDlg({ project: p }) },
                         { label: '', divider: true, onSelect() {} },
-                        { label: 'Delete project', icon: 'trash', danger: true, onSelect: () => del(p) },
+                        { label: 'Delete project', icon: 'trash', danger: true, onSelect: () => void del(p) },
                       ]}
                     />
                   )}

@@ -61,7 +61,7 @@ export function BoardView({
           onAdd={() => setAdding(col.id)}
           onStopAdding={() => setAdding(null)}
           onEdit={() => setColDlg({ column: col })}
-          onRemove={() => removeColumn(col)}
+          onRemove={() => void removeColumn(col)}
         />
       ))}
       {!readOnly && (
