@@ -12,7 +12,7 @@ export const rank = (r: Role) => RANK[r];
 
 /** `resource:verb`. Add actions here first; the compiler then forces a decision for each role. */
 export const ACTIONS = [
-  'org:read', 'org:update', 'org:delete', 'org:transfer_ownership',
+  'org:read', 'org:update', 'org:archive', 'org:delete', 'org:transfer_ownership',
   'members:read', 'members:read_contact', 'members:invite', 'members:change_role', 'members:remove', 'members:leave',
   'audit:read',
   'data:export', 'data:erase',
@@ -31,7 +31,7 @@ const ADMIN: Action[] = [
   ...STAFF, 'org:update', 'members:read_contact', 'members:invite', 'members:change_role', 'members:remove', 'audit:read',
   'people:delete', 'people:authorise_pickup', 'memberships:manage', 'credentials:manage', 'attendance:override', 'attendance:export', 'events:create', 'events:update', 'events:delete', 'tasks:delete', 'tasks:manage_board',
 ];
-const OWNER: Action[] = [...ADMIN, 'org:delete', 'org:transfer_ownership', 'data:export', 'data:erase'];
+const OWNER: Action[] = [...ADMIN, 'org:archive', 'org:delete', 'org:transfer_ownership', 'data:export', 'data:erase'];
 
 /** What each role may attempt. Rules below can still deny an action the role has. */
 export const GRANTS: Record<Role, ReadonlySet<Action>> = {
