@@ -11,7 +11,7 @@ These were in the phase 2 roadmap row and moved here so that phase 2 closes on c
 - **Public class pages:** a read-only page per class, listing its upcoming sessions, with no contact details and no enrolled campers. Only classes marked public.
 - **iCal feed:** a read-only feed per camp that calendar apps subscribe to by URL, authenticated by an unguessable token stored as a hash. Archived camps return not found.
 
-**Built, not merged:** branch `v0.2/feat/recurring-ical-public`, three parts, migrations 0020 and 0021.
+**Built, not merged:** branch `v0.3/feat/recurring-ical-public`, three parts, migrations 0020 and 0021.
 
 **Open decisions:**
 
