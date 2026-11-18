@@ -23,6 +23,10 @@ const saveTime = vi.hoisted(() =>
   ),
 );
 vi.mock('@/actions/account', () => ({ updateProfileAction: saveName, updateTimeFormatAction: saveTime }));
+const appearance = vi.hoisted(() => ({ theme: 'system' as 'system' | 'light' | 'dark', choose: vi.fn() }));
+vi.mock('@/components/components/camp/useAppearance', () => ({
+  useAppearance: () => [appearance.theme, appearance.choose],
+}));
 
 vi.mock('@/actions/camp', () => ({
   archiveCamp: async () => ({ ok: true }),
@@ -71,6 +75,8 @@ describe('the settings page', () => {
   beforeEach(() => {
     updateProfile = vi.fn();
     setTheme = vi.fn();
+    appearance.theme = 'system';
+    appearance.choose.mockClear();
     h.store = {
       s: { ...seed, ui: { ...seed.ui, agentsEnabled: false, theme: 'system' } },
       agents: [],
@@ -226,7 +232,7 @@ describe('the settings page', () => {
     await act(async () => {
       radios.find(r => r.value === 'dark')?.click();
     });
-    expect(setTheme).toHaveBeenCalledWith('dark');
+    expect(appearance.choose).toHaveBeenCalledWith('dark');
   });
 
   it('keeps the Agents, data and shortcut cards', () => {

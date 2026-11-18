@@ -12,15 +12,9 @@ vi.mock('@/actions/auth', () => ({ signOut: () => settle(() => undefined) }));
 const saveTime = vi.hoisted(() => vi.fn(() => Promise.resolve({ status: 'success', message: 'Time format saved' })));
 vi.mock('@/actions/account', () => ({ updateTimeFormatAction: saveTime }));
 
-const store = vi.hoisted(() => ({
-  theme: 'dark',
-  setTheme: vi.fn(),
-}));
-vi.mock('@buxa/middleware/providers/providers', () => ({
-  useStore: () => ({
-    s: { ui: { theme: store.theme } },
-    actions: { setTheme: store.setTheme },
-  }),
+const appearance = vi.hoisted(() => ({ theme: 'dark' as 'system' | 'light' | 'dark', choose: vi.fn() }));
+vi.mock('../useAppearance', () => ({
+  useAppearance: () => [appearance.theme, appearance.choose],
 }));
 
 const user = {
@@ -36,8 +30,8 @@ const user = {
 describe('the account menu', () => {
   let root: Root;
   beforeEach(() => {
-    store.theme = 'dark';
-    store.setTheme.mockClear();
+    appearance.theme = 'dark';
+    appearance.choose.mockClear();
     saveTime.mockClear();
     root = createRoot(document.body.appendChild(document.createElement('div')));
   });
@@ -126,13 +120,13 @@ describe('the account menu', () => {
     expect(choice('System')?.querySelector('.menu-check')).toBeNull();
   });
 
-  it('chooses an appearance from the submenu through the store, and closes the menu', () => {
+  it('chooses an appearance from the submenu, remembers it, and closes the menu', () => {
     openMenu();
     openSub('Appearance');
     act(() => {
       choice('System')?.click();
     });
-    expect(store.setTheme).toHaveBeenCalledWith('system');
+    expect(appearance.choose).toHaveBeenCalledWith('system');
     expect(document.querySelector('[role=menu]')).toBeNull();
   });
 
