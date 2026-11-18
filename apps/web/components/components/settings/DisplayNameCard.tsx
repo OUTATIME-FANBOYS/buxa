@@ -63,6 +63,7 @@ export function DisplayNameCard({
       >
         <div className="settings-name__fields">
           <TextField
+            className="settings-name__field"
             label="First name"
             error={errors.firstName}
             value={first}
@@ -71,6 +72,7 @@ export function DisplayNameCard({
             autoComplete="given-name"
           />
           <TextField
+            className="settings-name__field"
             label="Last name"
             error={errors.lastName}
             value={last}
