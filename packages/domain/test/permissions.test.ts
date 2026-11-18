@@ -210,6 +210,9 @@ describe('members:rename', () => {
 
   it('is refused in an archived camp and needs a target', () => {
     expect(can({ ...actorOf('owner'), archived: true }, 'members:rename', target('staff'))).toBe(false);
-    expect(authorize(actorOf('admin'), 'members:rename', { orgId: org })).toEqual({ allow: false, reason: 'missing_context' });
+    expect(authorize(actorOf('admin'), 'members:rename', { orgId: org })).toEqual({
+      allow: false,
+      reason: 'missing_context',
+    });
   });
 });
