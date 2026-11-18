@@ -2,7 +2,7 @@
 
 import type { ThemePref } from '@buxa/shared';
 import { useAppearance } from '@/components/components/camp';
-import { RadioGroup } from '@/components/atoms';
+import { Segmented } from '@/components/elements';
 
 const APPEARANCE: { value: ThemePref; label: string }[] = [
   { value: 'system', label: 'System' },
@@ -23,7 +23,7 @@ export function AppearanceCard({ className }: { className?: string }) {
         <p className="muted">Light or dark, or follow your device’s setting.</p>
       </div>
       <div className="settings-choice__control">
-        <RadioGroup label="Theme" value={theme} onChange={value => setTheme(value as ThemePref)} options={APPEARANCE} />
+        <Segmented label="Theme" value={theme} onChange={value => setTheme(value as ThemePref)} options={APPEARANCE} />
       </div>
     </section>
   );
