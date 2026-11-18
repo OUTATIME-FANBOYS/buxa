@@ -4,7 +4,6 @@ import pg from 'pg';
 import { migrate, withOrg } from '@buxa/db';
 import { PgUserRepository } from '../PgUserRepository';
 import { PgOrgRepository } from '../../orgs/PgOrgRepository';
-import { requirePresent } from '@buxa/domain';
 
 const url = process.env.DATABASE_URL;
 
@@ -22,7 +21,7 @@ describe.skipIf(!url)('runtime login without row-level-security bypass (S-06)', 
     await migrate(admin);
     await admin.query(`CREATE ROLE "${role}" LOGIN PASSWORD '${password}' NOSUPERUSER NOBYPASSRLS NOCREATEROLE NOCREATEDB`);
     await admin.query(`GRANT buxa_app TO "${role}"`);
-    const runtimeUrl = new URL(requirePresent(url, 'url'));
+    const runtimeUrl = new URL(url!);
     runtimeUrl.username = role;
     runtimeUrl.password = password;
     runtime = new pg.Pool({ connectionString: runtimeUrl.toString(), max: 2 });

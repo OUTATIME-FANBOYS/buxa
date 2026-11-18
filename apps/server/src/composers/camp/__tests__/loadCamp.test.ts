@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Actor } from '@buxa/domain';
 import { loadCampProfile, loadMembers } from '../loadCamp';
-import { settle } from '@buxa/domain';
 
-const svc = vi.hoisted(() => ({ orgs: { getCamp: vi.fn(() => settle(() => ({ name: 'Birchwood' }))), listMembers: vi.fn(() => settle(() => ({ members: [] }))) } }));
+const svc = vi.hoisted(() => ({ orgs: { getCamp: vi.fn(async () => ({ name: 'Birchwood' })), listMembers: vi.fn(async () => ({ members: [] })) } }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: svc }) }));
 
 const ACTOR = { userId: 'u-1' } as unknown as Actor;

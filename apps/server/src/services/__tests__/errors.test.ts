@@ -4,7 +4,6 @@ import { OrgNotFoundError } from '../../orgs/OrgRepository';
 import { createOrgService } from '../orgs';
 import { isHttpError } from '../../http/errors';
 import { translateRepositoryError } from '../shared/errors';
-import { settle } from '@buxa/domain';
 
 const pgError = (code: string) => Object.assign(new Error(`database said ${code} on users_pii`), { code });
 
@@ -30,26 +29,20 @@ describe('translateRepositoryError', () => {
 
 describe('the camp service', () => {
   const repo = (get: OrgRepository['get']): OrgRepository => ({
-    createWithOwner: () => {
-      return settle(() => {
-        throw new Error('unused');
-      });
+    createWithOwner: async () => {
+      throw new Error('unused');
     },
     get,
-    rename: () => {
-      return settle(() => {
-        throw new Error('unused');
-      });
+    rename: async () => {
+      throw new Error('unused');
     },
-    listMembers: () => settle(() => []),
+    listMembers: async () => [],
   });
   const owner = { userId: '00000000-0000-4000-8000-000000000001', orgId: '00000000-0000-4000-8000-000000000002', role: 'owner' as const };
 
   it('answers 404 for a camp the caller cannot see, instead of an unhandled error', async () => {
-    const service = createOrgService(repo(() => {
-      return settle(() => {
-        throw new OrgNotFoundError();
-      });
+    const service = createOrgService(repo(async () => {
+      throw new OrgNotFoundError();
     }));
     const error: unknown = await service.getCamp(owner).catch((e: unknown) => e);
     expect(error).toMatchObject({ statusCode: 404, message: 'Camp not found' });
@@ -57,6 +50,6 @@ describe('the camp service', () => {
 
   it('still returns a camp that exists', async () => {
     const org = { id: owner.orgId, name: 'Lake', slug: 'lake', createdAt: '2027-01-01T00:00:00.000Z', memberCount: 1, timezone: 'UTC', clockFormat: '24h' as const };
-    expect(await createOrgService(repo(() => settle(() => org))).getCamp(owner)).toEqual(org);
+    expect(await createOrgService(repo(async () => org)).getCamp(owner)).toEqual(org);
   });
 });

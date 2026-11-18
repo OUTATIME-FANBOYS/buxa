@@ -5,7 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { OnSiteRowView } from '@buxa/shared';
 import { OnSiteRow } from '@/components/components/attendance/export';
-import { settle, requirePresent } from '@buxa/domain';
+import { settle } from '@buxa/domain';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh() {}, push() {} }) }));
 vi.mock('@buxa/server/composers/attendance/checkOut', () => ({ checkOutAction: () => settle(() => ({ kind: 'ok', value: {} })) }));
@@ -50,7 +50,7 @@ describe('OnSiteRow check-out dialog', () => {
   it('opens the panel in a dialog from Check out, and Escape closes it and returns focus to Check out', () => {
     vi.useFakeTimers();
     act(() => root.render(<OnSiteRow row={row} canRecord canOverride={false} />));
-    const trigger = requirePresent(document.querySelector<HTMLButtonElement>('button.onsite-btn'), "document.querySelector<HTMLButtonElement>('button.onsite-btn')");
+    const trigger = document.querySelector<HTMLButtonElement>('button.onsite-btn')!;
     expect(document.querySelector('[role="dialog"]')).toBeNull();
 
     act(() => {
@@ -58,13 +58,13 @@ describe('OnSiteRow check-out dialog', () => {
     });
     const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
     expect(dialog).not.toBeNull();
-    expect(requirePresent(dialog, 'dialog').querySelector('h2')?.textContent).toBe('Check out Mia Cole');
-    expect(requirePresent(dialog, 'dialog').querySelector('form.checkout-panel')).not.toBeNull();
+    expect(dialog!.querySelector('h2')?.textContent).toBe('Check out Mia Cole');
+    expect(dialog!.querySelector('form.checkout-panel')).not.toBeNull();
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
-    expect(requirePresent(dialog, 'dialog').querySelector('.checkout-actions')?.textContent).toContain('CancelCheck out');
+    expect(dialog!.querySelector('.checkout-actions')?.textContent).toContain('CancelCheck out');
 
     act(() => {
- requirePresent(dialog, 'dialog').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+ dialog!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     });
     act(() => {
       vi.advanceTimersByTime(200);
@@ -76,9 +76,9 @@ describe('OnSiteRow check-out dialog', () => {
   it('Cancel inside the dialog closes it at once', () => {
     act(() => root.render(<OnSiteRow row={row} canRecord canOverride={false} />));
     act(() => {
- requirePresent(document.querySelector<HTMLButtonElement>('button.onsite-btn'), "document.querySelector<HTMLButtonElement>('button.onsite-btn')").click();
+ document.querySelector<HTMLButtonElement>('button.onsite-btn')!.click();
     });
-    const cancel = requirePresent([...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find(b => b.textContent === 'Cancel'), "[...document.querySelectorAll<HTMLButtonElement>('[role=\"dialog\"] button')].find(b => b.textContent === 'Cancel')");
+    const cancel = [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find(b => b.textContent === 'Cancel')!;
     act(() => {
       cancel.click();
     });

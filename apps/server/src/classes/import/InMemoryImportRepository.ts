@@ -5,7 +5,6 @@ import type { AuditRecord } from '../../people/InMemoryDatabase';
 import { ClassNotFoundError, SessionNotFoundError } from '../errors';
 import type { ClassRepository } from '../ClassRepository';
 import type { ImportRepository, ImportUpload } from './ImportRepository';
-import { settle } from '@buxa/domain';
 
 export interface InMemoryImportOptions {
   now?: Clock;
@@ -30,18 +29,16 @@ export class InMemoryImportRepository implements ImportRepository {
     this.sessions.set(session.id, { ...session, orgId });
   }
 
-  listCampSessions(orgId: string): Promise<ExistingSession[]> {
-    return settle(() => {
-      return [...this.sessions.values()]
-        .filter(s => s.orgId === orgId)
-        .sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.id.localeCompare(b.id))
-        .map(s => {
-          const copy: Partial<typeof s> = { ...s };
-          delete copy.orgId;
+  async listCampSessions(orgId: string): Promise<ExistingSession[]> {
+    return [...this.sessions.values()]
+      .filter(s => s.orgId === orgId)
+      .sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.id.localeCompare(b.id))
+      .map(s => {
+        const copy: Partial<typeof s> = { ...s };
+        delete copy.orgId;
 
-          return copy as Omit<typeof s, 'orgId'>;
-        });
-    });
+        return copy as Omit<typeof s, 'orgId'>;
+      });
   }
 
   async applyImport(actor: Actor, upload: ImportUpload, writes: readonly PlannedWrite[]): Promise<void> {

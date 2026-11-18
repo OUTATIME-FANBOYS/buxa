@@ -14,7 +14,6 @@ import { errorName, type Logger } from '../log';
 import { getRuntime } from '../runtime';
 import { hardenCookie } from './cookies';
 import { requestSessionClient } from './nextClient';
-import { settle } from '@buxa/domain';
 
 /**
  * CONTRACT between chunks A1 (implements this) and B1/B2 (use it). Signatures are frozen.
@@ -78,14 +77,12 @@ export const getSession: () => Promise<Session | null> = cache(loadSession);
  * The session when there is one, or null. Unlike getSession, it never throws when Supabase is not configured:
  * pages that work without a session (the browser demo) use this, so they still render in that case.
  */
-export function getOptionalSession(): Promise<Session | null> {
-  return settle(() => {
-    if (!publicEnv.supabaseUrl || !publicEnv.supabasePublishableKey) {
-      return null;
-    }
+export async function getOptionalSession(): Promise<Session | null> {
+  if (!publicEnv.supabaseUrl || !publicEnv.supabasePublishableKey) {
+    return null;
+  }
 
-    return getSession();
-  });
+  return getSession();
 }
 
 /**

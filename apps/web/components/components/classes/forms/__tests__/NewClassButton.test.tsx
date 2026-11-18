@@ -4,7 +4,6 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { failure } from '@buxa/shared';
 import { NewClassButton } from '@/components/components/classes/forms/export';
-import { requirePresent } from '@buxa/domain';
 
 const createClass = vi.hoisted(() => vi.fn());
 vi.mock('@buxa/server/composers/classes/createClassAction', () => ({ createClassAction: createClass }));
@@ -31,7 +30,7 @@ describe('NewClassButton (the Classes page)', () => {
     act(() => root.unmount()); host.remove();
   });
 
-  const button = () => requirePresent(Array.from(host.querySelectorAll('button')).find(b => b.textContent === 'New class'), "Array.from(host.querySelectorAll('button')).find(b => b.textContent === 'New class')");
+  const button = () => Array.from(host.querySelectorAll('button')).find(b => b.textContent === 'New class')!;
   const dialog = () => document.querySelector<HTMLElement>('[role="dialog"]');
   const open = async () => {
     button().focus(); act(() => button().click()); await flush();
@@ -50,7 +49,7 @@ describe('NewClassButton (the Classes page)', () => {
   it('closes on Escape, returns focus to the button, and leaves no dialog behind', async () => {
     act(() => root.render(<NewClassButton />));
     await open();
-    act(() => requirePresent(dialog(), 'dialog()').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
+    act(() => dialog()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
     await settle();
     expect(dialog()).toBeNull();
     expect(document.activeElement).toBe(button());
@@ -59,7 +58,7 @@ describe('NewClassButton (the Classes page)', () => {
   it('closes from its Cancel button', async () => {
     act(() => root.render(<NewClassButton />));
     await open();
-    const cancel = requirePresent(Array.from(requirePresent(dialog(), 'dialog()').querySelectorAll('button')).find(b => b.textContent === 'Cancel'), "Array.from(requirePresent(dialog(), 'dialog()').querySelectorAll('button')).find(b => b.textContent === 'Cancel')");
+    const cancel = Array.from(dialog()!.querySelectorAll('button')).find(b => b.textContent === 'Cancel')!;
     act(() => cancel.click());
     await settle();
     expect(dialog()).toBeNull();
@@ -69,22 +68,22 @@ describe('NewClassButton (the Classes page)', () => {
     createClass.mockResolvedValue(failure('Check the highlighted fields.', { name: 'Enter a class name.', capacity: 'Enter the default places.' }));
     act(() => root.render(<NewClassButton />));
     await open();
-    const form = requirePresent(requirePresent(dialog(), 'dialog()').querySelector('form'), "requirePresent(dialog(), 'dialog()').querySelector('form')");
+    const form = dialog()!.querySelector('form')!;
     act(() => form.requestSubmit());
     await flush();
     expect(createClass).toHaveBeenCalledTimes(1);
-    expect(requirePresent(dialog(), 'dialog()').textContent).toContain('Enter a class name.');
-    expect(requirePresent(dialog(), 'dialog()').textContent).toContain('Enter the default places.');
-    expect(document.activeElement).toBe(requirePresent(dialog(), 'dialog()').querySelector('input[name="name"]'));
+    expect(dialog()!.textContent).toContain('Enter a class name.');
+    expect(dialog()!.textContent).toContain('Enter the default places.');
+    expect(document.activeElement).toBe(dialog()!.querySelector('input[name="name"]'));
   });
 
   it('submits the fields as typed', async () => {
     createClass.mockResolvedValue(failure('Check the highlighted fields.', {}));
     act(() => root.render(<NewClassButton />));
     await open();
-    requirePresent(requirePresent(dialog(), 'dialog()').querySelector<HTMLInputElement>('input[name="name"]'), "requirePresent(dialog(), 'dialog()').querySelector<HTMLInputElement>('input[name=\"name\"]')").value = 'Robotics';
-    requirePresent(requirePresent(dialog(), 'dialog()').querySelector<HTMLInputElement>('input[name="minAge"]'), "requirePresent(dialog(), 'dialog()').querySelector<HTMLInputElement>('input[name=\"minAge\"]')").value = '8';
-    act(() => (requirePresent(requirePresent(dialog(), 'dialog()').querySelector('form'), "requirePresent(dialog(), 'dialog()').querySelector('form')")).requestSubmit());
+    dialog()!.querySelector<HTMLInputElement>('input[name="name"]')!.value = 'Robotics';
+    dialog()!.querySelector<HTMLInputElement>('input[name="minAge"]')!.value = '8';
+    act(() => (dialog()!.querySelector('form')!).requestSubmit());
     await flush();
     const data = createClass.mock.calls[0]?.[1] as FormData;
     expect(data.get('name')).toBe('Robotics');

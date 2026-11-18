@@ -1,18 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import type { NewPersonInput } from '@buxa/contracts';
 import { createCamp, thrown, type Camp } from './support';
-import { settle } from '@buxa/domain';
 
 const adult = (givenName: string, familyName: string, extra: Partial<NewPersonInput> = {}): NewPersonInput =>
   ({ givenName, familyName, roles: ['participant'], ...extra });
 
 /** A guardian with a new household, created as an admin would. */
-function guardianWithHousehold(camp: Camp, name: string, household = 'Lee family') {
-  return settle(() => {
-    const admin = camp.actor('admin');
+async function guardianWithHousehold(camp: Camp, name: string, household = 'Lee family') {
+  const admin = camp.actor('admin');
 
-    return camp.people.create(admin, { givenName: name, familyName: 'Lee', roles: ['guardian'], newHouseholdName: household, relationship: 'Parent' });
-  });
+  return camp.people.create(admin, { givenName: name, familyName: 'Lee', roles: ['guardian'], newHouseholdName: household, relationship: 'Parent' });
 }
 
 describe('PeopleService permissions', () => {

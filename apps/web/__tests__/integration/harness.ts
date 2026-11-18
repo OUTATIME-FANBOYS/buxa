@@ -4,7 +4,6 @@ import { GET as me } from '../../app/v1/me/route';
 import { GET as members } from '../../app/v1/members/route';
 import { GET as getOrg, PATCH as patchOrg } from '../../app/v1/org/route';
 import { POST as createOrg } from '../../app/v1/orgs/route';
-import { settle } from '@buxa/domain';
 
 export { BASE_ENV, startRuntime } from '@buxa/server/__tests__/runtimeHarness';
 
@@ -19,24 +18,22 @@ const ROUTES: Record<string, Handler> = {
 export interface CallOptions { token?: string | null; org?: string; body?: unknown; rawBody?: string; headers?: Record<string, string> }
 
 /** Calls a route handler with a real Web `Request`, exactly as Next.js would, and returns its `Response`. */
-export function call(method: string, path: string, options: CallOptions = {}): Promise<Response> {
-  return settle(() => {
-    const handler = ROUTES[`${method} ${path.split('?')[0]}`];
-    if (!handler) {
-      throw new Error(`No route for ${method} ${path}`);
-    }
-    const headers: Record<string, string> = { ...options.headers };
-    if (options.token) {
-      headers.authorization = `Bearer ${options.token}`;
-    }
-    if (options.org) {
-      headers['x-org-id'] = options.org;
-    }
-    const body = options.rawBody ?? (options.body !== undefined ? JSON.stringify(options.body) : undefined);
-    if (body !== undefined) {
-      headers['content-type'] = 'application/json';
-    }
+export async function call(method: string, path: string, options: CallOptions = {}): Promise<Response> {
+  const handler = ROUTES[`${method} ${path.split('?')[0]}`];
+  if (!handler) {
+    throw new Error(`No route for ${method} ${path}`);
+  }
+  const headers: Record<string, string> = { ...options.headers };
+  if (options.token) {
+    headers.authorization = `Bearer ${options.token}`;
+  }
+  if (options.org) {
+    headers['x-org-id'] = options.org;
+  }
+  const body = options.rawBody ?? (options.body !== undefined ? JSON.stringify(options.body) : undefined);
+  if (body !== undefined) {
+    headers['content-type'] = 'application/json';
+  }
 
-    return handler(new Request(`http://localhost${path}`, { method, headers, body }));
-  });
+  return handler(new Request(`http://localhost${path}`, { method, headers, body }));
 }

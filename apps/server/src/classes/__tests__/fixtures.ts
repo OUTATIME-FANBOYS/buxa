@@ -2,7 +2,6 @@ import type { Actor, Role } from '@buxa/domain';
 import type { NewClassInput, NewSessionInput } from '@buxa/contracts';
 import { createClassService } from '../ClassService';
 import { InMemoryClassRepository } from '../InMemoryClassRepository';
-import { settle } from '@buxa/domain';
 
 export const ORG = '11111111-1111-4111-8111-111111111111';
 export const OTHER_ORG = '22222222-2222-4222-8222-222222222222';
@@ -33,7 +32,7 @@ export const monday11to13: NewSessionInput = {
 
 export function setup() {
   const repo = new InMemoryClassRepository(() => new Date('2027-07-01T00:00:00Z'));
-  const service = createClassService({ repo, timezoneOf: () => settle(() => CAMP_TZ) });
+  const service = createClassService({ repo, timezoneOf: async () => CAMP_TZ });
   repo.seedCamper(ORG, CAMPER_ADA, 'Ada Lovelace', '2016-03-01');   // 11 in July 2027
   repo.seedCamper(ORG, CAMPER_BEN, 'Ben Carter', '2016-03-01');
   repo.seedCamper(ORG, CAMPER_CY, 'Cy Dunn', '2016-03-01');

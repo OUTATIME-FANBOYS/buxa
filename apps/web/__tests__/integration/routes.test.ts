@@ -4,7 +4,6 @@ import { InMemoryStore } from '@buxa/server/__tests__/fakes';
 import { call, startRuntime } from './harness';
 import { createTestIdentityProvider } from '@buxa/server/__tests__/tokens';
 import { IdBody } from '../types';
-import { requirePresent } from '@buxa/domain';
 
 // The real route handlers, auth and permission checks, against the in-memory adapter: no database needed.
 const idp = await createTestIdentityProvider();
@@ -54,7 +53,7 @@ describe('routes (in-memory repositories)', () => {
   it('stops a viewer before the repository is reached', async () => {
     const owner = await idp.token(); const org = await makeOrg(owner);
     const viewer = await idp.token(); await call('GET', '/v1/me', { token: viewer });
-    const viewerId = requirePresent([...store.users.values()].find(u => u.email !== [...store.users.values()][0].email), '[...store.users.values()].find(u => u.email !== [...store.users.values()][0].email)').id;
+    const viewerId = [...store.users.values()].find(u => u.email !== [...store.users.values()][0].email)!.id;
     store.members.push({ orgId: org, userId: viewerId, role: 'viewer' });
     const rename = vi.spyOn(store, 'rename');
     const r = await call('PATCH', '/v1/org', { token: viewer, org, body: { name: 'Hacked' } });

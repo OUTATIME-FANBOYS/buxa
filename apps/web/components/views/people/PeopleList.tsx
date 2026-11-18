@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { can, settle } from '@buxa/domain';
+import { can } from '@buxa/domain';
 import { Empty } from '@/components/components/export';
 import { loadHouseholdList, loadPeopleOrForbidden } from '@buxa/server/composers/index.server';
 import { currentActor } from '@buxa/server/composers/index.server';
@@ -12,10 +12,8 @@ import type { Actor } from '@buxa/domain';
 
 const countLine = (n: number) => (n === 1 ? '1 person' : `${n} people`);
 
-function listFor(actor: Actor, params: ListParams): Promise<PersonSummary[] | 'forbidden'> {
-  return settle(() => {
-    return loadPeopleOrForbidden(actor, params);
-  });
+async function listFor(actor: Actor, params: ListParams): Promise<PersonSummary[] | 'forbidden'> {
+  return loadPeopleOrForbidden(actor, params);
 }
 
 /** The people list with search and role filter. Viewers see names, roles and status; only staff and above see the add button. */

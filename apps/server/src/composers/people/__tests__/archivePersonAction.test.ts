@@ -3,7 +3,6 @@ import { ROUTES } from '@buxa/shared/config/routes';
 import { conflict, forbidden } from '../../../http/errors';
 import { archivePersonAction } from '../archivePersonAction';
 import { IDS } from './form';
-import { settle } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({
   actor: null as null | { userId: string; orgId: string; role: 'owner' | 'admin' | 'staff' | 'viewer' },
@@ -14,7 +13,7 @@ const h = vi.hoisted(() => ({
 vi.mock('next/cache', () => ({ revalidatePath: h.revalidatePath }));
 vi.mock('next/navigation', () => ({ redirect: h.redirect }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: { people: h.people } }) }));
-vi.mock('../camp', () => ({ currentActor: () => settle(() => h.actor) }));
+vi.mock('../camp', () => ({ currentActor: async () => h.actor }));
 
 describe('archivePersonAction', () => {
   beforeEach(() => {

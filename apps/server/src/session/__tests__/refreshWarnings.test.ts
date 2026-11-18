@@ -1,14 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NextRequest } from 'next/server';
 
-const outcome = vi.hoisted(() => ({ next: (): Promise<unknown> => settle(() => ({ data: { session: null }, error: null })) }));
+const outcome = vi.hoisted(() => ({ next: async (): Promise<unknown> => ({ data: { session: null }, error: null }) }));
 vi.mock('../supabaseClient', () => ({
   createSessionClient: () => ({ auth: { getSession: () => outcome.next() } }),
 }));
 
 import { createLogger } from '../../log';
 import { refreshSessionCookies } from '../refresh';
-import { settle } from '@buxa/domain';
 
 const EMAIL = 'maya.camp@example.test';
 const TOKEN = 'eyJhbGciOiJFUzI1NiJ9.secret-payload';
@@ -22,7 +21,7 @@ const log = () => createLogger('warn', line => lines.push(line));
 
 describe('the refresh path warns when the identity provider fails (audit S-20)', () => {
   it('an error returned by the client is logged by name, and the page is still served', async () => {
-    outcome.next = () => settle(() => ({ data: { session: null }, error: Object.assign(new Error(`refresh failed for ${EMAIL} ${TOKEN}`), { name: 'AuthRetryableFetchError' }) }));
+    outcome.next = async () => ({ data: { session: null }, error: Object.assign(new Error(`refresh failed for ${EMAIL} ${TOKEN}`), { name: 'AuthRetryableFetchError' }) });
     expect(await refreshSessionCookies(request, 1000, log())).toBeNull();
     const text = lines.join('\n');
     expect(text).toContain('AuthRetryableFetchError');
@@ -31,10 +30,8 @@ describe('the refresh path warns when the identity provider fails (audit S-20)',
   });
 
   it('a thrown error is logged by name only, and the page is still served', async () => {
-    outcome.next = () => {
-      return settle(() => {
-        throw Object.assign(new TypeError(`fetch failed ${EMAIL} ${TOKEN}`), {});
-      });
+    outcome.next = async () => {
+      throw Object.assign(new TypeError(`fetch failed ${EMAIL} ${TOKEN}`), {});
     };
     expect(await refreshSessionCookies(request, 1000, log())).toBeNull();
     const text = lines.join('\n');
@@ -44,7 +41,7 @@ describe('the refresh path warns when the identity provider fails (audit S-20)',
   });
 
   it('a healthy refresh writes nothing to the log', async () => {
-    outcome.next = () => settle(() => ({ data: { session: null }, error: null }));
+    outcome.next = async () => ({ data: { session: null }, error: null });
     await refreshSessionCookies(request, 1000, log());
     expect(lines).toEqual([]);
   });

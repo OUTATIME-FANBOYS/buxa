@@ -12,7 +12,6 @@ import { WorkspaceCalendar } from '@/components/views/kanban/export';
 import { BoardPage } from '@/components/views/kanban/export';
 import { Agents } from '@/components/views/kanban/export';
 import { Reports } from '@/components/views/kanban/export';
-import { requirePresent } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
@@ -21,7 +20,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push() {}, replace() {},
 
 const seed = buildSeed();
 const member = seed.workspaces[0].members[0];
-const me = requirePresent(seed.users.find((u) => u.id === member.userId), 'seed.users.find((u) => u.id === member.userId)');
+const me = seed.users.find((u) => u.id === member.userId)!;
 const camp: CampHome = {
   campId: 'o1', name: 'Lake Camp', firstName: 'Priya', canRename: false,
   people: 40, onSite: 12, checkedInToday: 20, validMemberships: 35, upcomingSessions: [],
@@ -34,7 +33,7 @@ function store(over: Record<string, unknown> = {}) {
   return {
     s: seed, actions: { setTheme() {}, setView() {}, selectProject() {}, setAgentsEnabled() {}, updateUser() {}, exportData: () => '{}', importData: () => null, simulateRun: () => 0 },
     me, workspace: seed.workspaces[0], project: seed.projects[0], projects: seed.projects, wsTasks: seed.tasks, kindOf: () => 'open',
-    members: seed.workspaces[0].members.map((m) => ({ userId: m.userId, role: m.role, user: requirePresent(seed.users.find((u) => u.id === m.userId), 'seed.users.find((u) => u.id === m.userId)') })),
+    members: seed.workspaces[0].members.map((m) => ({ userId: m.userId, role: m.role, user: seed.users.find((u) => u.id === m.userId)! })),
     myRole: 'owner', readOnly: false, userById: (id?: string) => seed.users.find((u) => u.id === id), saveStatus: 'saved', sync: 'local',
     ...over,
   };

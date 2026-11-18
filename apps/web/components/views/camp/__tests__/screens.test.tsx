@@ -22,8 +22,8 @@ vi.mock('@buxa/server/session/index', () => ({
   getCurrentCamp: () => settle(() => session.camp),
   toActor: (s: { user: { id: string } }, camp: Membership) => ({ userId: s.user.id, orgId: camp.orgId, role: camp.role }),
 }));
-vi.mock('@buxa/server/composers/camp/selectCampAction', () => ({ selectCampAction: () => settle(() => {}) }));
-vi.mock('@buxa/server/composers/auth/signOut', () => ({ signOut: () => settle(() => {}) }));
+vi.mock('@buxa/server/composers/camp/selectCampAction', () => ({ selectCampAction: async () => {} }));
+vi.mock('@buxa/server/composers/auth/signOut', () => ({ signOut: async () => {} }));
 vi.mock('@/components/components/camp/NewCampForm', () => ({ NewCampForm: ({ first }: { first: boolean }) => `NEW-CAMP-${first ? 'FIRST' : 'EXTRA'}` }));
 
 // Vitest compiles JSX with the classic runtime, which needs React in scope.

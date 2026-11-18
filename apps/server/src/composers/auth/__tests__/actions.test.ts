@@ -8,7 +8,7 @@ const env = vi.hoisted(() => {
   return { store: undefined as unknown };
 });
 
-vi.mock('next/headers', () => ({ cookies: () => settle(() => env.store) }));
+vi.mock('next/headers', () => ({ cookies: async () => env.store }));
 vi.mock('next/navigation', () => ({ redirect: (url: string) => {
   throw new Error(`REDIRECT ${url}`);
 } }));
@@ -24,7 +24,6 @@ import { FakeCookieStore, SESSION_COOKIE, personWithCamps, sessionCookieValue } 
 import { signIn } from '../signIn';
 import { signOut } from '../signOut';
 import { signUp } from '../signUp';
-import { settle } from '@buxa/domain';
 
 const form = (fields: Record<string, string>): FormData => {
   const data = new FormData(); for (const [k, v] of Object.entries(fields)) {

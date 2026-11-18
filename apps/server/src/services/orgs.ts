@@ -1,5 +1,5 @@
 import type { CreatedOrg, Members, NewOrgInput, Org, OrgPatchInput, OrgSummary } from '@buxa/contracts';
-import { can, type Actor, settle } from '@buxa/domain';
+import { can, type Actor } from '@buxa/domain';
 import { assertAllowed } from '../auth/authorize';
 import { conflict } from '../http/errors';
 import { isSlugTaken, type OrgRepository } from '../orgs/OrgRepository';
@@ -26,19 +26,15 @@ export function createOrgService(orgs: OrgRepository): OrgService {
         throw isSlugTaken(error) ? conflict(error.message) : error;
       }
     },
-    getCamp(actor) {
-      return settle(() => {
-        assertAllowed(actor, 'org:read');
+    async getCamp(actor) {
+      assertAllowed(actor, 'org:read');
 
-        return guard(() => orgs.get(actor.orgId));
-      });
+      return guard(() => orgs.get(actor.orgId));
     },
-    renameCamp(actor, input) {
-      return settle(() => {
-        assertAllowed(actor, 'org:update');
+    async renameCamp(actor, input) {
+      assertAllowed(actor, 'org:update');
 
-        return guard(() => orgs.rename(actor, input));
-      });
+      return guard(() => orgs.rename(actor, input));
     },
     async listMembers(actor) {
       assertAllowed(actor, 'members:read');

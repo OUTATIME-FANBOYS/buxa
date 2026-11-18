@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { IMPORT_COLUMNS, type Actor, settle } from '@buxa/domain';
+import { IMPORT_COLUMNS, type Actor } from '@buxa/domain';
 import { createImportService } from '../../../classes/import/ImportService';
 import { InMemoryClassRepository } from '../../../classes/InMemoryClassRepository';
 import { InMemoryImportRepository } from '../../../classes/import/InMemoryImportRepository';
@@ -7,7 +7,7 @@ import { CAMP_TZ, as, robotics } from '../../../classes/__tests__/fixtures';
 
 const h = vi.hoisted(() => ({ actor: null as null | Actor, services: {} }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: h.services }) }));
-vi.mock('../../people/camp', () => ({ currentActor: () => settle(() => h.actor) }));
+vi.mock('../../people/camp', () => ({ currentActor: async () => h.actor }));
 
 const { classErrorReportResponse } = await import('../errorReportResponse');
 
@@ -29,7 +29,7 @@ beforeEach(async () => {
   const classes = new InMemoryClassRepository(() => new Date('2027-07-01T00:00:00Z'));
   const imports = new InMemoryImportRepository(classes);
   await classes.createClass(as('admin'), robotics);
-  h.services = { imports: createImportService({ classes, imports, timezoneOf: () => settle(() => CAMP_TZ) }) };
+  h.services = { imports: createImportService({ classes, imports, timezoneOf: async () => CAMP_TZ }) };
   h.actor = as('admin');
 });
 

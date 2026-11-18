@@ -1,11 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { buildSeed } from '@buxa/shared';
 import { taskMenuItems } from '@/components/components/kanban/board/export';
-import { requirePresent } from '@buxa/domain';
 
 const seed = buildSeed();
 const project = seed.projects[0];
-const task = { ...requirePresent(seed.tasks.find((t) => t.projectId === project.id), 'seed.tasks.find((t) => t.projectId === project.id)'), archived: false };
+const task = { ...seed.tasks.find((t) => t.projectId === project.id)!, archived: false };
 
 function commands() {
   return { open: vi.fn(), duplicate: vi.fn(), moveTo: vi.fn(), toggleArchive: vi.fn(), remove: vi.fn() };
@@ -31,7 +30,7 @@ describe('taskMenuItems', () => {
   it('runs the matching command when an item is chosen', () => {
     const cmd = commands();
     const items = taskMenuItems(task, project, false, cmd as never).filter(Boolean) as { label: string; onSelect: () => void }[];
-    requirePresent(items.find((i) => i.label === 'Duplicate'), "items.find((i) => i.label === 'Duplicate')").onSelect();
+    items.find((i) => i.label === 'Duplicate')!.onSelect();
     expect(cmd.duplicate).toHaveBeenCalledWith(task);
   });
 });

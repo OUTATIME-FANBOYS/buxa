@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { Popover } from '@/components/components/export';
-import { requirePresent } from '@buxa/domain';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -18,7 +17,7 @@ describe('Popover', () => {
 
   it('portals its content to the body as a labelled dialog', () => {
     act(() => root.render(<Popover anchor={null} onClose={() => undefined} label="Filters" className="x"><p>Choose</p></Popover>));
-    const pop = requirePresent(document.querySelector('.popover'), "document.querySelector('.popover')");
+    const pop = document.querySelector('.popover')!;
     expect(pop.getAttribute('aria-label')).toBe('Filters');
     expect(pop.classList.contains('x')).toBe(true);
     expect(pop.textContent).toBe('Choose');
@@ -39,7 +38,7 @@ describe('Popover', () => {
     const onClose = vi.fn();
     const outside = document.body.appendChild(document.createElement('span'));
     act(() => root.render(<Popover anchor={null} onClose={onClose}><button>inside</button></Popover>));
-    const inside = requirePresent(document.querySelector('.popover button'), "document.querySelector('.popover button')");
+    const inside = document.querySelector('.popover button')!;
     act(() => {
       inside.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
     });

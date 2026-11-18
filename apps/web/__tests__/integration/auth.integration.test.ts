@@ -6,7 +6,6 @@ import { ErrorBodySchema, MeSchema, MembersSchema, OrgSchema } from '@buxa/contr
 import { call as callRoute, startRuntime } from './harness';
 import { ISSUER as ISS, createTestIdentityProvider, type TokenOptions } from '@buxa/server/__tests__/tokens';
 import { IdBody, NameBody } from '../types';
-import { settle, requirePresent } from '@buxa/domain';
 
 const url = process.env.DATABASE_URL;
 const tag = Math.random().toString(36).slice(2, 8);
@@ -22,13 +21,11 @@ describe.skipIf(!url)('authentication and organisation access', () => {
   /** A signed token; the default email carries this run's tag so cleanup can find the users it creates. */
   type Override = { sub?: string; email?: string; iss?: string; aud?: string; exp?: string; key?: CryptoKey };
 
-  function token(over: Override = {}) {
-    return settle(() => {
-      const sub = over.sub ?? uid();
-      const options: TokenOptions = { sub, email: over.email ?? `${sub.slice(0, 8)}-${tag}@camp.test`, issuer: over.iss, audience: over.aud, expiresIn: over.exp, signWith: over.key };
+  async function token(over: Override = {}) {
+    const sub = over.sub ?? uid();
+    const options: TokenOptions = { sub, email: over.email ?? `${sub.slice(0, 8)}-${tag}@camp.test`, issuer: over.iss, audience: over.aud, expiresIn: over.exp, signWith: over.key };
 
-      return idp.token(options);
-    });
+    return idp.token(options);
   }
 
   /** Calls the real route handler. `json(schema)` parses the body with the schema the test expects, so each field it reads is typed. */
@@ -48,7 +45,7 @@ describe.skipIf(!url)('authentication and organisation access', () => {
     await migrate(pool);
     idp = await createTestIdentityProvider();
     other = idp.strangerKey;
-    env = startRuntime({ env: { DATABASE_URL: requirePresent(url, 'url'), LOG_LEVEL: 'silent' }, verifier: idp.verifier });
+    env = startRuntime({ env: { DATABASE_URL: url!, LOG_LEVEL: 'silent' }, verifier: idp.verifier });
   });
   afterAll(async () => {
     await pool.query('DELETE FROM orgs WHERE id = ANY($1)', [made.orgs]);

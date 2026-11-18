@@ -16,7 +16,6 @@ import { diffDays, fmt, today } from '@buxa/shared';
 import { boardPath } from '@/config/routes';
 import { HEALTH_LABEL, HEALTH_TONE, healthOf, progressOf } from '@buxa/shared';
 import type { Project } from '@buxa/shared';
-import { requirePresent } from '@buxa/domain';
 
 export function Projects() {
   const { s, actions, projects, workspace, wsTasks, kindOf, members, readOnly } = useStore(); const { confirm, toast } = useUi();
@@ -47,7 +46,7 @@ export function Projects() {
                 <p className="muted clamp">{p.description || 'No description yet.'}</p>
                 <div><div className="pc-row small"><span>{d} of {total} done</span><strong>{Math.round(v)}%</strong></div><Progress value={v} tone={HEALTH_TONE[h]} label={`${p.name} completion`} /></div>
                 <div className="pc-foot"><span className="avatars">{members.slice(0, 4).map(m => <Avatar key={m.userId} user={m.user} size={24} />)}</span>
-                  {p.deadline && <span className={`small ${requirePresent(left, 'left') < 0 ? 'text-crit' : 'muted'}`}>{requirePresent(left, 'left') < 0 ? 'Past deadline' : `Due ${fmt(p.deadline)}`}</span>}</div>
+                  {p.deadline && <span className={`small ${left! < 0 ? 'text-crit' : 'muted'}`}>{left! < 0 ? 'Past deadline' : `Due ${fmt(p.deadline)}`}</span>}</div>
               </article>
             );
           })}

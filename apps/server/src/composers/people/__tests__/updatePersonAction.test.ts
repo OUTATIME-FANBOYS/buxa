@@ -4,7 +4,6 @@ import { idle } from '@buxa/shared';
 import { conflict, forbidden, badRequest, notFound } from '../../../http/errors';
 import { updatePersonAction } from '../updatePersonAction';
 import { formOf, IDS } from './form';
-import { settle } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({
   actor: null as null | { userId: string; orgId: string; role: 'owner' | 'admin' | 'staff' | 'viewer' },
@@ -15,7 +14,7 @@ const h = vi.hoisted(() => ({
 vi.mock('next/cache', () => ({ revalidatePath: h.revalidatePath }));
 vi.mock('next/navigation', () => ({ redirect: h.redirect }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: { people: h.people } }) }));
-vi.mock('../camp', () => ({ currentActor: () => settle(() => h.actor) }));
+vi.mock('../camp', () => ({ currentActor: async () => h.actor }));
 
 const details = {
   id: IDS.person, givenName: 'Ben', familyName: 'Lee', preferredName: '', dateOfBirth: '2016-05-02',

@@ -3,7 +3,6 @@ import { classPath } from '@buxa/shared/config/routes';
 import { idle } from '@buxa/shared';
 import { addSessionAction } from '../addSessionAction';
 import { formOf, IDS } from './form';
-import { settle } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({
   actor: null as null | { userId: string; orgId: string; role: 'owner' | 'admin' | 'staff' | 'viewer' },
@@ -15,7 +14,7 @@ const h = vi.hoisted(() => ({
 vi.mock('next/cache', () => ({ revalidatePath: h.revalidatePath }));
 vi.mock('next/navigation', () => ({ redirect: h.redirect }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: { classes: h.classes, orgs: h.orgs } }) }));
-vi.mock('../../people/camp', () => ({ currentActor: () => settle(() => h.actor) }));
+vi.mock('../../people/camp', () => ({ currentActor: async () => h.actor }));
 
 const session = { classId: IDS.cls, startsAt: '2027-07-05T09:00', endsAt: '2027-07-05T12:00', location: 'Lab 1', capacity: '', instructorIds: [] as string[] };
 

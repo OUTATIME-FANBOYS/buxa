@@ -8,7 +8,7 @@ const env = vi.hoisted(() => {
   return { store: undefined as unknown };
 });
 
-vi.mock('next/headers', () => ({ cookies: () => settle(() => env.store) }));
+vi.mock('next/headers', () => ({ cookies: async () => env.store }));
 vi.mock('next/navigation', () => ({ redirect: (url: string) => {
   throw new Error(`REDIRECT ${url}`);
 } }));
@@ -20,7 +20,6 @@ import { ISSUER, createTestIdentityProvider } from '@buxa/server/__tests__/token
 import { startRuntime } from '@buxa/server/__tests__/runtimeHarness';
 import { CAMP_COOKIE, getCurrentCamp, getSession, rememberCamp, requireSession, toActor } from '@buxa/server/session/index';
 import { FakeCookieStore, SESSION_COOKIE, personWithCamps, sessionCookieValue, tampered, unsignedToken } from '@buxa/server/session/__tests__/support';
-import { settle } from '@buxa/domain';
 
 let idp: Awaited<ReturnType<typeof createTestIdentityProvider>>;
 let data: InMemoryStore;
@@ -70,7 +69,7 @@ describe('getSession', () => {
     ['issued by another issuer', (i: typeof idp) => i.token({ sub, issuer: 'https://evil.example/auth/v1' })],
     ['meant for another audience', (i: typeof idp) => i.token({ sub, audience: 'someone-else' })],
     ['signed with a stranger\'s key', (i: typeof idp) => i.token({ sub, signWith: i.strangerKey })],
-    ['unsigned (alg none)', () => settle(() => unsignedToken(sub, ISSUER))],
+    ['unsigned (alg none)', async () => unsignedToken(sub, ISSUER)],
     ['tampered after signing', async (i: typeof idp) => tampered(await i.token({ sub }))],
   ])('refuses a token that is %s', async (_label, make) => {
     await personWithCamps(data, sub, ['Pine Lake']);

@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Membership } from '@buxa/contracts';
-import { settle } from '@buxa/domain';
 
 const notFound = vi.hoisted(() => vi.fn(() => {
   throw new Error('NEXT_NOT_FOUND');
@@ -9,8 +8,8 @@ const session = vi.hoisted(() => ({ camp: null as Membership | null }));
 
 vi.mock('next/navigation', () => ({ notFound }));
 vi.mock('../../../session', () => ({
-  requireSession: () => settle(() => ({ user: { id: 'u1' } })),
-  getCurrentCamp: () => settle(() => session.camp),
+  requireSession: async () => ({ user: { id: 'u1' } }),
+  getCurrentCamp: async () => session.camp,
   toActor: (_s: unknown, camp: Membership) => ({ userId: 'u1', orgId: camp.orgId, role: camp.role }),
 }));
 

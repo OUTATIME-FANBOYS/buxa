@@ -1,7 +1,6 @@
 import { createHash } from 'node:crypto';
 import type { Pool } from 'pg';
 import { tooManyRequests } from '../http/errors';
-import { settle } from '@buxa/domain';
 
 /**
  * Fixed-window rate limits. Every limit is a rule (its name, how many hits, how long the window is) applied to one identity: a
@@ -45,19 +44,17 @@ export function createMemoryRateLimiter(now: () => number = Date.now): RateLimit
   const windows = new Map<string, { start: number; count: number }>();
 
   return {
-    hit(rule, identity) {
-      return settle(() => {
-        const key = rateKey(rule, identity);
-        const time = now();
-        const span = rule.windowSeconds * 1000;
-        const previous = windows.get(key);
-        const current = previous && time - previous.start < span ? previous : { start: time, count: 0 };
-        current.count += 1;
-        windows.set(key, current);
-        const retryAfterSeconds = Math.max(Math.ceil((current.start + span - time) / 1000), 1);
+    async hit(rule, identity) {
+      const key = rateKey(rule, identity);
+      const time = now();
+      const span = rule.windowSeconds * 1000;
+      const previous = windows.get(key);
+      const current = previous && time - previous.start < span ? previous : { start: time, count: 0 };
+      current.count += 1;
+      windows.set(key, current);
+      const retryAfterSeconds = Math.max(Math.ceil((current.start + span - time) / 1000), 1);
 
-        return { allowed: current.count <= rule.limit, remaining: Math.max(rule.limit - current.count, 0), retryAfterSeconds };
-      });
+      return { allowed: current.count <= rule.limit, remaining: Math.max(rule.limit - current.count, 0), retryAfterSeconds };
     },
   };
 }

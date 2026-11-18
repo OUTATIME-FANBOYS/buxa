@@ -5,7 +5,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { ArchivePersonButton } from '@/components/components/people/forms/export';
-import { settle, requirePresent } from '@buxa/domain';
+import { settle } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({ archivePersonAction: vi.fn() }));
 vi.mock('@buxa/server/composers/people/archivePersonAction', () => ({ archivePersonAction: h.archivePersonAction }));
@@ -23,15 +23,15 @@ describe('ArchivePersonButton', () => {
 
   it('asks for confirmation before archiving, and does nothing when the person says no', async () => {
     act(() => root.render(<UiProvider Dialog={ConfirmDialog}><ArchivePersonButton personId="p-1" personName="Ada Lee" /></UiProvider>));
-    const button = requirePresent(Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Archive person'), "Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Archive person')");
+    const button = Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Archive person')!;
     await act(() => {
       return settle(() => {
         button.click();
       });
     });
-    const dialog = requirePresent(document.querySelector('[role="dialog"]'), "document.querySelector('[role=\"dialog\"]')");
+    const dialog = document.querySelector('[role="dialog"]')!;
     expect(dialog.getAttribute('aria-label')).toBe('Archive Ada Lee?');
-    const cancel = requirePresent(Array.from(dialog.querySelectorAll('button')).find((b) => b.textContent === 'Cancel'), "Array.from(dialog.querySelectorAll('button')).find((b) => b.textContent === 'Cancel')");
+    const cancel = Array.from(dialog.querySelectorAll('button')).find((b) => b.textContent === 'Cancel')!;
     await act(() => {
       return settle(() => {
         cancel.click();
@@ -43,7 +43,7 @@ describe('ArchivePersonButton', () => {
   it('archives once confirmed', async () => {
     h.archivePersonAction.mockResolvedValueOnce({ status: 'success' });
     act(() => root.render(<UiProvider Dialog={ConfirmDialog}><ArchivePersonButton personId="p-1" personName="Ada Lee" /></UiProvider>));
-    const button = requirePresent(Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Archive person'), "Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Archive person')");
+    const button = Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Archive person')!;
     await act(() => {
       return settle(() => {
         button.click();

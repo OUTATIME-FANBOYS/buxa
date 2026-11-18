@@ -3,7 +3,6 @@ import { idle } from '@buxa/shared';
 import { forbidden } from '../../../http/errors';
 import { cancelEnrolmentAction } from '../cancelEnrolmentAction';
 import { formOf, IDS } from './form';
-import { settle } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({
   actor: null as null | { userId: string; orgId: string; role: 'owner' | 'admin' | 'staff' | 'viewer' },
@@ -12,7 +11,7 @@ const h = vi.hoisted(() => ({
 }));
 vi.mock('next/cache', () => ({ revalidatePath: h.revalidatePath }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: { classes: h.classes } }) }));
-vi.mock('../../people/camp', () => ({ currentActor: () => settle(() => h.actor) }));
+vi.mock('../../people/camp', () => ({ currentActor: async () => h.actor }));
 
 describe('cancelEnrolmentAction', () => {
   beforeEach(() => {

@@ -1,5 +1,4 @@
 import { describe, expect, it, vi } from 'vitest';
-import { settle } from '@buxa/domain';
 
 // Next.js can load one file once per route, so two parts of the app may hold *different copies* of an error class. An error made by one
 // copy then fails `instanceof` against the other, and a 403 turns into a 500. This reproduces that, and checks the guards still work.
@@ -30,10 +29,8 @@ describe('errors survive being loaded twice', () => {
     const { startRuntime } = await import('@buxa/server/__tests__/runtimeHarness');
     const { publicRoute } = await import('@buxa/server/http/route');
     const env = startRuntime();
-    const response = await publicRoute(() => {
-      return settle(() => {
-        throw new Other(403, 'Your role cannot do this');
-      });
+    const response = await publicRoute(async () => {
+      throw new Other(403, 'Your role cannot do this');
     })(new Request('http://localhost/x'));
     expect(response.status).toBe(403);
     await env.stop();

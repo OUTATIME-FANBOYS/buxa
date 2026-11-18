@@ -5,7 +5,6 @@ import { systemClock, type Clock } from '../services/clock';
 import type { AuditRecord } from '../people/InMemoryDatabase';
 import type { ClassRepository, EnrolRequest, EnrolmentRule, GatheredEnrolmentFacts, NewSessionRecord } from './ClassRepository';
 import { ClassNotFoundError, CamperNotFoundError, EnrolmentNotFoundError, InstructorNotFoundError, SessionNotFoundError, refusalError } from './errors';
-import { settle } from '@buxa/domain';
 
 interface StoredClass extends Class { orgId: string }
 interface StoredSession extends NewSessionRecord { id: string; orgId: string; classId: string }
@@ -35,156 +34,136 @@ export class InMemoryClassRepository implements ClassRepository {
     this.campers.set(id, { id, orgId, name, dateOfBirth });
   }
 
-  listClasses(orgId: string): Promise<Class[]> {
-    return settle(() => {
-      return [...this.classes.values()].filter(c => c.orgId === orgId).sort(byCreated).map(toClass);
-    });
+  async listClasses(orgId: string): Promise<Class[]> {
+    return [...this.classes.values()].filter(c => c.orgId === orgId).sort(byCreated).map(toClass);
   }
 
-  getClass(orgId: string, classId: string): Promise<Class | null> {
-    return settle(() => {
-      const found = this.classIn(orgId, classId);
+  async getClass(orgId: string, classId: string): Promise<Class | null> {
+    const found = this.classIn(orgId, classId);
 
-      return found ? toClass(found) : null;
-    });
+    return found ? toClass(found) : null;
   }
 
-  createClass(actor: Actor, input: NewClassInput): Promise<Class> {
-    return settle(() => {
-      const row: StoredClass = {
-        id: randomUUID(), orgId: actor.orgId, name: input.name, description: input.description, ageRange: input.ageRange,
-        capacity: input.capacity, instructorRatio: input.instructorRatio, createdAt: this.now().toISOString(),
-      };
-      this.classes.set(row.id, row);
-      this.record(actor, 'class.create', 'class', row.id, { name: row.name });
+  async createClass(actor: Actor, input: NewClassInput): Promise<Class> {
+    const row: StoredClass = {
+      id: randomUUID(), orgId: actor.orgId, name: input.name, description: input.description, ageRange: input.ageRange,
+      capacity: input.capacity, instructorRatio: input.instructorRatio, createdAt: this.now().toISOString(),
+    };
+    this.classes.set(row.id, row);
+    this.record(actor, 'class.create', 'class', row.id, { name: row.name });
 
-      return toClass(row);
-    });
+    return toClass(row);
   }
 
-  addSession(actor: Actor, classId: string, input: NewSessionRecord): Promise<Session> {
-    return settle(() => {
-      const cls = this.classIn(actor.orgId, classId);
-      if (!cls) {
-        throw new ClassNotFoundError();
-      }
-      // As in Postgres: every instructor must be a person in this camp.
-      if (input.instructorIds.some(id => !this.camperIn(actor.orgId, id))) {
-        throw new InstructorNotFoundError();
-      }
-      const row: StoredSession = { ...input, id: randomUUID(), orgId: actor.orgId, classId };
-      this.sessions.set(row.id, row);
-      this.record(actor, 'session.create', 'session', row.id, {
-        classId, startsAt: row.startsAt, endsAt: row.endsAt, instructorIds: [...new Set(input.instructorIds)],
-      });
-
-      return this.toSession(row, cls);
+  async addSession(actor: Actor, classId: string, input: NewSessionRecord): Promise<Session> {
+    const cls = this.classIn(actor.orgId, classId);
+    if (!cls) {
+      throw new ClassNotFoundError();
+    }
+    // As in Postgres: every instructor must be a person in this camp.
+    if (input.instructorIds.some(id => !this.camperIn(actor.orgId, id))) {
+      throw new InstructorNotFoundError();
+    }
+    const row: StoredSession = { ...input, id: randomUUID(), orgId: actor.orgId, classId };
+    this.sessions.set(row.id, row);
+    this.record(actor, 'session.create', 'session', row.id, {
+      classId, startsAt: row.startsAt, endsAt: row.endsAt, instructorIds: [...new Set(input.instructorIds)],
     });
+
+    return this.toSession(row, cls);
   }
 
-  listSessions(orgId: string, classId: string): Promise<Session[]> {
-    return settle(() => {
-      const cls = this.classIn(orgId, classId);
-      if (!cls) {
-        throw new ClassNotFoundError();
-      }
+  async listSessions(orgId: string, classId: string): Promise<Session[]> {
+    const cls = this.classIn(orgId, classId);
+    if (!cls) {
+      throw new ClassNotFoundError();
+    }
 
-      return [...this.sessions.values()]
-        .filter(s => s.orgId === orgId && s.classId === classId)
-        .sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.id.localeCompare(b.id))
-        .map(s => this.toSession(s, cls));
-    });
+    return [...this.sessions.values()]
+      .filter(s => s.orgId === orgId && s.classId === classId)
+      .sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.id.localeCompare(b.id))
+      .map(s => this.toSession(s, cls));
   }
 
-  listEnrolments(orgId: string, sessionId: string): Promise<Enrolment[]> {
-    return settle(() => {
-      const session = this.sessionIn(orgId, sessionId);
+  async listEnrolments(orgId: string, sessionId: string): Promise<Enrolment[]> {
+    const session = this.sessionIn(orgId, sessionId);
+    if (!session) {
+      throw new SessionNotFoundError();
+    }
+
+    return [...this.enrolments.values()]
+      .filter(e => e.orgId === orgId && e.sessionId === sessionId)
+      .sort((a, b) => a.enrolledAt.localeCompare(b.enrolledAt) || a.id.localeCompare(b.id))
+      .map(e => this.toEnrolment(e));
+  }
+
+  async enrol(actor: Actor, request: EnrolRequest, rule: EnrolmentRule): Promise<Enrolment> {
+    return this.exclusive(request.sessionId, async () => {
+      const session = this.sessionIn(actor.orgId, request.sessionId);
       if (!session) {
         throw new SessionNotFoundError();
       }
-
-      return [...this.enrolments.values()]
-        .filter(e => e.orgId === orgId && e.sessionId === sessionId)
-        .sort((a, b) => a.enrolledAt.localeCompare(b.enrolledAt) || a.id.localeCompare(b.id))
-        .map(e => this.toEnrolment(e));
-    });
-  }
-
-  enrol(actor: Actor, request: EnrolRequest, rule: EnrolmentRule): Promise<Enrolment> {
-    return settle(() => {
-      return this.exclusive(request.sessionId, async () => {
-        const session = this.sessionIn(actor.orgId, request.sessionId);
-        if (!session) {
-          throw new SessionNotFoundError();
-        }
-        const cls = this.classIn(actor.orgId, session.classId);
-        if (!cls) {
-          throw new ClassNotFoundError();
-        }
-        const camper = this.camperIn(actor.orgId, request.camperId);
-        if (!camper) {
-          throw new CamperNotFoundError();
-        }
-        const facts: GatheredEnrolmentFacts = {
-          session: { sessionId: session.id, className: cls.name, startsAt: session.startsAt, endsAt: session.endsAt, capacity: session.capacity, ageRange: cls.ageRange },
-          seatsTaken: this.countWhere(session.id, 'enrolled'),
-          camperDateOfBirth: camper.dateOfBirth,
-          camperActive: this.activeFor(actor.orgId, camper.id),
-        };
-        // The facts are read now and the write happens after the round trip, as in Postgres. Only the lock keeps them current.
-        await yieldToDatabase();
-        const decision = rule(facts);
-        if (decision.kind === 'refuse') {
-          throw refusalError(decision);
-        }
-
-        const row: StoredEnrolment = {
-          id: randomUUID(), orgId: actor.orgId, sessionId: session.id, camperId: camper.id, status: decision.status,
-          enrolledAt: this.now().toISOString(), overrideReason: decision.overrode?.reason ?? null,
-        };
-        this.enrolments.set(row.id, row);
-        this.record(actor, 'enrolment.create', 'enrolment', row.id, { sessionId: session.id, camperId: camper.id, status: decision.status });
-        if (decision.overrode) {
-          this.record(actor, 'enrolment.override', 'enrolment', row.id, {
-            sessionId: session.id, camperId: camper.id, reason: decision.overrode.reason, clashSessionId: decision.overrode.clash.sessionId,
-          });
-        }
-
-        return this.toEnrolment(row);
-      });
-    });
-  }
-
-  cancelEnrolment(actor: Actor, enrolmentId: string, note: string | null): Promise<Enrolment> {
-    return settle(() => {
-      const existing = this.enrolments.get(enrolmentId);
-      if (!existing || existing.orgId !== actor.orgId || existing.status === 'cancelled') {
-        throw new EnrolmentNotFoundError();
+      const cls = this.classIn(actor.orgId, session.classId);
+      if (!cls) {
+        throw new ClassNotFoundError();
+      }
+      const camper = this.camperIn(actor.orgId, request.camperId);
+      if (!camper) {
+        throw new CamperNotFoundError();
+      }
+      const facts: GatheredEnrolmentFacts = {
+        session: { sessionId: session.id, className: cls.name, startsAt: session.startsAt, endsAt: session.endsAt, capacity: session.capacity, ageRange: cls.ageRange },
+        seatsTaken: this.countWhere(session.id, 'enrolled'),
+        camperDateOfBirth: camper.dateOfBirth,
+        camperActive: this.activeFor(actor.orgId, camper.id),
+      };
+      // The facts are read now and the write happens after the round trip, as in Postgres. Only the lock keeps them current.
+      await yieldToDatabase();
+      const decision = rule(facts);
+      if (decision.kind === 'refuse') {
+        throw refusalError(decision);
       }
 
-      return this.exclusive(existing.sessionId, () => {
-        return settle(() => {
-          const row = this.enrolments.get(enrolmentId);
-          if (!row || row.orgId !== actor.orgId || row.status === 'cancelled') {
-            throw new EnrolmentNotFoundError();
-          }
-          row.status = 'cancelled';
-          this.record(actor, 'enrolment.cancel', 'enrolment', row.id, { sessionId: row.sessionId, camperId: row.camperId, note });
-
-          return this.toEnrolment(row);
+      const row: StoredEnrolment = {
+        id: randomUUID(), orgId: actor.orgId, sessionId: session.id, camperId: camper.id, status: decision.status,
+        enrolledAt: this.now().toISOString(), overrideReason: decision.overrode?.reason ?? null,
+      };
+      this.enrolments.set(row.id, row);
+      this.record(actor, 'enrolment.create', 'enrolment', row.id, { sessionId: session.id, camperId: camper.id, status: decision.status });
+      if (decision.overrode) {
+        this.record(actor, 'enrolment.override', 'enrolment', row.id, {
+          sessionId: session.id, camperId: camper.id, reason: decision.overrode.reason, clashSessionId: decision.overrode.clash.sessionId,
         });
-      });
+      }
+
+      return this.toEnrolment(row);
     });
   }
 
-  private exclusive<T>(key: string, work: () => Promise<T>): Promise<T> {
-    return settle(() => {
-      const previous = this.locks.get(key) ?? Promise.resolve();
-      const run = previous.then(work);
-      this.locks.set(key, run.then(() => undefined, () => undefined));
+  async cancelEnrolment(actor: Actor, enrolmentId: string, note: string | null): Promise<Enrolment> {
+    const existing = this.enrolments.get(enrolmentId);
+    if (!existing || existing.orgId !== actor.orgId || existing.status === 'cancelled') {
+      throw new EnrolmentNotFoundError();
+    }
 
-      return run;
+    return this.exclusive(existing.sessionId, async () => {
+      const row = this.enrolments.get(enrolmentId);
+      if (!row || row.orgId !== actor.orgId || row.status === 'cancelled') {
+        throw new EnrolmentNotFoundError();
+      }
+      row.status = 'cancelled';
+      this.record(actor, 'enrolment.cancel', 'enrolment', row.id, { sessionId: row.sessionId, camperId: row.camperId, note });
+
+      return this.toEnrolment(row);
     });
+  }
+
+  private async exclusive<T>(key: string, work: () => Promise<T>): Promise<T> {
+    const previous = this.locks.get(key) ?? Promise.resolve();
+    const run = previous.then(work);
+    this.locks.set(key, run.then(() => undefined, () => undefined));
+
+    return run;
   }
 
   private record(actor: Actor, action: AuditAction, entity: string, entityId: string, data: Record<string, unknown>): void {
