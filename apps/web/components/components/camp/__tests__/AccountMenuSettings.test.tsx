@@ -12,7 +12,7 @@ vi.mock('@/actions/auth', () => ({ signOut: () => settle(() => undefined) }));
 const saveTime = vi.hoisted(() => vi.fn(() => Promise.resolve({ status: 'success', message: 'Time format saved' })));
 vi.mock('@/actions/account', () => ({ updateTimeFormatAction: saveTime }));
 
-const appearance = vi.hoisted(() => ({ theme: 'dark' as 'system' | 'light' | 'dark', choose: vi.fn() }));
+const appearance = vi.hoisted(() => ({ theme: 'dark', choose: vi.fn() }));
 vi.mock('../useAppearance', () => ({
   useAppearance: () => [appearance.theme, appearance.choose],
 }));
@@ -59,7 +59,7 @@ describe('the account menu', () => {
     });
   };
   const choice = (label: string) =>
-    Array.from(document.querySelectorAll<HTMLElement>('[role=menu] [role=menuitemradio]')).find(
+    Array.from(document.querySelectorAll<HTMLElement>('[role=menuitemradio]')).find(
       el => el.textContent?.trim() === label,
     );
 

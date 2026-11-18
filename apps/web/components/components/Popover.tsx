@@ -11,6 +11,7 @@ export function Popover({
   children,
   label,
   className = '',
+  side = 'below',
 }: {
   anchor: HTMLElement | null;
   onClose: () => void;
@@ -19,6 +20,8 @@ export function Popover({
   children: ReactNode;
   label?: string;
   className?: string;
+  /** `below` drops under the anchor; `beside` opens to its right, or its left when there is no room (a submenu flyout). */
+  side?: 'below' | 'beside';
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number; origin: string } | null>(null);
@@ -35,15 +38,23 @@ export function Popover({
       top = Math.max(8, r.top - h - 6);
     }
     let left = align === 'end' ? r.right - w : r.left;
+    if (side === 'beside') {
+      top = Math.max(8, Math.min(r.top, innerHeight - h - 8));
+      left = r.right + 6;
+      if (left + w > innerWidth - 8) {
+        left = r.left - w - 6;
+      }
+    }
     left = Math.min(Math.max(8, left), innerWidth - w - 8);
-    const above = top < r.top;
+    const above = side === 'below' && top < r.top;
     setPos({ top, left, origin: `${Math.round(r.left + r.width / 2 - left)}px ${above ? h : 0}px` });
-  }, [anchor, align, children]);
+  }, [anchor, align, side, children]);
 
   useEffect(() => {
     const down = (e: MouseEvent) => {
       const t = e.target as Node;
-      if (!ref.current?.contains(t) && !anchor?.contains(t)) {
+      const inFlyout = t instanceof Element && t.closest('[data-menu-flyout]') !== null;
+      if (!ref.current?.contains(t) && !anchor?.contains(t) && !inFlyout) {
         onClose();
       }
     };

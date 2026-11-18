@@ -25,12 +25,27 @@ export interface MenuItem {
 const isItem = (x: MenuItem | false | null): x is MenuItem => !!x;
 
 /** A menu item that opens a group of choices beneath it. */
+/**
+ * A menu item that opens its choices in a flyout beside it. The flyout opens on hover (and on click, for touch and keyboard), and
+ * stays open while the pointer is on either the item or the flyout.
+ */
 function SubMenu({ item, onChosen }: { item: MenuItem & { submenu: MenuItem[] }; onChosen: () => void }) {
   const [open, setOpen] = useState(false);
+  const row = useRef<HTMLDivElement>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const panel = useId();
+  const stay = () => {
+    if (timer.current) {
+      clearTimeout(timer.current);
+    }
+  };
+  const later = () => {
+    stay();
+    timer.current = setTimeout(() => setOpen(false), 150);
+  };
 
   return (
-    <>
+    <div ref={row} className="menu-sub-row" onMouseEnter={() => (stay(), setOpen(true))} onMouseLeave={later}>
       <Button
         variant="ghost"
         type="button"
@@ -45,28 +60,44 @@ function SubMenu({ item, onChosen }: { item: MenuItem & { submenu: MenuItem[] };
         <span>{item.label}</span>
         <Icon name="right" size={14} className={`menu-chev${open ? ' is-open' : ''}`} />
       </Button>
-      {open && (
-        <div id={panel} role="group" aria-label={item.label} className="menu-sub">
-          {item.submenu.map((choice, j) => (
-            <Button
-              key={j}
-              variant="ghost"
-              type="button"
-              role="menuitemradio"
-              aria-checked={!!choice.checked}
-              className="menu-sub-item"
-              onClick={() => {
-                onChosen();
-                choice.onSelect?.();
-              }}
-            >
-              <span>{choice.label}</span>
-              {choice.checked && <Icon name="check" size={14} className="menu-check" />}
-            </Button>
-          ))}
-        </div>
+      {open && row.current && (
+        <Popover
+          anchor={row.current}
+          onClose={() => setOpen(false)}
+          side="beside"
+          label={item.label}
+          className="menu menu-flyout"
+        >
+          <div
+            id={panel}
+            role="group"
+            aria-label={item.label}
+            data-menu-flyout
+            className="menu-sub"
+            onMouseEnter={stay}
+            onMouseLeave={later}
+          >
+            {item.submenu.map((choice, j) => (
+              <Button
+                key={j}
+                variant="ghost"
+                type="button"
+                role="menuitemradio"
+                aria-checked={!!choice.checked}
+                className="menu-sub-item"
+                onClick={() => {
+                  onChosen();
+                  choice.onSelect?.();
+                }}
+              >
+                <span>{choice.label}</span>
+                {choice.checked && <Icon name="check" size={14} className="menu-check" />}
+              </Button>
+            ))}
+          </div>
+        </Popover>
       )}
-    </>
+    </div>
   );
 }
 
