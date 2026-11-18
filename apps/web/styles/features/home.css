@@ -3,15 +3,10 @@
  * the membership ring and the sessions table. Colours come from tokens.css only, so light and dark themes both apply.
  */
 
-/* Stat cards: an info icon beside the label, and a change chip under the number. */
-.stat-info {
-  color: var(--text-3);
-  display: inline-flex;
-  cursor: help;
-  flex: none;
-}
-.stat-change {
+/* Stat cards: the label on the left and the change chip on the top right, with the number below. */
+.stat-top .stat-change {
   display: flex;
+  margin-left: auto;
 }
 .stat-change .pill {
   font-size: var(--fs-s);
