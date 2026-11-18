@@ -10,7 +10,10 @@ const notFound = vi.hoisted(() =>
   }),
 );
 const session = vi.hoisted(() => ({
-  current: null as null | { user: { id: string; email: string; name: string }; memberships: Membership[] },
+  current: null as null | {
+    user: { id: string; email: string; name: string; firstName: string; lastName: string | null; clockFormat: null };
+    memberships: Membership[];
+  },
   camp: null as Membership | null,
 }));
 const services = vi.hoisted(() => ({
