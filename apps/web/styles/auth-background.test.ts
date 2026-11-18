@@ -15,7 +15,7 @@ const block = (selector: string): string => {
   return tokens.slice(start, end);
 };
 
-const BACKGROUND_TOKENS = ['--hero-bg', '--hero-fg', '--hero-fg-2', '--auth-glow', '--auth-stars', '--auth-dots'];
+const BACKGROUND_TOKENS = ['--hero-bg', '--hero-fg', '--hero-fg-2', '--auth-glow', '--auth-stars', '--auth-tint', '--auth-dots'];
 
 describe('sign-in background tokens', () => {
   it('the light theme (:root) defines the hero background, its text, the coral glow and the dot grid', () => {
@@ -40,6 +40,12 @@ describe('sign-in background tokens', () => {
   it('the layout reads the tokens in CSS, not inline', () => {
     expect(auth).toContain('var(--auth-glow), var(--auth-stars), var(--hero-bg)');
     expect(auth).toContain('radial-gradient(var(--auth-dots) 1px');
-    expect(auth).toContain('background-color: var(--bg)');
+    expect(auth).toContain('background-color: var(--auth-tint)');
+  });
+
+  it('the light theme tints the form side teal and draws darker teal stars, the dark theme tints it coral-orange', () => {
+    expect(block(':root')).toContain('--auth-tint: #d6eeeb;');
+    expect(block(':root')).toContain('rgba(10,79,81,.6)');
+    expect(block('[data-theme="dark"]')).toContain('--auth-tint: #3d2619;');
   });
 });

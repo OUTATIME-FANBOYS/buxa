@@ -1,6 +1,6 @@
 /* ---------- Auth ---------- */
 /* The dot grid sits on the page. The hero covers the left column, so the dots show on the form side (and on the whole page on a phone). */
-.auth { min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); background-color: var(--bg); background-image: radial-gradient(var(--auth-dots) 1px, transparent 1.5px); background-size: 22px 22px; }
+.auth { min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); background-color: var(--auth-tint); background-image: radial-gradient(var(--auth-dots) 1px, transparent 1.5px); background-size: 22px 22px; }
 /* The card's one column is minmax(0, 1fr): an implicit auto column sized by a nowrap button made the card 343px inside a 294px box on a phone. */
 .auth-card { width: min(400px, calc(100% - 2 * var(--s4))); place-self: center; margin: var(--s5) 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-3); padding: var(--s6); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s4); box-shadow: var(--shadow); }
 .auth-brand { display: none; }
