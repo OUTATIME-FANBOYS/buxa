@@ -27,7 +27,7 @@ describe('phone layout for check-in, on site and the log', () => {
 
   it('on site cards keep the name and the compact check-out button in one row, and the dialog buttons share a row', () => {
     expect(phoneBlock).not.toContain('.onsite-head { flex-direction: column; align-items: stretch; }');
-    expect(phoneBlock).toContain('.checkout-actions .btn { flex: 1 1 0; }');
+    expect(phoneBlock).toContain('.checkout-actions .button { flex: 1 1 0; }');
     expect(tsx('attendance/OnSiteRow.tsx')).toContain('onsite-btn');
     expect(tsx('attendance/CheckOutPanel.tsx')).toContain('className="checkout-actions"');
   });

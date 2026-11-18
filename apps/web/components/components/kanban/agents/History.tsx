@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Avatar } from '@/components/elements/export';
+import { Avatar, Button } from '@/components/elements/export';
 import { Empty } from '@/components/components/export';
 import { Icon } from '@/components/elements/export';
 import { Menu } from '@/components/components/export';
@@ -32,7 +32,7 @@ export function History({ proposals, agents }: { proposals: Proposal[]; agents: 
         <select aria-label="Filter by outcome" value={status} onChange={e => setStatus(e.target.value as 'all' | ProposalStatus)} className="inline-select">
           <option value="all">All outcomes</option>{(['applied', 'approved', 'rejected', 'blocked', 'reverted'] as ProposalStatus[]).map(x => <option key={x} value={x}>{STATUS_LABEL[x]}</option>)}</select>
         {agents.length > 1 && <select aria-label="Filter by agent" value={agent} onChange={e => setAgent(e.target.value)} className="inline-select"><option value="all">All agents</option>{agents.map(a => <option key={a.userId} value={a.userId}>{s.users.find(u => u.id === a.userId)?.name}</option>)}</select>}
-        <span className="grow" /><button className="btn btn-sm" onClick={exportAudit} disabled={!proposals.length}><Icon name="download" size={15} />Export audit log</button>
+        <span className="grow" /><Button size="sm" onClick={exportAudit} disabled={!proposals.length}><Icon name="download" size={15} />Export audit log</Button>
       </div>
       {!groups.length ? <Empty icon="inbox" title="No history yet" body="Everything an agent does, and every decision you make, is recorded here." /> : (
         <div className="run-list">{groups.map(g => {

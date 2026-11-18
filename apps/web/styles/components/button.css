@@ -1,0 +1,128 @@
+/* ---------- Buttons ----------
+ * Rendered by components/elements/Button.tsx, which is the only place that builds these class names.
+ *
+ * The classes button, button--primary, button--outline ... are HeroUI's (buttonVariants from @heroui/styles).
+ * HeroUI's own button.css is written with @apply on unprefixed Tailwind utilities, which the prefixed build
+ * (styles/tailwind.css) cannot read, so its rules are written here in plain CSS. Colours come only from the
+ * HeroUI names in heroui-theme.css, which point at tokens.css. The buxa-button classes add Buxa's sizes and shapes.
+ *
+ * States: hover (only on a device that hovers), pressed (:active or data-pressed), focus-visible, disabled.
+ * Touch: every size is at least 44px tall on a coarse pointer, so thinner desktop sizes stay easy to tap.
+ */
+.button {
+  --button-bg: transparent;
+  --button-bg-hover: var(--button-bg);
+  --button-bg-pressed: var(--button-bg-hover);
+  --button-fg: var(--text);
+  --button-edge: transparent;
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  width: fit-content;
+  height: var(--control-h);
+  padding: 0 var(--s4);
+  border: 1px solid var(--button-edge);
+  border-radius: var(--r-1);
+  background-color: var(--button-bg);
+  color: var(--button-fg);
+  font: inherit;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  transition: transform .25s var(--ease-out), background-color .12s var(--ease), border-color .12s var(--ease), color .12s var(--ease);
+}
+
+/* Variants: each sets the colours it uses and nothing else. */
+.button--primary {
+  --button-bg: var(--accent);
+  --button-bg-hover: var(--accent-hover);
+  --button-bg-pressed: var(--accent-hover);
+  --button-fg: var(--accent-foreground);
+  --button-edge: var(--accent);
+}
+.button--outline {
+  --button-bg: var(--surface);
+  --button-bg-hover: var(--default-hover);
+  --button-bg-pressed: var(--default-hover);
+  --button-fg: var(--text);
+  --button-edge: var(--border);
+  box-shadow: var(--shadow-1);
+}
+.button--ghost {
+  --button-bg: transparent;
+  --button-bg-hover: var(--default-hover);
+  --button-bg-pressed: var(--default-hover);
+  --button-fg: var(--text-2);
+}
+.button--danger {
+  --button-bg: var(--danger);
+  --button-bg-hover: var(--danger-hover);
+  --button-bg-pressed: var(--danger-hover);
+  --button-fg: var(--danger-foreground);
+  --button-edge: var(--danger);
+}
+/* Text-only destructive action (Revoke, Disconnect, Reset demo data): the ghost shape in the danger colour. */
+.buxa-button--danger-text {
+  --button-fg: var(--crit);
+  --button-bg-hover: var(--danger-soft);
+  --button-bg-pressed: var(--danger-soft-hover);
+}
+
+/* Hover: only where the pointer hovers, so a tap on a phone does not leave a stuck colour. */
+@media (hover: hover) {
+  .button:hover:not(:disabled), .button[data-hovered="true"]:not([data-disabled="true"]) { background-color: var(--button-bg-hover); }
+  .button--ghost:hover:not(:disabled), .button--ghost[data-hovered="true"] { --button-fg: var(--text); }
+  .buxa-button--danger-text:hover:not(:disabled) { --button-fg: var(--crit); }
+}
+
+/* Pressed: a slight shrink and the pressed colour. */
+.button:active:not(:disabled), .button[data-pressed="true"] {
+  background-color: var(--button-bg-pressed);
+  transform: scale(.97);
+  transition-duration: .08s;
+}
+
+/* Focus: a visible ring that does not depend on the button's colour. */
+.button:focus-visible, .button[data-focus-visible="true"] {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Disabled: faded, no pointer, no hover or press. */
+.button:disabled, .button[aria-disabled="true"], .button[data-disabled="true"] {
+  opacity: .5;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Sizes. Default (md) is the 44px control height used by inputs and selects. */
+.button--sm { height: 30px; padding: 0 var(--s3); }
+.buxa-button--header { height: 36px; padding: 0 var(--s4); }
+.button--full-width { width: 100%; }
+
+/* Round icon-only: functional actions (more, settings, delete, close). A transparent circle until hovered. */
+.button--icon-only, .buxa-button--icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 999px;
+  flex: none;
+}
+
+/* Touch: 44px on a coarse pointer, whatever the desktop size. */
+@media (pointer: coarse) {
+  .button--sm, .buxa-button--header, .button--icon-only, .buxa-button--icon { height: var(--control-touch); }
+  .button--icon-only, .buxa-button--icon { width: var(--control-touch); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button { transition: background-color .12s var(--ease), border-color .12s var(--ease), color .12s var(--ease); }
+  .button:active, .button[data-pressed="true"] { transform: none; }
+}

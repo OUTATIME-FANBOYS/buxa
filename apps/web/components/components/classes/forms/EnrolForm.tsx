@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useRef } from 'react';
-import { Field } from '@/components/elements/export';
+import { Field, Button } from '@/components/elements/export';
 import { fieldError, idle } from '@buxa/shared';
 import { enrolAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
@@ -48,11 +48,11 @@ export function EnrolForm({ classId, sessionId, campers, full, canOverride }: {
         {full ? (
           <p className="muted">This session is full. A camper can join the waitlist instead.</p>
         ) : (
-          <button type="submit" name="intent" value="enrol" className="btn btn-primary classes-target" disabled={pending || noCampers}>Enrol camper</button>
+          <Button variant="primary" type="submit" name="intent" value="enrol" className="classes-target" disabled={pending || noCampers}>Enrol camper</Button>
         )}
-        <button type="submit" name="intent" value="waitlist" className={`btn classes-target ${full ? 'btn-primary' : ''}`} disabled={pending || noCampers}>
+        <Button type="submit" name="intent" value="waitlist" variant={full ? 'primary' : 'secondary'} className="classes-target" disabled={pending || noCampers}>
           Add to waitlist
-        </button>
+        </Button>
       </div>
       <ActionMessage state={state} />
     </form>

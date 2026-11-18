@@ -7,3 +7,5 @@ export * from './Menu';
 export * from './Notice';
 export * from './PageHeader';
 export * from './Popover';
+/** The app's error and not-found pages reach Button through this barrel: app may import components, not elements. */
+export { Button } from '@/components/elements/export';

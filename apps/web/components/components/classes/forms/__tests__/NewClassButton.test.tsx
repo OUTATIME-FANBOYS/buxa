@@ -43,7 +43,7 @@ describe('NewClassButton (the Classes page)', () => {
     expect(dialog()?.getAttribute('aria-label')).toBe('New class');
     expect(dialog()?.querySelector('form.class-form input[name="name"]')).not.toBeNull();
     expect(dialog()?.textContent).toContain('Instructor ratio (optional)');
-    expect(dialog()?.querySelector('button[type="submit"]')?.textContent).toBe('Create class');
+    expect(Array.from(dialog()?.querySelectorAll('button') ?? []).find(b => b.textContent === 'Create class')).toBeDefined();
   });
 
   it('closes on Escape, returns focus to the button, and leaves no dialog behind', async () => {

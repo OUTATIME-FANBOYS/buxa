@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import Link from 'next/link';
-import { Icon } from '@/components/elements/export';
+import { Button, Icon } from '@/components/elements/export';
 import { Popover } from './Popover';
 
 /** An action (`onSelect`) or a link (`href`). A link item navigates; it needs no `onSelect`. */
@@ -10,13 +10,15 @@ export interface MenuItem { label: string; icon?: string; onSelect?: () => void;
 
 const isItem = (x: MenuItem | false | null): x is MenuItem => !!x;
 
-export function Menu({ label, trigger, items, align = 'end', className = 'icon-btn', header }: {
-  label: string; trigger: ReactNode; items: (MenuItem | false | null)[]; align?: 'start' | 'end'; className?: string;
+export function Menu({ label, trigger, items, align = 'end', className, header }: {
+  label: string; trigger: ReactNode; items: (MenuItem | false | null)[]; align?: 'start' | 'end';
+  /** Extra classes for the round trigger button. */
+  className?: string;
   /** A line of text above the items. It is not a menu item and cannot be chosen. */
   header?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const btn = useRef<HTMLButtonElement>(null);
+  const btn = useRef<HTMLElement>(null);
   const close = useCallback(() => setOpen(false), []);
   const list = items.filter(isItem);
   const onKey = (e: KeyboardEvent) => {
@@ -38,17 +40,16 @@ export function Menu({ label, trigger, items, align = 'end', className = 'icon-b
 
   return (
     <>
-      <button ref={btn} type="button" className={className} aria-label={label} aria-haspopup="menu" aria-expanded={open}
-        onClick={e => {
-          e.stopPropagation(); setOpen(o => !o);
-        }}
+      {/* onPress stops the press from reaching a card or row the menu sits in, as the old stopPropagation did. */}
+      <Button ref={btn} variant="icon" className={className} aria-label={label} aria-haspopup="menu" aria-expanded={open}
+        onPress={() => setOpen(o => !o)}
         onKeyDown={e => {
           if (e.key === 'ArrowDown' && !open) {
             e.preventDefault(); setOpen(true);
           }
         }}>
         {trigger}
-      </button>
+      </Button>
       {open && (
         <Popover anchor={btn.current} onClose={close} align={align} label={label} className="menu">
           <div role="menu" aria-label={label} onKeyDown={onKey} onClick={e => e.stopPropagation()}>

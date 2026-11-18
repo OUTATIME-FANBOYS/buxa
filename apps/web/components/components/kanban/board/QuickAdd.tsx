@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { Column, Project } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
+import { Button } from '@/components/elements/export';
 
 export function QuickAdd({ project, column, onDone }: { project: Project; column: Column; onDone: () => void }) {
   const { actions, me } = useStore(); const [v, setV] = useState(''); const [err, setErr] = useState('');
@@ -29,7 +30,7 @@ export function QuickAdd({ project, column, onDone }: { project: Project; column
           }
         }} />
       {err && <span className="field-error" role="alert">{err}</span>}
-      <div className="row"><button className="btn btn-primary btn-sm" onClick={submit}>Add</button><button className="btn btn-ghost btn-sm" onClick={onDone}>Done</button><span className="muted small grow" style={{ textAlign: 'right' }}>Enter to add</span></div>
+      <div className="row"><Button variant="primary" size="sm" onClick={submit}>Add</Button><Button variant="ghost" size="sm" onClick={onDone}>Done</Button><span className="muted small grow" style={{ textAlign: 'right' }}>Enter to add</span></div>
     </div>
   );
 }

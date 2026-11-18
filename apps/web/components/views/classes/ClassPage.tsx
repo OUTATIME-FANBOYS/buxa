@@ -11,6 +11,7 @@ import { EnrolmentTable } from '@/components/components/classes/export';
 import { SessionTable, instructorNames } from '@/components/components/classes/export';
 import { formatCampDateTime } from '@buxa/shared';
 import { EnrolForm } from '@/components/components/classes/forms/export';
+import { Button } from '@/components/elements/export';
 
 const pick = (value: string | string[] | undefined): string | null => (typeof value === 'string' && isUuid(value) ? value : null);
 
@@ -53,7 +54,7 @@ export async function ClassPage({ classId, searchParams }: {
       <PageHeader
         title={cls.name}
         subtitle={cls.description || 'No description yet.'}
-        actions={canManage && <Link className="btn btn-primary classes-target" href={newSessionPath(cls.id)}>Add session</Link>}
+        actions={canManage && <Button variant="primary" className="classes-target" href={newSessionPath(cls.id)}>Add session</Button>}
       />
 
       <dl className="people-facts classes-facts">
@@ -67,7 +68,7 @@ export async function ClassPage({ classId, searchParams }: {
         {sessions.length === 0 ? (
           <Empty icon="calendar" title="No sessions yet"
             body={canManage ? 'Add the first session, with its time, place and instructors.' : 'No sessions are scheduled for this class yet.'}
-            action={canManage && <Link className="btn btn-primary classes-target" href={newSessionPath(cls.id)}>Add session</Link>} />
+            action={canManage && <Button variant="primary" className="classes-target" href={newSessionPath(cls.id)}>Add session</Button>} />
         ) : (
           <SessionTable classId={cls.id} sessions={sessions} timeZone={timeZone} clockFormat={clockFormat} selectedId={selected?.id ?? null} />
         )}

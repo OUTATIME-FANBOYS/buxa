@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Dialog } from '@/components/components/export';
-import { Field } from '@/components/elements/export';
+import { Field, Button } from '@/components/elements/export';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { useStore } from '@buxa/middleware/providers/providers';
 
@@ -31,7 +31,7 @@ export function AgentDialog({ onClose }: { onClose: () => void }) {
         <fieldset className="field"><legend className="field-label">Projects it may touch</legend>
           {projects.map(p => <label key={p.id} className="check-row"><input type="checkbox" checked={scope.includes(p.id)} onChange={() => setScope(x => (x.includes(p.id) ? x.filter(i => i !== p.id) : [...x, p.id]))} /><span>{p.name}</span></label>)}
         </fieldset>
-        <div className="row-end"><button type="button" className="btn" onClick={onClose}>Cancel</button><button className="btn btn-primary">Add agent</button></div>
+        <div className="row-end"><Button type="button" onClick={onClose}>Cancel</Button><Button variant="primary">Add agent</Button></div>
       </form>
     </Dialog>
   );

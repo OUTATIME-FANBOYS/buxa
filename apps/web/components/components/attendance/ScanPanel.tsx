@@ -3,6 +3,7 @@
 import { useRef, useState, type RefObject } from 'react';
 import { CameraScanner } from '@/components/components/scanner/export';
 import { ScanField, type ScanFieldHandle } from '@/components/components/scanner/export';
+import { Button } from '@/components/elements/export';
 
 interface Props { scanRef: RefObject<ScanFieldHandle | null>; disabled: boolean; onCode: (raw: string) => void }
 
@@ -19,10 +20,10 @@ export function ScanPanel({ scanRef, disabled, onCode }: Props) {
   return (
     <div className="scan-panel">
       <ScanField ref={scanRef} label="Scan a badge, or type a code" disabled={disabled} onScan={onCode} />
-      <button ref={toggle} type="button" className="btn btn-primary btn-camera att-btn-lg" aria-expanded={camera} aria-controls="camera-scanner"
+      <Button variant="primary" ref={toggle} type="button" className="btn-camera att-btn-lg" aria-expanded={camera} aria-controls="camera-scanner"
         onClick={() => (camera ? closeCamera() : setCamera(true))}>
         {camera ? 'Close camera' : 'Scan with camera'}
-      </button>
+      </Button>
       {camera && (
         <div id="camera-scanner" className="camera-slot">
           <CameraScanner onScan={raw => {

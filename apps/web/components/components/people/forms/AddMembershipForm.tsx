@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useRef } from 'react';
-import { Field } from '@/components/elements/export';
+import { Field, Button } from '@/components/elements/export';
 import { fieldError, idle } from '@buxa/shared';
 import { addMembershipAction } from '@/actions/people';
 import { FormMessage } from './FormMessage';
@@ -33,7 +33,7 @@ export function AddMembershipForm({ personId }: { personId: string }) {
         </Field>
       </div>
       <FormMessage state={state} />
-      <div><button className="btn" disabled={pending}>{pending ? 'Adding…' : 'Add membership'}</button></div>
+      <div><Button disabled={pending}>{pending ? 'Adding…' : 'Add membership'}</Button></div>
     </form>
   );
 }

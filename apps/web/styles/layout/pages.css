@@ -36,5 +36,5 @@
 .pc-row { display: flex; justify-content: space-between; margin-bottom: 6px; } .pc-foot { display: flex; justify-content: space-between; align-items: center; }
 dl.keys, .roles dl { display: grid; gap: var(--s3); } .keys > div, .roles dl > div { display: flex; justify-content: space-between; gap: var(--s4); } .roles dt { font-weight: 600; }
 .empty { display: grid; justify-items: center; gap: var(--s2); text-align: center; padding: var(--s6) var(--s5); color: var(--text-2); } .empty strong { color: var(--text); font-size: 15px; } .empty p { max-width: 340px; }
-.empty-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-deep); display: grid; place-items: center; margin-bottom: var(--s2); } .empty .btn { margin-top: var(--s3); }
+.empty-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-deep); display: grid; place-items: center; margin-bottom: var(--s2); } .empty .button { margin-top: var(--s3); }
 .fatal { max-width: 480px; margin: 12vh auto; text-align: center; padding: var(--s4); }

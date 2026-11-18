@@ -1,7 +1,7 @@
 import type { Column, Project, Task } from '@buxa/shared';
 import type { BoardDnd } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Icon } from '@/components/elements/export';
+import { Icon, Button } from '@/components/elements/export';
 import { Menu } from '@/components/components/export';
 import type { useBoardDnd } from '@buxa/middleware/hooks/hooks';
 import { QuickAdd } from './QuickAdd';
@@ -27,7 +27,7 @@ export function BoardColumn({ col, index, project, items, readOnly, dnd, adding,
         {!readOnly && <span className="grip" aria-hidden="true"><Icon name="grip" size={14} /></span>}
         <i className={`kind-dot kind-${col.kind}`} aria-hidden="true" /><h2>{col.name}</h2><span className="count" aria-label={`${items.length} tasks`}>{items.length}</span>
         <span className="grow" />
-        {!readOnly && <button className="icon-btn" aria-label={`Add task to ${col.name}`} onClick={onAdd}><Icon name="plus" /></button>}
+        {!readOnly && <Button variant="icon" aria-label={`Add task to ${col.name}`} onClick={onAdd}><Icon name="plus" /></Button>}
         {!readOnly && <Menu label={`Column options for ${col.name}`} trigger={<Icon name="more" />} items={[
           { label: 'Edit column', icon: 'edit', onSelect: onEdit },
           { label: 'Move left', icon: 'arrowLeft', disabled: index === 0, onSelect: () => actions.moveColumn(project.id, col.id, project.columns[index - 1].id) },

@@ -5,7 +5,7 @@ import { Dialog } from '@/components/components/export';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { fieldError, idle } from '@buxa/shared';
 import { renameCampAction } from '@/actions/camp';
-import { TextField } from '@/components/elements/export';
+import { TextField, Button } from '@/components/elements/export';
 
 const FORM_ID = 'rename-camp';
 
@@ -28,7 +28,7 @@ export function RenameCampDialog({ campId, currentName, onClose }: { campId: str
 
   return (
     <Dialog title="Rename camp" onClose={onClose}
-      footer={<><button type="button" className="btn" onClick={onClose}>Cancel</button><button className="btn btn-primary" form={FORM_ID} disabled={pending}>{pending ? 'Saving…' : 'Save'}</button></>}>
+      footer={<><Button type="button" onClick={onClose}>Cancel</Button><Button variant="primary" form={FORM_ID} disabled={pending}>{pending ? 'Saving…' : 'Save'}</Button></>}>
       <form id={FORM_ID} action={formAction}>
         <input type="hidden" name="campId" value={campId} />
         <TextField label="Camp name" name="name" value={name} onChange={setName} error={fieldError(state, 'name')} maxLength={120} autoFocus />

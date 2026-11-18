@@ -1,5 +1,5 @@
 import type { Project, Task } from '@buxa/shared';
-import { Icon } from '@/components/elements/export';
+import { Icon, Button } from '@/components/elements/export';
 import { Menu } from '@/components/components/export';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
 import { useTaskCommands } from '@buxa/middleware/hooks/hooks';
@@ -16,7 +16,7 @@ export function TaskDrawerHeader({ task, project, readOnly, onClose, onDelete }:
         { label: 'Duplicate', icon: 'copy', onSelect: () => openTask(cmd.duplicate(task)) },
         { label: task.archived ? 'Restore' : 'Archive', icon: 'archive', onSelect: () => cmd.toggleArchive(task) },
         { label: '', divider: true, onSelect() {} }, { label: 'Delete', icon: 'trash', danger: true, onSelect: onDelete }]} />}
-      <button className="icon-btn" onClick={onClose} aria-label="Close task"><Icon name="x" /></button>
+      <Button variant="icon" onClick={onClose} aria-label="Close task"><Icon name="x" /></Button>
     </div>
   );
 }

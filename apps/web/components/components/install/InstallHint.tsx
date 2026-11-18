@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Icon } from '@/components/elements/export';
+import { Icon, Button } from '@/components/elements/export';
 import { browserStorage, readDismissed, writeDismissed } from '@buxa/shared/install/dismissal';
 import { PHONE_QUERY, installPlatform, shouldShowInstallHint, type InstallPlatform } from '@buxa/shared/install/installRules';
 
@@ -62,8 +62,8 @@ export function InstallHint() {
         )}
       </div>
       <div className="install-hint-actions">
-        {prompt && platform === 'android' && <button type="button" className="btn btn-primary" onClick={install}>Install</button>}
-        <button type="button" className="btn btn-ghost" onClick={dismiss}>Not now</button>
+        {prompt && platform === 'android' && <Button variant="primary" type="button" onClick={install}>Install</Button>}
+        <Button variant="ghost" type="button" onClick={dismiss}>Not now</Button>
       </div>
     </aside>
   );

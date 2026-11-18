@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useState, type FormEvent } from 'react';
+import { Button } from '@/components/elements/export';
 
 interface Props { busy: boolean; onSubmit: (reason: string) => void }
 
@@ -24,7 +25,7 @@ export function OverrideForm({ busy, onSubmit }: Props) {
         <textarea id={fieldId} rows={3} value={reason} onChange={event => setReason(event.target.value)} maxLength={500} />
         <span className="field-hint">This is written on the record with the check-in.</span>
       </label>
-      <button type="submit" className="btn btn-danger att-btn-lg" disabled={busy || trimmed === ''}>Check in anyway</button>
+      <Button variant="danger" type="submit" className="att-btn-lg" disabled={busy || trimmed === ''}>Check in anyway</Button>
     </form>
   );
 }

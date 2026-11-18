@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
+import { Button } from '@/components/elements/export';
 
 /** A comment box with @mention suggestions drawn from the workspace members. */
 export function CommentComposer({ taskId, members }: { taskId: string; members: { id: string; name: string }[] }) {
@@ -29,7 +30,7 @@ export function CommentComposer({ taskId, members }: { taskId: string; members: 
           }
         }} />
       {suggestions.length > 0 && <ul className="mentions" role="listbox">{suggestions.map(m => <li key={m.id}><button type="button" onClick={() => setComment(comment.replace(/@[\p{L}]*$/u, '@' + m.name.split(' ')[0] + ' '))}>{m.name}</button></li>)}</ul>}
-      <div className="row-end"><span className="muted small grow">⌘ Enter to send</span><button className="btn btn-primary btn-sm" onClick={send} disabled={!comment.trim()}>Comment</button></div>
+      <div className="row-end"><span className="muted small grow">⌘ Enter to send</span><Button variant="primary" size="sm" onClick={send} disabled={!comment.trim()}>Comment</Button></div>
     </div>
   );
 }

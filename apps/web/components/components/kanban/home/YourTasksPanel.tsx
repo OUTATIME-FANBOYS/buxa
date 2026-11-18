@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Task } from '@buxa/shared';
 import { boardPath, ROUTES } from '@/config/routes';
+import { Button } from '@/components/elements/export';
 
 const SHOWN = 5;
 
@@ -23,7 +24,7 @@ export function YourTasksPanel({ tasks }: { tasks: readonly Task[] }) {
       )}
       {tasks.length > SHOWN && <p className="muted small">and {tasks.length - SHOWN} more</p>}
       <p className="muted small">Demo tasks, kept in this browser and separate from the camp.</p>
-      <Link className="btn" href={ROUTES.boards}>Open boards</Link>
+      <Button href={ROUTES.boards}>Open boards</Button>
     </section>
   );
 }

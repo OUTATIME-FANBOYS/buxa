@@ -2,7 +2,7 @@
 
 import { useRef, useState, type ReactNode } from 'react';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Field } from '@/components/elements/export';
+import { Field, Button } from '@/components/elements/export';
 import { Segmented } from '@/components/elements/export';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { ROUTES } from '@/config/routes';
@@ -34,7 +34,7 @@ export function Settings({ clock }: { clock?: ReactNode }) {
             <Field label="Name" error={err}><input value={name} onChange={e => setName(e.target.value)} maxLength={60} /></Field>
             <Field label="Role or title"><input value={title} onChange={e => setTitle(e.target.value)} maxLength={60} /></Field>
             <Field label="Email"><input value={me?.email ?? ''} disabled /></Field>
-            <div><button className="btn btn-primary">Save profile</button></div>
+            <div><Button variant="primary">Save profile</Button></div>
           </form></section>
         <section className="panel"><h2>Appearance</h2>
           <Segmented<ThemePref> label="Theme" value={s.ui.theme} onChange={actions.setTheme} options={[{ value: 'system', label: 'System' }, { value: 'light', label: 'Light', icon: 'sun' }, { value: 'dark', label: 'Dark', icon: 'moon' }]} />
@@ -43,13 +43,13 @@ export function Settings({ clock }: { clock?: ReactNode }) {
         <section className="panel"><h2>Agents</h2>
           <p className="muted">Let AI agents add and update tasks on your boards. Their changes can wait for your approval, and every one is recorded. Leave this off and Buxa is a plain Kanban board.</p>
           <label className="check-row"><input type="checkbox" checked={on} onChange={e => actions.setAgentsEnabled(e.target.checked)} /><span>Turn on agents</span></label>
-          {on && <div className="row"><button className="btn" onClick={() => setAddAgent(true)}>Add an agent</button>{hasAgents && <a className="btn btn-ghost" href={ROUTES.agents}>Open Agents</a>}</div>}
+          {on && <div className="row"><Button onClick={() => setAddAgent(true)}>Add an agent</Button>{hasAgents && <Button variant="ghost" href={ROUTES.agents}>Open Agents</Button>}</div>}
           {addAgent && <AgentDialog onClose={() => setAddAgent(false)} />}
         </section>
         <section className="panel"><h2>Your data</h2>
           <p className="muted">Everything lives in this browser’s storage. Export a copy to back it up or move it to another device.</p>
-          <div className="row"><button className="btn" onClick={exportJson}>Export JSON</button>
-            <button className="btn" onClick={() => file.current?.click()}>Import JSON</button>
+          <div className="row"><Button onClick={exportJson}>Export JSON</Button>
+            <Button onClick={() => file.current?.click()}>Import JSON</Button>
             <input ref={file} type="file" accept="application/json" hidden onChange={async e => {
               const f = e.target.files?.[0]; if (!f) {
                 return;

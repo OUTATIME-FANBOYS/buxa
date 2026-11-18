@@ -1,9 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import { useActionState, useEffect, useRef } from 'react';
 import { CAMP_ROLES, CAMP_ROLE_LABELS } from '@buxa/domain';
-import { Field } from '@/components/elements/export';
+import { Field, Button } from '@/components/elements/export';
 import { ROUTES } from '@/config/routes';
 import { fieldError, idle } from '@buxa/shared';
 import { createPersonAction } from '@/actions/people';
@@ -115,9 +114,9 @@ export function NewPersonForm({ household, households, variant = 'page', onCance
       <FormMessage state={state} />
       <div className="person-actions">
         {inDialog
-          ? <button type="button" className="btn" onClick={onCancel}>Cancel</button>
-          : <Link className="btn" href={ROUTES.people}>Cancel</Link>}
-        <button className="btn btn-primary" disabled={pending}>{pending ? 'Adding…' : 'Add person'}</button>
+          ? <Button type="button" onClick={onCancel}>Cancel</Button>
+          : <Button href={ROUTES.people}>Cancel</Button>}
+        <Button variant="primary" disabled={pending}>{pending ? 'Adding…' : 'Add person'}</Button>
       </div>
     </form>
   );

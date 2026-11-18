@@ -5,7 +5,7 @@ import type { ClockFormat } from '@buxa/domain';
 import { idle } from '@buxa/shared';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { updateCampClockAction } from '@/actions/camp';
-import { Segmented } from '@/components/elements/export';
+import { Segmented, Button } from '@/components/elements/export';
 
 const OPTIONS: { value: ClockFormat; label: string; example: string }[] = [
   { value: '12h', label: '12-hour', example: '9:05 AM' },
@@ -38,7 +38,7 @@ export function CampClockPanel({ campId, clockFormat, canChange }: { campId: str
           <input type="hidden" name="clockFormat" value={format} />
           <Segmented<ClockFormat> label="Clock" value={format} onChange={setFormat} options={SEGMENTS} />
           {state.status === 'error' && <p className="field-error" role="alert">{state.message}</p>}
-          <div><button className="btn btn-primary" disabled={pending}>{pending ? 'Saving…' : 'Save clock'}</button></div>
+          <div><Button variant="primary" disabled={pending}>{pending ? 'Saving…' : 'Save clock'}</Button></div>
         </form>
       ) : (
         <p>{current.label} ({current.example}). Ask an admin to change it.</p>

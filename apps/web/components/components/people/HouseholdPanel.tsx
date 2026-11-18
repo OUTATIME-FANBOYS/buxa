@@ -1,9 +1,9 @@
-import Link from 'next/link';
 import type { Household } from '@buxa/contracts';
 import { ROUTES } from '@/config/routes';
 import { LinkHouseholdForm, type HouseholdOption, type PersonOption } from '@/components/components/people/forms/export';
 import { PersonFinder } from '@/components/components/people/forms/export';
 import { HouseholdMemberRow } from './HouseholdMemberRow';
+import { Button } from '@/components/elements/export';
 
 export interface HouseholdPanelProps {
   personId: string;
@@ -38,7 +38,7 @@ export function HouseholdPanel({ personId, households, householdOptions, canUpda
               <HouseholdMemberRow key={member.personId} member={member} householdId={household.id} canUpdate={canUpdate} />
             ))}
           </ul>
-          {canCreate && <p><Link className="btn btn-sm" href={`${ROUTES.newPerson}?household=${encodeURIComponent(household.id)}`}>Add a child to this household</Link></p>}
+          {canCreate && <p><Button size="sm" href={`${ROUTES.newPerson}?household=${encodeURIComponent(household.id)}`}>Add a child to this household</Button></p>}
         </div>
       ))}
       {canUpdate && householdOptions.length > 0 && (

@@ -33,7 +33,7 @@ describe('OnSiteRow card', () => {
     const html = renderToStaticMarkup(<OnSiteRow row={row} canRecord canOverride={false} />);
     expect(html).toContain('aria-expanded="false"');
     expect(html).toContain('aria-haspopup="dialog"');
-    expect(html).toMatch(/<button[^>]*class="btn btn-primary onsite-btn"[^>]*>Check out<\/button>/);
+    expect(html).toMatch(/<button[^>]*class="[^"]*button--primary[^"]*onsite-btn"[^>]*>Check out<\/button>/);
   });
 });
 

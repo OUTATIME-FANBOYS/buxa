@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { classPath } from '@/config/routes';
@@ -8,6 +7,7 @@ import { campZone } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_MANAGE } from '@buxa/shared';
 import { loadClassPage, loadPeopleWithRole } from '@buxa/server/composers/index.server';
 import { NewSessionForm } from '@/components/components/classes/forms/export';
+import { Button } from '@/components/elements/export';
 
 /** Add a session to one class. Viewers get the forbidden state and no form; an unknown class is not found. */
 export async function NewSession({ classId }: { classId: string }) {
@@ -19,7 +19,7 @@ export async function NewSession({ classId }: { classId: string }) {
     return (
       <div className="page">
         <Empty icon="alert" title="You cannot add sessions" body={FORBIDDEN_MANAGE}
-          action={<Link className="btn classes-target" href={classPath(classId)}>Back to the class</Link>} />
+          action={<Button className="classes-target" href={classPath(classId)}>Back to the class</Button>} />
       </div>
     );
   }

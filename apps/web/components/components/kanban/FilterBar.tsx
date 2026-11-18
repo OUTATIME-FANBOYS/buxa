@@ -1,6 +1,6 @@
 'use client';
 
-import { PriorityMark } from '@/components/elements/export';
+import { PriorityMark, Button } from '@/components/elements/export';
 import { useCallback, useRef, useState, type ReactNode } from 'react';
 import type { Filter, DueFilter, Project, Sort } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
@@ -44,7 +44,7 @@ export function FilterBar({ filter, setFilter, project, tags, showStatus = true 
     <div className="filters" role="group" aria-label="Filters and sorting">
       <div className="search-local"><Icon name="search" size={15} />
         <input value={filter.q} onChange={e => set({ q: e.target.value })} placeholder="Filter tasks" aria-label="Filter tasks by title or description" />
-        {filter.q && <button className="icon-btn" aria-label="Clear search" onClick={() => set({ q: '' })}><Icon name="x" size={13} /></button>}</div>
+        {filter.q && <Button variant="icon" aria-label="Clear search" onClick={() => set({ q: '' })}><Icon name="x" size={13} /></Button>}</div>
       <Chip label="Priority" count={filter.priorities.length}>
         {PRIORITIES.slice().reverse().map(p => <Check key={p} checked={filter.priorities.includes(p)} onChange={() => set({ priorities: toggle(filter.priorities, p) })}><PriorityMark priority={p} label /></Check>)}
       </Chip>
@@ -66,7 +66,7 @@ export function FilterBar({ filter, setFilter, project, tags, showStatus = true 
         items={SORT.map(x => ({ label: x.l, checked: filter.sort === x.v, onSelect: () => set({ sort: x.v }) }))} />
       <label className="chip chip-check"><input type="checkbox" checked={filter.archived} onChange={e => set({ archived: e.target.checked })} /> Archived</label>
       <span className="grow" />
-      {active && <button className="btn btn-ghost btn-sm" onClick={() => setFilter({ ...emptyFilter, sort: filter.sort })}>Clear</button>}
+      {active && <Button variant="ghost" size="sm" onClick={() => setFilter({ ...emptyFilter, sort: filter.sort })}>Clear</Button>}
       <Menu label="Saved filters" className="chip" align="end" trigger={<><Icon name="bookmark" size={13} />Saved{saved.length > 0 && <span className="chip-count">{saved.length}</span>}</>}
         items={[
           ...saved.map(f => ({ label: f.name, icon: 'filter', onSelect: () => {
@@ -87,7 +87,7 @@ export function FilterBar({ filter, setFilter, project, tags, showStatus = true 
               setNaming(false);
             }
           }} />
-          <button className="btn btn-primary btn-sm" disabled={!name.trim()}>Save</button><button type="button" className="btn btn-sm" onClick={() => setNaming(false)}>Cancel</button>
+          <Button variant="primary" size="sm" disabled={!name.trim()}>Save</Button><Button size="sm" type="button" onClick={() => setNaming(false)}>Cancel</Button>
         </form>
       )}
     </div>

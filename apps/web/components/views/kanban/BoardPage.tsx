@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Icon } from '@/components/elements/export';
+import { Icon, Button } from '@/components/elements/export';
 import { Avatar } from '@/components/elements/export';
 import { Empty } from '@/components/components/export';
 import { Progress } from '@/components/elements/export';
@@ -42,10 +42,10 @@ export function BoardPage({ projectId }: { projectId?: string }) {
   const visible = useMemo(() => sortTasks(all.filter(t => matchesFilter(t, filter, kindOf(t))), filter.sort), [all, filter, kindOf]);
 
   if (projectId && !target) {
-    return <Empty icon="alert" title="That project doesn’t exist" body="It may have been deleted." action={<button className="btn" onClick={() => router.push(ROUTES.projects)}>Back to projects</button>} />;
+    return <Empty icon="alert" title="That project doesn’t exist" body="It may have been deleted." action={<Button onClick={() => router.push(ROUTES.projects)}>Back to projects</Button>} />;
   }
   if (!target) {
-    return <Empty icon="folder" title="No projects yet" body="Create a project to get your first board." action={<button className="btn btn-primary" onClick={() => router.push(ROUTES.projects)}>Go to projects</button>} />;
+    return <Empty icon="folder" title="No projects yet" body="Create a project to get your first board." action={<Button variant="primary" onClick={() => router.push(ROUTES.projects)}>Go to projects</Button>} />;
   }
 
   const pr = progressOf(all, kindOf); const { done, total: liveCount, pct } = pr; const health = healthOf(pr, target.deadline);
@@ -66,12 +66,12 @@ export function BoardPage({ projectId }: { projectId?: string }) {
             <div className="proj-progress"><Progress value={pct} tone={HEALTH_TONE[health]} label="Project completion" /><span className="small"><strong>{Math.round(pct)}%</strong> complete · {done} of {liveCount} tasks</span></div>
             {left !== null && <span className={`small ${left < 0 ? 'text-crit' : 'muted'}`}>{left < 0 ? `Deadline passed ${-left}d ago` : left === 0 ? 'Due today' : `${left} days to ${fmt(target.deadline!)}`}</span>}
             <span className="avatars" aria-label={`${members.length} members`}>{members.slice(0, 5).map(m => <Avatar key={m.userId} user={m.user} size={24} />)}</span>
-            <button className="btn btn-ghost btn-sm" onClick={() => setEdit(true)}><Icon name="edit" size={14} />Edit</button>
+            <Button variant="ghost" size="sm" onClick={() => setEdit(true)}><Icon name="edit" size={14} />Edit</Button>
           </div>
         </div>
         <div className="page-actions">
           <Segmented<ViewKind> label="Board view" value={view} onChange={actions.setView} options={options} />
-          {!readOnly && <button className="btn btn-primary" onClick={() => openTask('new', { projectId: target.id })}><Icon name="plus" size={16} />Add task</button>}
+          {!readOnly && <Button variant="primary" onClick={() => openTask('new', { projectId: target.id })}><Icon name="plus" size={16} />Add task</Button>}
         </div>
       </header>
       <FilterBar filter={filter} setFilter={setFilter} project={target} tags={tags} />

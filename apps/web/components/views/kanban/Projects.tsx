@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Avatar } from '@/components/elements/export';
+import { Avatar, Button } from '@/components/elements/export';
 import { Empty } from '@/components/components/export';
 import { Menu } from '@/components/components/export';
 import { Pill } from '@/components/elements/export';
@@ -31,8 +31,8 @@ export function Projects() {
   return (
     <div className="page">
       <header className="page-head"><div className="page-title"><h1>Projects</h1><p className="muted">{workspace?.name} · {projects.length} project{projects.length === 1 ? '' : 's'}</p></div>
-        {!readOnly && <div className="page-actions"><button className="btn btn-primary" onClick={() => setDlg({})}><Icon name="plus" size={16} />New project</button></div>}</header>
-      {projects.length === 0 ? <Empty icon="folder" title="Start your first project" body="Each project gets its own Kanban board." action={!readOnly ? <button className="btn btn-primary" onClick={() => setDlg({})}>New project</button> : undefined} /> : (
+        {!readOnly && <div className="page-actions"><Button variant="primary" size="header" onClick={() => setDlg({})}><Icon name="plus" size={16} />New project</Button></div>}</header>
+      {projects.length === 0 ? <Empty icon="folder" title="Start your first project" body="Each project gets its own Kanban board." action={!readOnly ? <Button variant="primary" onClick={() => setDlg({})}>New project</Button> : undefined} /> : (
         <div className="cards-grid">
           {projects.map(p => {
             const pr = progressOf(wsTasks.filter(x => x.projectId === p.id), kindOf); const { done: d, total, pct: v } = pr; const h = healthOf(pr, p.deadline);

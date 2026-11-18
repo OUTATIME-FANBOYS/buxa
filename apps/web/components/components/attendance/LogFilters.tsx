@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { PersonSummary } from '@buxa/contracts';
 import { ROUTES } from '@/config/routes';
 import { attendanceDisplayName } from '@buxa/shared';
+import { Button } from '@/components/elements/export';
 
 interface LogFilterValues { from: string; to: string; personId: string }
 
@@ -24,7 +25,7 @@ export function LogFilters({ values, people, children }: { values: LogFilterValu
           {people.map(person => <option key={person.id} value={person.id}>{attendanceDisplayName(person)}</option>)}
         </select>
       </label>
-      <button type="submit" className="btn btn-primary">Show</button>
+      <Button variant="primary" type="submit">Show</Button>
       {children}
     </form>
   );

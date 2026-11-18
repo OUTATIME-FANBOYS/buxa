@@ -1,4 +1,5 @@
 import { personPath } from '@/config/routes';
+import { Button } from '@/components/elements/export';
 
 interface PersonFinderProps { personId: string; query: string }
 
@@ -13,7 +14,7 @@ export function PersonFinder({ personId, query }: PersonFinderProps) {
         <span className="field-label">Find someone by name</span>
         <input type="search" name="q" defaultValue={query} maxLength={80} autoComplete="off" />
       </label>
-      <button className="btn" type="submit">Search</button>
+      <Button type="submit">Search</Button>
     </form>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useRef } from 'react';
-import { Field } from '@/components/elements/export';
+import { Field, Button } from '@/components/elements/export';
 import { fieldError, idle } from '@buxa/shared';
 import { revokeMembershipAction } from '@/actions/people';
 import { FormMessage } from './FormMessage';
@@ -25,7 +25,7 @@ export function RevokeMembershipForm({ membershipId, personId }: { membershipId:
         <textarea name="reason" rows={2} maxLength={500} aria-invalid={reasonError ? true : undefined} />
       </Field>
       <FormMessage state={state} />
-      <div><button className="btn btn-danger" disabled={pending}>{pending ? 'Revoking…' : 'Revoke membership'}</button></div>
+      <div><Button variant="danger" disabled={pending}>{pending ? 'Revoking…' : 'Revoke membership'}</Button></div>
     </form>
   );
 }
