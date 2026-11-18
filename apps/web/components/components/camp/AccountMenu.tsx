@@ -8,8 +8,8 @@ import { Avatar } from '@/components/elements';
 import { Menu } from '@/components/components';
 import { signOut } from '@/actions/auth';
 import { updateTimeFormatAction } from '@/actions/account';
-import { useStore } from '@buxa/middleware/providers/providers';
 import { ROUTES } from '@/config/routes';
+import { useAppearance } from './useAppearance';
 
 const APPEARANCE: { value: ThemePref; label: string }[] = [
   { value: 'system', label: 'System' },
@@ -22,7 +22,7 @@ const APPEARANCE: { value: ThemePref; label: string }[] = [
  * Settings, Reports, then Sign out. Signing out is a Server Action submitted through a form.
  */
 export function AccountMenu({ user }: { user: User }) {
-  const { s, actions } = useStore();
+  const [theme, setTheme] = useAppearance();
   const form = useRef<HTMLFormElement>(null);
   // The browser's clock is read after mount, because the server cannot know it.
   const [browser, setBrowser] = useState<ClockFormat>('24h');
@@ -46,8 +46,8 @@ export function AccountMenu({ user }: { user: User }) {
             icon: 'sun',
             submenu: APPEARANCE.map(a => ({
               label: a.label,
-              checked: s.ui.theme === a.value,
-              onSelect: () => actions.setTheme(a.value),
+              checked: theme === a.value,
+              onSelect: () => setTheme(a.value),
             })),
           },
           {
