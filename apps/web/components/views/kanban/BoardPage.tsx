@@ -21,6 +21,7 @@ import type { Filter, ViewKind } from '@buxa/shared';
 import { useRouter } from 'next/navigation';
 import { ROUTES } from '@/config/routes';
 import { HEALTH_LABEL, HEALTH_TONE, healthOf, progressOf } from '@buxa/shared';
+import { requirePresent } from '@buxa/domain';
 
 export function BoardPage({ projectId }: { projectId?: string }) {
   const router = useRouter();
@@ -64,7 +65,7 @@ export function BoardPage({ projectId }: { projectId?: string }) {
           <div className="proj-meta">
             <Pill tone={HEALTH_TONE[health]}>{HEALTH_LABEL[health]}</Pill>
             <div className="proj-progress"><Progress value={pct} tone={HEALTH_TONE[health]} label="Project completion" /><span className="small"><strong>{Math.round(pct)}%</strong> complete · {done} of {liveCount} tasks</span></div>
-            {left !== null && <span className={`small ${left < 0 ? 'text-crit' : 'muted'}`}>{left < 0 ? `Deadline passed ${-left}d ago` : left === 0 ? 'Due today' : `${left} days to ${fmt(target.deadline!)}`}</span>}
+            {left !== null && <span className={`small ${left < 0 ? 'text-crit' : 'muted'}`}>{left < 0 ? `Deadline passed ${-left}d ago` : left === 0 ? 'Due today' : `${left} days to ${fmt(requirePresent(target.deadline, 'target.deadline'))}`}</span>}
             <span className="avatars" aria-label={`${members.length} members`}>{members.slice(0, 5).map(m => <Avatar key={m.userId} user={m.user} size={24} />)}</span>
             <button className="btn btn-ghost btn-sm" onClick={() => setEdit(true)}><Icon name="edit" size={14} />Edit</button>
           </div>
