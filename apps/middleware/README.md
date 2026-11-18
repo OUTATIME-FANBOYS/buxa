@@ -36,5 +36,16 @@ Tests sit in the `__tests__/` folders beside the code (`hooks/__tests__/`, `prov
 
 ## Diagrams
 
-- [Folders and import direction](docs/diagrams/middleware-structure.html)
-- [A hook sends an action and the store updates](docs/diagrams/middleware-action.html)
+Each preview links to the interactive diagram, which you can explore in the browser. The standalone HTML files are in `docs/diagrams/` if you want to download them.
+
+### Folders and import direction
+
+[![Folders and import direction, preview](docs/diagrams/middleware-structure.png)](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/apps/middleware/docs/diagrams/middleware-structure.html)
+
+[Open the interactive diagram](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/apps/middleware/docs/diagrams/middleware-structure.html)
+
+### A hook sends an action and the store updates
+
+[![A hook sends an action and the store updates, preview](docs/diagrams/middleware-action.png)](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/apps/middleware/docs/diagrams/middleware-action.html)
+
+[Open the interactive diagram](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/apps/middleware/docs/diagrams/middleware-action.html)
