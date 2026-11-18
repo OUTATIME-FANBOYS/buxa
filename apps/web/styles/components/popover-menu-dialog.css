@@ -84,7 +84,18 @@
 }
 .menu .menu-sub {
   display: grid;
-  padding-left: var(--s4);
+  padding-left: 0;
+}
+/* The flyout: as wide as its longest choice, and each choice's text starts at the left edge. */
+.menu.menu-flyout {
+  width: max-content;
+  min-width: 0;
+}
+.menu .menu-sub [role='menuitemradio'] {
+  justify-content: flex-start;
+  text-align: left;
+  width: auto;
+  min-width: 100%;
 }
 .menu [role='menuitemradio'] {
   box-sizing: border-box;
