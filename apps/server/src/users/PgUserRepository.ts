@@ -38,6 +38,40 @@ export class PgUserRepository implements UserRepository {
     });
   }
 
+  async updateName(userId: string, name: string): Promise<User> {
+    const { rows } = await withOrg(this.pool, null, db =>
+      db.query<User>('SELECT user_id AS id, user_email AS email, user_name AS name FROM buxa_set_user_name($1, $2)', [
+        userId,
+        name,
+      ]),
+    );
+    if (!rows[0]) {
+      throw new Error('no user to rename');
+    }
+
+    return rows[0];
+  }
+
+  async roleIn(orgId: string, userId: string): Promise<Membership['role'] | null> {
+    const { rows } = await withOrg(this.pool, orgId, db =>
+      db.query<{ role: Membership['role'] }>('SELECT role FROM org_members WHERE user_id = $1', [userId]),
+    );
+
+    return rows[0]?.role ?? null;
+  }
+
+  async renameMember(orgId: string, userId: string, name: string): Promise<User | null> {
+    const { rows } = await withOrg(this.pool, orgId, db =>
+      db.query<User>('SELECT user_id AS id, user_email AS email, user_name AS name FROM buxa_rename_member($1, $2, $3)', [
+        orgId,
+        userId,
+        name,
+      ]),
+    );
+
+    return rows[0] ?? null;
+  }
+
   archivedMembershipsOf(userId: string): Promise<Membership[]> {
     return withOrg(this.pool, null, async db => {
       const { rows } = await db.query<Membership>(

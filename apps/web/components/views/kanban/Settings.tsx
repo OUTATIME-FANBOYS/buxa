@@ -10,6 +10,7 @@ import { AgentDialog } from '@/components/components/kanban/dialogs/export';
 import { ResetDemoButton } from '@/components/components/kanban/export';
 import { ArchivedCampsCard, DangerZone } from '@/components/components/camp/export';
 import type { ArchivedCamp } from '@/actions/camp';
+import { updateProfileAction } from '@/actions/account';
 import type { ThemePref } from '@buxa/shared';
 
 /** The camp the settings are for. `canDelete` is the owner's right (org:delete); an archived camp shows no danger zone. */
@@ -39,6 +40,21 @@ export function Settings({
   const [addAgent, setAddAgent] = useState(false);
   const on = s.ui.agentsEnabled;
   const hasAgents = s.agents.length > 0;
+  // The name is saved to the signed-in account first: the greeting, the account menu and the team list read it from there.
+  // Only then does the board's own copy change, so it never shows a name the account does not have.
+  const saveProfile = async () => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      return setErr('Name can’t be empty.');
+    }
+    const saved = await updateProfileAction({ name: trimmed });
+    if (saved.status === 'error') {
+      return setErr(saved.fieldErrors?.name ?? saved.message);
+    }
+    actions.updateProfile({ name: trimmed, title: title.trim() || undefined });
+    setErr(null);
+    toast('Profile saved');
+  };
   const exportJson = () => {
     const url = URL.createObjectURL(new Blob([actions.exportData()], { type: 'application/json' }));
     const a = document.createElement('a');
@@ -63,12 +79,7 @@ export function Settings({
             noValidate
             onSubmit={e => {
               e.preventDefault();
-              if (!name.trim()) {
-                return setErr('Name can’t be empty.');
-              }
-              actions.updateProfile({ name: name.trim(), title: title.trim() || undefined });
-              setErr(null);
-              toast('Profile saved');
+              void saveProfile();
             }}
           >
             <Field label="Name" error={err}>

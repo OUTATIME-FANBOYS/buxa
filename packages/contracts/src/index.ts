@@ -67,6 +67,12 @@ export const OrgPatchInputSchema = z
   .refine(v => v.name !== undefined || v.timezone !== undefined || v.clockFormat !== undefined, 'Nothing to change.');
 export type OrgPatchInput = z.infer<typeof OrgPatchInputSchema>;
 
+/** The signed-in person's own name, from their profile. One field for now; the first and last name split comes later. */
+export const ProfileNameInputSchema = z.object({
+  name: z.string().trim().min(1, 'Enter your name.').max(60, 'Keep your name to 60 characters or fewer.'),
+});
+export type ProfileNameInput = z.infer<typeof ProfileNameInputSchema>;
+
 /** Camp archive and delete. Both are owner only. Delete needs the camp's exact name, capitals included. */
 export const ArchiveCampInputSchema = z.object({ orgId: z.string().uuid() });
 export type ArchiveCampInput = z.infer<typeof ArchiveCampInputSchema>;

@@ -60,6 +60,28 @@ export class InMemoryStore implements UserRepository, OrgRepository {
 
     return { id: user.id, email: user.email, name: user.name };
   }
+  async updateName(userId: string, name: string): Promise<User> {
+    const user = this.users.get(userId);
+    if (!user) {
+      throw new Error('no user to rename');
+    }
+    user.name = name;
+
+    return { id: user.id, email: user.email, name: user.name };
+  }
+  async roleIn(orgId: string, userId: string): Promise<Membership['role'] | null> {
+    return this.members.find(m => m.orgId === orgId && m.userId === userId)?.role ?? null;
+  }
+  async renameMember(orgId: string, userId: string, name: string): Promise<User | null> {
+    const user = this.users.get(userId);
+    const inCamp = this.members.some(m => m.orgId === orgId && m.userId === userId);
+    if (!user || !inCamp) {
+      return null;
+    }
+    user.name = name;
+
+    return { id: user.id, email: user.email, name: user.name };
+  }
   async membershipsOf(userId: string): Promise<Membership[]> {
     return this.members
       .filter(m => m.userId === userId && !this.orgs.get(m.orgId)!.archivedAt)

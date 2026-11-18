@@ -8,6 +8,13 @@ import { buildSeed } from '@buxa/shared';
 import { SettingsPage } from '@/components/views/kanban/export';
 import { CampClockPanel } from '@/components/components/camp/export';
 
+const saveName = vi.hoisted(() =>
+  vi.fn<(input: { name: string }) => Promise<{ status: string; message: string; fieldErrors?: object }>>(() =>
+    Promise.resolve({ status: 'success', message: 'Profile saved' }),
+  ),
+);
+vi.mock('@/actions/account', () => ({ updateProfileAction: saveName }));
+
 vi.mock('@/actions/camp', () => ({
   updateCampClockAction: async () => ({ status: 'idle' }),
   archiveCamp: async () => ({ ok: true }),
@@ -128,16 +135,32 @@ describe('the settings grid', () => {
     expect(document.querySelector('.settings-grid > section#profile h2')?.textContent).toBe('Profile');
   });
 
-  it('saves the profile: submitting the form sends the name and role', () => {
+  it('saves the profile: the name goes to the account first, then the board takes it with the role', async () => {
     render();
     const input = document.querySelector<HTMLInputElement>('input[maxlength="60"]');
     const form = document.querySelector<HTMLFormElement>('#profile form');
     expect(form).not.toBeNull();
-    act(() => {
+    await act(async () => {
       form?.querySelector<HTMLButtonElement>('button')?.click();
     });
+    expect(saveName).toHaveBeenCalledWith({ name: 'Rosa Delgado' });
     expect(updateProfile).toHaveBeenCalledWith({ name: 'Rosa Delgado', title: 'Coordinator' });
     expect(input?.value).toBe('Rosa Delgado');
+  });
+
+  it('does not change the board when the account refuses the name', async () => {
+    saveName.mockResolvedValueOnce({
+      status: 'error',
+      message: 'Check the highlighted fields.',
+      fieldErrors: { name: 'Enter your name.' },
+    });
+    render();
+    const form = document.querySelector<HTMLFormElement>('#profile form');
+    await act(async () => {
+      form?.querySelector<HTMLButtonElement>('button')?.click();
+    });
+    expect(updateProfile).not.toHaveBeenCalled();
+    expect(document.body.textContent).toContain('Enter your name.');
   });
 
   it('shows the danger zone at the bottom of the grid to the owner only', () => {

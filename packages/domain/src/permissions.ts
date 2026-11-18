@@ -22,6 +22,7 @@ export const ACTIONS = [
   'members:invite',
   'members:change_role',
   'members:remove',
+  'members:rename',
   'members:leave',
   'audit:read',
   'data:export',
@@ -74,6 +75,7 @@ const ADMIN: Action[] = [
   'members:invite',
   'members:change_role',
   'members:remove',
+  'members:rename',
   'audit:read',
   'people:delete',
   'people:authorise_pickup',
@@ -181,6 +183,16 @@ export function authorize(actor: Actor, action: Action, res: Resource = {}): Dec
       if (res.target.userId === actor.userId) {
         return no('self_change');
       } // leaving uses members:leave
+
+      return above(res.target.role) ? ok : no('not_above_target');
+    }
+    case 'members:rename': {
+      if (!res.target) {
+        return no('missing_context');
+      }
+      if (res.target.userId === actor.userId) {
+        return no('self_change');
+      } // your own name is saved from your profile
 
       return above(res.target.role) ? ok : no('not_above_target');
     }
