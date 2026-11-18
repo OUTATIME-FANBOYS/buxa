@@ -24,7 +24,8 @@
   .page-board { height: auto; grid-template-rows: none; }
   .page-board .view { overflow: visible; } .page-board .board { height: 72dvh; min-height: 420px; }
   .page-board .avatars, .page-board .page-title .clamp { display: none; }
-  .filters { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 calc(var(--s4) * -1); padding: 0 var(--s4); }
+  /* On a phone the controls wrap onto the next line; they never scroll sideways or overlap. */
+  .filters { flex-wrap: wrap; }
   .filters > * { flex: none; } .filters .grow { display: none; } .search-local { width: 168px; }
   .save-filter { position: sticky; left: 0; }
 }
