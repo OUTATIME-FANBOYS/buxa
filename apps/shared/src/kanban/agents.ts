@@ -14,6 +14,7 @@
  */
 import type { Agent, AgentRun, AppState, Change, Proposal, ProposalKind, Trust, Undo, User, Via } from './types';
 import * as D from './domain';
+import { requirePresent } from '@buxa/domain';
 
 export const PROPOSAL_KINDS: ProposalKind[] = ['create_task', 'comment', 'update_task', 'move_task', 'complete_task'];
 export const KIND_LABEL: Record<ProposalKind, string> = {
@@ -189,14 +190,14 @@ export function decide(s: AppState, proposalId: string, verdict: 'approve' | 're
   }
   const at = D.clock.now();
   if (verdict === 'reject') {
-    return patchProposal(s, p.id, x => ({ ...x, status: 'rejected', decidedAt: at, decidedBy: by! }));
+    return patchProposal(s, p.id, x => ({ ...x, status: 'rejected', decidedAt: at, decidedBy: requirePresent(by, 'by') }));
   }
   const r = apply(s, p);
   if (r.error) {
-    return patchProposal(s, p.id, x => ({ ...x, status: 'blocked', note: r.error, decidedAt: at, decidedBy: by! }));
+    return patchProposal(s, p.id, x => ({ ...x, status: 'blocked', note: r.error, decidedAt: at, decidedBy: requirePresent(by, 'by') }));
   }
 
-  return patchProposal(r.state, p.id, x => ({ ...x, status: 'approved', undo: r.undo, taskId: r.taskId, decidedAt: at, decidedBy: by! }));
+  return patchProposal(r.state, p.id, x => ({ ...x, status: 'approved', undo: r.undo, taskId: r.taskId, decidedAt: at, decidedBy: requirePresent(by, 'by') }));
 }
 
 /** An agent with approval rights decides on another agent's proposal. Same rules as `decide`; the session is restored. */
@@ -216,7 +217,7 @@ export function revertRun(s: AppState, runId: string): { state: AppState; revert
     if (isAgentUser(n, by) || !canDecide(n, by, p.agentId)) {
       skipped++; continue;
     } // reverting is for people
-    const u = p.undo!; const t = taskOf(n, u.taskId); let why: string | null = null; let next = n;
+    const u = requirePresent(p.undo, 'p.undo'); const t = taskOf(n, u.taskId); let why: string | null = null; let next = n;
     if (!t) {
       why = 'The task is already gone.';
     } else if (u.kind === 'delete_task') {
@@ -245,7 +246,7 @@ export function revertRun(s: AppState, runId: string): { state: AppState; revert
     if (why) {
       skipped++; n = patchProposal(n, p.id, x => ({ ...x, note: `Not reverted: ${why}` }));
     } else {
-      reverted++; n = patchProposal(next, p.id, x => ({ ...x, status: 'reverted', note: undefined, decidedAt: D.clock.now(), decidedBy: by! }));
+      reverted++; n = patchProposal(next, p.id, x => ({ ...x, status: 'reverted', note: undefined, decidedAt: D.clock.now(), decidedBy: requirePresent(by, 'by') }));
     }
   }
 

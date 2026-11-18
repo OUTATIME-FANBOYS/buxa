@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { CAMP_ROLES } from '@buxa/domain';
+import { CAMP_ROLES, settle } from '@buxa/domain';
 import { EditPersonForm, type EditablePerson } from '@/components/components/people/forms/export';
 
-vi.mock('@buxa/server/composers/people/updatePersonAction', () => ({ updatePersonAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/people/updatePersonAction', () => ({ updatePersonAction: () => settle(() => ({ status: 'idle' })) }));
 
 const person: EditablePerson = {
   id: 'p-1', givenName: 'Ada', familyName: 'Lee', preferredName: 'Annie', roles: [CAMP_ROLES[0]], dateOfBirth: null, email: 'ada@example.com', phone: null,

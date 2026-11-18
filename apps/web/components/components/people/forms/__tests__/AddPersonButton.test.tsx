@@ -4,6 +4,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { failure } from '@buxa/shared';
 import { AddPersonButton } from '@/components/components/people/forms/export';
+import { requirePresent } from '@buxa/domain';
 
 const createPerson = vi.hoisted(() => vi.fn());
 vi.mock('@buxa/server/composers/people/createPersonAction', () => ({ createPersonAction: createPerson }));
@@ -30,7 +31,7 @@ describe('AddPersonButton (the People page)', () => {
     act(() => root.unmount()); host.remove();
   });
 
-  const button = () => Array.from(host.querySelectorAll('button')).find(b => b.textContent === 'Add person')!;
+  const button = () => requirePresent(Array.from(host.querySelectorAll('button')).find(b => b.textContent === 'Add person'), "Array.from(host.querySelectorAll('button')).find(b => b.textContent === 'Add person')");
   const dialog = () => document.querySelector<HTMLElement>('[role="dialog"]');
   const open = async () => {
     button().focus(); act(() => button().click()); await flush();
@@ -49,7 +50,7 @@ describe('AddPersonButton (the People page)', () => {
   it('closes on Escape, returns focus to the button, and leaves no dialog behind', async () => {
     act(() => root.render(<AddPersonButton households={[]} />));
     await open();
-    act(() => dialog()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
+    act(() => requirePresent(dialog(), 'dialog()').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
     await settle();
     expect(dialog()).toBeNull();
     expect(document.activeElement).toBe(button());
@@ -58,7 +59,7 @@ describe('AddPersonButton (the People page)', () => {
   it('closes from its Cancel button', async () => {
     act(() => root.render(<AddPersonButton households={[]} />));
     await open();
-    const cancel = Array.from(dialog()!.querySelectorAll('button')).find(b => b.textContent === 'Cancel')!;
+    const cancel = requirePresent(Array.from(requirePresent(dialog(), 'dialog()').querySelectorAll('button')).find(b => b.textContent === 'Cancel'), "Array.from(requirePresent(dialog(), 'dialog()').querySelectorAll('button')).find(b => b.textContent === 'Cancel')");
     act(() => cancel.click());
     await settle();
     expect(dialog()).toBeNull();
@@ -68,24 +69,24 @@ describe('AddPersonButton (the People page)', () => {
     createPerson.mockResolvedValue(failure('Check the highlighted fields.', { givenName: 'Enter a first name.', roles: 'Choose at least one role.' }));
     act(() => root.render(<AddPersonButton households={[]} />));
     await open();
-    const form = dialog()!.querySelector('form')!;
+    const form = requirePresent(requirePresent(dialog(), 'dialog()').querySelector('form'), "requirePresent(dialog(), 'dialog()').querySelector('form')");
     act(() => form.requestSubmit());
     await flush();
     expect(createPerson).toHaveBeenCalledTimes(1);
-    expect(dialog()!.textContent).toContain('Enter a first name.');
-    expect(dialog()!.textContent).toContain('Choose at least one role.');
-    expect(document.activeElement).toBe(dialog()!.querySelector('input[name="givenName"]'));
+    expect(requirePresent(dialog(), 'dialog()').textContent).toContain('Enter a first name.');
+    expect(requirePresent(dialog(), 'dialog()').textContent).toContain('Choose at least one role.');
+    expect(document.activeElement).toBe(requirePresent(dialog(), 'dialog()').querySelector('input[name="givenName"]'));
   });
 
   it('submits the fields as typed', async () => {
     createPerson.mockResolvedValue(failure('Check the highlighted fields.', {}));
     act(() => root.render(<AddPersonButton households={[]} />));
     await open();
-    const given = dialog()!.querySelector<HTMLInputElement>('input[name="givenName"]')!;
-    const family = dialog()!.querySelector<HTMLInputElement>('input[name="familyName"]')!;
+    const given = requirePresent(requirePresent(dialog(), 'dialog()').querySelector<HTMLInputElement>('input[name="givenName"]'), "requirePresent(dialog(), 'dialog()').querySelector<HTMLInputElement>('input[name=\"givenName\"]')");
+    const family = requirePresent(requirePresent(dialog(), 'dialog()').querySelector<HTMLInputElement>('input[name="familyName"]'), "requirePresent(dialog(), 'dialog()').querySelector<HTMLInputElement>('input[name=\"familyName\"]')");
     given.value = 'Ada';
     family.value = 'Lovelace';
-    act(() => (dialog()!.querySelector('form')!).requestSubmit());
+    act(() => (requirePresent(requirePresent(dialog(), 'dialog()').querySelector('form'), "requirePresent(dialog(), 'dialog()').querySelector('form')")).requestSubmit());
     await flush();
     const data = createPerson.mock.calls[0]?.[1] as FormData;
     expect(data.get('givenName')).toBe('Ada');

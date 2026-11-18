@@ -7,6 +7,7 @@ import { UiProvider } from '../../providers/UiProvider';
 import { buildSeed } from '@buxa/shared';
 import { type Task } from '@buxa/shared';
 import { useTaskCommands, type TaskCommands } from '../useTaskCommands';
+import { requirePresent } from '@buxa/domain';
 
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Kept: the compiler needs this assertion to type the value; removing it fails typecheck.
 const h = vi.hoisted(() => ({ store: {} as Record<string, unknown>, openTask: vi.fn() }));
@@ -39,7 +40,7 @@ describe('useTaskCommands', () => {
   });
 
   it('deletes a task and offers to undo', () => {
-    act(() => cmd!.remove(task));
+    act(() => requirePresent(cmd, 'cmd').remove(task));
     expect((h.store.actions as { deleteTask: ReturnType<typeof vi.fn> }).deleteTask).toHaveBeenCalledWith(task.id);
     expect(document.querySelector('.toast')?.textContent).toContain('Task deleted');
     // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
@@ -47,23 +48,23 @@ describe('useTaskCommands', () => {
     expect((h.store.actions as { restoreTask: ReturnType<typeof vi.fn> }).restoreTask).toHaveBeenCalledWith(task);
   });
   it('archives or restores with a matching message', () => {
-    act(() => cmd!.toggleArchive(task));
+    act(() => requirePresent(cmd, 'cmd').toggleArchive(task));
     expect((h.store.actions as { archiveTask: ReturnType<typeof vi.fn> }).archiveTask).toHaveBeenCalledWith(task.id, true);
     expect(document.body.textContent).toContain('Task archived');
   });
   it('duplicates a task and returns the copy’s id', () => {
     let copy: string | undefined;
     act(() => {
-      copy = cmd!.duplicate(task);
+      copy = requirePresent(cmd, 'cmd').duplicate(task);
     });
     expect(copy).toBe('t-copy');
   });
   it('moves a task to another column', () => {
-    act(() => cmd!.moveTo(task, seed.projects[0].columns[2]));
+    act(() => requirePresent(cmd, 'cmd').moveTo(task, seed.projects[0].columns[2]));
     expect((h.store.actions as { moveTask: ReturnType<typeof vi.fn> }).moveTask).toHaveBeenCalledWith(task.id, seed.projects[0].columns[2].id, null);
   });
   it('opens a task in the drawer', () => {
-    act(() => cmd!.open(task));
+    act(() => requirePresent(cmd, 'cmd').open(task));
     expect(h.openTask).toHaveBeenCalledWith(task.id);
   });
 });

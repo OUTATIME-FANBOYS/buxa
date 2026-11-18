@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { IMPORT_COLUMNS, type Actor } from '@buxa/domain';
+import { IMPORT_COLUMNS, type Actor, settle } from '@buxa/domain';
 import { isHttpError } from '../../http/errors';
 import { CAMP_TZ, ORG, as, painting, robotics } from '../__tests__/fixtures';
 import { InMemoryClassRepository } from '../InMemoryClassRepository';
@@ -26,7 +26,7 @@ interface World { service: ImportService; classes: InMemoryClassRepository; impo
 function world(failOnWrite?: number): World {
   const classes = new InMemoryClassRepository(() => new Date('2027-07-01T00:00:00Z'));
   const imports = new InMemoryImportRepository(classes, { failOnWrite });
-  const service = createImportService({ classes, imports, timezoneOf: async () => CAMP_TZ });
+  const service = createImportService({ classes, imports, timezoneOf: () => settle(() => CAMP_TZ) });
 
   return { service, classes, imports };
 }

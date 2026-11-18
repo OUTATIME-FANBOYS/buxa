@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AttendanceEntry, PersonSummary } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
 import type { OnSiteEntry } from '@buxa/server/services/attendance/AttendanceService';
+import { settle } from '@buxa/domain';
 
 const notFound = vi.hoisted(() => vi.fn(() => {
   throw new Error('NEXT_NOT_FOUND');
@@ -18,8 +19,8 @@ const services = vi.hoisted(() => ({
 vi.mock('next/navigation', () => ({ notFound, useRouter: () => ({ refresh() {}, push() {} }) }));
 vi.mock('@buxa/server/runtime', () => ({ getRuntime: () => ({ services }) }));
 vi.mock('@buxa/server/session/index', () => ({
-  requireSession: async () => ({ user: { id: 'u1', email: 'a@example.test', name: 'Ada' }, memberships: [] }),
-  getCurrentCamp: async () => (session.camp ? { orgId: 'o1', role: session.role, name: 'Sunrise', slug: 'sunrise' } : null),
+  requireSession: () => settle(() => ({ user: { id: 'u1', email: 'a@example.test', name: 'Ada' }, memberships: [] })),
+  getCurrentCamp: () => settle(() => (session.camp ? { orgId: 'o1', role: session.role, name: 'Sunrise', slug: 'sunrise' } : null)),
   toActor: (_s: unknown, camp: { role: Role }) => ({ userId: 'u1', orgId: 'o1', role: camp.role }),
 }));
 vi.mock('@/components/components/scanner/ScanField', () => ({
@@ -28,9 +29,9 @@ vi.mock('@/components/components/scanner/ScanField', () => ({
 vi.mock('@/components/components/scanner/CameraScanner', () => ({
   CameraScanner: () => 'CAMERA',
 }));
-vi.mock('@buxa/server/composers/attendance/searchPeople', () => ({ searchPeopleAction: async () => ({ kind: 'ok', value: [] }) }));
-vi.mock('@buxa/server/composers/attendance/checkIn', () => ({ checkInAction: async () => ({ kind: 'ok', value: { ok: false, reason: 'archived' } }) }));
-vi.mock('@buxa/server/composers/attendance/checkOut', () => ({ checkOutAction: async () => ({ kind: 'ok', value: { ok: false, reason: 'not_on_site' } }) }));
+vi.mock('@buxa/server/composers/attendance/searchPeople', () => ({ searchPeopleAction: () => settle(() => ({ kind: 'ok', value: [] })) }));
+vi.mock('@buxa/server/composers/attendance/checkIn', () => ({ checkInAction: () => settle(() => ({ kind: 'ok', value: { ok: false, reason: 'archived' } })) }));
+vi.mock('@buxa/server/composers/attendance/checkOut', () => ({ checkOutAction: () => settle(() => ({ kind: 'ok', value: { ok: false, reason: 'not_on_site' } })) }));
 
 const { CheckInScreen } = await import('@/components/views/attendance/export');
 const { OnSiteScreen } = await import('@/components/views/attendance/export');
@@ -46,7 +47,7 @@ const onSiteEntry = (person: PersonSummary, checkedInAt: string, isMinor: boolea
 beforeEach(() => {
   vi.clearAllMocks();
   session.camp = true; session.role = 'staff'; session.timeZone = 'Asia/Kolkata';
-  services.orgs.getCamp.mockImplementation(async () => ({ id: 'o1', name: 'Sunrise', slug: 'sunrise', createdAt: '2026-03-04T10:00:00Z', memberCount: 2, timezone: session.timeZone }));
+  services.orgs.getCamp.mockImplementation(() => settle(() => ({ id: 'o1', name: 'Sunrise', slug: 'sunrise', createdAt: '2026-03-04T10:00:00Z', memberCount: 2, timezone: session.timeZone })));
   services.people.list.mockResolvedValue([ada, sam]);
 });
 

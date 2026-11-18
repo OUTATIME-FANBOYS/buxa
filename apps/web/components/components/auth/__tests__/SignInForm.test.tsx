@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { SignInForm } from '@/components/components/auth/export';
+import { settle } from '@buxa/domain';
 
-vi.mock('@buxa/server/composers/auth/signIn', () => ({ signIn: async () => ({ status: 'idle' }) }));
-vi.mock('@buxa/server/composers/auth/signUp', () => ({ signUp: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/auth/signIn', () => ({ signIn: () => settle(() => ({ status: 'idle' })) }));
+vi.mock('@buxa/server/composers/auth/signUp', () => ({ signUp: () => settle(() => ({ status: 'idle' })) }));
 
 describe('SignInForm', () => {
   it('opens in sign-in mode and offers to create an account', () => {

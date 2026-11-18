@@ -1,4 +1,4 @@
-import { MAX_IMPORT_ROWS, planImport, readImportFile, type Actor, type ClassRef, type ImportPlan, type ImportRow, type RowResult } from '@buxa/domain';
+import { MAX_IMPORT_ROWS, planImport, readImportFile, type Actor, type ClassRef, type ImportPlan, type ImportRow, type RowResult, settle } from '@buxa/domain';
 import { assertAllowed } from '../../auth/authorize';
 import { badRequest } from '../../http/errors';
 import type { ClassRepository } from '../ClassRepository';
@@ -61,10 +61,12 @@ export function createImportService({ classes, imports, timezoneOf }: ImportServ
   }
 
   return {
-    async template(actor) {
-      assertAllowed(actor, 'classes:manage');
+    template(actor) {
+      return settle(() => {
+        assertAllowed(actor, 'classes:manage');
 
-      return importTemplateCsv();
+        return importTemplateCsv();
+      });
     },
 
     async preview(actor, file) {
@@ -99,10 +101,12 @@ export function createImportService({ classes, imports, timezoneOf }: ImportServ
       };
     },
 
-    async errorReport(actor, preview) {
-      assertAllowed(actor, 'classes:manage');
+    errorReport(actor, preview) {
+      return settle(() => {
+        assertAllowed(actor, 'classes:manage');
 
-      return importErrorReportCsv(preview.results);
+        return importErrorReportCsv(preview.results);
+      });
     },
   };
 }

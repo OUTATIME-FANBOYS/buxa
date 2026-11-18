@@ -3,6 +3,7 @@ import { ErrorBodySchema } from '@buxa/contracts';
 import { call, startRuntime } from './harness';
 import { publicRoute } from '@buxa/server/http/route';
 import { createTestIdentityProvider } from '@buxa/server/__tests__/tokens';
+import { settle } from '@buxa/domain';
 
 let env: ReturnType<typeof startRuntime> | undefined;
 afterEach(async () => {
@@ -59,8 +60,10 @@ describe('request handling around every route', () => {
 
   it('an unexpected error becomes a generic 500 and is logged with its cause', async () => {
     env = startRuntime({ verifier: idp.verifier });
-    const boom = publicRoute(async () => {
-      throw new Error('secret table users_pii');
+    const boom = publicRoute(() => {
+      return settle(() => {
+        throw new Error('secret table users_pii');
+      });
     });
     const r = await boom(new Request('http://localhost/boom'));
     expect(r.status).toBe(500); expect(await r.text()).not.toContain('users_pii');

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Actor } from '@buxa/domain';
 import { forbidden } from '@buxa/server/http/errors';
+import { settle } from '@buxa/domain';
 
 const mocks = vi.hoisted(() => ({
   actor: null as Actor | null,
@@ -8,9 +9,9 @@ const mocks = vi.hoisted(() => ({
   exportCsv: vi.fn(),
 }));
 vi.mock('@buxa/server/runtime', () => ({
-  getRuntime: () => ({ services: { attendance: { exportCsv: mocks.exportCsv }, orgs: { getCamp: async () => ({ timezone: mocks.timeZone }) } } }),
+  getRuntime: () => ({ services: { attendance: { exportCsv: mocks.exportCsv }, orgs: { getCamp: () => settle(() => ({ timezone: mocks.timeZone })) } } }),
 }));
-vi.mock('@buxa/server/session/index', () => ({ requireSession: async () => ({}), getCurrentCamp: async () => ({}), toActor: () => mocks.actor }));
+vi.mock('@buxa/server/session/index', () => ({ requireSession: () => settle(() => ({})), getCurrentCamp: () => settle(() => ({})), toActor: () => mocks.actor }));
 
 const { GET } = await import('../../../app/(app)/camp/(operations)/attendance/export/route');
 

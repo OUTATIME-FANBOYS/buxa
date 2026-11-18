@@ -6,6 +6,7 @@ import type { Class, Enrolment, PersonSummary, Session } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
 import { UiProvider } from '@buxa/middleware/providers/providers';
 import { forbidden } from '@buxa/server/http/errors';
+import { settle } from '@buxa/domain';
 
 const notFound = vi.hoisted(() => vi.fn(() => {
   throw new Error('NEXT_NOT_FOUND');
@@ -21,7 +22,7 @@ const services = vi.hoisted(() => ({
 vi.mock('next/navigation', () => ({ notFound, redirect: vi.fn() }));
 vi.mock('@buxa/server/runtime', () => ({ getRuntime: () => ({ services }) }));
 vi.mock('@buxa/server/composers/people/camp', () => ({
-  currentActor: async () => (session.role ? { userId: 'u1', orgId: 'o1', role: session.role } : null),
+  currentActor: () => settle(() => (session.role ? { userId: 'u1', orgId: 'o1', role: session.role } : null)),
 }));
 
 const { ClassList } = await import('@/components/views/classes/export');

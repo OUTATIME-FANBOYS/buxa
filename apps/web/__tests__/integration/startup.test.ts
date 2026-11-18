@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ErrorBodySchema } from '@buxa/contracts';
 import { call, startRuntime } from './harness';
+import { settle } from '@buxa/domain';
 
 let env: ReturnType<typeof startRuntime> | undefined;
 afterEach(async () => {
@@ -8,7 +9,7 @@ afterEach(async () => {
 });
 
 const PRODUCTION = { NODE_ENV: 'production', NEXT_PUBLIC_SUPABASE_URL: 'https://p.supabase.co', NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_x' };
-const supabaseSays = (settings: unknown) => vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(settings))));
+const supabaseSays = (settings: unknown) => vi.stubGlobal('fetch', vi.fn(() => settle(() => new Response(JSON.stringify(settings)))));
 
 describe('the email-confirmation start-up guard', () => {
   it('answers 503 on every route in production when Supabase auto-confirms sign-ups', async () => {
@@ -28,8 +29,10 @@ describe('the email-confirmation start-up guard', () => {
   });
 
   it('only warns when the check cannot run, so a Supabase outage cannot take the app down', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => {
-      throw new TypeError('offline');
+    vi.stubGlobal('fetch', vi.fn(() => {
+      return settle(() => {
+        throw new TypeError('offline');
+      });
     }));
     env = startRuntime({ env: PRODUCTION });
     expect((await call('GET', '/v1/me')).status).toBe(401);
