@@ -1,6 +1,7 @@
 import { Dialog as ConfirmDialog } from '@/components/components/export';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { readFileSync } from 'node:fs';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { buildSeed } from '@buxa/shared';
 import { emptyFilter } from '@buxa/shared';
@@ -37,5 +38,16 @@ describe('FilterBar', () => {
   it('hides the status chip on views that do not group by status', () => {
     const html = renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}><FilterBar filter={emptyFilter} setFilter={setFilter} project={project} tags={[]} showStatus={false} /></UiProvider>);
     expect(html).not.toContain('>Status');
+  });
+
+  it('the filter row wraps and has a gap, so its controls never overlap; the sort and saved triggers size to their labels', () => {
+    const filters = readFileSync(new URL('../../../../styles/features/kanban/filters.css', import.meta.url), 'utf8');
+    expect(filters).toMatch(/\.filters \{ display: flex; flex-wrap: wrap; gap: var\(--s2\);/);
+    expect(filters).toContain('.filters .buxa-chip-menu.button--icon-only { width: auto;');
+    const responsive = readFileSync(new URL('../../../../styles/responsive.css', import.meta.url), 'utf8');
+    expect(responsive).not.toContain('.filters { flex-wrap: nowrap; overflow-x: auto;');
+    expect(responsive).toMatch(/\.filters \{ flex-wrap: wrap; \}/);
+    const html = renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}><FilterBar filter={emptyFilter} setFilter={setFilter} project={project} tags={[]} /></UiProvider>);
+    expect(html).toMatch(/class="button button--icon-only [^"]*chip buxa-chip-menu"[^>]*aria-label="Sort tasks"/);
   });
 });

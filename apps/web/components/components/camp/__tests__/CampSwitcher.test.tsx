@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { readFileSync } from 'node:fs';
 import type { Membership } from '@buxa/contracts';
 import { CampSwitcher } from '@/components/components/camp/export';
 import { settle } from '@buxa/domain';
@@ -12,7 +13,15 @@ describe('CampSwitcher', () => {
     const current = { orgId: 'o-1', name: 'Camp Birchwood' } as unknown as Membership;
     const html = renderToStaticMarkup(<CampSwitcher camps={[current]} current={current} />);
     expect(html).toContain('aria-label="Switch camp"');
-    expect(html).toContain('<span class="crumb-text">Camp Birchwood</span>');
+    expect(html).toContain('<span class="crumb-text" title="Camp Birchwood">Camp Birchwood</span>');
+  });
+  it('the trigger shows the full camp name, not an icon-sized square, and keeps the name for a truncated view', () => {
+    const current = { orgId: 'o-2', name: 'Camp Birchwood Riverside Outdoor Centre' } as unknown as Membership;
+    const html = renderToStaticMarkup(<CampSwitcher camps={[current]} current={current} />);
+    expect(html).toMatch(/<button[^>]*class="[^"]*\bcamp-switch\b[^"]*"[^>]*aria-label="Switch camp"/);
+    expect(html).toContain('>Camp Birchwood Riverside Outdoor Centre</span>');
+    const css = readFileSync(new URL('../../../../styles/features/camp.css', import.meta.url), 'utf8');
+    expect(css).toContain('.crumb.camp-switch { width: auto;');
   });
   it('says there is no camp yet when the person has none', () => {
     expect(renderToStaticMarkup(<CampSwitcher camps={[]} current={null} />)).toContain('No camp yet');

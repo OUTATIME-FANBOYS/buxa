@@ -63,12 +63,12 @@ export function FilterBar({ filter, setFilter, project, tags, showStatus = true 
         {tags.length === 0 && <p className="muted small pad">No tags yet.</p>}
         {tags.map(t => <Check key={t} checked={filter.tags.includes(t)} onChange={() => set({ tags: toggle(filter.tags, t) })}>{t}</Check>)}
       </Chip>
-      <Menu label="Sort tasks" className="chip" align="start" trigger={<><Icon name="timeline" size={13} />{requirePresent(SORT.find(x => x.v === filter.sort), 'SORT.find(x => x.v === filter.sort)').l}<Icon name="down" size={13} /></>}
+      <Menu label="Sort tasks" className="chip buxa-chip-menu" align="start" trigger={<><Icon name="timeline" size={13} />{requirePresent(SORT.find(x => x.v === filter.sort), 'SORT.find(x => x.v === filter.sort)').l}<Icon name="down" size={13} /></>}
         items={SORT.map(x => ({ label: x.l, checked: filter.sort === x.v, onSelect: () => set({ sort: x.v }) }))} />
       <label className="chip chip-check"><input type="checkbox" checked={filter.archived} onChange={e => set({ archived: e.target.checked })} /> Archived</label>
       <span className="grow" />
       {active && <Button variant="ghost" size="sm" onClick={() => setFilter({ ...emptyFilter, sort: filter.sort })}>Clear</Button>}
-      <Menu label="Saved filters" className="chip" align="end" trigger={<><Icon name="bookmark" size={13} />Saved{saved.length > 0 && <span className="chip-count">{saved.length}</span>}</>}
+      <Menu label="Saved filters" className="chip buxa-chip-menu" align="end" trigger={<><Icon name="bookmark" size={13} />Saved{saved.length > 0 && <span className="chip-count">{saved.length}</span>}</>}
         items={[
           ...saved.map(f => ({ label: f.name, icon: 'filter', onSelect: () => {
             setFilter(f.filter); toast(`Applied “${f.name}”`);
