@@ -70,12 +70,10 @@ describe('Add person form on a touch screen', () => {
 });
 
 describe('settings grid', () => {
-  it('is one column on a phone and widens in steps, with no fixed page width', () => {
+  it('is one full-width column at every width, with no fixed page width', () => {
     const settings = read('./features/settings.css');
     expect(settings).toContain('.settings-grid { display: grid; grid-template-columns: minmax(0, 1fr);');
-    expect(settings).toContain(
-      '@media (min-width: 900px) { .settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }',
-    );
+    expect(settings).not.toContain('repeat(2, minmax(0, 1fr))');
     expect(settings).not.toContain('min-width: 1280px');
     expect(settings).toContain('.page.settings-page { max-width: none; }');
   });

@@ -1,5 +1,5 @@
 import type { Pool } from 'pg';
-import type { ClockFormat, CreatedOrg, Member, NewOrgInput, Org, OrgPatchInput, OrgSummary } from '@buxa/contracts';
+import type { CreatedOrg, Member, NewOrgInput, Org, OrgPatchInput, OrgSummary } from '@buxa/contracts';
 import { errorMessage, isUniqueViolation, withOrg } from '@buxa/db';
 import type { Actor, Role } from '@buxa/domain';
 import { recordAudit } from '../audit/recordAudit';
