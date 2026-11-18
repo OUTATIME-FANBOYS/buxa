@@ -1,9 +1,10 @@
 import type { Pool } from 'pg';
 import type { ClockFormat, CreatedOrg, Member, NewOrgInput, Org, OrgPatchInput, OrgSummary } from '@buxa/contracts';
-import { isUniqueViolation, withOrg } from '@buxa/db';
-import type { Actor } from '@buxa/domain';
+import { errorMessage, isUniqueViolation, withOrg } from '@buxa/db';
+import type { Actor, Role } from '@buxa/domain';
 import { recordAudit } from '../audit/recordAudit';
-import { OrgNotFoundError, SlugTakenError, type OrgRepository } from './OrgRepository';
+import { conflict, forbidden } from '../http/errors';
+import { OrgNotFoundError, SlugTakenError, type ArchivedCampRecord, type OrgRepository } from './OrgRepository';
 
 interface OrgRow { id: string; name: string; slug: string; created_at: Date; member_count: number; timezone: string; clock_format: ClockFormat }
 
@@ -65,5 +66,49 @@ export class PgOrgRepository implements OrgRepository {
 
       return rows;
     });
+  }
+
+  /** buxa_archive_camp (migration 0013) checks the owner role, refuses an archived camp and writes the audit row in one statement. */
+  async archive(actor: Actor): Promise<{ archivedAt: string }> {
+    try {
+      return await withOrg(this.pool, actor.orgId, async db => {
+        const { rows } = await db.query<{ archived_at: Date }>('SELECT buxa_archive_camp($1, $2) AS archived_at', [actor.orgId, actor.userId]);
+
+        return { archivedAt: rows[0].archived_at.toISOString() };
+      });
+    } catch (error) {
+      throw mapCampFunctionError(error);
+    }
+  }
+
+  /** buxa_delete_camp (migration 0013) checks the owner role and the exact name, then deletes the camp; the rows go with it. */
+  async deleteCamp(actor: Actor, confirmName: string): Promise<void> {
+    try {
+      await withOrg(this.pool, actor.orgId, db => db.query('SELECT buxa_delete_camp($1, $2, $3)', [actor.orgId, actor.userId, confirmName]));
+    } catch (error) {
+      throw mapCampFunctionError(error);
+    }
+  }
+
+  /** buxa_archived_camps_of (migration 0013) runs as the function owner, because the camp is not the current one. */
+  archivedCampsOf(userId: string): Promise<ArchivedCampRecord[]> {
+    return withOrg(this.pool, null, async db => {
+      const { rows } = await db.query<{ id: string; name: string; archived_at: Date; role: Role }>(
+        'SELECT camp_id AS id, camp_name AS name, camp_archived_at AS archived_at, camp_role AS role FROM buxa_archived_camps_of($1)', [userId]);
+
+      return rows.map(r => ({ id: r.id, name: r.name, archivedAt: r.archived_at.toISOString(), role: r.role }));
+    });
+  }
+}
+
+/** Maps the errors the 0013 functions raise to the ones the service and the client understand. Anything else is rethrown. */
+function mapCampFunctionError(error: unknown): unknown {
+  const code = (error as { code?: unknown } | null)?.code;
+  const message = errorMessage(error);
+  switch (code) {
+    case '42501': return forbidden(message);
+    case 'P0002': return new OrgNotFoundError();
+    case '22023': return conflict(message);
+    default: return error;
   }
 }

@@ -43,6 +43,25 @@ export const OrgPatchInputSchema = z.object({ name: NameSchema.optional(), timez
   .refine(v => v.name !== undefined || v.timezone !== undefined || v.clockFormat !== undefined, 'Nothing to change.');
 export type OrgPatchInput = z.infer<typeof OrgPatchInputSchema>;
 
+/** Camp archive and delete. Both are owner only. Delete needs the camp's exact name, capitals included. */
+export const ArchiveCampInputSchema = z.object({ orgId: z.string().uuid() });
+export type ArchiveCampInput = z.infer<typeof ArchiveCampInputSchema>;
+export const DeleteCampInputSchema = z.object({ orgId: z.string().uuid(), confirmName: z.string() });
+export type DeleteCampInput = z.infer<typeof DeleteCampInputSchema>;
+
+/** `{ ok: true }` on success; `{ ok: false, message }` with a message safe to show when the camp could not be changed. */
+export const CampResultSchema = z.discriminatedUnion('ok', [
+  z.object({ ok: z.literal(true) }),
+  z.object({ ok: z.literal(false), message: z.string() }),
+]);
+export type CampResult = z.infer<typeof CampResultSchema>;
+
+/** An archived camp the signed-in person belongs to. Read-only: there is no unarchive yet. */
+export const ArchivedCampSchema = z.object({ id: z.string(), name: z.string(), archivedAt: z.string() });
+export type ArchivedCamp = z.infer<typeof ArchivedCampSchema>;
+export const ArchivedCampsSchema = z.array(ArchivedCampSchema);
+export type ArchivedCamps = z.infer<typeof ArchivedCampsSchema>;
+
 export const ErrorBodySchema = z.object({ error: z.object({ code: z.string(), message: z.string(), requestId: z.string().optional() }) });
 
 export * from './people';

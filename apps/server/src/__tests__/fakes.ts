@@ -6,13 +6,13 @@ import { InMemoryAttendanceRepository } from '../attendance/InMemoryAttendanceRe
 import { InMemoryClassRepository } from '../classes/InMemoryClassRepository';
 import { InMemoryCredentialRepository } from '../credentials/InMemoryCredentialRepository';
 import { InMemoryMembershipRepository } from '../memberships/InMemoryMembershipRepository';
-import { OrgNotFoundError, SlugTakenError, type OrgRepository } from '../orgs/OrgRepository';
+import { OrgNotFoundError, SlugTakenError, type ArchivedCampRecord, type OrgRepository } from '../orgs/OrgRepository';
 import { InMemoryPeopleRepository } from '../people/InMemoryPeopleRepository';
 import { InMemoryDatabase, type AuditRecord } from '../people/InMemoryDatabase';
 import type { Repositories } from '../repositories';
 import { EmailInUseError, type UserRepository } from '../users/UserRepository';
 
-interface StoredOrg { id: string; name: string; slug: string; createdAt: string; timezone: string; clockFormat: ClockFormat }
+interface StoredOrg { id: string; name: string; slug: string; createdAt: string; timezone: string; clockFormat: ClockFormat; archivedAt: string | null }
 
 /**
  * An in-memory stand-in for Postgres: users and organisations here, and the people, membership, badge and attendance adapters
@@ -43,17 +43,51 @@ export class InMemoryStore implements UserRepository, OrgRepository {
     return { id: user.id, email: user.email, name: user.name };
   }
   async membershipsOf(userId: string): Promise<Membership[]> {
-    return this.members.filter(m => m.userId === userId).map(m => {
+    return this.members.filter(m => m.userId === userId && !this.orgs.get(m.orgId)!.archivedAt).map(m => {
       const o = this.orgs.get(m.orgId)!;
 
       return { orgId: o.id, role: m.role, name: o.name, slug: o.slug };
+    });
+  }
+  async archive(actor: { userId: string; orgId: string }): Promise<{ archivedAt: string }> {
+    const o = this.orgs.get(actor.orgId); if (!o) {
+      throw new OrgNotFoundError();
+    }
+    if (o.archivedAt) {
+      throw new Error('This camp is already archived');
+    }
+    o.archivedAt = new Date().toISOString();
+    this.database.record(actor, 'org.archive', 'org', o.id);
+
+    return { archivedAt: o.archivedAt };
+  }
+  /** Removes the camp and its memberships. The people and attendance tables are not modelled here; the database test covers the full cascade. */
+  async deleteCamp(actor: { userId: string; orgId: string }, confirmName: string): Promise<void> {
+    const o = this.orgs.get(actor.orgId); if (!o) {
+      throw new OrgNotFoundError();
+    }
+    if (o.name !== confirmName) {
+      throw new Error('The camp name does not match');
+    }
+    this.orgs.delete(o.id);
+    for (let i = this.members.length - 1; i >= 0; i--) {
+      if (this.members[i].orgId === o.id) {
+        this.members.splice(i, 1);
+      }
+    }
+  }
+  async archivedCampsOf(userId: string): Promise<ArchivedCampRecord[]> {
+    return this.members.filter(m => m.userId === userId && this.orgs.get(m.orgId)!.archivedAt).map(m => {
+      const o = this.orgs.get(m.orgId)!;
+
+      return { id: o.id, name: o.name, archivedAt: o.archivedAt!, role: m.role };
     });
   }
   async createWithOwner(input: NewOrgInput, ownerId: string): Promise<CreatedOrg> {
     if ([...this.orgs.values()].some(o => o.slug === input.slug)) {
       throw new SlugTakenError();
     }
-    const org: StoredOrg = { id: randomUUID(), name: input.name, slug: input.slug, createdAt: new Date().toISOString(), timezone: input.timezone, clockFormat: DEFAULT_CLOCK_FORMAT };
+    const org: StoredOrg = { id: randomUUID(), name: input.name, slug: input.slug, createdAt: new Date().toISOString(), timezone: input.timezone, clockFormat: DEFAULT_CLOCK_FORMAT, archivedAt: null };
     this.orgs.set(org.id, org);
     this.members.push({ orgId: org.id, userId: ownerId, role: 'owner' });
     this.database.record({ userId: ownerId, orgId: org.id }, 'org.create', 'org', org.id);

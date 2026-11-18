@@ -37,6 +37,13 @@ describe('the camp service', () => {
       throw new Error('unused');
     },
     listMembers: async () => [],
+    archive: async () => {
+      throw new Error('unused');
+    },
+    deleteCamp: async () => {
+      throw new Error('unused');
+    },
+    archivedCampsOf: async () => [],
   });
   const owner = { userId: '00000000-0000-4000-8000-000000000001', orgId: '00000000-0000-4000-8000-000000000002', role: 'owner' as const };
 
