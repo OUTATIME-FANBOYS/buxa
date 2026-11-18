@@ -5,6 +5,7 @@ import { forbidden } from '../../../http/errors';
 import { createPersonAction } from '../createPersonAction';
 import { CAMPER_NEEDS_HOUSEHOLD, CHOOSE_ONE_HOUSEHOLD, NEW_HOUSEHOLD_NO_GUARDIAN } from '@buxa/shared';
 import { formOf, IDS } from './form';
+import { settle } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({
   actor: null as null | { userId: string; orgId: string; role: 'owner' | 'admin' | 'staff' | 'viewer' },
@@ -15,7 +16,7 @@ const h = vi.hoisted(() => ({
 vi.mock('next/cache', () => ({ revalidatePath: h.revalidatePath }));
 vi.mock('next/navigation', () => ({ redirect: h.redirect }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: { people: h.people } }) }));
-vi.mock('../camp', () => ({ currentActor: async () => h.actor }));
+vi.mock('../camp', () => ({ currentActor: () => settle(() => h.actor) }));
 
 const adult = { givenName: 'Anna', familyName: 'Lee', roles: 'guardian' };
 const camper = { givenName: 'Ben', familyName: 'Lee', roles: 'camper' };

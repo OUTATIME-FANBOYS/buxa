@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { decideStartup, readEmailConfirmation } from '../auth/emailConfirmation';
+import { settle } from '@buxa/domain';
 
-const reply = (body: unknown, status = 200) => vi.fn(async () => new Response(JSON.stringify(body), { status })) as unknown as typeof fetch;
+const reply = (body: unknown, status = 200) => vi.fn(() => settle(() => new Response(JSON.stringify(body), { status }))) as unknown as typeof fetch;
 const read = (f: typeof fetch) => readEmailConfirmation({ supabaseUrl: 'https://p.supabase.co/', publishableKey: 'sb_publishable_x', fetch: f });
 
 describe('reading the Supabase email-confirmation setting', () => {
@@ -17,8 +18,10 @@ describe('reading the Supabase email-confirmation setting', () => {
     expect(await read(reply({}, 401))).toBe('unknown');
     expect(await read(reply({ other: 1 }))).toBe('unknown');
     expect(await read(reply('nope'))).toBe('unknown');
-    expect(await read(vi.fn(async () => {
-      throw new TypeError('offline');
+    expect(await read(vi.fn(() => {
+      return settle(() => {
+        throw new TypeError('offline');
+      });
     }) as unknown as typeof fetch)).toBe('unknown');
   });
 });

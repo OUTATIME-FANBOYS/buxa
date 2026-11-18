@@ -1,5 +1,5 @@
 import type { AttendanceEntry, AttendanceFilter, CheckInInput, CheckOutInput } from '@buxa/contracts';
-import { can, decideCheckIn, decideCheckOut, isMinor, personAccess, toLocalDate } from '@buxa/domain';
+import { can, decideCheckIn, decideCheckOut, isMinor, personAccess, toLocalDate, settle } from '@buxa/domain';
 import { encodeCsv, type CsvCell } from '@buxa/shared';
 import { assertAllowed } from '../../auth/authorize';
 import { badRequest, notFound } from '../../http/errors';
@@ -21,10 +21,12 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
   const { attendance, people, memberships, orgs, clock } = deps;
 
   /** Records for the filter's camp-local days, newest first. */
-  async function recordsFor(orgId: string, filter: AttendanceFilter, timeZone: string): Promise<CheckInRecord[]> {
-    const query: AttendanceQuery = { ...localDaysWindow(filter.from, filter.to, timeZone), personId: filter.personId, onSiteOnly: filter.onSiteOnly };
+  function recordsFor(orgId: string, filter: AttendanceFilter, timeZone: string): Promise<CheckInRecord[]> {
+    return settle(() => {
+      const query: AttendanceQuery = { ...localDaysWindow(filter.from, filter.to, timeZone), personId: filter.personId, onSiteOnly: filter.onSiteOnly };
 
-    return attendance.log(orgId, query);
+      return attendance.log(orgId, query);
+    });
   }
 
   return {

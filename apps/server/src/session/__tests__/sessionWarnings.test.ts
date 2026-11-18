@@ -8,7 +8,7 @@ const env = vi.hoisted(() => {
   return { store: undefined as unknown };
 });
 
-vi.mock('next/headers', () => ({ cookies: async () => env.store }));
+vi.mock('next/headers', () => ({ cookies: () => settle(() => env.store) }));
 vi.mock('next/navigation', () => ({ redirect: (url: string) => {
   throw new Error(`REDIRECT ${url}`);
 } }));
@@ -20,8 +20,10 @@ vi.mock('@buxa/server/session/supabaseClient', async importOriginal => {
   return {
     ...actual,
     createSessionClient: (store: Parameters<typeof actual.createSessionClient>[0]) => (broken.on
-      ? { auth: { getSession: async () => {
-        throw Object.assign(new Error(`cannot decode ${TOKEN} for ${EMAIL}`), { name: 'CookieDecodeError' });
+      ? { auth: { getSession: () => {
+        return settle(() => {
+          throw Object.assign(new Error(`cannot decode ${TOKEN} for ${EMAIL}`), { name: 'CookieDecodeError' });
+        });
       } } }
       : actual.createSessionClient(store)) as unknown as ReturnType<typeof actual.createSessionClient>,
   };
@@ -33,6 +35,7 @@ import { createTestIdentityProvider } from '@buxa/server/__tests__/tokens';
 import { getSession } from '@buxa/server/session/index';
 import { InMemoryStore } from '@buxa/server/__tests__/fakes';
 import { FakeCookieStore, SESSION_COOKIE, sessionCookieValue } from '@buxa/server/session/__tests__/support';
+import { settle } from '@buxa/domain';
 
 const EMAIL = 'maya.camp@example.test';
 const TOKEN = 'eyJhbGciOiJFUzI1NiJ9.secret-payload';

@@ -4,6 +4,7 @@ import type { Actor } from '@buxa/domain';
 import { badRequest, forbidden, HttpError } from '../../../http/errors';
 import type { CheckInResult, CheckOutResult, OnSiteEntry } from '../../../services/attendance/AttendanceService';
 import type { ScanResult } from '../../../services/credentials/CredentialService';
+import { settle } from '@buxa/domain';
 
 const mocks = vi.hoisted(() => ({
   campActor: vi.fn(),
@@ -16,7 +17,7 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: mocks.services, rateLimiter: mocks.rateLimiter }) }));
 vi.mock('../../../session', () => ({ requireSession: vi.fn(), getCurrentCamp: vi.fn(), toActor: vi.fn() }));
-vi.mock('../campActor', () => ({ campActor: mocks.campActor, campZone: vi.fn(async () => 'Europe/London') }));
+vi.mock('../campActor', () => ({ campActor: mocks.campActor, campZone: vi.fn(() => settle(() => 'Europe/London')) }));
 
 const { checkInAction } = await import('../..');
 const { checkOutAction } = await import('../..');

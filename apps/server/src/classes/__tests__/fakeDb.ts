@@ -1,4 +1,5 @@
 import type { Pool, PoolClient } from 'pg';
+import { settle } from '@buxa/domain';
 
 /** A statement the fake saw, and the parameters it was given. */
 export interface Seen {
@@ -15,15 +16,17 @@ export type Answer = (sql: string, params: unknown[]) => { id?: string; [column:
  */
 export function fakeDb(answer: Answer = () => undefined) {
   const seen: Seen[] = [];
-  const query = async (sql: string, params: unknown[] = []) => {
-    seen.push({ sql, params });
-    const rows = answer(sql, params) ?? [];
+  const query = (sql: string, params: unknown[] = []) => {
+    return settle(() => {
+      seen.push({ sql, params });
+      const rows = answer(sql, params) ?? [];
 
-    return { rows, rowCount: rows.length };
+      return { rows, rowCount: rows.length };
+    });
   };
   const client = { query } as unknown as Pick<PoolClient, 'query'>;
   const pool = {
-    connect: async () => ({ query, release: () => undefined }) as unknown as PoolClient,
+    connect: () => settle(() => ({ query, release: () => undefined }) as unknown as PoolClient),
     query,
   } as unknown as Pool;
 
