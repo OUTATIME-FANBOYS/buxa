@@ -44,5 +44,16 @@ Tests sit beside the code and in `__tests__/` folders.
 
 ## Diagrams
 
-- [Folders and import direction](docs/diagrams/server-structure.html)
-- [A check-in, from the action to the database and audit log](docs/diagrams/server-checkin.html)
+Each preview links to the interactive diagram, which you can explore in the browser. The standalone HTML files are in `docs/diagrams/` if you want to download them.
+
+### Folders and import direction
+
+[![Folders and import direction, preview](docs/diagrams/server-structure.png)](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/apps/server/docs/diagrams/server-structure.html)
+
+[Open the interactive diagram](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/apps/server/docs/diagrams/server-structure.html)
+
+### A check-in, from the action to the database and audit log
+
+[![A check-in, from the action to the database and audit log, preview](docs/diagrams/server-checkin.png)](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/apps/server/docs/diagrams/server-checkin.html)
+
+[Open the interactive diagram](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/apps/server/docs/diagrams/server-checkin.html)
