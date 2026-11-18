@@ -4,6 +4,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import type { ComponentType } from 'react';
 import { UiProvider, useUi, type ConfirmDialogProps } from '../UiProvider';
+import { settle } from '@buxa/domain';
 
 // A stand-in for the web app's Dialog: the same role and label, so the confirm prompt can be tested here.
 const Dialog: ComponentType<ConfirmDialogProps> = ({ title, footer, children }) => (
@@ -53,8 +54,10 @@ describe('UiProvider', () => {
     expect(dialog.textContent).toContain('This cannot be undone.');
     const confirm = Array.from(dialog.querySelectorAll('button')).find((b) => b.textContent === 'Delete')!;
     expect(confirm.className).toContain('btn-danger');
-    await act(async () => {
-      confirm.click();
+    await act(() => {
+      return settle(() => {
+        confirm.click();
+      });
     });
     expect(answer).toBe(true);
   });
@@ -66,8 +69,10 @@ describe('UiProvider', () => {
       });
     });
     const cancel = Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Cancel')!;
-    await act(async () => {
-      cancel.click();
+    await act(() => {
+      return settle(() => {
+        cancel.click();
+      });
     });
     expect(answer).toBe(false);
   });
