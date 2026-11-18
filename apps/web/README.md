@@ -40,5 +40,16 @@ Component and page tests sit beside the code (`*.test.ts`, `*.test.tsx`) and in 
 
 ## Diagrams
 
-- [Folders and import direction](docs/diagrams/web-structure.html)
-- [A page request, browser to HTML and back](docs/diagrams/web-request.html)
+Each preview links to the interactive diagram, which you can explore in the browser. The standalone HTML files are in `docs/diagrams/` if you want to download them.
+
+### Folders and import direction
+
+[![Folders and import direction, preview](docs/diagrams/web-structure.png)](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/apps/web/docs/diagrams/web-structure.html)
+
+[Open the interactive diagram](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/apps/web/docs/diagrams/web-structure.html)
+
+### A page request, browser to HTML and back
+
+[![A page request, browser to HTML and back, preview](docs/diagrams/web-request.png)](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/apps/web/docs/diagrams/web-request.html)
+
+[Open the interactive diagram](https://htmlpreview.github.io/?https://github.com/OUTATIME-FANBOYS/buxa/blob/develop/apps/web/docs/diagrams/web-request.html)
