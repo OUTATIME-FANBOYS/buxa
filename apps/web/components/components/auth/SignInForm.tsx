@@ -10,22 +10,25 @@ export function SignInForm() {
   const isSignIn = mode === 'in';
 
   return (
-    <div className="auth-card">
+    <>
+      {/* Shown only on a phone, above the card (hidden on desktop by auth.css). Outside the card so it can sit above it. */}
       <div className="brand brand-lg auth-brand">
         <span className="logo logo-mark" aria-hidden="true">
           <BrandMark size={32} />
         </span>{' '}
         Buxa
       </div>
-      <h1>{isSignIn ? 'Welcome back' : 'Create your account'}</h1>
-      <p className="muted">{isSignIn ? 'Sign in to manage your camp.' : 'Then set up your first camp.'}</p>
-      <AuthForm key={mode} mode={mode} />
-      <p className="auth-switch muted">
-        {isSignIn ? 'New here?' : 'Already have an account?'}{' '}
-        <button type="button" className="link" onClick={() => setMode(isSignIn ? 'up' : 'in')}>
-          {isSignIn ? 'Create an account' : 'Sign in'}
-        </button>
-      </p>
-    </div>
+      <div className="auth-card">
+        <h1>{isSignIn ? 'Welcome back' : 'Create your account'}</h1>
+        <p className="muted">{isSignIn ? 'Sign in to manage your camp.' : 'Then set up your first camp.'}</p>
+        <AuthForm key={mode} mode={mode} />
+        <p className="auth-switch muted">
+          {isSignIn ? 'New here?' : 'Already have an account?'}{' '}
+          <button type="button" className="link" onClick={() => setMode(isSignIn ? 'up' : 'in')}>
+            {isSignIn ? 'Create an account' : 'Sign in'}
+          </button>
+        </p>
+      </div>
+    </>
   );
 }

@@ -48,6 +48,6 @@ describe('sign-in background tokens', () => {
     expect(block(':root')).toContain('rgba(11, 90, 94, 0.18)');
     expect(block(':root')).toContain('--auth-tint: #d6eeeb;');
     expect(block(':root')).toContain('rgba(10, 79, 81, 0.6)');
-    expect(block("[data-theme='dark']")).toContain('--auth-tint: #3d2619;');
+    expect(block("[data-theme='dark']")).toContain('--auth-tint: #55333a;');
   });
 });

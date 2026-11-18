@@ -77,6 +77,20 @@
   }
 }
 @media (max-width: 720px) {
+  /* Sign-in on a phone: the hero's glows and stars become the page background, and the brand sits centred above the card with one gap. */
+  .auth {
+    background: var(--auth-glow), var(--auth-stars), var(--hero-bg);
+    justify-items: center;
+    align-content: center;
+    gap: var(--s5);
+    padding: var(--s6) 0;
+  }
+  .auth-brand {
+    margin: 0;
+  }
+  .auth-card {
+    margin: 0;
+  }
   input,
   select,
   textarea {
