@@ -34,17 +34,28 @@ describe('TaskTopBar', () => {
     h.store = {};
   });
 
-  it('says what the save state is, in words', () => {
-    expect(saveLabel('saved', 'synced')).toBe('Synced');
+  it('says what the save state is, in words, while something is unsaved or syncing', () => {
+    expect(saveLabel('saving', 'synced')).toBe('Syncing…');
     expect(saveLabel('saving', 'local')).toBe('Saving…');
     expect(saveLabel('error', 'local')).toBe('Not saved, storage full');
     expect(saveLabel('saved', 'offline')).toBe('Offline, retrying');
   });
-  it('places search, notifications and the account menu together', () => {
+  it('shows no save note when everything is saved, so the header never says Saved', () => {
+    expect(saveLabel('saved', 'synced')).toBe('');
+    expect(saveLabel('saved', 'local')).toBe('');
+    const html = renderToStaticMarkup(<TaskTopBar account={<span>account-menu</span>} />);
+    expect(html).not.toContain('Saved');
+    expect(html).not.toContain('save-state');
+  });
+  it('places search, Help, notifications and the account menu in that order', () => {
     saveLabel('saved', 'synced');
     const html = renderToStaticMarkup(<TaskTopBar account={<span>account-menu</span>} />);
+    const at = (s: string) => html.indexOf(s);
     expect(html).toContain('aria-label="Search all tasks"');
+    expect(html).toContain('aria-label="Help"');
     expect(html).toContain('aria-label="Notifications"');
-    expect(html).toContain('account-menu');
+    expect(at('aria-label="Search all tasks"')).toBeLessThan(at('aria-label="Help"'));
+    expect(at('aria-label="Help"')).toBeLessThan(at('aria-label="Notifications"'));
+    expect(at('aria-label="Notifications"')).toBeLessThan(at('account-menu'));
   });
 });

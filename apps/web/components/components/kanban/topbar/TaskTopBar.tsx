@@ -3,10 +3,13 @@
 import { useRef, type ReactNode } from 'react';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { useGlobalShortcuts } from '@buxa/middleware/hooks/hooks';
+import { Button } from '@/components/elements';
+import { ROUTES } from '@/config/routes';
 import { GlobalSearch } from './GlobalSearch';
 import { Notifications } from './Notifications';
 
-function useSaveLabel() {
+/** The save state in words, or null when everything is saved: the header says nothing then. */
+function useSaveLabel(): string | null {
   const { saveStatus, sync } = useStore();
   if (sync === 'offline') {
     return 'Offline, retrying';
@@ -14,16 +17,16 @@ function useSaveLabel() {
   if (saveStatus === 'error') {
     return 'Not saved, storage full';
   }
-  if (sync === 'synced') {
-    return saveStatus === 'saving' ? 'Syncing…' : 'Synced';
+  if (saveStatus === 'saving') {
+    return sync === 'synced' ? 'Syncing…' : 'Saving…';
   }
 
-  return saveStatus === 'saving' ? 'Saving…' : 'Saved';
+  return null;
 }
 
 /**
- * The task pieces of the top bar: search (⌘K or /), the save state, notifications, and the account.
- * `account` is the signed-in person's menu.
+ * The task pieces of the top bar, left to right: search (⌘K or /), a note only while something is unsaved or syncing,
+ * Help, notifications, and the account. `account` is the signed-in person's menu.
  */
 export function TaskTopBar({ account }: { account: ReactNode }) {
   const { saveStatus, sync, project } = useStore();
@@ -34,9 +37,12 @@ export function TaskTopBar({ account }: { account: ReactNode }) {
   return (
     <>
       <GlobalSearch inputRef={searchRef} />
-      <span className={`save-state save-${sync === 'offline' ? 'error' : saveStatus}`} role="status">
-        {label}
-      </span>
+      {label && (
+        <span className={`save-state save-${sync === 'offline' ? 'error' : saveStatus}`} role="status">
+          {label}
+        </span>
+      )}
+      <Button iconOnly variant="secondary" icon="help" href={ROUTES.help} aria-label="Help" className="header-icon" />
       <Notifications />
       {account}
     </>
