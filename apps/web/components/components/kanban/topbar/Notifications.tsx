@@ -67,15 +67,23 @@ export function Notifications() {
         <Popover anchor={btn.current} onClose={close} align="end" width={360} label="Notifications" className="notif">
           <div className="notif-head">
             <strong>Notifications</strong>
-            <button className="link" onClick={actions.markAllRead} disabled={!mine.some(n => !n.read)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="link"
+              icon="check"
+              onClick={actions.markAllRead}
+              disabled={!mine.some(n => !n.read)}
+            >
               Mark all read
-            </button>
+            </Button>
           </div>
           <div className="notif-list">
             {reminders.length > 0 && <div className="eyebrow pad">Needs attention</div>}
             {reminders.map(r => (
-              <button
+              <Button
                 key={r.id}
+                variant="ghost"
                 className="notif-item"
                 onClick={() => {
                   close();
@@ -86,12 +94,13 @@ export function Notifications() {
                   <Icon name="clock" size={14} />
                 </span>
                 <span>{r.text}</span>
-              </button>
+              </Button>
             ))}
             {mine.length > 0 && <div className="eyebrow pad">Recent</div>}
             {mine.slice(0, 15).map(n => (
-              <button
+              <Button
                 key={n.id}
+                variant="ghost"
                 className={`notif-item ${n.read ? '' : 'unread'}`}
                 onClick={() => {
                   actions.markNoticeRead(n.id);
@@ -108,7 +117,7 @@ export function Notifications() {
                   <span>{n.text}</span>
                   <span className="muted small block">{ago(n.at)}</span>
                 </span>
-              </button>
+              </Button>
             ))}
             {!reminders.length && !mine.length && (
               <Empty

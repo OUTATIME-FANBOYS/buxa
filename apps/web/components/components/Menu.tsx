@@ -183,8 +183,9 @@ export function Menu({
               }
 
               return (
-                <button
+                <Button
                   key={i}
+                  variant="ghost"
                   role="menuitem"
                   type="button"
                   disabled={it.disabled}
@@ -196,7 +197,7 @@ export function Menu({
                   }}
                 >
                   {content}
-                </button>
+                </Button>
               );
             })}
           </div>

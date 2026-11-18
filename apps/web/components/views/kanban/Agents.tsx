@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Empty } from '@/components/components/export';
 import { Icon, Button } from '@/components/elements/export';
 import { Segmented } from '@/components/elements/export';
+import { Select } from '@/components/atoms';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { AgentDialog } from '@/components/components/kanban/dialogs/export';
@@ -61,8 +62,7 @@ export function Agents() {
             </Button>
           )}
           {canManage && (
-            <Button variant="primary" onClick={() => setAdding(true)}>
-              <Icon name="plus" size={16} />
+            <Button variant="primary" icon="plus" onClick={() => setAdding(true)}>
               Add agent
             </Button>
           )}
@@ -88,7 +88,7 @@ export function Agents() {
             body="Add one to let it propose tasks, comments and changes. It starts out asking before it changes anything."
             action={
               canManage ? (
-                <Button variant="primary" onClick={() => setAdding(true)}>
+                <Button variant="primary" icon="plus" onClick={() => setAdding(true)}>
                   Add agent
                 </Button>
               ) : undefined
@@ -103,21 +103,24 @@ export function Agents() {
         ))}
       {adding && <AgentDialog onClose={() => setAdding(false)} />}
       {tab !== 'agents' && agents.length > 1 && sim && (
-        <label className="muted small row">
+        <div className="muted small row">
           Simulated runs use{' '}
-          <select
+          <Select
+            label="Agent for simulated runs"
+            hideLabel
             className="inline-select"
             value={sim.userId}
-            onChange={e => setSimAgent(e.target.value)}
-            aria-label="Agent for simulated runs"
-          >
-            {agents.map(a => (
-              <option key={a.userId} value={a.userId}>
-                {s.users.find(u => u.id === a.userId)?.name}
-              </option>
-            ))}
-          </select>
-        </label>
+            onChange={value => {
+              if (value) {
+                setSimAgent(value);
+              }
+            }}
+            options={agents.map(a => ({
+              value: a.userId,
+              label: s.users.find(u => u.id === a.userId)?.name ?? a.userId,
+            }))}
+          />
+        </div>
       )}
     </div>
   );

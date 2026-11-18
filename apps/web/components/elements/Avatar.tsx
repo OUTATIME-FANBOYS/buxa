@@ -1,5 +1,5 @@
 import { initials } from '@buxa/shared';
-import { Icon } from './Icon';
+import { Icon } from '../atoms/Icon/Icon';
 import { avatarHue } from '@buxa/shared';
 
 /** Anything with a name works; `agent` marks a non-human member. */

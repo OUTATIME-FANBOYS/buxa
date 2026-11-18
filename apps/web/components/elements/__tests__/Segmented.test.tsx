@@ -13,7 +13,7 @@ describe('Segmented', () => {
     );
     expect(html).toContain('role="radiogroup" aria-label="View"');
     expect(html).toContain('aria-checked="true"');
-    expect(html).toContain('class="on"');
+    expect(html).toMatch(/class="[^"]*\bon\b[^"]*"/);
   });
   it('shows the icon and a label class only when an option has an icon', () => {
     const html = renderToStaticMarkup(

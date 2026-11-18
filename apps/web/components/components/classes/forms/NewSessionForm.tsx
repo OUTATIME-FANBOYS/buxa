@@ -1,7 +1,8 @@
 'use client';
 
 import { useActionState, useEffect, useRef } from 'react';
-import { Field, Button } from '@/components/elements/export';
+import { Button } from '@/components/elements/export';
+import { Checkbox, HiddenField, TextField } from '@/components/atoms';
 import { classPath } from '@/config/routes';
 import { fieldError, idle } from '@buxa/shared';
 import { addSessionAction } from '@/actions/classes';
@@ -41,11 +42,10 @@ export function NewSessionForm({
   }, [state]);
 
   const err = (name: string) => fieldError(state, name);
-  const invalid = (name: string) => (err(name) ? true : undefined);
 
   return (
     <form ref={formRef} action={formAction} className="panel stack classes-form" aria-describedby="session-form-help">
-      <input type="hidden" name="classId" value={classId} />
+      <HiddenField name="classId" value={classId} />
       <p id="session-form-help" className="muted">
         Times are in the camp&apos;s time zone ({timeZone}), written as 2027-07-05T09:00. Fields marked with an asterisk
         are required.
@@ -55,31 +55,32 @@ export function NewSessionForm({
         {ratio ? `${ratio.instructors} instructor for ${ratio.campers} campers` : 'not set on this class'}.
       </p>
       <div className="form-row">
-        <Field label="Starts *" error={err('startsAt')}>
-          <input
-            name="startsAt"
-            placeholder="2027-07-05T09:00"
-            autoComplete="off"
-            aria-invalid={invalid('startsAt')}
-            autoFocus
-          />
-        </Field>
-        <Field label="Ends *" error={err('endsAt')}>
-          <input name="endsAt" placeholder="2027-07-05T12:00" autoComplete="off" aria-invalid={invalid('endsAt')} />
-        </Field>
-      </div>
-      <Field label="Location *" error={err('location')}>
-        <input name="location" maxLength={200} autoComplete="off" aria-invalid={invalid('location')} />
-      </Field>
-      <Field label="Places" error={err('capacity')} hint={`Leave empty to use the class default (${defaultCapacity}).`}>
-        <input
-          name="capacity"
-          inputMode="numeric"
+        <TextField
+          label="Starts *"
+          name="startsAt"
+          placeholder="2027-07-05T09:00"
+          error={err('startsAt')}
           autoComplete="off"
-          placeholder={String(defaultCapacity)}
-          aria-invalid={invalid('capacity')}
+          autoFocus
         />
-      </Field>
+        <TextField
+          label="Ends *"
+          name="endsAt"
+          placeholder="2027-07-05T12:00"
+          error={err('endsAt')}
+          autoComplete="off"
+        />
+      </div>
+      <TextField label="Location *" name="location" error={err('location')} maxLength={200} autoComplete="off" />
+      <TextField
+        label="Places"
+        name="capacity"
+        inputMode="numeric"
+        placeholder={String(defaultCapacity)}
+        error={err('capacity')}
+        hint={`Leave empty to use the class default (${defaultCapacity}).`}
+        autoComplete="off"
+      />
       <fieldset className="plain">
         <legend className="field-label">Instructors</legend>
         {instructors.length === 0 ? (
@@ -87,9 +88,9 @@ export function NewSessionForm({
         ) : (
           <div className="people-checks">
             {instructors.map(i => (
-              <label key={i.id} className="people-check">
-                <input type="checkbox" name="instructorIds" value={i.id} /> {i.name}
-              </label>
+              <Checkbox key={i.id} className="people-check" name="instructorIds" value={i.id}>
+                {i.name}
+              </Checkbox>
             ))}
           </div>
         )}

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { Column, Project, Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Icon } from '@/components/elements/export';
+import { Button } from '@/components/elements/export';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { useBoardDnd } from '@buxa/middleware/hooks/hooks';
 import { ColumnDialog } from '@/components/components/kanban/dialogs/export';
@@ -65,9 +65,9 @@ export function BoardView({
         />
       ))}
       {!readOnly && (
-        <button className="add-column" onClick={() => setColDlg({})}>
-          <Icon name="plus" size={16} /> Add column
-        </button>
+        <Button variant="ghost" icon="plus" className="add-column" onClick={() => setColDlg({})}>
+          Add column
+        </Button>
       )}
       {colDlg && <ColumnDialog projectId={project.id} column={colDlg.column} onClose={() => setColDlg(null)} />}
     </div>

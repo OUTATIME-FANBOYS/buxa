@@ -17,7 +17,7 @@ describe('NewClassForm', () => {
       'Instructors',
       'Campers',
     ]) {
-      expect(html).toContain(`<span class="field-label">${label}</span>`);
+      expect(html).toContain(`>${label}<`);
     }
     expect(html).toContain('name="name"');
     expect(html).toContain('name="ratioInstructors"');

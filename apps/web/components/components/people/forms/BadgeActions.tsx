@@ -3,6 +3,7 @@
 import { useActionState } from 'react';
 import { BadgeCard } from '@/components/components/badge/export';
 import { PrintButton, Button } from '@/components/elements/export';
+import { HiddenField } from '@/components/atoms';
 import { idle } from '@buxa/shared';
 import { issueBadgeAction, revokeBadgeAction } from '@/actions/people';
 import type { BadgeState } from '@buxa/shared';
@@ -31,15 +32,15 @@ export function BadgeActions({ personId, hasActiveBadge, personName, roleLabel, 
     <div className="stack">
       <div className="row">
         <form action={issueAction}>
-          <input type="hidden" name="personId" value={personId} />
-          <Button variant="primary" disabled={issuing}>
+          <HiddenField name="personId" value={personId} />
+          <Button variant="primary" icon="badge" disabled={issuing}>
             {issuing ? 'Making badge…' : hasActiveBadge ? 'Reissue badge' : 'Issue badge'}
           </Button>
         </form>
         {hasActiveBadge && (
           <form action={revokeAction}>
-            <input type="hidden" name="personId" value={personId} />
-            <Button variant="danger-soft" disabled={revoking}>
+            <HiddenField name="personId" value={personId} />
+            <Button variant="danger-soft" icon="ban" disabled={revoking}>
               {revoking ? 'Revoking…' : 'Revoke badge'}
             </Button>
           </form>

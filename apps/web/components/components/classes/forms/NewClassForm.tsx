@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef } from 'react';
 import { Field, Button } from '@/components/elements/export';
+import { TextField } from '@/components/atoms';
 import { ROUTES } from '@/config/routes';
 import { fieldError, idle } from '@buxa/shared';
 import { createClassAction } from '@/actions/classes';
@@ -27,7 +28,6 @@ export function NewClassForm({
   }, [state]);
 
   const err = (name: string) => fieldError(state, name);
-  const invalid = (name: string) => (err(name) ? true : undefined);
 
   return (
     <form
@@ -39,49 +39,47 @@ export function NewClassForm({
       <p id="class-form-help" className="class-helper">
         Fields marked with an asterisk are required.
       </p>
-      <Field label="Class name *" error={err('name')}>
-        <input
-          name="name"
-          maxLength={120}
-          autoComplete="off"
-          aria-invalid={invalid('name')}
-          data-autofocus
-          autoFocus={!inDialog}
-        />
-      </Field>
+      <TextField
+        label="Class name *"
+        name="name"
+        error={err('name')}
+        maxLength={120}
+        autoComplete="off"
+        autoFocus={!inDialog}
+      />
       <Field label="Description" error={err('description')} hint="What campers do in this class. Shown to staff.">
-        <textarea name="description" rows={3} maxLength={2000} aria-invalid={invalid('description')} />
+        <textarea name="description" rows={3} maxLength={2000} aria-invalid={err('description') ? true : undefined} />
       </Field>
       <div className="form-row">
-        <Field label="Youngest age *" error={err('minAge')}>
-          <input name="minAge" inputMode="numeric" autoComplete="off" aria-invalid={invalid('minAge')} />
-        </Field>
-        <Field label="Oldest age *" error={err('maxAge')}>
-          <input name="maxAge" inputMode="numeric" autoComplete="off" aria-invalid={invalid('maxAge')} />
-        </Field>
+        <TextField label="Youngest age *" name="minAge" inputMode="numeric" error={err('minAge')} autoComplete="off" />
+        <TextField label="Oldest age *" name="maxAge" inputMode="numeric" error={err('maxAge')} autoComplete="off" />
       </div>
-      <Field
+      <TextField
         label="Default places *"
+        name="capacity"
+        inputMode="numeric"
         error={err('capacity')}
         hint="Each new session starts with this many places. A session can change its own."
-      >
-        <input name="capacity" inputMode="numeric" autoComplete="off" aria-invalid={invalid('capacity')} />
-      </Field>
+        autoComplete="off"
+      />
       <fieldset className="plain class-section">
         <legend className="class-legend">Instructor ratio (optional)</legend>
         <p className="field-hint">For example 1 instructor for 8 campers. Saved with the class. Not enforced yet.</p>
         <div className="form-row">
-          <Field label="Instructors" error={err('ratioInstructors')}>
-            <input
-              name="ratioInstructors"
-              inputMode="numeric"
-              autoComplete="off"
-              aria-invalid={invalid('ratioInstructors')}
-            />
-          </Field>
-          <Field label="Campers" error={err('ratioCampers')}>
-            <input name="ratioCampers" inputMode="numeric" autoComplete="off" aria-invalid={invalid('ratioCampers')} />
-          </Field>
+          <TextField
+            label="Instructors"
+            name="ratioInstructors"
+            inputMode="numeric"
+            error={err('ratioInstructors')}
+            autoComplete="off"
+          />
+          <TextField
+            label="Campers"
+            name="ratioCampers"
+            inputMode="numeric"
+            error={err('ratioCampers')}
+            autoComplete="off"
+          />
         </div>
       </fieldset>
       <ActionMessage state={state} />
@@ -95,7 +93,13 @@ export function NewClassForm({
             Cancel
           </Button>
         )}
-        <Button type="submit" variant="primary" className={inDialog ? undefined : 'classes-target'} disabled={pending}>
+        <Button
+          type="submit"
+          variant="primary"
+          icon="plus"
+          className={inDialog ? undefined : 'classes-target'}
+          disabled={pending}
+        >
           {pending ? 'Saving...' : 'Create class'}
         </Button>
       </div>

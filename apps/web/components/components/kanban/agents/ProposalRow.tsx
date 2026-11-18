@@ -31,9 +31,9 @@ export function ProposalRow({ p, actions: showActions }: { p: Proposal; actions:
           {t ? (
             <>
               {d.before}
-              <button className="link-inline" onClick={() => openTask(t.id)}>
+              <Button variant="ghost" size="sm" className="link-inline" onClick={() => openTask(t.id)}>
                 “{d.title}”
-              </button>
+              </Button>
               {d.after}
             </>
           ) : (

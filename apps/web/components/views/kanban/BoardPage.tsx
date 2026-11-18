@@ -116,8 +116,7 @@ export function BoardPage({ projectId }: { projectId?: string }) {
                 <Avatar key={m.userId} user={m.user} size={24} />
               ))}
             </span>
-            <Button variant="ghost" size="sm" onClick={() => setEdit(true)}>
-              <Icon name="edit" size={14} />
+            <Button variant="ghost" size="sm" icon="edit" onClick={() => setEdit(true)}>
               Edit
             </Button>
           </div>
@@ -125,8 +124,12 @@ export function BoardPage({ projectId }: { projectId?: string }) {
         <div className="page-actions">
           <Segmented<ViewKind> label="Board view" value={view} onChange={actions.setView} options={options} />
           {!readOnly && (
-            <Button variant="primary" size="header" onClick={() => openTask('new', { projectId: target.id })}>
-              <Icon name="plus" size={16} />
+            <Button
+              variant="primary"
+              size="header"
+              icon="plus"
+              onClick={() => openTask('new', { projectId: target.id })}
+            >
               Add task
             </Button>
           )}

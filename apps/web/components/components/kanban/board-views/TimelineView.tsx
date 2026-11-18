@@ -49,13 +49,14 @@ function TimelineRow({ task, s, e, base }: { task: Task; s: string; e: string; b
 
   return (
     <div className="tl-row">
-      <button className="tl-label" onClick={() => openTask(task.id)} title={task.title}>
+      <Button variant="ghost" className="tl-label" onClick={() => openTask(task.id)} title={task.title}>
         <Avatar user={userById(task.assigneeId)} size={20} />
         <span>{task.title}</span>
-      </button>
+      </Button>
       <div className="tl-track" style={{ backgroundSize: `${DAYW * 7}px 100%` }}>
         {visible && (
-          <button
+          <Button
+            variant="ghost"
             className={`tl-bar prio-bg-${task.priority} ${done ? 'is-done' : ''}`}
             style={{ left: Math.max(left, 0), width: Math.max(width + Math.min(left, 0), DAYW) }}
             onClick={() => openTask(task.id)}
@@ -63,7 +64,7 @@ function TimelineRow({ task, s, e, base }: { task: Task; s: string; e: string; b
           >
             {sp.total > 0 && <span className="tl-fill" style={{ width: `${(sp.done / sp.total) * 100}%` }} />}
             <span className="tl-text">{width > 90 ? task.title : ''}</span>
-          </button>
+          </Button>
         )}
       </div>
     </div>

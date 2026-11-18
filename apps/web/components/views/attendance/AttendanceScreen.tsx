@@ -52,7 +52,7 @@ export async function AttendanceScreen({ searchParams }: { searchParams: SearchP
       />
       <LogFilters values={values} people={people}>
         {parsed.ok && canExport && (
-          <Button className="log-export" href={attendanceExportPath(parsed.filter)} download>
+          <Button className="log-export" icon="download" href={attendanceExportPath(parsed.filter)} download>
             Download CSV
           </Button>
         )}

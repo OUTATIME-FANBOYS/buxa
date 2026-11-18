@@ -21,7 +21,7 @@ describe('StageRules', () => {
 
   it('lists each stage of the agent’s project with its rule, editable for managers', () => {
     const html = renderToStaticMarkup(<StageRules agent={agent} canManage />);
-    expect(html).toContain(`aria-label="Moving into ${seed.projects[0].columns[0].name}"`);
+    expect(html).toContain(`Moving into ${seed.projects[0].columns[0].name}`);
     expect(html).toContain('>Ask me</option>');
     expect(html).toContain('>Default</option>');
   });

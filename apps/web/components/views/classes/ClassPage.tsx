@@ -68,7 +68,7 @@ export async function ClassPage({
         subtitle={cls.description || 'No description yet.'}
         actions={
           canManage && (
-            <Button variant="primary" className="classes-target" href={newSessionPath(cls.id)}>
+            <Button variant="primary" className="classes-target" icon="plus" href={newSessionPath(cls.id)}>
               Add session
             </Button>
           )
@@ -101,7 +101,7 @@ export async function ClassPage({
             }
             action={
               canManage && (
-                <Button variant="primary" className="classes-target" href={newSessionPath(cls.id)}>
+                <Button variant="primary" className="classes-target" icon="plus" href={newSessionPath(cls.id)}>
                   Add session
                 </Button>
               )

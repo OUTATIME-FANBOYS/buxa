@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
-import { Icon } from '@/components/elements/export';
+import { SearchField } from '@/components/atoms';
 
 export function GlobalSearch({ inputRef }: { inputRef: React.RefObject<HTMLInputElement | null> }) {
   const { wsTasks, userById, s } = useStore();
@@ -35,38 +35,39 @@ export function GlobalSearch({ inputRef }: { inputRef: React.RefObject<HTMLInput
 
   return (
     <div className="search" role="search">
-      <Icon name="search" size={15} />
-      <input
-        ref={inputRef}
-        value={q}
-        placeholder="Search tasks"
+      <SearchField
         aria-label="Search all tasks"
-        role="combobox"
-        aria-expanded={open && !!q}
-        aria-controls="search-results"
-        onChange={e => {
-          setQ(e.target.value);
+        placeholder="Search tasks"
+        value={q}
+        onChange={value => {
+          setQ(value);
           setOpen(true);
           setI(0);
         }}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 120)}
-        onKeyDown={e => {
-          if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            setI(x => Math.min(results.length - 1, x + 1));
-          }
-          if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            setI(x => Math.max(0, x - 1));
-          }
-          if (e.key === 'Enter' && results[i]) {
-            pick(results[i].id);
-          }
-          if (e.key === 'Escape') {
-            setQ('');
-            inputRef.current?.blur();
-          }
+        inputRef={inputRef}
+        inputProps={{
+          role: 'combobox',
+          'aria-expanded': open && !!q,
+          'aria-controls': 'search-results',
+          onFocus: () => setOpen(true),
+          onBlur: () => setTimeout(() => setOpen(false), 120),
+          onKeyDown: e => {
+            if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              setI(x => Math.min(results.length - 1, x + 1));
+            }
+            if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              setI(x => Math.max(0, x - 1));
+            }
+            if (e.key === 'Enter' && results[i]) {
+              pick(results[i].id);
+            }
+            if (e.key === 'Escape') {
+              setQ('');
+              inputRef.current?.blur();
+            }
+          },
         }}
       />
       <kbd className="kbd">⌘K</kbd>

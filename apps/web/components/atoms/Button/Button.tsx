@@ -4,7 +4,7 @@ import { Button as HeroButton } from '@heroui/react/button';
 import { buttonVariants } from '@heroui/styles';
 import Link from 'next/link';
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ComponentProps, ReactNode, Ref } from 'react';
-import { Icon } from './Icon';
+import { Icon } from '../Icon/Icon';
 
 /*
  * The one button for the app. Call sites write <Button variant="primary">; they do not import HeroUI.
@@ -87,6 +87,10 @@ interface CommonButtonProps extends NativeButtonProps {
   target?: string;
   rel?: string;
   ref?: Ref<HTMLElement>;
+  /** A widget role the button plays (menuitem, radio, tab). HeroUI drops it, so the atom sets it on the element. */
+  role?: 'menuitem' | 'radio' | 'tab';
+  'aria-checked'?: boolean;
+  'aria-selected'?: boolean;
 }
 
 /** A label-led button takes its text as children and may lead with an icon. */
@@ -125,8 +129,14 @@ export function Button({
   target,
   rel,
   ref,
+  role,
+  'aria-checked': ariaChecked,
+  'aria-selected': ariaSelected,
   ...rest
 }: ButtonProps) {
+  // HeroUI's button keeps only its own attributes, so a widget role (menuitem, radio, tab) is set through its render prop.
+  const widgetAttrs = { role, 'aria-checked': ariaChecked, 'aria-selected': ariaSelected };
+  const hasWidgetAttrs = role !== undefined || ariaChecked !== undefined || ariaSelected !== undefined;
   const extra = className ? [className] : [];
   const press = onPress ?? (onClick ? () => onClick() : undefined);
   const content = (
@@ -165,6 +175,7 @@ export function Button({
   return (
     <HeroButton
       {...(rest as ComponentProps<typeof HeroButton>)}
+      render={hasWidgetAttrs ? (props: object) => <button {...props} {...widgetAttrs} /> : undefined}
       ref={ref as Ref<HTMLButtonElement>}
       type={type ?? 'submit'}
       variant={variant}

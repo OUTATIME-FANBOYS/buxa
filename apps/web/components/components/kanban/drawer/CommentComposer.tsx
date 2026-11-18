@@ -45,19 +45,21 @@ export function CommentComposer({ taskId, members }: { taskId: string; members: 
         <ul className="mentions" role="listbox">
           {suggestions.map(m => (
             <li key={m.id}>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 type="button"
                 onClick={() => setComment(comment.replace(/@[\p{L}]*$/u, '@' + m.name.split(' ')[0] + ' '))}
               >
                 {m.name}
-              </button>
+              </Button>
             </li>
           ))}
         </ul>
       )}
       <div className="row-end">
         <span className="muted small grow">⌘ Enter to send</span>
-        <Button variant="primary" size="sm" onClick={send} disabled={!comment.trim()}>
+        <Button variant="primary" size="sm" icon="message" onClick={send} disabled={!comment.trim()}>
           Comment
         </Button>
       </div>

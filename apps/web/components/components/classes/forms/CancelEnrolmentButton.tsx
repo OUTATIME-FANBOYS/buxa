@@ -5,6 +5,7 @@ import { idle } from '@buxa/shared';
 import { cancelEnrolmentAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
 import { Button } from '@/components/elements/export';
+import { HiddenField } from '@/components/atoms';
 
 /** Cancels one enrolment. The label names the camper, so a screen reader user knows which row the button belongs to. */
 export function CancelEnrolmentButton({
@@ -20,9 +21,9 @@ export function CancelEnrolmentButton({
 
   return (
     <form action={formAction} className="classes-inline">
-      <input type="hidden" name="classId" value={classId} />
-      <input type="hidden" name="enrolmentId" value={enrolmentId} />
-      <Button variant="danger-soft" type="submit" className="classes-target" disabled={pending}>
+      <HiddenField name="classId" value={classId} />
+      <HiddenField name="enrolmentId" value={enrolmentId} />
+      <Button variant="danger-soft" type="submit" icon="x" className="classes-target" disabled={pending}>
         Cancel enrolment<span className="sr-only"> for {camperName}</span>
       </Button>
       <ActionMessage state={state} />

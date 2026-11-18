@@ -47,7 +47,7 @@ describe('BoardView', () => {
       `aria-label="${project.columns[0].name}, ${tasks.filter(t => t.columnId === project.columns[0].id).length} tasks"`,
     );
     expect(html.match(/<section data-col-id=/g)).toHaveLength(project.columns.length);
-    expect(html).toContain(' Add column</button>');
+    expect(html).toContain('Add column');
   });
   it('hides every change for read-only members', () => {
     const html = renderToStaticMarkup(

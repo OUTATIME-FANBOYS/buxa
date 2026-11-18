@@ -47,7 +47,7 @@ describe('Menu', () => {
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
     const items = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'));
     expect(items.map(i => i.textContent)).toEqual(['Rename', 'Delete']);
-    expect(items[1].className).toBe('danger');
+    expect(items[1].classList.contains('danger')).toBe(true);
     act(() => items[0].click());
     expect(onRename).toHaveBeenCalledTimes(1);
     expect(document.querySelector('[role="menu"]')).toBeNull();

@@ -25,7 +25,7 @@ describe('SubtaskList', () => {
     expect(html).toContain('aria-label="Subtask progress"');
     expect(html.match(/type="checkbox"/g)).toHaveLength(2);
     expect(html).toContain('aria-label="Remove subtask Book bus"');
-    expect(html).toContain('aria-label="New subtask"');
+    expect(html).toContain('New subtask');
   });
   it('locks the checkboxes and hides the add form for read-only members', () => {
     const html = renderToStaticMarkup(<SubtaskList task={task} ro />);

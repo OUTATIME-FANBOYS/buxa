@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Avatar, Button } from '@/components/elements/export';
 import { Empty } from '@/components/components/export';
+import { Select } from '@/components/atoms';
 import { Icon } from '@/components/elements/export';
 import { Menu } from '@/components/components/export';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
@@ -48,37 +49,35 @@ export function History({ proposals, agents }: { proposals: Proposal[]; agents: 
   return (
     <div className="stack">
       <div className="row filters">
-        <select
-          aria-label="Filter by outcome"
-          value={status}
-          onChange={e => setStatus(e.target.value as 'all' | ProposalStatus)}
+        <Select
+          label="Filter by outcome"
+          hideLabel
           className="inline-select"
-        >
-          <option value="all">All outcomes</option>
-          {(['applied', 'approved', 'rejected', 'blocked', 'reverted'] as ProposalStatus[]).map(x => (
-            <option key={x} value={x}>
-              {STATUS_LABEL[x]}
-            </option>
-          ))}
-        </select>
+          value={status}
+          onChange={value => setStatus((value ?? 'all') as 'all' | ProposalStatus)}
+          options={[
+            { value: 'all', label: 'All outcomes' },
+            ...(['applied', 'approved', 'rejected', 'blocked', 'reverted'] as ProposalStatus[]).map(x => ({
+              value: x,
+              label: STATUS_LABEL[x],
+            })),
+          ]}
+        />
         {agents.length > 1 && (
-          <select
-            aria-label="Filter by agent"
-            value={agent}
-            onChange={e => setAgent(e.target.value)}
+          <Select
+            label="Filter by agent"
+            hideLabel
             className="inline-select"
-          >
-            <option value="all">All agents</option>
-            {agents.map(a => (
-              <option key={a.userId} value={a.userId}>
-                {s.users.find(u => u.id === a.userId)?.name}
-              </option>
-            ))}
-          </select>
+            value={agent}
+            onChange={value => setAgent(value ?? 'all')}
+            options={[
+              { value: 'all', label: 'All agents' },
+              ...agents.map(a => ({ value: a.userId, label: s.users.find(u => u.id === a.userId)?.name ?? a.userId })),
+            ]}
+          />
         )}
         <span className="grow" />
-        <Button size="sm" onClick={exportAudit} disabled={!proposals.length}>
-          <Icon name="download" size={15} />
+        <Button size="sm" icon="download" onClick={exportAudit} disabled={!proposals.length}>
           Export audit log
         </Button>
       </div>

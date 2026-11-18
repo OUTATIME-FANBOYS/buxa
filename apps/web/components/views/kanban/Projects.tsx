@@ -49,8 +49,7 @@ export function Projects() {
         </div>
         {!readOnly && (
           <div className="page-actions">
-            <Button variant="primary" size="header" onClick={() => setDlg({})}>
-              <Icon name="plus" size={16} />
+            <Button variant="primary" size="header" icon="plus" onClick={() => setDlg({})}>
               New project
             </Button>
           </div>
@@ -63,7 +62,7 @@ export function Projects() {
           body="Each project gets its own Kanban board."
           action={
             !readOnly ? (
-              <Button variant="primary" onClick={() => setDlg({})}>
+              <Button variant="primary" icon="plus" onClick={() => setDlg({})}>
                 New project
               </Button>
             ) : undefined

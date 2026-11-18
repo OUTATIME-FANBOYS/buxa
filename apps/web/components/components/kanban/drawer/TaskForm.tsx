@@ -97,7 +97,7 @@ export function TaskForm({ task, project, defaults, onClose }: TaskFormProps) {
           ) : (
             <div className="row-end sticky-foot">
               <Button onClick={close}>Cancel</Button>
-              <Button variant="primary" onClick={d.create}>
+              <Button variant="primary" icon="plus" onClick={d.create}>
                 Create task
               </Button>
             </div>

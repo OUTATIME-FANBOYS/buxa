@@ -18,6 +18,7 @@ export function NewClassButton() {
       <Button
         variant="primary"
         type="button"
+        icon="plus"
         className="classes-target"
         aria-haspopup="dialog"
         onClick={() => setOpen(true)}

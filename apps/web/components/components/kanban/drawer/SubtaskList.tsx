@@ -5,6 +5,7 @@ import type { Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { Button } from '@/components/elements/export';
 import { Progress } from '@/components/elements/export';
+import { Checkbox, TextField } from '@/components/atoms';
 import { subtaskProgress } from '@buxa/shared';
 
 export function SubtaskList({ task, ro }: { task: Task; ro: boolean }) {
@@ -26,15 +27,9 @@ export function SubtaskList({ task, ro }: { task: Task; ro: boolean }) {
       <ul className="checklist">
         {task.subtasks.map(st => (
           <li key={st.id}>
-            <label>
-              <input
-                type="checkbox"
-                checked={st.done}
-                disabled={ro}
-                onChange={() => actions.toggleSubtask(task.id, st.id)}
-              />
+            <Checkbox isSelected={st.done} isDisabled={ro} onChange={() => actions.toggleSubtask(task.id, st.id)}>
               <span className={st.done ? 'done' : ''}>{st.title}</span>
-            </label>
+            </Checkbox>
             {!ro && (
               <Button
                 iconOnly
@@ -58,14 +53,15 @@ export function SubtaskList({ task, ro }: { task: Task; ro: boolean }) {
             }
           }}
         >
-          <input
+          <TextField
+            label="New subtask"
+            hideLabel
             value={sub}
-            onChange={e => setSub(e.target.value)}
+            onChange={setSub}
             placeholder="Add a subtask"
-            aria-label="New subtask"
             maxLength={140}
           />
-          <Button size="sm" disabled={!sub.trim()}>
+          <Button size="sm" icon="plus" disabled={!sub.trim()}>
             Add
           </Button>
         </form>

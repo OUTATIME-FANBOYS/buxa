@@ -16,7 +16,7 @@ export function AddPersonButton({ households }: { households: readonly Household
 
   return (
     <>
-      <Button variant="primary" type="button" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+      <Button variant="primary" type="button" icon="user-plus" aria-haspopup="dialog" onClick={() => setOpen(true)}>
         Add person
       </Button>
       {open && (

@@ -1,7 +1,6 @@
+export * from '../atoms';
 export * from './Avatar';
-export * from './Button';
 export * from './Field';
-export * from './Icon';
 export * from './Legend';
 export * from './LiveRegion';
 export * from './Pill';
@@ -11,7 +10,5 @@ export * from './Progress';
 export * from './Ring';
 export * from './Segmented';
 export * from './StatusBar';
-export * from './TextField';
 export * from './chartTone';
-export * from './icons';
 export * from './BrandMark';

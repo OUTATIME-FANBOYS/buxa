@@ -11,6 +11,7 @@ import { Avatar } from '@/components/elements/export';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { PRIORITIES, emptyFilter, isFilterActive } from '@buxa/shared';
 import { requirePresent } from '@buxa/domain';
+import { Checkbox, RadioGroup, SearchField, TextField } from '@/components/atoms';
 
 function Chip({
   label,
@@ -29,8 +30,10 @@ function Chip({
 
   return (
     <>
-      <button
+      <Button
         ref={ref}
+        variant="ghost"
+        size="sm"
         className={`chip ${count ? 'on' : ''}`}
         aria-haspopup="dialog"
         aria-expanded={open}
@@ -39,7 +42,7 @@ function Chip({
         {label}
         {count > 0 && <span className="chip-count">{count}</span>}
         <Icon name="down" size={13} />
-      </button>
+      </Button>
       {open && (
         <Popover
           anchor={ref.current}
@@ -57,10 +60,9 @@ function Chip({
 
 function Check({ checked, onChange, children }: { checked: boolean; onChange: () => void; children: ReactNode }) {
   return (
-    <label className="check-row">
-      <input type="checkbox" checked={checked} onChange={onChange} />
-      <span>{children}</span>
-    </label>
+    <Checkbox className="check-row" isSelected={checked} onChange={onChange}>
+      {children}
+    </Checkbox>
   );
 }
 const toggle = <T,>(arr: T[], v: T) => (arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]);
@@ -102,16 +104,13 @@ export function FilterBar({
 
   return (
     <div className="filters" role="group" aria-label="Filters and sorting">
-      <div className="search-local">
-        <Icon name="search" size={15} />
-        <input
-          value={filter.q}
-          onChange={e => set({ q: e.target.value })}
-          placeholder="Filter tasks"
-          aria-label="Filter tasks by title or description"
-        />
-        {filter.q && <Button iconOnly icon="x" aria-label="Clear search" onClick={() => set({ q: '' })} />}
-      </div>
+      <SearchField
+        className="search-local"
+        value={filter.q}
+        onChange={q => set({ q })}
+        placeholder="Filter tasks"
+        aria-label="Filter tasks by title or description"
+      />
       <Chip label="Priority" count={filter.priorities.length}>
         {PRIORITIES.slice()
           .reverse()
@@ -156,12 +155,13 @@ export function FilterBar({
         </Chip>
       )}
       <Chip label="Due" count={filter.due !== 'any' ? 1 : 0}>
-        {DUE.map(d => (
-          <label key={d.v} className="check-row">
-            <input type="radio" name="due" checked={filter.due === d.v} onChange={() => set({ due: d.v })} />
-            <span>{d.l}</span>
-          </label>
-        ))}
+        <RadioGroup
+          label="Due"
+          name="due"
+          value={filter.due}
+          onChange={v => set({ due: v as DueFilter })}
+          options={DUE.map(d => ({ value: d.v, label: d.l }))}
+        />
       </Chip>
       <Chip label="Tags" count={filter.tags.length}>
         {tags.length === 0 && <p className="muted small pad">No tags yet.</p>}
@@ -189,9 +189,9 @@ export function FilterBar({
         }
         items={SORT.map(x => ({ label: x.l, checked: filter.sort === x.v, onSelect: () => set({ sort: x.v }) }))}
       />
-      <label className="chip chip-check">
-        <input type="checkbox" checked={filter.archived} onChange={e => set({ archived: e.target.checked })} /> Archived
-      </label>
+      <Checkbox className="chip chip-check" isSelected={filter.archived} onChange={archived => set({ archived })}>
+        Archived
+      </Checkbox>
       <span className="grow" />
       {active && (
         <Button variant="ghost" size="sm" onClick={() => setFilter({ ...emptyFilter, sort: filter.sort })}>
@@ -246,12 +246,13 @@ export function FilterBar({
             toast('Filter saved');
           }}
         >
-          <input
+          <TextField
+            label="Saved filter name"
+            hideLabel
             autoFocus
             value={name}
-            onChange={e => setName(e.target.value)}
+            onChange={setName}
             placeholder="Name this view"
-            aria-label="Saved filter name"
             maxLength={40}
             onKeyDown={e => {
               if (e.key === 'Escape') {
@@ -259,7 +260,7 @@ export function FilterBar({
               }
             }}
           />
-          <Button variant="primary" size="sm" disabled={!name.trim()}>
+          <Button variant="primary" size="sm" icon="save" disabled={!name.trim()}>
             Save
           </Button>
           <Button size="sm" type="button" onClick={() => setNaming(false)}>

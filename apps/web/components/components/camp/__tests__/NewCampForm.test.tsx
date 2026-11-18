@@ -22,8 +22,8 @@ describe('NewCampForm', () => {
   });
   it('asks for a name and an address for the camp', () => {
     const html = renderToStaticMarkup(<NewCampForm first />);
-    expect(html).toContain('>Camp name</span>');
-    expect(html).toContain('>Address</span>');
+    expect(html).toMatch(/data-slot="label"[^>]*>Camp name</);
+    expect(html).toMatch(/data-slot="label"[^>]*>Address</);
     expect(html).toContain('>Create camp</button>');
   });
 });

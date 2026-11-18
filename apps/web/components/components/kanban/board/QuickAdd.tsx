@@ -52,10 +52,10 @@ export function QuickAdd({ project, column, onDone }: { project: Project; column
         </span>
       )}
       <div className="row">
-        <Button variant="primary" size="sm" onClick={submit}>
+        <Button variant="primary" size="sm" icon="plus" onClick={submit}>
           Add
         </Button>
-        <Button variant="ghost" size="sm" onClick={onDone}>
+        <Button variant="ghost" size="sm" icon="check" onClick={onDone}>
           Done
         </Button>
         <span className="muted small grow" style={{ textAlign: 'right' }}>

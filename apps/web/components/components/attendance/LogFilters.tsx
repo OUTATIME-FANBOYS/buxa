@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import type { PersonSummary } from '@buxa/contracts';
 import { ROUTES } from '@/config/routes';
 import { attendanceDisplayName } from '@buxa/shared';
-import { Button } from '@/components/elements/export';
+import { Button, DatePicker, parseLocalDate, Select } from '@/components/atoms';
 
 interface LogFilterValues {
   from: string;
@@ -28,25 +28,17 @@ export function LogFilters({
       role="search"
       aria-label="Filter the log"
     >
-      <label className="field">
-        <span className="field-label">From</span>
-        <input type="date" name="from" defaultValue={values.from} required />
-      </label>
-      <label className="field">
-        <span className="field-label">To</span>
-        <input type="date" name="to" defaultValue={values.to} required />
-      </label>
-      <label className="field">
-        <span className="field-label">Person</span>
-        <select name="personId" defaultValue={values.personId}>
-          <option value="">Everyone</option>
-          {people.map(person => (
-            <option key={person.id} value={person.id}>
-              {attendanceDisplayName(person)}
-            </option>
-          ))}
-        </select>
-      </label>
+      <DatePicker label="From" name="from" defaultValue={parseLocalDate(values.from)} isRequired />
+      <DatePicker label="To" name="to" defaultValue={parseLocalDate(values.to)} isRequired />
+      <Select
+        label="Person"
+        name="personId"
+        defaultValue={values.personId}
+        options={[
+          { value: '', label: 'Everyone' },
+          ...people.map(person => ({ value: person.id, label: attendanceDisplayName(person) })),
+        ]}
+      />
       <Button variant="primary" type="submit">
         Show
       </Button>

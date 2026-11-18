@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from './Button';
+import { Button } from '../atoms/Button';
 
 /** Opens the browser's print dialog. The badge's print styles hide everything else. */
 export function PrintButton({ label = 'Print badge' }: { label?: string }) {

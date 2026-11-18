@@ -63,7 +63,7 @@ export async function PersonScreen({
           <ContactDetails person={person} />
           <div className="row">
             {canUpdate && (
-              <Button size="sm" href={personEditPath(person.id)}>
+              <Button size="sm" icon="edit" href={personEditPath(person.id)}>
                 Edit details
               </Button>
             )}

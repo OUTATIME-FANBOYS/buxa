@@ -132,7 +132,7 @@ export function CameraScanner({ onScan, onClose }: CameraScannerProps) {
           </p>
         </>
       )}
-      <Button type="button" onClick={close}>
+      <Button type="button" icon="x" onClick={close}>
         Close camera
       </Button>
     </div>

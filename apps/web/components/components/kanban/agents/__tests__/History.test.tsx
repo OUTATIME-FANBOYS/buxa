@@ -24,7 +24,7 @@ describe('History', () => {
         <History proposals={[]} agents={seed.agents} />
       </UiProvider>,
     );
-    expect(html).toContain('aria-label="Filter by outcome"');
+    expect(html).toContain('Filter by outcome');
     expect(html).toContain('>All outcomes</option>');
     expect(html).toContain('Export audit log');
   });

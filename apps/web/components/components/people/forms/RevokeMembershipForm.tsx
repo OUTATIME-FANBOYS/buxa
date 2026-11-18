@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef } from 'react';
 import { Field, Button } from '@/components/elements/export';
+import { HiddenField } from '@/components/atoms';
 import { fieldError, idle } from '@buxa/shared';
 import { revokeMembershipAction } from '@/actions/people';
 import { FormMessage } from './FormMessage';
@@ -19,14 +20,14 @@ export function RevokeMembershipForm({ membershipId, personId }: { membershipId:
 
   return (
     <form ref={formRef} action={formAction} className="stack people-subpanel">
-      <input type="hidden" name="membershipId" value={membershipId} />
-      <input type="hidden" name="personId" value={personId} />
+      <HiddenField name="membershipId" value={membershipId} />
+      <HiddenField name="personId" value={personId} />
       <Field label="Why is it being revoked? *" error={reasonError} hint="Recorded with the revocation.">
         <textarea name="reason" rows={2} maxLength={500} aria-invalid={reasonError ? true : undefined} />
       </Field>
       <FormMessage state={state} />
       <div>
-        <Button variant="danger" disabled={pending}>
+        <Button variant="danger" icon="ban" disabled={pending}>
           {pending ? 'Revoking…' : 'Revoke membership'}
         </Button>
       </div>

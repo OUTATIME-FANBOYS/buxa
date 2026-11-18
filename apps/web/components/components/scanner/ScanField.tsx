@@ -12,6 +12,7 @@ import {
 } from 'react';
 import { createScanDeduper } from '@buxa/shared';
 import { normalizeScan } from '@buxa/shared';
+import { TextField } from '@/components/atoms';
 
 /**
  * One focused text input that accepts a handheld scanner (it types the code and presses Enter) or typing. Calls `onScan` with the raw
@@ -71,21 +72,16 @@ export const ScanField = forwardRef<ScanFieldHandle, ScanFieldProps>(function Sc
 
   return (
     <form className="scan-field" onSubmit={submit}>
-      <label className="scan-label" htmlFor="scan-code">
-        {label}
-      </label>
-      <input
+      <TextField
         id="scan-code"
-        ref={input}
+        label={label}
         name="code"
-        className="scan-input"
-        type="text"
+        inputRef={input}
         inputMode="text"
         enterKeyHint="go"
-        disabled={disabled}
+        isDisabled={disabled}
         autoFocus
         autoComplete="off"
-        autoCorrect="off"
         autoCapitalize="off"
         spellCheck={false}
       />
