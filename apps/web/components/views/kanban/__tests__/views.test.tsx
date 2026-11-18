@@ -88,10 +88,11 @@ describe('kanban views', () => {
     h.store = store();
   });
 
-  it('Settings lists the name and email, time format, appearance, agents, data and shortcuts cards, with no Camp clock', () => {
+  it('Settings lists the display name, email, time format, appearance, agents, data and shortcuts cards, with no Camp clock', () => {
     const html = page(<Settings />);
     for (const heading of [
-      'Name and email',
+      'Display name',
+      'Email',
       'Time format',
       'Appearance',
       'Agents',

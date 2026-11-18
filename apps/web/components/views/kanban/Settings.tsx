@@ -8,7 +8,7 @@ import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { ROUTES } from '@/config/routes';
 import { AgentDialog } from '@/components/components/kanban/dialogs';
 import { ResetDemoButton } from '@/components/components/kanban';
-import { AppearanceCard, NameEmailCard, TimeFormatCard } from '@/components/components/settings';
+import { AppearanceCard, DisplayNameCard, EmailCard, TimeFormatCard } from '@/components/components/settings';
 import { ArchivedCampsCard, DangerZone } from '@/components/components/camp';
 import type { ArchivedCamp } from '@/actions/camp';
 import { fullNameOf } from '@buxa/shared/names';
@@ -68,13 +68,8 @@ export function Settings({
         </div>
       </header>
       <div className="settings-grid">
-        <NameEmailCard
-          className="settings-tile--full"
-          firstName={firstName}
-          lastName={lastName}
-          email={email}
-          onSaved={savedName}
-        />
+        <DisplayNameCard firstName={firstName} lastName={lastName} onSaved={savedName} />
+        <EmailCard email={email} />
         <TimeFormatCard clockFormat={user?.clockFormat ?? undefined} />
         <AppearanceCard />
         <section className="panel settings-tile">
