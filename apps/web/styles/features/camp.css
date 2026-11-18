@@ -1,4 +1,7 @@
 /* ---------- Camp area ---------- */
+/* The camp switcher trigger is a Menu, so its Button is icon-only (a fixed 36px square). Let it size to the camp name instead. */
+.crumb.camp-switch { width: auto; max-width: 100%; min-width: 0; flex: 0 1 auto; }
+.camp-switch .crumb-text { max-width: 100%; min-width: 0; }
 .setup { max-width: 520px; margin: var(--s7) auto; }
 .steps { display: grid; gap: var(--s2); padding-left: var(--s5); margin: var(--s3) 0; }
 .abilities { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }

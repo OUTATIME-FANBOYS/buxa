@@ -13,13 +13,14 @@ import { selectCampAction, type ArchivedCamp } from '@/actions/camp';
  */
 export function CampSwitcher({ camps, current, archivedCamps = [] }: { camps: readonly Membership[]; current: Membership | null; archivedCamps?: readonly ArchivedCamp[] }) {
   const router = useRouter();
+  const name = current?.name ?? 'No camp yet';
   const select = async (orgId: string) => {
     await selectCampAction(orgId); router.push(ROUTES.camp); router.refresh();
   };
 
   return (
-    <Menu label="Switch camp" className="crumb" align="start"
-      trigger={<><span className="crumb-text">{current?.name ?? 'No camp yet'}</span><Icon name="down" size={14} /></>}
+    <Menu label="Switch camp" className="crumb camp-switch" align="start"
+      trigger={<><span className="crumb-text" title={name}>{name}</span><Icon name="down" size={14} /></>}
       items={[
         ...camps.map(c => ({ label: c.name, checked: c.orgId === current?.orgId, onSelect: () => {
           void select(c.orgId);
