@@ -3,6 +3,9 @@ import { selectCampAction as selectCampActionImpl } from '@buxa/server/composers
 import { createCampAction as createCampActionImpl } from '@buxa/server/composers/camp/createCampAction';
 import { renameCampAction as renameCampActionImpl } from '@buxa/server/composers/camp/renameCampAction';
 import { updateCampClockAction as updateCampClockActionImpl } from '@buxa/server/composers/camp/updateCampClockAction';
+import { archiveCamp as archiveCampImpl } from '@buxa/server/composers/camp/archiveCamp';
+import { deleteCamp as deleteCampImpl } from '@buxa/server/composers/camp/deleteCamp';
+import { listArchivedCamps as listArchivedCampsImpl } from '@buxa/server/composers/camp/listArchivedCamps';
 
 // Server action wrappers for the camp screens. Client components import this module, never @buxa/server. Next.js allows only
 // async functions to be exported from a 'use server' file, so each action is wrapped rather than re-exported.
@@ -23,8 +26,7 @@ export async function updateCampClockAction(...args: Parameters<typeof updateCam
   return updateCampClockActionImpl(...args);
 }
 
-// Archive and delete. The contract is fixed; the server side (issue #266, branch v0.2/feat/camp-archive-server) replaces these stubs.
-// STUB until server issue #266 merges: nothing is archived or deleted, and no camp is listed as archived. Replace the bodies with the server composers.
+// Archive and delete. The server composers return the same CampResult shape as the other camp actions.
 
 export type CampActionResult = { ok: true } | { ok: false; message: string };
 export interface ArchivedCamp {
@@ -33,21 +35,17 @@ export interface ArchivedCamp {
   archivedAt: string;
 }
 
-/** STUB (server issue #266): archives the camp. It is hidden from the switcher, and its data is kept. */
-export async function archiveCamp(_input: { orgId: string }): Promise<CampActionResult> {
-  void _input;
-
-  return { ok: false, message: 'Archiving is not available yet.' };
+/** Archives the camp (owner only). It is hidden from the switcher, and its data is kept. */
+export async function archiveCamp(input: { orgId: string }): Promise<CampActionResult> {
+  return archiveCampImpl(input);
 }
 
-/** STUB (server issue #266): deletes the camp and everything in it. `confirmName` must match the camp name exactly. */
-export async function deleteCamp(_input: { orgId: string; confirmName: string }): Promise<CampActionResult> {
-  void _input;
-
-  return { ok: false, message: 'Deleting is not available yet.' };
+/** Deletes the camp and everything in it (owner only). `confirmName` must match the camp name exactly. */
+export async function deleteCamp(input: { orgId: string; confirmName: string }): Promise<CampActionResult> {
+  return deleteCampImpl(input);
 }
 
-/** STUB (server issue #266): the person's archived camps. */
+/** The person's archived camps, read-only. */
 export async function listArchivedCamps(): Promise<ArchivedCamp[]> {
-  return [];
+  return listArchivedCampsImpl();
 }
