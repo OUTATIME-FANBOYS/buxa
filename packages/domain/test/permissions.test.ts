@@ -17,6 +17,7 @@ const MATRIX: Record<Action, string> = {
   'members:invite': '..YY',
   'members:change_role': '..YY',
   'members:remove': '..YY',
+  'members:rename': '..YY',
   'members:leave': 'YYYY',
   'audit:read': '..YY',
   'data:export': '...Y',
@@ -180,5 +181,34 @@ describe('transferring ownership', () => {
 describe('ranks', () => {
   it('are strictly ordered', () => {
     expect(ROLES.map(rank)).toEqual([0, 1, 2, 3]);
+  });
+});
+
+describe('members:rename', () => {
+  const org = 'org-1';
+  const actorOf = (role: Role) => ({ userId: 'me', orgId: org, role });
+  const target = (role: Role, userId = 'them') => ({ orgId: org, target: { userId, role } });
+
+  it('an admin may rename staff and viewers, not peers or owners', () => {
+    expect(can(actorOf('admin'), 'members:rename', target('staff'))).toBe(true);
+    expect(can(actorOf('admin'), 'members:rename', target('viewer'))).toBe(true);
+    expect(can(actorOf('admin'), 'members:rename', target('admin'))).toBe(false);
+    expect(can(actorOf('admin'), 'members:rename', target('owner'))).toBe(false);
+  });
+
+  it('an owner may rename anyone else but not themselves', () => {
+    expect(can(actorOf('owner'), 'members:rename', target('admin'))).toBe(true);
+    expect(can(actorOf('owner'), 'members:rename', target('owner'))).toBe(true);
+    expect(can(actorOf('owner'), 'members:rename', target('owner', 'me'))).toBe(false);
+  });
+
+  it('staff and viewers may not rename anyone', () => {
+    expect(can(actorOf('staff'), 'members:rename', target('viewer'))).toBe(false);
+    expect(can(actorOf('viewer'), 'members:rename', target('viewer'))).toBe(false);
+  });
+
+  it('is refused in an archived camp and needs a target', () => {
+    expect(can({ ...actorOf('owner'), archived: true }, 'members:rename', target('staff'))).toBe(false);
+    expect(authorize(actorOf('admin'), 'members:rename', { orgId: org })).toEqual({ allow: false, reason: 'missing_context' });
   });
 });
