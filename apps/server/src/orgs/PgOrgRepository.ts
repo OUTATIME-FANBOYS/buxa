@@ -112,7 +112,7 @@ export class PgOrgRepository implements OrgRepository {
     }
   }
 
-  /** buxa_unarchive_camp (migration 0015) checks the owner role, refuses a camp that is not archived and writes the audit row. */
+  /** buxa_unarchive_camp (migration 0017) checks the owner role, refuses a camp that is not archived and writes the audit row. */
   async unarchive(actor: Actor): Promise<void> {
     try {
       await withOrg(this.pool, actor.orgId, db =>

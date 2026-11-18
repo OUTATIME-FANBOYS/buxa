@@ -6,9 +6,9 @@ import type { Row } from '../types';
 
 const url = process.env.DATABASE_URL;
 
-// Migration 0015: unarchive (owner only, refused when the camp is not archived, audited, data unchanged). Delete of an
+// Migration 0017: unarchive (owner only, refused when the camp is not archived, audited, data unchanged). Delete of an
 // archived camp (0013) is covered here too, because the owner can delete it straight from the archived list.
-describe.skipIf(!url)('camp unarchive (0015)', () => {
+describe.skipIf(!url)('camp unarchive (0017)', () => {
   const pool = new pg.Pool({ connectionString: url });
   const tag = randomBytes(6).toString('hex');
   let owner = '';
@@ -64,7 +64,7 @@ describe.skipIf(!url)('camp unarchive (0015)', () => {
     await withOrg(pool, camp, db => db.query('SELECT buxa_archive_camp($1, $2)', [camp, owner]));
     const auditRows = () =>
       pool.query<Row>(`SELECT action FROM audit_log WHERE org_id = $1 AND action = 'org.unarchive'`, [camp]);
-    const before = (await auditRows()).rowCount;
+    const before = (await auditRows()).rowCount ?? 0;
     await unarchive(owner);
 
     expect(await archivedAt()).toBeNull();
