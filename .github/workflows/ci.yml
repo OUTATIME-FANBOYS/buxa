@@ -150,6 +150,8 @@ jobs:
           key: node-modules-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
           fail-on-cache-miss: true
       - run: npm run lint
+      - name: Prettier check
+        run: npm run format:check
 
   unit:
     name: 3. unit tests (packages and apps, no database)
