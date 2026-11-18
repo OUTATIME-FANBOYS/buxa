@@ -5,6 +5,7 @@
 import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
+import eslintConfigPrettier from 'eslint-config-prettier/flat';
 
 // Scripts, tests and command-line entry points may write to stdout and stderr; product code may only use console.warn and console.error (server logs).
 const consoleAllowed = [
@@ -105,5 +106,8 @@ export default tseslint.config(
     files: consoleAllowed,
     rules: { 'no-console': 'off' },
   },
+
+  // Last: turns off the ESLint style rules that conflict with Prettier. Formatting is Prettier's job.
+  eslintConfigPrettier,
 
 );
