@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { can, CAMP_ROLE_LABELS, type Actor, type CampRole } from '@buxa/domain';
 import { personEditPath } from '@/config/routes';
-import { loadCampProfile } from '@buxa/server/composers/index.server';
+import { campClock, loadCampProfile } from '@buxa/server/composers/index.server';
 import { loadHouseholdList, loadPersonMatches } from '@buxa/server/composers/index.server';
 import { loadVisitHistory } from '@buxa/server/composers/index.server';
 import { ArchivePersonButton } from '@/components/components/people/forms';
@@ -41,11 +41,12 @@ export async function PersonScreen({
     permissionsFor(actor);
   const { q } = readListParams(searchParams);
   // The camp's own zone (orgs.timezone) is what every time on this page is shown in. Every role may read the camp.
-  const [visits, households, matches, camp] = await Promise.all([
+  const [visits, households, matches, camp, clock] = await Promise.all([
     canSeeVisits ? loadVisitHistory(actor, person.id) : Promise.resolve([]),
     canUpdate ? loadHouseholdList(actor) : Promise.resolve([]),
     canUpdate && q !== '' ? loadPersonMatches(actor, q) : Promise.resolve([]),
     loadCampProfile(actor),
+    campClock(actor),
   ]);
   const roleLabel = person.roles.map((role: CampRole) => CAMP_ROLE_LABELS[role]).join(', ');
   const linkable = matches
@@ -88,7 +89,7 @@ export async function PersonScreen({
             memberships={person.memberships}
             canManage={canManage}
             timeZone={camp.timezone}
-            clockFormat={camp.clockFormat}
+            clockFormat={clock.clockFormat}
           />
         )}
         {person.hasActiveBadge !== null && (
@@ -103,7 +104,7 @@ export async function PersonScreen({
           />
         )}
       </div>
-      {canSeeVisits && <AttendanceHistory entries={visits} timeZone={camp.timezone} clockFormat={camp.clockFormat} />}
+      {canSeeVisits && <AttendanceHistory entries={visits} timeZone={camp.timezone} clockFormat={clock.clockFormat} />}
     </div>
   );
 }
