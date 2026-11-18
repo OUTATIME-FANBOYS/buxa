@@ -3,6 +3,22 @@
 Status: **spec for review. No code yet.** Roadmap row: "Registration: sign-up forms with custom fields, holds, waitlist. No card payments yet (demo only)." Card payments and refunds moved to phase 9 (`09-payments-go-live.md`).
 Depends on: phase 2 (sessions and enrolments).
 
+## Moved from phase 2: recurring events, public class pages and the iCal feed
+
+These were in the phase 2 roadmap row and moved here so that phase 2 closes on classes, sessions and enrolment alone.
+
+- **Recurring sessions:** a weekly rule expands into normal sessions, each with its own enrolments. Overlap and capacity still apply to each. Tests cover month ends, DST days, and the count and until limits.
+- **Public class pages:** a read-only page per class, listing its upcoming sessions, with no contact details and no enrolled campers. Only classes marked public.
+- **iCal feed:** a read-only feed per camp that calendar apps subscribe to by URL, authenticated by an unguessable token stored as a hash. Archived camps return not found.
+
+**Built, not merged:** branch `v0.2/feat/recurring-ical-public`, three parts, migrations 0020 and 0021.
+
+**Open decisions:**
+
+- Staff UI to create a series and to make an existing class public. The branch has the server side only.
+- Token rotation from Settings. Settings is still being reworked, so the button waits for that.
+- The token is in the feed URL's query string. Calendar apps cannot send headers, so the token has to be in the URL. The remaining risk is platform request logs; check their retention.
+
 ## Words we use
 
 - **Registration**: a family's request to enrol a camper in one or more sessions, with the form answers and a payment.

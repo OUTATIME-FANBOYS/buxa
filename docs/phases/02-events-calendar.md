@@ -1,7 +1,7 @@
 # Phase 2: classes, sessions and enrolment
 
-Status: **built** for this slice (classes, sessions, enrolment, bulk import and the classes screens). Recurring events, public pages and the iCal feed are not built yet. Roadmap row (phase 2, `docs/ROADMAP.md`): "Events & calendar: programs to sessions, recurring events, capacity, public pages, iCal feed."
-This spec covers the first slice of that row: classes (the roadmap's "programs") and their sessions, and who is enrolled. Recurring events, public pages and the iCal feed are still phase 2 work and come after this slice. Phase 2 is not done until its roadmap exit criteria pass, including the recurrence and public-page tests.
+Status: **built** for this slice (classes, sessions, enrolment, bulk import and the classes screens). Recurring events, public pages and the iCal feed moved to phase 3 (`docs/phases/03-registration.md`). Roadmap row (phase 2, `docs/ROADMAP.md`): "Events & calendar: programs to sessions, capacity, enrolment."
+This spec covers the first slice of that row: classes (the roadmap's "programs") and their sessions, and who is enrolled. Recurring events, public pages and the iCal feed moved to phase 3, so this phase's exit does not depend on them.
 
 ## Words we use
 
@@ -48,7 +48,7 @@ Done when all four are recorded in this phase's docs.
 
 ## Not in this phase
 
-Public class pages, iCal feed, payments, waitlist promotion, automatic ratio enforcement, and check-in per session (check-in stays per camp day for now).
+Recurring events, public class pages and the iCal feed (moved to phase 3), payments, waitlist promotion, automatic ratio enforcement, and check-in per session (check-in stays per camp day for now).
 
 ## Open for review
 
