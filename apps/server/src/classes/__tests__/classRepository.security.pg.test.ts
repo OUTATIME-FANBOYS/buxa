@@ -48,7 +48,7 @@ describe.skipIf(!url)('classes on Postgres: request role and camp isolation', ()
 
     it('the rows are still there after the refused deletes', async () => {
       await expect(asCampA('DELETE FROM enrolments WHERE id = $1', [enrolmentId])).rejects.toMatchObject({ code: '42501' });
-      const { rows } = await pool.query('SELECT count(*)::int AS n FROM enrolments WHERE id = $1', [enrolmentId]);
+      const { rows } = await pool.query<{ n: number }>('SELECT count(*)::int AS n FROM enrolments WHERE id = $1', [enrolmentId]);
       expect(rows[0].n).toBe(1);
     });
   });

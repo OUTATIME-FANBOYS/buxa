@@ -106,9 +106,4 @@ export default tseslint.config(
     rules: { 'no-console': 'off' },
   },
 
-  // Debt: the legacy server's test file types its JSON bodies as `any` (8 places). Warning until the test gets real types.
-  {
-    files: ['apps/server/src/agents/__tests__/**'],
-    rules: { '@typescript-eslint/no-explicit-any': 'warn' },
-  },
 );

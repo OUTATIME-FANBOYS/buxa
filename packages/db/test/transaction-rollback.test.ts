@@ -1,23 +1,27 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 import type { Pool, PoolClient } from 'pg';
 import { transaction } from '../src';
 
 // Audit S-13. Fault injection with a scripted client: no database needed.
 // A rollback that fails must not return the connection to the pool.
 
-interface FakeClient { query: ReturnType<typeof vi.fn>; release: ReturnType<typeof vi.fn> }
+/** The test double for a pooled client: its query and release are mocks with these shapes. */
+interface FakeClient {
+  query: Mock<(sql: string) => Promise<{ rows: never[]; rowCount: number }>>;
+  release: Mock<(err?: unknown) => void>;
+}
 
 /** A client whose statements succeed unless `fail` names them. */
 function fakeClient(fail: Record<string, Error>): FakeClient {
   return {
-    query: vi.fn(async (sql: string) => {
+    query: vi.fn(async (sql: string): Promise<{ rows: never[]; rowCount: number }> => {
       if (fail[sql]) {
         throw fail[sql];
       }
 
       return { rows: [], rowCount: 0 };
     }),
-    release: vi.fn(),
+    release: vi.fn<(err?: unknown) => void>(),
   };
 }
 

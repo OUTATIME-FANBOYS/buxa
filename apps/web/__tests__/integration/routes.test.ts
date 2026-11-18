@@ -3,6 +3,7 @@ import { CreatedOrgSchema, ErrorBodySchema, MeSchema, MembersSchema, OrgSchema }
 import { InMemoryStore } from '@buxa/server/__tests__/fakes';
 import { call, startRuntime } from './harness';
 import { createTestIdentityProvider } from '@buxa/server/__tests__/tokens';
+import { IdBody } from '../types';
 
 // The real route handlers, auth and permission checks, against the in-memory adapter: no database needed.
 const idp = await createTestIdentityProvider();
@@ -15,7 +16,7 @@ describe('routes (in-memory repositories)', () => {
   });
   afterEach(() => env.stop());
 
-  const makeOrg = async (token: string, slug = 'sunrise-lake') => (await (await call('POST', '/v1/orgs', { token, body: { name: 'Sunrise Lake', slug } })).json()).id as string;
+  const makeOrg = async (token: string, slug = 'sunrise-lake') => IdBody.parse(await (await call('POST', '/v1/orgs', { token, body: { name: 'Sunrise Lake', slug } })).json()).id;
 
   it('every success response matches its published contract', async () => {
     const t = await idp.token(); const org = await makeOrg(t);
@@ -35,13 +36,13 @@ describe('routes (in-memory repositories)', () => {
 
   it('refuses a bad body before anything is stored, naming the field', async () => {
     const r = await call('POST', '/v1/orgs', { token: await idp.token(), body: { name: 'Camp', slug: 'Not A Slug' } });
-    expect(r.status).toBe(400); expect((await r.json()).error.message).toMatch(/^slug:/);
+    expect(r.status).toBe(400); expect(ErrorBodySchema.parse(await r.json()).error.message).toMatch(/^slug:/);
     expect(store.orgs.size).toBe(0);
   });
 
   it('refuses a body that is not JSON', async () => {
     const r = await call('POST', '/v1/orgs', { token: await idp.token(), rawBody: '{bad' });
-    expect(r.status).toBe(400); expect((await r.json()).error.message).toMatch(/JSON/);
+    expect(r.status).toBe(400); expect(ErrorBodySchema.parse(await r.json()).error.message).toMatch(/JSON/);
   });
 
   it('maps a taken address to 409', async () => {

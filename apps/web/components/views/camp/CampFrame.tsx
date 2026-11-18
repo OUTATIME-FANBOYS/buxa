@@ -7,11 +7,12 @@ import { CampSwitcher } from '@/components/components/camp/export';
 import { InstallHint } from '@/components/components/install/export';
 import { navGroupsFor } from '@buxa/shared';
 import { Shell } from '@/components/components/camp/export';
+import type { CampFrameElement } from './types';
 
 interface Props { user: User; camps: readonly Membership[]; current: Membership | null; children: ReactNode }
 
 /** The signed-in frame around camp operations pages. With no camp yet, first-run setup is the only page, whatever address was asked for. */
-export function CampFrame({ user, camps, current, children }: Props) {
+export function CampFrame({ user, camps, current, children }: Props): CampFrameElement {
   return (
     <Shell nav={navGroupsFor(current?.role ?? null)} brandHref={ROUTES.camp}
       topBarStart={<CampSwitcher camps={camps} current={current} />} topBarEnd={<AccountMenu user={user} />}>

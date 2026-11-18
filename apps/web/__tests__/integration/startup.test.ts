@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ErrorBodySchema } from '@buxa/contracts';
 import { call, startRuntime } from './harness';
 
 let env: ReturnType<typeof startRuntime> | undefined;
@@ -15,7 +16,7 @@ describe('the email-confirmation start-up guard', () => {
     env = startRuntime({ env: PRODUCTION });
     for (const [method, path] of [['GET', '/v1/me'], ['GET', '/ready'], ['POST', '/v1/orgs']] as const) {
       const r = await call(method, path);
-      expect(r.status, path).toBe(503); expect((await r.json()).error.message).toBe('Service unavailable');
+      expect(r.status, path).toBe(503); expect(ErrorBodySchema.parse(await r.json()).error.message).toBe('Service unavailable');
     }
     expect(env.logs.join('')).toContain('auto-confirm');
   });

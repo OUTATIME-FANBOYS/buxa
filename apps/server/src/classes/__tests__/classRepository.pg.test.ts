@@ -158,8 +158,11 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
       const painting = await makeClass(fx.repo, fx.actor, { name: 'Painting' });
       const clash = await fx.repo.addSession(fx.actor, painting.id, sessionInput(11, 13));
       await fx.repo.enrol(fx.actor, { sessionId: clash.id, camperId: camper }, enrolRule());
-      const error = await fx.repo.enrol(fx.actor, { sessionId, camperId: camper }, enrolRule()).catch(e => e);
+      const error: unknown = await fx.repo.enrol(fx.actor, { sessionId, camperId: camper }, enrolRule()).catch((e: unknown) => e);
       expect(error).toBeInstanceOf(OverlapError);
+      if (!(error instanceof OverlapError)) {
+        throw new Error('expected an OverlapError');
+      }
       expect(error.refusal).toMatchObject({ reason: 'overlap', clash: { sessionId: clash.id, className: 'Painting' } });
     });
 

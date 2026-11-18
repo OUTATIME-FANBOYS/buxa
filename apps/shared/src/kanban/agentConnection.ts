@@ -1,4 +1,6 @@
-export interface TokenInfo { exists: boolean; createdAt: string | null; lastSeen: string | null }
+import type { TokenInfo } from './types';
+
+export type { TokenInfo };
 
 /**
  * Where "connect this agent to Claude" stands. One phase at a time, so the dialog can never show a token while

@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 import { migrate } from '../src';
+import type { Row } from '../types';
 
 const url = process.env.DATABASE_URL;
 
@@ -27,7 +28,7 @@ describe.skipIf(!url)('schema guarantees', () => {
     });
 
     it('the request role cannot read the migration bookkeeping table', async () => {
-      const r = await pool.query(`SELECT has_table_privilege('buxa_app', 'schema_migrations', 'SELECT') AS can`);
+      const r = await pool.query<Row>(`SELECT has_table_privilege('buxa_app', 'schema_migrations', 'SELECT') AS can`);
       expect(r.rows[0].can).toBe(false);
     });
   });
@@ -36,33 +37,33 @@ describe.skipIf(!url)('schema guarantees', () => {
     const tag = Math.random().toString(36).slice(2, 8);
     let orgId = '', userId = '';
     beforeAll(async () => {
-      orgId = (await pool.query(`INSERT INTO orgs(name, slug) VALUES ('Audit Camp', $1) RETURNING id`, [`audit-${tag}`])).rows[0].id;
-      userId = (await pool.query(`INSERT INTO users(email, name) VALUES ($1, 'Aud') RETURNING id`, [`aud-${tag}@a.test`])).rows[0].id;
-      await pool.query(`INSERT INTO audit_log(org_id, actor_id, action, entity) VALUES ($1, $2, 'seed', 'org')`, [orgId, userId]);
+      orgId = (await pool.query<{ id: string }>(`INSERT INTO orgs(name, slug) VALUES ('Audit Camp', $1) RETURNING id`, [`audit-${tag}`])).rows[0].id;
+      userId = (await pool.query<{ id: string }>(`INSERT INTO users(email, name) VALUES ($1, 'Aud') RETURNING id`, [`aud-${tag}@a.test`])).rows[0].id;
+      await pool.query<Row>(`INSERT INTO audit_log(org_id, actor_id, action, entity) VALUES ($1, $2, 'seed', 'org')`, [orgId, userId]);
     });
     afterAll(async () => {
-      await pool.query('DELETE FROM orgs WHERE id = $1', [orgId]);
-      await pool.query('DELETE FROM users WHERE id = $1', [userId]);
+      await pool.query<Row>('DELETE FROM orgs WHERE id = $1', [orgId]);
+      await pool.query<Row>('DELETE FROM users WHERE id = $1', [userId]);
     });
 
     it('refuses a direct DELETE, even from the owner role (the trigger, not a missing grant)', async () => {
-      await expect(pool.query('DELETE FROM audit_log WHERE org_id = $1', [orgId])).rejects.toThrow(/append-only/);
+      await expect(pool.query<Row>('DELETE FROM audit_log WHERE org_id = $1', [orgId])).rejects.toThrow(/append-only/);
     });
     it('refuses any direct UPDATE, including clearing actor_id', async () => {
-      await expect(pool.query(`UPDATE audit_log SET action = 'edited' WHERE org_id = $1`, [orgId])).rejects.toThrow(/append-only/);
-      await expect(pool.query('UPDATE audit_log SET actor_id = NULL WHERE org_id = $1', [orgId])).rejects.toThrow(/append-only/);
+      await expect(pool.query<Row>(`UPDATE audit_log SET action = 'edited' WHERE org_id = $1`, [orgId])).rejects.toThrow(/append-only/);
+      await expect(pool.query<Row>('UPDATE audit_log SET actor_id = NULL WHERE org_id = $1', [orgId])).rejects.toThrow(/append-only/);
     });
     it('refuses TRUNCATE', async () => {
-      await expect(pool.query('TRUNCATE audit_log')).rejects.toThrow(/cannot be truncated/);
+      await expect(pool.query<Row>('TRUNCATE audit_log')).rejects.toThrow(/cannot be truncated/);
     });
     it('still lets deleting a user clear actor_id (erasure) without touching anything else', async () => {
-      await pool.query('DELETE FROM users WHERE id = $1', [userId]);
-      const row = (await pool.query('SELECT actor_id, action FROM audit_log WHERE org_id = $1', [orgId])).rows[0];
+      await pool.query<Row>('DELETE FROM users WHERE id = $1', [userId]);
+      const row = (await pool.query<Row>('SELECT actor_id, action FROM audit_log WHERE org_id = $1', [orgId])).rows[0];
       expect(row).toEqual({ actor_id: null, action: 'seed' });
     });
     it('still lets deleting an organisation remove its audit rows (erasure)', async () => {
-      await pool.query('DELETE FROM orgs WHERE id = $1', [orgId]);
-      expect((await pool.query('SELECT 1 FROM audit_log WHERE org_id = $1', [orgId])).rowCount).toBe(0);
+      await pool.query<Row>('DELETE FROM orgs WHERE id = $1', [orgId]);
+      expect((await pool.query<Row>('SELECT 1 FROM audit_log WHERE org_id = $1', [orgId])).rowCount).toBe(0);
     });
   });
 });
@@ -77,7 +78,7 @@ describe.skipIf(!url)('Supabase Data API is locked out', () => {
     const tables = (await pool.query<{ t: string }>(`SELECT tablename AS t FROM pg_tables WHERE schemaname = 'public'`)).rows.map(r => r.t);
     for (const role of roles) {
       for (const table of tables) {
-        const r = await pool.query(`SELECT has_table_privilege($1, format('public.%I', $2::text), 'SELECT,INSERT,UPDATE,DELETE') AS any`, [role, table]);
+        const r = await pool.query<Row>(`SELECT has_table_privilege($1, format('public.%I', $2::text), 'SELECT,INSERT,UPDATE,DELETE') AS any`, [role, table]);
         expect(r.rows[0].any, `${role} on ${table}`).toBe(false);
       }
     }

@@ -51,7 +51,9 @@ describe.skipIf(!url)('runtime login without row-level-security bypass (S-06)', 
     const email = `runtime-${tag}@privs.test`;
 
     const user = await users.upsertFromIdentity({ authId, email, name: 'Runtime Owner' });
-    expect(user).toEqual({ id: expect.any(String), email, name: 'Runtime Owner' });
+    expect(typeof user.id).toBe('string');
+    expect(Object.keys(user).sort()).toEqual(['email', 'id', 'name']);
+    expect(user).toMatchObject({ email, name: 'Runtime Owner' });
     // The same provider id updates the row rather than creating a second one.
     const again = await users.upsertFromIdentity({ authId, email, name: 'Runtime Owner' });
     expect(again.id).toBe(user.id);

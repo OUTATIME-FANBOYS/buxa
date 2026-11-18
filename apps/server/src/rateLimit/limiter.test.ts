@@ -39,8 +39,11 @@ describe('rate limiter (in memory)', () => {
     const limiter = createMemoryRateLimiter(() => 0);
     const r = rule(1, 90);
     await enforceRateLimit(limiter, r, 'user-a');
-    const error = await enforceRateLimit(limiter, r, 'user-a').catch(e => e);
+    const error: unknown = await enforceRateLimit(limiter, r, 'user-a').catch((e: unknown) => e);
     expect(error).toBeInstanceOf(HttpError);
+    if (!(error instanceof HttpError)) {
+      throw new Error('expected an HttpError');
+    }
     expect(error.statusCode).toBe(429);
     expect(error.retryAfterSeconds).toBe(90);
     expect(error.message).toBe('Too many requests. Try again in 2 minutes.');

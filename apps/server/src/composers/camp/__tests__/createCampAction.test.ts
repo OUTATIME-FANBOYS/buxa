@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ROUTES } from '@buxa/shared/config/routes';
-import { idle } from '@buxa/shared';
+import { fieldError, idle } from '@buxa/shared';
 import { createCampAction } from '../createCampAction';
 import { formOf, startWorld } from './support';
 
@@ -44,7 +44,9 @@ describe('createCampAction', () => {
 
   it('treats missing fields as empty instead of throwing', async () => {
     const state = await createCampAction(idle, new FormData());
-    expect(state).toMatchObject({ status: 'error', fieldErrors: { name: expect.any(String), slug: expect.any(String) } });
+    expect(state).toMatchObject({ status: 'error' });
+    expect(typeof fieldError(state, 'name')).toBe('string');
+    expect(typeof fieldError(state, 'slug')).toBe('string');
   });
 
   it('maps a taken address to a field error on slug', async () => {

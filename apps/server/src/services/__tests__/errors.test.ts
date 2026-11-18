@@ -44,7 +44,7 @@ describe('the camp service', () => {
     const service = createOrgService(repo(async () => {
       throw new OrgNotFoundError();
     }));
-    const error = await service.getCamp(owner).catch(e => e);
+    const error: unknown = await service.getCamp(owner).catch((e: unknown) => e);
     expect(error).toMatchObject({ statusCode: 404, message: 'Camp not found' });
   });
 

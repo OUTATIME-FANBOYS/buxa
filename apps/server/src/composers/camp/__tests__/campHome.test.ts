@@ -63,10 +63,12 @@ describe('loadCampHome', () => {
     as('staff');
     const home = await loadCampHome();
     expect(services.orgs.getCamp).toHaveBeenCalledWith({ userId: 'u1', orgId: 'o1', role: 'staff' });
-    expect(home).toEqual({
+    const { checkInsByDay, ...facts } = home;
+    expect(checkInsByDay?.complete).toBe(true);
+    expect(checkInsByDay?.days).toEqual(expect.any(Array));
+    expect(facts).toEqual({
       campId: 'o1', name: 'Lake Camp', firstName: 'Priya', canRename: false,
       people: 3, onSite: 1, checkedInToday: 0, validMemberships: 2, upcomingSessions: [],
-      checkInsByDay: { days: expect.any(Array), complete: true },
       onSiteByAge: { adults: 1, minors: 0 },
       membershipStatus: { valid: 2, notStarted: 0, expired: 1, none: 0 },
     });

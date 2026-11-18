@@ -34,8 +34,8 @@ describe('request handling around every route', () => {
     env = startRuntime({ verifier: idp.verifier });
     const r = await call('GET', '/v1/me', { token: await idp.token({ expiresIn: '-1h' }) });
     expect(r.status).toBe(401); expect(r.headers.get('www-authenticate')).toBe('Bearer');
-    const body = await r.json(); ErrorBodySchema.parse(body);
-    expect(body.error.message).toBe('Invalid or expired token');
+    const body: unknown = await r.json(); ErrorBodySchema.parse(body);
+    expect(body).toMatchObject({ error: { message: 'Invalid or expired token' } });
     expect(JSON.stringify(body)).not.toMatch(/signature|issuer|audience|claim/i);
     expect(r.headers.get('cache-control')).toBe('no-store'); expect(r.headers.get('x-content-type-options')).toBe('nosniff');
   });
@@ -48,13 +48,13 @@ describe('request handling around every route', () => {
   it('refuses an oversized body with 413 in the standard shape', async () => {
     env = startRuntime({ verifier: idp.verifier });
     const r = await call('POST', '/v1/orgs', { token: await idp.token(), headers: { 'content-length': '2000000' }, rawBody: '{}' });
-    expect(r.status).toBe(413); expect((await r.json()).error.code).toBe('payload_too_large');
+    expect(r.status).toBe(413); expect(ErrorBodySchema.parse(await r.json()).error.code).toBe('payload_too_large');
   });
 
   it('answers 503 on protected routes when sign-in is not configured', async () => {
     env = startRuntime({ verifier: null });
     const r = await call('GET', '/v1/me', { token: 'anything' });
-    expect(r.status).toBe(503); expect((await r.json()).error.message).toBe('Sign-in is not configured');
+    expect(r.status).toBe(503); expect(ErrorBodySchema.parse(await r.json()).error.message).toBe('Sign-in is not configured');
   });
 
   it('an unexpected error becomes a generic 500 and is logged with its cause', async () => {

@@ -55,7 +55,8 @@ describe('state persistence', () => {
     store.set('tessera.state.v1', '{}');
     const seed = buildSeed();
     storage.save(seed);
-    expect(JSON.parse(store.get('buxa.state.v1')!).version).toBe(1);
+    const saved: unknown = JSON.parse(store.get('buxa.state.v1')!);
+    expect(saved).toMatchObject({ version: 1 });
     expect(JSON.parse(store.get(THEME_KEY)!)).toBe(seed.ui.theme);
     expect(store.has('tessera.state.v1')).toBe(false);
   });

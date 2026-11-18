@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ErrorBodySchema } from '@buxa/contracts';
 import { InMemoryStore } from '@buxa/server/__tests__/fakes';
 import { call, startRuntime } from './harness';
 import { createTestIdentityProvider } from '@buxa/server/__tests__/tokens';
@@ -29,7 +30,7 @@ describe('POST /v1/orgs is rate limited per person', () => {
     const refused = await call('POST', '/v1/orgs', { token, body: { name: 'One too many', slug: 'one-too-many' } });
     expect(refused.status).toBe(429);
     expect(refused.headers.get('retry-after')).toMatch(/^\d+$/);
-    expect((await refused.json()).error).toMatchObject({ code: 'rate_limited' });
+    expect(ErrorBodySchema.parse(await refused.json()).error).toMatchObject({ code: 'rate_limited' });
     expect(store.orgs.size).toBe(limit);
   });
 

@@ -22,9 +22,12 @@ describe('a conflicting identity (audit S-09)', () => {
 
     const { log, text, lines } = capture();
     const attempt = sessionFromToken('token', { verifier: async () => identity('auth-second'), users }, log);
-    const error = await attempt.catch(e => e);
+    const error: unknown = await attempt.catch((e: unknown) => e);
 
     expect(isHttpError(error)).toBe(true);
+    if (!isHttpError(error)) {
+      throw new Error('expected an HTTP error');
+    }
     expect(error.statusCode).toBe(409);
     expect(error.message).toBe(ACCOUNT_CONFLICT_MESSAGE);
     expect(error.message).not.toMatch(/email|already linked|different account/i);

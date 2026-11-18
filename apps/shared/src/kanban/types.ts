@@ -1,3 +1,5 @@
+import type { Data } from './dataSlices';
+
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
 export type ColumnKind = 'open' | 'active' | 'done';
 export type Role = 'owner' | 'admin' | 'member' | 'viewer';
@@ -90,3 +92,17 @@ export interface Proposal {
   decidedAt?: string; decidedBy?: string; note?: string; undo?: Undo; taskId?: string;
 }
 export interface AgentRun { id: string; agentId: string; label: string; at: string; simulated?: boolean; source?: 'mcp'; tokens?: number; costUsd?: number }
+
+/* ---------- replies from the local Buxa server (sync.ts) ---------- */
+/** The server's health reply: whether it is up and where its MCP endpoint is. */
+export interface HealthReply { ok: boolean; mcpUrl: string }
+/** The server's shared copy of the data. `empty` means nothing has been stored yet. */
+export interface StateReply { version: number; empty?: boolean; data?: Data }
+/** A PUT of the shared data: the status it was answered with, and the new version when accepted. */
+export interface PutReply { status: number; version?: number }
+/** Whether an agent has a connection token, and when it was made and last used. */
+export interface TokenInfo { exists: boolean; createdAt: string | null; lastSeen: string | null }
+/** A freshly issued token. It is shown once and never read back. */
+export interface IssuedToken { token: string }
+/** The payload of a `version` event on the server's event stream. */
+export interface VersionEvent { version: number; origin: string }

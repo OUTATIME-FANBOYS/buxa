@@ -92,7 +92,9 @@ describe('planImport: clashes within the file', () => {
   it('refuses the later of two overlapping rows and names the earlier row', () => {
     const p = plan([row({}, 2), row({ class_name: 'Art', starts_at: '2027-07-05T14:00', ends_at: '2027-07-05T16:00', age_min: '6', age_max: '14', capacity: '10' }, 3)]);
     expect(p.results.map(r => r.status)).toEqual(['create', 'refused']);
-    expect(p.results[1]?.problems).toEqual([{ field: 'starts_at', message: expect.stringContaining('Clashes with row 2 of this file') }]);
+    expect(p.results[1]?.problems).toHaveLength(1);
+    expect(p.results[1]?.problems[0]).toMatchObject({ field: 'starts_at' });
+    expect(p.results[1]?.problems[0]?.message).toContain('Clashes with row 2 of this file');
   });
 
   it('allows rows that only touch (one ends at 15:00, the next starts at 15:00)', () => {
@@ -115,10 +117,13 @@ describe('planImport: clashes within the file', () => {
   it('does not let a refused row block a later one', () => {
     const bad = row({ capacity: '0' }, 2);
     const same = row({}, 3);
-    expect(only([bad, same])).toEqual([
-      { row: 2, status: 'refused', problems: [{ field: 'capacity', message: expect.any(String) }] },
-      { row: 3, status: 'create', problems: [] },
-    ]);
+    const results = only([bad, same]);
+    expect(results).toHaveLength(2);
+    expect(results[0]).toMatchObject({ row: 2, status: 'refused' });
+    expect(results[0]?.problems).toHaveLength(1);
+    expect(results[0]?.problems[0]).toMatchObject({ field: 'capacity' });
+    expect(typeof results[0]?.problems[0]?.message).toBe('string');
+    expect(results[1]).toEqual({ row: 3, status: 'create', problems: [] });
   });
 });
 
@@ -126,7 +131,10 @@ describe('planImport: clashes with sessions already in the camp', () => {
   it('refuses a clash with another class in the camp and names that session', () => {
     const artAm = existing({ id: 's-art', classId: 'cls-art', className: 'Art', startsAt: '2027-07-05T10:00:00+10:00', endsAt: '2027-07-05T12:00:00+10:00' });
     const p = plan([row({ starts_at: '2027-07-05T11:00', ends_at: '2027-07-05T13:00' }, 2)], [artAm]);
-    expect(p.results[0]).toMatchObject({ status: 'refused', problems: [{ field: 'starts_at', message: expect.stringContaining('Clashes with Art') }] });
+    expect(p.results[0]).toMatchObject({ status: 'refused' });
+    expect(p.results[0]?.problems).toHaveLength(1);
+    expect(p.results[0]?.problems[0]).toMatchObject({ field: 'starts_at' });
+    expect(p.results[0]?.problems[0]?.message).toContain('Clashes with Art');
   });
 
   it('allows a row that starts exactly when an existing session ends', () => {
@@ -144,7 +152,10 @@ describe('planImport: clashes with sessions already in the camp', () => {
 describe('planImport: duplicates (rows without an external key)', () => {
   it('refuses a row that matches an existing session on class, start, end and location', () => {
     const p = plan([row({ starts_at: '2027-07-05T09:00', ends_at: '2027-07-05T12:00', location: 'Lab 1' }, 2)], [SYDNEY_0900_1200]);
-    expect(p.results[0]).toMatchObject({ status: 'refused', problems: [{ field: 'starts_at', message: expect.stringContaining('already in the camp') }] });
+    expect(p.results[0]).toMatchObject({ status: 'refused' });
+    expect(p.results[0]?.problems).toHaveLength(1);
+    expect(p.results[0]?.problems[0]).toMatchObject({ field: 'starts_at' });
+    expect(p.results[0]?.problems[0]?.message).toContain('already in the camp');
   });
 
   it('matches the location ignoring case', () => {
@@ -185,7 +196,10 @@ describe('planImport: external keys (re-upload updates, never duplicates)', () =
     const withKey = { ...SYDNEY_0900_1200, externalKey: 'ROB-AM' };
     const artAm = existing({ id: 's-art', classId: 'cls-art', className: 'Art', startsAt: '2027-07-05T13:00:00+10:00', endsAt: '2027-07-05T15:00:00+10:00' });
     const p = plan([keyed('ROB-AM', { starts_at: '2027-07-05T14:00', ends_at: '2027-07-05T16:00' }, 2)], [withKey, artAm]);
-    expect(p.results[0]).toMatchObject({ status: 'refused', problems: [{ field: 'starts_at', message: expect.stringContaining('Clashes with Art') }] });
+    expect(p.results[0]).toMatchObject({ status: 'refused' });
+    expect(p.results[0]?.problems).toHaveLength(1);
+    expect(p.results[0]?.problems[0]).toMatchObject({ field: 'starts_at' });
+    expect(p.results[0]?.problems[0]?.message).toContain('Clashes with Art');
   });
 
   it('refuses an update that sets capacity below the campers already enrolled', () => {

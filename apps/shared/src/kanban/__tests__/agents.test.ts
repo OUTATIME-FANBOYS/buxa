@@ -71,7 +71,9 @@ describe('deciding', () => {
     const p = propose({ kind: 'move_task', taskId: 't-4', columnId: col('In Review') });
     s = D.moveTask(s, 't-4', col('Done'), null);
     s = A.decide(s, p.id, 'approve');
-    expect(s.proposals.find(x => x.id === p.id)).toMatchObject({ status: 'blocked', note: expect.stringMatching(/changed/) });
+    const blocked = s.proposals.find(x => x.id === p.id);
+    expect(blocked).toMatchObject({ status: 'blocked' });
+    expect(blocked?.note).toMatch(/changed/);
     expect(task('t-4').columnId).toBe(col('Done'));
   });
   it('lets only non-viewer members of the workspace decide, and never an agent', () => {

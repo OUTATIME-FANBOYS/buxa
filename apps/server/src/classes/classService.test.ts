@@ -95,9 +95,9 @@ describe('class service: catalogue', () => {
     }
     const added = await service.addSession(as('admin'), created.value.id, { ...monday9to12, instructorIds: [CAMPER_ADA] });
     expect(added).toMatchObject({ ok: true, value: { instructorIds: [CAMPER_ADA], instructors: [{ id: CAMPER_ADA, name: 'Ada Lovelace' }] } });
-    expect(repo.audit.filter(a => a.action === 'session.create')).toEqual([
-      expect.objectContaining({ actorId: 'user-admin', data: expect.objectContaining({ instructorIds: [CAMPER_ADA] }) }),
-    ]);
+    const sessionCreates = repo.audit.filter(a => a.action === 'session.create');
+    expect(sessionCreates).toHaveLength(1);
+    expect(sessionCreates[0]).toMatchObject({ actorId: 'user-admin', data: { instructorIds: [CAMPER_ADA] } });
     const listed = await service.listSessions(as('viewer'), created.value.id);
     expect(listed).toMatchObject({ ok: true, value: [{ instructors: [{ id: CAMPER_ADA, name: 'Ada Lovelace' }] }] });
   });

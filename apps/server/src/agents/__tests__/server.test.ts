@@ -10,16 +10,26 @@ import { AGENT_ID, CAMP_PROJECT_IDS, PROJECT, PROJECT_NAME, USER } from '@buxa/s
 import { buildSeed } from '@buxa/shared';
 import { pickData } from '@buxa/shared';
 import * as A from '@buxa/shared';
-import type { AppState } from '@buxa/shared';
+import type { AppState, Data } from '@buxa/shared';
+import { OutcomeBody, ProposalListBody, StateBody, TokenBody, VersionBody, WhoAmIBody } from '../types';
 
 let dir: string; let app: ReturnType<typeof createApp>; let base: string;
 const SECRET = 'test-run-secret-0123456789';
 const H = { 'content-type': 'application/json', 'x-buxa-client': 'test', 'x-buxa-run-secret': SECRET };
 const api = async (method: string, p: string, b?: unknown, headers: Record<string, string> = H) => {
   const r = await fetch(base + p, { method, headers, body: b === undefined ? undefined : JSON.stringify(b) });
+  const json: unknown = await r.json().catch(() => null);
 
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Kept: the compiler needs this assertion to type the value; removing it fails typecheck.
-  return { status: r.status, json: (await r.json().catch(() => null)) as any };
+  return { status: r.status, json };
+};
+/** GET /api/state, parsed, with the data required (the tests only read it after a first upload). */
+const readState = async () => {
+  const body = StateBody.parse((await api('GET', '/api/state')).json);
+  if (!body.data) {
+    throw new Error('the server has no data yet');
+  }
+
+  return { version: body.version, data: body.data };
 };
 const seed = () => pickData(buildSeed());
 const start = async (d = dir) => {
@@ -34,7 +44,8 @@ async function connect(token: string) {
 }
 const call = async (c: Client, name: string, args: Record<string, unknown> = {}) => {
   const r = (await c.callTool({ name, arguments: args })) as { isError?: boolean; content: { text: string }[] };
-  const text = r.content[0].text; let json: any; try {
+  const text = r.content[0].text;
+  let json: unknown; try {
     json = JSON.parse(text);
   } catch {
     json = text;
@@ -42,7 +53,7 @@ const call = async (c: Client, name: string, args: Record<string, unknown> = {})
 
   return { error: !!r.isError, json, text };
 };
-const token = async () => (await api('POST', `/api/agents/${AGENT_ID}/token`)).json.token as string;
+const token = async () => TokenBody.parse((await api('POST', `/api/agents/${AGENT_ID}/token`)).json).token;
 
 beforeEach(async () => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), 'buxa-')); await start();
@@ -90,16 +101,16 @@ describe('network safety', () => {
 describe('state sync', () => {
   it('starts empty, accepts a first upload, and rejects stale writers', async () => {
     expect((await api('GET', '/api/state')).json).toMatchObject({ empty: true, version: 0 });
-    expect((await api('PUT', '/api/state', { baseVersion: 0, data: seed() })).json.version).toBe(1);
+    expect(VersionBody.parse((await api('PUT', '/api/state', { baseVersion: 0, data: seed() })).json).version).toBe(1);
     const stale = await api('PUT', '/api/state', { baseVersion: 0, data: seed() });
-    expect(stale.status).toBe(409); expect(stale.json.version).toBe(1);
+    expect(stale.status).toBe(409); expect(VersionBody.parse(stale.json).version).toBe(1);
     expect((await api('PUT', '/api/state', { baseVersion: 1, data: { tasks: [] } })).status).toBe(400);
   });
   it('keeps data and tokens across a restart', async () => {
     await api('PUT', '/api/state', { baseVersion: 0, data: seed() }); const t = await token();
     await app.close(); await start();
-    expect((await api('GET', '/api/state')).json.version).toBe(1);
-    const c = await connect(t); expect((await call(c, 'whoami')).json.name).toBe('Triage Agent'); await c.close();
+    expect((await readState()).version).toBe(1);
+    const c = await connect(t); expect(WhoAmIBody.parse((await call(c, 'whoami')).json).name).toBe('Triage Agent'); await c.close();
   });
 });
 
@@ -121,34 +132,36 @@ describe('MCP endpoint', () => {
     const c = await connect(await token());
     const names = (await c.listTools()).tools.map(x => x.name);
     expect(names).toEqual(expect.arrayContaining(['whoami', 'list_projects', 'list_tasks', 'get_task', 'create_task', 'update_task', 'move_task', 'add_comment', 'list_my_proposals', 'review_proposal']));
-    const who = (await call(c, 'whoami')).json;
+    const who = WhoAmIBody.parse((await call(c, 'whoami')).json);
     expect(who.permissions).toMatchObject({ create_task: 'allowed', complete_task: 'needs approval' }); expect(who.projects.length).toBe(CAMP_PROJECT_IDS.length);
     await c.close();
   });
 
   it('applies an allowed write, queues one that needs approval, and the app sees both', async () => {
-    const c = await connect(await token()); const v0 = (await api('GET', '/api/state')).json.version;
-    const made = await call(c, 'create_task', { project: PROJECT_NAME.registration, title: 'Check cabin 4 window latch', column: 'Backlog', reason: 'Found during the cabin walk-through' });
-    expect(made.json.status).toBe('applied');
-    const moved = await call(c, 'move_task', { taskId: made.json.taskId, column: 'Done', reason: 'Looks finished' });
-    expect(moved.json.status).toBe('pending');
-    const state = (await api('GET', '/api/state')).json; expect(state.version).toBeGreaterThan(v0);
-    const task = state.data.tasks.find((t: any) => t.id === made.json.taskId);
-    expect(task).toMatchObject({ title: 'Check cabin 4 window latch', createdBy: AGENT_ID }); expect(task.history[0].via.reason).toBe('Found during the cabin walk-through');
-    expect(state.data.proposals.find((p: any) => p.id === moved.json.proposalId).status).toBe('pending');
+    const c = await connect(await token()); const v0 = (await readState()).version;
+    const made = OutcomeBody.parse((await call(c, 'create_task', { project: PROJECT_NAME.registration, title: 'Check cabin 4 window latch', column: 'Backlog', reason: 'Found during the cabin walk-through' })).json);
+    expect(made.status).toBe('applied');
+    const taskId = made.taskId ?? '';
+    const moved = OutcomeBody.parse((await call(c, 'move_task', { taskId, column: 'Done', reason: 'Looks finished' })).json);
+    expect(moved.status).toBe('pending');
+    const proposalId = moved.proposalId ?? '';
+    const state = await readState(); expect(state.version).toBeGreaterThan(v0);
+    const task = state.data.tasks.find(t => t.id === taskId);
+    expect(task).toMatchObject({ title: 'Check cabin 4 window latch', createdBy: AGENT_ID }); expect(task?.history[0]?.via?.reason).toBe('Found during the cabin walk-through');
+    expect(state.data.proposals.find(p => p.id === proposalId)?.status).toBe('pending');
     // a person approves in the app; the agent can then see the outcome
-    const approved = A.decide({ ...buildStateFrom(state.data), session: { userId: USER.rosa } }, moved.json.proposalId, 'approve');
+    const approved = A.decide({ ...buildStateFrom(state.data), session: { userId: USER.rosa } }, proposalId, 'approve');
     expect((await api('PUT', '/api/state', { baseVersion: state.version, data: pickData(approved) })).status).toBe(200);
-    const mine = (await call(c, 'list_my_proposals', { status: 'approved' })).json; expect(mine.map((p: any) => p.id)).toContain(moved.json.proposalId);
+    const mine = ProposalListBody.parse((await call(c, 'list_my_proposals', { status: 'approved' })).json); expect(mine.map(p => p.id)).toContain(proposalId);
     await c.close();
   });
 
   it('keeps an agent inside its scope and reports bad input as tool errors', async () => {
-    const st = (await api('GET', '/api/state')).json; const data = { ...st.data, agents: st.data.agents.map((a: any) => ({ ...a, scope: [PROJECT.registration] })) };
+    const st = await readState(); const data: Data = { ...st.data, agents: st.data.agents.map(a => ({ ...a, scope: [PROJECT.registration] })) };
     await api('PUT', '/api/state', { baseVersion: st.version, data });
     const c = await connect(await token());
     expect((await call(c, 'list_tasks', { project: PROJECT_NAME.facilities })).error).toBe(true);
-    const appTask = st.data.tasks.find((t: any) => t.projectId === PROJECT.facilities).id;
+    const appTask = st.data.tasks.find(t => t.projectId === PROJECT.facilities)?.id ?? '';
     expect((await call(c, 'get_task', { taskId: appTask })).text).toMatch(/scope/);
     expect((await call(c, 'create_task', { project: PROJECT.registration, title: 'x', due: 'soon', reason: 'r' })).text).toMatch(/YYYY-MM-DD/);
     expect((await call(c, 'move_task', { taskId: 't-4', column: 'Nowhere', reason: 'r' })).text).toMatch(/No column/);
@@ -174,6 +187,6 @@ describe('MCP endpoint', () => {
 });
 
 /** Rebuild a full AppState from synced data, as the app does. */
-function buildStateFrom(data: any): AppState {
+function buildStateFrom(data: Data): AppState {
   return { ...buildSeed(), ...data };
 }
