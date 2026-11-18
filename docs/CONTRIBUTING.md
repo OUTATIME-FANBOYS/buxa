@@ -50,6 +50,12 @@ Vitest is the unit test runner for the whole repo, including `apps/web`, `packag
 - Nothing merges into `develop` by squash or rebase. Phase branches may be renamed later; the rule applies to whatever branch merges into `develop`.
 - Do not merge a phase until its tests pass and its exit criteria in `docs/phases/` are met.
 
+## Migrations
+
+- A new migration takes the next number after the highest one on `Phase2` (`ls packages/db/migrations`). Rebase onto the latest `Phase2` before you number it, and renumber if someone else took your number first.
+- Never rename or edit a migration that has run anywhere. Databases record migrations by filename, so a rename makes them run it again. Write a new migration instead.
+- `packages/db/test/migration-numbering.test.ts` fails the build on a duplicate or a gap in the numbers.
+
 ## Release
 
 1. Confirm `develop` is green and the exit criteria of the phases in this release are met (`docs/phases/`).
