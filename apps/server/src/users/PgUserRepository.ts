@@ -19,10 +19,11 @@ export class PgUserRepository implements UserRepository {
   async upsertFromIdentity(identity: Identity): Promise<User> {
     try {
       const { rows } = await withOrg(this.pool, null, db =>
-        db.query<User>(
-          `SELECT ${USER_COLUMNS} FROM buxa_upsert_user($1, $2, $3)`,
-          [identity.authId, identity.email, identity.name],
-        ),
+        db.query<User>(`SELECT ${USER_COLUMNS} FROM buxa_upsert_user($1, $2, $3)`, [
+          identity.authId,
+          identity.email,
+          identity.name,
+        ]),
       );
 
       return rows[0];
@@ -44,7 +45,11 @@ export class PgUserRepository implements UserRepository {
 
   async updateName(userId: string, name: { firstName: string; lastName: string | null }): Promise<User> {
     const { rows } = await withOrg(this.pool, null, db =>
-      db.query<User>(`SELECT ${USER_COLUMNS} FROM buxa_set_user_name($1, $2, $3)`, [userId, name.firstName, name.lastName]),
+      db.query<User>(`SELECT ${USER_COLUMNS} FROM buxa_set_user_name($1, $2, $3)`, [
+        userId,
+        name.firstName,
+        name.lastName,
+      ]),
     );
     if (!rows[0]) {
       throw new Error('no user to rename');
@@ -74,11 +79,10 @@ export class PgUserRepository implements UserRepository {
 
   async renameMember(orgId: string, userId: string, name: string): Promise<Pick<User, 'id' | 'email' | 'name'> | null> {
     const { rows } = await withOrg(this.pool, orgId, db =>
-      db.query<Pick<User, 'id' | 'email' | 'name'>>('SELECT user_id AS id, user_email AS email, user_name AS name FROM buxa_rename_member($1, $2, $3)', [
-        orgId,
-        userId,
-        name,
-      ]),
+      db.query<Pick<User, 'id' | 'email' | 'name'>>(
+        'SELECT user_id AS id, user_email AS email, user_name AS name FROM buxa_rename_member($1, $2, $3)',
+        [orgId, userId, name],
+      ),
     );
 
     return rows[0] ?? null;

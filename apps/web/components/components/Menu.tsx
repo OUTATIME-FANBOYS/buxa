@@ -91,7 +91,9 @@ export function Menu({
   const list = items.filter(isItem);
   const onKey = (e: KeyboardEvent) => {
     const els = Array.from(
-      e.currentTarget.querySelectorAll<HTMLElement>('[role=menuitem]:not([disabled]), [role=menuitemradio]:not([disabled])'),
+      e.currentTarget.querySelectorAll<HTMLElement>(
+        '[role=menuitem]:not([disabled]), [role=menuitemradio]:not([disabled])',
+      ),
     );
     const i = els.findIndex(el => el === document.activeElement);
     if (e.key === 'ArrowDown') {

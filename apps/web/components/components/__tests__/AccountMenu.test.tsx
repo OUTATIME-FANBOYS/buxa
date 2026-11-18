@@ -6,7 +6,9 @@ import { AccountMenu } from '@/components/components/camp/export';
 import { HomeHeader } from '@/components/components/kanban/home/export';
 
 vi.mock('@/actions/auth', () => ({ signOut: () => Promise.resolve(undefined) }));
-vi.mock('@/actions/account', () => ({ updateTimeFormatAction: () => Promise.resolve({ status: 'success', message: '' }) }));
+vi.mock('@/actions/account', () => ({
+  updateTimeFormatAction: () => Promise.resolve({ status: 'success', message: '' }),
+}));
 vi.mock('@buxa/middleware/providers/providers', () => ({
   useStore: () => ({ s: { ui: { theme: 'light' } }, actions: { setTheme: () => undefined } }),
 }));

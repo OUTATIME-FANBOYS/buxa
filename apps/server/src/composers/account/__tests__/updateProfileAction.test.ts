@@ -49,7 +49,10 @@ describe('updateProfileAction', () => {
 
   it('changes only the signed-in person: the id comes from the session, not the input', async () => {
     signInAs(priya);
-    await updateProfileAction({ firstName: 'Test', lastName: 'User', id: other } as { firstName: string; lastName: string });
+    await updateProfileAction({ firstName: 'Test', lastName: 'User', id: other } as {
+      firstName: string;
+      lastName: string;
+    });
     expect(world.store.users.get(priya)?.firstName).toBe('Test');
     expect(world.store.users.get(other)?.name).toBe('Person 2');
   });

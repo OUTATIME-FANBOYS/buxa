@@ -4,7 +4,9 @@ import { AccountMenu } from '@/components/components/camp/export';
 import { settle } from '@buxa/domain';
 
 vi.mock('@buxa/server/composers/auth/signOut', () => ({ signOut: () => settle(() => undefined) }));
-vi.mock('@/actions/account', () => ({ updateTimeFormatAction: () => Promise.resolve({ status: 'success', message: '' }) }));
+vi.mock('@/actions/account', () => ({
+  updateTimeFormatAction: () => Promise.resolve({ status: 'success', message: '' }),
+}));
 vi.mock('@buxa/middleware/providers/providers', () => ({
   useStore: () => ({ s: { ui: { theme: 'system' } }, actions: { setTheme: () => undefined } }),
 }));

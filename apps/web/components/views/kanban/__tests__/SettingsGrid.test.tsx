@@ -11,9 +11,12 @@ import { SettingsPage } from '@/components/views/kanban/export';
 import { CampClockPanel } from '@/components/components/camp/export';
 
 const saveName = vi.hoisted(() =>
-  vi.fn<(input: { firstName: string; lastName?: string }) => Promise<{ status: string; message: string; fieldErrors?: object }>>(
-    () => Promise.resolve({ status: 'success', message: 'Profile saved' }),
-  ),
+  vi.fn<
+    (input: {
+      firstName: string;
+      lastName?: string;
+    }) => Promise<{ status: string; message: string; fieldErrors?: object }>
+  >(() => Promise.resolve({ status: 'success', message: 'Profile saved' })),
 );
 const saveTime = vi.hoisted(() =>
   vi.fn<(input: { clockFormat: string }) => Promise<{ status: string; message: string }>>(() =>
@@ -157,7 +160,8 @@ describe('the settings page', () => {
         ?.click();
     });
     const first = document.querySelector<HTMLInputElement>('input[maxlength="60"]');
-    const dialog = document.querySelector<HTMLElement>('#update-display-name-title')?.closest('[role="dialog"]') ?? document.body;
+    const dialog =
+      document.querySelector<HTMLElement>('#update-display-name-title')?.closest('[role="dialog"]') ?? document.body;
     expect(dialog.textContent).toContain('First name');
     expect(dialog.textContent).toContain('Last name');
     expect(first?.value).toBe('Rosa');
@@ -184,9 +188,12 @@ describe('the settings page', () => {
         .find(b => b.textContent === 'Update display name')
         ?.click();
     });
-    const dialog = document.querySelector<HTMLElement>('#update-display-name-title')?.closest('[role="dialog"]') ?? document.body;
+    const dialog =
+      document.querySelector<HTMLElement>('#update-display-name-title')?.closest('[role="dialog"]') ?? document.body;
     await act(async () => {
-      dialog.querySelector<HTMLFormElement>('form')?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      dialog
+        .querySelector<HTMLFormElement>('form')
+        ?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
     expect(updateProfile).not.toHaveBeenCalled();
     expect(document.body.textContent).toContain('Enter your first name.');

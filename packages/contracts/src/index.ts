@@ -79,7 +79,11 @@ export type OrgPatchInput = z.infer<typeof OrgPatchInputSchema>;
 
 /** The signed-in person's first and last name, from the Update display name dialog. The first name is required. */
 export const ProfileInputSchema = z.object({
-  firstName: z.string().trim().min(1, 'Enter your first name.').max(60, 'Keep your first name to 60 characters or fewer.'),
+  firstName: z
+    .string()
+    .trim()
+    .min(1, 'Enter your first name.')
+    .max(60, 'Keep your first name to 60 characters or fewer.'),
   lastName: z
     .string()
     .trim()

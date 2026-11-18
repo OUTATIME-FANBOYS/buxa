@@ -32,8 +32,22 @@ function splitName(name: string): { firstName: string; lastName: string | null }
 }
 
 /** The User the repository returns: the stored fields, without the auth id. */
-function publicUser(u: { id: string; email: string; name: string; firstName: string; lastName: string | null; clockFormat: ClockFormat | null }): User {
-  return { id: u.id, email: u.email, name: u.name, firstName: u.firstName, lastName: u.lastName, clockFormat: u.clockFormat };
+function publicUser(u: {
+  id: string;
+  email: string;
+  name: string;
+  firstName: string;
+  lastName: string | null;
+  clockFormat: ClockFormat | null;
+}): User {
+  return {
+    id: u.id,
+    email: u.email,
+    name: u.name,
+    firstName: u.firstName,
+    lastName: u.lastName,
+    clockFormat: u.clockFormat,
+  };
 }
 
 interface StoredOrg {
@@ -69,7 +83,14 @@ export class InMemoryStore implements UserRepository, OrgRepository {
     if ([...this.users.values()].some(u => u.email === identity.email)) {
       throw new EmailInUseError();
     }
-    const user = { ...splitName(identity.name), id: randomUUID(), authId: identity.authId, email: identity.email, name: identity.name, clockFormat: null };
+    const user = {
+      ...splitName(identity.name),
+      id: randomUUID(),
+      authId: identity.authId,
+      email: identity.email,
+      name: identity.name,
+      clockFormat: null,
+    };
     this.users.set(user.id, user);
 
     return publicUser(user);
@@ -79,7 +100,11 @@ export class InMemoryStore implements UserRepository, OrgRepository {
     if (!user) {
       throw new Error('no user to rename');
     }
-    Object.assign(user, { firstName: name.firstName, lastName: name.lastName, name: [name.firstName, name.lastName].filter(Boolean).join(' ') });
+    Object.assign(user, {
+      firstName: name.firstName,
+      lastName: name.lastName,
+      name: [name.firstName, name.lastName].filter(Boolean).join(' '),
+    });
 
     return publicUser(user);
   }

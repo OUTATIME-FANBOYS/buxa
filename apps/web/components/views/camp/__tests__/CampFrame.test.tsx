@@ -8,9 +8,18 @@ vi.mock('next/navigation', () => ({ usePathname: () => '/camp', useRouter: () =>
 vi.mock('@buxa/middleware/providers/providers', () => ({
   useStore: () => ({ s: { ui: { theme: 'system' } }, actions: { setTheme: () => undefined } }),
 }));
-vi.mock('@/actions/account', () => ({ updateTimeFormatAction: () => Promise.resolve({ status: 'success', message: '' }) }));
+vi.mock('@/actions/account', () => ({
+  updateTimeFormatAction: () => Promise.resolve({ status: 'success', message: '' }),
+}));
 
-const user = { id: 'u', name: 'Olive', firstName: 'Olive', lastName: null, clockFormat: null, email: 'olive@example.org' };
+const user = {
+  id: 'u',
+  name: 'Olive',
+  firstName: 'Olive',
+  lastName: null,
+  clockFormat: null,
+  email: 'olive@example.org',
+};
 const camp = { orgId: 'o', name: 'Lake Camp', slug: 'lake-camp', role: 'owner' as const };
 
 function render(current: (typeof camp & { archived?: boolean }) | null) {
