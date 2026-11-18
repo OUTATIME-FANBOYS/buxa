@@ -1,13 +1,12 @@
-import type { Membership } from '@buxa/contracts';
 import { isHttpError } from '../../http/errors';
 import { failure, type ActionState } from '@buxa/shared';
-import type { Session } from '../../auth/session';
+import { openableCamps, type CampMembership, type Session } from '../../auth/session';
 
 export const SLUG_TAKEN = 'That address is taken. Try another.';
 
-/** The camp this person belongs to, or null. A posted camp id is only a claim until it is found in their memberships. */
-export const membershipOf = (session: Session, orgId: string): Membership | null =>
-  session.memberships.find(m => m.orgId === orgId) ?? null;
+/** The camp this person belongs to, active or archived, or null. A posted camp id is only a claim until it is found in their memberships. */
+export const membershipOf = (session: Session, orgId: string): CampMembership | null =>
+  openableCamps(session).find(m => m.orgId === orgId) ?? null;
 
 /**
  * Turns the failures a person can cause into a form state; anything else (a bug, the database being down) is rethrown for the

@@ -15,7 +15,7 @@ export async function actorForCamp(session: Session, orgId: string): Promise<Act
   }
   const archived = (await getRuntime().services.orgs.listArchivedCamps(session.user.id)).find(c => c.id === orgId);
 
-  return archived ? { userId: session.user.id, orgId, role: archived.role } : null;
+  return archived ? { userId: session.user.id, orgId, role: archived.role, archived: true } : null;
 }
 
 /** A refusal the person can act on becomes `{ ok: false, message }`; anything else (a bug, the database being down) is rethrown. */
