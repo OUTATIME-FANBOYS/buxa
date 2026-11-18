@@ -2,7 +2,7 @@ import type { ClockFormat } from '@buxa/domain';
 
 /**
  * Times on screen are always the camp's local time, from its IANA zone (`orgs.timezone`), never the server's or the browser's zone.
- * Every caller passes the camp's zone and clock format (`orgs.clock_format`) explicitly; there are no defaults.
+ * Every caller passes the camp's zone and the signed-in person's clock format explicitly; there are no defaults.
  */
 
 /** "09:05" from an instant, in the camp's zone, on a 24-hour clock. */

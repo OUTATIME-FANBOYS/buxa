@@ -22,10 +22,15 @@ describe('attendance camp actor', () => {
     expect(await campZone(ACTOR)).toBe('Europe/London');
     expect(h.getCamp).toHaveBeenCalledWith(ACTOR);
   });
-  it("uses the signed-in person's clock first, then the camp's", async () => {
+  it("uses the signed-in person's own clock, and 24 hour when they have not chosen one", async () => {
     h.getCamp.mockResolvedValue({ timezone: 'Europe/London', clockFormat: '24h' });
     h.requireSession.mockResolvedValueOnce({ user: { clockFormat: '12h' } });
     expect(await campClock(ACTOR)).toEqual({ timeZone: 'Europe/London', clockFormat: '12h' });
+    h.requireSession.mockResolvedValueOnce({ user: { clockFormat: null } });
+    expect(await campClock(ACTOR)).toEqual({ timeZone: 'Europe/London', clockFormat: '24h' });
+  });
+  it("ignores the camp's clock format", async () => {
+    h.getCamp.mockResolvedValue({ timezone: 'Europe/London', clockFormat: '12h' });
     h.requireSession.mockResolvedValueOnce({ user: { clockFormat: null } });
     expect(await campClock(ACTOR)).toEqual({ timeZone: 'Europe/London', clockFormat: '24h' });
   });
