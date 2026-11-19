@@ -26,4 +26,6 @@ Periodic reviews of the codebase live in this folder, each with its findings and
 - Favour the simplest maintainable solution over engineering complexity.
 - Start read-only: the first pass produces a findings report here, and changes follow only after the owner agrees to them.
 
+**Skills:** use `andrej-karpathy-skills:karpathy-guidelines` to judge every change for surgical scope and checkable success, and `jony-ive` to judge the UI and component design against purpose, restraint and consistent spacing and type.
+
 **Output:** one file per audit, named `YYYY-MM-DD-principal-audit.md`, with findings ranked by impact, the evidence for each, the proposed change, and the decision (accepted, deferred or rejected).
