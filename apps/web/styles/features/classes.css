@@ -186,3 +186,8 @@ form.class-form {
 .classes-row-actions .classes-delete.button--icon-only {
   border-color: var(--crit);
 }
+
+/* Withdraw an enrolment: a red button with a visible border in the same red as its fill (the danger token). */
+.classes-withdraw {
+  border: 1px solid var(--crit);
+}
