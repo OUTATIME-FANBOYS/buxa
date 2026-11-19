@@ -1,6 +1,6 @@
 import { can } from '@buxa/domain';
 import { loadMembers } from '@buxa/server/composers/index.server';
-import { MembersTable } from '@/components/components/camp';
+import { MembersTable, PermissionAreasTable } from '@/components/components/camp';
 import { PageHeader } from '@/components/components';
 import { campContext } from '@buxa/server/composers/index.server';
 
@@ -13,6 +13,7 @@ export async function Members() {
     <div className="page">
       <PageHeader title="Team access" subtitle={subtitle} />
       <MembersTable members={members} showEmail={can(actor, 'members:read_contact')} />
+      <PermissionAreasTable />
     </div>
   );
 }

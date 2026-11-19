@@ -106,7 +106,12 @@ Card payments, refunds, Stripe Connect, instalments, sponsorship funds (all phas
 
 ## Permissions by category
 
-Every action in `packages/domain/src/permissions.ts` sits in one category below. This phase does not change the matrix; the section only groups it so each area can be checked on its own. The default roles are the matrix's: owner has everything admin has, admin has everything staff has, and so on. "Built" means the code that uses the action exists today (phases 0 to 2 and the staff board). "Future" means the feature has not been built yet.
+Every action in `packages/domain/src/permissions.ts` sits in one category below. This phase does not change the matrix; the section only groups it so each area can be checked on its own.
+
+**Status: grouping built** (`packages/domain/src/permissionCategories.ts`, tests in `packages/domain/test/permissionCategories.test.ts`, read-only table on the Team page). No role's grants changed. Three places where the code differs from the table below, to resolve before the phase closes:
+
+- `members:rename` (rename a member) is in the code but not in the Team row. It is grouped under Team.
+- `org:archive` and `org:unarchive` are in the code (owner only), but the Admin row says there is no archive action. They are grouped under Admin. The default roles are the matrix's: owner has everything admin has, admin has everything staff has, and so on. "Built" means the code that uses the action exists today (phases 0 to 2 and the staff board). "Future" means the feature has not been built yet.
 
 | Category                               | Permissions in it                                                                                                                                              | Default roles                                                                                                                                                                          | Status                                                                                                                                 |
 | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
