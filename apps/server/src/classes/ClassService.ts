@@ -7,6 +7,7 @@ import type {
   EnrolInput,
   NewSessionInput,
   Session,
+  SessionPriceInput,
 } from '@buxa/contracts';
 import { assertAllowed } from '../auth/authorize';
 import type { ClassRecord, ClassRepository } from './ClassRepository';
@@ -24,6 +25,8 @@ export interface ClassService {
   listSessions(actor: Actor): Promise<Outcome<Session[]>>;
   getSession(actor: Actor, sessionId: string): Promise<Outcome<Session>>;
   createSession(actor: Actor, input: NewSessionInput): Promise<Outcome<Session>>;
+  /** Sets or clears a session's price. Needs classes:manage (staff and above); a viewer is refused. */
+  setSessionPrice(actor: Actor, sessionId: string, price: SessionPriceInput | null): Promise<Outcome<Session>>;
   listClasses(actor: Actor, sessionId: string): Promise<Outcome<Class[]>>;
   getClass(actor: Actor, classId: string): Promise<Outcome<Class>>;
   addClass(actor: Actor, sessionId: string, input: ClassInput): Promise<Outcome<Class>>;
@@ -104,6 +107,12 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
       assertAllowed(actor, 'classes:manage');
 
       return attempt(() => repo.createSession(actor, input), await timezoneOf(actor.orgId));
+    },
+
+    async setSessionPrice(actor, sessionId, price) {
+      assertAllowed(actor, 'classes:manage');
+
+      return attempt(() => repo.setSessionPrice(actor, sessionId, price), await timezoneOf(actor.orgId));
     },
 
     async listClasses(actor, sessionId) {

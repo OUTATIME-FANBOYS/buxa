@@ -10,6 +10,7 @@ import {
   MAX_AGE_LIMIT,
   MAX_CAMP_SIZE,
   MAX_CLASS_AGE,
+  MAX_MINOR_AMOUNT,
   MIN_CAMP_SIZE,
   MIN_CLASS_AGE,
 } from '@buxa/domain';
@@ -46,6 +47,27 @@ const NameSchema = z.string().trim().min(1, 'Give the name.').max(120);
 const InstantSchema = z.iso.datetime({ offset: true, message: 'Use a date and time with a time zone offset.' });
 const LocalDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a date like 2027-07-05.');
 
+/**
+ * A session's price, in minor units (cents, yen) with an ISO currency code. Shown for information only: nothing is charged.
+ * The early-bird amount and its end date are given together, and the early-bird amount is not above the regular price.
+ */
+export const SessionPriceSchema = z
+  .object({
+    currency: z.string().regex(/^[A-Z]{3}$/, 'Use a three-letter currency code, for example USD.'),
+    regularMinor: z.number().int().min(0).max(MAX_MINOR_AMOUNT),
+    earlyBirdMinor: z.number().int().min(0).max(MAX_MINOR_AMOUNT).nullable(),
+    earlyBirdUntil: LocalDateSchema.nullable(),
+  })
+  .refine(v => (v.earlyBirdMinor === null) === (v.earlyBirdUntil === null), {
+    message: 'Give the early-bird price and its last day together, or neither.',
+    path: ['earlyBirdUntil'],
+  })
+  .refine(v => v.earlyBirdMinor === null || v.earlyBirdMinor <= v.regularMinor, {
+    message: 'The early-bird price cannot be above the regular price.',
+    path: ['earlyBirdMinor'],
+  });
+export type SessionPriceInput = z.infer<typeof SessionPriceSchema>;
+
 /** A class's instructor as the screens show them: the person's id and name. Names are trimmed and bounded like a person's name. */
 export const ClassInstructorSchema = z.object({
   id: z.string(),
@@ -65,6 +87,8 @@ export const SessionSchema = z.object({
   endsOn: z.string().nullable(),
   classCount: z.number().int(),
   createdAt: z.string(),
+  /** The session's price, or null when none is set. Its classes show this same price. */
+  price: SessionPriceSchema.nullable(),
 });
 export type Session = z.infer<typeof SessionSchema>;
 
@@ -74,6 +98,7 @@ export const NewSessionInputSchema = z
     description: z.string().trim().max(2000).default(''),
     startsOn: LocalDateSchema,
     endsOn: LocalDateSchema,
+    price: SessionPriceSchema.nullable().optional(),
   })
   .refine(v => v.endsOn >= v.startsOn, {
     message: 'The session must end on or after its first day.',
@@ -95,6 +120,8 @@ export const ClassSchema = z.object({
   instructors: z.array(ClassInstructorSchema).max(MAX_CLASS_INSTRUCTORS),
   seatsTaken: z.number().int(),
   waitlisted: z.number().int(),
+  /** The price of the session this class runs in. Each class shows its session's price. */
+  price: SessionPriceSchema.nullable(),
 });
 export type Class = z.infer<typeof ClassSchema>;
 

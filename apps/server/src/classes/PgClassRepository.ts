@@ -1,7 +1,7 @@
 import type { Pool } from 'pg';
 import { withOrg } from '@buxa/db';
 import type { Actor } from '@buxa/domain';
-import type { Class, Enrolment, NewSessionInput, Session } from '@buxa/contracts';
+import type { Class, Enrolment, NewSessionInput, Session, SessionPriceInput } from '@buxa/contracts';
 import type { ClassRecord, ClassRepository, EnrolRequest, EnrolmentRule } from './ClassRepository';
 import { cancelInTransaction, enrolInTransaction } from './PgEnrolmentWrites';
 import {
@@ -15,7 +15,7 @@ import {
   requireSession,
   requireSessionExists,
 } from './PgClassQueries';
-import { deleteClassRow, insertClass, insertSession, updateClassRow } from './PgClassWrites';
+import { deleteClassRow, insertClass, insertSession, setSessionPriceRow, updateClassRow } from './PgClassWrites';
 import { translateClassWriteError } from './pgClassErrors';
 
 /**
@@ -39,6 +39,14 @@ export class PgClassRepository implements ClassRepository {
       const id = await insertSession(db, actor, input);
 
       return requireSession(db, id);
+    });
+  }
+
+  setSessionPrice(actor: Actor, sessionId: string, price: SessionPriceInput | null): Promise<Session> {
+    return withOrg(this.pool, actor.orgId, async db => {
+      await setSessionPriceRow(db, actor, sessionId, price);
+
+      return requireSession(db, sessionId);
     });
   }
 

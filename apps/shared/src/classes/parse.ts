@@ -1,13 +1,15 @@
-import { parseCampLocal } from '@buxa/domain';
+import { DEFAULT_CURRENCY, parseCampLocal, parseMoney } from '@buxa/domain';
 import {
   CancelEnrolmentInputSchema,
   ClassInputSchema,
   EnrolInputSchema,
   NewSessionInputSchema,
+  SessionPriceSchema,
   type CancelEnrolmentInput,
   type ClassInput,
   type EnrolInput,
   type NewSessionInput,
+  type SessionPriceInput,
 } from '@buxa/contracts';
 import { failure, type FieldErrors } from '../actionState';
 import { field, fieldAll, parseWith, type PersonParsed } from '../people/parse';
@@ -99,7 +101,56 @@ export function classForm(form: FormData, timeZone: string): PersonParsed<ClassI
   );
 }
 
-/** A session (the parent): its name, description and first and last day, picked as calendar dates. */
+const MONEY_MESSAGES = {
+  format: 'Type an amount like 45 or 45.50.',
+  precision: 'This currency has fewer decimal places. Remove the extra digits.',
+  range: 'That amount is too large.',
+} as const;
+
+/**
+ * The price fields of a session form: `priceAmount`, `priceCurrency` (default USD), `earlyBirdAmount` and `earlyBirdUntil`.
+ * A blank price means no price. Amounts become minor units with parseMoney, which refuses extra decimals rather than rounding.
+ * Returns undefined when a problem was recorded in `problems`.
+ */
+function priceFromForm(form: FormData, problems: FieldErrors): SessionPriceInput | null | undefined {
+  const currency = field(form, 'priceCurrency').trim().toUpperCase() || DEFAULT_CURRENCY;
+  const amount = field(form, 'priceAmount').trim();
+  const early = field(form, 'earlyBirdAmount').trim();
+  const until = field(form, 'earlyBirdUntil').trim();
+  if (amount === '') {
+    if (early !== '' || until !== '') {
+      problems.priceAmount = 'Enter the price, or clear the early-bird fields.';
+
+      return undefined;
+    }
+
+    return null;
+  }
+  const regular = parseMoney(amount, currency);
+  if (!regular.ok) {
+    problems.priceAmount = MONEY_MESSAGES[regular.reason];
+
+    return undefined;
+  }
+  if (early === '' && until === '') {
+    return { currency, regularMinor: regular.minor, earlyBirdMinor: null, earlyBirdUntil: null };
+  }
+  const earlyParsed = early === '' ? null : parseMoney(early, currency);
+  if (earlyParsed && !earlyParsed.ok) {
+    problems.earlyBirdAmount = MONEY_MESSAGES[earlyParsed.reason];
+
+    return undefined;
+  }
+
+  return {
+    currency,
+    regularMinor: regular.minor,
+    earlyBirdMinor: earlyParsed ? earlyParsed.minor : null,
+    earlyBirdUntil: until === '' ? null : until,
+  };
+}
+
+/** A session (the parent): its name, description, first and last day (calendar dates) and an optional price. */
 export function sessionForm(form: FormData): PersonParsed<NewSessionInput> {
   const problems: FieldErrors = {};
   const startsOn = field(form, 'startsOn');
@@ -110,6 +161,7 @@ export function sessionForm(form: FormData): PersonParsed<NewSessionInput> {
   if (endsOn === '') {
     problems.endsOn = 'Choose the last day.';
   }
+  const price = priceFromForm(form, problems);
 
   return withProblems(problems, () =>
     parseWith<NewSessionInput>(NewSessionInputSchema, {
@@ -117,7 +169,18 @@ export function sessionForm(form: FormData): PersonParsed<NewSessionInput> {
       description: field(form, 'description'),
       startsOn,
       endsOn,
+      price: price ?? null,
     }),
+  );
+}
+
+/** Sets or clears a session's price (the session's Price dialog). A blank amount clears it. */
+export function sessionPriceForm(form: FormData): PersonParsed<SessionPriceInput | null> {
+  const problems: FieldErrors = {};
+  const price = priceFromForm(form, problems);
+
+  return withProblems(problems, () =>
+    parseWith<SessionPriceInput | null>(SessionPriceSchema.nullable(), price ?? null),
   );
 }
 

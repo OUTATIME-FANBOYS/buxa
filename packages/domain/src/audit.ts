@@ -22,6 +22,7 @@ export const AUDIT_ACTIONS = [
   'class.delete',
   'session.create',
   'session.update',
+  'session.price_change',
   'import.upload',
   'enrolment.create',
   'enrolment.cancel',

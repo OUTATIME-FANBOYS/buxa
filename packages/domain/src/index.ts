@@ -6,5 +6,7 @@ export * from './clock';
 export * from './people';
 export * from './classes';
 export * from './registration';
+export * from './money';
+export * from './prices';
 export * from './presence';
 export * from './settle';
