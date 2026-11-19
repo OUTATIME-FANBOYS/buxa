@@ -1,18 +1,19 @@
-import { classWithinSession, type Actor } from '@buxa/domain';
+import { classWithinSession, expandClassRule, findClash, formatClash, type Actor } from '@buxa/domain';
 import type {
   CancelEnrolmentInput,
   Class,
   ClassInput,
   Enrolment,
   EnrolInput,
+  NewRecurringClassInput,
   NewSessionInput,
   Session,
   SessionPriceInput,
 } from '@buxa/contracts';
 import { assertAllowed } from '../auth/authorize';
-import type { ClassRecord, ClassRepository } from './ClassRepository';
+import type { ClassRecord, ClassRepository, CampClassSpan } from './ClassRepository';
 import { teacherScopeOf, type TeacherScope } from './teacherScope';
-import { ClassNotFoundError, ClassOutsideSessionError, SessionNotFoundError } from './errors';
+import { ClassNotFoundError, ClassOutsideSessionError, RecurrenceRefusedError, SessionNotFoundError } from './errors';
 import { createEnrolmentMethods } from './EnrolmentService';
 import { attempt, ok, type Outcome } from './outcome';
 
@@ -28,6 +29,13 @@ export interface ClassService {
   createSession(actor: Actor, input: NewSessionInput): Promise<Outcome<Session>>;
   /** Sets or clears a session's price. Needs classes:manage (staff and above); a viewer is refused. */
   setSessionPrice(actor: Actor, sessionId: string, price: SessionPriceInput | null): Promise<Outcome<Session>>;
+  /** Shows or hides a session's public page. */
+  setSessionPublic(actor: Actor, sessionId: string, isPublic: boolean): Promise<Outcome<Session>>;
+  /**
+   * A weekly series of classes under a session. Each class is checked against the session's dates and against every class in
+   * the camp (and the earlier classes of the series), then all are written, or none.
+   */
+  addRecurringClasses(actor: Actor, sessionId: string, input: NewRecurringClassInput): Promise<Outcome<Class[]>>;
   listClasses(actor: Actor, sessionId: string): Promise<Outcome<Class[]>>;
   getClass(actor: Actor, classId: string): Promise<Outcome<Class>>;
   addClass(actor: Actor, sessionId: string, input: ClassInput): Promise<Outcome<Class>>;
@@ -127,6 +135,61 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
       assertAllowed(actor, 'classes:manage');
 
       return attempt(() => repo.createSession(actor, input), await timezoneOf(actor.orgId));
+    },
+
+    async setSessionPublic(actor, sessionId, isPublic) {
+      assertAllowed(actor, 'classes:manage');
+
+      return attempt(() => repo.setSessionPublic(actor, sessionId, isPublic), await timezoneOf(actor.orgId));
+    },
+
+    async addRecurringClasses(actor, sessionId, input) {
+      assertAllowed(actor, 'classes:manage');
+      const timeZone = await timezoneOf(actor.orgId);
+
+      return attempt(async () => {
+        const session = await repo.getSession(actor.orgId, sessionId);
+        if (!session) {
+          throw new SessionNotFoundError();
+        }
+        const expanded = expandClassRule(input.rule, timeZone);
+        if (!expanded.ok) {
+          throw new RecurrenceRefusedError('recurrence_invalid', expanded.message);
+        }
+
+        const days =
+          session.startsOn !== null && session.endsOn !== null
+            ? { startsOn: session.startsOn, endsOn: session.endsOn }
+            : null;
+        // Each class is checked against every class in the camp and against the earlier classes of this series, as an import is.
+        const existing: CampClassSpan[] = await repo.listCampClassSpans(actor.orgId);
+        const accepted: CampClassSpan[] = [];
+        for (const occurrence of expanded.occurrences) {
+          if (days && !classWithinSession(occurrence, days, timeZone)) {
+            throw new ClassOutsideSessionError(days.startsOn, days.endsOn);
+          }
+          const clash = findClash(occurrence, [...existing, ...accepted]);
+          if (clash) {
+            throw new RecurrenceRefusedError(
+              'class_clash',
+              `The class on ${occurrence.date} clashes with ${clash.className} (${formatClash(clash, timeZone)}). Choose other times or change the rule; nothing was saved.`,
+            );
+          }
+          accepted.push({ startsAt: occurrence.startsAt, endsAt: occurrence.endsAt, className: input.name });
+        }
+
+        const records: ClassRecord[] = expanded.occurrences.map(o => ({
+          name: input.name,
+          ageRange: input.ageRange,
+          capacity: input.capacity,
+          startsAt: o.startsAt,
+          endsAt: o.endsAt,
+          location: input.location,
+          instructorIds: input.instructorIds,
+        }));
+
+        return repo.addClasses(actor, sessionId, records);
+      }, timeZone);
     },
 
     async setSessionPrice(actor, sessionId, price) {

@@ -3,7 +3,7 @@ import { withOrg } from '@buxa/db';
 import { isUuid, type Actor } from '@buxa/domain';
 import type { Class, Enrolment, NewSessionInput, Session, SessionPriceInput } from '@buxa/contracts';
 import { recordAudit } from '../audit/recordAudit';
-import type { ClassRecord, ClassRepository, EnrolRequest, EnrolmentRule } from './ClassRepository';
+import type { CampClassSpan, ClassRecord, ClassRepository, EnrolRequest, EnrolmentRule } from './ClassRepository';
 import { TeacherNotFoundError } from './errors';
 import { cancelInTransaction, enrolInTransaction } from './PgEnrolmentWrites';
 import {
@@ -17,8 +17,9 @@ import {
   requireSession,
   requireSessionExists,
 } from './PgClassQueries';
-import { deleteClassRow, insertClass, insertSession, setSessionPriceRow, updateClassRow } from './PgClassWrites';
+import { deleteClassRow, insertClass, insertSession, setSessionPriceRow, setSessionPublicRow, updateClassRow } from './PgClassWrites';
 import { translateClassWriteError } from './pgClassErrors';
+import { toIso } from '../people/pgRows';
 
 /**
  * Postgres adapter for sessions, classes and enrolments. Every call runs in withOrg (row-level security), and every write
@@ -49,6 +50,36 @@ export class PgClassRepository implements ClassRepository {
       await setSessionPriceRow(db, actor, sessionId, price);
 
       return requireSession(db, sessionId);
+    });
+  }
+
+  setSessionPublic(actor: Actor, sessionId: string, isPublic: boolean): Promise<Session> {
+    return withOrg(this.pool, actor.orgId, async db => {
+      await setSessionPublicRow(db, actor, sessionId, isPublic);
+
+      return requireSession(db, sessionId);
+    });
+  }
+
+  addClasses(actor: Actor, sessionId: string, inputs: ClassRecord[]): Promise<Class[]> {
+    return withOrg(this.pool, actor.orgId, async db => {
+      await requireSessionExists(db, sessionId);
+      const written: Class[] = [];
+      for (const input of inputs) {
+        written.push(await requireClass(db, await insertClass(db, actor, sessionId, input)));
+      }
+
+      return written;
+    });
+  }
+
+  listCampClassSpans(orgId: string): Promise<CampClassSpan[]> {
+    return withOrg(this.pool, orgId, async db => {
+      const { rows } = await db.query<{ starts_at: Date; ends_at: Date; class_name: string }>(
+        'SELECT s.starts_at, s.ends_at, s.name AS class_name FROM sessions s ORDER BY s.starts_at',
+      );
+
+      return rows.map(r => ({ startsAt: toIso(r.starts_at), endsAt: toIso(r.ends_at), className: r.class_name }));
     });
   }
 

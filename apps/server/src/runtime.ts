@@ -12,6 +12,8 @@ import { createPgRepositories, type Repositories } from './repositories';
 import { createAttendanceService } from './services/attendance/createAttendanceService';
 import { createClassService, type ClassService } from './classes/ClassService';
 import { createSeatHoldService, type SeatHoldService } from './holds/SeatHoldService';
+import { createCalendarService, type CalendarService } from './calendar/CalendarService';
+import { createPublicSessionService, type PublicSessionService } from './publicSessions/PublicSessionService';
 import { createCredentialService } from './services/credentials/createCredentialService';
 import { createImportService, type ImportService } from './classes/import/ImportService';
 import { createMembershipService } from './services/memberships/createMembershipService';
@@ -52,6 +54,8 @@ export interface Services {
   registration: RegistrationService;
   /** Seat holds for registration. The form calls placeHold; the cleanup calls releaseExpiredHolds. */
   seatHolds: SeatHoldService;
+  calendar: CalendarService;
+  publicSessions: PublicSessionService;
 }
 
 export interface RuntimeOptions {
@@ -134,6 +138,8 @@ export function createServices(repositories: Repositories, clock: Clock): Servic
     attendance: createAttendanceService({ attendance, classes, people, memberships, orgs, clock }),
     ...createClassServices(repositories),
     registration: createRegistrationService(repositories.registration),
+    calendar: createCalendarService({ repo: repositories.calendar }),
+    publicSessions: createPublicSessionService({ repo: repositories.publicSessions }),
   };
 }
 

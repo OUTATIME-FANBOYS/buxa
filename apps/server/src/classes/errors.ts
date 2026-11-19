@@ -162,6 +162,21 @@ export class HoldExistsError extends Error {
   }
 }
 
+/**
+ * A recurring rule that cannot be expanded, or a class of the series that clashes with a class already in the camp or with an
+ * earlier class of the same series. Thrown before anything is written, so a refused series saves nothing.
+ */
+export class RecurrenceRefusedError extends Error {
+  readonly kind = 'recurrence-refused';
+  constructor(
+    readonly reason: 'recurrence_invalid' | 'class_clash',
+    message: string,
+  ) {
+    super(message);
+    this.name = 'RecurrenceRefusedError';
+  }
+}
+
 export type ClassErrorKind =
   | 'class-not-found'
   | 'session-not-found'

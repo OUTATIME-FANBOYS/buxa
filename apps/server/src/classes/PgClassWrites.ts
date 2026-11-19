@@ -16,8 +16,8 @@ import { priceChangeAudit, samePrice } from './priceAudit';
 export async function insertSession(db: Db, actor: Actor, input: NewSessionInput): Promise<string> {
   const price = input.price ?? null;
   const { rows } = await db.query<{ id: string }>(
-    `INSERT INTO classes (org_id, name, description, starts_on, ends_on, price_minor, price_currency, early_bird_minor, early_bird_until)
-     VALUES ($1, $2, $3, $4::date, $5::date, $6, $7, $8, $9::date) RETURNING id`,
+    `INSERT INTO classes (org_id, name, description, starts_on, ends_on, price_minor, price_currency, early_bird_minor, early_bird_until, is_public)
+     VALUES ($1, $2, $3, $4::date, $5::date, $6, $7, $8, $9::date, $10) RETURNING id`,
     [
       actor.orgId,
       input.name,
@@ -28,6 +28,7 @@ export async function insertSession(db: Db, actor: Actor, input: NewSessionInput
       price?.currency ?? null,
       price?.earlyBirdMinor ?? null,
       price?.earlyBirdUntil ?? null,
+      input.isPublic ?? false,
     ],
   );
   const id = rows[0].id;
@@ -49,6 +50,24 @@ export async function insertSession(db: Db, actor: Actor, input: NewSessionInput
   }
 
   return id;
+}
+
+/** Sets whether a session has a public page, and audits it. Throws SessionNotFoundError when the session is not in the camp. */
+export async function setSessionPublicRow(db: Db, actor: Actor, sessionId: string, isPublic: boolean): Promise<void> {
+  const { rows } = await db.query<{ id: string }>(
+    'UPDATE classes SET is_public = $3 WHERE id = $1 AND org_id = $2 RETURNING id',
+    [sessionId, actor.orgId, isPublic],
+  );
+  if (rows.length === 0) {
+    throw new SessionNotFoundError();
+  }
+  await recordAudit(db, {
+    actor,
+    action: 'session.update',
+    entity: 'session',
+    entityId: sessionId,
+    data: { isPublic },
+  });
 }
 
 /**

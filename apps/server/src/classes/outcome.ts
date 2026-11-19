@@ -10,6 +10,8 @@ export type FailureReason =
   | 'class_not_found'
   | 'session_not_found'
   | 'class_outside_session'
+  | 'recurrence_invalid'
+  | 'class_clash'
   | 'capacity_below_enrolled'
   | 'class_has_enrolments'
   | 'enrolment_not_found'
@@ -70,6 +72,11 @@ export async function attempt<T>(work: () => Promise<T>, timeZone: string): Prom
       if (isClassError(e, kind)) {
         return { ok: false, failure: NOT_FOUND[kind] };
       }
+    }
+    if (e instanceof Error && (e as { kind?: unknown }).kind === 'recurrence-refused') {
+      const refused = e as Error & { reason: 'recurrence_invalid' | 'class_clash' };
+
+      return { ok: false, failure: { reason: refused.reason, message: refused.message } };
     }
     if (isOutsideSession(e)) {
       const { startsOn, endsOn } = e;

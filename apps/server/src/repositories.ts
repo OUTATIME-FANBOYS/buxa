@@ -1,6 +1,10 @@
 import type { Pool } from 'pg';
 import { PgAttendanceRepository } from './attendance/PgAttendanceRepository';
 import { type AttendanceRepository } from './attendance/AttendanceRepository';
+import type { CalendarRepository } from './calendar/CalendarService';
+import { PgCalendarRepository } from './calendar/PgCalendarRepository';
+import type { PublicSessionRepository } from './publicSessions/PublicSessionService';
+import { PgPublicSessionRepository } from './publicSessions/PgPublicSessionRepository';
 import type { ClassRepository } from './classes/ClassRepository';
 import { PgClassRepository } from './classes/PgClassRepository';
 import type { ImportRepository } from './classes/import/ImportRepository';
@@ -36,6 +40,10 @@ export interface Repositories {
   registration: RegistrationRepository;
   /** Seat holds for registration. Postgres only: the seat rules live in the database (migration 0023). */
   seatHolds: SeatHoldRepository;
+  /** The iCal feed token and the camp classes it reads. */
+  calendar: CalendarRepository;
+  /** The public session pages: read without sign-in. */
+  publicSessions: PublicSessionRepository;
 }
 
 export const createPgRepositories = (pool: Pool): Repositories => ({
@@ -49,4 +57,6 @@ export const createPgRepositories = (pool: Pool): Repositories => ({
   imports: new PgImportRepository(pool),
   registration: new PgRegistrationRepository(pool),
   seatHolds: new PgSeatHoldRepository(pool),
+  calendar: new PgCalendarRepository(pool),
+  publicSessions: new PgPublicSessionRepository(pool),
 });

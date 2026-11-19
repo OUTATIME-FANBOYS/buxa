@@ -19,6 +19,7 @@ export interface SessionRow {
   starts_on: string | null;
   ends_on: string | null;
   class_count: number;
+  is_public: boolean;
   created_at: Date;
   price_minor: number | null;
   price_currency: string | null;
@@ -95,6 +96,7 @@ export function toSession(row: SessionRow): Session {
     startsOn: row.starts_on,
     endsOn: row.ends_on,
     classCount: row.class_count,
+    isPublic: row.is_public,
     createdAt: toIso(row.created_at),
     price: toPrice(row),
   };
@@ -148,7 +150,7 @@ export function toActiveFacts(row: {
 }
 
 const SESSION_COLUMNS = `p.id, p.name, p.description, to_char(p.starts_on, 'YYYY-MM-DD') AS starts_on,
-  to_char(p.ends_on, 'YYYY-MM-DD') AS ends_on, p.created_at,
+  to_char(p.ends_on, 'YYYY-MM-DD') AS ends_on, p.is_public, p.created_at,
   (SELECT count(*)::int FROM sessions s WHERE s.class_id = p.id) AS class_count,
   p.price_minor, p.price_currency, p.early_bird_minor, to_char(p.early_bird_until, 'YYYY-MM-DD') AS early_bird_until`;
 

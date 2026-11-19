@@ -18,6 +18,7 @@ import { InMemoryClassRepository } from '../classes/InMemoryClassRepository';
 import type { SeatHoldRepository } from '../holds/SeatHoldRepository';
 import { InMemoryImportRepository } from '../classes/import/InMemoryImportRepository';
 import { InMemoryRegistrationRepository } from '../registration/InMemoryRegistrationRepository';
+import { InMemoryCalendarRepository } from '../calendar/InMemoryCalendarRepository';
 import { InMemoryCredentialRepository } from '../credentials/InMemoryCredentialRepository';
 import { InMemoryMembershipRepository } from '../memberships/InMemoryMembershipRepository';
 import { OrgNotFoundError, SlugTakenError, type ArchivedCampRecord, type OrgRepository } from '../orgs/OrgRepository';
@@ -268,6 +269,12 @@ export class InMemoryStore implements UserRepository, OrgRepository {
       imports: new InMemoryImportRepository(classes),
       registration: new InMemoryRegistrationRepository({}),
       seatHolds: unavailableSeatHolds,
+      calendar: new InMemoryCalendarRepository(),
+      // These tests create no public pages, so the public read finds nothing.
+      publicSessions: {
+        findPublicSession: () => Promise.resolve(null),
+        listUpcomingClasses: () => Promise.resolve([]),
+      },
     };
   }
 }
