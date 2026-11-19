@@ -89,6 +89,12 @@
   --p-medium: var(--accent);
   --p-high: var(--warn);
   --p-critical: var(--crit);
+  /* Status colours for the status dropdown: one per seeded status, each text-safe (4.5:1) on the surface. */
+  --st-backlog: #5a5f6e;
+  --st-todo: #0f7173;
+  --st-progress: #a34a07;
+  --st-review: #4f2d66;
+  --st-done: #096d4c;
   /* Task type tints for calendar pills: very pastel, with the app's text colour on top (well over 4.5:1). */
   --type-1: #e3eefb;
   --type-2: #efe6f7;
@@ -185,6 +191,12 @@
   /* Medium priority is teal in light mode, but --accent is coral in dark mode, the same family as --p-high (amber).
      Give it its own teal here so the four priority dots stay distinct. */
   --p-medium: #7fd1d1;
+  /* Dark status colours: --accent and --warn are coral and amber here, so the status set gets its own values. */
+  --st-backlog: #9ea4b0;
+  --st-todo: #7fd1d1;
+  --st-progress: #f2b045;
+  --st-review: #c9b2d9;
+  --st-done: #3fcf8e;
   /* Dark variants of the calendar type tints: deep, low-chroma, with the dark text colour on top. */
   --type-1: #1f2b3d;
   --type-2: #2b2338;
