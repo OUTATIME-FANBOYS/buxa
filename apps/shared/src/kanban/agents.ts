@@ -165,7 +165,7 @@ function apply(s: AppState, p: Proposal): Applied {
     const id = D.clock.id();
 
     return {
-      state: runAs(s, p.agentId, via, x => D.createTask(x, id, { ...c.draft, tags: c.draft.tags ?? [] })),
+      state: runAs(s, p.agentId, via, x => D.createTask(x, id, { ...c.draft })),
       undo: { kind: 'delete_task', taskId: id },
       taskId: id,
     };

@@ -81,7 +81,6 @@ export interface Task {
   assigneeId?: string;
   start?: string;
   due?: string;
-  tags: string[];
   subtasks: Subtask[];
   comments: Comment[];
   attachments: Attachment[];
@@ -118,7 +117,6 @@ export interface Filter {
   assignees: string[];
   columns: string[];
   due: DueFilter;
-  tags: string[];
   sort: Sort;
   archived: boolean;
 }
@@ -181,10 +179,9 @@ export type TaskDraftChange = {
   priority?: Priority;
   assigneeId?: string;
   due?: string;
-  tags?: string[];
 };
 export type TaskPatchChange = Partial<
-  Pick<Task, 'title' | 'description' | 'priority' | 'assigneeId' | 'start' | 'due' | 'tags'>
+  Pick<Task, 'title' | 'description' | 'priority' | 'assigneeId' | 'start' | 'due'>
 >;
 export type Change =
   | { kind: 'create_task'; draft: TaskDraftChange }

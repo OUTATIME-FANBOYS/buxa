@@ -28,19 +28,18 @@ export const isData = (d: unknown): d is Data =>
  * Fill those in when data is loaded. Returns the same object when nothing needed repair.
  */
 export function repairData<T extends Pick<AppState, 'tasks'>>(d: T): T {
-  if (!d.tasks.some(t => t.description === undefined || t.priority === undefined || !Array.isArray(t.tags))) {
+  if (!d.tasks.some(t => t.description === undefined || t.priority === undefined)) {
     return d;
   }
 
   return {
     ...d,
     tasks: d.tasks.map(t =>
-      t.description === undefined || t.priority === undefined || !Array.isArray(t.tags)
+      t.description === undefined || t.priority === undefined
         ? {
             ...t,
             description: t.description ?? '',
             priority: t.priority ?? 'medium',
-            tags: Array.isArray(t.tags) ? t.tags : [],
           }
         : t,
     ),

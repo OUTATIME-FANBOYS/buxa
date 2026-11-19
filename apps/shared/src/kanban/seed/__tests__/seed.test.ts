@@ -53,20 +53,16 @@ describe('seed projects', () => {
 describe('seed task builder', () => {
   it('turns a spec into a task in the right column with relative dates', () => {
     const projects = buildProjects();
-    const [task] = buildTasks(
-      [spec(PROJECT.registration, 2, 'Write form', 'high', USER.tom, 0, 3, ['family'])],
-      projects,
-    );
+    const [task] = buildTasks([spec(PROJECT.registration, 2, 'Write form', 'high', USER.tom, 0, 3)], projects);
     expect(task.columnId).toBe(projects[0].columns[2].id);
     expect(task.priority).toBe('high');
     expect(task.assigneeId).toBe(USER.tom);
-    expect(task.tags).toEqual(['family']);
     expect(task.start).toMatch(/^\d{4}-\d{2}-\d{2}/);
     expect(task.completedAt).toBeUndefined();
   });
   it('marks a done spec as completed and gives subtasks, comments and attachments ids', () => {
     const projects = buildProjects();
-    const specs = [doneSpec(PROJECT.staffing, 'Hire', 'low', USER.sam, -2, ['hr'])];
+    const specs = [doneSpec(PROJECT.staffing, 'Hire', 'low', USER.sam, -2)];
     const [task] = buildTasks(
       [
         {
@@ -82,7 +78,7 @@ describe('seed task builder', () => {
     expect(task.attachments[0]).toMatchObject({ id: 't-1-file-0', name: 'x.pdf' });
   });
   it('throws when a spec points at a column the project does not have', () => {
-    expect(() => buildTasks([spec(PROJECT.registration, 4, 'x', 'low', undefined, null, null, [])], [])).toThrow(
+    expect(() => buildTasks([spec(PROJECT.registration, 4, 'x', 'low', undefined, null, null)], [])).toThrow(
       /missing column/,
     );
   });
