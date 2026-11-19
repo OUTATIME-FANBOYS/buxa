@@ -55,11 +55,11 @@ describe('status colour tokens', () => {
       expect(contrast(hex(light, `status-${c}-ink`) ?? '', glass)).toBeGreaterThanOrEqual(6);
     }
   });
-  it('keep the dark pill text (the colour on the 6% glass, with its 1px border) at 4.5:1 or better', () => {
+  it('keep the dark pill text (the paler ink on the 16% glass) at 4.5:1 or better', () => {
     const surface = hex(dark, 'surface') ?? '';
     for (const c of COLOURS) {
-      const glass = over(hex(dark, `status-${c}`) ?? '', surface, 0.06);
-      expect(contrast(hex(dark, `status-${c}`) ?? '', glass)).toBeGreaterThanOrEqual(4.5);
+      const glass = over(hex(dark, `status-${c}`) ?? '', surface, 0.16);
+      expect(contrast(hex(dark, `status-${c}-ink`) ?? '', glass)).toBeGreaterThanOrEqual(4.5);
     }
   });
   it('give the glass a soft top highlight in both themes', () => {

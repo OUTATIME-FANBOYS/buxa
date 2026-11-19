@@ -11,7 +11,7 @@ export function StatusPill({ column }: { column: Column }) {
 
   return (
     <span className={`status-pill status-${mark.colour}`}>
-      <StatusIcon glyph={mark.glyph} size={11} />
+      <StatusIcon glyph={mark.glyph} size={14} />
       {column.name}
     </span>
   );

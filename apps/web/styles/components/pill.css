@@ -1,20 +1,18 @@
 /*
  * Pills: a liquid-glass chip, the same recipe as the status pills (features/kanban/status.css). The tone's class (.tone-* in
- * tokens.css) sets the colours. Light mode is the filled pill: the tone tint with the ink text and no border. Dark mode is the
- * outlined pill: a faint glass with a 1px border and the text in the tone's colour. Both keep the blur and the top highlight.
- * The size is 80% of the old one (text, padding, height, gaps and dot), so a pill is proportionally smaller. Pills are spans, not
- * buttons, so they carry no touch target; a pill that became a button would need the 44px touch target from button.css.
+ * tokens.css) sets the colours. Light mode is the filled pill: the tone tint with the ink text. Dark mode is a stronger tint
+ * (16%) with the paler ink as text. Neither has a border: the colour carries the shape. Both keep the blur and the top highlight.
+ * Pills are spans, not buttons, so they carry no touch target; a pill that became a button would need button.css's 44px target.
  */
 .pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  min-height: 18px;
-  padding: 0 6px;
+  gap: 6px;
+  padding: 0 8px;
   border-radius: 999px;
-  font-size: calc(var(--fs-s) * 0.8);
+  font-size: var(--fs-s);
   font-weight: 600;
-  line-height: 16px;
+  line-height: 20px;
   letter-spacing: normal;
   white-space: nowrap;
   color: var(--tone-ink);
@@ -24,14 +22,10 @@
   -webkit-backdrop-filter: blur(12px) saturate(160%);
   backdrop-filter: blur(12px) saturate(160%);
 }
-[data-theme='dark'] .pill {
-  color: var(--tone);
-  border: 1px solid var(--tone);
-}
 .pill-dot {
   flex: none;
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--tone-f);
 }
