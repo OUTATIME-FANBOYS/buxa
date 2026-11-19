@@ -79,13 +79,14 @@ export function ClassesTable({
                   <div className="classes-row-actions">
                     <Button
                       variant="ghost"
-                      className="classes-target"
+                      size="sm"
+                      iconOnly
+                      icon="users"
+                      aria-label={`Enrolments for ${cls.name}`}
+                      title={selected ? 'Showing enrolments' : 'Enrolments'}
                       aria-current={selected ? 'true' : undefined}
                       href={`${sessionPath(sessionId)}?class=${encodeURIComponent(cls.id)}#enrolments`}
-                    >
-                      {selected ? 'Showing enrolments' : 'Enrolments'}
-                      <span className="sr-only"> for {cls.name}</span>
-                    </Button>
+                    />
                     {canManage && (
                       <>
                         <EditClassButton
