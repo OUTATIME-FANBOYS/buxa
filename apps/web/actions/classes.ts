@@ -2,8 +2,10 @@
 import { cancelEnrolmentAction as cancelEnrolmentActionImpl } from '@buxa/server/composers/classes/cancelEnrolmentAction';
 import { enrolAction as enrolActionImpl } from '@buxa/server/composers/classes/enrolAction';
 import { importClassesAction as importClassesActionImpl } from '@buxa/server/composers/classes/importClassesAction';
-import { createClassAction as createClassActionImpl } from '@buxa/server/composers/classes/createClassAction';
-import { addSessionAction as addSessionActionImpl } from '@buxa/server/composers/classes/addSessionAction';
+import { createSessionAction as createSessionActionImpl } from '@buxa/server/composers/classes/createSessionAction';
+import { addClassAction as addClassActionImpl } from '@buxa/server/composers/classes/addClassAction';
+import { updateClassAction as updateClassActionImpl } from '@buxa/server/composers/classes/updateClassAction';
+import { deleteClassAction as deleteClassActionImpl } from '@buxa/server/composers/classes/deleteClassAction';
 
 // Server action wrappers for the classes screens. Client components import this module, never @buxa/server. Next.js allows only
 // async functions to be exported from a 'use server' file, so each action is wrapped rather than re-exported.
@@ -20,10 +22,18 @@ export async function importClassesAction(...args: Parameters<typeof importClass
   return importClassesActionImpl(...args);
 }
 
-export async function createClassAction(...args: Parameters<typeof createClassActionImpl>) {
-  return createClassActionImpl(...args);
+export async function createSessionAction(...args: Parameters<typeof createSessionActionImpl>) {
+  return createSessionActionImpl(...args);
 }
 
-export async function addSessionAction(...args: Parameters<typeof addSessionActionImpl>) {
-  return addSessionActionImpl(...args);
+export async function addClassAction(...args: Parameters<typeof addClassActionImpl>) {
+  return addClassActionImpl(...args);
+}
+
+export async function updateClassAction(...args: Parameters<typeof updateClassActionImpl>) {
+  return updateClassActionImpl(...args);
+}
+
+export async function deleteClassAction(...args: Parameters<typeof deleteClassActionImpl>) {
+  return deleteClassActionImpl(...args);
 }

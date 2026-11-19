@@ -20,8 +20,8 @@ function previewOf(text: string) {
   return planImport({
     rows: read.rows,
     classes: [
-      { id: 'c-robotics', name: 'Robotics', ageRange: { minAge: 8, maxAge: 12 }, capacity: 2 },
-      { id: 'c-painting', name: 'Painting', ageRange: { minAge: 6, maxAge: 14 }, capacity: 10 },
+      { id: 'c-robotics', name: 'Robotics' },
+      { id: 'c-painting', name: 'Painting' },
     ],
     sessions: [],
     timeZone: CAMP_TZ,
@@ -33,7 +33,7 @@ describe('ImportResults (preview of the fixture file)', () => {
   const html = renderToStaticMarkup(<ImportResults results={plan.results} counts={plan.counts} />);
 
   it('says how many rows are ready and refused, and that nothing is saved yet', () => {
-    expect(countsLine(plan.counts)).toBe('2 rows are ready, 3 rows are refused.');
+    expect(countsLine(plan.counts)).toBe('3 rows are ready, 2 rows are refused.');
     expect(html).toContain('Nothing is saved until you confirm.');
   });
 
@@ -46,7 +46,6 @@ describe('ImportResults (preview of the fixture file)', () => {
   it('shows the reason for each refused row, against the column that is wrong', () => {
     expect(html).toMatch(/Clashes with row 2 of this file/);
     expect(html).toMatch(/There is no class called &quot;Ghost class&quot;/);
-    expect(html).toMatch(/Robotics is for ages 8 to 12/);
   });
 
   it('has headers for every column, so the table reads correctly with a screen reader', () => {

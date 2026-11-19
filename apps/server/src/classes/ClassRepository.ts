@@ -1,51 +1,61 @@
 import type { Actor, EnrolmentDecision, EnrolmentFacts } from '@buxa/domain';
-import type { Class, Enrolment, NewClassInput, Session } from '@buxa/contracts';
+import type { Class, Enrolment, NewSessionInput, Session } from '@buxa/contracts';
 
 export type { Class, Session, Enrolment } from '@buxa/contracts';
 
-/** A session as stored; `capacity` is already resolved (the class default when the input left it out). */
-export interface NewSessionRecord {
+/** A class as stored: its time range, ages and camp size. `capacity` is always given (the form requires it). */
+export interface ClassRecord {
+  name: string;
+  ageRange: { minAge: number; maxAge: number };
+  capacity: number;
   startsAt: string;
   endsAt: string;
   location: string;
   instructorIds: string[];
-  capacity: number;
 }
 
 export interface EnrolRequest {
-  sessionId: string;
+  classId: string;
   camperId: string;
 }
 
-/** The facts the enrolment rule needs, gathered inside the transaction. The session day is added by the service (it needs the camp zone). */
+/** The facts the enrolment rule needs, gathered inside the transaction. The class day is added by the service (it needs the camp zone). */
 export type GatheredEnrolmentFacts = Omit<EnrolmentFacts, 'sessionDay'>;
 
 /**
- * The decision callback. The repository calls it inside the transaction, after taking the session's lock, so the facts it sees
+ * The decision callback. The repository calls it inside the transaction, after taking the class's lock, so the facts it sees
  * are the ones the write is based on. It must be pure: the service passes the domain rule, nothing else.
  */
 export type EnrolmentRule = (facts: GatheredEnrolmentFacts) => EnrolmentDecision;
 
 /**
- * Storage for classes, sessions and enrolments. Callers decide whether something may happen (permissions, rules in @buxa/domain);
+ * Storage for sessions, classes and enrolments. Callers decide whether something may happen (permissions, rules in @buxa/domain);
  * implementations persist it and write the audit entry in the same transaction. Every method is scoped to the actor's organisation.
- * Refusals are thrown as the errors in ./errors.ts, after the transaction is rolled back, so nothing is written for a refused enrolment.
+ * Refusals are thrown as the errors in ./errors.ts, after the transaction is rolled back, so nothing is written for a refused change.
  */
 export interface ClassRepository {
-  listClasses(orgId: string): Promise<Class[]>;
-  getClass(orgId: string, classId: string): Promise<Class | null>;
-  /** Audits `class.create`. */
-  createClass(actor: Actor, input: NewClassInput): Promise<Class>;
-  /** Audits `session.create`. Throws ClassNotFoundError, or InstructorNotFoundError for an instructor outside the camp. */
-  addSession(actor: Actor, classId: string, input: NewSessionRecord): Promise<Session>;
-  /** Throws ClassNotFoundError. */
-  listSessions(orgId: string, classId: string): Promise<Session[]>;
+  listSessions(orgId: string): Promise<Session[]>;
+  getSession(orgId: string, sessionId: string): Promise<Session | null>;
+  /** Audits `session.create`. */
+  createSession(actor: Actor, input: NewSessionInput): Promise<Session>;
   /** Throws SessionNotFoundError. */
-  listEnrolments(orgId: string, sessionId: string): Promise<Enrolment[]>;
+  listClasses(orgId: string, sessionId: string): Promise<Class[]>;
+  getClass(orgId: string, classId: string): Promise<Class | null>;
+  /** Audits `class.create`. Throws SessionNotFoundError, or InstructorNotFoundError for an instructor outside the camp. */
+  addClass(actor: Actor, sessionId: string, input: ClassRecord): Promise<Class>;
   /**
-   * The only place that checks and takes a seat. In one transaction, under a lock on the session: gathers the facts, runs `rule`,
+   * Audits `class.update`. Throws ClassNotFoundError, InstructorNotFoundError, or CapacityBelowEnrolledError when the camp size
+   * is below the places already taken.
+   */
+  updateClass(actor: Actor, classId: string, input: ClassRecord): Promise<Class>;
+  /** Audits `class.delete`. Throws ClassNotFoundError, or ClassHasEnrolmentsError when any enrolment exists. */
+  deleteClass(actor: Actor, classId: string): Promise<void>;
+  /** Throws SessionNotFoundError. */
+  listEnrolments(orgId: string, classId: string): Promise<Enrolment[]>;
+  /**
+   * The only place that checks and takes a seat. In one transaction, under a lock on the class: gathers the facts, runs `rule`,
    * and on `allow` writes the enrolment and its audit entries (`enrolment.create`, plus `enrolment.override` when an overlap was overridden).
-   * On `refuse` it throws the matching error from ./errors.ts and writes nothing. Throws SessionNotFoundError, CamperNotFoundError.
+   * On `refuse` it throws the matching error from ./errors.ts and writes nothing. Throws ClassNotFoundError, CamperNotFoundError.
    */
   enrol(actor: Actor, request: EnrolRequest, rule: EnrolmentRule): Promise<Enrolment>;
   /** Frees the seat and the time. Audits `enrolment.cancel`. Throws EnrolmentNotFoundError (also when already cancelled). */

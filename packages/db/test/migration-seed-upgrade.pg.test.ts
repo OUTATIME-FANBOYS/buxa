@@ -57,7 +57,7 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       );
 
       const earlyMigrations = readdirSync(DIR)
-        .filter(f => f.endsWith('.sql') && f <= '0017_')
+        .filter(f => f.endsWith('.sql') && f.slice(0, 4) <= '0017')
         .sort();
 
       for (const file of earlyMigrations) {
@@ -89,7 +89,7 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       // Class and session (before 0019 adds external_key)
       const classResult = await client.query<{ id: string }>(
         `
-        INSERT INTO classes (org_id, name, capacity)
+        INSERT INTO classes (org_id, name, default_capacity)
         VALUES ($1, 'Kayaking ${tag}', 12)
         RETURNING id
       `,
@@ -136,7 +136,29 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0018_first_last_name_and_clock.sql',
       '0019_session_external_key.sql',
       '0020_drop_camp_clock.sql',
+      '0021_orgs_update_columns.sql',
+      '0022_sessions_parent_classes.sql',
     ]);
+  });
+
+  it('0022 moves the existing class template into its session: dates from the classes, ages and name copied onto each class', async () => {
+    if (!canCreateDb || !tempPool) {
+      return;
+    }
+    const parent = await tempPool.query<{ name: string; starts_on: string; ends_on: string }>(
+      `SELECT name, to_char(starts_on, 'YYYY-MM-DD') AS starts_on, to_char(ends_on, 'YYYY-MM-DD') AS ends_on
+         FROM classes WHERE name = $1`,
+      [`Kayaking ${tag}`],
+    );
+    expect(parent.rows).toHaveLength(1);
+    expect(parent.rows[0]).toMatchObject({ name: `Kayaking ${tag}` });
+    expect(parent.rows[0].starts_on <= parent.rows[0].ends_on).toBe(true);
+    expect(parent.rows[0].starts_on).not.toBeNull();
+    const child = await tempPool.query<{ name: string; age_min: number | null; capacity: number }>(
+      `SELECT s.name, s.age_min, s.capacity FROM sessions s JOIN classes c ON c.id = s.class_id WHERE c.name = $1`,
+      [`Kayaking ${tag}`],
+    );
+    expect(child.rows).toEqual([{ name: `Kayaking ${tag}`, age_min: null, capacity: 10 }]);
   });
 
   it('migration 0018 correctly splits existing user names into first_name and last_name', async () => {

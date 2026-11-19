@@ -3,7 +3,7 @@ import type { Enrolment } from '@buxa/contracts';
 import { recordAudit } from '../audit/recordAudit';
 import { toIso, type Db } from '../people/pgRows';
 import type { EnrolRequest, EnrolmentRule, GatheredEnrolmentFacts } from './ClassRepository';
-import { CamperNotFoundError, EnrolmentNotFoundError, refusalError, SessionNotFoundError } from './errors';
+import { CamperNotFoundError, ClassNotFoundError, EnrolmentNotFoundError, refusalError } from './errors';
 import { activeFactsFor, requireEnrolment } from './PgClassQueries';
 import { translateCapacityError } from './pgClassErrors';
 
@@ -36,10 +36,10 @@ async function lockCamper(db: Db, camperId: string): Promise<LocalDate | null> {
   return rows[0].date_of_birth;
 }
 
-/** Locks the session's row and reads the facts the rule needs (the session and its class). */
-async function lockSession(db: Db, sessionId: string): Promise<LockedSession> {
-  if (!isUuid(sessionId)) {
-    throw new SessionNotFoundError();
+/** Locks the class's row and reads the facts the rule needs. The class's own name and ages are what the rule uses. */
+async function lockClass(db: Db, classId: string): Promise<LockedSession> {
+  if (!isUuid(classId)) {
+    throw new ClassNotFoundError();
   }
   const { rows } = await db.query<{
     id: string;
@@ -50,14 +50,14 @@ async function lockSession(db: Db, sessionId: string): Promise<LockedSession> {
     age_min: number | null;
     age_max: number | null;
   }>(
-    `SELECT s.id, s.capacity, s.starts_at, s.ends_at, c.name AS class_name, c.age_min, c.age_max
-       FROM sessions s JOIN classes c ON c.id = s.class_id
+    `SELECT s.id, s.capacity, s.starts_at, s.ends_at, s.name AS class_name, s.age_min, s.age_max
+       FROM sessions s
       WHERE s.id = $1 FOR UPDATE OF s`,
-    [sessionId],
+    [classId],
   );
   const row = rows[0];
   if (!row) {
-    throw new SessionNotFoundError();
+    throw new ClassNotFoundError();
   }
 
   return {
@@ -83,7 +83,7 @@ async function countEnrolled(db: Db, sessionId: string): Promise<number> {
 }
 
 /**
- * Enrols a camper in a session under the locks above. Throws a refusal (nothing is written) or writes the enrolment and its
+ * Enrols a camper in a class under the locks above. Throws a refusal (nothing is written) or writes the enrolment and its
  * audit entries. Returns the enrolment as read back.
  */
 export async function enrolInTransaction(
@@ -93,7 +93,7 @@ export async function enrolInTransaction(
   rule: EnrolmentRule,
 ): Promise<Enrolment> {
   const dateOfBirth = await lockCamper(db, request.camperId);
-  const session = await lockSession(db, request.sessionId);
+  const session = await lockClass(db, request.classId);
   const camperActive = await activeFactsFor(db, request.camperId);
 
   // A second enrolment in the same session is never allowed, even as an override: the database keeps one active row per pair.

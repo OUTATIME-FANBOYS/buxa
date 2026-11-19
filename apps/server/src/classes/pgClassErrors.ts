@@ -1,20 +1,44 @@
-import { SessionFullError } from './errors';
+import { CapacityBelowEnrolledError, ClassHasEnrolmentsError, ClassNotFoundError, SessionFullError } from './errors';
 
 /*
  * Driver errors never leave the adapter. The capacity trigger in migration 0008 raises a named check violation when a
- * session is full; it is the one database error that means a business refusal, so it is the one translated here.
+ * session is full, and migration 0022 names the errors of a class write. These are the database errors that mean a business
+ * refusal, so they are the ones translated here.
  */
 
 const CHECK_VIOLATION = '23514';
+const FOREIGN_KEY_VIOLATION = '23503';
 export const CAPACITY_CONSTRAINT = 'enrolments_capacity';
 
-/** True for a Postgres error with this SQLSTATE and constraint name. Anything else (including non-errors) is false. */
-function isPgError(error: unknown, code: string, constraint: string): boolean {
+/** True for a Postgres error with this SQLSTATE and, when given, this constraint name. Anything else (including non-errors) is false. */
+function isPgError(error: unknown, code: string, constraint: string | null): boolean {
   if (typeof error !== 'object' || error === null) {
     return false;
   }
+  if (!('code' in error) || error.code !== code) {
+    return false;
+  }
 
-  return 'code' in error && error.code === code && 'constraint' in error && error.constraint === constraint;
+  return constraint === null || ('constraint' in error && error.constraint === constraint);
+}
+
+/**
+ * Turns the errors of a class write into domain errors: a camp size below the places taken (the capacity floor trigger), a delete
+ * refused because of enrolments (buxa_delete_class), and a class that is not in the camp (P0002 from the functions).
+ * Any other error is returned unchanged.
+ */
+export function translateClassWriteError(error: unknown): unknown {
+  if (isPgError(error, CHECK_VIOLATION, 'sessions_capacity_floor')) {
+    return new CapacityBelowEnrolledError();
+  }
+  if (isPgError(error, FOREIGN_KEY_VIOLATION, 'sessions_has_enrolments')) {
+    return new ClassHasEnrolmentsError();
+  }
+  if (isPgError(error, 'P0002', null)) {
+    return new ClassNotFoundError();
+  }
+
+  return error;
 }
 
 /** Turns the capacity trigger's error into a SessionFullError for `capacity`. Any other error is returned unchanged. */

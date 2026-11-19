@@ -13,16 +13,34 @@ import {
 
 const created = new Date('2027-07-01T00:00:00.000Z');
 
+const sessionRow = (over: Partial<SessionRow> = {}): SessionRow => ({
+  id: 'p1',
+  name: 'Summer camp',
+  description: null,
+  starts_on: '2027-07-01',
+  ends_on: '2027-07-31',
+  class_count: 2,
+  created_at: created,
+  ...over,
+});
+
 const classRow = (over: Partial<ClassRow> = {}): ClassRow => ({
   id: 'c1',
+  session_id: 'p1',
+  session_name: 'Summer camp',
   name: 'Robotics',
-  description: null,
   age_min: 8,
   age_max: 12,
-  default_capacity: 10,
-  ratio_campers: null,
-  ratio_instructors: null,
-  created_at: created,
+  capacity: 5,
+  starts_at: new Date('2027-07-04T23:00:00.000Z'),
+  ends_at: new Date('2027-07-05T02:00:00.000Z'),
+  location: 'Lab 1',
+  seats_taken: 2,
+  waitlisted: 1,
+  instructors: [
+    { id: 'i1', name: 'Ada Test' },
+    { id: 'i2', name: 'Ben Test' },
+  ],
   ...over,
 });
 
@@ -38,68 +56,50 @@ describe('toAgeRange', () => {
   });
 });
 
-describe('toClass', () => {
-  it('maps a row to the contract, with an ISO instant and an empty description for NULL', () => {
-    expect(toClass(classRow())).toEqual({
-      id: 'c1',
-      name: 'Robotics',
+describe('toSession', () => {
+  it('maps a session row, with its dates as written and an empty description for NULL', () => {
+    expect(toSession(sessionRow())).toEqual({
+      id: 'p1',
+      name: 'Summer camp',
       description: '',
-      ageRange: { minAge: 8, maxAge: 12 },
-      capacity: 10,
-      instructorRatio: null,
+      startsOn: '2027-07-01',
+      endsOn: '2027-07-31',
+      classCount: 2,
       createdAt: '2027-07-01T00:00:00.000Z',
     });
   });
 
-  it('builds the ratio only when both numbers are stored', () => {
-    expect(toClass(classRow({ ratio_campers: 8, ratio_instructors: 1 })).instructorRatio).toEqual({
-      instructors: 1,
-      campers: 8,
-    });
-    expect(toClass(classRow({ ratio_campers: 8, ratio_instructors: null })).instructorRatio).toBeNull();
+  it('keeps NULL dates as NULL, for a session with no class yet', () => {
+    expect(toSession(sessionRow({ starts_on: null, ends_on: null }))).toMatchObject({ startsOn: null, endsOn: null });
   });
 });
 
-describe('toSession', () => {
-  const row: SessionRow = {
-    id: 's1',
-    class_id: 'c1',
-    class_name: 'Robotics',
-    starts_at: new Date('2027-07-04T23:00:00.000Z'),
-    ends_at: new Date('2027-07-05T02:00:00.000Z'),
-    location: 'Lab 1',
-    capacity: 5,
-    seats_taken: 2,
-    waitlisted: 1,
-    instructors: [
-      { id: 'p1', name: 'Ada Test' },
-      { id: 'p2', name: 'Ben Test' },
-    ],
-  };
-
-  it('maps instants to ISO strings, with the instructors and their names', () => {
-    const mapped = toSession(row);
+describe('toClass', () => {
+  it('maps a class row, with its own ages and camp size, ISO instants and the instructors by name', () => {
+    const mapped = toClass(classRow());
     expect(mapped).toEqual({
-      id: 's1',
-      classId: 'c1',
-      className: 'Robotics',
+      id: 'c1',
+      sessionId: 'p1',
+      sessionName: 'Summer camp',
+      name: 'Robotics',
+      ageRange: { minAge: 8, maxAge: 12 },
+      capacity: 5,
       startsAt: '2027-07-04T23:00:00.000Z',
       endsAt: '2027-07-05T02:00:00.000Z',
       location: 'Lab 1',
-      instructorIds: ['p1', 'p2'],
+      instructorIds: ['i1', 'i2'],
       instructors: [
-        { id: 'p1', name: 'Ada Test' },
-        { id: 'p2', name: 'Ben Test' },
+        { id: 'i1', name: 'Ada Test' },
+        { id: 'i2', name: 'Ben Test' },
       ],
-      capacity: 5,
       seatsTaken: 2,
       waitlisted: 1,
     });
-    expect(mapped.instructors).not.toBe(row.instructors);
+    expect(mapped.instructors).not.toBe(classRow().instructors);
   });
 
-  it('a session with no instructors maps to empty lists', () => {
-    expect(toSession({ ...row, instructors: [] })).toMatchObject({ instructorIds: [], instructors: [] });
+  it('a class with no instructors maps to empty lists', () => {
+    expect(toClass(classRow({ instructors: [] }))).toMatchObject({ instructorIds: [], instructors: [] });
   });
 });
 
@@ -107,7 +107,6 @@ describe('toEnrolment', () => {
   it('maps the row, with the override reason only when there is one', () => {
     const row: EnrolmentRow = {
       id: 'e1',
-      session_id: 's1',
       class_id: 'c1',
       class_name: 'Robotics',
       camper_id: 'p1',
@@ -118,7 +117,6 @@ describe('toEnrolment', () => {
     };
     expect(toEnrolment(row)).toEqual({
       id: 'e1',
-      sessionId: 's1',
       classId: 'c1',
       className: 'Robotics',
       camperId: 'p1',
@@ -135,13 +133,13 @@ describe('toActiveFacts', () => {
   it('gives the overlap rule ISO instants for both ends', () => {
     expect(
       toActiveFacts({
-        session_id: 's9',
+        class_id: 'c9',
         class_name: 'Painting',
         starts_at: new Date('2027-07-05T01:00:00.000Z'),
         ends_at: new Date('2027-07-05T03:00:00.000Z'),
       }),
     ).toEqual({
-      sessionId: 's9',
+      sessionId: 'c9',
       className: 'Painting',
       startsAt: '2027-07-05T01:00:00.000Z',
       endsAt: '2027-07-05T03:00:00.000Z',

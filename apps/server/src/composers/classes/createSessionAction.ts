@@ -3,36 +3,36 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { ROUTES, classPath } from '@buxa/shared/config/routes';
-import { failure, type ActionState } from '@buxa/shared';
+import { failure, sessionForm, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../runtime';
 import { currentActor } from '../people/camp';
 import { expectedFailure, NO_CAMP } from '../people/failures';
-import { classForm } from '@buxa/shared';
 
 /**
- * Create a class. Success opens the class page; a refused or invalid form comes back as form state. The service checks the permission
- * (classes:manage) before anything else, so a viewer who posts this form gets the forbidden message and nothing is written.
+ * Create a session: its name, description and first and last day. Success opens the session's page, where its classes are added.
+ * The service checks the permission (classes:manage) before anything else, so a viewer who posts this form gets the forbidden
+ * message and nothing is written.
  */
-export async function createClassAction(_previous: ActionState, form: FormData): Promise<ActionState> {
+export async function createSessionAction(_previous: ActionState, form: FormData): Promise<ActionState> {
   const actor = await currentActor();
   if (!actor) {
     return failure(NO_CAMP);
   }
 
-  const parsed = classForm(form);
+  const parsed = sessionForm(form);
   if (!parsed.ok) {
     return parsed.state;
   }
 
   let createdId: string;
   try {
-    const outcome = await getRuntime().services.classes.createClass(actor, parsed.data);
+    const outcome = await getRuntime().services.classes.createSession(actor, parsed.data);
     if (!outcome.ok) {
       return failure(outcome.failure.message);
     }
     createdId = outcome.value.id;
   } catch (error) {
-    return expectedFailure(error, 'Could not create the class.');
+    return expectedFailure(error, 'Could not create the session.');
   }
 
   revalidatePath(ROUTES.classes);

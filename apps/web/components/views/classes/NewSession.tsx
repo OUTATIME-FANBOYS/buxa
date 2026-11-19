@@ -1,16 +1,14 @@
-import { notFound } from 'next/navigation';
-import { can } from '@buxa/domain';
-import { classPath } from '@/config/routes';
+import { ROUTES } from '@/config/routes';
 import { Empty, PageHeader } from '@/components/components';
 import { currentActor } from '@buxa/server/composers/index.server';
-import { campZone } from '@buxa/server/composers/index.server';
+import { can } from '@buxa/domain';
 import { FORBIDDEN_MANAGE } from '@buxa/shared';
-import { loadClassPage, loadPeopleWithRole } from '@buxa/server/composers/index.server';
 import { NewSessionForm } from '@/components/components/classes/forms';
 import { Button } from '@/components/elements';
+import { notFound } from 'next/navigation';
 
-/** Add a session to one class. Viewers get the forbidden state and no form; an unknown class is not found. */
-export async function NewSession({ classId }: { classId: string }) {
+/** Create a session (its date range). Viewers get the forbidden state and no form. The Sessions page opens the same form in a dialog. */
+export async function NewSession() {
   const actor = await currentActor();
   if (!actor) {
     notFound();
@@ -20,11 +18,11 @@ export async function NewSession({ classId }: { classId: string }) {
       <div className="page">
         <Empty
           icon="alert"
-          title="You cannot add sessions"
+          title="You cannot create sessions"
           body={FORBIDDEN_MANAGE}
           action={
-            <Button className="classes-target" href={classPath(classId)}>
-              Back to the class
+            <Button className="classes-target" href={ROUTES.classes}>
+              Back to sessions
             </Button>
           }
         />
@@ -32,25 +30,10 @@ export async function NewSession({ classId }: { classId: string }) {
     );
   }
 
-  const loaded = await loadClassPage(actor, classId);
-  if (!loaded.ok) {
-    notFound();
-  }
-  const { cls } = loaded.value;
-  const timeZone = await campZone(actor);
-  const instructors = await loadPeopleWithRole(actor, 'instructor');
-
   return (
     <div className="page">
-      <PageHeader title="Add session" subtitle={`A new session of ${cls.name}.`} />
-      <NewSessionForm
-        classId={cls.id}
-        className={cls.name}
-        defaultCapacity={cls.capacity}
-        timeZone={timeZone}
-        ratio={cls.instructorRatio}
-        instructors={instructors.ok ? instructors.value.map(i => ({ id: i.id, name: i.name })) : []}
-      />
+      <PageHeader title="New session" subtitle="A session is a date range. Its classes are added after it is saved." />
+      <NewSessionForm />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import type { Actor, Role } from '@buxa/domain';
-import type { NewClassInput, NewSessionInput } from '@buxa/contracts';
+import type { ClassInput, NewSessionInput } from '@buxa/contracts';
 import { createClassService } from '../ClassService';
 import { InMemoryClassRepository } from '../InMemoryClassRepository';
 import { settle } from '@buxa/domain';
@@ -14,35 +14,50 @@ export const CAMPER_CY = '00000000-0000-4000-8000-0000000000c3';
 
 export const as = (role: Role, orgId = ORG, userId = `user-${role}`): Actor => ({ userId, orgId, role });
 
-export const robotics: NewClassInput = {
-  name: 'Robotics',
-  description: 'Build and program small robots.',
-  ageRange: { minAge: 8, maxAge: 12 },
-  capacity: 2,
-  instructorRatio: { instructors: 1, campers: 8 },
-};
-export const painting: NewClassInput = {
-  name: 'Painting',
-  description: '',
-  ageRange: { minAge: 6, maxAge: 14 },
-  capacity: 10,
-  instructorRatio: null,
+/** A session (the parent): a date range that covers July 2027 in Sydney. */
+export const JULY_SESSION: NewSessionInput = {
+  name: 'Summer camp',
+  description: 'Two weeks in July.',
+  startsOn: '2027-07-01',
+  endsOn: '2027-07-31',
 };
 
-/** Monday 5 July 2027, 09:00-12:00 in Sydney (UTC+10 in July). */
-export const monday9to12: NewSessionInput = {
-  startsAt: '2027-07-05T09:00:00+10:00',
-  endsAt: '2027-07-05T12:00:00+10:00',
+/** A class's own fields, without its time range. Times are added per test (see `monday9to12`). */
+export const robotics = {
+  name: 'Robotics',
+  ageRange: { minAge: 8, maxAge: 12 },
+  capacity: 2,
   location: 'Lab 1',
   instructorIds: [],
 };
-/** Overlaps Monday 9-12 by two hours. */
-export const monday11to13: NewSessionInput = {
-  startsAt: '2027-07-05T11:00:00+10:00',
-  endsAt: '2027-07-05T13:00:00+10:00',
+export const painting = {
+  name: 'Painting',
+  ageRange: { minAge: 6, maxAge: 14 },
+  capacity: 10,
   location: 'Art room',
   instructorIds: [],
 };
+
+/** Monday 5 July 2027, 09:00-12:00 in Sydney (UTC+10 in July). */
+export const monday9to12 = {
+  startsAt: '2027-07-05T09:00:00+10:00',
+  endsAt: '2027-07-05T12:00:00+10:00',
+};
+/** Overlaps Monday 9-12 by two hours. */
+export const monday11to13 = {
+  startsAt: '2027-07-05T11:00:00+10:00',
+  endsAt: '2027-07-05T13:00:00+10:00',
+  location: 'Art room',
+};
+
+/** A class input: a class's fields with its time range. */
+export const classAt = (
+  cls: Omit<ClassInput, 'startsAt' | 'endsAt'>,
+  times: { startsAt: string; endsAt: string },
+): ClassInput => ({
+  ...cls,
+  ...times,
+});
 
 export function setup() {
   const repo = new InMemoryClassRepository(() => new Date('2027-07-01T00:00:00Z'));
@@ -54,20 +69,28 @@ export function setup() {
   return { repo, service };
 }
 
-/** Creates a class and a session as an admin, returning their ids. */
+/**
+ * Creates a session (July) and one class under it, as an admin. `sessionId` and `classId` are both returned; the class is the
+ * unit an enrolment is made into, so tests enrol with `classId`.
+ */
 export async function classWithSession(
   service: ReturnType<typeof createClassService>,
-  cls: NewClassInput = robotics,
-  session: NewSessionInput = monday9to12,
+  cls: Omit<ClassInput, 'startsAt' | 'endsAt'> = robotics,
+  times: { startsAt: string; endsAt: string; location?: string; instructorIds?: string[] } = monday9to12,
 ) {
-  const created = await service.createClass(as('admin'), cls);
-  if (!created.ok) {
-    throw new Error(created.failure.message);
+  const session = await service.createSession(as('admin'), JULY_SESSION);
+  if (!session.ok) {
+    throw new Error(session.failure.message);
   }
-  const added = await service.addSession(as('admin'), created.value.id, session);
+  const added = await service.addClass(as('admin'), session.value.id, {
+    ...cls,
+    ...times,
+    location: times.location ?? cls.location,
+    instructorIds: times.instructorIds ?? cls.instructorIds,
+  });
   if (!added.ok) {
     throw new Error(added.failure.message);
   }
 
-  return { classId: created.value.id, sessionId: added.value.id };
+  return { sessionId: session.value.id, classId: added.value.id };
 }

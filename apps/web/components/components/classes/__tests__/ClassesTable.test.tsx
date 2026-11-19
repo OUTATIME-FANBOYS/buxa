@@ -1,28 +1,62 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { Class } from '@buxa/contracts';
 import { ClassesTable } from '@/components/components/classes';
 
+vi.mock('@/actions/classes', () => ({ updateClassAction: vi.fn(), deleteClassAction: vi.fn() }));
+
+const SESSION = '11111111-1111-4111-8111-111111111111';
+
 const cls = (over: Partial<Class> = {}): Class => ({
-  id: '11111111-1111-4111-8111-111111111111',
+  id: '22222222-2222-4222-8222-222222222222',
+  sessionId: SESSION,
+  sessionName: 'Summer camp',
   name: 'Robotics',
-  description: '',
   ageRange: { minAge: 8, maxAge: 12 },
   capacity: 12,
-  instructorRatio: { instructors: 1, campers: 8 },
-  createdAt: '2027-07-01T00:00:00.000Z',
+  startsAt: '2027-07-04T23:00:00.000Z',
+  endsAt: '2027-07-05T02:00:00.000Z',
+  location: 'Lab 1',
+  instructorIds: ['33333333-3333-4333-8333-333333333333'],
+  instructors: [{ id: '33333333-3333-4333-8333-333333333333', name: 'Ana Ruiz' }],
+  seatsTaken: 3,
+  waitlisted: 0,
   ...over,
 });
 
-describe('ClassesTable', () => {
-  it('links each class to its page and shows its ages, default places and ratio', () => {
-    const html = renderToStaticMarkup(<ClassesTable classes={[cls()]} />);
-    expect(html).toContain('href="/camp/classes/11111111-1111-4111-8111-111111111111"');
+const render = (canManage: boolean, selectedId: string | null = null) =>
+  renderToStaticMarkup(
+    <ClassesTable
+      sessionId={SESSION}
+      sessionName="Summer camp"
+      classes={[cls()]}
+      timeZone="Australia/Sydney"
+      clockFormat="24h"
+      selectedId={selectedId}
+      canManage={canManage}
+      instructors={[]}
+    />,
+  );
+
+describe('ClassesTable: the classes of one session', () => {
+  it('shows the ages, the Camp Size, the time, location, instructors and seats of each class', () => {
+    const html = render(false);
+    expect(html).toContain('Camp Size');
     expect(html).toContain('8 to 12');
-    expect(html).toContain('1:8');
+    expect(html).toContain('Lab 1');
+    expect(html).toContain('Ana Ruiz');
+    expect(html).toContain('9 places left');
+    expect(html).not.toContain('Instructor ratio');
   });
 
-  it('says when no instructor ratio is set', () => {
-    expect(renderToStaticMarkup(<ClassesTable classes={[cls({ instructorRatio: null })]} />)).toContain('Not set');
+  it('links the enrolments of a class by its id, on the session page', () => {
+    expect(render(false)).toContain(`/camp/classes/${SESSION}?class=22222222-2222-4222-8222-222222222222#enrolments`);
+  });
+
+  it('offers Edit and Delete to staff only', () => {
+    expect(render(true)).toContain('Edit Robotics');
+    expect(render(true)).toContain('Delete Robotics');
+    expect(render(false)).not.toContain('Edit Robotics');
+    expect(render(false)).not.toContain('Delete Robotics');
   });
 });

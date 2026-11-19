@@ -2,14 +2,24 @@
 
 import { useCallback, useState } from 'react';
 import { Dialog } from '@/components/components/Dialog';
-import { NewClassForm } from './NewClassForm';
 import { Button } from '@/components/elements';
+import { ClassForm, type InstructorChoice } from './ClassForm';
 
 /**
- * The Classes page's New class button. It opens the create form in a dialog, so the list stays in view; the dialog closes on Escape,
- * the close button or Cancel, and focus returns to this button. The page at /camp/classes/new still renders the same form.
+ * The session page's New class button. It opens the add form in a dialog, so the session's classes stay in view; the dialog closes
+ * on Escape, the close button or Cancel, and focus returns to this button.
  */
-export function NewClassButton() {
+export function NewClassButton({
+  sessionId,
+  sessionName,
+  timeZone,
+  instructors,
+}: {
+  sessionId: string;
+  sessionName: string;
+  timeZone: string;
+  instructors: readonly InstructorChoice[];
+}) {
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
 
@@ -27,7 +37,14 @@ export function NewClassButton() {
       </Button>
       {open && (
         <Dialog title="New class" onClose={close} className="class-dialog">
-          <NewClassForm variant="dialog" onCancel={close} />
+          <ClassForm
+            sessionId={sessionId}
+            sessionName={sessionName}
+            timeZone={timeZone}
+            instructors={instructors}
+            variant="dialog"
+            onCancel={close}
+          />
         </Dialog>
       )}
     </>

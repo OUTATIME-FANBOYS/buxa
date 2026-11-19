@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { IMPORT_COLUMNS, type Actor, settle } from '@buxa/domain';
 import { isHttpError } from '../../http/errors';
-import { CAMP_TZ, ORG, as, painting, robotics } from '../__tests__/fixtures';
+import { CAMP_TZ, JULY_SESSION, ORG, as } from '../__tests__/fixtures';
 import { InMemoryClassRepository } from '../InMemoryClassRepository';
 import { InMemoryImportRepository } from './InMemoryImportRepository';
 import { importTemplateCsv } from './importCsv';
@@ -46,8 +46,8 @@ function world(failOnWrite?: number): World {
 }
 
 async function withClasses(w: World): Promise<void> {
-  await w.classes.createClass(admin, robotics);
-  await w.classes.createClass(admin, painting);
+  await w.classes.createSession(admin, { ...JULY_SESSION, name: 'Robotics' });
+  await w.classes.createSession(admin, { ...JULY_SESSION, name: 'Painting' });
 }
 
 const expect403 = async (p: Promise<unknown>) => {
@@ -183,7 +183,7 @@ describe('import service: confirm', () => {
     await withClasses(w);
     const preview = await previewOf(w, admin, row());
     expect(preview.counts.create).toBe(1);
-    const robotics13 = (await w.classes.listClasses(ORG)).find(c => c.name === 'Robotics');
+    const robotics13 = (await w.classes.listSessions(ORG)).find(c => c.name === 'Robotics');
     w.imports.seedSession(ORG, {
       id: '99999999-9999-4999-8999-999999999999',
       classId: robotics13?.id ?? '',
@@ -227,9 +227,9 @@ describe('import service: confirm', () => {
   it('does not create a class for an unknown class name', async () => {
     const w = world();
     await withClasses(w);
-    const before = (await w.classes.listClasses(ORG)).length;
+    const before = (await w.classes.listSessions(ORG)).length;
     await w.service.confirm(admin, await previewOf(w, admin, row({ class_name: 'Chess' })));
-    expect((await w.classes.listClasses(ORG)).length).toBe(before);
+    expect((await w.classes.listSessions(ORG)).length).toBe(before);
   });
 });
 

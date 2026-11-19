@@ -21,10 +21,10 @@ async function guarded<T>(work: () => Promise<T>): Promise<Loaded<T>> {
   }
 }
 
-/** Every class in the camp, or forbidden when the actor cannot read classes. */
-export async function loadClasses(actor: Actor): Promise<Loaded<Class[]>> {
+/** Every session in the camp, or forbidden when the actor cannot read them. */
+export async function loadSessions(actor: Actor): Promise<Loaded<Session[]>> {
   return guarded(async () => {
-    const outcome = await getRuntime().services.classes.listClasses(actor);
+    const outcome = await getRuntime().services.classes.listSessions(actor);
     if (!outcome.ok) {
       throw notFound(outcome.failure.message);
     }
@@ -33,23 +33,23 @@ export async function loadClasses(actor: Actor): Promise<Loaded<Class[]>> {
   });
 }
 
-/** One class and its sessions. Not found when the class is not in this camp. */
-export async function loadClassPage(
+/** One session and its classes. Not found when the session is not in this camp. */
+export async function loadSessionPage(
   actor: Actor,
-  classId: string,
-): Promise<Loaded<{ cls: Class; sessions: Session[] }>> {
+  sessionId: string,
+): Promise<Loaded<{ session: Session; classes: Class[] }>> {
   return guarded(async () => {
     const services = getRuntime().services.classes;
-    const cls = await services.getClass(actor, classId);
-    if (!cls.ok) {
-      throw notFound(cls.failure.message);
+    const session = await services.getSession(actor, sessionId);
+    if (!session.ok) {
+      throw notFound(session.failure.message);
     }
-    const sessions = await services.listSessions(actor, classId);
-    if (!sessions.ok) {
-      throw notFound(sessions.failure.message);
+    const classes = await services.listClasses(actor, sessionId);
+    if (!classes.ok) {
+      throw notFound(classes.failure.message);
     }
 
-    return { cls: cls.value, sessions: sessions.value };
+    return { session: session.value, classes: classes.value };
   });
 }
 
@@ -65,10 +65,10 @@ export async function loadPeopleWithRole(
   });
 }
 
-/** The people enrolled in one session: names and status only. Needs people:read. */
-export async function loadEnrolments(actor: Actor, sessionId: string): Promise<Loaded<Enrolment[]>> {
+/** The people enrolled in one class: names and status only. Needs people:read. */
+export async function loadEnrolments(actor: Actor, classId: string): Promise<Loaded<Enrolment[]>> {
   return guarded(async () => {
-    const outcome = await getRuntime().services.classes.listEnrolments(actor, sessionId);
+    const outcome = await getRuntime().services.classes.listEnrolments(actor, classId);
     if (!outcome.ok) {
       throw notFound(outcome.failure.message);
     }

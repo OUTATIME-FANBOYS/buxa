@@ -57,7 +57,7 @@ export class InMemoryImportRepository implements ImportRepository {
       if (attempted === this.options.failOnWrite) {
         throw new Error(`Injected failure on write ${attempted}`);
       }
-      const cls = await this.classes.getClass(actor.orgId, w.classId);
+      const cls = await this.classes.getSession(actor.orgId, w.classId);
       if (!cls) {
         throw new ClassNotFoundError();
       }
