@@ -14,6 +14,13 @@ export interface ClassRecord {
   instructorIds: string[];
 }
 
+/** A class's times and name, for every class in the camp: what a new class must not clash with. */
+export interface CampClassSpan {
+  startsAt: string;
+  endsAt: string;
+  className: string;
+}
+
 export interface EnrolRequest {
   classId: string;
   camperId: string;
@@ -40,6 +47,15 @@ export interface ClassRepository {
   createSession(actor: Actor, input: NewSessionInput): Promise<Session>;
   /** Sets or clears a session's price. Audits `session.price_change` with the old and new price. Throws SessionNotFoundError. */
   setSessionPrice(actor: Actor, sessionId: string, price: SessionPriceInput | null): Promise<Session>;
+  /** Audits `session.update`. Throws SessionNotFoundError. */
+  setSessionPublic(actor: Actor, sessionId: string, isPublic: boolean): Promise<Session>;
+  /**
+   * Writes every class of a series in one transaction, or none. Audits `class.create` for each. Throws SessionNotFoundError,
+   * or InstructorNotFoundError.
+   */
+  addClasses(actor: Actor, sessionId: string, inputs: ClassRecord[]): Promise<Class[]>;
+  /** Times and names of every class in the camp, for the clash check. */
+  listCampClassSpans(orgId: string): Promise<CampClassSpan[]>;
   /** Throws SessionNotFoundError. */
   listClasses(orgId: string, sessionId: string): Promise<Class[]>;
   getClass(orgId: string, classId: string): Promise<Class | null>;

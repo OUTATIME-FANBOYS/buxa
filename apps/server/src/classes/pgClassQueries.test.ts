@@ -20,6 +20,7 @@ const sessionRow = (over: Partial<SessionRow> = {}): SessionRow => ({
   starts_on: '2027-07-01',
   ends_on: '2027-07-31',
   class_count: 2,
+  is_public: false,
   created_at: created,
   price_minor: null,
   price_currency: null,
@@ -73,6 +74,7 @@ describe('toSession', () => {
       startsOn: '2027-07-01',
       endsOn: '2027-07-31',
       classCount: 2,
+      isPublic: false,
       createdAt: '2027-07-01T00:00:00.000Z',
       price: null,
     });

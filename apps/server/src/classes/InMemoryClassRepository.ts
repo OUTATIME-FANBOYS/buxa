@@ -6,6 +6,7 @@ import { systemClock, type Clock } from '../services/clock';
 import type { AuditRecord } from '../people/InMemoryDatabase';
 import type { AuditData } from '../audit/types';
 import type {
+  CampClassSpan,
   ClassRecord,
   ClassRepository,
   EnrolRequest,
@@ -33,6 +34,7 @@ interface StoredSession {
   description: string;
   startsOn: LocalDate | null;
   endsOn: LocalDate | null;
+  isPublic: boolean;
   createdAt: string;
   price: SessionPriceInput | null;
 }
@@ -118,6 +120,7 @@ export class InMemoryClassRepository implements ClassRepository {
         description: input.description,
         startsOn: input.startsOn,
         endsOn: input.endsOn,
+        isPublic: input.isPublic ?? false,
         createdAt: this.now().toISOString(),
         price: input.price ?? null,
       };
@@ -144,6 +147,53 @@ export class InMemoryClassRepository implements ClassRepository {
 
       return this.toSession(row);
     });
+  }
+
+  setSessionPublic(actor: Actor, sessionId: string, isPublic: boolean): Promise<Session> {
+    return settle(() => {
+      const row = this.sessionIn(actor.orgId, sessionId);
+      if (!row) {
+        throw new SessionNotFoundError();
+      }
+      row.isPublic = isPublic;
+      this.record(actor, 'session.update', 'session', sessionId, { isPublic });
+
+      return this.toSession(row);
+    });
+  }
+
+  addClasses(actor: Actor, sessionId: string, inputs: ClassRecord[]): Promise<Class[]> {
+    return settle(() => {
+      if (!this.sessionIn(actor.orgId, sessionId)) {
+        throw new SessionNotFoundError();
+      }
+      // Check everything before writing anything, so a failure part-way leaves the camp unchanged (as the transaction does).
+      for (const input of inputs) {
+        this.requireInstructorsInCamp(actor.orgId, input.instructorIds);
+      }
+
+      return inputs.map(input => {
+        const row: StoredClass = { ...input, id: randomUUID(), orgId: actor.orgId, sessionId };
+        this.classes.set(row.id, row);
+        this.record(actor, 'class.create', 'class', row.id, {
+          sessionId,
+          startsAt: row.startsAt,
+          endsAt: row.endsAt,
+          instructorIds: [...new Set(input.instructorIds)],
+        });
+
+        return this.toClass(row);
+      });
+    });
+  }
+
+  listCampClassSpans(orgId: string): Promise<CampClassSpan[]> {
+    return settle(() =>
+      [...this.classes.values()]
+        .filter(c => c.orgId === orgId)
+        .map(c => ({ startsAt: c.startsAt, endsAt: c.endsAt, className: c.name }))
+        .sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
+    );
   }
 
   listClasses(orgId: string, sessionId: string): Promise<Class[]> {
@@ -434,6 +484,7 @@ export class InMemoryClassRepository implements ClassRepository {
       startsOn: s.startsOn,
       endsOn: s.endsOn,
       classCount: [...this.classes.values()].filter(c => c.sessionId === s.id).length,
+      isPublic: s.isPublic,
       createdAt: s.createdAt,
       price: s.price ? { ...s.price } : null,
     };

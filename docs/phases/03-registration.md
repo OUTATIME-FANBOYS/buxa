@@ -30,12 +30,14 @@ These were in the phase 2 roadmap row and moved here so that phase 2 closes on c
 - **Public class pages:** a read-only page per class, listing its upcoming sessions, with no contact details and no enrolled campers. Only classes marked public.
 - **iCal feed:** a read-only feed per camp that calendar apps subscribe to by URL, authenticated by an unguessable token stored as a hash. Archived camps return not found.
 
-**Built, not merged:** branch `v0.3/feat/recurring-ical-public`, three parts, migrations 0020 and 0021.
+**Built, not merged:** branch `v0.3/feat/recurring-ical-public`, on top of `Phase3`. Server, domain and database are in; migrations 0028 (calendar token) and 0029 (public sessions). The earlier branch used 0020 and 0021, which clash with shipped migrations. Renumbered to 0028 and 0029 for the merge order (Registration 0023, prices 0024, holds 0025, teacher role 0026 and 0027 come first).
+
+Terms on this branch: a **session** (the parent row) is the public page's unit, and its **classes** are the time ranges a series generates. A public page lists a session's upcoming classes.
 
 **Open decisions:**
 
-- Staff UI to create a series and to make an existing class public. The branch has the server side only.
-- Token rotation from Settings. Settings is still being reworked, so the button waits for that.
+- Staff UI to create a series and to make a session public. Not built on this branch: the server methods exist (`addRecurringClasses`, `setSessionPublic`), but there is no screen yet.
+- Token rotation from Settings. Not built: `CalendarService.rotateToken` exists, but no screen calls it, so no camp can get a feed token yet.
 - The token is in the feed URL's query string. Calendar apps cannot send headers, so the token has to be in the URL. The remaining risk is platform request logs; check their retention.
 
 ## Prices (built, branch `v0.3/feat/session-prices`)

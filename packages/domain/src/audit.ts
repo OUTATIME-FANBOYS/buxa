@@ -23,6 +23,7 @@ export const AUDIT_ACTIONS = [
   'session.create',
   'session.update',
   'session.price_change',
+  'calendar.token_rotate',
   'import.upload',
   'enrolment.create',
   'enrolment.cancel',
