@@ -25,6 +25,12 @@ describe('MembersTable', () => {
     expect(html).toMatch(/pill tone-role-viewer">Viewer</);
   });
   it('maps every camp role to a role tone', () => {
-    expect(ROLE_TONE).toEqual({ owner: 'role-owner', admin: 'role-admin', staff: 'role-staff', viewer: 'role-viewer' });
+    expect(ROLE_TONE).toEqual({
+      owner: 'role-owner',
+      admin: 'role-admin',
+      staff: 'role-staff',
+      viewer: 'role-viewer',
+      teacher: 'role-teacher',
+    });
   });
 });
