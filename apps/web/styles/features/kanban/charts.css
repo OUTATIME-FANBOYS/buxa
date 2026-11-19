@@ -153,6 +153,9 @@
 .chart-tone-agent {
   --chart-fill: var(--f-agent);
 }
+.chart-tone-info {
+  --chart-fill: var(--f-info);
+}
 .chart-tone-neutral {
   --chart-fill: var(--f-neutral);
 }

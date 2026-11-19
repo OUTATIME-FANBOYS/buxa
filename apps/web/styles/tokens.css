@@ -44,6 +44,7 @@
   --agent-soft: #efe7f4;
   --agent-ink: #36213e;
   --f-agent: #7b5597;
+  --f-info: #2f6fd1;
   /* Semantic control aliases used by the shared button styles. */
   --accent-foreground: var(--accent-ink);
   --accent-hover: var(--accent-deep);
@@ -193,6 +194,7 @@
   --agent-soft: #34263f;
   --agent-ink: #e0d0ee;
   --f-agent: #9b7bb8;
+  --f-info: #6fa8ff;
   --f-neutral: #8a90a0;
   --neutral-soft: #373a46;
   --neutral-ink: #b9bec9;
