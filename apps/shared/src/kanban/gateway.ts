@@ -16,7 +16,7 @@ import { requirePresent } from '@buxa/domain';
 export type Out<T> = { state: AppState; value?: T; error?: string };
 const fail = (state: AppState, error: string): Out<never> => ({ state, error });
 
-export const LIMITS = { title: 200, description: 5000, body: 2000, reason: 300, tag: 30, tags: 10, results: 100 };
+export const LIMITS = { title: 200, description: 5000, body: 2000, reason: 300, results: 100 };
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 const RUN_GAP_MS = 10 * 60 * 1000;
 
@@ -65,7 +65,6 @@ const taskView = (s: AppState, t: Task) => {
     assignee: nameOf(s, t.assigneeId) ?? null,
     due: t.due ?? null,
     start: t.start ?? null,
-    tags: t.tags,
     createdBy: nameOf(s, t.createdBy) ?? null,
     subtasks: { done: t.subtasks.filter(x => x.done).length, total: t.subtasks.length },
   };
@@ -182,10 +181,7 @@ export function listTasks(
       !t.archived &&
       (!col || t.columnId === col) &&
       (!who || t.assigneeId === who) &&
-      (!text ||
-        t.title.toLowerCase().includes(text) ||
-        (t.description ?? '').toLowerCase().includes(text) ||
-        (t.tags ?? []).some(g => g.toLowerCase().includes(text))),
+      (!text || t.title.toLowerCase().includes(text) || (t.description ?? '').toLowerCase().includes(text)),
   );
   const limit = Math.min(q.limit ?? 50, LIMITS.results);
 
@@ -262,7 +258,6 @@ export interface NewTask {
   priority?: Priority;
   assignee?: string;
   due?: string;
-  tags?: string[];
   reason: string;
 }
 export function createTask(s: AppState, agentId: string, i: NewTask): Out<ReturnType<typeof outcome>> {
@@ -289,10 +284,6 @@ export function createTask(s: AppState, agentId: string, i: NewTask): Out<Return
   if (i.due && !DAY.test(i.due)) {
     return bad(s, 'Dates use YYYY-MM-DD.');
   }
-  const tags = (i.tags ?? []).map(t => t.trim().toLowerCase()).filter(Boolean);
-  if (tags.length > LIMITS.tags || tags.some(t => t.length > LIMITS.tag)) {
-    return bad(s, `Use at most ${LIMITS.tags} tags of ${LIMITS.tag} characters.`);
-  }
   let assigneeId: string | undefined;
   if (i.assignee) {
     assigneeId = userRef(s, p.workspaceId, i.assignee)?.id;
@@ -309,7 +300,6 @@ export function createTask(s: AppState, agentId: string, i: NewTask): Out<Return
       priority: i.priority,
       assigneeId,
       due: i.due,
-      tags,
     }).filter(([, v]) => v !== undefined),
   ) as Extract<Change, { kind: 'create_task' }>['draft'];
 
@@ -324,7 +314,6 @@ export interface TaskEdits {
   assignee?: string | null;
   start?: string | null;
   due?: string | null;
-  tags?: string[];
   reason: string;
 }
 /** One proposal per field, so a person can approve the priority change and reject the rename. */
@@ -385,15 +374,6 @@ export function updateTask(s: AppState, agentId: string, i: TaskEdits): Out<Retu
   for (const k of ['start', 'due'] as const) {
     if (i[k] !== undefined && (i[k] ?? undefined) !== t[k]) {
       add({ [k]: i[k] ?? undefined });
-    }
-  }
-  if (i.tags) {
-    const tags = i.tags.map(x => x.trim().toLowerCase()).filter(Boolean);
-    if (tags.length > LIMITS.tags || tags.some(x => x.length > LIMITS.tag)) {
-      return bad(s, `Use at most ${LIMITS.tags} tags of ${LIMITS.tag} characters.`);
-    }
-    if (tags.join() !== t.tags.join()) {
-      add({ tags });
     }
   }
   if (!patches.length) {

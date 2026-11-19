@@ -21,7 +21,6 @@ const task = (over: Partial<Task> = {}): Task => ({
   title: 'Write the form',
   description: 'Family questions',
   priority: 'medium',
-  tags: ['family'],
   subtasks: [
     { id: 's1', title: 'a', done: true },
     { id: 's2', title: 'b', done: false },
@@ -75,11 +74,10 @@ describe('matchesFilter', () => {
     expect(matchesFilter(task(), f({ q: 'FORM' }), 'open')).toBe(true);
     expect(matchesFilter(task(), f({ q: 'budget' }), 'open')).toBe(false);
   });
-  it('filters by priority, column, assignee and tag', () => {
+  it('filters by priority, column and assignee', () => {
     expect(matchesFilter(task(), f({ priorities: ['high'] }), 'open')).toBe(false);
     expect(matchesFilter(task({ columnId: 'x' }), f({ columns: ['c'] }), 'open')).toBe(false);
     expect(matchesFilter(task({ assigneeId: undefined }), f({ assignees: ['none'] }), 'open')).toBe(true);
-    expect(matchesFilter(task(), f({ tags: ['work', 'family'] }), 'open')).toBe(true);
   });
   it('applies the due filters, leaving finished work out of overdue', () => {
     expect(matchesFilter(task({ due: '2027-07-07' }), f({ due: 'overdue' }), 'open')).toBe(true);

@@ -21,7 +21,6 @@ export type TaskSpec = {
   who: string | undefined;
   start: number | null;
   due: number | null;
-  tags: string[];
   extras: Extras;
 };
 
@@ -34,9 +33,8 @@ export const spec = (
   who: string | undefined,
   start: number | null,
   due: number | null,
-  tags: string[],
   extras: Extras = {},
-): TaskSpec => ({ project, slot, title, priority, who, start, due, tags, extras });
+): TaskSpec => ({ project, slot, title, priority, who, start, due, extras });
 
 /** A finished task: `finishedDaysAgo` is negative, and the start/due dates are derived around it. */
 export const doneSpec = (
@@ -45,10 +43,9 @@ export const doneSpec = (
   priority: Priority,
   who: string,
   finishedDaysAgo: number,
-  tags: string[],
   createdOffset = 5,
 ): TaskSpec =>
-  spec(project, 4, title, priority, who, finishedDaysAgo - 6, finishedDaysAgo + 1, tags, {
+  spec(project, 4, title, priority, who, finishedDaysAgo - 6, finishedDaysAgo + 1, {
     created: finishedDaysAgo - createdOffset,
     done: finishedDaysAgo,
   });
@@ -78,7 +75,6 @@ export function buildTasks(specs: TaskSpec[], projects: Project[]): Task[] {
       assigneeId: s.who,
       start: s.start === null ? undefined : addDays(today(), s.start),
       due: s.due === null ? undefined : addDays(today(), s.due),
-      tags: s.tags,
       subtasks: (s.extras.subs ?? []).map(([title, done], n) => ({ id: `${id}-sub-${n}`, title, done })),
       comments: (s.extras.comments ?? []).map(([authorId, body], n) => ({
         id: `${id}-com-${n}`,

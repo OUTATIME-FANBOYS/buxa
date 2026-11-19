@@ -81,9 +81,9 @@
   border-radius: 4px;
   font-size: 11px;
   font-weight: 600;
-  /* The body is the task's type tint (--cal-bg, set by a cal-type-* class); the dot is its priority (--pc). */
-  --button-bg: var(--cal-bg, var(--surface));
-  --button-bg-hover: color-mix(in srgb, var(--cal-bg, var(--surface)) 82%, var(--text));
+  /* The body is the surface; the dot is the task's priority (--pc). */
+  --button-bg: var(--surface);
+  --button-bg-hover: color-mix(in srgb, var(--surface) 82%, var(--text));
   --button-fg: var(--text);
   min-width: 0;
   width: 100%;
@@ -105,21 +105,6 @@
 }
 .cal-task.prio-bg-critical {
   --pc: var(--p-critical);
-}
-.cal-task.cal-type-1 {
-  --cal-bg: var(--type-1);
-}
-.cal-task.cal-type-2 {
-  --cal-bg: var(--type-2);
-}
-.cal-task.cal-type-3 {
-  --cal-bg: var(--type-3);
-}
-.cal-task.cal-type-4 {
-  --cal-bg: var(--type-4);
-}
-.cal-task.cal-type-5 {
-  --cal-bg: var(--type-5);
 }
 .cal-dot {
   width: 5px;

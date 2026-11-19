@@ -105,7 +105,6 @@ export function simulateRun(s: AppState, agentId: string, projectId: string): { 
               columnId: firstCol.id,
               title,
               priority: 'low',
-              tags: ['follow-up'],
               description: `Opened automatically after “${t.title}” was completed.`,
             },
           },

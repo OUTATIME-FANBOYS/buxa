@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { avatarHue, KIND_TONE, PALETTE_HUES, tagHue } from '../tones';
+import { avatarHue, KIND_TONE, PALETTE_HUES } from '../tones';
 
 describe('KIND_TONE', () => {
   it('maps every column kind to a tone', () => {
@@ -18,12 +18,5 @@ describe('avatarHue', () => {
     expect(avatarHue('A')).toBe('brand'); // 65 % 5 = 0
     expect(avatarHue('B')).toBe('ok'); // 66 % 5 = 1
     expect(avatarHue('')).toBe('brand'); // 0
-  });
-});
-
-describe('tagHue', () => {
-  it('is stable and case-insensitive, and always a palette hue', () => {
-    expect(tagHue('Planning')).toBe(tagHue('planning'));
-    expect(PALETTE_HUES).toContain(tagHue('payments'));
   });
 });

@@ -11,16 +11,13 @@ import type { AppState, Attachment, Column, ColumnKind, Filter, Notice, Project,
 import { defaultColumns } from './seed/projects';
 import { fmt } from '../dates';
 import { PRIORITY_LABEL, uid } from './tasks';
-import { requirePresent } from '@buxa/domain';
 
 export const clock = { now: () => new Date().toISOString(), id: uid };
 
 export type TaskDraft = Partial<
   Omit<Task, 'id' | 'history' | 'comments' | 'attachments' | 'createdAt' | 'createdBy'>
 > & { projectId: string; columnId: string; title: string };
-export type TaskPatch = Partial<
-  Pick<Task, 'title' | 'description' | 'priority' | 'assigneeId' | 'start' | 'due' | 'tags'>
->;
+export type TaskPatch = Partial<Pick<Task, 'title' | 'description' | 'priority' | 'assigneeId' | 'start' | 'due'>>;
 
 const nameOf = (s: AppState, id?: string | null) => s.users.find(u => u.id === id)?.name ?? 'Someone';
 const mapTask = (s: AppState, id: string, f: (t: Task) => Task): AppState => ({
@@ -116,7 +113,6 @@ export function createTask(s: AppState, id: string, d: TaskDraft): AppState {
   const task: Task = {
     description: '',
     priority: 'medium',
-    tags: [],
     subtasks: [],
     comments: [],
     attachments: [],
@@ -176,9 +172,6 @@ export function updateTask(s: AppState, id: string, patch: TaskPatch): AppState 
       patch.start ? 'set the start date of' : 'cleared the start date of',
       patch.start ? `to ${fmt(patch.start)}` : '',
     );
-  }
-  if ('tags' in patch && requirePresent(patch.tags, 'patch.tags').join() !== old.tags.join()) {
-    n = log(n, id, 'updated tags on');
   }
 
   return n;

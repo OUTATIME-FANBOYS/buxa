@@ -18,7 +18,6 @@ describe('task actions', () => {
       columnId: project.columns[0].id,
       title: 'Call the nurse',
       priority: 'low',
-      tags: [],
     } as never);
     expect(id).toMatch(/^[a-z0-9]+$/);
     expect(ctx.get().tasks.some(t => t.id === id && t.title === 'Call the nurse')).toBe(true);
