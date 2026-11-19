@@ -89,12 +89,21 @@
   --p-medium: var(--accent);
   --p-high: var(--warn);
   --p-critical: var(--crit);
-  /* Status colours for the status dropdown: one per seeded status, each text-safe (4.5:1) on the surface. */
-  --st-backlog: #5a5f6e;
-  --st-todo: #0f7173;
-  --st-progress: #a34a07;
-  --st-review: #4f2d66;
-  --st-done: #096d4c;
+  /* Status colours (liquid-glass pills and the status field). The colour tints the glass (18%); the -ink is the text, at 6:1
+     or better on the tinted glass over the surface. Backlog pink, To Do blue, In Progress orange, In Review purple, Done green. */
+  --status-pink: #be185d;
+  --status-pink-ink: #831843;
+  --status-blue: #1d4ed8;
+  --status-blue-ink: #1e3a8a;
+  --status-orange: #c2410c;
+  --status-orange-ink: #7c2d12;
+  --status-purple: #7e22ce;
+  --status-purple-ink: #581c87;
+  --status-green: #047857;
+  --status-green-ink: #064e3b;
+  /* The glass edge: a thin light border and a soft highlight along the top. */
+  --glass-edge: rgba(255, 255, 255, 0.7);
+  --glass-highlight: rgba(255, 255, 255, 0.9);
   --track: #c9d1d8;
   --grid: #d8dee4;
   --shadow-1: 0 1px 2px rgba(39, 41, 50, 0.06);
@@ -185,12 +194,19 @@
   /* Medium priority is teal in light mode, but --accent is coral in dark mode, the same family as --p-high (amber).
      Give it its own teal here so the four priority dots stay distinct. */
   --p-medium: #7fd1d1;
-  /* Dark status colours: --accent and --warn are coral and amber here, so the status set gets its own values. */
-  --st-backlog: #9ea4b0;
-  --st-todo: #7fd1d1;
-  --st-progress: #f2b045;
-  --st-review: #c9b2d9;
-  --st-done: #3fcf8e;
+  /* Dark status colours: the glass tints with the colour (18%), and the ink is a paler step of the same hue (6:1 or better). */
+  --status-pink: #f9a8d4;
+  --status-pink-ink: #fbcfe8;
+  --status-blue: #93c5fd;
+  --status-blue-ink: #bfdbfe;
+  --status-orange: #fdba74;
+  --status-orange-ink: #fed7aa;
+  --status-purple: #d8b4fe;
+  --status-purple-ink: #e9d5ff;
+  --status-green: #6ee7b7;
+  --status-green-ink: #a7f3d0;
+  --glass-edge: rgba(255, 255, 255, 0.14);
+  --glass-highlight: rgba(255, 255, 255, 0.22);
   /* Dark variants of the calendar type tints: deep, low-chroma, with the dark text colour on top. */
   --track: #3a3e4b;
   --grid: #31343f;

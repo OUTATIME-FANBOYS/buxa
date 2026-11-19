@@ -55,8 +55,8 @@ describe('TaskProperties', () => {
     const col = project.columns[2];
     const task = { ...seed.tasks[0], columnId: col.id } as never;
     const html = renderToStaticMarkup(<TaskProperties task={task} project={project} d={draft as never} />);
-    expect(html).toContain('border-[var(--st-progress)]!');
-    expect(html).toContain('text-[var(--st-progress)]!');
+    expect(html).toContain('border-[var(--status-orange)]!');
+    expect(html).toContain('text-[var(--status-orange-ink)]!');
     expect(html).toContain(`>🔨 ${col.name}</option>`);
     expect(html).toContain('>📝 To Do</option>');
   });
