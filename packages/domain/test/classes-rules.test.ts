@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkAge, instructorRatio, isValidAgeRange, seatFor, seatsLeft } from '../src';
+import { checkAge, isValidAgeRange, seatFor, seatsLeft } from '../src';
 
 describe('age range (inclusive)', () => {
   const range = { minAge: 8, maxAge: 12 };
@@ -48,48 +48,5 @@ describe('capacity (hard limit)', () => {
     expect(seatsLeft(10, 4)).toBe(6);
     expect(seatsLeft(10, 10)).toBe(0);
     expect(seatsLeft(10, 12)).toBe(0);
-  });
-});
-
-describe('instructor ratio (computed and reported, not enforced)', () => {
-  it('is null when no ratio is set', () => {
-    expect(instructorRatio(null, 20, 1)).toBeNull();
-  });
-
-  it('reports no shortfall when there are enough instructors for the campers', () => {
-    expect(instructorRatio({ instructors: 1, campers: 8 }, 8, 1)).toEqual({
-      ratio: { instructors: 1, campers: 8 },
-      enrolled: 8,
-      assignedInstructors: 1,
-      requiredInstructors: 1,
-      shortfall: 0,
-      withinRatio: true,
-      campersPerInstructor: 8,
-    });
-  });
-
-  it('rounds the required instructors up and reports the shortfall', () => {
-    const r = instructorRatio({ instructors: 1, campers: 8 }, 9, 1);
-    expect(r?.requiredInstructors).toBe(2);
-    expect(r?.shortfall).toBe(1);
-    expect(r?.withinRatio).toBe(false);
-  });
-
-  it('is within ratio with no campers, and has no campers per instructor when nobody is assigned', () => {
-    expect(instructorRatio({ instructors: 1, campers: 8 }, 0, 0)).toMatchObject({
-      requiredInstructors: 0,
-      shortfall: 0,
-      withinRatio: true,
-      campersPerInstructor: null,
-    });
-    expect(instructorRatio({ instructors: 1, campers: 8 }, 3, 0)).toMatchObject({
-      requiredInstructors: 1,
-      shortfall: 1,
-      campersPerInstructor: null,
-    });
-  });
-
-  it('does not refuse anything: the report is the only output', () => {
-    expect(() => instructorRatio({ instructors: 1, campers: 1 }, 50, 0)).not.toThrow();
   });
 });

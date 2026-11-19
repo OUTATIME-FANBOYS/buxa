@@ -19,6 +19,7 @@ export const AUDIT_ACTIONS = [
   'attendance.override',
   'class.create',
   'class.update',
+  'class.delete',
   'session.create',
   'session.update',
   'import.upload',
