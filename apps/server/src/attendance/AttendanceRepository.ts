@@ -45,7 +45,7 @@ export class AlreadyCheckedInError extends Error {
   }
 }
 export const isAlreadyCheckedIn = (e: unknown): e is AlreadyCheckedInError =>
-  e instanceof Error && (e as { kind?: unknown }).kind === 'already-checked-in';
+  e instanceof Error && 'kind' in e && e.kind === 'already-checked-in';
 
 export class NotOnSiteError extends Error {
   readonly kind = 'not-on-site';
@@ -55,7 +55,7 @@ export class NotOnSiteError extends Error {
   }
 }
 export const isNotOnSite = (e: unknown): e is NotOnSiteError =>
-  e instanceof Error && (e as { kind?: unknown }).kind === 'not-on-site';
+  e instanceof Error && 'kind' in e && e.kind === 'not-on-site';
 
 /** Most rows one query returns; a log longer than this is exported in date slices. */
 export const MAX_LOG_ROWS = 5000;

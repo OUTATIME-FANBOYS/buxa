@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { AddressInfo } from 'node:net';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { isData } from '@buxa/shared';
+import { isData, type Data } from '@buxa/shared';
 import * as A from '@buxa/shared';
 import { Store, Tokens } from './store';
 import { buildMcp } from './mcp';
@@ -76,10 +76,23 @@ function body(req: http.IncomingMessage, limit: number): Promise<unknown> {
     req.on('error', reject);
   });
 }
-const send = (res: http.ServerResponse, status: number, value: unknown, headers: Record<string, string> = {}) => {
+const send = (res: http.ServerResponse, status: number, value: object, headers: Record<string, string> = {}) => {
   res.writeHead(status, { 'content-type': 'application/json', 'cache-control': 'no-store', ...headers });
   res.end(JSON.stringify(value));
 };
+
+/** A PUT /api/state body: the version the browser last saw, and its data. */
+const isPutBody = (v: unknown): v is { baseVersion: number; data: Data } =>
+  typeof v === 'object' &&
+  v !== null &&
+  'baseVersion' in v &&
+  typeof v.baseVersion === 'number' &&
+  'data' in v &&
+  isData(v.data);
+
+/** The HTTP status an error carries, or 500 for anything else. */
+const statusOf = (e: unknown): number =>
+  typeof e === 'object' && e !== null && 'status' in e && typeof e.status === 'number' ? e.status : 500;
 
 export function createApp(opts: AppOptions) {
   const store = new Store(opts.dataDir);
@@ -141,9 +154,9 @@ export function createApp(opts: AppOptions) {
 
       return serveStatic(req, res, url);
     } catch (e) {
-      const status = (e as { status?: number }).status ?? 500;
+      const status = statusOf(e);
       if (!res.headersSent) {
-        send(res, status, { error: status === 500 ? 'Internal error.' : (e as Error).message });
+        send(res, status, { error: status === 500 ? 'Internal error.' : e instanceof Error ? e.message : undefined });
       }
       if (status === 500) {
         console.error(e);
@@ -220,8 +233,8 @@ export function createApp(opts: AppOptions) {
         );
       }
       if (req.method === 'PUT') {
-        const b = (await body(req, 40 * 1024 * 1024)) as { baseVersion?: number; data?: unknown } | undefined;
-        if (!b || typeof b.baseVersion !== 'number' || !isData(b.data)) {
+        const b = await body(req, 40 * 1024 * 1024);
+        if (!isPutBody(b)) {
           return send(res, 400, { error: 'Expected { baseVersion, data }.' });
         }
         const v = store.put(b.baseVersion, b.data, client);

@@ -1,12 +1,13 @@
 import type { PoolClient } from 'pg';
 import type { Actor, AuditAction } from '@buxa/domain';
+import type { AuditData } from './types';
 
 export interface AuditEntry {
   actor: Pick<Actor, 'userId' | 'orgId'>;
   action: AuditAction;
   entity: string;
   entityId: string;
-  data?: Record<string, unknown>;
+  data?: AuditData;
 }
 
 /** The one place that writes an audit row, so every entry has the same shape and a typed action. */

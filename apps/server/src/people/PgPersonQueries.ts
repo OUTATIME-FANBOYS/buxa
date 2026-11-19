@@ -1,6 +1,6 @@
 import { isUuid, MAX_SEARCH_RESULTS, normalizeForSearch, type CampRole } from '@buxa/domain';
 import { PersonNotFoundError, type PersonFilter, type PersonRecord } from './PeopleRepository';
-import { type Db, nullableIso, toIso } from './pgRows';
+import { type Db, type SqlParam, nullableIso, toIso } from './pgRows';
 
 interface PersonRow {
   id: string;
@@ -37,7 +37,7 @@ const toRecord = (row: PersonRow): PersonRecord => ({
 });
 
 /** Runs a people query. The limit is the last parameter, so it never sits in the SQL text. */
-async function queryPeople(db: Db, where: string, params: unknown[], limit?: number): Promise<PersonRecord[]> {
+async function queryPeople(db: Db, where: string, params: SqlParam[], limit?: number): Promise<PersonRecord[]> {
   const values = limit === undefined ? params : [...params, limit];
   const limitClause = limit === undefined ? '' : `LIMIT $${values.length}`;
   const { rows } = await db.query<PersonRow>(`${SELECT_PEOPLE} ${where} ${ORDER_PEOPLE} ${limitClause}`, values);

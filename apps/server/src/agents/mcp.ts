@@ -18,7 +18,7 @@ const reason = z.string().describe('Why you are doing this, in one sentence. Peo
 /** Builds an MCP server bound to one agent. The identity comes from the bearer token, never from tool arguments. */
 export function buildMcp(store: Store, agentId: string): McpServer {
   const server = new McpServer({ name: 'buxa', version: '1.0.0' }, { instructions: INSTRUCTIONS });
-  const text = (v: unknown) => ({
+  const text = <T>(v: T) => ({
     content: [{ type: 'text' as const, text: typeof v === 'string' ? v : JSON.stringify(v, null, 2) }],
   });
   const err = (m: string) => ({ isError: true as const, content: [{ type: 'text' as const, text: m }] });
@@ -30,7 +30,7 @@ export function buildMcp(store: Store, agentId: string): McpServer {
 
     return text(fn(s));
   };
-  const readOut = (fn: (s: AppState) => G.Out<unknown>) => {
+  const readOut = <T>(fn: (s: AppState) => G.Out<T>) => {
     const s = store.snapshot;
     if (!s) {
       return err('Buxa has no data yet. Open the app once to create the workspace.');
@@ -39,11 +39,11 @@ export function buildMcp(store: Store, agentId: string): McpServer {
 
     return r.error ? err(r.error) : text(r.value);
   };
-  const write = (fn: (s: AppState) => G.Out<unknown>) => {
+  const write = <T>(fn: (s: AppState) => G.Out<T>) => {
     if (!store.snapshot) {
       return err('Buxa has no data yet. Open the app once to create the workspace.');
     }
-    let r: G.Out<unknown> | undefined;
+    let r: G.Out<T> | undefined;
     store.mutate(s => {
       r = fn(s);
 

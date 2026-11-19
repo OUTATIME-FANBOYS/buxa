@@ -105,10 +105,10 @@ export type ClassErrorKind =
   | EnrolmentRefusalError['kind'];
 
 export const isClassError = (e: unknown, kind: ClassErrorKind): boolean =>
-  e instanceof Error && (e as { kind?: unknown }).kind === kind;
+  e instanceof Error && 'kind' in e && e.kind === kind;
 
 export const isEnrolmentRefusal = (e: unknown): e is EnrolmentRefusalError =>
   e instanceof Error &&
-  ['session-full', 'age-out-of-range', 'overlap', 'enrolment-refused'].includes(
-    (e as { kind?: unknown }).kind as string,
-  );
+  'kind' in e &&
+  typeof e.kind === 'string' &&
+  ['session-full', 'age-out-of-range', 'overlap', 'enrolment-refused'].includes(e.kind);

@@ -25,7 +25,7 @@ type Write = (line: string) => void;
 export const errorName = (error: unknown): string => (error instanceof Error ? error.name : 'unknown');
 
 /** Errors do not survive JSON.stringify, so they are written out by hand. */
-const serialise = (value: unknown): unknown =>
+const serialise = <T>(value: T): T | { type: string; message: string; stack: string | undefined } =>
   value instanceof Error ? { type: value.name, message: value.message, stack: value.stack } : value;
 
 /**

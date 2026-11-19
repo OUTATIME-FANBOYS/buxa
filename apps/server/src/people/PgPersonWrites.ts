@@ -1,5 +1,5 @@
 import type { NewPersonRecord, PersonPatchRecord } from './PeopleRepository';
-import type { Db } from './pgRows';
+import type { Db, SqlParam } from './pgRows';
 
 async function insertRoles(db: Db, orgId: string, personId: string, roles: readonly string[]): Promise<void> {
   if (roles.length === 0) {
@@ -27,9 +27,9 @@ export async function insertPerson(db: Db, orgId: string, input: NewPersonRecord
 /** Changes only the fields present in the patch. Returns their names in a fixed order (the audit entry lists them). */
 export async function updatePerson(db: Db, orgId: string, id: string, patch: PersonPatchRecord): Promise<string[]> {
   const sets: string[] = [];
-  const values: unknown[] = [];
+  const values: SqlParam[] = [];
   const changed: string[] = [];
-  const set = (name: string, column: string, value: unknown): void => {
+  const set = (name: string, column: string, value: SqlParam): void => {
     values.push(value);
     sets.push(`${column} = $${values.length}`);
     changed.push(name);
