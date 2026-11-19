@@ -1,6 +1,6 @@
 # Sessions and classes: data model and migration
 
-Status: proposal for v0.3 (branch `v0.3/feat/sessions-classes`), migration `0022_sessions_parent_classes.sql`.
+Status: built for v0.3 (branch `v0.3/feat/sessions-classes`, merged into `v0.3/task/functional-checkup`). Migration `0022_sessions_parent_classes.sql` is in `packages/db/migrations`. Whether it has run on a deployed database is not recorded in the repo. The status list at the end says what is done and what is not.
 
 ## Terms
 
@@ -34,13 +34,31 @@ The tables keep their names because the release still running during a deploy re
 
 ## Old release during the deploy
 
-- It inserts classes with no dates. The new app shows them as "dates not set" and asks for dates when they are edited.
+- It inserts classes with no dates. The new app shows them as "Dates not set yet" and asks for dates when they are edited.
 - It inserts class rows with no name or ages. The trigger fills them in.
-- New sessions have a NULL `default_capacity`. The old release's list parser expects a number, so the old classes list can fail to render those rows until the old release is gone. This is the one visible risk. Do not run the two releases side by side for long.
+- New app: the parent insert writes no `default_capacity`, so new sessions have a NULL `default_capacity`. The old release's list parser expects a number, so the old classes list can fail to render those rows until the old release is gone. This is the one visible risk. Do not run the two releases side by side for long. Run the migration in a quiet window.
 - Enrolments and capacity keep their rules; the capacity trigger is unchanged.
+- Nothing is dropped, so the old release still runs on the migrated schema. Rolling back the app does not roll back the migration.
 
 ## Decisions for the owner to check
 
-- The session's date range is typed in. A class's local days must fall inside it (the service checks this).
+- The session's date range is typed in. A class's local days must fall inside it (the service checks this, `ClassService.ts`, and `packages/domain/src/classes/sessionDates.ts`).
 - Deleting a class is refused when it has any enrolment, cancelled ones included, so no enrolment history is lost.
 - Editing a class can lower its camp size only down to the places already taken (the existing trigger).
+
+## Status
+
+Done (on the v0.3 branch):
+
+- Migration 0022: the expand steps 1 to 7 above, with the backfill (step 3). It contains no `DROP`, so the drop guard test (`packages/db/test/migration-drops.test.ts`) passes without an approval line.
+- Sessions with date ranges and classes with time ranges, camp size 3 to 30, ages 3 to 20.
+- Editing and deleting classes; instructor edits go through `buxa_replace_class_instructors`.
+- The class form is a pop-up. The instructor ratio is hidden from the UI; its columns stay in the database and the app no longer writes them.
+- Routes moved from `/camp/classes` to `/camp/sessions` with permanent redirects (`apps/web/next.config.ts`).
+
+Not done:
+
+- Contract release: dropping the ratio columns and `classes.default_capacity`. Wait until the release that still reads them has gone.
+- Recurring sessions and public class pages: phase 3 (`docs/phases/03-registration.md`).
+- The owner's signed-in check at 390px and 1280px (`docs/phases/owner-acceptance.md`).
+- Running 0022 on a deployed database: see the deploy steps in `docs/deploy.md`.
