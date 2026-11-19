@@ -23,8 +23,6 @@
     "typecheck": "tsc --noEmit && next typegen apps/web && tsc --noEmit -p apps/web"
   },
   "dependencies": {
-    "@heroui/react": "^3.2.7",
-    "@heroui/styles": "^3.2.7",
     "@internationalized/date": "^3.12.4",
     "@modelcontextprotocol/sdk": "^1.32.2",
     "@supabase/ssr": "^0.12.7",
