@@ -5,6 +5,8 @@ import type { ClassRepository } from './classes/ClassRepository';
 import { PgClassRepository } from './classes/PgClassRepository';
 import type { ImportRepository } from './classes/import/ImportRepository';
 import { PgImportRepository } from './classes/import/PgImportRepository';
+import type { SeatHoldRepository } from './holds/SeatHoldRepository';
+import { PgSeatHoldRepository } from './holds/PgSeatHoldRepository';
 import { PgCredentialRepository } from './credentials/PgCredentialRepository';
 import { type CredentialRepository } from './credentials/CredentialRepository';
 import { PgMembershipRepository } from './memberships/PgMembershipRepository';
@@ -32,6 +34,8 @@ export interface Repositories {
   imports: ImportRepository;
   /** Registration forms and submissions. The Postgres adapter in production; the in-memory one is for tests. */
   registration: RegistrationRepository;
+  /** Seat holds for registration. Postgres only: the seat rules live in the database (migration 0023). */
+  seatHolds: SeatHoldRepository;
 }
 
 export const createPgRepositories = (pool: Pool): Repositories => ({
@@ -44,4 +48,5 @@ export const createPgRepositories = (pool: Pool): Repositories => ({
   classes: new PgClassRepository(pool),
   imports: new PgImportRepository(pool),
   registration: new PgRegistrationRepository(pool),
+  seatHolds: new PgSeatHoldRepository(pool),
 });

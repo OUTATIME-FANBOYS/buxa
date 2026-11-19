@@ -127,6 +127,32 @@ export function refusalError(refusal: Refusal): EnrolmentRefusalError {
   }
 }
 
+/** A seat hold names a household that is not in this camp (or a malformed id). */
+export class HouseholdNotFoundError extends Error {
+  readonly kind = 'household-not-found';
+  constructor() {
+    super('Household not found');
+    this.name = 'HouseholdNotFoundError';
+  }
+}
+
+export class HoldNotFoundError extends Error {
+  readonly kind = 'hold-not-found';
+  constructor() {
+    super('Hold not found');
+    this.name = 'HoldNotFoundError';
+  }
+}
+
+/** The household already holds a place in this session. One hold per household per session. */
+export class HoldExistsError extends Error {
+  readonly kind = 'hold-exists';
+  constructor() {
+    super('The household already holds a place in this session');
+    this.name = 'HoldExistsError';
+  }
+}
+
 export type ClassErrorKind =
   | 'class-not-found'
   | 'session-not-found'
@@ -136,6 +162,9 @@ export type ClassErrorKind =
   | 'enrolment-not-found'
   | 'camper-not-found'
   | 'instructor-not-found'
+  | 'household-not-found'
+  | 'hold-not-found'
+  | 'hold-exists'
   | EnrolmentRefusalError['kind'];
 
 export const isClassError = (e: unknown, kind: ClassErrorKind): boolean =>

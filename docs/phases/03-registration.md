@@ -48,6 +48,26 @@ These were in the phase 2 roadmap row and moved here so that phase 2 closes on c
 - **Screens:** the New session form takes a price; the session page has a Set/Change price dialog; the session and selected-class details show the price for today.
 - **Not yet:** the class form does not set the price (the price is per session). Multi-currency conversion is out of scope.
 
+## Status: seat holds
+
+**Built (branch `v0.3/feat/seat-holds`):**
+
+- A hold reserves one place in a class for a household. One active hold per household per class. It counts as taken only while it is unreleased and its time has not passed, so an expired hold returns its place at once, without a job.
+- The length is one constant, `SEAT_HOLD_MINUTES` (15) in `packages/domain/src/classes/holds.ts`.
+- Capacity holds under concurrency: the hold and enrolment triggers (migration 0025) lock the class row and count enrolments plus live holds. Tested on real Postgres with parallel holds and holds racing enrolments for the last place.
+- A place freed by a cancelled hold, an expired hold or a cancelled enrolment goes to the first waitlisted enrolment, in the order they joined. Each promotion is audited (`enrolment.promote`). Waitlist promotion was not in phase 2.
+- The cleanup (`releaseExpiredHolds(orgId)`) releases expired holds and promotes waitlists. It is safe to run twice. Enrolling a camper and placing a hold first free the class's expired holds, so the waitlist is never skipped.
+- Permission `holds:manage` (staff, admin, owner; not viewer). Archived camps are read-only, as for every write.
+- Row-level security and a camp-isolation test on `seat_holds`.
+
+**Not built yet:**
+
+- Taking a hold from the registration submission. The service method is ready for it (`SeatHoldService.placeHold`, `releaseHold`); the form's submit path does not call it yet.
+- Turning a hold into an enrolment when the family completes registration. The `completed` release reason is not in the table yet; the form adds it with that change.
+- The waitlist UI, and a screen that shows holds.
+- A scheduled job for `releaseExpiredHolds`. Expired holds already stop counting without it.
+- Hold length set per camp. It is fixed at 15 minutes (see Open for review).
+
 ## Words we use
 
 - **Registration**: a family's request to enrol a camper in one or more sessions, with the form answers and a payment.
@@ -92,7 +112,7 @@ Every action in `packages/domain/src/permissions.ts` sits in one category below.
 | People (people and households)         | `people:read`, `people:read_contact`, `people:create`, `people:update`, `people:delete`, `people:authorise_pickup`, `memberships:manage`, `credentials:manage` | Viewer: read. Staff: read contacts, create and update. Admin and owner: delete, pickup authority, memberships and check-in credentials.                                             | Built (phase 1)                                                                                                                        |
 | Classes and events                     | `classes:manage`, `events:read`, `events:create`, `events:update`, `events:delete`                                                                             | Viewer: read events. Staff: manage classes. Admin and owner: create, update and delete events.                                                                                      | Built (phase 2)                                                                                                                        |
 | Money (payments and refunds)           | None yet                                                                                                                                                       | Decided in phase 9                                                                                                                                                                  | Future (phase 9)                                                                                                                       |
-| Registration                           | `registration:read`, `registration:submit`, `registration:manage`                                                                                              | Viewer: none. Staff: read forms and submissions, and record a registration. Admin and owner: also create, edit and publish forms. Owner has everything admin has.                   | Built (this phase): forms, publishing and submissions. Holds and the waitlist are not built                                            |
+| Registration                           | `registration:read`, `registration:submit`, `registration:manage`, `holds:manage`                                                                              | Viewer: none. Staff: read forms and submissions, record a registration, place and release holds. Admin and owner: also create, edit and publish forms. Owner has everything admin has. | Built (this phase): forms, publishing and submissions. Holds are built. The waitlist UI and confirmation are not built |
 | Team (members and roles)               | `members:read`, `members:leave`, `members:read_contact`, `members:invite`, `members:change_role`, `members:remove`                                             | Viewer: read members and leave. Admin and owner: read contacts, invite, change roles and remove members.                                                                            | Partly built: the list is built; invite, role change and removal are planned (the Team access page says invites are not yet available) |
 | Work (boards, projects and tasks)      | `tasks:read`, `tasks:create`, `tasks:update`, `tasks:move`, `tasks:comment`, `tasks:delete`, `tasks:manage_board`                                              | Viewer: read. Staff: create, edit, move and comment. Admin and owner: delete and manage boards.                                                                                     | Built (staff board)                                                                                                                    |
 | Admin (camp settings, delete and data) | `org:read`, `org:update`, `audit:read`, `org:delete`, `org:transfer_ownership`, `data:export`, `data:erase`                                                    | Viewer: read the camp. Admin and owner: rename the camp and read the audit log. Owner only: delete the camp, transfer ownership, export and erase data. There is no archive action. | Partly built: renaming the camp is built; the audit log, delete, transfer, export and erase are planned                                |

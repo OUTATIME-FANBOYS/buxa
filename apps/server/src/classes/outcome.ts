@@ -15,6 +15,9 @@ export type FailureReason =
   | 'enrolment_not_found'
   | 'camper_not_found'
   | 'instructor_not_found'
+  | 'household_not_found'
+  | 'hold_not_found'
+  | 'hold_exists'
   | Refusal['reason'];
 
 export interface Failure {
@@ -28,9 +31,17 @@ export interface Failure {
 export const ok = <T>(value: T): Outcome<T> => ({ ok: true, value });
 
 const NOT_FOUND: Record<
-  'class-not-found' | 'session-not-found' | 'enrolment-not-found' | 'camper-not-found' | 'instructor-not-found',
+  | 'class-not-found'
+  | 'session-not-found'
+  | 'enrolment-not-found'
+  | 'camper-not-found'
+  | 'instructor-not-found'
+  | 'household-not-found'
+  | 'hold-not-found',
   Failure
 > = {
+  'household-not-found': { reason: 'household_not_found', message: 'That household does not exist in this camp.' },
+  'hold-not-found': { reason: 'hold_not_found', message: 'That hold no longer exists, or it has been released.' },
   'class-not-found': { reason: 'class_not_found', message: 'That class no longer exists.' },
   'session-not-found': { reason: 'session_not_found', message: 'That session no longer exists.' },
   'enrolment-not-found': {
@@ -84,6 +95,12 @@ export async function attempt<T>(work: () => Promise<T>, timeZone: string): Prom
           reason: 'class_has_enrolments',
           message: 'This class has enrolments, so it cannot be deleted. Cancel them first.',
         },
+      };
+    }
+    if (isClassError(e, 'hold-exists')) {
+      return {
+        ok: false,
+        failure: { reason: 'hold_exists', message: 'This family already holds a place in this session.' },
       };
     }
     if (isEnrolmentRefusal(e)) {

@@ -11,6 +11,7 @@ import type { Clock } from './services/clock';
 import { createPgRepositories, type Repositories } from './repositories';
 import { createAttendanceService } from './services/attendance/createAttendanceService';
 import { createClassService, type ClassService } from './classes/ClassService';
+import { createSeatHoldService, type SeatHoldService } from './holds/SeatHoldService';
 import { createCredentialService } from './services/credentials/createCredentialService';
 import { createImportService, type ImportService } from './classes/import/ImportService';
 import { createMembershipService } from './services/memberships/createMembershipService';
@@ -49,6 +50,8 @@ export interface Services {
   classes: ClassService;
   imports: ImportService;
   registration: RegistrationService;
+  /** Seat holds for registration. The form calls placeHold; the cleanup calls releaseExpiredHolds. */
+  seatHolds: SeatHoldService;
 }
 
 export interface RuntimeOptions {
@@ -135,11 +138,12 @@ export function createServices(repositories: Repositories, clock: Clock): Servic
 }
 
 /** Classes, sessions, enrolments and the bulk import. Both storages come from `repositories` (Postgres in production). */
-function createClassServices(repositories: Repositories): Pick<Services, 'classes' | 'imports'> {
+function createClassServices(repositories: Repositories): Pick<Services, 'classes' | 'imports' | 'seatHolds'> {
   const timezoneOf = async (orgId: string): Promise<string> => (await repositories.orgs.get(orgId)).timezone;
   const classes = repositories.classes;
 
   return {
+    seatHolds: createSeatHoldService({ repo: repositories.seatHolds, timezoneOf }),
     classes: createClassService({ repo: classes, timezoneOf }),
     imports: createImportService({ classes, imports: repositories.imports, timezoneOf }),
   };
