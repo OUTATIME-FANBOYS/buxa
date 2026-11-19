@@ -10,6 +10,7 @@ import {
   type AttendanceQuery,
   type CheckInRecord,
 } from '../../attendance/AttendanceRepository';
+import { assignedTo, teacherScopeOf, type TeacherScope } from '../../classes/teacherScope';
 import { localDaysWindow } from '../shared/campDay';
 import { campZone, onSiteByPerson, toSummary } from '../shared/views';
 import { toEntries, authorisedCollectors, pickupOptionsFor } from './visits';
@@ -38,7 +39,7 @@ const EXPORT_HEADER: CsvCell[] = [
 ];
 
 export function createAttendanceService(deps: AttendanceServiceDeps): AttendanceService {
-  const { attendance, people, memberships, orgs, clock } = deps;
+  const { attendance, classes, people, memberships, orgs, clock } = deps;
 
   /** Records for the filter's camp-local days, newest first. */
   async function recordsFor(orgId: string, filter: AttendanceFilter, timeZone: string): Promise<CheckInRecord[]> {
@@ -51,9 +52,14 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
     return attendance.log(orgId, query);
   }
 
+  /** Keeps only the records of the teacher's campers. Null scope (not a teacher) keeps everything. */
+  const inScope = (scope: TeacherScope | null, records: CheckInRecord[]): CheckInRecord[] =>
+    scope === null ? records : records.filter(r => scope.camperIds.has(r.personId));
+
   return {
     async checkIn(actor, input: CheckInInput): Promise<CheckInResult> {
-      assertAllowed(actor, 'attendance:record');
+      const scope = await teacherScopeOf(classes, actor);
+      assertAllowed(actor, 'attendance:record', { assignedToClass: assignedTo(scope, input.personId) });
       const orgId = actor.orgId;
       const person = await people.get(orgId, input.personId);
       if (!person) {
@@ -112,7 +118,8 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
     },
 
     async checkOut(actor, input: CheckOutInput): Promise<CheckOutResult> {
-      assertAllowed(actor, 'attendance:record');
+      const scope = await teacherScopeOf(classes, actor);
+      assertAllowed(actor, 'attendance:record', { assignedToClass: assignedTo(scope, input.personId) });
       const orgId = actor.orgId;
       const person = await people.get(orgId, input.personId);
       if (!person) {
@@ -174,9 +181,10 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
     },
 
     async onSite(actor): Promise<OnSiteEntry[]> {
-      assertAllowed(actor, 'attendance:read');
+      const scope = await teacherScopeOf(classes, actor);
+      assertAllowed(actor, 'attendance:read', { assignedToClass: scope === null ? undefined : true });
       const orgId = actor.orgId;
-      const records = await attendance.onSite(orgId);
+      const records = inScope(scope, await attendance.onSite(orgId));
       if (records.length === 0) {
         return [];
       }
@@ -219,15 +227,17 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
     },
 
     async log(actor, filter) {
-      assertAllowed(actor, 'attendance:read');
+      const scope = await teacherScopeOf(classes, actor);
+      assertAllowed(actor, 'attendance:read', { assignedToClass: scope === null ? undefined : true });
       const orgId = actor.orgId;
-      const records = await recordsFor(orgId, filter, await campZone(orgs, orgId));
+      const records = inScope(scope, await recordsFor(orgId, filter, await campZone(orgs, orgId)));
 
       return toEntries(deps, orgId, records);
     },
 
     async history(actor, personId) {
-      assertAllowed(actor, 'attendance:read');
+      const scope = await teacherScopeOf(classes, actor);
+      assertAllowed(actor, 'attendance:read', { assignedToClass: assignedTo(scope, personId) });
       const orgId = actor.orgId;
       if (!(await people.get(orgId, personId))) {
         throw notFound('Person not found');

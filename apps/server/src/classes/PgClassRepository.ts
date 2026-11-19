@@ -1,8 +1,10 @@
 import type { Pool } from 'pg';
 import { withOrg } from '@buxa/db';
-import type { Actor } from '@buxa/domain';
+import { isUuid, type Actor } from '@buxa/domain';
 import type { Class, Enrolment, NewSessionInput, Session, SessionPriceInput } from '@buxa/contracts';
+import { recordAudit } from '../audit/recordAudit';
 import type { ClassRecord, ClassRepository, EnrolRequest, EnrolmentRule } from './ClassRepository';
+import { TeacherNotFoundError } from './errors';
 import { cancelInTransaction, enrolInTransaction } from './PgEnrolmentWrites';
 import {
   getClass,
@@ -110,4 +112,64 @@ export class PgClassRepository implements ClassRepository {
   cancelEnrolment(actor: Actor, enrolmentId: string, note: string | null): Promise<Enrolment> {
     return withOrg(this.pool, actor.orgId, db => cancelInTransaction(db, actor, enrolmentId, note));
   }
+
+  assignedClassIds(orgId: string, userId: string): Promise<string[]> {
+    return withOrg(this.pool, orgId, async db => {
+      if (!isUuid(userId)) {
+        return [];
+      }
+      // The join checks the role now, so a person who stopped being a teacher has no classes even before the trigger clears them.
+      const { rows } = await db.query<{ session_id: string }>(
+        `SELECT ct.session_id
+           FROM class_teachers ct
+           JOIN org_members m ON m.org_id = ct.org_id AND m.user_id = ct.user_id
+          WHERE ct.user_id = $1 AND m.role = 'teacher'`,
+        [userId],
+      );
+
+      return rows.map(r => r.session_id);
+    });
+  }
+
+  camperIdsIn(orgId: string, classIds: readonly string[]): Promise<string[]> {
+    const ids = classIds.filter(isUuid);
+    if (ids.length === 0) {
+      return Promise.resolve([]);
+    }
+
+    return withOrg(this.pool, orgId, async db => {
+      const { rows } = await db.query<{ person_id: string }>(
+        `SELECT DISTINCT person_id FROM enrolments WHERE session_id = ANY($1::uuid[]) AND status = 'enrolled'`,
+        [ids],
+      );
+
+      return rows.map(r => r.person_id);
+    });
+  }
+
+  async replaceTeachers(actor: Actor, classId: string, userIds: readonly string[]): Promise<void> {
+    const unique = [...new Set(userIds)];
+    try {
+      await withOrg(this.pool, actor.orgId, async db => {
+        await db.query('SELECT buxa_replace_class_teachers($1, $2, $3)', [actor.orgId, classId, unique]);
+        await recordAudit(db, {
+          actor,
+          action: 'class.update',
+          entity: 'class',
+          entityId: classId,
+          data: { teacherIds: unique },
+        });
+      });
+    } catch (error) {
+      // The function raises P0002 for a missing class and for a user who is not a teacher here; the message tells them apart.
+      if (isPgError(error) && error.message.includes('Teacher not found')) {
+        throw new TeacherNotFoundError();
+      }
+      throw translateClassWriteError(error);
+    }
+  }
+}
+
+function isPgError(error: unknown): error is Error & { code: string } {
+  return error instanceof Error && 'code' in error && error.code === 'P0002';
 }

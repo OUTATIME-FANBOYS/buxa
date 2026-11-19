@@ -124,14 +124,14 @@ export function createRuntime(options: RuntimeOptions = {}): Runtime {
 
 /** Services are built from repositories and a clock only, so tests can assemble them without a runtime. */
 export function createServices(repositories: Repositories, clock: Clock): Services {
-  const { orgs, people, memberships, credentials, attendance } = repositories;
+  const { orgs, people, memberships, credentials, attendance, classes } = repositories;
 
   return {
     orgs: createOrgService(orgs),
-    people: createPeopleService({ people, memberships, credentials, attendance, orgs, clock }),
+    people: createPeopleService({ people, memberships, credentials, attendance, classes, orgs, clock }),
     memberships: createMembershipService({ memberships, people, orgs, clock }),
     credentials: createCredentialService({ credentials, people, memberships, attendance, orgs, clock }),
-    attendance: createAttendanceService({ attendance, people, memberships, orgs, clock }),
+    attendance: createAttendanceService({ attendance, classes, people, memberships, orgs, clock }),
     ...createClassServices(repositories),
     registration: createRegistrationService(repositories.registration),
   };

@@ -8,6 +8,7 @@ import type {
 } from '@buxa/contracts';
 import { can, isMinor, MAX_SEARCH_RESULTS, type Actor, type LocalDate } from '@buxa/domain';
 import { assertAllowed } from '../../auth/authorize';
+import { assignedTo, teacherScopeOf } from '../../classes/teacherScope';
 import { badRequest, conflict, notFound } from '../../http/errors';
 import type { MembershipRecord } from '../../memberships/MembershipRepository';
 import type { PersonHouseholdLink, PersonPatchRecord, PersonRecord } from '../../people/PeopleRepository';
@@ -78,7 +79,7 @@ function byPerson(records: readonly MembershipRecord[]): Map<string, MembershipR
 }
 
 export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
-  const { people, memberships, credentials, attendance, orgs, clock } = deps;
+  const { people, memberships, credentials, attendance, classes, orgs, clock } = deps;
 
   const todayFor = async (orgId: string): Promise<LocalDate> => campToday(clock, await campZone(orgs, orgId));
 
@@ -160,16 +161,18 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
 
   return {
     async list(actor, query?: PersonListQuery): Promise<PersonSummary[]> {
-      assertAllowed(actor, 'people:read');
+      const scope = await teacherScopeOf(classes, actor);
+      assertAllowed(actor, 'people:read', { assignedToClass: scope === null ? undefined : true });
       const orgId = actor.orgId;
       const term = query?.query?.trim() ?? '';
       const role = query?.role;
-      const records =
+      const found =
         term === ''
           ? await people.list(orgId, { role, includeArchived: query?.includeArchived === true })
           : (await people.search(orgId, term, MAX_SEARCH_RESULTS)).filter(
               p => role === undefined || p.roles.includes(role),
             );
+      const records = scope === null ? found : found.filter(p => scope.camperIds.has(p.id));
       const [ms, onSite, today] = await Promise.all([
         memberships.forPeople(
           orgId,
@@ -185,7 +188,8 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
     },
 
     async get(actor, id) {
-      assertAllowed(actor, 'people:read');
+      const scope = await teacherScopeOf(classes, actor);
+      assertAllowed(actor, 'people:read', { assignedToClass: assignedTo(scope, id) });
       const record = await people.get(actor.orgId, id);
       if (!record) {
         throw notFound('Person not found');
@@ -317,7 +321,8 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
     },
 
     async getHousehold(actor, id) {
-      assertAllowed(actor, 'people:read');
+      // Households name people outside a teacher's classes, so a teacher is refused them (assignedToClass: false).
+      assertAllowed(actor, 'people:read', { assignedToClass: (await teacherScopeOf(classes, actor)) === null ? undefined : false });
       const record = await people.getHousehold(actor.orgId, id);
       if (!record) {
         throw notFound('Household not found');
@@ -327,7 +332,7 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
     },
 
     async listHouseholds(actor) {
-      assertAllowed(actor, 'people:read');
+      assertAllowed(actor, 'people:read', { assignedToClass: (await teacherScopeOf(classes, actor)) === null ? undefined : false });
 
       return toHouseholds(people, actor.orgId, await people.listHouseholds(actor.orgId), seesCustody(actor));
     },
