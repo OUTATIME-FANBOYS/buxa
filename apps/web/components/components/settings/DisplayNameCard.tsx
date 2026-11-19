@@ -5,6 +5,17 @@ import { TextField } from '@/components/atoms';
 import { Button } from '@/components/elements';
 import { updateProfileAction } from '@/actions/account';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
+import { SETTINGS_TILE_HEADING } from './styles';
+
+// The name inputs share a row with the Update button. The inputs take the free width; on a phone (under 600px) they stack
+// first name, last name, then the button under them on the same left edge.
+const NAME_FORM =
+  'buxa:flex buxa:items-end buxa:gap-[var(--s3)] buxa:min-w-0 max-[599px]:buxa:flex-col max-[599px]:buxa:items-stretch';
+const NAME_FIELDS =
+  'buxa:flex-[1_1_0] buxa:min-w-0 buxa:grid buxa:grid-cols-[repeat(2,minmax(0,1fr))] buxa:gap-[var(--s3)] max-[599px]:buxa:grid-cols-[minmax(0,1fr)]';
+const NAME_FIELD = 'buxa:flex buxa:flex-col buxa:gap-[var(--s2)] buxa:min-w-0';
+// The Update button is as tall as the inputs, so it sits level with them on their bottom edge.
+const NAME_BUTTON = 'buxa:flex-none buxa:h-[var(--control-h)]! buxa:whitespace-nowrap max-[599px]:buxa:self-start';
 
 /** The name the person saved, as the server returns it. */
 export interface SavedName {
@@ -45,25 +56,31 @@ export function DisplayNameCard({
 
       return;
     }
+    // Only a success reaches here; the idle state of the action's result type is never returned after a save.
+    if (saved.status !== 'success') {
+      return;
+    }
     setErrors({});
-    toast(saved.message);
+    toast(saved.message ?? 'Profile saved');
     onSaved({ firstName: first.trim(), lastName: last.trim() || null });
   };
 
   return (
     <section className={`panel settings-tile ${className ?? ''}`} aria-labelledby="display-name-title">
-      <h2 id="display-name-title">Display name</h2>
+      <h2 id="display-name-title" className={SETTINGS_TILE_HEADING}>
+        Display name
+      </h2>
       <form
-        className="settings-name"
+        className={`settings-name ${NAME_FORM}`}
         noValidate
         onSubmit={e => {
           e.preventDefault();
           void save();
         }}
       >
-        <div className="settings-name__fields">
+        <div className={`settings-name__fields ${NAME_FIELDS}`}>
           <TextField
-            className="settings-name__field"
+            className={`settings-name__field ${NAME_FIELD}`}
             label="First name"
             error={errors.firstName}
             value={first}
@@ -72,7 +89,7 @@ export function DisplayNameCard({
             autoComplete="given-name"
           />
           <TextField
-            className="settings-name__field"
+            className={`settings-name__field ${NAME_FIELD}`}
             label="Last name"
             error={errors.lastName}
             value={last}
@@ -81,7 +98,7 @@ export function DisplayNameCard({
             autoComplete="family-name"
           />
         </div>
-        <Button variant="secondary" size="sm" disabled={pending}>
+        <Button variant="secondary" size="sm" disabled={pending} className={NAME_BUTTON}>
           Update
         </Button>
       </form>

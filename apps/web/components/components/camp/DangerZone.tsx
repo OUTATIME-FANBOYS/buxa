@@ -52,7 +52,8 @@ export function DangerZone({ campId, campName }: { campId: string; campName: str
   ) : null;
 
   return (
-    <section className="panel danger-zone" aria-labelledby="danger-zone-title">
+    // The destructive colour on the border, last in the settings column (forced: .panel's border is unlayered CSS).
+    <section className="panel danger-zone buxa:border-[var(--danger)]!" aria-labelledby="danger-zone-title">
       <h2 id="danger-zone-title">Danger zone</h2>
       <p className="muted">
         Archive hides this camp and keeps its data. Delete removes the camp and everything in it, for good.

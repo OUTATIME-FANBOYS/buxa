@@ -48,7 +48,8 @@ export function ArchivedCampsCard({ camps }: { camps: readonly ArchivedCamp[] })
       {camps.length === 0 ? (
         <p className="muted">No archived camps.</p>
       ) : (
-        <ul className="archived-list">
+        // A plain read-only list, name and date on one line.
+        <ul className="archived-list buxa:grid buxa:gap-[var(--s2)]">
           {camps.map(camp => (
             <li key={camp.id}>
               <span>{camp.name}</span> <span className="muted">Archived {formatDate(camp.archivedAt)}</span>

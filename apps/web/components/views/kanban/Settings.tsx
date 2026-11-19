@@ -10,6 +10,7 @@ import { AgentDialog } from '@/components/components/kanban/dialogs';
 import { ResetDemoButton } from '@/components/components/kanban';
 import { AppearanceCard, DisplayNameCard, EmailCard, TimeFormatCard } from '@/components/components/settings';
 import { ArchivedCampsCard, DangerZone } from '@/components/components/camp';
+import { SETTINGS_GRID, SETTINGS_TILE_HEADING, SETTINGS_TILE_TEXT } from '@/components/components/settings/styles';
 import type { ArchivedCamp } from '@/actions/camp';
 import { fullNameOf } from '@buxa/shared/names';
 
@@ -61,20 +62,23 @@ export function Settings({
   };
 
   return (
-    <div className="page settings-page">
+    // Settings: every setting is a full-width card, stacked in one column, as Cloudflare's account settings. Cards share
+    // .panel, so padding and style match. The page is as wide as the window, not the 1240px page width (forced: .page is
+    // unlayered CSS).
+    <div className="page settings-page buxa:max-w-none!">
       <header className="page-head">
         <div className="page-title">
           <h1>Settings</h1>
         </div>
       </header>
-      <div className="settings-grid">
+      <div className={`settings-grid ${SETTINGS_GRID}`}>
         <DisplayNameCard firstName={firstName} lastName={lastName} onSaved={savedName} />
         <EmailCard email={email} />
         <TimeFormatCard clockFormat={user?.clockFormat ?? undefined} />
         <AppearanceCard />
         <section className="panel settings-tile">
-          <h2>Agents</h2>
-          <p className="muted">
+          <h2 className={SETTINGS_TILE_HEADING}>Agents</h2>
+          <p className={`muted ${SETTINGS_TILE_TEXT}`}>
             Let AI agents add and update tasks on your boards. Their changes can wait for your approval, and every one
             is recorded. Leave this off and Buxa is a plain Kanban board.
           </p>
@@ -95,8 +99,8 @@ export function Settings({
           {addAgent && <AgentDialog onClose={() => setAddAgent(false)} />}
         </section>
         <section className="panel settings-tile">
-          <h2>Your data</h2>
-          <p className="muted">
+          <h2 className={SETTINGS_TILE_HEADING}>Your data</h2>
+          <p className={`muted ${SETTINGS_TILE_TEXT}`}>
             Everything lives in this browser’s storage. Export a copy to back it up or move it to another device.
           </p>
           <div className="row">
@@ -127,7 +131,7 @@ export function Settings({
           </div>
         </section>
         <section className="panel settings-tile">
-          <h2>Keyboard shortcuts</h2>
+          <h2 className={SETTINGS_TILE_HEADING}>Keyboard shortcuts</h2>
           <dl className="keys">
             <div>
               <dt>
