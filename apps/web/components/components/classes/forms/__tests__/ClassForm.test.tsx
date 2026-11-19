@@ -80,7 +80,7 @@ describe('ClassForm: adding and editing', () => {
 
   it('a dialog has a Cancel button, and a page has a Cancel link back to the session', () => {
     expect(render({ variant: 'dialog', onCancel: () => undefined })).toContain('>Cancel<');
-    expect(render()).toContain(`href="/camp/classes/${SESSION}"`);
+    expect(render()).toContain(`href="/camp/sessions/${SESSION}"`);
   });
 });
 

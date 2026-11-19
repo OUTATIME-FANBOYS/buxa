@@ -5,9 +5,9 @@ const response = new Response('report');
 const classErrorReportResponse = vi.fn<(form: FormData) => Promise<Response>>(() => settle(() => response));
 vi.mock('@buxa/server/composers/index.server', () => ({ classErrorReportResponse }));
 
-const { POST } = await import('../../../../app/(app)/camp/(operations)/classes/import/error-report/route');
+const { POST } = await import('../../../../app/(app)/camp/(operations)/sessions/import/error-report/route');
 
-const URL_ = 'https://buxa.example/camp/classes/import/error-report';
+const URL_ = 'https://buxa.example/camp/sessions/import/error-report';
 
 const formBody = (): FormData => {
   const body = new FormData();
@@ -17,7 +17,7 @@ const formBody = (): FormData => {
   return body;
 };
 
-describe('POST /camp/classes/import/error-report', () => {
+describe('POST /camp/sessions/import/error-report', () => {
   it('hands the posted form to the composer and answers with its response unchanged', async () => {
     const request = new Request(URL_, {
       method: 'POST',

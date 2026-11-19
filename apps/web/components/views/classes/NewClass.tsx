@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
-import { classPath } from '@/config/routes';
+import { sessionPath } from '@/config/routes';
 import { Empty, PageHeader } from '@/components/components';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { campZone } from '@buxa/server/composers/index.server';
@@ -23,7 +23,7 @@ export async function NewClass({ sessionId }: { sessionId: string }) {
           title="You cannot add classes"
           body={FORBIDDEN_MANAGE}
           action={
-            <Button className="classes-target" href={classPath(sessionId)}>
+            <Button className="classes-target" href={sessionPath(sessionId)}>
               Back to the session
             </Button>
           }

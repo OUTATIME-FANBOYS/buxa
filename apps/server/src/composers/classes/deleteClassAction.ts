@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { isUuid } from '@buxa/domain';
-import { classPath } from '@buxa/shared/config/routes';
+import { sessionPath } from '@buxa/shared/config/routes';
 import { failure, field, success, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../runtime';
 import { currentActor } from '../people/camp';
@@ -33,7 +33,7 @@ export async function deleteClassAction(_previous: ActionState, form: FormData):
     return expectedFailure(error, 'Could not delete the class.');
   }
 
-  revalidatePath(classPath(sessionId));
+  revalidatePath(sessionPath(sessionId));
 
   return success('Class deleted.');
 }

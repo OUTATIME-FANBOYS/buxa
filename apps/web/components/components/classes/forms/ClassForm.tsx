@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef } from 'react';
 import { Button } from '@/components/elements';
 import { Checkbox, DateTimeField, NumberField, TextField } from '@/components/atoms';
-import { classPath } from '@/config/routes';
+import { sessionPath } from '@/config/routes';
 import { fieldError, idle } from '@buxa/shared';
 import { MAX_CAMP_SIZE, MIN_CAMP_SIZE } from '@buxa/domain';
 import { addClassAction, updateClassAction } from '@/actions/classes';
@@ -178,7 +178,7 @@ export function ClassForm({
             Cancel
           </Button>
         ) : (
-          <Button variant="ghost" className="classes-target" href={classPath(sessionId)}>
+          <Button variant="ghost" className="classes-target" href={sessionPath(sessionId)}>
             Cancel
           </Button>
         )}

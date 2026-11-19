@@ -1,5 +1,5 @@
 import type { Class } from '@buxa/contracts';
-import { classPath } from '@/config/routes';
+import { sessionPath } from '@/config/routes';
 import { formatCampDateTime } from '@buxa/shared';
 import type { ClockFormat } from '@buxa/domain';
 import { Button } from '@/components/elements';
@@ -81,7 +81,7 @@ export function ClassesTable({
                       variant="ghost"
                       className="classes-target"
                       aria-current={selected ? 'true' : undefined}
-                      href={`${classPath(sessionId)}?class=${encodeURIComponent(cls.id)}#enrolments`}
+                      href={`${sessionPath(sessionId)}?class=${encodeURIComponent(cls.id)}#enrolments`}
                     >
                       {selected ? 'Showing enrolments' : 'Enrolments'}
                       <span className="sr-only"> for {cls.name}</span>

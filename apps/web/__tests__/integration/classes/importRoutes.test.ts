@@ -26,11 +26,11 @@ vi.mock('@/config/sameOrigin', () => ({
   isSameOriginPost: mocks.isSameOriginPost,
 }));
 
-const { GET } = await import('../../../app/(app)/camp/(operations)/classes/import/template/route');
-const { POST } = await import('../../../app/(app)/camp/(operations)/classes/import/error-report/route');
+const { GET } = await import('../../../app/(app)/camp/(operations)/sessions/import/template/route');
+const { POST } = await import('../../../app/(app)/camp/(operations)/sessions/import/error-report/route');
 
 describe('classes import route handlers', () => {
-  describe('GET /camp/classes/import/template', () => {
+  describe('GET /camp/sessions/import/template', () => {
     it('returns the CSV template download response', async () => {
       const response = await GET();
       expect(response.status).toBe(200);
@@ -39,11 +39,11 @@ describe('classes import route handlers', () => {
     });
   });
 
-  describe('POST /camp/classes/import/error-report', () => {
+  describe('POST /camp/sessions/import/error-report', () => {
     it('refuses requests that fail the same-origin check with 403', async () => {
       mocks.isSameOriginPost.mockReturnValueOnce(false);
 
-      const request = new Request('http://localhost/camp/classes/import/error-report', {
+      const request = new Request('http://localhost/camp/sessions/import/error-report', {
         method: 'POST',
       });
 
@@ -58,7 +58,7 @@ describe('classes import route handlers', () => {
       const formData = new FormData();
       formData.set('file', 'test data');
 
-      const request = new Request('http://localhost/camp/classes/import/error-report', {
+      const request = new Request('http://localhost/camp/sessions/import/error-report', {
         method: 'POST',
         body: formData,
       });

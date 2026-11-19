@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { ROUTES, classPath } from '@buxa/shared/config/routes';
+import { ROUTES, sessionPath } from '@buxa/shared/config/routes';
 import { failure, sessionForm, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../runtime';
 import { currentActor } from '../people/camp';
@@ -35,6 +35,6 @@ export async function createSessionAction(_previous: ActionState, form: FormData
     return expectedFailure(error, 'Could not create the session.');
   }
 
-  revalidatePath(ROUTES.classes);
-  redirect(classPath(createdId)); // throws; kept outside the try
+  revalidatePath(ROUTES.sessions);
+  redirect(sessionPath(createdId)); // throws; kept outside the try
 }
