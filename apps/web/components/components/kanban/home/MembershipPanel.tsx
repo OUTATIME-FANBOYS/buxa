@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { MembershipStatusCounts } from '@buxa/shared/camp/campHomeTypes';
 import { ROUTES } from '@/config/routes';
+import { ChartCard } from '@/components/components/charts/ChartCard';
 import { donutSegments } from './homeChartMath';
 
 const RADIUS = 42;
@@ -26,10 +27,12 @@ export function MembershipPanel({ counts }: { counts: MembershipStatusCounts | n
     : '';
 
   return (
-    <section className="panel" aria-labelledby="membership-title">
-      <div className="panel-head">
-        <h2 id="membership-title">Membership status</h2>
-      </div>
+    <ChartCard
+      titleId="membership-title"
+      title="Membership status"
+      value={counts ? total : '—'}
+      subtitle="people on the camp list"
+    >
       {counts === null ? (
         <p className="muted">Memberships are not shown for your role.</p>
       ) : total === 0 ? (
@@ -80,6 +83,6 @@ export function MembershipPanel({ counts }: { counts: MembershipStatusCounts | n
           Open People
         </Link>
       )}
-    </section>
+    </ChartCard>
   );
 }

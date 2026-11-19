@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { CheckInsByDay } from '@buxa/shared/camp/campHomeTypes';
 import { periodChange } from '@buxa/shared/kanban/homeCards';
 import { Pill, Segmented } from '@/components/elements';
+import { ChartCard } from '@/components/components/charts/ChartCard';
 import {
   CHECK_IN_RANGES,
   type CheckInRange,
@@ -45,27 +46,32 @@ export function CheckInsPanel({ series }: { series: CheckInsByDay | null }) {
   const band = [`0,100`, ...days.map((day, i) => `${i + 0.5},${100 - (day.count / peak) * 100}`), `${n},100`].join(' ');
 
   return (
-    <section className="panel chart-card home-chart" aria-labelledby="check-ins-title">
-      <div className="panel-head home-chart-head">
-        <h2 id="check-ins-title">Check-ins per day</h2>
+    <ChartCard
+      titleId="check-ins-title"
+      title="Check-ins per day"
+      action={
         <Segmented<string>
           label="Date range"
           value={String(range)}
           onChange={value => setRange(Number(value) as CheckInRange)}
           options={CHECK_IN_RANGES.map(n => ({ value: String(n), label: `${n} days` }))}
         />
-      </div>
-      <div className="home-chart-meta">
-        <p className="muted small">
-          {total} {total === 1 ? 'person' : 'people'} checked in from {shortDate(first.date)} to {shortDate(last.date)}.
-          {busiest ? ` Busiest day: ${shortDate(busiest.date)}, ${busiest.count}.` : ''}
-        </p>
-        {change && (
+      }
+      value={total}
+      badge={
+        change && (
           <Pill tone={change.tone} dot={false}>
             {change.text}
           </Pill>
-        )}
-      </div>
+        )
+      }
+      subtitle={
+        <>
+          {total} {total === 1 ? 'person' : 'people'} checked in from {shortDate(first.date)} to {shortDate(last.date)}.
+          {busiest ? ` Busiest day: ${shortDate(busiest.date)}, ${busiest.count}.` : ''}
+        </>
+      }
+    >
       {!series.complete && (
         <p className="home-note small">
           This camp has more visits in the last {series.days.length} days than the page can count, so the older days may
@@ -179,6 +185,6 @@ export function CheckInsPanel({ series }: { series: CheckInsByDay | null }) {
           </details>
         </>
       )}
-    </section>
+    </ChartCard>
   );
 }
