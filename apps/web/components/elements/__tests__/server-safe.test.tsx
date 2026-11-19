@@ -33,11 +33,9 @@ describe('server-safe components', () => {
   it('Pill keeps its dot and classes', () => {
     const { Pill } = ui;
     expect(renderToStaticMarkup(<Pill tone="ok">Done</Pill>)).toMatch(
-      /^<span class="pill pill-ok [^"]*"><i class="pill-dot [^"]*" aria-hidden="true"><\/i>Done<\/span>$/,
+      /^<span class="pill tone-ok"><i class="pill-dot" aria-hidden="true"><\/i>Done<\/span>$/,
     );
-    expect(renderToStaticMarkup(<Pill dot={false}>x</Pill>)).toMatch(
-      /^<span class="pill pill-neutral [^"]*">x<\/span>$/,
-    );
+    expect(renderToStaticMarkup(<Pill dot={false}>x</Pill>)).toMatch(/^<span class="pill tone-neutral">x<\/span>$/);
   });
   it('Avatar renders person, agent and unassigned', () => {
     const { Avatar } = ui;
