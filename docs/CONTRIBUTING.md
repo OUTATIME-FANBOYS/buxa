@@ -55,6 +55,8 @@ Vitest is the unit test runner for the whole repo, including `apps/web`, `packag
 - A new migration takes the next number after the highest one on `Phase2` (`ls packages/db/migrations`). Rebase onto the latest `Phase2` before you number it, and renumber if someone else took your number first.
 - Never rename or edit a migration that has run anywhere. Databases record migrations by filename, so a rename makes them run it again. Write a new migration instead.
 - `packages/db/test/migration-numbering.test.ts` fails the build on a duplicate or a gap in the numbers.
+- Expand, then contract. The old release keeps running while a migration runs, so a migration must not drop a function, column, table, policy or trigger that the running release still calls. Add the new object first, move the code, and drop the old one in a later release.
+- `packages/db/test/migration-drops.test.ts` fails the build on a new drop. If a drop is truly safe, say which release stopped using the object: `-- drop-approved: <release>`.
 
 ## Release
 

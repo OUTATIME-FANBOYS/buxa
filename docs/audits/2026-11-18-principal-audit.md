@@ -224,10 +224,12 @@ Ranked by impact. Nothing was changed, and the live database and Supabase settin
 5. **Medium: migrations break the previous version during deploy.** `0018:55` drops `buxa_set_user_name(uuid, text)`, and `0020:5` drops `orgs.clock_format`. Both run before the new code serves (`scripts/vercel-build.ts:15-27`).
    - Suggested: expand first, contract a release later.
    - Risk: failed saves and sign-ins during each deploy.
+   - Status (fix round 3): a guard test now fails on any new drop without a release note (`packages/db/test/migration-drops.test.ts`), and CONTRIBUTING.md states the expand-then-contract rule. The drops in 0018 and 0020 already shipped in `v0.2.3-release`, so they stay as they are.
 6. **Medium-low: silent data loss.** `0018:9-12` truncates names to 60 characters with no count. `0020` drops the camp clock without copying a 12-hour setting to `users.clock_format`.
    - Suggested: copy before dropping, and assert zero truncations.
 7. **Duplicate live functions.** `0013:22` `buxa_archived_camps_of` and `0014:6` `buxa_archived_memberships_of` run the same query.
    - Suggested: keep one.
+   - Status (fix round 3): deferred, not changed. The two functions return different columns (`camp_role` vs `member_role` and `org_slug`), and both are called by the released build (`PgOrgRepository.ts` and `PgUserRepository.ts`). Merge them only after the release that stops calling the old one, using expand-then-contract.
 8. **Lower.** `0010:50-51` revokes `rate_limit_hit` only from `PUBLIC`, while 0009, 0013 and 0014 also revoke from `anon` and `authenticated`. `narrow-privileges.test.ts:40-47` checks 3 of the 12 live definer functions.
    - Suggested: add a catalogue test for every `prosecdef` function. Also pin `search_path` to `''` with qualified names, and pin `current_org()`.
 
