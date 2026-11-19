@@ -27,7 +27,7 @@ check "only apps/web/styles changed" "install typecheck lint unit build" apps/we
 check "only packages/db/migrations" "install database" packages/db/migrations/0012_example.sql
 check "only packages/db/test" "install typecheck lint database" packages/db/test/people-schema.test.ts
 check "package.json changed" "install typecheck lint unit database build workflow" package.json
-check "docs only" "install unit" docs/auth.md README.md
+check "docs only" "install lint unit" docs/auth.md README.md
 check "server code changed" "install typecheck lint unit database build" apps/server/src/config.ts
 check "web integration test" "install typecheck lint database" apps/web/__tests__/integration/example.test.ts
 check "unknown root file" "install typecheck lint unit database build workflow" docker-compose.yml
