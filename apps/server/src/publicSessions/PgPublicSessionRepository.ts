@@ -5,7 +5,7 @@ import type { PublicClass, PublicSessionRecord, PublicSessionRepository } from '
 
 /**
  * Postgres adapter for the public session pages. There is no signed-in user, so both reads go through the definer functions in
- * migration 0024, which return only what a visitor may see. They run with no camp context.
+ * migration 0029, which return only what a visitor may see. They run with no camp context.
  */
 export class PgPublicSessionRepository implements PublicSessionRepository {
   constructor(private readonly pool: Pool) {}
