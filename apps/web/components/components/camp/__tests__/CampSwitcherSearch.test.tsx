@@ -11,7 +11,7 @@ vi.mock('@/actions/camp', () => ({ selectCampAction: h.select }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-const RECENT_KEY = 'buxa.recentCamp';
+const RECENT_KEY = 'buxa.recentCamps';
 const camp = (orgId: string, name: string) => ({ orgId, name, role: 'owner', slug: orgId }) as unknown as Membership;
 const BIRCH = camp('o-birch', 'Camp Birchwood');
 const ALDER = camp('o-alder', 'Camp Alder');
@@ -100,6 +100,15 @@ describe('CampSwitcher search and recent camp', () => {
     expect(camps_()).toEqual(['Camp Cedar', 'Camp Alder', 'Camp Birchwood']);
   });
 
+  it('lists at most 8 recent camps when nothing is searched, and a search still finds the rest', () => {
+    const many = Array.from({ length: 10 }, (_, i) => camp(`o-${i}`, `Camp ${String(i).padStart(2, '0')}`));
+    act(() => root.render(<CampSwitcher camps={many} current={many[0]} />));
+    open();
+    expect(camps_()).toHaveLength(8);
+    type('Camp 09');
+    expect(camps_()).toEqual(['Camp 09']);
+  });
+
   it('remembers a camp the person opens, so it leads the menu next time', async () => {
     act(() => root.render(<CampSwitcher camps={camps} current={BIRCH} />));
     open();
@@ -110,7 +119,7 @@ describe('CampSwitcher search and recent camp', () => {
       cedar?.click();
     });
     expect(h.select).toHaveBeenCalledWith('o-cedar');
-    expect(store.getItem(RECENT_KEY)).toBe('o-cedar');
+    expect(store.getItem(RECENT_KEY)).toBe(JSON.stringify(['o-cedar']));
   });
 
   it('keeps the menu working when storage is blocked', async () => {

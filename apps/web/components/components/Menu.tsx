@@ -219,7 +219,7 @@ export function Menu({
                   autoFocus
                   autoComplete="off"
                   onChange={e => search.onChange(e.target.value)}
-                  className="buxa:box-border buxa:w-full buxa:h-[32px] buxa:px-[var(--s3)] buxa:rounded-[var(--r-1)] buxa:border buxa:border-[var(--line)] buxa:bg-transparent buxa:text-[var(--text)] buxa:[font:inherit] buxa:placeholder:text-[var(--muted)] buxa:focus-visible:outline-none buxa:focus-visible:border-[var(--accent)]"
+                  className="buxa:box-border buxa:w-full buxa:h-[28px] buxa:px-[var(--s3)] buxa:rounded-[var(--r-1)] buxa:border buxa:border-[var(--line)] buxa:bg-transparent buxa:text-[var(--text)] buxa:[font:inherit] buxa:placeholder:text-[var(--muted)] buxa:focus-visible:outline-none buxa:focus-visible:border-[var(--accent)]"
                 />
               </div>
             )}

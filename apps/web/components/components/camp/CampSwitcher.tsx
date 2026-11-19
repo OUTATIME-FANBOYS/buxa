@@ -9,19 +9,28 @@ import { ROUTES } from '@/config/routes';
 import { selectCampAction, type ArchivedCamp } from '@/actions/camp';
 
 /** The camp the person last opened, by its org id. It is listed first in the menu. */
-const RECENT_KEY = 'buxa.recentCamp';
+const RECENT_KEY = 'buxa.recentCamps';
+/** How many recently opened camps the menu lists when nothing is searched. */
+const RECENT_LIMIT = 8;
 
-function readRecent(): string | null {
+/** The camp ids last opened, most recent first. A single id from the older key is read as a list of one. */
+function readRecent(): string[] {
   try {
-    return localStorage.getItem(RECENT_KEY);
+    const raw = localStorage.getItem(RECENT_KEY);
+    if (!raw) return [];
+    const parsed: unknown = raw.startsWith('[') ? JSON.parse(raw) : [raw];
+    return Array.isArray(parsed)
+      ? parsed.filter((id): id is string => typeof id === 'string').slice(0, RECENT_LIMIT)
+      : [];
   } catch {
-    return null;
+    return [];
   }
 }
 
-function writeRecent(orgId: string) {
+function writeRecent(orgId: string, previous: readonly string[]) {
   try {
-    localStorage.setItem(RECENT_KEY, orgId);
+    const next = [orgId, ...previous.filter(id => id !== orgId)].slice(0, RECENT_LIMIT);
+    localStorage.setItem(RECENT_KEY, JSON.stringify(next));
   } catch {
     // Storage can be blocked; the menu simply does not remember this camp.
   }
@@ -45,23 +54,29 @@ export function CampSwitcher({
 }) {
   const router = useRouter();
   const name = current?.name ?? 'No camp yet';
-  const [recent, setRecent] = useState<string | null>(null);
+  const [recent, setRecent] = useState<string[]>([]);
   const [query, setQuery] = useState('');
   useEffect(() => setRecent(readRecent()), []);
 
   const select = async (orgId: string) => {
-    writeRecent(orgId);
-    setRecent(orgId);
+    writeRecent(orgId, recent);
+    setRecent([orgId, ...recent.filter(id => id !== orgId)].slice(0, RECENT_LIMIT));
     await selectCampAction(orgId);
     router.push(ROUTES.camp);
     router.refresh();
   };
 
-  const sorted = [...camps].sort(byName);
-  const first = sorted.find(c => c.orgId === recent);
-  const ordered = first ? [first, ...sorted.filter(c => c !== first)] : sorted;
+  // Recent camps first (most recent first), then the rest by name. Without a search the list holds only the recent camps;
+  // a search covers every camp, so a camp outside the recent list can still be found.
+  const byRecent = (a: Membership, b: Membership) => {
+    const ia = recent.indexOf(a.orgId);
+    const ib = recent.indexOf(b.orgId);
+    if (ia !== -1 || ib !== -1) return (ia === -1 ? Infinity : ia) - (ib === -1 ? Infinity : ib);
+    return byName(a, b);
+  };
+  const ordered = [...camps].sort(byRecent);
   const needle = query.trim().toLowerCase();
-  const shown = needle ? ordered.filter(c => c.name.toLowerCase().includes(needle)) : ordered;
+  const shown = needle ? ordered.filter(c => c.name.toLowerCase().includes(needle)) : ordered.slice(0, RECENT_LIMIT);
 
   return (
     <Menu
@@ -80,6 +95,7 @@ export function CampSwitcher({
       items={[
         ...shown.map(c => ({
           label: c.name,
+          icon: 'camp',
           checked: c.orgId === current?.orgId,
           onSelect: () => {
             void select(c.orgId);
