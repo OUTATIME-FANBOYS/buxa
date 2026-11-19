@@ -9,13 +9,13 @@ import { DatePicker, Select } from '@/components/atoms';
 import { firstNameOf } from '@buxa/shared/names';
 import { statusMark, type StatusMark } from './statusMark';
 
-// The status field takes its status's token for the border and the text (the --st-* tokens in tokens.css).
-const STATUS_FIELD: Record<StatusMark['token'], string> = {
-  backlog: 'buxa:[&_select]:border-[var(--st-backlog)]! buxa:[&_select]:text-[var(--st-backlog)]!',
-  todo: 'buxa:[&_select]:border-[var(--st-todo)]! buxa:[&_select]:text-[var(--st-todo)]!',
-  progress: 'buxa:[&_select]:border-[var(--st-progress)]! buxa:[&_select]:text-[var(--st-progress)]!',
-  review: 'buxa:[&_select]:border-[var(--st-review)]! buxa:[&_select]:text-[var(--st-review)]!',
-  done: 'buxa:[&_select]:border-[var(--st-done)]! buxa:[&_select]:text-[var(--st-done)]!',
+// The status field takes its status's colour for the border and its ink for the text (the --status-* tokens in tokens.css).
+const STATUS_FIELD: Record<StatusMark['colour'], string> = {
+  pink: 'buxa:[&_select]:border-[var(--status-pink)]! buxa:[&_select]:text-[var(--status-pink-ink)]!',
+  blue: 'buxa:[&_select]:border-[var(--status-blue)]! buxa:[&_select]:text-[var(--status-blue-ink)]!',
+  orange: 'buxa:[&_select]:border-[var(--status-orange)]! buxa:[&_select]:text-[var(--status-orange-ink)]!',
+  purple: 'buxa:[&_select]:border-[var(--status-purple)]! buxa:[&_select]:text-[var(--status-purple-ink)]!',
+  green: 'buxa:[&_select]:border-[var(--status-green)]! buxa:[&_select]:text-[var(--status-green-ink)]!',
 };
 
 // The priority field takes its chosen priority's token for the border and the text (the same tokens as PriorityMark).
@@ -40,7 +40,7 @@ export function TaskProperties({ task, project, d }: { task: Task | null; projec
       <div className="buxa:grid buxa:grid-cols-[repeat(3,minmax(0,1fr))] buxa:gap-[var(--s4)]">
         <Select
           label="Status"
-          className={currentMark ? STATUS_FIELD[currentMark.token] : undefined}
+          className={currentMark ? STATUS_FIELD[currentMark.colour] : undefined}
           value={task?.columnId ?? d.columnId}
           onChange={value => {
             if (value === null) {
