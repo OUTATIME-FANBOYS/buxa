@@ -20,15 +20,9 @@ export interface MenuItem {
   disabled?: boolean;
   checked?: boolean;
   submenu?: MenuItem[];
-  /** Outlines the row in a status token (ok: green), for an item that should stand out, such as "New camp". */
-  tone?: 'ok';
 }
 
 const isItem = (x: MenuItem | false | null): x is MenuItem => !!x;
-
-const TONE: Record<NonNullable<MenuItem['tone']>, string> = {
-  ok: 'buxa:border! buxa:border-solid! buxa:border-[var(--ok)]!',
-};
 
 // A menu row. Rows are buttons (or links) that carry the shared button styles, so every override they need is forced (!).
 const ROW =
@@ -70,7 +64,7 @@ function SubMenu({ item, onChosen }: { item: MenuItem & { submenu: MenuItem[] };
         className={`menu-sub-trigger ${ROW}`}
         onClick={() => setOpen(o => !o)}
       >
-        {item.icon ? <Icon name={item.icon} size={15} /> : <span style={{ width: 15 }} />}
+        {item.icon && <Icon name={item.icon} size={15} />}
         <span>{item.label}</span>
         <Icon
           name="right"
@@ -260,7 +254,7 @@ export function Menu({
               }
               const content = (
                 <>
-                  {it.icon ? <Icon name={it.icon} size={15} /> : <span style={{ width: 15 }} />}
+                  {it.icon && <Icon name={it.icon} size={15} />}
                   <span>{it.label}</span>
                   {it.checked && <Icon name="check" size={14} className={`menu-check ${CHECK}`} />}
                 </>
@@ -271,7 +265,7 @@ export function Menu({
                     key={i}
                     role="menuitem"
                     href={it.href}
-                    className={`${it.danger ? 'danger' : ''} ${it.tone ? TONE[it.tone] : ''} ${ROW}`}
+                    className={`${it.danger ? 'danger' : ''} ${ROW}`}
                     onClick={() => {
                       close();
                       it.onSelect?.();
@@ -289,7 +283,7 @@ export function Menu({
                   role="menuitem"
                   type="button"
                   disabled={it.disabled}
-                  className={`${it.danger ? 'danger buxa:text-[var(--crit)]!' : ''} ${it.tone ? TONE[it.tone] : ''} ${ROW}`}
+                  className={`${it.danger ? 'danger buxa:text-[var(--crit)]!' : ''} ${ROW}`}
                   onClick={() => {
                     close();
                     btn.current?.focus();

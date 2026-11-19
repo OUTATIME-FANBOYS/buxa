@@ -87,7 +87,7 @@ export function CampSwitcher({
         })),
         ...(needle && shown.length === 0 ? [{ label: 'No matching camps', disabled: true, onSelect() {} }] : []),
         ...(camps.length ? [{ label: '', divider: true, onSelect() {} }] : []),
-        { label: 'New camp…', icon: 'plus', tone: 'ok', onSelect: () => router.push(ROUTES.newCamp) },
+        { label: 'New camp…', icon: 'plus', onSelect: () => router.push(ROUTES.newCamp) },
         ...(archivedCamps.length
           ? [
               { label: '', divider: true, onSelect() {} },
