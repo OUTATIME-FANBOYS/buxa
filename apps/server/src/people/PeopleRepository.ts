@@ -69,7 +69,7 @@ export class PersonNotFoundError extends Error {
   }
 }
 export const isPersonNotFound = (e: unknown): e is PersonNotFoundError =>
-  e instanceof Error && (e as { kind?: unknown }).kind === 'person-not-found';
+  e instanceof Error && 'kind' in e && e.kind === 'person-not-found';
 
 export class HouseholdNotFoundError extends Error {
   readonly kind = 'household-not-found';
@@ -79,7 +79,7 @@ export class HouseholdNotFoundError extends Error {
   }
 }
 export const isHouseholdNotFound = (e: unknown): e is HouseholdNotFoundError =>
-  e instanceof Error && (e as { kind?: unknown }).kind === 'household-not-found';
+  e instanceof Error && 'kind' in e && e.kind === 'household-not-found';
 
 /**
  * Storage for people and households. Callers decide whether something may happen (permissions, rules in @buxa/domain); implementations

@@ -22,7 +22,7 @@ export class MembershipNotFoundError extends Error {
   }
 }
 export const isMembershipNotFound = (e: unknown): e is MembershipNotFoundError =>
-  e instanceof Error && (e as { kind?: unknown }).kind === 'membership-not-found';
+  e instanceof Error && 'kind' in e && e.kind === 'membership-not-found';
 
 /** Storage for memberships (a person's right to attend for a date range). Status is computed by the caller, never stored. */
 export interface MembershipRepository {

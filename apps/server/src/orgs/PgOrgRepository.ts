@@ -146,7 +146,7 @@ export class PgOrgRepository implements OrgRepository {
 
 /** Maps the errors the 0013 functions raise to the ones the service and the client understand. Anything else is rethrown. */
 function mapCampFunctionError(error: unknown): unknown {
-  const code = (error as { code?: unknown } | null)?.code;
+  const code = typeof error === 'object' && error !== null && 'code' in error ? error.code : undefined;
   const message = errorMessage(error);
   switch (code) {
     case '42501':

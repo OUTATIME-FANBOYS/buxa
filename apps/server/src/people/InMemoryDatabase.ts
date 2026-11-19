@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { CheckInMethod } from '@buxa/contracts';
 import type { Actor, AuditAction, CampRole, LocalDate } from '@buxa/domain';
+import type { AuditData } from '../audit/types';
 
 /** One audit row, as the in-memory adapters record it (the same fields as an audit_log row). */
 export interface AuditRecord {
@@ -9,7 +10,7 @@ export interface AuditRecord {
   action: AuditAction;
   entity: string;
   entityId: string;
-  data: Record<string, unknown>;
+  data: AuditData;
 }
 
 export interface StoredPerson {
@@ -96,7 +97,7 @@ export class InMemoryDatabase {
     action: AuditAction,
     entity: string,
     entityId: string,
-    data: Record<string, unknown> = {},
+    data: AuditData = {},
   ): void {
     this.audit.push({ orgId: actor.orgId, actorId: actor.userId, action, entity, entityId, data });
   }

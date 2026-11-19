@@ -3,6 +3,7 @@ import type { Actor, ActiveEnrolmentFacts, AuditAction, LocalDate } from '@buxa/
 import type { Class, Enrolment, EnrolmentStatus, NewClassInput, Session } from '@buxa/contracts';
 import { systemClock, type Clock } from '../services/clock';
 import type { AuditRecord } from '../people/InMemoryDatabase';
+import type { AuditData } from '../audit/types';
 import type {
   ClassRepository,
   EnrolRequest,
@@ -254,13 +255,7 @@ export class InMemoryClassRepository implements ClassRepository {
     return run;
   }
 
-  private record(
-    actor: Actor,
-    action: AuditAction,
-    entity: string,
-    entityId: string,
-    data: Record<string, unknown>,
-  ): void {
+  private record(actor: Actor, action: AuditAction, entity: string, entityId: string, data: AuditData): void {
     this.audit.push({ orgId: actor.orgId, actorId: actor.userId, action, entity, entityId, data });
   }
 

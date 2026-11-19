@@ -34,4 +34,4 @@ export class BadgeConflictError extends Error {
 
 /** True for a BadgeConflictError from any copy of this module (see isHttpError for why not `instanceof`). */
 export const isBadgeConflict = (error: unknown): error is BadgeConflictError =>
-  error instanceof Error && (error as { kind?: unknown }).kind === 'badge-conflict';
+  error instanceof Error && 'kind' in error && error.kind === 'badge-conflict';
