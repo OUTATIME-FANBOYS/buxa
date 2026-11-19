@@ -1,9 +1,7 @@
 'use client';
 
-import { Button as HeroButton } from '@heroui/react/button';
-import { buttonVariants } from '@heroui/styles';
 import Link from 'next/link';
-import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ComponentProps, ReactNode, Ref } from 'react';
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, MouseEvent, ReactNode, Ref } from 'react';
 import { Icon } from '../Icon';
 
 /*
@@ -37,26 +35,23 @@ export type ButtonSize = 'sm' | 'md' | 'header';
 const ICON_SIZE: Record<ButtonSize, number> = { sm: 14, md: 16, header: 16 };
 
 /** Buxa size to the HeroUI size class. The heights themselves are in styles/components/button.css. */
-const HEROUI_SIZE = { sm: 'sm', md: 'md', header: 'md' } as const;
-
-/** The Buxa-only classes for a size and icon form (the HeroUI classes come from buttonVariants). */
-function buxaClasses(size: ButtonSize): string[] {
-  return [size === 'header' && 'buxa-button--header'].filter((c): c is string => typeof c === 'string');
-}
-
-/**
- * The class string for a button, for markup that cannot be a Button: a <summary> that toggles a disclosure.
- * Prefer <Button>; this exists only where the element itself is fixed by the markup.
- */
+/** The class string for a button, from the button styles in styles/components/button.css. */
 export function buttonClassName({
   variant = 'secondary',
   size = 'md',
   fullWidth = false,
   iconOnly = false,
 }: { variant?: ButtonVariant; size?: ButtonSize; fullWidth?: boolean; iconOnly?: boolean } = {}): string {
-  const heroui = buttonVariants({ variant, size: HEROUI_SIZE[size], isIconOnly: iconOnly, fullWidth });
-
-  return [heroui, ...buxaClasses(size)].join(' ');
+  return [
+    'button',
+    `button--${variant}`,
+    size === 'sm' && 'button--sm',
+    iconOnly && 'button--icon-only',
+    fullWidth && 'button--full-width',
+    size === 'header' && 'buxa-button--header',
+  ]
+    .filter(Boolean)
+    .join(' ');
 }
 
 type NativeButtonProps = Omit<
@@ -73,8 +68,8 @@ interface CommonButtonProps extends NativeButtonProps {
   className?: string;
   /** Runs on press. It takes no event: use a closure for anything the handler needs. */
   onClick?: () => void;
-  /** Runs on press with HeroUI's press event, for a handler that must stop propagation (a menu trigger inside a card). */
-  onPress?: NonNullable<ComponentProps<typeof HeroButton>['onPress']>;
+  /** Runs on press with the click event, for a handler that must stop propagation (a menu trigger inside a card). */
+  onPress?: (event: MouseEvent<HTMLButtonElement>) => void;
   /** Disables the button and its hover and press states, as the native attribute does. */
   disabled?: boolean;
   /** Defaults to "submit", as a native button does, so a button in a form submits it. */
@@ -134,11 +129,8 @@ export function Button({
   'aria-selected': ariaSelected,
   ...rest
 }: ButtonProps) {
-  // HeroUI's button keeps only its own attributes, so a widget role (menuitem, radio, tab) is set through its render prop.
   const widgetAttrs = { role, 'aria-checked': ariaChecked, 'aria-selected': ariaSelected };
-  const hasWidgetAttrs = role !== undefined || ariaChecked !== undefined || ariaSelected !== undefined;
   const extra = className ? [className] : [];
-  const press = onPress ?? (onClick ? () => onClick() : undefined);
   const content = (
     <>
       {icon !== undefined && <Icon name={icon} size={ICON_SIZE[size]} />}
@@ -170,23 +162,19 @@ export function Button({
     );
   }
 
-  const classes = [...buxaClasses(size), ...extra].join(' ');
+  const classes = [buttonClassName({ variant, size, fullWidth, iconOnly }), ...extra].join(' ');
 
   return (
-    <HeroButton
-      {...(rest as ComponentProps<typeof HeroButton>)}
-      render={hasWidgetAttrs ? (props: object) => <button {...props} {...widgetAttrs} /> : undefined}
+    <button
+      {...(rest as ButtonHTMLAttributes<HTMLButtonElement>)}
+      {...widgetAttrs}
       ref={ref as Ref<HTMLButtonElement>}
       type={type ?? 'submit'}
-      variant={variant}
-      size={HEROUI_SIZE[size]}
-      isIconOnly={iconOnly}
-      fullWidth={fullWidth}
-      isDisabled={disabled}
+      disabled={disabled}
       className={classes}
-      onPress={press}
+      onClick={event => (onPress ? onPress(event) : onClick?.())}
     >
       {content}
-    </HeroButton>
+    </button>
   );
 }
