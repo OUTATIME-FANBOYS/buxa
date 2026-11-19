@@ -1,6 +1,7 @@
 export * from './Button';
 export * from './Checkbox';
 export * from './DatePicker';
+export * from './DateTimeField';
 export * from './FileField';
 export * from './HiddenField';
 export * from './Icon';

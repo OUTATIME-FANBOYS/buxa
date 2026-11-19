@@ -4,47 +4,50 @@ import { ROUTES } from '@/config/routes';
 import { Empty, PageHeader } from '@/components/components';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_READ } from '@buxa/shared';
-import { loadClasses } from '@buxa/server/composers/index.server';
-import { ClassesTable } from '@/components/components/classes';
-import { NewClassButton } from '@/components/components/classes/forms';
+import { loadSessions } from '@buxa/server/composers/index.server';
+import { SessionsTable } from '@/components/components/classes';
+import { NewSessionButton } from '@/components/components/classes/forms';
 import { Button } from '@/components/elements';
 
-/** The camp's classes. Anyone who can read classes sees them; only staff with classes:manage see the create and import buttons. */
+/**
+ * The camp's sessions: each one a date range that holds classes. Anyone who can read classes sees them; only staff with
+ * classes:manage see the create and import buttons.
+ */
 export async function ClassList() {
   const actor = await currentActor();
   if (!actor) {
     notFound();
   }
   const canManage = can(actor, 'classes:manage');
-  const loaded = await loadClasses(actor);
+  const loaded = await loadSessions(actor);
 
   const actions = canManage ? (
     <>
       <Button className="classes-target" icon="import" href={ROUTES.classImport}>
         Import classes
       </Button>
-      <NewClassButton />
+      <NewSessionButton />
     </>
   ) : undefined;
 
   return (
     <div className="page">
       <PageHeader
-        title="Classes"
-        subtitle="The programs the camp runs, and the sessions they are scheduled in."
+        title="Sessions"
+        subtitle="The sessions the camp runs. Each session has a date range and holds its classes."
         actions={actions}
       />
       {!loaded.ok ? (
-        <Empty icon="alert" title="You cannot see classes" body={FORBIDDEN_READ} />
+        <Empty icon="alert" title="You cannot see sessions" body={FORBIDDEN_READ} />
       ) : loaded.value.length === 0 ? (
         <Empty
           icon="calendar"
-          title="No classes yet"
-          body={canManage ? 'Create the first class, then add its sessions.' : 'Nobody has created a class yet.'}
-          action={canManage && <NewClassButton />}
+          title="No sessions yet"
+          body={canManage ? 'Create the first session, then add its classes.' : 'Nobody has created a session yet.'}
+          action={canManage && <NewSessionButton />}
         />
       ) : (
-        <ClassesTable classes={loaded.value} />
+        <SessionsTable sessions={loaded.value} />
       )}
     </div>
   );

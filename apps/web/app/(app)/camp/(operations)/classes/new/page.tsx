@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { NewClass } from '@/components/views/classes';
+import { NewSession } from '@/components/views/classes';
 
-export const metadata: Metadata = { title: 'New class' };
+export const metadata: Metadata = { title: 'New session' };
 
 export default function Page() {
-  return <NewClass />;
+  return <NewSession />;
 }

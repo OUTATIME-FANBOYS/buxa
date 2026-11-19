@@ -125,3 +125,18 @@ form.class-form {
     font-size: 16px;
   }
 }
+
+/* The class and session dialogs: their labels and hint text sit one step up the type scale (--fs-s to --fs-b). */
+.class-dialog .field-label,
+.class-dialog .field-hint,
+.class-dialog .class-helper,
+.class-dialog .field-error {
+  font-size: var(--fs-b);
+}
+
+/* The row of actions in the classes table: Enrolments, Edit and Delete wrap on a narrow screen. */
+.classes-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}

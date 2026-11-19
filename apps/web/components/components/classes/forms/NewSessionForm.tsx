@@ -1,39 +1,25 @@
 'use client';
 
 import { useActionState, useEffect, useRef } from 'react';
-import { Button } from '@/components/elements';
-import { Checkbox, HiddenField, TextField } from '@/components/atoms';
-import { classPath } from '@/config/routes';
+import { Field, Button } from '@/components/elements';
+import { DatePicker, TextField } from '@/components/atoms';
+import { ROUTES } from '@/config/routes';
 import { fieldError, idle } from '@buxa/shared';
-import { addSessionAction } from '@/actions/classes';
+import { createSessionAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
 
-interface InstructorChoice {
-  id: string;
-  name: string;
-}
-
 /**
- * One session of a class. Times are typed in the camp's clock (the zone is shown above the fields). Instructors are chosen from the
- * people who have the instructor role; the class's ratio is shown, because it is stored on the class.
+ * A new session: its name, description and first and last day (calendar dates; the session holds the classes that run in it).
+ * `variant` says where it renders: on its own page (a panel, with a Cancel link back to the list) or in the Sessions page's dialog
+ * (no panel, with a Cancel button that closes the dialog through `onCancel`). The fields, validation and action are the same.
  */
 export function NewSessionForm({
-  classId,
-  className,
-  defaultCapacity,
-  timeZone,
-  ratio,
-  instructors,
-}: {
-  classId: string;
-  className: string;
-  defaultCapacity: number;
-  timeZone: string;
-  ratio: { instructors: number; campers: number } | null;
-  instructors: readonly InstructorChoice[];
-}) {
-  const [state, formAction, pending] = useActionState(addSessionAction, idle);
+  variant = 'page',
+  onCancel,
+}: { variant?: 'page' | 'dialog'; onCancel?: () => void } = {}) {
+  const [state, formAction, pending] = useActionState(createSessionAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
+  const inDialog = variant === 'dialog';
 
   useEffect(() => {
     if (state.status === 'error' && state.fieldErrors) {
@@ -44,66 +30,49 @@ export function NewSessionForm({
   const err = (name: string) => fieldError(state, name);
 
   return (
-    <form ref={formRef} action={formAction} className="panel stack classes-form" aria-describedby="session-form-help">
-      <HiddenField name="classId" value={classId} />
-      <p id="session-form-help" className="muted">
-        Times are in the camp&apos;s time zone ({timeZone}), written as 2027-07-05T09:00. Fields marked with an asterisk
-        are required.
+    <form
+      ref={formRef}
+      action={formAction}
+      className={`${inDialog ? '' : 'panel '}class-form session-form`}
+      aria-describedby="session-form-help"
+    >
+      <p id="session-form-help" className="class-helper">
+        Fields marked with an asterisk are required. A session is a date range; its classes are added after it is saved.
       </p>
-      <p className="muted">
-        Class: <strong>{className}</strong>. Instructor ratio:{' '}
-        {ratio ? `${ratio.instructors} instructor for ${ratio.campers} campers` : 'not set on this class'}.
-      </p>
-      <div className="form-row buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-end buxa:[&>.field]:flex-[1_1_180px] buxa:[&>.field]:min-w-0 buxa:[&>.button]:flex-none buxa:[&>a.button]:flex-none">
-        <TextField
-          label="Starts *"
-          name="startsAt"
-          placeholder="2027-07-05T09:00"
-          error={err('startsAt')}
-          autoComplete="off"
-          autoFocus
-        />
-        <TextField
-          label="Ends *"
-          name="endsAt"
-          placeholder="2027-07-05T12:00"
-          error={err('endsAt')}
-          autoComplete="off"
-        />
-      </div>
-      <TextField label="Location *" name="location" error={err('location')} maxLength={200} autoComplete="off" />
       <TextField
-        label="Places"
-        name="capacity"
-        inputMode="numeric"
-        placeholder={String(defaultCapacity)}
-        error={err('capacity')}
-        hint={`Leave empty to use the class default (${defaultCapacity}).`}
+        label="Session name *"
+        name="name"
+        error={err('name')}
+        maxLength={120}
         autoComplete="off"
+        autoFocus={!inDialog}
       />
-      <fieldset className="plain buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
-        <legend className="field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]">
-          Instructors
-        </legend>
-        {instructors.length === 0 ? (
-          <p className="muted">No one has the instructor role yet. Add them under People, then come back.</p>
-        ) : (
-          <div className="people-checks">
-            {instructors.map(i => (
-              <Checkbox key={i.id} className="people-check" name="instructorIds" value={i.id}>
-                {i.name}
-              </Checkbox>
-            ))}
-          </div>
-        )}
-      </fieldset>
+      <Field label="Description" error={err('description')} hint="What the session is. Shown to staff.">
+        <textarea name="description" rows={3} maxLength={2000} aria-invalid={err('description') ? true : undefined} />
+      </Field>
+      <div className="form-row buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-end buxa:[&>.field]:flex-[1_1_180px] buxa:[&>.field]:min-w-0">
+        <DatePicker label="First day" name="startsOn" error={err('startsOn')} isRequired />
+        <DatePicker label="Last day" name="endsOn" error={err('endsOn')} isRequired />
+      </div>
       <ActionMessage state={state} />
       <div className="classes-actions">
-        <Button variant="primary" type="submit" className="classes-target" disabled={pending}>
-          {pending ? 'Saving...' : 'Add session'}
-        </Button>
-        <Button variant="ghost" className="classes-target" href={classPath(classId)}>
-          Back to the class
+        {inDialog ? (
+          <Button type="button" onClick={onCancel}>
+            Cancel
+          </Button>
+        ) : (
+          <Button variant="ghost" className="classes-target" href={ROUTES.classes}>
+            Cancel
+          </Button>
+        )}
+        <Button
+          type="submit"
+          variant="primary"
+          icon="plus"
+          className={inDialog ? undefined : 'classes-target'}
+          disabled={pending}
+        >
+          {pending ? 'Saving...' : 'Create session'}
         </Button>
       </div>
     </form>

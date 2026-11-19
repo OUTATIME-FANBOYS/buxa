@@ -95,11 +95,11 @@ describe('CampFrame', () => {
     const frame = CampFrame({ user, camps: [camp], current: camp, children: 'THE-PAGE' });
     expect(labels(frame.props.nav)).toEqual([
       'Home',
+      'Sessions',
       'Check-in',
       'On site',
       'People',
       'Attendance',
-      'Classes',
       'My tasks',
       'Projects',
       'Boards',
