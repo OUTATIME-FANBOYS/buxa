@@ -7,9 +7,9 @@ import { systemClock } from './services/clock';
 describe('runtime wiring: classes', () => {
   it('the class service reads from the repository it was given, not a placeholder', async () => {
     const repositories = createInMemoryRepositories();
-    const listClasses = vi.spyOn(repositories.classes, 'listClasses');
-    const result = await createServices(repositories, systemClock).classes.listClasses(as('staff'));
-    expect(listClasses).toHaveBeenCalledWith(ORG);
+    const listSessions = vi.spyOn(repositories.classes, 'listSessions');
+    const result = await createServices(repositories, systemClock).classes.listSessions(as('staff'));
+    expect(listSessions).toHaveBeenCalledWith(ORG);
     expect(result).toEqual({ ok: true, value: [] });
   });
 });

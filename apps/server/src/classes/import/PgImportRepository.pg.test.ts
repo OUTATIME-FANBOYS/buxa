@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 import { migrate } from '@buxa/db';
 import type { PlannedWrite } from '@buxa/domain';
-import { auditActions, createClassFixture, makeClass, type ClassFixture } from '../__tests__/pgClassFixture';
+import { auditActions, createClassFixture, makeSession, type ClassFixture } from '../__tests__/pgClassFixture';
 import { importRepositoryContract } from './importRepository.contract';
 import { PgImportRepository } from './PgImportRepository';
 
@@ -16,6 +16,8 @@ const create = (classId: string, over: Partial<PlannedWrite> = {}): PlannedWrite
   kind: 'create',
   sessionId: null,
   classId,
+  name: 'Robotics',
+  ageRange: { minAge: 8, maxAge: 12 },
   startsAt: '2027-07-05T03:00:00.000Z',
   endsAt: '2027-07-05T05:00:00.000Z',
   location: 'Lab 2',
@@ -59,8 +61,8 @@ describe.skipIf(!url)('PgImportRepository', () => {
     it('writes a whole file: every session with its audit entry, and one upload entry, in the same transaction', async () => {
       await setUp();
       try {
-        const robotics = await makeClass(fx.repo, fx.actor, { name: 'Robotics' });
-        const art = await makeClass(fx.repo, fx.actor, { name: 'Art' });
+        const robotics = await makeSession(fx.repo, fx.actor, { name: 'Robotics' });
+        const art = await makeSession(fx.repo, fx.actor, { name: 'Art' });
 
         await repo.applyImport(fx.actor, upload('season.csv', 2), [
           create(robotics.id, { externalKey: 'ROB-1' }),
@@ -82,8 +84,9 @@ describe.skipIf(!url)('PgImportRepository', () => {
         );
 
         const actions = await auditActions(pool, fx.orgA);
-        // Two classes were created by the fixture helper, then the two sessions, then the upload.
-        expect(actions.filter(a => a === 'session.create')).toHaveLength(2);
+        // Two sessions (the date ranges) were created by the fixture helper; the import then wrote two classes (audited as
+        // session.create, the import's own action), and the upload.
+        expect(actions.filter(a => a === 'session.create')).toHaveLength(4);
         expect(actions.filter(a => a === 'import.upload')).toHaveLength(1);
         expect(actions.slice(-3)).toEqual(['session.create', 'session.create', 'import.upload']);
       } finally {
@@ -94,7 +97,7 @@ describe.skipIf(!url)('PgImportRepository', () => {
     it('rolls back the whole import when one row fails: no session and no audit entry from the file', async () => {
       await setUp();
       try {
-        const robotics = await makeClass(fx.repo, fx.actor, { name: 'Robotics' });
+        const robotics = await makeSession(fx.repo, fx.actor, { name: 'Robotics' });
         const before = await auditActions(pool, fx.orgA);
 
         const missingSession = {
@@ -119,12 +122,12 @@ describe.skipIf(!url)('PgImportRepository', () => {
     it("does not show a camp another camp's imported classes and sessions", async () => {
       await setUp();
       try {
-        const robotics = await makeClass(fx.repo, fx.actor, { name: 'Robotics' });
+        const robotics = await makeSession(fx.repo, fx.actor, { name: 'Robotics' });
         await repo.applyImport(fx.actor, upload('season.csv', 1), [create(robotics.id, { externalKey: 'ROB-1' })]);
 
         expect(await repo.listCampSessions(fx.orgA)).toHaveLength(1);
         expect(await repo.listCampSessions(fx.orgB)).toEqual([]);
-        expect(await fx.repo.listClasses(fx.orgB)).toEqual([]);
+        expect(await fx.repo.listSessions(fx.orgB)).toEqual([]);
 
         // Camp B cannot write into camp A's class: the class is invisible to it, so the import refuses the row.
         await expect(

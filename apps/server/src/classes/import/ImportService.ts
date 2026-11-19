@@ -67,12 +67,7 @@ export interface ImportServiceDeps {
 export function createImportService({ classes, imports, timezoneOf }: ImportServiceDeps): ImportService {
   /** The plan for these rows against the camp's current classes and sessions. Reads only. */
   async function planFor(orgId: string, rows: readonly ImportRow[]): Promise<ImportPlan> {
-    const classRefs: ClassRef[] = (await classes.listClasses(orgId)).map(c => ({
-      id: c.id,
-      name: c.name,
-      ageRange: c.ageRange,
-      capacity: c.capacity,
-    }));
+    const classRefs: ClassRef[] = (await classes.listSessions(orgId)).map(s => ({ id: s.id, name: s.name }));
     const sessions = await imports.listCampSessions(orgId);
 
     return planImport({ rows: [...rows], classes: classRefs, sessions, timeZone: await timezoneOf(orgId) });
