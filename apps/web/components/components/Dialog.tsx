@@ -10,8 +10,10 @@ import { Button } from '@/components/elements';
 const SCRIM =
   'buxa:fixed buxa:inset-0 buxa:z-[50] buxa:grid buxa:bg-[var(--scrim)] buxa:[[data-theme=dark]_&]:bg-[var(--scrim-dark)]';
 const DIALOG_SCRIM = 'buxa:place-items-center buxa:p-[var(--s4)]';
+// The drawer's one row is exactly the window's height (minmax(0,1fr), not auto): an auto row grows to the drawer's content, so
+// the drawer would be as tall as its content and the body inside it would never scroll.
 const DRAWER_SCRIM =
-  'buxa:[backdrop-filter:blur(2px)] buxa:[-webkit-backdrop-filter:blur(2px)] buxa:[place-items:stretch_end] buxa:p-0';
+  'buxa:[backdrop-filter:blur(2px)] buxa:[-webkit-backdrop-filter:blur(2px)] buxa:[place-items:stretch_end] buxa:grid-rows-[minmax(0,1fr)] buxa:p-0';
 const FADE_IN = 'buxa:[animation:fade_0.16s_var(--ease)]';
 const FADE_OUT = 'buxa:[animation:fadeOut_0.2s_linear_forwards]';
 const DIALOG =

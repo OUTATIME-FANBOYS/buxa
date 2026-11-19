@@ -85,4 +85,16 @@ describe('Dialog', () => {
     expect(body?.className).toContain('buxa:min-h-0');
     expect(body?.className).toContain('buxa:flex-1');
   });
+
+  it('gives the drawer scrim one row the height of the window, so the drawer is no taller than the window', () => {
+    act(() =>
+      root.render(
+        <Dialog title="Task" drawer onClose={() => undefined}>
+          <p>x</p>
+        </Dialog>,
+      ),
+    );
+    expect(document.querySelector('.scrim-drawer')?.className).toContain('buxa:grid-rows-[minmax(0,1fr)]');
+    expect(document.querySelector('.drawer')?.className).toContain('buxa:h-full');
+  });
 });
