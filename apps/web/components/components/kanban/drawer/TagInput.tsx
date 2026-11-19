@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, TextField } from '@/components/elements';
-import { TAG } from '@/components/elements/tag';
+import { Button, TextField, TAG } from '@/components/elements';
 
 // The chips and the field they sit in. The field inside takes the rest of the row; its own defaults are forced (!).
 const BOX =

@@ -8,9 +8,16 @@ import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { ROUTES } from '@/config/routes';
 import { AgentDialog } from '@/components/components/kanban/dialogs';
 import { ResetDemoButton } from '@/components/components/kanban';
-import { AppearanceCard, DisplayNameCard, EmailCard, TimeFormatCard } from '@/components/components/settings';
+import {
+  AppearanceCard,
+  DisplayNameCard,
+  EmailCard,
+  TimeFormatCard,
+  SETTINGS_GRID,
+  SETTINGS_TILE_HEADING,
+  SETTINGS_TILE_TEXT,
+} from '@/components/components/settings';
 import { ArchivedCampsCard, DangerZone } from '@/components/components/camp';
-import { SETTINGS_GRID, SETTINGS_TILE_HEADING, SETTINGS_TILE_TEXT } from '@/components/components/settings/styles';
 import type { ArchivedCamp } from '@/actions/camp';
 import { fullNameOf } from '@buxa/shared/names';
 

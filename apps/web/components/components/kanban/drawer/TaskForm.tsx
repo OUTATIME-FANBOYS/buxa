@@ -1,11 +1,10 @@
 import type { Project, Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { Dialog } from '@/components/components';
-import { Field, Button } from '@/components/elements';
+import { Field, Button, TAG } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { useTaskCommands } from '@buxa/middleware/hooks/hooks';
 import { useTaskDraft } from '@buxa/middleware/hooks/hooks';
-import { TAG } from '@/components/elements/tag';
 import { TaskDrawerHeader } from './TaskDrawerHeader';
 
 // The title: a large, borderless text area that shows an edge only on hover (its own rules beat the field defaults, so they

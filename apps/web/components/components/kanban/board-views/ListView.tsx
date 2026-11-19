@@ -1,7 +1,6 @@
 'use client';
 
-import { PriorityMark } from '@/components/elements';
-import { TAG } from '@/components/elements/tag';
+import { PriorityMark, TAG } from '@/components/elements';
 import { useMemo, useState } from 'react';
 import type { Project, Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';

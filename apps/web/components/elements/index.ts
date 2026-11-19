@@ -11,5 +11,6 @@ export * from './Progress';
 export * from './Ring';
 export * from './Segmented';
 export * from './StatusBar';
+export * from './tag';
 export * from './chartTone';
 export * from './BrandMark';

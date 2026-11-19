@@ -4,7 +4,7 @@ import { connection } from 'next/server';
 import Script from 'next/script';
 import type { ReactNode } from 'react';
 import { BRAND } from '@/config/brand';
-import { FIELD_DEFAULTS } from '@/components/elements/fieldDefaults';
+import { FIELD_DEFAULTS } from '../styles/fieldDefaults';
 import '../styles/index.css';
 
 export const metadata: Metadata = {
