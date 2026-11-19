@@ -17,7 +17,14 @@ import {
   requireSession,
   requireSessionExists,
 } from './PgClassQueries';
-import { deleteClassRow, insertClass, insertSession, setSessionPriceRow, setSessionPublicRow, updateClassRow } from './PgClassWrites';
+import {
+  deleteClassRow,
+  insertClass,
+  insertSession,
+  setSessionPriceRow,
+  setSessionPublicRow,
+  updateClassRow,
+} from './PgClassWrites';
 import { translateClassWriteError } from './pgClassErrors';
 import { toIso } from '../people/pgRows';
 
