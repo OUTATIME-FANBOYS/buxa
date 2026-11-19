@@ -52,7 +52,7 @@ describe('CampSwitcher with archived camps', () => {
     const row = item('New camp…');
     expect(row?.className).not.toContain('border-[var(--ok)]!');
     expect(row?.querySelector('span[style*="width"]')).toBeNull();
-    expect(row?.className).toContain('pl-0!');
+    expect(row?.className).toContain('pl-[5px]!');
   });
 
   it('"Show archived" opens the archived list, which selects a camp the same way as a live camp', async () => {
