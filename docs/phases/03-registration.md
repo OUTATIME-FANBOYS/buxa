@@ -129,6 +129,8 @@ A teacher gets only what it needs to run its own classes:
 
 The scoping rule ("assigned classes only") is not in the matrix yet. It is added with the teacher role in this phase, as a change to the matrix that is reviewed on its own.
 
+**Status (issue #258, branch `v0.3/feat/teacher-role`):** built. The role is in migration 0023; assignments are `class_teachers` (migration 0024), set by staff and admins with `classes:manage`. The matrix change is `ASSIGNED_CLASSES_ONLY` in `packages/domain/src/permissions.ts`, checked by `authorize()` through `assignedToClass`. The server enforces it in the attendance, people and class services, not only in the sidebar. Still to do: a screen to pick a class's teachers (the server action exists), and a browser check of the teacher sidebar and the orange role pill.
+
 ## Open for review
 
 - Hold length (proposed 15 minutes) and whether camps can change it.
