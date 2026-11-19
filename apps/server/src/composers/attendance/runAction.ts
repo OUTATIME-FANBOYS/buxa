@@ -9,17 +9,27 @@ import { campActor } from './campActor';
  * method, and map the two problems a person can cause (403, 400) to outcomes. Other errors are rethrown.
  */
 export async function runAttendanceAction<I, R>(
-  schema: ZodType<I>, input: unknown, call: (actor: Actor, data: I) => Promise<R>,
+  schema: ZodType<I>,
+  input: unknown,
+  call: (actor: Actor, data: I) => Promise<R>,
 ): Promise<ActionOutcome<R>> {
   const parsed = schema.safeParse(input);
-  if (!parsed.success) return { kind: 'invalid', message: parsed.error.issues[0]?.message ?? 'Check the details.' };
+  if (!parsed.success) {
+    return { kind: 'invalid', message: parsed.error.issues[0]?.message ?? 'Check the details.' };
+  }
   const actor = await campActor();
-  if (!actor) return { kind: 'forbidden', message: 'Choose a camp first.' };
+  if (!actor) {
+    return { kind: 'forbidden', message: 'Choose a camp first.' };
+  }
   try {
     return { kind: 'ok', value: await call(actor, parsed.data) };
   } catch (error) {
-    if (isHttpError(error) && error.statusCode === 403) return { kind: 'forbidden', message: error.message };
-    if (isHttpError(error) && (error.statusCode === 400 || error.statusCode === 429)) return { kind: 'invalid', message: error.message }; // 429: the message says when to try again
+    if (isHttpError(error) && error.statusCode === 403) {
+      return { kind: 'forbidden', message: error.message };
+    }
+    if (isHttpError(error) && (error.statusCode === 400 || error.statusCode === 429)) {
+      return { kind: 'invalid', message: error.message };
+    } // 429: the message says when to try again
     throw error;
   }
 }

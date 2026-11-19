@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Ring } from '@/components/elements/export';
+import { Ring } from '@/components/elements';
 
 describe('Ring', () => {
   it('describes the value as a percentage and fills the arc to it', () => {

@@ -6,9 +6,22 @@ import type { CampHome } from '@buxa/server/composers/index.server';
 vi.mock('@/components/components/camp/RenameCampButton', () => ({ RenameCampButton: () => 'RENAME-BUTTON' }));
 
 Object.assign(globalThis, { React });
-const { HomeHeader } = await import('@/components/components/kanban/home/export');
+const { HomeHeader } = await import('@/components/components/kanban/home');
 
-const camp = (canRename: boolean): CampHome => ({ campId: 'o1', name: 'Lake Camp', firstName: 'Priya', canRename, people: 1, onSite: 0, checkedInToday: 0, validMemberships: 1, upcomingSessions: [], checkInsByDay: null, onSiteByAge: null, membershipStatus: null });
+const camp = (canRename: boolean): CampHome => ({
+  campId: 'o1',
+  name: 'Lake Camp',
+  firstName: 'Priya',
+  canRename,
+  people: 1,
+  onSite: 0,
+  checkedInToday: 0,
+  validMemberships: 1,
+  upcomingSessions: [],
+  checkInsByDay: null,
+  onSiteByAge: null,
+  membershipStatus: null,
+});
 
 describe('HomeHeader', () => {
   it('greets the person by name with the camp as context', () => {
@@ -17,7 +30,10 @@ describe('HomeHeader', () => {
     expect(html).toContain('Lake Camp');
   });
 
-  it.each([[true, true], [false, false]])('shows Rename when canRename is %s: %s', (canRename, shown) => {
+  it.each([
+    [true, true],
+    [false, false],
+  ])('shows Rename when canRename is %s: %s', (canRename, shown) => {
     const html = renderToStaticMarkup(<HomeHeader firstName="Priya" camp={camp(canRename)} />);
     expect(html.includes('RENAME-BUTTON')).toBe(shown);
   });

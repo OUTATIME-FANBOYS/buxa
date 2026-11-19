@@ -1,17 +1,20 @@
 'use client';
 
-import Link from 'next/link';
 import { useActionState, useEffect, useRef } from 'react';
 import type { Person } from '@buxa/contracts';
 import { CAMP_ROLES, CAMP_ROLE_LABELS } from '@buxa/domain';
 import { personPath } from '@/config/routes';
-import { Field } from '@/components/elements/export';
+import { Button } from '@/components/elements';
+import { Checkbox, DatePicker, HiddenField, TextField } from '@/components/atoms';
 import { fieldError, idle } from '@buxa/shared';
 import { updatePersonAction } from '@/actions/people';
 import { FormMessage } from './FormMessage';
 
 /** The fields a person's details can change, as the form posts them. Contact fields and date of birth are only given to staff. */
-export type EditablePerson = Pick<Person, 'id' | 'givenName' | 'familyName' | 'preferredName' | 'roles' | 'dateOfBirth' | 'email' | 'phone'>;
+export type EditablePerson = Pick<
+  Person,
+  'id' | 'givenName' | 'familyName' | 'preferredName' | 'roles' | 'dateOfBirth' | 'email' | 'phone'
+>;
 
 /**
  * Change a person's details. Pre-filled from the person; the server validates and refuses what the role may not do. Works without
@@ -23,64 +26,120 @@ export function EditPersonForm({ person }: { person: EditablePerson }) {
 
   // A field error moves focus to the first invalid field, so the person can correct it without searching the page.
   useEffect(() => {
-    if (state.status === 'error' && state.fieldErrors) formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+    if (state.status === 'error' && state.fieldErrors) {
+      formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+    }
   }, [state]);
 
   const err = (name: string) => fieldError(state, name);
-  const invalid = (name: string) => (err(name) ? true : undefined);
 
   return (
     <form ref={formRef} action={formAction} className="panel stack people-form" aria-describedby="people-form-help">
-      <input type="hidden" name="id" value={person.id} />
-      <p id="people-form-help" className="muted">Fields marked with an asterisk are required.</p>
+      <HiddenField name="id" value={person.id} />
+      <p id="people-form-help" className="muted">
+        Fields marked with an asterisk are required.
+      </p>
 
-      <fieldset className="plain">
-        <legend className="field-label">Name</legend>
+      <fieldset className="plain buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
+        <legend className="field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]">
+          Name
+        </legend>
         <div className="people-form-grid">
-          <Field label="First name *" error={err('givenName')}>
-            <input name="givenName" defaultValue={person.givenName} autoComplete="off" maxLength={80} aria-invalid={invalid('givenName')} autoFocus />
-          </Field>
-          <Field label="Family name *" error={err('familyName')}>
-            <input name="familyName" defaultValue={person.familyName} autoComplete="off" maxLength={80} aria-invalid={invalid('familyName')} />
-          </Field>
-          <Field label="Preferred name" error={err('preferredName')} hint="The name people use, if it is not the first name.">
-            <input name="preferredName" defaultValue={person.preferredName ?? ''} autoComplete="off" maxLength={80} aria-invalid={invalid('preferredName')} />
-          </Field>
+          <TextField
+            label="First name *"
+            name="givenName"
+            defaultValue={person.givenName}
+            error={err('givenName')}
+            autoComplete="off"
+            maxLength={80}
+            autoFocus
+          />
+          <TextField
+            label="Family name *"
+            name="familyName"
+            defaultValue={person.familyName}
+            error={err('familyName')}
+            autoComplete="off"
+            maxLength={80}
+          />
+          <TextField
+            label="Preferred name"
+            name="preferredName"
+            defaultValue={person.preferredName ?? ''}
+            error={err('preferredName')}
+            hint="The name people use, if it is not the first name."
+            autoComplete="off"
+            maxLength={80}
+          />
         </div>
       </fieldset>
 
-      <fieldset className="plain">
-        <legend className="field-label">Roles *</legend>
-        <p className="field-hint">Choose everything that applies. A camper must stay in a household that has a parent or guardian.</p>
+      <fieldset className="plain buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
+        <legend className="field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]">
+          Roles *
+        </legend>
+        <p className="field-hint buxa:text-[length:var(--fs-s)] buxa:text-[var(--text-3)]">
+          Choose everything that applies. A camper must stay in a household that has a parent or guardian.
+        </p>
         <div className="people-checks">
           {CAMP_ROLES.map(role => (
-            <label key={role} className="people-check">
-              <input type="checkbox" name="roles" value={role} defaultChecked={person.roles.includes(role)} /> {CAMP_ROLE_LABELS[role]}
-            </label>
+            <Checkbox
+              key={role}
+              className="people-check"
+              name="roles"
+              value={role}
+              defaultSelected={person.roles.includes(role)}
+            >
+              {CAMP_ROLE_LABELS[role]}
+            </Checkbox>
           ))}
         </div>
-        {err('roles') && <p className="field-error" role="alert">{err('roles')}</p>}
+        {err('roles') && (
+          <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
+            {err('roles')}
+          </p>
+        )}
       </fieldset>
 
-      <fieldset className="plain">
-        <legend className="field-label">Contact and age</legend>
+      <fieldset className="plain buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
+        <legend className="field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]">
+          Contact and age
+        </legend>
         <div className="people-form-grid">
-          <Field label="Date of birth" error={err('dateOfBirth')} hint="Only used to tell whether someone is under 18. Leave blank to clear it.">
-            <input type="date" name="dateOfBirth" defaultValue={person.dateOfBirth ?? ''} aria-invalid={invalid('dateOfBirth')} />
-          </Field>
-          <Field label="Email" error={err('email')}>
-            <input type="email" name="email" defaultValue={person.email ?? ''} autoComplete="off" maxLength={254} aria-invalid={invalid('email')} />
-          </Field>
-          <Field label="Phone" error={err('phone')}>
-            <input type="tel" name="phone" defaultValue={person.phone ?? ''} autoComplete="off" maxLength={32} aria-invalid={invalid('phone')} />
-          </Field>
+          <DatePicker
+            label="Date of birth"
+            name="dateOfBirth"
+            defaultValue={person.dateOfBirth ?? null}
+            error={err('dateOfBirth')}
+            hint="Only used to tell whether someone is under 18. Leave blank to clear it."
+          />
+          <TextField
+            label="Email"
+            type="email"
+            name="email"
+            defaultValue={person.email ?? ''}
+            error={err('email')}
+            autoComplete="off"
+            maxLength={254}
+          />
+          <TextField
+            label="Phone"
+            type="tel"
+            name="phone"
+            defaultValue={person.phone ?? ''}
+            error={err('phone')}
+            autoComplete="off"
+            maxLength={32}
+          />
         </div>
       </fieldset>
 
       <FormMessage state={state} />
       <div className="row">
-        <button className="btn btn-primary" disabled={pending}>{pending ? 'Saving…' : 'Save changes'}</button>
-        <Link className="btn" href={personPath(person.id)}>Cancel</Link>
+        <Button variant="primary" icon="save" disabled={pending}>
+          {pending ? 'Saving…' : 'Save changes'}
+        </Button>
+        <Button href={personPath(person.id)}>Cancel</Button>
       </div>
     </form>
   );

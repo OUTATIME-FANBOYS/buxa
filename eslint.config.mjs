@@ -5,6 +5,7 @@
 import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
+import eslintConfigPrettier from 'eslint-config-prettier/flat';
 
 // Scripts, tests and command-line entry points may write to stdout and stderr; product code may only use console.warn and console.error (server logs).
 const consoleAllowed = [
@@ -21,7 +22,10 @@ const consoleAllowed = [
 const typedDebtAsWarnings = Object.fromEntries(
   tseslint.configs.recommendedTypeChecked
     .flatMap(config => Object.entries(config.rules ?? {}))
-    .filter(([name, setting]) => name.startsWith('@typescript-eslint/') && (Array.isArray(setting) ? setting[0] : setting) === 'error')
+    .filter(
+      ([name, setting]) =>
+        name.startsWith('@typescript-eslint/') && (Array.isArray(setting) ? setting[0] : setting) === 'error',
+    )
     .map(([name]) => [name, 'warn']),
 );
 
@@ -46,7 +50,12 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
     },
-    rules: typedDebtAsWarnings,
+    rules: {
+      ...typedDebtAsWarnings,
+      // Type assertions must be needed, and written in the non-null form where that applies. These need type information.
+      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+      '@typescript-eslint/non-nullable-type-assertion-style': 'error',
+    },
   },
 
   // Plain JS and MJS files are not in any TypeScript project, so they get the untyped rules only.
@@ -79,15 +88,28 @@ export default tseslint.config(
     },
   },
 
+  // Layout and brace rules from ESLint core. Every conditional and loop body is a block, braces are never on one line,
+  // a return after other statements gets a blank line above it, and runs of blank lines collapse to one.
+  {
+    rules: {
+      curly: ['error', 'all'],
+      'brace-style': ['error', '1tbs', { allowSingleLine: false }],
+      'padding-line-between-statements': [
+        'error',
+        { blankLine: 'always', prev: '*', next: 'return' },
+        // Function and class declarations (top-level or nested) start after a blank line.
+        { blankLine: 'always', prev: '*', next: ['function', 'class'] },
+      ],
+      'no-multiple-empty-lines': ['error', { max: 1 }],
+    },
+  },
+
   // Scripts, tests and CLI entry points may use console.log.
   {
     files: consoleAllowed,
     rules: { 'no-console': 'off' },
   },
 
-  // Debt: the legacy server's test file types its JSON bodies as `any` (8 places). Warning until the test gets real types.
-  {
-    files: ['apps/server/src/agents/__tests__/**'],
-    rules: { '@typescript-eslint/no-explicit-any': 'warn' },
-  },
+  // Last: turns off the ESLint style rules that conflict with Prettier. Formatting is Prettier's job.
+  eslintConfigPrettier,
 );

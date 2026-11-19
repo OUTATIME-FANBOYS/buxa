@@ -3,7 +3,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { INSTALL_HINT_KEY } from '@buxa/shared/install/dismissal';
-import { InstallHint } from '@/components/components/install/export';
+import { InstallHint } from '@/components/components/install';
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -19,7 +19,9 @@ function fakeLocalStorage() {
   values = new Map();
   const store = {
     getItem: (key: string) => values.get(key) ?? null,
-    setItem: (key: string, value: string) => { values.set(key, String(value)); },
+    setItem: (key: string, value: string) => {
+      values.set(key, String(value));
+    },
     clear: () => values.clear(),
   };
   Object.defineProperty(window, 'localStorage', { configurable: true, value: store });
@@ -29,11 +31,18 @@ function fakeLocalStorage() {
 function setDevice({ userAgent, phone }: { userAgent: string; phone: boolean }) {
   Object.defineProperty(navigator, 'userAgent', { configurable: true, get: () => userAgent });
   Object.defineProperty(navigator, 'maxTouchPoints', { configurable: true, get: () => (phone ? 5 : 0) });
-  vi.stubGlobal('matchMedia', (query: string) => ({ matches: query.includes('max-width') ? phone : false, media: query, addEventListener() {}, removeEventListener() {} }));
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: query.includes('max-width') ? phone : false,
+    media: query,
+    addEventListener() {},
+    removeEventListener() {},
+  }));
 }
 
 function render() {
-  act(() => { root.render(<InstallHint />); });
+  act(() => {
+    root.render(<InstallHint />);
+  });
 }
 
 beforeEach(() => {
@@ -68,7 +77,7 @@ describe('install hint', () => {
   it('"Not now" hides it and remembers the choice in this browser', () => {
     setDevice({ userAgent: IPHONE, phone: true });
     render();
-    act(() => host.querySelector<HTMLButtonElement>('.btn-ghost')?.click());
+    act(() => host.querySelector<HTMLButtonElement>('.button--ghost')?.click());
     expect(host.querySelector('.install-hint')).toBeNull();
     expect(values.get(INSTALL_HINT_KEY)).toBe('1');
   });

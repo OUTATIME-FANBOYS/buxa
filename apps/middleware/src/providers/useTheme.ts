@@ -13,6 +13,7 @@ export function useTheme(theme: ThemePref) {
     apply();
     const mq = matchMedia('(prefers-color-scheme: dark)');
     mq.addEventListener('change', apply);
+
     return () => mq.removeEventListener('change', apply);
   }, [theme]);
 }

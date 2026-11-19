@@ -2,16 +2,31 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { OnSiteRowView } from '@buxa/shared';
 import { EMPTY_DRAFT } from '@buxa/shared';
-import { CheckOutPanel, type CheckOutPanelProps } from '@/components/components/attendance/export';
+import { CheckOutPanel, type CheckOutPanelProps } from '@/components/components/attendance';
 
 const row = (overrides: Partial<OnSiteRowView>): OnSiteRowView => ({
-  personId: '6f1c2b8e-9a3d-4c5e-8f70-1a2b3c4d5e6f', name: 'Ada Lovelace', arrivedAt: '02:00', isMinor: true, pickupOptions: [], ...overrides,
+  personId: '6f1c2b8e-9a3d-4c5e-8f70-1a2b3c4d5e6f',
+  name: 'Ada Lovelace',
+  arrivedAt: '02:00',
+  isMinor: true,
+  pickupOptions: [],
+  ...overrides,
 });
 
-const panel = (props: Partial<CheckOutPanelProps> & { row: OnSiteRowView }) => renderToStaticMarkup(
-  <CheckOutPanel id="checkout-test" draft={EMPTY_DRAFT} busy={false} canOverride={false} refusal={null} failure={null}
-    onPatch={() => {}} onSubmit={() => {}} {...props} />,
-);
+const panel = (props: Partial<CheckOutPanelProps> & { row: OnSiteRowView }) =>
+  renderToStaticMarkup(
+    <CheckOutPanel
+      id="checkout-test"
+      draft={EMPTY_DRAFT}
+      busy={false}
+      canOverride={false}
+      refusal={null}
+      failure={null}
+      onPatch={() => {}}
+      onSubmit={() => {}}
+      {...props}
+    />,
+  );
 
 const NO_GUARDIAN_LINE = 'No guardian who may collect this child is linked yet.';
 
@@ -34,12 +49,14 @@ describe('CheckOutPanel guardian wording', () => {
     const html = panel({ row: row({ isMinor: null }) });
     expect(html).not.toContain(NO_GUARDIAN_LINE);
     expect(html).not.toContain('Who is collecting?');
-    expect(html).toMatch(/<button type="submit"[^>]*>Check out<\/button>/);
+    expect(html).toMatch(/<button[^>]*type="submit"[^>]*>Check out<\/button>/);
     expect(html).not.toMatch(/<button type="submit"[^>]*disabled[^>]*>/);
   });
 
   it('for an unknown minor status it still lists guardians when there are some', () => {
-    const html = panel({ row: row({ isMinor: null, pickupOptions: [{ personId: 'g1', name: 'Sam Lee', relationship: 'Parent' }] }) });
+    const html = panel({
+      row: row({ isMinor: null, pickupOptions: [{ personId: 'g1', name: 'Sam Lee', relationship: 'Parent' }] }),
+    });
     expect(html).toContain('Who is collecting?');
   });
 
@@ -50,7 +67,9 @@ describe('CheckOutPanel guardian wording', () => {
 
   it('puts Cancel and Check out in one row, Cancel first', () => {
     const html = panel({ row: row({ isMinor: false }), onCancel: () => {} });
-    expect(html).toMatch(/<div class="checkout-actions"><button type="button" class="btn onsite-btn">Cancel<\/button><button type="submit"[^>]*>Check out<\/button><\/div>/);
+    expect(html).toMatch(
+      /<div class="checkout-actions"><button[^>]*type="button"[^>]*class="button button--secondary onsite-btn"[^>]*>Cancel<\/button><button[^>]*type="submit"[^>]*>Check out<\/button><\/div>/,
+    );
   });
 
   it('has no Cancel button when no cancel handler is given', () => {

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { CalendarPage } from '@/components/views/kanban/export';
+import { CalendarPage } from '@/components/views/kanban';
 
 export const metadata: Metadata = { title: 'Calendar' };
 

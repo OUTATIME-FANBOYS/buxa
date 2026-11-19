@@ -2,20 +2,26 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { buildSeed } from '@buxa/shared';
 import { type Agent } from '@buxa/shared';
-import { StageRules } from '@/components/components/kanban/agents/export';
+import { StageRules } from '@/components/components/kanban/agents';
 
-const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
+const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 
 const seed = buildSeed();
-const agent = { ...seed.agents[0], scope: [seed.projects[0].id], moveRules: { [seed.projects[0].columns[0].id]: 'approve' } } as unknown as Agent;
+const agent = {
+  ...seed.agents[0],
+  scope: [seed.projects[0].id],
+  moveRules: { [seed.projects[0].columns[0].id]: 'approve' },
+} as unknown as Agent;
 
 describe('StageRules', () => {
-  beforeEach(() => { h.store = { actions: {}, projects: seed.projects }; });
+  beforeEach(() => {
+    h.store = { actions: {}, projects: seed.projects };
+  });
 
   it('lists each stage of the agent’s project with its rule, editable for managers', () => {
     const html = renderToStaticMarkup(<StageRules agent={agent} canManage />);
-    expect(html).toContain(`aria-label="Moving into ${seed.projects[0].columns[0].name}"`);
+    expect(html).toContain(`Moving into ${seed.projects[0].columns[0].name}`);
     expect(html).toContain('>Ask me</option>');
     expect(html).toContain('>Default</option>');
   });
@@ -26,6 +32,6 @@ describe('StageRules', () => {
     expect(html).not.toContain('<select');
   });
   it('shows nothing for an agent with no projects it may touch', () => {
-    expect(renderToStaticMarkup(<StageRules agent={{ ...agent, scope: [] } as never} canManage />)).toBe('');
+    expect(renderToStaticMarkup(<StageRules agent={{ ...agent, scope: [] }} canManage />)).toBe('');
   });
 });

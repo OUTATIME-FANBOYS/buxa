@@ -2,29 +2,46 @@ import type { ReactNode } from 'react';
 import type { PersonSummary } from '@buxa/contracts';
 import { ROUTES } from '@/config/routes';
 import { attendanceDisplayName } from '@buxa/shared';
+import { Button, DatePicker, Select } from '@/components/atoms';
 
-interface LogFilterValues { from: string; to: string; personId: string }
+interface LogFilterValues {
+  from: string;
+  to: string;
+  personId: string;
+}
 
 /** The log's date range and person filter. A plain GET form, so it works without scripts and the address is shareable. */
-export function LogFilters({ values, people, children }: { values: LogFilterValues; people: readonly PersonSummary[]; children?: ReactNode }) {
+export function LogFilters({
+  values,
+  people,
+  children,
+}: {
+  values: LogFilterValues;
+  people: readonly PersonSummary[];
+  children?: ReactNode;
+}) {
   return (
-    <form className="form-row log-filters" method="get" action={ROUTES.attendance} role="search" aria-label="Filter the log">
-      <label className="field">
-        <span className="field-label">From</span>
-        <input type="date" name="from" defaultValue={values.from} required />
-      </label>
-      <label className="field">
-        <span className="field-label">To</span>
-        <input type="date" name="to" defaultValue={values.to} required />
-      </label>
-      <label className="field">
-        <span className="field-label">Person</span>
-        <select name="personId" defaultValue={values.personId}>
-          <option value="">Everyone</option>
-          {people.map(person => <option key={person.id} value={person.id}>{attendanceDisplayName(person)}</option>)}
-        </select>
-      </label>
-      <button type="submit" className="btn btn-primary">Show</button>
+    <form
+      className="form-row log-filters buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-end buxa:[&>.field]:flex-[1_1_180px] buxa:[&>.field]:min-w-0 buxa:[&>.button]:flex-none buxa:[&>a.button]:flex-none"
+      method="get"
+      action={ROUTES.attendance}
+      role="search"
+      aria-label="Filter the log"
+    >
+      <DatePicker label="From" name="from" defaultValue={values.from} isRequired />
+      <DatePicker label="To" name="to" defaultValue={values.to} isRequired />
+      <Select
+        label="Person"
+        name="personId"
+        defaultValue={values.personId}
+        options={[
+          { value: '', label: 'Everyone' },
+          ...people.map(person => ({ value: person.id, label: attendanceDisplayName(person) })),
+        ]}
+      />
+      <Button variant="primary" type="submit">
+        Show
+      </Button>
       {children}
     </form>
   );

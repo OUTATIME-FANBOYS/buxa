@@ -1,5 +1,13 @@
 import type { Actor } from '@buxa/domain';
-import type { CancelEnrolmentInput, Class, Enrolment, EnrolInput, NewClassInput, NewSessionInput, Session } from '@buxa/contracts';
+import type {
+  CancelEnrolmentInput,
+  Class,
+  Enrolment,
+  EnrolInput,
+  NewClassInput,
+  NewSessionInput,
+  Session,
+} from '@buxa/contracts';
 import { assertAllowed } from '../auth/authorize';
 import type { ClassRepository } from './ClassRepository';
 import { ClassNotFoundError } from './errors';
@@ -26,50 +34,71 @@ export interface ClassService {
 export interface ClassServiceDeps {
   repo: ClassRepository;
   /** The camp's IANA zone (orgs.timezone). Used for the camp's local day and for wording refusals. */
-  timezoneOf(orgId: string): Promise<string>;
+  timezoneOf: (orgId: string) => Promise<string>;
 }
 
 export function createClassService({ repo, timezoneOf }: ClassServiceDeps): ClassService {
   return {
     async listClasses(actor) {
       assertAllowed(actor, 'events:read');
+
       return ok(await repo.listClasses(actor.orgId));
     },
 
     async getClass(actor, classId) {
       assertAllowed(actor, 'events:read');
-      return attempt(async () => {
-        const found = await repo.getClass(actor.orgId, classId);
-        if (!found) throw new ClassNotFoundError();
-        return found;
-      }, await timezoneOf(actor.orgId));
+
+      return attempt(
+        async () => {
+          const found = await repo.getClass(actor.orgId, classId);
+          if (!found) {
+            throw new ClassNotFoundError();
+          }
+
+          return found;
+        },
+        await timezoneOf(actor.orgId),
+      );
     },
 
     async createClass(actor, input) {
       assertAllowed(actor, 'classes:manage');
+
       return attempt(() => repo.createClass(actor, input), await timezoneOf(actor.orgId));
     },
 
     async addSession(actor, classId, input) {
       assertAllowed(actor, 'classes:manage');
-      return attempt(async () => {
-        const cls = await repo.getClass(actor.orgId, classId);
-        if (!cls) throw new ClassNotFoundError();
-        return repo.addSession(actor, classId, {
-          startsAt: input.startsAt, endsAt: input.endsAt, location: input.location, instructorIds: input.instructorIds,
-          capacity: input.capacity ?? cls.capacity,
-        });
-      }, await timezoneOf(actor.orgId));
+
+      return attempt(
+        async () => {
+          const cls = await repo.getClass(actor.orgId, classId);
+          if (!cls) {
+            throw new ClassNotFoundError();
+          }
+
+          return repo.addSession(actor, classId, {
+            startsAt: input.startsAt,
+            endsAt: input.endsAt,
+            location: input.location,
+            instructorIds: input.instructorIds,
+            capacity: input.capacity ?? cls.capacity,
+          });
+        },
+        await timezoneOf(actor.orgId),
+      );
     },
 
     async listSessions(actor, classId) {
       assertAllowed(actor, 'events:read');
+
       return attempt(() => repo.listSessions(actor.orgId, classId), await timezoneOf(actor.orgId));
     },
 
     async listEnrolments(actor, sessionId) {
       // Viewers see who is enrolled, by name. Contact details are not part of an enrolment at all.
       assertAllowed(actor, 'people:read');
+
       return attempt(() => repo.listEnrolments(actor.orgId, sessionId), await timezoneOf(actor.orgId));
     },
 

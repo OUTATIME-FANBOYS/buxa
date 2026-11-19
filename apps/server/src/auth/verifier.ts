@@ -20,10 +20,18 @@ const ClaimsSchema = z.object({
 export function createVerifier(opts: { issuer: string; keys: JWTVerifyGetKey }): Verifier {
   return async token => {
     const { payload } = await jwtVerify(token, opts.keys, {
-      issuer: opts.issuer, audience: 'authenticated', algorithms: ['ES256', 'RS256'], clockTolerance: 5,
+      issuer: opts.issuer,
+      audience: 'authenticated',
+      algorithms: ['ES256', 'RS256'],
+      clockTolerance: 5,
     });
     const claims = ClaimsSchema.parse(payload);
     const given = (claims.user_metadata?.name ?? claims.user_metadata?.full_name ?? '').trim();
-    return { authId: claims.sub, email: claims.email.toLowerCase(), name: (given || claims.email.split('@')[0]).slice(0, 120) };
+
+    return {
+      authId: claims.sub,
+      email: claims.email.toLowerCase(),
+      name: (given || claims.email.split('@')[0]).slice(0, 120),
+    };
   };
 }

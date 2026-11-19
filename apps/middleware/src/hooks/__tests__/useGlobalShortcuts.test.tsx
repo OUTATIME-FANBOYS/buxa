@@ -9,7 +9,11 @@ vi.mock('../../providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ op
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-const press = (key: string, init: KeyboardEventInit = {}) => { act(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, ...init })); }); };
+const press = (key: string, init: KeyboardEventInit = {}) => {
+  act(() => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, ...init }));
+  });
+};
 
 describe('useGlobalShortcuts', () => {
   let root: Root;
@@ -19,11 +23,18 @@ describe('useGlobalShortcuts', () => {
     search = document.body.appendChild(document.createElement('input'));
     const ref = createRef<HTMLInputElement>();
     ref.current = search;
-    const Probe = ({ hasProject }: { hasProject: boolean }) => { useGlobalShortcuts(ref, hasProject); return null; };
+    const Probe = ({ hasProject }: { hasProject: boolean }) => {
+      useGlobalShortcuts(ref, hasProject);
+
+      return null;
+    };
     root = createRoot(document.body.appendChild(document.createElement('div')));
     act(() => root.render(<Probe hasProject />));
   });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; });
+  afterEach(() => {
+    act(() => root.unmount());
+    document.body.innerHTML = '';
+  });
 
   it('focuses search with ⌘K and with /', () => {
     press('k', { metaKey: true });
@@ -39,7 +50,9 @@ describe('useGlobalShortcuts', () => {
   it('ignores bare keys while typing', () => {
     const field = document.body.appendChild(document.createElement('textarea'));
     field.focus();
-    act(() => { field.dispatchEvent(new KeyboardEvent('keydown', { key: 'c', bubbles: true })); });
+    act(() => {
+      field.dispatchEvent(new KeyboardEvent('keydown', { key: 'c', bubbles: true }));
+    });
     expect(h.openTask).not.toHaveBeenCalled();
   });
 });

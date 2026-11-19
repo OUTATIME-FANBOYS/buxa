@@ -1,10 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Actor } from '@buxa/domain';
 import { loadLogEntries, loadOnSiteEntries, loadPeopleOptions, loadVisitHistory } from '../loadAttendance';
+import { settle } from '@buxa/domain';
 
 const svc = vi.hoisted(() => ({
-  attendance: { onSite: vi.fn(async () => ['on']), log: vi.fn(async () => ['log']), history: vi.fn(async () => ['visits']) },
-  people: { list: vi.fn(async () => ['people']) },
+  attendance: {
+    onSite: vi.fn(() => settle(() => ['on'])),
+    log: vi.fn(() => settle(() => ['log'])),
+    history: vi.fn(() => settle(() => ['visits'])),
+  },
+  people: { list: vi.fn(() => settle(() => ['people'])) },
 }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: svc }) }));
 

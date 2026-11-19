@@ -6,10 +6,20 @@ import { useUi, type ConfirmDialogProps } from '../UiProvider';
 
 const Dialog: ComponentType<ConfirmDialogProps> = ({ children }) => <div>{children}</div>;
 
-function Probe() { useUi(); return <p>uses ui</p>; }
+function Probe() {
+  useUi();
+
+  return <p>uses ui</p>;
+}
 
 describe('AppProviders', () => {
   it('provides the ui context (toasts, confirm, sidebar) to its children', () => {
-    expect(renderToStaticMarkup(<AppProviders Dialog={Dialog}><Probe /></AppProviders>)).toContain('<p>uses ui</p>');
+    expect(
+      renderToStaticMarkup(
+        <AppProviders Dialog={Dialog}>
+          <Probe />
+        </AppProviders>,
+      ),
+    ).toContain('<p>uses ui</p>');
   });
 });

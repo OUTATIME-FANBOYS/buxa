@@ -150,6 +150,8 @@ jobs:
           key: node-modules-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
           fail-on-cache-miss: true
       - run: npm run lint
+      - name: Prettier check
+        run: npm run format:check
 
   unit:
     name: 3. unit tests (packages and apps, no database)
@@ -181,7 +183,7 @@ jobs:
       postgres:
         image: postgres:16
         env: { POSTGRES_USER: buxa, POSTGRES_PASSWORD: buxa, POSTGRES_DB: buxa }
-        ports: ["5433:5432"]
+        ports: ['5433:5432']
         options: >-
           --health-cmd "pg_isready -U buxa" --health-interval 3s --health-retries 20
       # A second, separate server for the managed-database check below. Postgres roles belong to the whole server,
@@ -189,7 +191,7 @@ jobs:
       postgres-managed:
         image: postgres:16
         env: { POSTGRES_USER: postgres, POSTGRES_PASSWORD: admin }
-        ports: ["5434:5432"]
+        ports: ['5434:5432']
         options: >-
           --health-cmd "pg_isready -U postgres" --health-interval 3s --health-retries 20
     env:
@@ -254,7 +256,7 @@ jobs:
       - name: Every chunk that ran succeeded
         env:
           CHANGES_RESULT: ${{ needs.changes.result }}
-          CHANGES_RUN: "true"
+          CHANGES_RUN: 'true'
           WORKFLOW_RESULT: ${{ needs.workflow.result }}
           WORKFLOW_RUN: ${{ needs.changes.outputs.run_workflow }}
           INSTALL_RESULT: ${{ needs.install.result }}

@@ -7,13 +7,17 @@ const DAY = 86400000;
 /** Looks a seeded task up by title; the seed lists are written together, so a miss is a programming error. */
 function find(tasks: Task[], title: string): Task {
   const task = tasks.find(t => t.title === title);
-  if (!task) throw new Error(`Seed refers to an unknown task: ${title}`);
+  if (!task) {
+    throw new Error(`Seed refers to an unknown task: ${title}`);
+  }
+
   return task;
 }
 
 /** Seed ids are numbered, not random, so the same seed always produces the same data. */
 const numbered = (prefix: string) => {
   let n = 0;
+
   return () => `${prefix}-${++n}`;
 };
 
@@ -21,8 +25,19 @@ export function buildActivity(tasks: Task[]): ActivityItem[] {
   const nextId = numbered('act');
   const row = (actorId: string, verb: string, title: string, detail: string, daysAgo: number): ActivityItem => {
     const task = find(tasks, title);
-    return { id: nextId(), at: new Date(Date.now() + daysAgo * DAY).toISOString(), actorId, verb, taskTitle: title, taskId: task.id, detail, projectId: task.projectId };
+
+    return {
+      id: nextId(),
+      at: new Date(Date.now() + daysAgo * DAY).toISOString(),
+      actorId,
+      verb,
+      taskTitle: title,
+      taskId: task.id,
+      detail,
+      projectId: task.projectId,
+    };
   };
+
   return [
     row(USER.tom, 'moved', TASK_TITLE.allergySection, 'to In Review', -0.1),
     row(USER.nia, 'commented on', TASK_TITLE.welcomeEmail, '', -0.5),
@@ -39,12 +54,61 @@ export function buildNotices(tasks: Task[]): Notice[] {
   const rosa = USER.rosa;
   const nextId = numbered('notice');
   const link = (title: string) => ({ taskId: find(tasks, title).id, projectId: find(tasks, title).projectId });
+
   return [
-    { id: nextId(), userId: rosa, at: iso(0, 8), kind: 'mention', text: 'Tom Achebe mentioned you in “Finalise 2027 session dates and fees”', ...link(TASK_TITLE.sessionDates), read: false },
-    { id: nextId(), userId: rosa, at: iso(-1, 15), kind: 'assign', text: 'Hannah Lindqvist assigned you “Fire extinguisher and smoke alarm check”', ...link(TASK_TITLE.smokeAlarms), read: false },
-    { id: nextId(), userId: rosa, at: iso(-2, 11), kind: 'comment', text: 'Hannah Lindqvist commented on “Rewrite registration form questions”', ...link(TASK_TITLE.formQuestions), read: true },
-    { id: nextId(), userId: rosa, at: iso(-3, 9), kind: 'complete', text: 'Tom Achebe completed “Choose payment provider”', projectId: PROJECT.registration, read: true },
-    { id: nextId(), userId: USER.tom, at: iso(-1, 10), kind: 'assign', text: 'Rosa Delgado assigned you “Configure deposit and payment plan”', ...link(TASK_TITLE.paymentPlan), read: false },
-    { id: nextId(), userId: USER.hannah, at: iso(-1, 14), kind: 'status', text: 'Rosa Delgado moved “Rewrite registration form questions” to In Review', ...link(TASK_TITLE.formQuestions), read: false },
+    {
+      id: nextId(),
+      userId: rosa,
+      at: iso(0, 8),
+      kind: 'mention',
+      text: 'Tom Achebe mentioned you in “Finalise 2027 session dates and fees”',
+      ...link(TASK_TITLE.sessionDates),
+      read: false,
+    },
+    {
+      id: nextId(),
+      userId: rosa,
+      at: iso(-1, 15),
+      kind: 'assign',
+      text: 'Hannah Lindqvist assigned you “Fire extinguisher and smoke alarm check”',
+      ...link(TASK_TITLE.smokeAlarms),
+      read: false,
+    },
+    {
+      id: nextId(),
+      userId: rosa,
+      at: iso(-2, 11),
+      kind: 'comment',
+      text: 'Hannah Lindqvist commented on “Rewrite registration form questions”',
+      ...link(TASK_TITLE.formQuestions),
+      read: true,
+    },
+    {
+      id: nextId(),
+      userId: rosa,
+      at: iso(-3, 9),
+      kind: 'complete',
+      text: 'Tom Achebe completed “Choose payment provider”',
+      projectId: PROJECT.registration,
+      read: true,
+    },
+    {
+      id: nextId(),
+      userId: USER.tom,
+      at: iso(-1, 10),
+      kind: 'assign',
+      text: 'Rosa Delgado assigned you “Configure deposit and payment plan”',
+      ...link(TASK_TITLE.paymentPlan),
+      read: false,
+    },
+    {
+      id: nextId(),
+      userId: USER.hannah,
+      at: iso(-1, 14),
+      kind: 'status',
+      text: 'Rosa Delgado moved “Rewrite registration form questions” to In Review',
+      ...link(TASK_TITLE.formQuestions),
+      read: false,
+    },
   ];
 }

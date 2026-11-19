@@ -1,0 +1,11 @@
+node_modules
+.next
+dist
+coverage
+.claude
+.buxa-data
+package-lock.json
+
+# Generated architecture diagrams (hand-tuned HTML, not formatted)
+apps/*/docs/diagrams/*.html
+docs/architecture/*.html

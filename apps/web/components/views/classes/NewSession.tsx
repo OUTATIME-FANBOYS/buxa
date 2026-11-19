@@ -1,29 +1,41 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { classPath } from '@/config/routes';
-import { Empty, PageHeader } from '@/components/components/export';
+import { Empty, PageHeader } from '@/components/components';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { campZone } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_MANAGE } from '@buxa/shared';
 import { loadClassPage, loadPeopleWithRole } from '@buxa/server/composers/index.server';
-import { NewSessionForm } from '@/components/components/classes/forms/export';
+import { NewSessionForm } from '@/components/components/classes/forms';
+import { Button } from '@/components/elements';
 
 /** Add a session to one class. Viewers get the forbidden state and no form; an unknown class is not found. */
 export async function NewSession({ classId }: { classId: string }) {
   const actor = await currentActor();
-  if (!actor) notFound();
+  if (!actor) {
+    notFound();
+  }
   if (!can(actor, 'classes:manage')) {
     return (
       <div className="page">
-        <Empty icon="alert" title="You cannot add sessions" body={FORBIDDEN_MANAGE}
-          action={<Link className="btn classes-target" href={classPath(classId)}>Back to the class</Link>} />
+        <Empty
+          icon="alert"
+          title="You cannot add sessions"
+          body={FORBIDDEN_MANAGE}
+          action={
+            <Button className="classes-target" href={classPath(classId)}>
+              Back to the class
+            </Button>
+          }
+        />
       </div>
     );
   }
 
   const loaded = await loadClassPage(actor, classId);
-  if (!loaded.ok) notFound();
+  if (!loaded.ok) {
+    notFound();
+  }
   const { cls } = loaded.value;
   const timeZone = await campZone(actor);
   const instructors = await loadPeopleWithRole(actor, 'instructor');

@@ -1,8 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { UnlinkButton } from '@/components/components/people/forms/export';
+import { UnlinkButton } from '@/components/components/people/forms';
+import { settle } from '@buxa/domain';
 
-vi.mock('@buxa/server/composers/people/unlinkHouseholdAction', () => ({ unlinkHouseholdAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/people/unlinkHouseholdAction', () => ({
+  unlinkHouseholdAction: () => settle(() => ({ status: 'idle' })),
+}));
 
 describe('UnlinkButton', () => {
   it('removes the named person from the household, with the name in the accessible label', () => {

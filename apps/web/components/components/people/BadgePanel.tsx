@@ -1,5 +1,5 @@
-import { Pill } from '@/components/elements/export';
-import { BadgeActions } from '@/components/components/people/forms/export';
+import { Pill } from '@/components/elements';
+import { BadgeActions } from '@/components/components/people/forms';
 
 export interface BadgePanelProps {
   personId: string;
@@ -12,16 +12,36 @@ export interface BadgePanelProps {
 }
 
 /** The badge (QR code) for the door. Whether one is active is shown in words; the code itself is only ever displayed at issue. */
-export function BadgePanel({ personId, personName, roleLabel, campName, hasActiveBadge, archived, canManage }: BadgePanelProps) {
+export function BadgePanel({
+  personId,
+  personName,
+  roleLabel,
+  campName,
+  hasActiveBadge,
+  archived,
+  canManage,
+}: BadgePanelProps) {
   return (
     <section className="panel" aria-labelledby="badge-heading">
       <div className="panel-head">
-        <h2 id="badge-heading" className="people-heading">Badge</h2>
+        <h2 id="badge-heading" className="people-heading">
+          Badge
+        </h2>
         {hasActiveBadge ? <Pill tone="ok">Badge active</Pill> : <Pill tone="neutral">No active badge</Pill>}
       </div>
-      {archived ? <p className="muted">Archived people cannot have a badge.</p>
-        : canManage ? <BadgeActions personId={personId} hasActiveBadge={hasActiveBadge} personName={personName} roleLabel={roleLabel} campName={campName} />
-        : <p className="muted">Only admins can issue or revoke badges.</p>}
+      {archived ? (
+        <p className="muted">Archived people cannot have a badge.</p>
+      ) : canManage ? (
+        <BadgeActions
+          personId={personId}
+          hasActiveBadge={hasActiveBadge}
+          personName={personName}
+          roleLabel={roleLabel}
+          campName={campName}
+        />
+      ) : (
+        <p className="muted">Only admins can issue or revoke badges.</p>
+      )}
     </section>
   );
 }

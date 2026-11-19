@@ -3,6 +3,7 @@ import { idle } from '@buxa/shared';
 import { forbidden } from '../../../http/errors';
 import { cancelEnrolmentAction } from '../cancelEnrolmentAction';
 import { formOf, IDS } from './form';
+import { settle } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({
   actor: null as null | { userId: string; orgId: string; role: 'owner' | 'admin' | 'staff' | 'viewer' },
@@ -11,7 +12,7 @@ const h = vi.hoisted(() => ({
 }));
 vi.mock('next/cache', () => ({ revalidatePath: h.revalidatePath }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: { classes: h.classes } }) }));
-vi.mock('../../people/camp', () => ({ currentActor: async () => h.actor }));
+vi.mock('../../people/camp', () => ({ currentActor: () => settle(() => h.actor) }));
 
 describe('cancelEnrolmentAction', () => {
   beforeEach(() => {
@@ -28,19 +29,29 @@ describe('cancelEnrolmentAction', () => {
   });
 
   it('tells the person when the enrolment is already gone', async () => {
-    h.classes.cancelEnrolment.mockResolvedValue({ ok: false, failure: { reason: 'enrolment_not_found', message: 'That enrolment does not exist, or it is already cancelled.' } });
-    expect(await cancelEnrolmentAction(idle, formOf({ classId: IDS.cls, enrolmentId: IDS.enrolment })))
-      .toEqual({ status: 'error', message: 'That enrolment does not exist, or it is already cancelled.' });
+    h.classes.cancelEnrolment.mockResolvedValue({
+      ok: false,
+      failure: { reason: 'enrolment_not_found', message: 'That enrolment does not exist, or it is already cancelled.' },
+    });
+    expect(await cancelEnrolmentAction(idle, formOf({ classId: IDS.cls, enrolmentId: IDS.enrolment }))).toEqual({
+      status: 'error',
+      message: 'That enrolment does not exist, or it is already cancelled.',
+    });
   });
 
   it('answers a role that may not manage classes with the forbidden message', async () => {
     h.classes.cancelEnrolment.mockRejectedValue(forbidden('nope'));
-    expect(await cancelEnrolmentAction(idle, formOf({ classId: IDS.cls, enrolmentId: IDS.enrolment })))
-      .toEqual({ status: 'error', message: 'Your role cannot do this.', fieldErrors: undefined });
+    expect(await cancelEnrolmentAction(idle, formOf({ classId: IDS.cls, enrolmentId: IDS.enrolment }))).toEqual({
+      status: 'error',
+      message: 'Your role cannot do this.',
+      fieldErrors: undefined,
+    });
   });
 
   it('refuses a missing enrolment id without calling the service', async () => {
-    expect(await cancelEnrolmentAction(idle, formOf({ classId: IDS.cls, enrolmentId: '' }))).toMatchObject({ status: 'error' });
+    expect(await cancelEnrolmentAction(idle, formOf({ classId: IDS.cls, enrolmentId: '' }))).toMatchObject({
+      status: 'error',
+    });
     expect(h.classes.cancelEnrolment).not.toHaveBeenCalled();
   });
 });

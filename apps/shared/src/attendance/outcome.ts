@@ -3,6 +3,4 @@
  * screen can show it; `forbidden` and `invalid` are the two problems a person can cause. Anything else throws to the error boundary.
  */
 export type ActionOutcome<R> =
-  | { kind: 'ok'; value: R }
-  | { kind: 'forbidden'; message: string }
-  | { kind: 'invalid'; message: string };
+  { kind: 'ok'; value: R } | { kind: 'forbidden'; message: string } | { kind: 'invalid'; message: string };

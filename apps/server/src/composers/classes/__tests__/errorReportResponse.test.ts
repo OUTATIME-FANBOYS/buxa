@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { IMPORT_COLUMNS, type Actor } from '@buxa/domain';
+import { IMPORT_COLUMNS, type Actor, settle } from '@buxa/domain';
 import { createImportService } from '../../../classes/import/ImportService';
 import { InMemoryClassRepository } from '../../../classes/InMemoryClassRepository';
 import { InMemoryImportRepository } from '../../../classes/import/InMemoryImportRepository';
 import { CAMP_TZ, as, robotics } from '../../../classes/__tests__/fixtures';
 
-const h = vi.hoisted(() => ({ actor: null as null | Actor, services: {} as Record<string, unknown> }));
+const h = vi.hoisted(() => ({ actor: null as null | Actor, services: {} }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: h.services }) }));
-vi.mock('../../people/camp', () => ({ currentActor: async () => h.actor }));
+vi.mock('../../people/camp', () => ({ currentActor: () => settle(() => h.actor) }));
 
 const { classErrorReportResponse } = await import('../errorReportResponse');
 
@@ -21,6 +21,7 @@ const form = (csv: string, fileName = 'season.csv'): FormData => {
   const body = new FormData();
   body.append('fileName', fileName);
   body.append('csv', csv);
+
   return body;
 };
 
@@ -28,7 +29,7 @@ beforeEach(async () => {
   const classes = new InMemoryClassRepository(() => new Date('2027-07-01T00:00:00Z'));
   const imports = new InMemoryImportRepository(classes);
   await classes.createClass(as('admin'), robotics);
-  h.services = { imports: createImportService({ classes, imports, timezoneOf: async () => CAMP_TZ }) };
+  h.services = { imports: createImportService({ classes, imports, timezoneOf: () => settle(() => CAMP_TZ) }) };
   h.actor = as('admin');
 });
 
@@ -49,7 +50,7 @@ describe('classErrorReportResponse', () => {
   it('neutralises a spreadsheet formula in the downloaded report', async () => {
     const response = await classErrorReportResponse(form(fileOf(FORMULA_ROW)));
     const text = await response.text();
-    expect(text).toContain('\'=HYPERLINK(');
+    expect(text).toContain("'=HYPERLINK(");
     expect(text).not.toMatch(/(^|,)"?=HYPERLINK/m);
   });
 

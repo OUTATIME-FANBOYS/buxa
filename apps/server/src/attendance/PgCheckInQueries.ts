@@ -35,21 +35,34 @@ export const toCheckIn = (row: CheckInRow): CheckInRecord => ({
 });
 
 /** Runs a visit query. The limit, when given, is the last parameter. */
-export async function queryCheckIns(db: Db, where: string, params: unknown[], order: string, limit?: number): Promise<CheckInRecord[]> {
+export async function queryCheckIns(
+  db: Db,
+  where: string,
+  params: unknown[],
+  order: string,
+  limit?: number,
+): Promise<CheckInRecord[]> {
   const values = limit === undefined ? params : [...params, limit];
   const limitClause = limit === undefined ? '' : `LIMIT $${values.length}`;
   const { rows } = await db.query<CheckInRow>(`${SELECT_CHECK_INS} ${where} ${order} ${limitClause}`, values);
+
   return rows.map(toCheckIn);
 }
 
 export async function openVisit(db: Db, personId: string): Promise<CheckInRecord | null> {
-  if (!isUuid(personId)) return null;
+  if (!isUuid(personId)) {
+    return null;
+  }
   const found = await queryCheckIns(db, 'WHERE person_id = $1 AND checked_out_at IS NULL', [personId], '');
+
   return found[0] ?? null;
 }
 
 export async function requireCheckIn(db: Db, id: string): Promise<CheckInRecord> {
   const found = await queryCheckIns(db, 'WHERE id = $1', [id], '');
-  if (!found[0]) throw new NotOnSiteError();
+  if (!found[0]) {
+    throw new NotOnSiteError();
+  }
+
   return found[0];
 }

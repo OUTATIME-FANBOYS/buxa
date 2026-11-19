@@ -1,10 +1,13 @@
 import { notFound } from 'next/navigation';
-import type { Membership } from '@buxa/contracts';
 import { getCurrentCamp, requireSession, toActor } from '../../session';
-import type { Session } from '../../auth/session';
+import type { CampMembership, Session } from '../../auth/session';
 import type { Actor } from '@buxa/domain';
 
-export interface CampContext { session: Session; camp: Membership; actor: Actor }
+export interface CampContext {
+  session: Session;
+  camp: CampMembership;
+  actor: Actor;
+}
 
 /**
  * Who is asking, and which camp they are working in. Null when no camp is selected, for callers that answer in their own way
@@ -13,6 +16,7 @@ export interface CampContext { session: Session; camp: Membership; actor: Actor 
 export async function findCampContext(): Promise<CampContext | null> {
   const session = await requireSession();
   const camp = await getCurrentCamp(session);
+
   return camp ? { session, camp, actor: toActor(session, camp) } : null;
 }
 
@@ -22,6 +26,9 @@ export async function findCampContext(): Promise<CampContext | null> {
  */
 export async function campContext(): Promise<CampContext> {
   const context = await findCampContext();
-  if (!context) notFound();
+  if (!context) {
+    notFound();
+  }
+
   return context;
 }

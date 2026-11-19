@@ -15,4 +15,5 @@ export const loadLogEntries = (actor: Actor, filter: Parameters<AttendanceServic
   getRuntime().services.attendance.log(actor, filter);
 
 /** One person's visits, for their page. */
-export const loadVisitHistory = (actor: Actor, personId: string) => getRuntime().services.attendance.history(actor, personId);
+export const loadVisitHistory = (actor: Actor, personId: string) =>
+  getRuntime().services.attendance.history(actor, personId);

@@ -2,42 +2,104 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Membership, PersonSummary, Session } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
 import { MAX_LOG_ROWS } from '../../../attendance/AttendanceRepository';
+import { settle } from '@buxa/domain';
 
-const notFound = vi.hoisted(() => vi.fn(() => { throw new Error('NEXT_NOT_FOUND'); }));
-const session = vi.hoisted(() => ({ current: null as null | { user: { id: string; email: string; name: string }; memberships: Membership[] }, camp: null as Membership | null }));
+const notFound = vi.hoisted(() =>
+  vi.fn(() => {
+    throw new Error('NEXT_NOT_FOUND');
+  }),
+);
+const session = vi.hoisted(() => ({
+  current: null as null | {
+    user: { id: string; email: string; name: string; firstName: string; lastName: string | null; clockFormat: null };
+    memberships: Membership[];
+  },
+  camp: null as Membership | null,
+}));
 const services = vi.hoisted(() => ({
-  orgs: { getCamp: vi.fn(async () => ({ id: 'o1', name: 'Lake Camp', slug: 'lake', createdAt: '2026-03-04T10:00:00Z', memberCount: 3, timezone: 'UTC' })) },
-  people: { list: vi.fn(async (): Promise<PersonSummary[]> => []) },
+  orgs: {
+    getCamp: vi.fn(() =>
+      settle(() => ({
+        id: 'o1',
+        name: 'Lake Camp',
+        slug: 'lake',
+        createdAt: '2026-03-04T10:00:00Z',
+        memberCount: 3,
+        timezone: 'UTC',
+      })),
+    ),
+  },
+  people: { list: vi.fn((): Promise<PersonSummary[]> => settle(() => [])) },
   attendance: {
-    onSite: vi.fn(async (): Promise<{ personId: string; isMinor: boolean | null }[]> => []),
-    log: vi.fn<(actor: unknown, filter: { from: string; to: string }) => Promise<{ personId: string; checkedInAt: string }[]>>(async () => []),
+    onSite: vi.fn((): Promise<{ personId: string; isMinor: boolean | null }[]> => settle(() => [])),
+    log: vi.fn<
+      (actor: unknown, filter: { from: string; to: string }) => Promise<{ personId: string; checkedInAt: string }[]>
+    >(() => settle(() => [])),
   },
   classes: {
-    listClasses: vi.fn(async () => ({ ok: true as const, value: [] as { id: string }[] })),
-    listSessions: vi.fn<(actor: unknown, classId: string) => Promise<{ ok: true; value: Session[] }>>(async () => ({ ok: true, value: [] })),
+    listClasses: vi.fn(() => settle(() => ({ ok: true as const, value: [] as { id: string }[] }))),
+    listSessions: vi.fn<(actor: unknown, classId: string) => Promise<{ ok: true; value: Session[] }>>(() =>
+      settle(() => ({ ok: true, value: [] })),
+    ),
   },
 }));
 
 vi.mock('next/navigation', () => ({ notFound }));
-vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services }) }));
+const repositories = vi.hoisted(() => ({
+  people: {
+    getMany: vi.fn((): Promise<{ id: string; dateOfBirth: string | null; roles: string[] }[]> => settle(() => [])),
+  },
+}));
+vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services, repositories }) }));
 vi.mock('../../../session', () => ({
-  requireSession: async () => session.current,
-  getCurrentCamp: async () => session.camp,
-  toActor: (s: { user: { id: string } }, camp: Membership) => ({ userId: s.user.id, orgId: camp.orgId, role: camp.role }),
+  requireSession: () => settle(() => session.current),
+  getCurrentCamp: () => settle(() => session.camp),
+  toActor: (s: { user: { id: string } }, camp: Membership) => ({
+    userId: s.user.id,
+    orgId: camp.orgId,
+    role: camp.role,
+  }),
 }));
 
-const { checkInsPerDay, daysBefore, loadCampHome, membershipCounts, onSiteAgeGroups, CHART_DAYS } = await import('../campHome');
+const { checkInsPerDay, daysBefore, loadCampHome, membershipCounts, onSiteAgeGroups, CHART_DAYS } =
+  await import('../campHome');
 
 const person = (id: string, status: PersonSummary['status']): PersonSummary => ({
-  id, givenName: id, familyName: 'Test', preferredName: null, roles: ['camper'], status, onSite: false, archived: false,
+  id,
+  givenName: id,
+  familyName: 'Test',
+  preferredName: null,
+  roles: ['camper'],
+  status,
+  onSite: false,
+  archived: false,
 });
-const session_ = (id: string, classId: string, startsAt: string, location = 'Range 2'): Session => ({
-  id, classId, className: `Class ${classId}`, startsAt, endsAt: startsAt, location, instructorIds: [], instructors: [], capacity: 10,
-} as unknown as Session);
+const session_ = (id: string, classId: string, startsAt: string, location = 'Range 2'): Session =>
+  ({
+    id,
+    classId,
+    className: `Class ${classId}`,
+    startsAt,
+    endsAt: startsAt,
+    location,
+    instructorIds: [],
+    instructors: [],
+    capacity: 10,
+  }) as unknown as Session;
 
 const as = (role: Role) => {
   const camp: Membership = { orgId: 'o1', role, name: 'Lake Camp', slug: 'lake' };
-  session.current = { user: { id: 'u1', email: 'priya@example.com', name: 'Priya Nair' }, memberships: [camp] };
+  session.current = {
+    user: {
+      id: 'u1',
+      email: 'priya@example.com',
+      name: 'Priya Nair',
+      firstName: 'Priya',
+      lastName: 'Nair',
+      clockFormat: null,
+    },
+    memberships: [camp],
+  };
   session.camp = camp;
 };
 
@@ -58,10 +120,19 @@ describe('loadCampHome', () => {
     as('staff');
     const home = await loadCampHome();
     expect(services.orgs.getCamp).toHaveBeenCalledWith({ userId: 'u1', orgId: 'o1', role: 'staff' });
-    expect(home).toEqual({
-      campId: 'o1', name: 'Lake Camp', firstName: 'Priya', canRename: false,
-      people: 3, onSite: 1, checkedInToday: 0, validMemberships: 2, upcomingSessions: [],
-      checkInsByDay: { days: expect.any(Array), complete: true },
+    const { checkInsByDay, ...facts } = home;
+    expect(checkInsByDay?.complete).toBe(true);
+    expect(checkInsByDay?.days).toEqual(expect.any(Array));
+    expect(facts).toEqual({
+      campId: 'o1',
+      name: 'Lake Camp',
+      firstName: 'Priya',
+      canRename: false,
+      people: 3,
+      onSite: 1,
+      checkedInToday: 0,
+      validMemberships: 2,
+      upcomingSessions: [],
       onSiteByAge: { adults: 1, minors: 0 },
       membershipStatus: { valid: 2, notStarted: 0, expired: 1, none: 0 },
     });
@@ -73,8 +144,8 @@ describe('loadCampHome', () => {
     services.attendance.log.mockResolvedValue([visit('a', today), visit('a', today), visit('b', today)]);
     const home = await loadCampHome();
     expect(home.checkedInToday).toBe(2);
-    expect(home.checkInsByDay?.days[CHART_DAYS - 1]).toEqual({ date: today, count: 2 });
-    const filter = services.attendance.log.mock.calls[0]?.[1] as { from: string; to: string };
+    expect(home.checkInsByDay?.days[CHART_DAYS - 1]).toEqual({ date: today, count: 2, minors: 0 });
+    const filter = services.attendance.log.mock.calls[0]?.[1];
     expect(filter.to).toBe(today);
     expect(filter.from).toBe(dayOf(CHART_DAYS - 1));
   });
@@ -82,7 +153,10 @@ describe('loadCampHome', () => {
   it('gives no check-in chart, no age split and no membership counts to a viewer who may not read them', async () => {
     as('viewer');
     // The service hides status from viewers (null on every row), even though the list itself is readable.
-    services.people.list.mockResolvedValue([{ ...person('a', 'valid'), status: null }, { ...person('b', 'expired'), status: null }]);
+    services.people.list.mockResolvedValue([
+      { ...person('a', 'valid'), status: null },
+      { ...person('b', 'expired'), status: null },
+    ]);
     const home = await loadCampHome();
     expect(home.onSite).toBeNull();
     expect(home.checkedInToday).toBeNull();
@@ -95,18 +169,31 @@ describe('loadCampHome', () => {
   it('lists the next sessions across classes, soonest first, and drops past ones', async () => {
     as('staff');
     services.classes.listClasses.mockResolvedValue({ ok: true, value: [{ id: 'k1' }, { id: 'k2' }] });
-    services.classes.listSessions.mockImplementation(async (_actor, classId) => ({
-      ok: true as const,
-      value: classId === 'k1'
-        ? [session_('s-late', 'k1', '2999-01-03T09:00:00Z'), session_('s-past', 'k1', '2000-01-01T09:00:00Z')]
-        : [session_('s-soon', 'k2', '2999-01-02T09:00:00Z', 'Lake')],
-    }));
+    services.classes.listSessions.mockImplementation((_actor, classId) =>
+      settle(() => ({
+        ok: true as const,
+        value:
+          classId === 'k1'
+            ? [session_('s-late', 'k1', '2999-01-03T09:00:00Z'), session_('s-past', 'k1', '2000-01-01T09:00:00Z')]
+            : [session_('s-soon', 'k2', '2999-01-02T09:00:00Z', 'Lake')],
+      })),
+    );
     const home = await loadCampHome();
     expect(home.upcomingSessions?.map(s => s.id)).toEqual(['s-soon', 's-late']);
-    expect(home.upcomingSessions?.[0]).toEqual({ id: 's-soon', className: 'Class k2', startsAt: '2999-01-02T09:00:00Z', location: 'Lake' });
+    expect(home.upcomingSessions?.[0]).toEqual({
+      id: 's-soon',
+      className: 'Class k2',
+      startsAt: '2999-01-02T09:00:00Z',
+      location: 'Lake',
+    });
   });
 
-  it.each([['owner', true], ['admin', true], ['staff', false], ['viewer', false]] as const)('%s may rename the camp: %s', async (role, canRename) => {
+  it.each([
+    ['owner', true],
+    ['admin', true],
+    ['staff', false],
+    ['viewer', false],
+  ] as const)('%s may rename the camp: %s', async (role, canRename) => {
     as(role);
     expect((await loadCampHome()).canRename).toBe(canRename);
   });
@@ -120,25 +207,57 @@ describe('loadCampHome', () => {
 
 describe('checkInsPerDay', () => {
   it('returns one day per entry of the window, oldest first, ending on today, with zeros for quiet days', () => {
-    const series = checkInsPerDay([], '2026-11-17', 'UTC', true);
+    const series = checkInsPerDay([], '2026-11-17', 'UTC', true, null);
     expect(series.days).toHaveLength(CHART_DAYS);
-    expect(series.days[0].date).toBe('2026-10-19');
-    expect(series.days[CHART_DAYS - 1]).toEqual({ date: '2026-11-17', count: 0 });
+    expect(series.days[0].date).toBe(daysBefore('2026-11-17', CHART_DAYS - 1));
+    expect(series.days[CHART_DAYS - 1]).toEqual({ date: '2026-11-17', count: 0, minors: null });
     expect(series.complete).toBe(true);
   });
 
   it('buckets each visit by its camp-local day, not the UTC day', () => {
     // 23:30 UTC on 16 Nov is already 17 Nov in Auckland (UTC+13 in November).
-    const visits = [{ personId: 'a', checkedInAt: '2026-11-16T23:30:00.000Z' }, { personId: 'b', checkedInAt: '2026-11-17T01:00:00.000Z' }];
-    const series = checkInsPerDay(visits, '2026-11-17', 'Pacific/Auckland', true);
-    expect(series.days.at(-1)).toEqual({ date: '2026-11-17', count: 2 });
+    const visits = [
+      { personId: 'a', checkedInAt: '2026-11-16T23:30:00.000Z' },
+      { personId: 'b', checkedInAt: '2026-11-17T01:00:00.000Z' },
+    ];
+    const series = checkInsPerDay(visits, '2026-11-17', 'Pacific/Auckland', true, null);
+    expect(series.days.at(-1)).toEqual({ date: '2026-11-17', count: 2, minors: null });
     expect(series.days.at(-2)?.count).toBe(0);
   });
 
   it('counts a person once per day and keeps the complete flag it was given', () => {
-    const visits = [{ personId: 'a', checkedInAt: '2026-11-17T08:00:00Z' }, { personId: 'a', checkedInAt: '2026-11-17T09:00:00Z' }];
-    expect(checkInsPerDay(visits, '2026-11-17', 'UTC', false)).toMatchObject({ complete: false });
-    expect(checkInsPerDay(visits, '2026-11-17', 'UTC', true).days.at(-1)?.count).toBe(1);
+    const visits = [
+      { personId: 'a', checkedInAt: '2026-11-17T08:00:00Z' },
+      { personId: 'a', checkedInAt: '2026-11-17T09:00:00Z' },
+    ];
+    expect(checkInsPerDay(visits, '2026-11-17', 'UTC', false, null)).toMatchObject({ complete: false });
+    expect(checkInsPerDay(visits, '2026-11-17', 'UTC', true, null).days.at(-1)?.count).toBe(1);
+  });
+
+  it('splits each day into students (minors) and the rest, counting a person once', () => {
+    const visits = [
+      { personId: 'kid', checkedInAt: '2026-11-17T08:00:00Z' },
+      { personId: 'kid', checkedInAt: '2026-11-17T10:00:00Z' },
+      { personId: 'parent', checkedInAt: '2026-11-17T09:00:00Z' },
+      { personId: 'kid2', checkedInAt: '2026-11-16T09:00:00Z' },
+    ];
+    const series = checkInsPerDay(visits, '2026-11-17', 'UTC', true, new Set(['kid', 'kid2']));
+    expect(series.days.at(-1)).toEqual({ date: '2026-11-17', count: 2, minors: 1 });
+    expect(series.days.at(-2)).toEqual({ date: '2026-11-16', count: 1, minors: 1 });
+  });
+});
+
+describe('loadCampHome age split on the chart', () => {
+  it('reads the visitors from the people repository and marks the students, for a role that may see contact details', async () => {
+    as('staff');
+    const today = dayOf(0);
+    services.attendance.log.mockResolvedValue([visit('kid', today), visit('a', today)]);
+    repositories.people.getMany.mockResolvedValue([
+      { id: 'kid', dateOfBirth: '2016-01-01', roles: ['camper'] },
+      { id: 'a', dateOfBirth: '1980-01-01', roles: ['staff'] },
+    ]);
+    const home = await loadCampHome();
+    expect(home.checkInsByDay?.days.at(-1)).toEqual({ date: today, count: 2, minors: 1 });
   });
 });
 
@@ -166,7 +285,13 @@ describe('onSiteAgeGroups', () => {
 
 describe('membershipCounts', () => {
   it('counts each status, folding revoked into none and keeping not started apart', () => {
-    const list = [person('a', 'valid'), person('b', 'not_started'), person('c', 'expired'), person('d', 'revoked'), person('e', 'none')];
+    const list = [
+      person('a', 'valid'),
+      person('b', 'not_started'),
+      person('c', 'expired'),
+      person('d', 'revoked'),
+      person('e', 'none'),
+    ];
     expect(membershipCounts(list)).toEqual({ valid: 1, notStarted: 1, expired: 1, none: 2 });
   });
 

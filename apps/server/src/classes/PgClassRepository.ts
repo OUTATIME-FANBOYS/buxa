@@ -4,7 +4,15 @@ import type { Actor } from '@buxa/domain';
 import type { Class, Enrolment, NewClassInput, Session } from '@buxa/contracts';
 import type { ClassRepository, EnrolRequest, EnrolmentRule, NewSessionRecord } from './ClassRepository';
 import { cancelInTransaction, enrolInTransaction } from './PgEnrolmentWrites';
-import { getClass, getSession, listClassRows, listEnrolmentRows, listSessionRows, requireClass, requireSessionExists } from './PgClassQueries';
+import {
+  getClass,
+  getSession,
+  listClassRows,
+  listEnrolmentRows,
+  listSessionRows,
+  requireClass,
+  requireSessionExists,
+} from './PgClassQueries';
 import { insertClass, insertSession } from './PgClassWrites';
 
 /**
@@ -26,6 +34,7 @@ export class PgClassRepository implements ClassRepository {
   createClass(actor: Actor, input: NewClassInput): Promise<Class> {
     return withOrg(this.pool, actor.orgId, async db => {
       const id = await insertClass(db, actor, input);
+
       return requireClass(db, id);
     });
   }
@@ -35,7 +44,10 @@ export class PgClassRepository implements ClassRepository {
       await requireClass(db, classId);
       const id = await insertSession(db, actor, classId, input);
       const session = await getSession(db, id);
-      if (!session) throw new Error('A session was written but cannot be read back');
+      if (!session) {
+        throw new Error('A session was written but cannot be read back');
+      }
+
       return session;
     });
   }
@@ -43,6 +55,7 @@ export class PgClassRepository implements ClassRepository {
   listSessions(orgId: string, classId: string): Promise<Session[]> {
     return withOrg(this.pool, orgId, async db => {
       await requireClass(db, classId);
+
       return listSessionRows(db, classId);
     });
   }
@@ -50,6 +63,7 @@ export class PgClassRepository implements ClassRepository {
   listEnrolments(orgId: string, sessionId: string): Promise<Enrolment[]> {
     return withOrg(this.pool, orgId, async db => {
       await requireSessionExists(db, sessionId);
+
       return listEnrolmentRows(db, sessionId);
     });
   }

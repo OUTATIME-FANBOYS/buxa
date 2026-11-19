@@ -9,5 +9,6 @@ export const dynamic = 'force-dynamic';
 export const POST = authedRoute(async ({ request, session, runtime }) => {
   await enforceRateLimit(runtime.rateLimiter, RATE_RULES.createCamp, session.user.id);
   const input = parseBody(NewOrgInputSchema, await readJson(request));
+
   return created(await runtime.services.orgs.createCamp(session.user.id, input));
 });

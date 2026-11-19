@@ -11,23 +11,33 @@ function chunkedBody(chunks: number) {
   const state = { pulled: 0 };
   const stream = new ReadableStream<Uint8Array>({
     pull(controller) {
-      if (state.pulled >= chunks) { controller.close(); return; }
+      if (state.pulled >= chunks) {
+        controller.close();
+
+        return;
+      }
       state.pulled += 1;
       controller.enqueue(new TextEncoder().encode(' '.repeat(CHUNK))); // whitespace is valid JSON around the value
     },
   });
+
   return { stream, state };
 }
 
 const request = (body: ReadableStream<Uint8Array>) =>
-  new Request('http://localhost/x', { method: 'POST', body, duplex: 'half', headers: { 'content-type': 'application/json' } } as RequestInit);
+  new Request('http://localhost/x', {
+    method: 'POST',
+    body,
+    duplex: 'half',
+    headers: { 'content-type': 'application/json' },
+  } as RequestInit);
 
 describe('request body limit', () => {
   it('stops reading a chunked body without Content-Length once it passes the limit', async () => {
     const { stream, state } = chunkedBody(100); // about 6.4 MB if it were all read
     const req = request(stream);
     expect(req.headers.get('content-length')).toBeNull();
-    const error = await readJson(req).catch(e => e);
+    const error: unknown = await readJson(req).catch((e: unknown) => e);
     expect(isHttpError(error)).toBe(true);
     expect(isHttpError(error) && error.statusCode).toBe(413);
     // Reading stops just past the limit: never the whole body.
@@ -43,7 +53,9 @@ describe('request body limit', () => {
       const { stream } = chunkedBody(100);
       const response = await route(request(stream));
       expect(response.status).toBe(413);
-      expect((await response.json()).error).toMatchObject({ code: 'payload_too_large', message: 'Request body too large' });
+      expect(await response.json()).toMatchObject({
+        error: { code: 'payload_too_large', message: 'Request body too large' },
+      });
     } finally {
       await env.stop();
     }
@@ -64,7 +76,11 @@ describe('request body limit', () => {
   });
 
   it('treats an empty body as no body', async () => {
-    const stream = new ReadableStream<Uint8Array>({ start(c) { c.close(); } });
+    const stream = new ReadableStream<Uint8Array>({
+      start(c) {
+        c.close();
+      },
+    });
     expect(await readJson(request(stream))).toBeUndefined();
   });
 });

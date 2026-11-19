@@ -15,17 +15,25 @@ import { classForm } from '@buxa/shared';
  */
 export async function createClassAction(_previous: ActionState, form: FormData): Promise<ActionState> {
   const actor = await currentActor();
-  if (!actor) return failure(NO_CAMP);
+  if (!actor) {
+    return failure(NO_CAMP);
+  }
 
   const parsed = classForm(form);
-  if (!parsed.ok) return parsed.state;
+  if (!parsed.ok) {
+    return parsed.state;
+  }
 
   let createdId: string;
   try {
     const outcome = await getRuntime().services.classes.createClass(actor, parsed.data);
-    if (!outcome.ok) return failure(outcome.failure.message);
+    if (!outcome.ok) {
+      return failure(outcome.failure.message);
+    }
     createdId = outcome.value.id;
-  } catch (error) { return expectedFailure(error, 'Could not create the class.'); }
+  } catch (error) {
+    return expectedFailure(error, 'Could not create the class.');
+  }
 
   revalidatePath(ROUTES.classes);
   redirect(classPath(createdId)); // throws; kept outside the try

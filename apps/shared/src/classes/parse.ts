@@ -1,7 +1,13 @@
 import { parseCampLocal } from '@buxa/domain';
 import {
-  CancelEnrolmentInputSchema, EnrolInputSchema, NewClassInputSchema, NewSessionInputSchema,
-  type CancelEnrolmentInput, type EnrolInput, type NewClassInput, type NewSessionInput,
+  CancelEnrolmentInputSchema,
+  EnrolInputSchema,
+  NewClassInputSchema,
+  NewSessionInputSchema,
+  type CancelEnrolmentInput,
+  type EnrolInput,
+  type NewClassInput,
+  type NewSessionInput,
 } from '@buxa/contracts';
 import { failure, type FieldErrors } from '../actionState';
 import { field, fieldAll, parseWith, type PersonParsed } from '../people/parse';
@@ -14,16 +20,26 @@ import { CHECK_FIELDS, WHOLE_NUMBER } from './copy';
  */
 
 /** A whole number from a text field. Blank is undefined (and a message when the field is required); other text is refused. */
-export function numberField(form: FormData, name: string, problems: FieldErrors, required?: string): number | undefined {
+export function numberField(
+  form: FormData,
+  name: string,
+  problems: FieldErrors,
+  required?: string,
+): number | undefined {
   const raw = field(form, name).trim();
   if (raw === '') {
-    if (required) problems[name] = required;
+    if (required) {
+      problems[name] = required;
+    }
+
     return undefined;
   }
   if (!/^\d+$/.test(raw)) {
     problems[name] = WHOLE_NUMBER;
+
     return undefined;
   }
+
   return Number(raw);
 }
 
@@ -31,14 +47,23 @@ export function numberField(form: FormData, name: string, problems: FieldErrors,
  * Runs the contract over the values and merges its field errors with the form's own. The form's messages win for a field both name,
  * because they say what to type. When there are no form problems, the contract's result is returned unchanged.
  */
-function withProblems<T>(problems: FieldErrors, check: () => PersonParsed<T>, renames: Record<string, string> = {}): PersonParsed<T> {
+function withProblems<T>(
+  problems: FieldErrors,
+  check: () => PersonParsed<T>,
+  renames: Record<string, string> = {},
+): PersonParsed<T> {
   const parsed = check();
   const contract: FieldErrors = {};
   if (!parsed.ok && parsed.state.status === 'error') {
-    for (const [name, message] of Object.entries(parsed.state.fieldErrors ?? {})) contract[renames[name] ?? name] = message;
+    for (const [name, message] of Object.entries(parsed.state.fieldErrors ?? {})) {
+      contract[renames[name] ?? name] = message;
+    }
   }
   const fieldErrors: FieldErrors = { ...contract, ...problems };
-  if (Object.keys(fieldErrors).length === 0) return parsed;
+  if (Object.keys(fieldErrors).length === 0) {
+    return parsed;
+  }
+
   return { ok: false, state: failure(CHECK_FIELDS, fieldErrors) };
 }
 
@@ -51,17 +76,24 @@ export function classForm(form: FormData): PersonParsed<NewClassInput> {
   const campers = numberField(form, 'ratioCampers', problems);
   const ratioSet = instructors !== undefined || campers !== undefined;
   if (ratioSet && (instructors === undefined || campers === undefined)) {
-    problems[instructors === undefined ? 'ratioInstructors' : 'ratioCampers'] ??= 'Give both numbers of the ratio, or leave both empty.';
+    problems[instructors === undefined ? 'ratioInstructors' : 'ratioCampers'] ??=
+      'Give both numbers of the ratio, or leave both empty.';
   }
 
   // The contract reports the age-range refinement under `ageRange`; the form shows it on the oldest-age field.
-  return withProblems(problems, () => parseWith(NewClassInputSchema, {
-    name: field(form, 'name'),
-    description: field(form, 'description'),
-    ageRange: { minAge, maxAge },
-    capacity,
-    instructorRatio: ratioSet && instructors !== undefined && campers !== undefined ? { instructors, campers } : null,
-  }) as PersonParsed<NewClassInput>, { ageRange: 'maxAge' });
+  return withProblems(
+    problems,
+    () =>
+      parseWith<NewClassInput>(NewClassInputSchema, {
+        name: field(form, 'name'),
+        description: field(form, 'description'),
+        ageRange: { minAge, maxAge },
+        capacity,
+        instructorRatio:
+          ratioSet && instructors !== undefined && campers !== undefined ? { instructors, campers } : null,
+      }),
+    { ageRange: 'maxAge' },
+  );
 }
 
 /** A session. Times are typed in the camp's own clock and converted to instants here, so the contract always gets an offset. */
@@ -69,36 +101,48 @@ export function sessionForm(form: FormData, timeZone: string): PersonParsed<NewS
   const problems: FieldErrors = {};
   const starts = parseCampLocal(field(form, 'startsAt'), timeZone);
   const ends = parseCampLocal(field(form, 'endsAt'), timeZone);
-  if (!starts.ok) problems.startsAt = starts.message;
-  if (!ends.ok) problems.endsAt = ends.message;
+  if (!starts.ok) {
+    problems.startsAt = starts.message;
+  }
+  if (!ends.ok) {
+    problems.endsAt = ends.message;
+  }
   const capacity = numberField(form, 'capacity', problems);
 
-  return withProblems(problems, () => parseWith(NewSessionInputSchema, {
-    startsAt: starts.ok ? starts.instant : undefined,
-    endsAt: ends.ok ? ends.instant : undefined,
-    location: field(form, 'location'),
-    instructorIds: fieldAll(form, 'instructorIds'),
-    capacity,
-  }) as PersonParsed<NewSessionInput>);
+  return withProblems(problems, () =>
+    parseWith<NewSessionInput>(NewSessionInputSchema, {
+      startsAt: starts.ok ? starts.instant : undefined,
+      endsAt: ends.ok ? ends.instant : undefined,
+      location: field(form, 'location'),
+      instructorIds: fieldAll(form, 'instructorIds'),
+      capacity,
+    }),
+  );
 }
 
 /** An enrolment. The button pressed decides the waitlist: "waitlist" puts a camper on the list when the session is full. */
 export function enrolForm(form: FormData): PersonParsed<EnrolInput> {
   const problems: FieldErrors = {};
-  if (field(form, 'camperId') === '') problems.camperId = 'Choose a camper.';
+  if (field(form, 'camperId') === '') {
+    problems.camperId = 'Choose a camper.';
+  }
   const reason = field(form, 'overrideReason').trim();
-  return withProblems(problems, () => parseWith(EnrolInputSchema, {
-    sessionId: field(form, 'sessionId'),
-    camperId: field(form, 'camperId'),
-    waitlistIfFull: field(form, 'intent') === 'waitlist',
-    ...(reason ? { override: { reason } } : {}),
-  }) as PersonParsed<EnrolInput>);
+
+  return withProblems(problems, () =>
+    parseWith<EnrolInput>(EnrolInputSchema, {
+      sessionId: field(form, 'sessionId'),
+      camperId: field(form, 'camperId'),
+      waitlistIfFull: field(form, 'intent') === 'waitlist',
+      ...(reason ? { override: { reason } } : {}),
+    }),
+  );
 }
 
 export function cancelForm(form: FormData): PersonParsed<CancelEnrolmentInput> {
   const note = field(form, 'note').trim();
-  return parseWith(CancelEnrolmentInputSchema, {
+
+  return parseWith<CancelEnrolmentInput>(CancelEnrolmentInputSchema, {
     enrolmentId: field(form, 'enrolmentId'),
     ...(note ? { note } : {}),
-  }) as PersonParsed<CancelEnrolmentInput>;
+  });
 }

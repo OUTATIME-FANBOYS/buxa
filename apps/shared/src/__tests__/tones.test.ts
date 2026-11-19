@@ -10,7 +10,9 @@ describe('KIND_TONE', () => {
 describe('avatarHue', () => {
   it('is stable for a name and always one of the person hues', () => {
     expect(avatarHue('Maya Chen')).toBe(avatarHue('Maya Chen'));
-    for (const n of ['A', 'Maya Chen', 'Jo', '', 'Zoë Ångström']) expect(PALETTE_HUES).toContain(avatarHue(n));
+    for (const n of ['A', 'Maya Chen', 'Jo', '', 'Zoë Ångström']) {
+      expect(PALETTE_HUES).toContain(avatarHue(n));
+    }
   });
   it('is the char-code sum modulo the five palette hues', () => {
     expect(avatarHue('A')).toBe('brand'); // 65 % 5 = 0

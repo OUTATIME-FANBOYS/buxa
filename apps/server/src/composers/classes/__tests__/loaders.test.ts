@@ -65,7 +65,10 @@ describe('loadClassPage', () => {
 describe('loadPeopleWithRole', () => {
   it('turns people into id and display name pairs', async () => {
     h.people.list.mockResolvedValue([{ id: 'p1', givenName: 'Ada', familyName: 'Lovelace' }]);
-    expect(await loadPeopleWithRole(actor, 'instructor' as never)).toEqual({ ok: true, value: [{ id: 'p1', name: 'Ada Lovelace' }] });
+    expect(await loadPeopleWithRole(actor, 'instructor')).toEqual({
+      ok: true,
+      value: [{ id: 'p1', name: 'Ada Lovelace' }],
+    });
   });
 });
 

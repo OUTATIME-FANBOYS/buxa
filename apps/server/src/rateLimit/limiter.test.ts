@@ -3,16 +3,30 @@ import { randomBytes } from 'node:crypto';
 import pg from 'pg';
 import { migrate } from '@buxa/db';
 import { HttpError } from '../http/errors';
-import { clientAddress, createMemoryRateLimiter, createPgRateLimiter, enforceRateLimit, howLong, rateKey, type RateRule } from './limiter';
+import {
+  clientAddress,
+  createMemoryRateLimiter,
+  createPgRateLimiter,
+  enforceRateLimit,
+  howLong,
+  rateKey,
+  type RateRule,
+} from './limiter';
 
-const rule = (limit: number, windowSeconds: number): RateRule => ({ name: `test.${limit}.${windowSeconds}`, limit, windowSeconds });
+const rule = (limit: number, windowSeconds: number): RateRule => ({
+  name: `test.${limit}.${windowSeconds}`,
+  limit,
+  windowSeconds,
+});
 
 describe('rate limiter (in memory)', () => {
   it('allows the first N hits, refuses hit N+1, and resets after the window', async () => {
     let now = 1_000_000;
     const limiter = createMemoryRateLimiter(() => now);
     const r = rule(10, 3600);
-    for (let i = 1; i <= 10; i++) expect((await limiter.hit(r, 'user-a')).allowed).toBe(true);
+    for (let i = 1; i <= 10; i++) {
+      expect((await limiter.hit(r, 'user-a')).allowed).toBe(true);
+    }
     const refused = await limiter.hit(r, 'user-a');
     expect(refused.allowed).toBe(false);
     expect(refused.remaining).toBe(0);
@@ -37,8 +51,11 @@ describe('rate limiter (in memory)', () => {
     const limiter = createMemoryRateLimiter(() => 0);
     const r = rule(1, 90);
     await enforceRateLimit(limiter, r, 'user-a');
-    const error = await enforceRateLimit(limiter, r, 'user-a').catch(e => e);
+    const error: unknown = await enforceRateLimit(limiter, r, 'user-a').catch((e: unknown) => e);
     expect(error).toBeInstanceOf(HttpError);
+    if (!(error instanceof HttpError)) {
+      throw new Error('expected an HttpError');
+    }
     expect(error.statusCode).toBe(429);
     expect(error.retryAfterSeconds).toBe(90);
     expect(error.message).toBe('Too many requests. Try again in 2 minutes.');
@@ -78,7 +95,9 @@ describe.skipIf(!url)('rate limiter (Postgres, migration 0010)', () => {
     const r = { name: `pg.test.${randomBytes(4).toString('hex')}`, limit: 3, windowSeconds: 1 };
     const identity = randomBytes(8).toString('hex');
     const results = [];
-    for (let i = 0; i < 4; i++) results.push(await limiter.hit(r, identity));
+    for (let i = 0; i < 4; i++) {
+      results.push(await limiter.hit(r, identity));
+    }
     expect(results.map(x => x.allowed)).toEqual([true, true, true, false]);
     expect(results[2].remaining).toBe(0);
     expect(results[3].retryAfterSeconds).toBeGreaterThanOrEqual(1);
@@ -91,15 +110,21 @@ describe.skipIf(!url)('rate limiter (Postgres, migration 0010)', () => {
   it('stores hashed keys only, with no identity in the clear', async () => {
     const identity = `visible-${randomBytes(6).toString('hex')}`;
     await limiter.hit(rule(5, 60), identity);
-    const { rows } = await pool.query<{ key: string }>('SELECT key FROM rate_limits WHERE key = $1', [rateKey(rule(5, 60), identity)]);
+    const { rows } = await pool.query<{ key: string }>('SELECT key FROM rate_limits WHERE key = $1', [
+      rateKey(rule(5, 60), identity),
+    ]);
     expect(rows).toHaveLength(1);
     expect(rows[0].key).not.toContain(identity);
   });
 
   it('is not readable by the request role or the Data API roles', async () => {
-    const { rows } = await pool.query<{ can: boolean }>(`SELECT has_table_privilege('buxa_app', 'rate_limits', 'SELECT') AS can`);
+    const { rows } = await pool.query<{ can: boolean }>(
+      `SELECT has_table_privilege('buxa_app', 'rate_limits', 'SELECT') AS can`,
+    );
     expect(rows[0].can).toBe(false);
-    const fn = await pool.query<{ can: boolean }>(`SELECT has_function_privilege('buxa_app', 'rate_limit_hit(text,integer,integer)', 'EXECUTE') AS can`);
+    const fn = await pool.query<{ can: boolean }>(
+      `SELECT has_function_privilege('buxa_app', 'rate_limit_hit(text,integer,integer)', 'EXECUTE') AS can`,
+    );
     expect(fn.rows[0].can).toBe(true);
   });
 });

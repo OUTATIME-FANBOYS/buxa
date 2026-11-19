@@ -1,51 +1,89 @@
 'use client';
 
 import { useActionState, useEffect, useRef } from 'react';
-import { Field } from '@/components/elements/export';
+import { Button } from '@/components/elements';
+import { Checkbox, Select, TextField } from '@/components/atoms';
 import { fieldError, idle } from '@buxa/shared';
 import { linkHouseholdAction } from '@/actions/people';
 import { FormMessage } from './FormMessage';
 
-export interface PersonOption { id: string; name: string }
-export interface HouseholdOption { id: string; name: string }
+export interface PersonOption {
+  id: string;
+  name: string;
+}
+export interface HouseholdOption {
+  id: string;
+  name: string;
+}
 
 /**
  * Link one of the matching people to a household. A child's collector must be a guardian (the form says so; the server enforces it).
  * The pick-up checkbox appears only for admins and above: the server refuses it from anyone else.
  */
-export function LinkHouseholdForm({ households, people, canAuthorisePickup }: { households: readonly HouseholdOption[]; people: readonly PersonOption[]; canAuthorisePickup: boolean }) {
+export function LinkHouseholdForm({
+  households,
+  people,
+  canAuthorisePickup,
+}: {
+  households: readonly HouseholdOption[];
+  people: readonly PersonOption[];
+  canAuthorisePickup: boolean;
+}) {
   const [state, formAction, pending] = useActionState(linkHouseholdAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
   useEffect(() => {
-    if (state.status === 'error' && state.fieldErrors) formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+    if (state.status === 'error' && state.fieldErrors) {
+      formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+    }
   }, [state]);
   const err = (name: string) => fieldError(state, name);
 
   return (
     <form ref={formRef} action={formAction} className="stack">
       <div className="people-form-grid">
-        <Field label="Household" error={err('householdId')}>
-          <select name="householdId" aria-invalid={err('householdId') ? true : undefined} defaultValue={households[0]?.id}>
-            {households.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
-          </select>
-        </Field>
-        <Field label="Person" error={err('personId')}>
-          <select name="personId" aria-invalid={err('personId') ? true : undefined} defaultValue="">
-            <option value="" disabled>Choose a person</option>
-            {people.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-        </Field>
-        <Field label="How they are related" error={err('relationship')}>
-          <input name="relationship" maxLength={40} autoComplete="off" aria-invalid={err('relationship') ? true : undefined} />
-        </Field>
+        <Select
+          label="Household"
+          name="householdId"
+          error={err('householdId')}
+          defaultValue={households[0]?.id}
+          options={households.map(h => ({ value: h.id, label: h.name }))}
+        />
+        <Select
+          label="Person"
+          name="personId"
+          error={err('personId')}
+          placeholder="Choose a person"
+          options={people.map(p => ({ value: p.id, label: p.name }))}
+        />
+        <TextField
+          label="How they are related"
+          name="relationship"
+          error={err('relationship')}
+          maxLength={40}
+          autoComplete="off"
+        />
       </div>
       <div className="people-checks">
-        <label className="people-check"><input type="checkbox" name="isGuardian" /> Parent or guardian</label>
-        {canAuthorisePickup && <label className="people-check"><input type="checkbox" name="canPickup" /> May collect the child (guardians only)</label>}
+        <Checkbox className="people-check" name="isGuardian">
+          Parent or guardian
+        </Checkbox>
+        {canAuthorisePickup && (
+          <Checkbox className="people-check" name="canPickup">
+            May collect the child (guardians only)
+          </Checkbox>
+        )}
       </div>
-      {err('canPickup') && <p className="field-error" role="alert">{err('canPickup')}</p>}
+      {err('canPickup') && (
+        <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
+          {err('canPickup')}
+        </p>
+      )}
       <FormMessage state={state} />
-      <div><button className="btn" disabled={pending}>{pending ? 'Linking…' : 'Link to household'}</button></div>
+      <div>
+        <Button icon="unlink" disabled={pending}>
+          {pending ? 'Linking…' : 'Link to household'}
+        </Button>
+      </div>
     </form>
   );
 }

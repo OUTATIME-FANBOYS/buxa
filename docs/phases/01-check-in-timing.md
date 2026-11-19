@@ -5,10 +5,10 @@ This page holds the evidence for it. It has two halves: a server-side guard that
 
 ## Budgets
 
-| Budget | Value | Where it is enforced |
-|---|---|---|
-| **Phone budget** | 5 seconds from the scan to the green result, on a real phone, on iOS Safari and Android Chrome | Manual, procedure below |
-| **Server budget** | p95 under **1000 ms** for the server side of a scan followed by a check-in | `SERVER_P95_BUDGET_MS` in `apps/server/src/attendance/__tests__/checkInTiming.pg.test.ts` |
+| Budget            | Value                                                                                          | Where it is enforced                                                                      |
+| ----------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **Phone budget**  | 5 seconds from the scan to the green result, on a real phone, on iOS Safari and Android Chrome | Manual, procedure below                                                                   |
+| **Server budget** | p95 under **1000 ms** for the server side of a scan followed by a check-in                     | `SERVER_P95_BUDGET_MS` in `apps/server/src/attendance/__tests__/checkInTiming.pg.test.ts` |
 
 The server budget is **not the phone budget**. It is a regression guard on the database and the services. The 5 seconds on the phone also includes the network, the phone itself, the browser, and the staff member's taps. The server's share has to stay well inside it, so a slow query fails the build before a phone ever sees it.
 
@@ -26,7 +26,7 @@ The server budget is **not the phone budget**. It is a regression guard on the d
 
 The Server Action wrapper (session lookup, the rate limiter, the input check) is **not** included. Those add a little time on top of these numbers, and the phone measurement captures them.
 
-Unit tests cover the helpers: `scripts/timing/stats.test.ts` (percentiles and summaries), `scripts/timing/targetUrl.test.ts` (the localhost guard), `scripts/timing/options.test.ts` (argument checks) and `scripts/timing/actionId.test.ts` (finding the scan action's id).
+Unit tests cover the helpers in `scripts/timing/`: `targetUrl.test.ts` (the localhost guard), `options.test.ts` (argument checks) and `actionId.test.ts` (finding the scan action's id).
 
 ### How to run it
 
@@ -41,12 +41,12 @@ The test prints the numbers. Without `DATABASE_URL` it is skipped, as the other 
 
 Machine: a Mac (Darwin 27) running the Node test process, with the local Postgres 16 from `docker-compose.yml` in Docker. Times are in milliseconds, for 100 timed visits.
 
-| Run | Conditions | Scan p50 / p95 / max | Check-in p50 / p95 / max | Scan to check-in response p50 / **p95** / max |
-|---|---|---|---|---|
-| 1 | this file alone | 17.4 / 48.7 / 207.3 | 12.8 / 38.0 / 143.4 | 30.4 / **84.6** / 315.6 |
-| 2 | full `npm test` run (other suites in parallel) | 33.5 / 75.3 / 90.3 | 23.1 / 62.1 / 119.3 | 58.7 / **129.6** / 152.7 |
-| 3 | this file alone (slower run, cause not investigated) | 92.4 / 185.4 / 245.8 | 68.5 / 140.7 / 160.9 | 178.3 / **285.0** / 361.2 |
-| 4 | this file alone | 17.6 / 30.0 / 67.9 | 13.2 / 25.4 / 58.5 | 31.6 / **59.7** / 93.9 |
+| Run | Conditions                                           | Scan p50 / p95 / max | Check-in p50 / p95 / max | Scan to check-in response p50 / **p95** / max |
+| --- | ---------------------------------------------------- | -------------------- | ------------------------ | --------------------------------------------- |
+| 1   | this file alone                                      | 17.4 / 48.7 / 207.3  | 12.8 / 38.0 / 143.4      | 30.4 / **84.6** / 315.6                       |
+| 2   | full `npm test` run (other suites in parallel)       | 33.5 / 75.3 / 90.3   | 23.1 / 62.1 / 119.3      | 58.7 / **129.6** / 152.7                      |
+| 3   | this file alone (slower run, cause not investigated) | 92.4 / 185.4 / 245.8 | 68.5 / 140.7 / 160.9     | 178.3 / **285.0** / 361.2                     |
+| 4   | this file alone                                      | 17.6 / 30.0 / 67.9   | 13.2 / 25.4 / 58.5       | 31.6 / **59.7** / 93.9                        |
 
 **Headline:** across the four runs the server's p95 for scan plus check-in was between 60 and 285 ms, and the slowest single visit was 361 ms. That is well under the 1000 ms server budget. Expect the numbers to move from run to run on a laptop; the guard is the p95 threshold, not any one run.
 
@@ -58,7 +58,7 @@ This is the evidence the exit criterion needs. It has to be done on **real devic
 
 ### Before you start
 
-- **Install step:** the installable staff app (PWA) is on `develop` and built (`/manifest.webmanifest`; see `docs/ROADMAP.md`, "Staff mobile app"). Run each phone once in the browser and record `browser` in the table's *Install* column. Then install the app from the home screen and repeat the run, recording `home screen`.
+- **Install step:** the installable staff app (PWA) is on `develop` and built (`/manifest.webmanifest`; see `docs/ROADMAP.md`, "Staff mobile app"). Run each phone once in the browser and record `browser` in the table's _Install_ column. Then install the app from the home screen and repeat the run, recording `home screen`.
 - Use a **production build** on a **staging URL** (the same build as `npm run build` and `npm run start`), never `next dev`.
 - You need one **test badge**: a test person (not a real member) with a membership valid today and a badge printed or shown on a second screen. Archive or revoke that person afterwards. Do not use a real child's badge.
 - Turn off battery saver and low-power mode. Keep the phone on Wi-Fi or a normal mobile connection, and write down which one.
@@ -66,7 +66,7 @@ This is the evidence the exit criterion needs. It has to be done on **real devic
 
 ### Steps (for each phone: one iPhone on Safari, one Android on Chrome)
 
-1. Install the app from the phone's home screen (once the app exists; otherwise open the staging URL in the browser).
+1. Install the app from the phone's home screen (open the staging URL in the browser first if the install prompt is not offered).
 2. Sign in as a staff member with the `staff` role or higher.
 3. Open **Check in** (`/camp/check-in`).
 4. Start the screen recording, or the stopwatch, on the moment the badge is held up to the camera or the moment the code is typed or scanned.
@@ -87,36 +87,36 @@ Median is over the 10 runs of each phone. The median goes in the "Median" row, a
 **iOS Safari**
 
 | Phone and iOS version | Network | Install (browser / home screen) | Run | Scan to green result (s) | Notes |
-|---|---|---|---|---|---|
-| | | | 1 | | |
-| | | | 2 | | |
-| | | | 3 | | |
-| | | | 4 | | |
-| | | | 5 | | |
-| | | | 6 | | |
-| | | | 7 | | |
-| | | | 8 | | |
-| | | | 9 | | |
-| | | | 10 | | |
-| **Median** | | | | | |
+| --------------------- | ------- | ------------------------------- | --- | ------------------------ | ----- |
+|                       |         |                                 | 1   |                          |       |
+|                       |         |                                 | 2   |                          |       |
+|                       |         |                                 | 3   |                          |       |
+|                       |         |                                 | 4   |                          |       |
+|                       |         |                                 | 5   |                          |       |
+|                       |         |                                 | 6   |                          |       |
+|                       |         |                                 | 7   |                          |       |
+|                       |         |                                 | 8   |                          |       |
+|                       |         |                                 | 9   |                          |       |
+|                       |         |                                 | 10  |                          |       |
+| **Median**            |         |                                 |     |                          |       |
 
 Result: ______ (PASS if the median is under 5 s and no run was over 5 s).
 
 **Android Chrome**
 
 | Phone and Android version | Network | Install (browser / home screen) | Run | Scan to green result (s) | Notes |
-|---|---|---|---|---|---|
-| | | | 1 | | |
-| | | | 2 | | |
-| | | | 3 | | |
-| | | | 4 | | |
-| | | | 5 | | |
-| | | | 6 | | |
-| | | | 7 | | |
-| | | | 8 | | |
-| | | | 9 | | |
-| | | | 10 | | |
-| **Median** | | | | | |
+| ------------------------- | ------- | ------------------------------- | --- | ------------------------ | ----- |
+|                           |         |                                 | 1   |                          |       |
+|                           |         |                                 | 2   |                          |       |
+|                           |         |                                 | 3   |                          |       |
+|                           |         |                                 | 4   |                          |       |
+|                           |         |                                 | 5   |                          |       |
+|                           |         |                                 | 6   |                          |       |
+|                           |         |                                 | 7   |                          |       |
+|                           |         |                                 | 8   |                          |       |
+|                           |         |                                 | 9   |                          |       |
+|                           |         |                                 | 10  |                          |       |
+| **Median**                |         |                                 |     |                          |       |
 
 Result: ______ (PASS if the median is under 5 s and no run was over 5 s).
 
@@ -142,5 +142,5 @@ BUXA_SESSION_COOKIE='<Cookie header from a signed-in staff browser>' \
 ## Still open
 
 - The phone results table is blank. The phase exit criterion is not met until the owner fills it in with a passing median on both phones.
-- The installable app (PWA) is not built, so the "install from the home screen" step cannot be done yet.
+- The install check on real phones is still open. The manifest and the install hint are built.
 - The browser script has not been run end to end against a signed-in site.

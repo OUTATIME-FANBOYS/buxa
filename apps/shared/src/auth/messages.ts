@@ -1,14 +1,26 @@
 /** What to tell a person when Supabase refuses. Deliberately general: never says whether an email already has an account. */
 export function describeSignInError(message: string): string {
-  if (/email not confirmed/i.test(message)) return 'Confirm your email first. Check your inbox for the link.';
-  if (/invalid login|invalid credentials/i.test(message)) return 'That email and password do not match.';
-  if (/rate|too many|limit/i.test(message)) return 'Too many attempts. Wait a minute and try again.';
+  if (/email not confirmed/i.test(message)) {
+    return 'Confirm your email first. Check your inbox for the link.';
+  }
+  if (/invalid login|invalid credentials/i.test(message)) {
+    return 'That email and password do not match.';
+  }
+  if (/rate|too many|limit/i.test(message)) {
+    return 'Too many attempts. Wait a minute and try again.';
+  }
+
   return 'Could not sign in. Please try again.';
 }
 
 export function describeSignUpError(message: string): string {
-  if (/password/i.test(message)) return 'Choose a stronger password (at least 8 characters).';
-  if (/rate|too many|limit/i.test(message)) return 'Too many attempts. Wait a minute and try again.';
+  if (/password/i.test(message)) {
+    return 'Choose a stronger password (at least 8 characters).';
+  }
+  if (/rate|too many|limit/i.test(message)) {
+    return 'Too many attempts. Wait a minute and try again.';
+  }
+
   return 'Could not create the account. Please try again.';
 }
 
@@ -16,7 +28,8 @@ export function describeSignUpError(message: string): string {
 export const CONFIRM_EMAIL_MESSAGE = 'Check your email for a confirmation link, then sign in.';
 
 /** Supabase's answer when the address already has an account. It gets the same answer as a new address (audit S-10). */
-export const isAlreadyRegistered = (message: string): boolean => /already (been )?registered|already exists|user_already_exists/i.test(message);
+export const isAlreadyRegistered = (message: string): boolean =>
+  /already (been )?registered|already exists|user_already_exists/i.test(message);
 
 /** Shown instead of the forms while the app is refusing to serve (see server/availability.ts). */
 export const MAINTENANCE_MESSAGE = 'Sign-in is paused for maintenance. Please try again later.';

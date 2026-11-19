@@ -1,11 +1,78 @@
 /* ---------- Auth ---------- */
-.auth { min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
+/* The right-hand panel is a plain tint (no dots). The hero on the left carries the glows and stars. */
+.auth {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  background-color: var(--auth-tint);
+}
 /* The card's one column is minmax(0, 1fr): an implicit auto column sized by a nowrap button made the card 343px inside a 294px box on a phone. */
-.auth-card { width: min(400px, calc(100% - 2 * var(--s4))); place-self: center; margin: var(--s5) 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-3); padding: var(--s6); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s4); box-shadow: var(--shadow); }
-.auth-brand { display: none; }
-.auth-hero { background: var(--hero-bg); color: var(--hero-fg); padding: var(--s7); display: flex; flex-direction: column; justify-content: space-between; gap: var(--s6); }
-.auth-hero .brand { margin: 0; } .auth-hero .logo { background: var(--hero-fg); color: var(--hero-bg); }
-.auth-hero .logo.logo-mark { background: none; }
-.hero-copy { display: grid; gap: var(--s5); } .hero-title { font-size: clamp(1.75rem, 3.2vw, 2.5rem); font-weight: 650; letter-spacing: -.03em; line-height: 1.08; max-width: 16ch; text-wrap: balance; }
-.hero-copy ul { display: grid; gap: var(--s3); color: var(--hero-fg-2); font-weight: 500; } .hero-copy li { display: flex; align-items: center; gap: var(--s3); }
-.auth-card h1 { font-size: 24px; letter-spacing: -.025em; } .auth form { display: grid; gap: var(--s4); } .auth-switch { text-align: center; }
+.auth-card {
+  width: min(400px, calc(100% - 2 * var(--s4)));
+  place-self: center;
+  margin: var(--s5) 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  padding: var(--s6);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s4);
+  box-shadow: var(--shadow);
+}
+.auth-brand {
+  display: none;
+}
+.auth-hero {
+  background: var(--auth-glow), var(--auth-stars), var(--hero-bg);
+  color: var(--hero-fg);
+  padding: var(--s7);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--s6);
+}
+.auth-hero .brand {
+  margin: 0;
+}
+.auth-hero .logo {
+  background: var(--hero-fg);
+  color: var(--hero-bg);
+}
+.auth-hero .logo.logo-mark {
+  background: none;
+}
+.hero-copy {
+  display: grid;
+  gap: var(--s5);
+}
+.hero-title {
+  font-size: clamp(1.75rem, 3.2vw, 2.5rem);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  max-width: 16ch;
+  text-wrap: balance;
+}
+.hero-copy ul {
+  display: grid;
+  gap: var(--s3);
+  color: var(--hero-fg-2);
+  font-weight: 500;
+}
+.hero-copy li {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+.auth-card h1 {
+  font-size: 24px;
+  letter-spacing: -0.025em;
+}
+.auth form {
+  display: grid;
+  gap: var(--s4);
+}
+.auth-switch {
+  text-align: center;
+}

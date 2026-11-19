@@ -1,5 +1,8 @@
 /** A stretch of time, as ISO instants. Sessions and enrolments are compared as instants, so the camp zone never changes the answer. */
-export interface Span { startsAt: string; endsAt: string }
+export interface Span {
+  startsAt: string;
+  endsAt: string;
+}
 
 const ms = (iso: string): number => Date.parse(iso);
 
@@ -7,6 +10,7 @@ const ms = (iso: string): number => Date.parse(iso);
 export function isValidSpan(s: Span): boolean {
   const start = ms(s.startsAt);
   const end = ms(s.endsAt);
+
   return Number.isFinite(start) && Number.isFinite(end) && start < end;
 }
 
@@ -21,5 +25,6 @@ export function overlaps(a: Span, b: Span): boolean {
 /** The first of `others` that clashes with `candidate`, earliest start first, so the same clash is reported every time. */
 export function findClash<T extends Span>(candidate: Span, others: readonly T[]): T | null {
   const clashing = others.filter(o => overlaps(candidate, o)).sort((x, y) => ms(x.startsAt) - ms(y.startsAt));
+
   return clashing[0] ?? null;
 }

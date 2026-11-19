@@ -7,7 +7,16 @@ describe('createActions', () => {
   it('binds every action group to the one context', () => {
     const ctx = fakeContext(buildSeed());
     const actions = createActions(ctx);
-    for (const name of ['setUi', 'setTheme', 'createTask', 'moveTask', 'createColumn', 'createProject', 'decide', 'simulateRun']) {
+    for (const name of [
+      'setUi',
+      'setTheme',
+      'createTask',
+      'moveTask',
+      'createColumn',
+      'createProject',
+      'decide',
+      'simulateRun',
+    ]) {
       expect(typeof (actions as Record<string, unknown>)[name]).toBe('function');
     }
     actions.setTheme('light');

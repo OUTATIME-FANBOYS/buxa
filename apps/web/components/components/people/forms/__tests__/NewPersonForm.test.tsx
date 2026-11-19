@@ -1,8 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { NewPersonForm } from '@/components/components/people/forms/export';
+import { NewPersonForm } from '@/components/components/people/forms';
+import { settle } from '@buxa/domain';
 
-vi.mock('@buxa/server/composers/people/createPersonAction', () => ({ createPersonAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/people/createPersonAction', () => ({
+  createPersonAction: () => settle(() => ({ status: 'idle' })),
+}));
 
 describe('NewPersonForm', () => {
   it('joins the person to the household they came from when given one', () => {
@@ -12,8 +15,10 @@ describe('NewPersonForm', () => {
     expect(html).not.toContain('New household name');
   });
   it('lets the person join an existing household or start a new one when there is no household yet', () => {
-    const html = renderToStaticMarkup(<NewPersonForm household={null} households={[{ id: 'h-1', name: 'The Coles' } as never]} />);
-    expect(html).toContain('>Existing household</span>');
+    const html = renderToStaticMarkup(
+      <NewPersonForm household={null} households={[{ id: 'h-1', name: 'The Coles' } as never]} />,
+    );
+    expect(html).toContain('>Existing household</label>');
     expect(html).toContain('New household name');
     expect(html).toContain('>Add person</button>');
   });
@@ -31,6 +36,6 @@ describe('NewPersonForm', () => {
     const html = renderToStaticMarkup(<NewPersonForm household={null} households={[]} variant="dialog" />);
     expect(html).toContain('class="people-form person-form"');
     expect(html).not.toContain('href="/camp/people"');
-    expect(html).toContain('<button type="button" class="btn">Cancel</button>');
+    expect(html).toMatch(/<button[^>]*type="button"[^>]*class="button button--secondary"[^>]*>Cancel<\/button>/);
   });
 });

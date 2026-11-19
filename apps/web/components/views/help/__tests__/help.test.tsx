@@ -3,14 +3,15 @@ import { describe, expect, it } from 'vitest';
 import { HELP_SECTIONS } from '@buxa/shared';
 import { IMPORTS_SECTION } from '@buxa/shared';
 import { EXPORTS_SECTION } from '@buxa/shared';
-import { CodeBlock } from '@/components/components/help/export';
-import { ExampleTable } from '@/components/components/help/export';
-import { HelpPage } from '@/components/views/help/export';
-import { HelpSection } from '@/components/components/help/export';
+import { CodeBlock } from '@/components/components/help';
+import { ExampleTable } from '@/components/components/help';
+import { HelpPage } from '@/components/views/help';
+import { HelpSection } from '@/components/components/help';
 
 /** The heading levels in the order they appear in the markup, for example ['h1', 'h2', 'h3']. */
 const headingLevels = (html: string): string[] => [...html.matchAll(/<(h[1-6])[ >]/g)].map(m => m[1] ?? '');
-const headingTexts = (html: string): string[] => [...html.matchAll(/<h[1-6][^>]*>([^<]*)<\/h[1-6]>/g)].map(m => m[1] ?? '');
+const headingTexts = (html: string): string[] =>
+  [...html.matchAll(/<h[1-6][^>]*>([^<]*)<\/h[1-6]>/g)].map(m => m[1] ?? '');
 
 describe('HelpPage', () => {
   const html = renderToStaticMarkup(<HelpPage />);
@@ -60,7 +61,16 @@ describe('HelpSection', () => {
 
 describe('ExampleTable', () => {
   it('renders a header row and one body row per example', () => {
-    const html = renderToStaticMarkup(<ExampleTable caption="Columns" headers={['Column', 'Example']} rows={[['starts_at', '2027-06-07T09:00'], ['age_min', '8']]} />);
+    const html = renderToStaticMarkup(
+      <ExampleTable
+        caption="Columns"
+        headers={['Column', 'Example']}
+        rows={[
+          ['starts_at', '2027-06-07T09:00'],
+          ['age_min', '8'],
+        ]}
+      />,
+    );
     expect(html).toContain('<th scope="col">Column</th>');
     expect(html.match(/<tr>/g)).toHaveLength(3);
     expect(html).toContain('<td>2027-06-07T09:00</td>');

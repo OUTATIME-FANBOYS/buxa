@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { buildSeed } from '@buxa/shared';
-import { TaskDrawer } from '@/components/components/kanban/drawer/export';
+import { TaskDrawer } from '@/components/components/kanban/drawer';
 
-const h = vi.hoisted(() => ({ drawer: null as null | { id: string }, store: {} as Record<string, unknown> }));
-vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({ useTaskDrawer: () => ({ drawer: h.drawer, closeTask: () => undefined }) }));
+const h = vi.hoisted(() => ({ drawer: null as null | { id: string }, store: {} }));
+vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({
+  useTaskDrawer: () => ({ drawer: h.drawer, closeTask: () => undefined }),
+}));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 
 describe('TaskDrawer', () => {

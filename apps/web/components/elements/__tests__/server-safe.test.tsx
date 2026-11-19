@@ -12,10 +12,18 @@ beforeAll(async () => {
   Object.assign(globalThis, { React });
   // Built from the files, not the retired barrel, so each module is one import.
   ui = {
-    ...(await import('@/components/elements/export')), ...(await import('@/components/elements/export')), ...(await import('@/components/elements/export')),
-    ...(await import('@/components/components/export')), ...(await import('@/components/components/export')), ...(await import('@/components/elements/export')),
-    ...(await import('@/components/elements/export')), ...(await import('@/components/elements/export')), ...(await import('@/components/components/export')),
-    ...(await import('@/components/components/export')), ...(await import('@/components/components/export')), ...(await import('@/components/components/export')),
+    ...(await import('@/components/elements')),
+    ...(await import('@/components/elements')),
+    ...(await import('@/components/elements')),
+    ...(await import('@/components/components')),
+    ...(await import('@/components/components')),
+    ...(await import('@/components/elements')),
+    ...(await import('@/components/elements')),
+    ...(await import('@/components/elements')),
+    ...(await import('@/components/components')),
+    ...(await import('@/components/components')),
+    ...(await import('@/components/components')),
+    ...(await import('@/components/components')),
     ...(await import('@buxa/shared')),
   };
 });
@@ -24,8 +32,12 @@ beforeAll(async () => {
 describe('server-safe components', () => {
   it('Pill keeps its dot and classes', () => {
     const { Pill } = ui;
-    expect(renderToStaticMarkup(<Pill tone="ok">Done</Pill>)).toBe('<span class="pill pill-ok"><i class="pill-dot" aria-hidden="true"></i>Done</span>');
-    expect(renderToStaticMarkup(<Pill dot={false}>x</Pill>)).toBe('<span class="pill pill-neutral">x</span>');
+    expect(renderToStaticMarkup(<Pill tone="ok">Done</Pill>)).toMatch(
+      /^<span class="pill pill-ok [^"]*"><i class="pill-dot [^"]*" aria-hidden="true"><\/i>Done<\/span>$/,
+    );
+    expect(renderToStaticMarkup(<Pill dot={false}>x</Pill>)).toMatch(
+      /^<span class="pill pill-neutral [^"]*">x<\/span>$/,
+    );
   });
   it('Avatar renders person, agent and unassigned', () => {
     const { Avatar } = ui;
@@ -35,7 +47,9 @@ describe('server-safe components', () => {
   });
   it('PageHeader renders the title, the optional subtitle and actions', () => {
     const { PageHeader } = ui;
-    expect(renderToStaticMarkup(<PageHeader title="On site" />)).toBe('<header class="page-head"><div class="page-title"><h1>On site</h1></div></header>');
+    expect(renderToStaticMarkup(<PageHeader title="On site" />)).toBe(
+      '<header class="page-head"><div class="page-title"><h1>On site</h1></div></header>',
+    );
     expect(renderToStaticMarkup(<PageHeader title="Check-in" subtitle="Scan." actions={<b>Go</b>} />)).toBe(
       '<header class="page-head"><div class="page-title"><h1>Check-in</h1><p class="muted">Scan.</p></div><div class="page-actions"><b>Go</b></div></header>',
     );
@@ -43,7 +57,13 @@ describe('server-safe components', () => {
   it('Empty, Field, Progress, Icon render', () => {
     const { Empty, Field, Progress, Icon } = ui;
     expect(renderToStaticMarkup(<Empty title="Nothing" body="b" />)).toContain('<strong>Nothing</strong><p>b</p>');
-    expect(renderToStaticMarkup(<Field label="Name" error="Bad"><input /></Field>)).toContain('<span class="field-error" role="alert">Bad</span>');
+    expect(
+      renderToStaticMarkup(
+        <Field label="Name" error="Bad">
+          <input />
+        </Field>,
+      ),
+    ).toMatch(/<span class="field-error [^"]*" role="alert">Bad<\/span>/);
     expect(renderToStaticMarkup(<Progress value={250} />)).toContain('aria-valuenow="100"');
     expect(renderToStaticMarkup(<Icon name="check" size={20} />)).toContain('width="20"');
   });

@@ -6,5 +6,6 @@ import { getCurrentCamp, requireSession, toActor } from '../../session';
 export async function currentActor(): Promise<Actor | null> {
   const session = await requireSession();
   const camp = await getCurrentCamp(session);
+
   return camp ? toActor(session, camp) : null;
 }

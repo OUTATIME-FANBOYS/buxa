@@ -20,8 +20,11 @@ export function neutraliseFormula(text: string): string {
 
 /** One cell, encoded: formula-neutralised first, then quoted if RFC 4180 requires it. */
 export function csvCell(cell: CsvCell): string {
-  if (cell === null || cell === undefined) return '';
+  if (cell === null || cell === undefined) {
+    return '';
+  }
   const text = typeof cell === 'number' ? String(cell) : neutraliseFormula(cell);
+
   return NEEDS_QUOTES.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 

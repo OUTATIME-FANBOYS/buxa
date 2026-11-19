@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { connectionReducer, initialConnection, ISSUE_FAILED, type AgentConnection, type AgentConnectionEvent, type TokenInfo } from '../agentConnection';
+import {
+  connectionReducer,
+  initialConnection,
+  ISSUE_FAILED,
+  type AgentConnection,
+  type AgentConnectionEvent,
+  type TokenInfo,
+} from '../agentConnection';
 
 const none: TokenInfo = { exists: false, createdAt: null, lastSeen: null };
 const some: TokenInfo = { exists: true, createdAt: '2026-01-01T00:00:00Z', lastSeen: null };
@@ -7,7 +14,12 @@ const run = (from: AgentConnection, ...events: AgentConnectionEvent[]) => events
 
 describe('agent connection phases', () => {
   it('loads, issues a token and shows it once', () => {
-    const s = run(initialConnection, { type: 'loaded', info: none }, { type: 'issueStarted' }, { type: 'issued', token: 'tok' });
+    const s = run(
+      initialConnection,
+      { type: 'loaded', info: none },
+      { type: 'issueStarted' },
+      { type: 'issued', token: 'tok' },
+    );
     expect(s).toEqual({ phase: 'issued', info: { ...none, exists: true }, token: 'tok' });
     expect(run(s, { type: 'infoRefreshed', info: some })).toEqual({ phase: 'issued', info: some, token: 'tok' });
   });

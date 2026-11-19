@@ -31,23 +31,41 @@ export function parseMeasureOptions(argv: readonly string[], env: Record<string,
       continue;
     }
     const match = /^--(url|token|runs|action-id)(?:=(.*))?$/.exec(arg);
-    if (!match) throw new Error(`Unknown option ${arg.startsWith('--') ? arg.split('=')[0] : 'argument'}. See the usage in scripts/measure-checkin.ts.`);
+    if (!match) {
+      throw new Error(
+        `Unknown option ${arg.startsWith('--') ? arg.split('=')[0] : 'argument'}. See the usage in scripts/measure-checkin.ts.`,
+      );
+    }
     const value = match[2] ?? argv[++i];
-    if (value === undefined || value === '' || value.startsWith('--')) throw new Error(`${match[1] === 'token' ? '--token' : `--${match[1]}`} needs a value.`);
+    if (value === undefined || value === '' || value.startsWith('--')) {
+      throw new Error(`${match[1] === 'token' ? '--token' : `--${match[1]}`} needs a value.`);
+    }
     values.set(match[1], value);
   }
 
   const url = values.get('url');
-  if (url === undefined) throw new Error('Give the site to measure with --url, for example --url=http://localhost:3000');
+  if (url === undefined) {
+    throw new Error('Give the site to measure with --url, for example --url=http://localhost:3000');
+  }
   const token = values.get('token');
-  if (token === undefined) throw new Error('Give a test badge with --token (the bx1. code from a test person, not a real member).');
-  if (parseCredentialPayload(token) === null) throw new Error('That is not a Buxa badge code: it should start with bx1. and be the code printed on the test badge.');
+  if (token === undefined) {
+    throw new Error('Give a test badge with --token (the bx1. code from a test person, not a real member).');
+  }
+  if (parseCredentialPayload(token) === null) {
+    throw new Error(
+      'That is not a Buxa badge code: it should start with bx1. and be the code printed on the test badge.',
+    );
+  }
 
   const runs = values.has('runs') ? Number(values.get('runs')) : DEFAULT_RUNS;
-  if (!Number.isInteger(runs) || runs < 1 || runs > MAX_RUNS) throw new Error(`--runs must be a whole number from 1 to ${MAX_RUNS}.`);
+  if (!Number.isInteger(runs) || runs < 1 || runs > MAX_RUNS) {
+    throw new Error(`--runs must be a whole number from 1 to ${MAX_RUNS}.`);
+  }
 
   const actionId = values.get('action-id') ?? null;
-  if (actionId !== null && !/^[0-9a-f]{40,}$/.test(actionId)) throw new Error('--action-id must be the hexadecimal id of the scan action.');
+  if (actionId !== null && !/^[0-9a-f]{40,}$/.test(actionId)) {
+    throw new Error('--action-id must be the hexadecimal id of the scan action.');
+  }
 
   return {
     url: assertTargetUrl(url, allowRemote),

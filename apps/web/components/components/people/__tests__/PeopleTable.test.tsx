@@ -1,9 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { PersonSummary } from '@buxa/contracts';
-import { PeopleTable } from '@/components/components/people/export';
+import { PeopleTable } from '@/components/components/people';
 
-const person = { id: 'p-1', givenName: 'Ada', familyName: 'Lee', preferredName: 'Annie', roles: [], status: 'valid', onSite: true } as unknown as PersonSummary;
+const person = {
+  id: 'p-1',
+  givenName: 'Ada',
+  familyName: 'Lee',
+  preferredName: 'Annie',
+  roles: [],
+  status: 'valid',
+  onSite: true,
+} as unknown as PersonSummary;
 
 describe('PeopleTable', () => {
   it('links each person by name, with the preferred name in brackets', () => {

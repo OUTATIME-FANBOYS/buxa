@@ -10,7 +10,10 @@ export const CAPACITY_CONSTRAINT = 'enrolments_capacity';
 
 /** True for a Postgres error with this SQLSTATE and constraint name. Anything else (including non-errors) is false. */
 function isPgError(error: unknown, code: string, constraint: string): boolean {
-  if (typeof error !== 'object' || error === null) return false;
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+
   return 'code' in error && error.code === code && 'constraint' in error && error.constraint === constraint;
 }
 

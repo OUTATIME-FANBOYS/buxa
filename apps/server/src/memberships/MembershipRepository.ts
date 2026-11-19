@@ -7,13 +7,22 @@ export interface MembershipRecord extends MembershipPeriod {
   revokedReason: string | null;
 }
 
-export interface NewMembershipRecord { personId: string; plan: string; startsOn: LocalDate; endsOn: LocalDate }
+export interface NewMembershipRecord {
+  personId: string;
+  plan: string;
+  startsOn: LocalDate;
+  endsOn: LocalDate;
+}
 
 export class MembershipNotFoundError extends Error {
   readonly kind = 'membership-not-found';
-  constructor() { super('Membership not found'); this.name = 'MembershipNotFoundError'; }
+  constructor() {
+    super('Membership not found');
+    this.name = 'MembershipNotFoundError';
+  }
 }
-export const isMembershipNotFound = (e: unknown): e is MembershipNotFoundError => e instanceof Error && (e as { kind?: unknown }).kind === 'membership-not-found';
+export const isMembershipNotFound = (e: unknown): e is MembershipNotFoundError =>
+  e instanceof Error && (e as { kind?: unknown }).kind === 'membership-not-found';
 
 /** Storage for memberships (a person's right to attend for a date range). Status is computed by the caller, never stored. */
 export interface MembershipRepository {

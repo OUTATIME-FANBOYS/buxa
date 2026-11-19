@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { OnSitePill } from '@/components/components/people/export';
+import { OnSitePill } from '@/components/components/people';
 
 describe('OnSitePill', () => {
   it('marks someone who is checked in and not yet out', () => {

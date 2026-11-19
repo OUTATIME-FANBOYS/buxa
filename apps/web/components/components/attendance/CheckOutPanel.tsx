@@ -1,12 +1,13 @@
 'use client';
 
 import { useId } from 'react';
-import { Notice } from '@/components/components/export';
+import { Notice } from '@/components/components';
 import type { OnSiteRowView } from '@buxa/shared';
 import { checkOutRefusalCopy, type CheckOutRefusal } from '@buxa/shared';
 import { canSubmitCheckOut } from '@buxa/shared';
 import type { CheckOutDraft } from '@buxa/shared';
 import { PickupChoices } from './PickupChoices';
+import { Button } from '@/components/elements';
 
 export interface CheckOutPanelProps {
   id: string;
@@ -35,28 +36,52 @@ export function CheckOutPanel(props: CheckOutPanelProps) {
   const noGuardianLine = row.isMinor === true && row.pickupOptions.length === 0 && !copy;
 
   return (
-    <form id={id} className="checkout-panel" onSubmit={event => { event.preventDefault(); if (submittable) onSubmit(); }}>
+    <form
+      id={id}
+      className="checkout-panel"
+      onSubmit={event => {
+        event.preventDefault();
+        if (submittable) {
+          onSubmit();
+        }
+      }}
+    >
       {showGuardians && (
-        <PickupChoices name={radioName} options={row.pickupOptions} value={draft.collectedBy}
-          onChange={collectedBy => onPatch({ collectedBy })} />
+        <PickupChoices
+          name={radioName}
+          options={row.pickupOptions}
+          value={draft.collectedBy}
+          onChange={collectedBy => onPatch({ collectedBy })}
+        />
       )}
       {noGuardianLine && <p className="muted">No guardian who may collect this child is linked yet.</p>}
       {row.isMinor !== false && canOverride && (
         <div className="stack">
-          <label className="field" htmlFor={reasonId}>
-            <span className="field-label">Admin override: reason (only if no guardian can collect)</span>
-            <textarea id={reasonId} rows={2} maxLength={500} value={draft.overrideReason ?? ''}
-              onChange={event => onPatch({ overrideReason: event.target.value })} />
+          <label className="field buxa:grid buxa:gap-[6px] buxa:content-start" htmlFor={reasonId}>
+            <span className="field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]">
+              Admin override: reason (only if no guardian can collect)
+            </span>
+            <textarea
+              id={reasonId}
+              rows={2}
+              maxLength={500}
+              value={draft.overrideReason ?? ''}
+              onChange={event => onPatch({ overrideReason: event.target.value })}
+            />
           </label>
         </div>
       )}
       {copy && <Notice tone="crit" title={copy.title} body={copy.body} />}
       {failure && <Notice tone="crit" title="Not checked out" body={failure} />}
       <div className="checkout-actions">
-        {onCancel && <button type="button" className="btn onsite-btn" onClick={onCancel}>Cancel</button>}
-        <button type="submit" className="btn btn-primary onsite-btn" disabled={!submittable}>
+        {onCancel && (
+          <Button type="button" className="onsite-btn" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
+        <Button variant="primary" type="submit" className="onsite-btn" disabled={!submittable}>
           {busy ? 'Checking out…' : 'Check out'}
-        </button>
+        </Button>
       </div>
     </form>
   );

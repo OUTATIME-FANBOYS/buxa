@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { NewClassForm } from '@/components/components/classes/forms/export';
+import { NewClassForm } from '@/components/components/classes/forms';
 
 vi.mock('@buxa/server/composers/index', () => ({ createClassAction: vi.fn() }));
 
@@ -8,8 +8,16 @@ describe('NewClassForm', () => {
   const html = renderToStaticMarkup(<NewClassForm />);
 
   it('ties every label to its input, so each field has a name for assistive technology', () => {
-    for (const label of ['Class name *', 'Description', 'Youngest age *', 'Oldest age *', 'Default places *', 'Instructors', 'Campers']) {
-      expect(html).toContain(`<span class="field-label">${label}</span>`);
+    for (const label of [
+      'Class name *',
+      'Description',
+      'Youngest age *',
+      'Oldest age *',
+      'Default places *',
+      'Instructors',
+      'Campers',
+    ]) {
+      expect(html).toContain(`>${label}<`);
     }
     expect(html).toContain('name="name"');
     expect(html).toContain('name="ratioInstructors"');

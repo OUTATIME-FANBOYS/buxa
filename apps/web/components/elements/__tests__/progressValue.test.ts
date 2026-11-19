@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { progressValue } from '@/components/elements/export';
+import { progressValue } from '@/components/elements';
 
 describe('progressValue', () => {
   it('clamps to 0-100 and rounds', () => {

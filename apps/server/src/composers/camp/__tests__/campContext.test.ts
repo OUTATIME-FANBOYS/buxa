@@ -1,13 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Membership } from '@buxa/contracts';
+import { settle } from '@buxa/domain';
 
-const notFound = vi.hoisted(() => vi.fn(() => { throw new Error('NEXT_NOT_FOUND'); }));
+const notFound = vi.hoisted(() =>
+  vi.fn(() => {
+    throw new Error('NEXT_NOT_FOUND');
+  }),
+);
 const session = vi.hoisted(() => ({ camp: null as Membership | null }));
 
 vi.mock('next/navigation', () => ({ notFound }));
 vi.mock('../../../session', () => ({
-  requireSession: async () => ({ user: { id: 'u1' } }),
-  getCurrentCamp: async () => session.camp,
+  requireSession: () => settle(() => ({ user: { id: 'u1' } })),
+  getCurrentCamp: () => settle(() => session.camp),
   toActor: (_s: unknown, camp: Membership) => ({ userId: 'u1', orgId: camp.orgId, role: camp.role }),
 }));
 
@@ -15,7 +20,10 @@ const { campContext, findCampContext } = await import('../campContext');
 
 const camp: Membership = { orgId: 'o1', role: 'staff', name: 'Sunrise', slug: 'sunrise' };
 
-beforeEach(() => { vi.clearAllMocks(); session.camp = camp; });
+beforeEach(() => {
+  vi.clearAllMocks();
+  session.camp = camp;
+});
 
 describe('findCampContext', () => {
   it('returns the session, the camp and the actor for the camp being worked in', async () => {

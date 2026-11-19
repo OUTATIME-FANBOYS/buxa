@@ -17,12 +17,43 @@ export function buildSeed(): AppState {
   const tasks = buildTasks([...registrationTasks(), ...campTasks()], projects);
 
   return {
-    version: 1, users,
-    workspaces: buildWorkspaces(), projects, tasks, activity: buildActivity(tasks), notices: buildNotices(tasks), savedFilters: [],
-    agents: [{ userId: AGENT_ID, workspaceId: WORKSPACE.camp, model: 'Claude', purpose: 'Reads each camp project, flags unowned or overdue work, and proposes follow-ups.', scope: [...CAMP_PROJECT_IDS],
-      trust: { create_task: 'auto', comment: 'auto', update_task: 'approve', move_task: 'approve', complete_task: 'approve' }, paused: false, moveRules: {}, approves: [] }],
-    runs: [], proposals: [],
+    version: 1,
+    users,
+    workspaces: buildWorkspaces(),
+    projects,
+    tasks,
+    activity: buildActivity(tasks),
+    notices: buildNotices(tasks),
+    savedFilters: [],
+    agents: [
+      {
+        userId: AGENT_ID,
+        workspaceId: WORKSPACE.camp,
+        model: 'Claude',
+        purpose: 'Reads each camp project, flags unowned or overdue work, and proposes follow-ups.',
+        scope: [...CAMP_PROJECT_IDS],
+        trust: {
+          create_task: 'auto',
+          comment: 'auto',
+          update_task: 'approve',
+          move_task: 'approve',
+          complete_task: 'approve',
+        },
+        paused: false,
+        moveRules: {},
+        approves: [],
+      },
+    ],
+    runs: [],
+    proposals: [],
     session: { userId: null },
-    ui: { workspaceId: WORKSPACE.camp, projectId: PROJECT.registration, view: 'board', theme: 'system', sidebarCollapsed: false, agentsEnabled: true },
+    ui: {
+      workspaceId: WORKSPACE.camp,
+      projectId: PROJECT.registration,
+      view: 'board',
+      theme: 'system',
+      sidebarCollapsed: false,
+      agentsEnabled: true,
+    },
   };
 }

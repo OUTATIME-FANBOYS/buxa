@@ -32,7 +32,9 @@ describe('attendanceExportResponse', () => {
     h.exportCsv.mockResolvedValueOnce('name,time\nÁda,09:00\n');
     const res = await attendanceExportResponse(url('from=2027-07-01&to=2027-07-03'));
     expect(res.status).toBe(200);
-    expect(res.headers.get('Content-Disposition')).toBe('attachment; filename="attendance-2027-07-01-to-2027-07-03.csv"');
+    expect(res.headers.get('Content-Disposition')).toBe(
+      'attachment; filename="attendance-2027-07-01-to-2027-07-03.csv"',
+    );
     // TextDecoder drops a leading byte-order mark, so the bytes are checked directly.
     const bytes = new Uint8Array(await res.arrayBuffer());
     expect([...bytes.slice(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
@@ -49,7 +51,9 @@ describe('attendanceExportResponse', () => {
   it('answers other HTTP errors with their status and rethrows anything else', async () => {
     h.campActor.mockResolvedValueOnce(ACTOR);
     h.exportCsv.mockRejectedValueOnce(new HttpError(500, 'db down'));
-    await expect(attendanceExportResponse(url('from=2027-07-01&to=2027-07-03'))).resolves.toMatchObject({ status: 500 });
+    await expect(attendanceExportResponse(url('from=2027-07-01&to=2027-07-03'))).resolves.toMatchObject({
+      status: 500,
+    });
     h.campActor.mockResolvedValueOnce(ACTOR);
     h.exportCsv.mockRejectedValueOnce(new Error('crash'));
     await expect(attendanceExportResponse(url('from=2027-07-01&to=2027-07-03'))).rejects.toThrow('crash');

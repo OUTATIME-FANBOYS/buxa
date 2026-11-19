@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createPgRepositories } from './repositories';
 import { PgClassRepository } from './classes/PgClassRepository';
+import { PgImportRepository } from './classes/import/PgImportRepository';
 import { fakeDb } from './classes/__tests__/fakeDb';
 
 describe('createPgRepositories', () => {
@@ -8,5 +9,6 @@ describe('createPgRepositories', () => {
     const { pool } = fakeDb();
     const repos = createPgRepositories(pool);
     expect(repos.classes).toBeInstanceOf(PgClassRepository);
+    expect(repos.imports).toBeInstanceOf(PgImportRepository);
   });
 });

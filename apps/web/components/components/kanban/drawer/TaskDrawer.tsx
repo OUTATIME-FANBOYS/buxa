@@ -6,11 +6,20 @@ import { TaskForm } from './TaskForm';
 export function TaskDrawer() {
   const { drawer, closeTask } = useTaskDrawer();
   const { s, project } = useStore();
-  if (!drawer) return null;
+  if (!drawer) {
+    return null;
+  }
   const task = drawer.id === 'new' ? null : s.tasks.find(t => t.id === drawer.id);
-  if (drawer.id !== 'new' && !task) return null;
+  if (drawer.id !== 'new' && !task) {
+    return null;
+  }
   const projectId = task?.projectId ?? drawer.defaults?.projectId ?? project?.id;
   const target = s.projects.find(p => p.id === projectId);
-  if (!target) return null;
-  return <TaskForm key={drawer.id} task={task ?? null} project={target} defaults={drawer.defaults} onClose={closeTask} />;
+  if (!target) {
+    return null;
+  }
+
+  return (
+    <TaskForm key={drawer.id} task={task ?? null} project={target} defaults={drawer.defaults} onClose={closeTask} />
+  );
 }

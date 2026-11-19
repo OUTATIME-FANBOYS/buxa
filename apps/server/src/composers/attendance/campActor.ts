@@ -2,6 +2,7 @@ import 'server-only';
 import type { ClockFormat, Actor } from '@buxa/domain';
 import { getRuntime } from '../../runtime';
 import { findCampContext } from '../camp/campContext';
+import { requireSession } from '../../session';
 
 /** Who is asking, in the camp they are working in. Null when they have no camp selected (the caller answers not-found). */
 export async function campActor(): Promise<Actor | null> {
@@ -13,8 +14,12 @@ export async function campZone(actor: Actor): Promise<string> {
   return (await getRuntime().services.orgs.getCamp(actor)).timezone;
 }
 
-/** The camp's zone and its clock (12 or 24 hour), for a screen that shows times. One read of the camp record. */
+/**
+ * The camp's zone and the clock (12 or 24 hour) for a screen that shows times. The clock is always the signed-in person's own
+ * choice; when they have not chosen (null) it is 24 hour.
+ */
 export async function campClock(actor: Actor): Promise<{ timeZone: string; clockFormat: ClockFormat }> {
-  const camp = await getRuntime().services.orgs.getCamp(actor);
-  return { timeZone: camp.timezone, clockFormat: camp.clockFormat };
+  const [camp, session] = await Promise.all([getRuntime().services.orgs.getCamp(actor), requireSession()]);
+
+  return { timeZone: camp.timezone, clockFormat: session.user.clockFormat ?? '24h' };
 }

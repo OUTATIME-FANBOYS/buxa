@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type ChartTone } from '@/components/elements/export';
+import { type ChartTone } from '@/components/elements';
 
 describe('ChartTone', () => {
   it('lists the chart tones the palette defines', () => {

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { planImport, readImportFile } from '@buxa/domain';
 import { CAMP_TZ } from '@buxa/server/classes/__tests__/fixtures';
 import { SEASON_CSV } from '@buxa/server/composers/classes/__tests__/seasonFixture';
-import { ImportResults, countsLine } from '@/components/components/classes/forms/export';
+import { ImportResults, countsLine } from '@/components/components/classes/forms';
 
 /*
  * The preview screen, fed by the real planner and the fixture file the action tests use. The file has two ready rows, a row that
@@ -13,7 +13,10 @@ const FIXTURE = SEASON_CSV;
 
 function previewOf(text: string) {
   const read = readImportFile(text);
-  if (!read.ok) throw new Error(read.message);
+  if (!read.ok) {
+    throw new Error(read.message);
+  }
+
   return planImport({
     rows: read.rows,
     classes: [

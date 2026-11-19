@@ -20,8 +20,11 @@ export function chartTotals(days: readonly DayCount[]): { total: number; busiest
   let total = 0;
   for (const day of days) {
     total += day.count;
-    if (busiest === null || day.count > busiest.count) busiest = day;
+    if (busiest === null || day.count > busiest.count) {
+      busiest = day;
+    }
   }
+
   return { total, busiest: busiest && busiest.count > 0 ? busiest : null };
 }
 
@@ -29,7 +32,14 @@ export function chartTotals(days: readonly DayCount[]): { total: number; busiest
 export const showAxisLabel = (index: number, count: number): boolean =>
   index === count - 1 || index % (count > 14 ? 3 : 1) === 0;
 
-export interface DonutSegment { key: keyof MembershipStatusCounts; label: string; count: number; percent: number; dash: number; offset: number }
+export interface DonutSegment {
+  key: keyof MembershipStatusCounts;
+  label: string;
+  count: number;
+  percent: number;
+  dash: number;
+  offset: number;
+}
 
 /** The donut's segments in a fixed order, skipping empty ones. `length` is the ring's circumference; dash and offset are in the same units. */
 export function donutSegments(counts: MembershipStatusCounts, length: number): DonutSegment[] {
@@ -40,15 +50,20 @@ export function donutSegments(counts: MembershipStatusCounts, length: number): D
     { key: 'none', label: 'None (includes revoked)' },
   ];
   const total = order.reduce((sum, o) => sum + counts[o.key], 0);
-  if (total === 0) return [];
+  if (total === 0) {
+    return [];
+  }
   let cumulative = 0;
   const segments: DonutSegment[] = [];
   for (const { key, label } of order) {
     const count = counts[key];
-    if (count === 0) continue;
+    if (count === 0) {
+      continue;
+    }
     const dash = (count / total) * length;
     segments.push({ key, label, count, percent: Math.round((count / total) * 100), dash, offset: -cumulative });
     cumulative += dash;
   }
+
   return segments;
 }

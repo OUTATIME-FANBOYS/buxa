@@ -12,6 +12,7 @@ import { gotrue, stubIdentityProvider } from '@buxa/server/session/__tests__/got
 import { SESSION_COOKIE, sessionCookieValue } from '@buxa/server/session/__tests__/support';
 import { refreshSessionCookies } from '@buxa/server/session/refresh';
 import { proxy } from './proxy';
+import { settle } from '@buxa/domain';
 
 const request = (cookie?: string) => new NextRequest('http://localhost/camp', { headers: cookie ? { cookie } : {} });
 afterEach(() => vi.unstubAllGlobals());
@@ -23,7 +24,9 @@ describe('proxy', () => {
     expect(policy).toMatch(/script-src 'self' 'nonce-[^']+'/);
     expect(policy).toContain("frame-ancestors 'none'");
     expect(policy).toContain("form-action 'self'");
-    for (const [name, value] of Object.entries(SECURITY_HEADERS)) expect(response.headers.get(name)).toBe(value);
+    for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+      expect(response.headers.get(name)).toBe(value);
+    }
   });
 
   it('gives every request its own nonce', async () => {
@@ -50,14 +53,22 @@ describe('proxy', () => {
     expect(calls.map(c => c.path)).toEqual(['/auth/v1/token']);
     const cookies = response.headers.getSetCookie().filter(line => line.startsWith(`${SESSION_COOKIE}=`));
     expect(cookies.length).toBeGreaterThan(0);
-    for (const line of cookies) expect(line).toMatch(/HttpOnly/i);
-    for (const line of cookies) expect(line).toMatch(/SameSite=lax/i);
+    for (const line of cookies) {
+      expect(line).toMatch(/HttpOnly/i);
+    }
+    for (const line of cookies) {
+      expect(line).toMatch(/SameSite=lax/i);
+    }
     expect(response.headers.get('cache-control')).toMatch(/no-store/);
     expect(response.headers.get('content-security-policy')).toMatch(/nonce-/);
   });
 
   it('does not make a page wait for an identity provider that is down', async () => {
-    vi.stubGlobal('fetch', async () => { throw new Error('offline'); }); // the library retries this for a long time
+    vi.stubGlobal('fetch', () => {
+      return settle(() => {
+        throw new Error('offline');
+      });
+    }); // the library retries this for a long time
     const stale = sessionCookieValue('x.y.z', Math.floor(Date.now() / 1000) - 60);
     const started = Date.now();
     expect(await refreshSessionCookies(request(`${SESSION_COOKIE}=${stale}`), 50)).toBeNull();

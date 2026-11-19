@@ -9,7 +9,7 @@ describe('attendance paths', () => {
     expect(attendanceExportPath(filter as never)).toBe(`${ROUTES.attendance}/export?from=2027-07-01&to=2027-07-03`);
   });
   it('adds personId only when the filter has one', () => {
-    expect(attendanceExportPath({ ...filter, personId: 'p1' } as never)).toContain('&personId=p1');
+    expect(attendanceExportPath({ ...filter, personId: 'p1' })).toContain('&personId=p1');
   });
   it('names the file after the date range', () => {
     expect(attendanceFileName(filter as never)).toBe('attendance-2027-07-01-to-2027-07-03.csv');

@@ -1,25 +1,35 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 import type { Pool, PoolClient } from 'pg';
 import { transaction } from '../src';
+import { settle } from '@buxa/domain';
 
 // Audit S-13. Fault injection with a scripted client: no database needed.
 // A rollback that fails must not return the connection to the pool.
 
-interface FakeClient { query: ReturnType<typeof vi.fn>; release: ReturnType<typeof vi.fn> }
+/** The test double for a pooled client: its query and release are mocks with these shapes. */
+interface FakeClient {
+  query: Mock<(sql: string) => Promise<{ rows: never[]; rowCount: number }>>;
+  release: Mock<(err?: unknown) => void>;
+}
 
 /** A client whose statements succeed unless `fail` names them. */
 function fakeClient(fail: Record<string, Error>): FakeClient {
   return {
-    query: vi.fn(async (sql: string) => {
-      if (fail[sql]) throw fail[sql];
-      return { rows: [], rowCount: 0 };
+    query: vi.fn((sql: string): Promise<{ rows: never[]; rowCount: number }> => {
+      return settle(() => {
+        if (fail[sql]) {
+          throw fail[sql];
+        }
+
+        return { rows: [], rowCount: 0 };
+      });
     }),
-    release: vi.fn(),
+    release: vi.fn<(err?: unknown) => void>(),
   };
 }
 
 function poolWith(client: FakeClient): Pool {
-  return { connect: vi.fn(async () => client) } as unknown as Pool;
+  return { connect: vi.fn(() => settle(() => client)) } as unknown as Pool;
 }
 
 describe('transaction() when the rollback fails (S-13)', () => {
@@ -29,7 +39,11 @@ describe('transaction() when the rollback fails (S-13)', () => {
     const client = fakeClient({ ROLLBACK: rollbackError });
     const pool = poolWith(client);
 
-    const outcome = transaction(pool, async () => { throw workError; });
+    const outcome = transaction(pool, () => {
+      return settle(() => {
+        throw workError;
+      });
+    });
 
     await expect(outcome).rejects.toThrow(/Rollback failed.*connection lost/);
     await expect(outcome).rejects.toMatchObject({ cause: workError });
@@ -41,13 +55,25 @@ describe('transaction() when the rollback fails (S-13)', () => {
 
   it('a non-Error rollback failure still destroys the connection', async () => {
     const client = fakeClient({});
-    client.query.mockImplementation(async (sql: string) => {
-      if (sql === 'ROLLBACK') throw 'socket reset';
-      return { rows: [], rowCount: 0 };
+    client.query.mockImplementation((sql: string) => {
+      return settle(() => {
+        if (sql === 'ROLLBACK') {
+          // eslint-disable-next-line @typescript-eslint/only-throw-error -- this test covers a rollback that rejects with a non-Error value, so the throw must be a string
+          throw 'socket reset';
+        }
+
+        return { rows: [], rowCount: 0 };
+      });
     });
     const pool = poolWith(client);
 
-    await expect(transaction(pool, async () => { throw new Error('boom'); })).rejects.toThrow(/socket reset/);
+    await expect(
+      transaction(pool, () => {
+        return settle(() => {
+          throw new Error('boom');
+        });
+      }),
+    ).rejects.toThrow(/socket reset/);
     expect(client.release.mock.calls[0][0]).toBeInstanceOf(Error);
   });
 
@@ -56,7 +82,13 @@ describe('transaction() when the rollback fails (S-13)', () => {
     const client = fakeClient({});
     const pool = poolWith(client);
 
-    await expect(transaction(pool, async () => { throw workError; })).rejects.toBe(workError);
+    await expect(
+      transaction(pool, () => {
+        return settle(() => {
+          throw workError;
+        });
+      }),
+    ).rejects.toBe(workError);
     expect(client.release).toHaveBeenCalledWith();
     expect(client.query).toHaveBeenCalledWith('ROLLBACK');
   });
@@ -65,7 +97,13 @@ describe('transaction() when the rollback fails (S-13)', () => {
     const client = fakeClient({});
     const pool = poolWith(client);
 
-    await expect(transaction(pool, async (db: PoolClient) => { await db.query('SELECT 1'); return 42; })).resolves.toBe(42);
+    await expect(
+      transaction(pool, async (db: PoolClient) => {
+        await db.query('SELECT 1');
+
+        return 42;
+      }),
+    ).resolves.toBe(42);
     expect(client.query.mock.calls.map(c => c[0])).toEqual(['BEGIN', 'SELECT 1', 'COMMIT']);
     expect(client.release).toHaveBeenCalledWith();
   });

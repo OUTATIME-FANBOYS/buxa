@@ -1,16 +1,27 @@
 import Link from 'next/link';
 import type { HouseholdMember } from '@buxa/contracts';
-import { Pill } from '@/components/elements/export';
+import { Pill } from '@/components/elements';
 import { personPath } from '@/config/routes';
-import { UnlinkButton } from '@/components/components/people/forms/export';
+import { UnlinkButton } from '@/components/components/people/forms';
 
 /** One member of a household, with the two facts that decide pick-up, as words. */
-export function HouseholdMemberRow({ member, householdId, canUpdate }: { member: HouseholdMember; householdId: string; canUpdate: boolean }) {
+export function HouseholdMemberRow({
+  member,
+  householdId,
+  canUpdate,
+}: {
+  member: HouseholdMember;
+  householdId: string;
+  canUpdate: boolean;
+}) {
   const name = `${member.givenName} ${member.familyName}`;
+
   return (
     <li className="people-member">
       <div className="people-member-main">
-        <Link href={personPath(member.personId)} className="row-title">{name}</Link>
+        <Link href={personPath(member.personId)} className="row-title">
+          {name}
+        </Link>
         <span className="muted">{member.relationship}</span>
       </div>
       <div className="row">

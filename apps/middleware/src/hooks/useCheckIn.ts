@@ -20,25 +20,36 @@ export function useCheckIn(actions: CheckInActions) {
   const phase = state.phase;
 
   useEffect(() => {
-    if (phase !== 'done') return undefined;
+    if (phase !== 'done') {
+      return undefined;
+    }
     const timer = window.setTimeout(() => dispatch({ type: 'reset' }), CONFIRM_MS);
+
     return () => window.clearTimeout(timer);
   }, [phase]);
 
-  const scanCode = useCallback(async (raw: string) => {
-    const outcome = await actions.scanCode({ raw });
-    dispatch(outcome.kind === 'ok' ? lookupEvent(outcome.value, 'qr') : { type: 'error', message: outcome.message });
-  }, [actions]);
+  const scanCode = useCallback(
+    async (raw: string) => {
+      const outcome = await actions.scanCode({ raw });
+      dispatch(outcome.kind === 'ok' ? lookupEvent(outcome.value, 'qr') : { type: 'error', message: outcome.message });
+    },
+    [actions],
+  );
 
   const pickPerson = useCallback((card: PersonCard) => dispatch({ type: 'selected', card, method: 'search' }), []);
 
-  const checkIn = useCallback(async (card: PersonCard, method: CheckInMethod, overrideReason?: string) => {
-    dispatch({ type: 'submitted' });
-    const outcome = await actions.checkIn({
-      personId: card.person.id, method, ...(overrideReason ? { overrideReason } : {}),
-    });
-    dispatch({ type: 'answered', outcome });
-  }, [actions]);
+  const checkIn = useCallback(
+    async (card: PersonCard, method: CheckInMethod, overrideReason?: string) => {
+      dispatch({ type: 'submitted' });
+      const outcome = await actions.checkIn({
+        personId: card.person.id,
+        method,
+        ...(overrideReason ? { overrideReason } : {}),
+      });
+      dispatch({ type: 'answered', outcome });
+    },
+    [actions],
+  );
 
   const clear = useCallback(() => dispatch({ type: 'reset' }), []);
 

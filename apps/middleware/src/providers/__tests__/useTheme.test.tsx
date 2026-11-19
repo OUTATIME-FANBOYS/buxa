@@ -10,12 +10,23 @@ function setSystemDark(dark: boolean) {
   vi.stubGlobal('matchMedia', () => ({ matches: dark, addEventListener() {}, removeEventListener() {} }));
 }
 
-function Probe({ theme }: { theme: 'system' | 'light' | 'dark' }) { useTheme(theme); return null; }
+function Probe({ theme }: { theme: 'system' | 'light' | 'dark' }) {
+  useTheme(theme);
+
+  return null;
+}
 
 describe('useTheme', () => {
   let root: Root;
-  beforeEach(() => { root = createRoot(document.body.appendChild(document.createElement('div'))); });
-  afterEach(() => { act(() => root.unmount()); document.body.innerHTML = ''; delete document.documentElement.dataset.theme; vi.unstubAllGlobals(); });
+  beforeEach(() => {
+    root = createRoot(document.body.appendChild(document.createElement('div')));
+  });
+  afterEach(() => {
+    act(() => root.unmount());
+    document.body.innerHTML = '';
+    delete document.documentElement.dataset.theme;
+    vi.unstubAllGlobals();
+  });
 
   it('applies an explicit light or dark choice', () => {
     setSystemDark(true);

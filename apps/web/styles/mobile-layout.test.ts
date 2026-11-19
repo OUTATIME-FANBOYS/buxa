@@ -2,9 +2,13 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 /** The phone block of each stylesheet: everything inside the first `@media (max-width: 720px)` after the given marker. */
-const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
+// Prettier breaks rules over several lines, so the stylesheet text is flattened to one line before matching.
+const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8').replace(/\s+/g, ' ');
 const attendance = read('./features/attendance.css');
-const phoneBlock = attendance.slice(attendance.indexOf('@media (max-width: 720px)'), attendance.indexOf('.log-filters'));
+const phoneBlock = attendance.slice(
+  attendance.indexOf('@media (max-width: 720px)'),
+  attendance.indexOf('.log-filters'),
+);
 const tsx = (path: string) => read(`../components/components/${path}`);
 
 describe('sign-in on a phone', () => {
@@ -27,14 +31,14 @@ describe('phone layout for check-in, on site and the log', () => {
 
   it('on site cards keep the name and the compact check-out button in one row, and the dialog buttons share a row', () => {
     expect(phoneBlock).not.toContain('.onsite-head { flex-direction: column; align-items: stretch; }');
-    expect(phoneBlock).toContain('.checkout-actions .btn { flex: 1 1 0; }');
+    expect(phoneBlock).toContain('.checkout-actions .button { flex: 1 1 0; }');
     expect(tsx('attendance/OnSiteRow.tsx')).toContain('onsite-btn');
     expect(tsx('attendance/CheckOutPanel.tsx')).toContain('className="checkout-actions"');
   });
 
   it('the log stacks each visit, with a label in front of each value', () => {
     expect(phoneBlock).toContain('.log-table thead { display: none; }');
-    expect(phoneBlock).toContain("content: attr(data-label);");
+    expect(phoneBlock).toContain('content: attr(data-label);');
     const log = tsx('attendance/LogTable.tsx');
     for (const label of ['In', 'Out', 'Checked in by', 'Checked out by', 'Collected by', 'Method', 'Override reason']) {
       expect(log).toContain(`data-label="${label}"`);
@@ -56,19 +60,40 @@ describe('phone layout for check-in, on site and the log', () => {
 describe('Add person form on a touch screen', () => {
   const people = read('./features/people.css');
   it('uses the touch target height and 16px inputs on a coarse pointer', () => {
-    expect(people).toContain('@media (pointer: coarse) {\n  /* Touch');
+    expect(people).toContain('@media (pointer: coarse) { /* Touch');
     expect(people).toContain('form.person-form { --control-h: var(--control-touch); }');
-    expect(people).toMatch(/\.person-form input:not\(\[type=checkbox\]\), \.person-form select \{ font-size: 16px; \}/);
+    expect(people).toMatch(
+      /\.person-form input:not\(\[type='checkbox'\]\), \.person-form select \{ font-size: 16px; \}/,
+    );
     expect(read('./tokens.css')).toContain('--control-touch: 44px');
   });
 });
 
+// The settings page's classes are Tailwind utilities on its markup, in components/components/settings/styles.ts.
+const settingsStyles = read('../components/components/settings/styles.ts');
+const settingsPage = read('../components/views/kanban/Settings.tsx');
+const cardSegmented = read('../components/components/settings/AppearanceCard.tsx');
+const timeFormatCard = read('../components/components/settings/TimeFormatCard.tsx');
+
 describe('settings grid', () => {
-  it('is one column on a phone and widens in steps, with no fixed page width', () => {
-    const settings = read('./features/settings.css');
-    expect(settings).toContain('.settings-grid { display: grid; grid-template-columns: minmax(0, 1fr);');
-    expect(settings).toContain('@media (min-width: 900px) { .settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }');
-    expect(settings).toContain('@media (min-width: 1280px) { .settings-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }');
-    expect(settings).toContain('.page.settings-page { max-width: none; }');
+  it('is one full-width column at every width, with no fixed page width', () => {
+    expect(settingsStyles).toContain(
+      "SETTINGS_GRID = 'buxa:grid buxa:grid-cols-[minmax(0,1fr)] buxa:gap-[var(--s5)] buxa:items-stretch'",
+    );
+    expect(settingsPage).toContain('className={`settings-grid ${SETTINGS_GRID}`}');
+    expect(settingsStyles).not.toMatch(/SETTINGS_GRID = '[^']*repeat\(2/);
+    expect(settingsStyles).not.toContain('1280px');
+    expect(settingsPage).toContain('className="page settings-page buxa:max-w-none!"');
+  });
+
+  it('keeps the segmented controls (theme, clock) inside their card at every width', () => {
+    expect(settingsStyles).toContain(
+      "CARD_SEGMENTED = 'buxa:flex! buxa:w-full buxa:max-w-full buxa:min-w-0 buxa:box-border! buxa:[&_button]:h-auto!",
+    );
+    expect(settingsStyles).toContain('buxa:[&_button]:flex-[1_1_0]!');
+    expect(settingsStyles).toContain('buxa:[&_button]:min-w-0!');
+    expect(settingsStyles).toContain('buxa:[&_button]:[overflow-wrap:anywhere]!');
+    expect(cardSegmented).toContain('className={CARD_SEGMENTED}');
+    expect(timeFormatCard).toContain('className={CARD_SEGMENTED}');
   });
 });

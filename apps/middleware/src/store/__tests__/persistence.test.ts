@@ -2,24 +2,32 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { THEME_KEY } from '@buxa/shared/config/theme';
 import { buildSeed } from '@buxa/shared';
 import { loadState, storage } from '../persistence';
+import { requirePresent } from '@buxa/domain';
 
 // Node has its own localStorage global; the store here is an in-memory stub for every test.
 const store = new Map<string, string>();
 const stub = {
   getItem: (k: string) => store.get(k) ?? null,
-  setItem: (k: string, v: string) => { store.set(k, v); },
-  removeItem: (k: string) => { store.delete(k); },
+  setItem: (k: string, v: string) => {
+    store.set(k, v);
+  },
+  removeItem: (k: string) => {
+    store.delete(k);
+  },
   clear: () => store.clear(),
 };
 
 describe('state persistence', () => {
-  beforeEach(() => { vi.stubGlobal('localStorage', stub); store.clear(); });
+  beforeEach(() => {
+    vi.stubGlobal('localStorage', stub);
+    store.clear();
+  });
   afterEach(() => vi.unstubAllGlobals());
 
   it('loads the saved state, normalised, when the current version is stored', () => {
     const seed = buildSeed();
     store.set('buxa.state.v1', JSON.stringify(seed));
-    expect(loadState().tasks.map((t) => t.id)).toEqual(seed.tasks.map((t) => t.id));
+    expect(loadState().tasks.map(t => t.id)).toEqual(seed.tasks.map(t => t.id));
   });
   it('reads the state saved under the app’s previous name', () => {
     store.set('tessera.state.v1', JSON.stringify(buildSeed()));
@@ -49,8 +57,9 @@ describe('state persistence', () => {
     store.set('tessera.state.v1', '{}');
     const seed = buildSeed();
     storage.save(seed);
-    expect(JSON.parse(store.get('buxa.state.v1')!).version).toBe(1);
-    expect(JSON.parse(store.get(THEME_KEY)!)).toBe(seed.ui.theme);
+    const saved: unknown = JSON.parse(requirePresent(store.get('buxa.state.v1'), "store.get('buxa.state.v1')"));
+    expect(saved).toMatchObject({ version: 1 });
+    expect(JSON.parse(requirePresent(store.get(THEME_KEY), 'store.get(THEME_KEY)'))).toBe(seed.ui.theme);
     expect(store.has('tessera.state.v1')).toBe(false);
   });
 });

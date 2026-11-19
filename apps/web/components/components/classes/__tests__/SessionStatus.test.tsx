@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { SessionStatus, sessionState } from '@/components/components/classes/export';
+import { SessionStatus, sessionState } from '@/components/components/classes';
 
 describe('sessionState', () => {
   it.each([
@@ -13,6 +13,8 @@ describe('sessionState', () => {
   });
 
   it('uses a word, not colour alone, for a full session', () => {
-    expect(renderToStaticMarkup(<SessionStatus session={{ capacity: 2, seatsTaken: 2, waitlisted: 0 }} />)).toContain('Full');
+    expect(renderToStaticMarkup(<SessionStatus session={{ capacity: 2, seatsTaken: 2, waitlisted: 0 }} />)).toContain(
+      'Full',
+    );
   });
 });

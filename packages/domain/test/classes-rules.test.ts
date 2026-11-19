@@ -58,7 +58,13 @@ describe('instructor ratio (computed and reported, not enforced)', () => {
 
   it('reports no shortfall when there are enough instructors for the campers', () => {
     expect(instructorRatio({ instructors: 1, campers: 8 }, 8, 1)).toEqual({
-      ratio: { instructors: 1, campers: 8 }, enrolled: 8, assignedInstructors: 1, requiredInstructors: 1, shortfall: 0, withinRatio: true, campersPerInstructor: 8,
+      ratio: { instructors: 1, campers: 8 },
+      enrolled: 8,
+      assignedInstructors: 1,
+      requiredInstructors: 1,
+      shortfall: 0,
+      withinRatio: true,
+      campersPerInstructor: 8,
     });
   });
 
@@ -70,8 +76,17 @@ describe('instructor ratio (computed and reported, not enforced)', () => {
   });
 
   it('is within ratio with no campers, and has no campers per instructor when nobody is assigned', () => {
-    expect(instructorRatio({ instructors: 1, campers: 8 }, 0, 0)).toMatchObject({ requiredInstructors: 0, shortfall: 0, withinRatio: true, campersPerInstructor: null });
-    expect(instructorRatio({ instructors: 1, campers: 8 }, 3, 0)).toMatchObject({ requiredInstructors: 1, shortfall: 1, campersPerInstructor: null });
+    expect(instructorRatio({ instructors: 1, campers: 8 }, 0, 0)).toMatchObject({
+      requiredInstructors: 0,
+      shortfall: 0,
+      withinRatio: true,
+      campersPerInstructor: null,
+    });
+    expect(instructorRatio({ instructors: 1, campers: 8 }, 3, 0)).toMatchObject({
+      requiredInstructors: 1,
+      shortfall: 1,
+      campersPerInstructor: null,
+    });
   });
 
   it('does not refuse anything: the report is the only output', () => {

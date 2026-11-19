@@ -3,7 +3,12 @@ import { AttachmentList } from './AttachmentList';
 import { Discussion } from './Discussion';
 import { SubtaskList } from './SubtaskList';
 
-interface TaskSectionsProps { task: Task; ro: boolean; members: { id: string; name: string }[]; userById: (id?: string) => { name: string } | undefined }
+interface TaskSectionsProps {
+  task: Task;
+  ro: boolean;
+  members: { id: string; name: string }[];
+  userById: (id?: string) => { name: string } | undefined;
+}
 
 /** Everything below the properties of a saved task. */
 export function TaskSections({ task, ro, members, userById }: TaskSectionsProps) {

@@ -15,24 +15,38 @@ describe.skipIf(!url)('PgOrgRepository timezone', () => {
 
   beforeAll(async () => {
     await migrate(pool);
-    const { rows } = await pool.query<{ id: string }>(`INSERT INTO users (email, name) VALUES ($1, 'Owner') RETURNING id`, [`owner-${tag}@example.test`]);
+    const { rows } = await pool.query<{ id: string }>(
+      `INSERT INTO users (email, name) VALUES ($1, 'Owner') RETURNING id`,
+      [`owner-${tag}@example.test`],
+    );
     ownerId = rows[0].id;
   });
-  afterAll(async () => { await pool.end(); });
+  afterAll(async () => {
+    await pool.end();
+  });
 
   it('stores the timezone given at creation and returns it from get', async () => {
-    const created = await repo.createWithOwner({ name: 'Tz camp', slug: `tz-${tag}`, timezone: 'Europe/London' }, ownerId);
+    const created = await repo.createWithOwner(
+      { name: 'Tz camp', slug: `tz-${tag}`, timezone: 'Europe/London' },
+      ownerId,
+    );
     const org = await repo.get(created.id);
     expect(org.timezone).toBe('Europe/London');
   });
 
   it('defaults to UTC when the column is not given', async () => {
-    const { rows } = await pool.query<{ timezone: string }>(`INSERT INTO orgs (name, slug) VALUES ('Default', $1) RETURNING timezone`, [`tz-default-${tag}`]);
+    const { rows } = await pool.query<{ timezone: string }>(
+      `INSERT INTO orgs (name, slug) VALUES ('Default', $1) RETURNING timezone`,
+      [`tz-default-${tag}`],
+    );
     expect(rows[0].timezone).toBe('UTC');
   });
 
   it('rename changes the timezone when given, and keeps it when not', async () => {
-    const created = await repo.createWithOwner({ name: 'Rename camp', slug: `tz-rename-${tag}`, timezone: 'Europe/London' }, ownerId);
+    const created = await repo.createWithOwner(
+      { name: 'Rename camp', slug: `tz-rename-${tag}`, timezone: 'Europe/London' },
+      ownerId,
+    );
     const actor = { userId: ownerId, orgId: created.id, role: 'owner' as const };
     await repo.rename(actor, { timezone: 'America/New_York' });
     expect((await repo.get(created.id)).timezone).toBe('America/New_York');

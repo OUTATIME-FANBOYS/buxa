@@ -1,11 +1,19 @@
 import { CAMP_ROLE_LABELS, type CampRole } from '@buxa/domain';
-import { Pill } from '@/components/elements/export';
+import { CAMP_ROLE_TONE } from '@buxa/shared';
+import { Pill } from '@/components/elements';
 
 export function RolePills({ roles }: { roles: readonly CampRole[] }) {
-  if (roles.length === 0) return <span className="muted">No roles</span>;
+  if (roles.length === 0) {
+    return <span className="muted">No roles</span>;
+  }
+
   return (
     <span className="row">
-      {roles.map(role => <Pill key={role} tone="neutral" dot={false}>{CAMP_ROLE_LABELS[role]}</Pill>)}
+      {roles.map(role => (
+        <Pill key={role} tone={CAMP_ROLE_TONE[role] ?? 'neutral'} dot={false}>
+          {CAMP_ROLE_LABELS[role]}
+        </Pill>
+      ))}
     </span>
   );
 }

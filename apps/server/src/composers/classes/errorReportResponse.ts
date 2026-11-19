@@ -13,7 +13,9 @@ const PLAIN = { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'n
  */
 export async function classErrorReportResponse(form: FormData): Promise<Response> {
   const actor = await currentActor();
-  if (!actor) return new Response('Choose a camp first.', { status: 404, headers: PLAIN });
+  if (!actor) {
+    return new Response('Choose a camp first.', { status: 404, headers: PLAIN });
+  }
   const fileName = form.get('fileName');
   const text = form.get('csv');
   if (typeof fileName !== 'string' || typeof text !== 'string' || text === '') {
@@ -26,6 +28,7 @@ export async function classErrorReportResponse(form: FormData): Promise<Response
     const services = getRuntime().services.imports;
     const preview = await services.preview(actor, { fileName, text });
     const csv = await services.errorReport(actor, preview);
+
     return new Response(`﻿${csv}`, {
       status: 200,
       headers: {
@@ -35,7 +38,9 @@ export async function classErrorReportResponse(form: FormData): Promise<Response
       },
     });
   } catch (error) {
-    if (isHttpError(error)) return new Response(error.message, { status: error.statusCode, headers: PLAIN });
+    if (isHttpError(error)) {
+      return new Response(error.message, { status: error.statusCode, headers: PLAIN });
+    }
     throw error;
   }
 }

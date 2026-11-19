@@ -1,0 +1,47 @@
+/*
+ * HeroUI theme variables, mapped onto the Buxa tokens in tokens.css.
+ *
+ * HeroUI's components read a fixed set of names (accent, default, danger, border, focus ...). Each name below points
+ * at the Buxa colour that means the same thing, so HeroUI draws in Buxa's palette, not its own defaults. No new colour
+ * is defined here. Names that tokens.css already defines with the same meaning (accent, accent-soft, surface) need no
+ * line: HeroUI reads the same custom property.
+ *
+ * The block is one rule for :root and [data-theme="dark"]. A var() is resolved on the element that declares it, so the
+ * same text picks up the light or the dark token value wherever the theme attribute sits.
+ *
+ * Contrast (text on each background, WCAG 2.x) is checked for both themes in the button tests and in the commit notes.
+ */
+:root,
+[data-theme='dark'] {
+  /* Canvas and surfaces */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --surface-foreground: var(--text);
+  --surface-secondary: var(--surface-2);
+  --surface-secondary-foreground: var(--text);
+  --surface-tertiary: var(--surface-3);
+  --surface-tertiary-foreground: var(--text);
+
+  /* Accent (primary buttons): the Buxa teal in light, the Buxa coral in dark */
+  --accent-foreground: var(--accent-ink);
+  --accent-hover: var(--accent-deep);
+  --accent-soft-foreground: var(--accent-deep);
+  --accent-soft-hover: var(--accent-soft);
+
+  /* Default (neutral fill and outline buttons) */
+  --default: var(--surface-2);
+  --default-foreground: var(--text);
+  --default-hover: var(--hover);
+
+  /* Danger (destructive): the Buxa red step, with the text colour that passes on it */
+  --danger: var(--crit);
+  --danger-foreground: var(--on-solid);
+  --danger-hover: var(--crit-ink);
+  --danger-soft: var(--crit-soft);
+  --danger-soft-foreground: var(--crit-ink);
+  --danger-soft-hover: var(--crit-soft);
+
+  /* Borders and focus. A control's own edge must reach 3:1 against its surroundings (WCAG 1.4.11), so it uses the control step. */
+  --border: var(--control);
+  --focus: var(--accent);
+}

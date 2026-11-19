@@ -2,18 +2,24 @@
 import { act, createRef } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ScanField, type ScanFieldHandle } from '@/components/components/scanner/export';
+import { ScanField, type ScanFieldHandle } from '@/components/components/scanner';
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
-interface HarnessProps { onScan: (raw: string) => void; disabled?: boolean; handle: React.RefObject<ScanFieldHandle | null> }
+interface HarnessProps {
+  onScan: (raw: string) => void;
+  disabled?: boolean;
+  handle: React.RefObject<ScanFieldHandle | null>;
+}
 
 function Harness({ onScan, disabled, handle }: HarnessProps) {
   return (
     <>
       <ScanField ref={handle} label="Scan a badge" disabled={disabled} onScan={onScan} />
       <button type="button">Elsewhere</button>
-      <div tabIndex={0} id="plain">Plain text</div>
+      <div tabIndex={0} id="plain">
+        Plain text
+      </div>
     </>
   );
 }
@@ -21,13 +27,19 @@ function Harness({ onScan, disabled, handle }: HarnessProps) {
 let host: HTMLDivElement;
 let root: Root;
 
+// eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
 const field = () => host.querySelector('input') as HTMLInputElement;
+// eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
 const form = () => host.querySelector('form') as HTMLFormElement;
-const flush = () => act(async () => { await new Promise(resolve => setTimeout(resolve, 0)); });
+const flush = () =>
+  act(async () => {
+    await new Promise(resolve => setTimeout(resolve, 0));
+  });
 
 function render(props: Omit<HarnessProps, 'handle'> & { handle?: React.RefObject<ScanFieldHandle | null> }) {
   const handle = props.handle ?? createRef<ScanFieldHandle>();
   act(() => root.render(<Harness {...props} handle={handle} />));
+
   return handle;
 }
 
@@ -51,6 +63,7 @@ describe('ScanField focus', () => {
 
   it('the handle puts focus back after focus has moved to another control', () => {
     const handle = render({ onScan: () => {} });
+    // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
     act(() => (host.querySelector('button') as HTMLButtonElement).focus());
     expect(document.activeElement).not.toBe(field());
     act(() => handle.current?.focus());
@@ -68,6 +81,7 @@ describe('ScanField focus', () => {
     const handle = render({ onScan, disabled: false });
     // While a check-in is written the field is disabled, and focus leaves it when the user moves on.
     render({ onScan, disabled: true, handle });
+    // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
     act(() => (host.querySelector('button') as HTMLButtonElement).focus());
     render({ onScan, disabled: false, handle });
     expect(document.activeElement).toBe(field());
@@ -76,7 +90,9 @@ describe('ScanField focus', () => {
   it('after a scan: reports the code, clears the field and keeps focus in it', () => {
     const onScan = vi.fn();
     render({ onScan });
-    act(() => { field().value = '  bx1.abc  '; });
+    act(() => {
+      field().value = '  bx1.abc  ';
+    });
     act(() => form().requestSubmit());
     expect(onScan).toHaveBeenCalledWith('bx1.abc');
     expect(field().value).toBe('');
@@ -85,6 +101,7 @@ describe('ScanField focus', () => {
 
   it('takes focus back when the user taps something that is not a control', async () => {
     render({ onScan: () => {} });
+    // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
     act(() => (host.querySelector('#plain') as HTMLDivElement).focus());
     await flush();
     expect(document.activeElement).toBe(field());

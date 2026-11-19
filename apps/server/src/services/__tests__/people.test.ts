@@ -2,13 +2,24 @@ import { describe, expect, it } from 'vitest';
 import type { NewPersonInput } from '@buxa/contracts';
 import { createCamp, thrown, type Camp } from './support';
 
-const adult = (givenName: string, familyName: string, extra: Partial<NewPersonInput> = {}): NewPersonInput =>
-  ({ givenName, familyName, roles: ['participant'], ...extra });
+const adult = (givenName: string, familyName: string, extra: Partial<NewPersonInput> = {}): NewPersonInput => ({
+  givenName,
+  familyName,
+  roles: ['participant'],
+  ...extra,
+});
 
 /** A guardian with a new household, created as an admin would. */
 async function guardianWithHousehold(camp: Camp, name: string, household = 'Lee family') {
   const admin = camp.actor('admin');
-  return camp.people.create(admin, { givenName: name, familyName: 'Lee', roles: ['guardian'], newHouseholdName: household, relationship: 'Parent' });
+
+  return camp.people.create(admin, {
+    givenName: name,
+    familyName: 'Lee',
+    roles: ['guardian'],
+    newHouseholdName: household,
+    relationship: 'Parent',
+  });
 }
 
 describe('PeopleService permissions', () => {
@@ -23,7 +34,19 @@ describe('PeopleService permissions', () => {
     expect((await thrown(() => camp.people.update(viewer, ana.id, { givenName: 'X' }))).statusCode).toBe(403);
     expect((await thrown(() => camp.people.archive(viewer, ana.id))).statusCode).toBe(403);
     expect((await thrown(() => camp.people.createHousehold(viewer, { name: 'Other' }))).statusCode).toBe(403);
-    expect((await thrown(() => camp.people.linkToHousehold(viewer, { householdId: household.id, personId: ana.id, relationship: 'Parent', isGuardian: true, canPickup: false }))).statusCode).toBe(403);
+    expect(
+      (
+        await thrown(() =>
+          camp.people.linkToHousehold(viewer, {
+            householdId: household.id,
+            personId: ana.id,
+            relationship: 'Parent',
+            isGuardian: true,
+            canPickup: false,
+          }),
+        )
+      ).statusCode,
+    ).toBe(403);
     expect((await thrown(() => camp.people.unlinkFromHousehold(viewer, household.id, ana.id))).statusCode).toBe(403);
   });
 
@@ -43,7 +66,11 @@ describe('PeopleService permissions', () => {
 /** The fixture people for these tests: a guardian in one household and an adult with contact details. */
 async function withFixtures(camp: Camp): Promise<Camp> {
   await guardianWithHousehold(camp, 'Ana');
-  await camp.people.create(camp.actor('admin'), adult('Ben', 'Stone', { dateOfBirth: '1990-04-02', email: 'ben@example.org', phone: '+44 7700 900123' }));
+  await camp.people.create(
+    camp.actor('admin'),
+    adult('Ben', 'Stone', { dateOfBirth: '1990-04-02', email: 'ben@example.org', phone: '+44 7700 900123' }),
+  );
+
   return camp;
 }
 
@@ -70,7 +97,14 @@ describe('PeopleService redaction', () => {
     const admin = camp.actor('admin');
     const guardian = await guardianWithHousehold(camp, 'Ana');
     const household = (await camp.people.get(admin, guardian.id)).households[0];
-    const kim = await camp.people.create(admin, { givenName: 'Kim', familyName: 'Lee', roles: ['camper'], householdId: household.id, relationship: 'Child', dateOfBirth: '2015-03-01' });
+    const kim = await camp.people.create(admin, {
+      givenName: 'Kim',
+      familyName: 'Lee',
+      roles: ['camper'],
+      householdId: household.id,
+      relationship: 'Child',
+      dateOfBirth: '2015-03-01',
+    });
 
     expect((await camp.people.get(camp.actor('viewer'), kim.id)).isMinor).toBeNull();
     expect((await camp.people.get(camp.actor('staff'), kim.id)).isMinor).toBe(true);
@@ -87,14 +121,23 @@ describe('PeopleService redaction', () => {
   it('keeps contact details out of the list rows for everyone', async () => {
     const camp = await withFixtures(await createCamp());
     const rows = await camp.people.list(camp.actor('staff'));
-    for (const row of rows) expect(Object.keys(row)).not.toContain('email');
+    for (const row of rows) {
+      expect(Object.keys(row)).not.toContain('email');
+    }
   });
 });
 
 describe('PeopleService household rules', () => {
   it('refuses a camper with no household (400)', async () => {
     const camp = await createCamp();
-    const error = await thrown(() => camp.people.create(camp.actor('staff'), { givenName: 'Kim', familyName: 'Lee', roles: ['camper'], relationship: 'Child' }));
+    const error = await thrown(() =>
+      camp.people.create(camp.actor('staff'), {
+        givenName: 'Kim',
+        familyName: 'Lee',
+        roles: ['camper'],
+        relationship: 'Child',
+      }),
+    );
     expect(error.statusCode).toBe(400);
   });
 
@@ -102,14 +145,30 @@ describe('PeopleService household rules', () => {
     const camp = await createCamp();
     const admin = camp.actor('admin');
     const household = await camp.people.createHousehold(admin, { name: 'Empty' });
-    const error = await thrown(() => camp.people.create(admin, { givenName: 'Kim', familyName: 'Lee', roles: ['camper'], householdId: household.id, relationship: 'Child' }));
+    const error = await thrown(() =>
+      camp.people.create(admin, {
+        givenName: 'Kim',
+        familyName: 'Lee',
+        roles: ['camper'],
+        householdId: household.id,
+        relationship: 'Child',
+      }),
+    );
     expect(error.statusCode).toBe(400);
   });
 
   it('refuses a camper in a new household, and leaves no household behind', async () => {
     const camp = await createCamp();
     const admin = camp.actor('admin');
-    const error = await thrown(() => camp.people.create(admin, { givenName: 'Kim', familyName: 'Lee', roles: ['camper'], newHouseholdName: 'Lee family', relationship: 'Child' }));
+    const error = await thrown(() =>
+      camp.people.create(admin, {
+        givenName: 'Kim',
+        familyName: 'Lee',
+        roles: ['camper'],
+        newHouseholdName: 'Lee family',
+        relationship: 'Child',
+      }),
+    );
     expect(error.statusCode).toBe(400);
     expect(await camp.repos.people.listHouseholds(camp.orgId)).toEqual([]);
     expect(await camp.repos.people.list(camp.orgId, {})).toEqual([]);
@@ -120,7 +179,14 @@ describe('PeopleService household rules', () => {
     const admin = camp.actor('admin');
     const guardian = await guardianWithHousehold(camp, 'Ana');
     const household = (await camp.people.get(admin, guardian.id)).households[0];
-    const kim = await camp.people.create(admin, { givenName: 'Kim', familyName: 'Lee', roles: ['camper'], householdId: household.id, relationship: 'Child', dateOfBirth: '2015-03-01' });
+    const kim = await camp.people.create(admin, {
+      givenName: 'Kim',
+      familyName: 'Lee',
+      roles: ['camper'],
+      householdId: household.id,
+      relationship: 'Child',
+      dateOfBirth: '2015-03-01',
+    });
     expect(kim.isMinor).toBe(true);
     const link = (await camp.people.getHousehold(admin, household.id)).members.find(m => m.personId === kim.id);
     expect(link?.isGuardian).toBe(false);
@@ -130,7 +196,11 @@ describe('PeopleService household rules', () => {
     const camp = await createCamp();
     const guardian = await guardianWithHousehold(camp, 'Ana');
     const household = (await camp.people.get(camp.actor('admin'), guardian.id)).households[0];
-    expect(household.members.find(m => m.personId === guardian.id)).toMatchObject({ isGuardian: true, canPickup: false, relationship: 'Parent' });
+    expect(household.members.find(m => m.personId === guardian.id)).toMatchObject({
+      isGuardian: true,
+      canPickup: false,
+      relationship: 'Parent',
+    });
   });
 
   it('refuses canPickup without isGuardian when linking (400)', async () => {
@@ -138,16 +208,30 @@ describe('PeopleService household rules', () => {
     const admin = camp.actor('admin');
     const household = await camp.people.createHousehold(admin, { name: 'Lee family' });
     const ben = await camp.people.create(admin, adult('Ben', 'Stone'));
-    const error = await thrown(() => camp.people.linkToHousehold(admin, { householdId: household.id, personId: ben.id, relationship: 'Uncle', isGuardian: false, canPickup: true }));
+    const error = await thrown(() =>
+      camp.people.linkToHousehold(admin, {
+        householdId: household.id,
+        personId: ben.id,
+        relationship: 'Uncle',
+        isGuardian: false,
+        canPickup: true,
+      }),
+    );
     expect(error.statusCode).toBe(400);
   });
 
-  it('refuses unlinking a camper\'s last guardian (409), and allows it once no camper depends on them', async () => {
+  it("refuses unlinking a camper's last guardian (409), and allows it once no camper depends on them", async () => {
     const camp = await createCamp();
     const admin = camp.actor('admin');
     const guardian = await guardianWithHousehold(camp, 'Ana');
     const household = (await camp.people.get(admin, guardian.id)).households[0];
-    await camp.people.create(admin, { givenName: 'Kim', familyName: 'Lee', roles: ['camper'], householdId: household.id, relationship: 'Child' });
+    await camp.people.create(admin, {
+      givenName: 'Kim',
+      familyName: 'Lee',
+      roles: ['camper'],
+      householdId: household.id,
+      relationship: 'Child',
+    });
 
     const refused = await thrown(() => camp.people.unlinkFromHousehold(admin, household.id, guardian.id));
     expect(refused.statusCode).toBe(409);
@@ -173,7 +257,12 @@ describe('PeopleService lifecycle', () => {
     const camp = await createCamp();
     const admin = camp.actor('admin');
     const ben = await camp.people.create(admin, adult('Ben', 'Stone'));
-    await camp.memberships.add(admin, { personId: ben.id, plan: 'Summer', startsOn: '2027-07-01', endsOn: '2027-08-31' });
+    await camp.memberships.add(admin, {
+      personId: ben.id,
+      plan: 'Summer',
+      startsOn: '2027-07-01',
+      endsOn: '2027-08-31',
+    });
     await camp.credentials.issue(admin, ben.id);
     await camp.attendance.checkIn(admin, { personId: ben.id, method: 'manual' });
 
@@ -195,7 +284,7 @@ describe('PeopleService lifecycle', () => {
     expect((await thrown(() => camp.people.get(admin, '00000000-0000-4000-8000-000000000000'))).statusCode).toBe(404);
   });
 
-  it('keeps a person\'s own names and roles when only the contact details change', async () => {
+  it("keeps a person's own names and roles when only the contact details change", async () => {
     const camp = await createCamp();
     const admin = camp.actor('admin');
     const ben = await camp.people.create(admin, adult('Ben', 'Stone', { preferredName: 'Benny' }));

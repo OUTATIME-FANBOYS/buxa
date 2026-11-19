@@ -5,7 +5,11 @@ describe('ActionState', () => {
   it('has three explicit states', () => {
     expect(idle).toEqual({ status: 'idle' });
     expect(success('Saved')).toEqual({ status: 'success', message: 'Saved' });
-    expect(failure('No', { name: 'Required' })).toEqual({ status: 'error', message: 'No', fieldErrors: { name: 'Required' } });
+    expect(failure('No', { name: 'Required' })).toEqual({
+      status: 'error',
+      message: 'No',
+      fieldErrors: { name: 'Required' },
+    });
   });
   it('reads a field error only from an error state', () => {
     expect(fieldError(failure('No', { name: 'Required' }), 'name')).toBe('Required');

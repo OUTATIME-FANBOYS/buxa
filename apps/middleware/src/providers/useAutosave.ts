@@ -9,10 +9,23 @@ export function useAutosave(state: AppState): SaveStatus {
   const [status, setStatus] = useState<SaveStatus>('saved');
   const first = useRef(true);
   useEffect(() => {
-    if (first.current) { first.current = false; return; }
+    if (first.current) {
+      first.current = false;
+
+      return;
+    }
     setStatus('saving');
-    const id = setTimeout(() => { try { storage.save(state); setStatus('saved'); } catch { setStatus('error'); } }, 250);
+    const id = setTimeout(() => {
+      try {
+        storage.save(state);
+        setStatus('saved');
+      } catch {
+        setStatus('error');
+      }
+    }, 250);
+
     return () => clearTimeout(id);
   }, [state]);
+
   return status;
 }

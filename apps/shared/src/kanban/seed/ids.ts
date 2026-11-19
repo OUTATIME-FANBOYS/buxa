@@ -23,7 +23,11 @@ export type ProjectId = (typeof PROJECT)[keyof typeof PROJECT];
 
 /** The camp's projects, in sidebar order. */
 export const CAMP_PROJECT_IDS: readonly ProjectId[] = [
-  PROJECT.registration, PROJECT.facilities, PROJECT.staffing, PROJECT.comms, PROJECT.programme,
+  PROJECT.registration,
+  PROJECT.facilities,
+  PROJECT.staffing,
+  PROJECT.comms,
+  PROJECT.programme,
 ];
 
 export const PROJECT_NAME = {

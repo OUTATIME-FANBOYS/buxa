@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { StatusPill } from '@/components/components/attendance/export';
+import { StatusPill } from '@/components/components/attendance';
 
 describe('StatusPill', () => {
   it('shows a status as its words', () => {

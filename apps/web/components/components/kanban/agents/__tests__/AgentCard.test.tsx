@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { buildSeed } from '@buxa/shared';
 import { type Agent } from '@buxa/shared';
-import { AgentCard } from '@/components/components/kanban/agents/export';
+import { AgentCard } from '@/components/components/kanban/agents';
 
-const h = vi.hoisted(() => ({ store: {} as Record<string, unknown> }));
+const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
 vi.mock('@/components/components/kanban/dialogs/ConnectAgentDialog', () => ({ ConnectAgentDialog: () => null }));
 
@@ -15,7 +15,7 @@ describe('AgentCard', () => {
   });
 
   it('shows the agent with its model, its purpose and whether it is active', () => {
-    const agent = buildSeed().agents[0] as Agent;
+    const agent = buildSeed().agents[0];
     const html = renderToStaticMarkup(<AgentCard agent={agent} canManage={false} />);
     expect(html).toContain('agent-card');
     expect(html).toContain(agent.model);

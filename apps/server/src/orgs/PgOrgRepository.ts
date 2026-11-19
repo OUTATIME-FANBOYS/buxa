@@ -1,11 +1,19 @@
 import type { Pool } from 'pg';
-import type { ClockFormat, CreatedOrg, Member, NewOrgInput, Org, OrgPatchInput, OrgSummary } from '@buxa/contracts';
-import { isUniqueViolation, withOrg } from '@buxa/db';
-import type { Actor } from '@buxa/domain';
+import type { CreatedOrg, Member, NewOrgInput, Org, OrgPatchInput, OrgSummary } from '@buxa/contracts';
+import { errorMessage, isUniqueViolation, withOrg } from '@buxa/db';
+import type { Actor, Role } from '@buxa/domain';
 import { recordAudit } from '../audit/recordAudit';
-import { OrgNotFoundError, SlugTakenError, type OrgRepository } from './OrgRepository';
+import { conflict, forbidden } from '../http/errors';
+import { OrgNotFoundError, SlugTakenError, type ArchivedCampRecord, type OrgRepository } from './OrgRepository';
 
-interface OrgRow { id: string; name: string; slug: string; created_at: Date; member_count: number; timezone: string; clock_format: ClockFormat }
+interface OrgRow {
+  id: string;
+  name: string;
+  slug: string;
+  created_at: Date;
+  member_count: number;
+  timezone: string;
+}
 
 export class PgOrgRepository implements OrgRepository {
   constructor(private readonly pool: Pool) {}
@@ -16,9 +24,13 @@ export class PgOrgRepository implements OrgRepository {
    */
   async createWithOwner(input: NewOrgInput, ownerId: string): Promise<CreatedOrg> {
     try {
-      const { rows } = await withOrg(this.pool, null, db => db.query<OrgSummary>(
-        'SELECT org_id AS id, org_name AS name, org_slug AS slug FROM buxa_create_org($1, $2, $3, $4)',
-        [input.name, input.slug, input.timezone, ownerId]));
+      const { rows } = await withOrg(this.pool, null, db =>
+        db.query<OrgSummary>(
+          'SELECT org_id AS id, org_name AS name, org_slug AS slug FROM buxa_create_org($1, $2, $3, $4)',
+          [input.name, input.slug, input.timezone, ownerId],
+        ),
+      );
+
       return { ...rows[0], role: 'owner' };
     } catch (error) {
       throw isUniqueViolation(error) ? new SlugTakenError() : error;
@@ -28,25 +40,45 @@ export class PgOrgRepository implements OrgRepository {
   get(orgId: string): Promise<Org> {
     return withOrg(this.pool, orgId, async db => {
       const { rows } = await db.query<OrgRow>(
-        `SELECT id, name, slug, timezone, clock_format, created_at, (SELECT count(*)::int FROM org_members) AS member_count FROM orgs`);
-      if (!rows[0]) throw new OrgNotFoundError();
+        `SELECT id, name, slug, timezone, created_at, (SELECT count(*)::int FROM org_members) AS member_count FROM orgs`,
+      );
+      if (!rows[0]) {
+        throw new OrgNotFoundError();
+      }
       const row = rows[0];
-      return { id: row.id, name: row.name, slug: row.slug, createdAt: row.created_at.toISOString(), memberCount: row.member_count, timezone: row.timezone, clockFormat: row.clock_format };
+
+      return {
+        id: row.id,
+        name: row.name,
+        slug: row.slug,
+        createdAt: row.created_at.toISOString(),
+        memberCount: row.member_count,
+        timezone: row.timezone,
+      };
     });
   }
 
   rename(actor: Actor, input: OrgPatchInput): Promise<OrgSummary> {
     return withOrg(this.pool, actor.orgId, async db => {
       const { rows } = await db.query<OrgSummary>(
-        `UPDATE orgs SET name = coalesce($1, name), timezone = coalesce($2, timezone), clock_format = coalesce($3, clock_format)
-         WHERE id = $4 RETURNING id, name, slug`,
-        [input.name ?? null, input.timezone ?? null, input.clockFormat ?? null, actor.orgId]);
-      if (!rows[0]) throw new OrgNotFoundError();
-      await recordAudit(db, { actor, action: 'org.update', entity: 'org', entityId: actor.orgId, data: {
-        ...(input.name !== undefined && { name: input.name }),
-        ...(input.timezone !== undefined && { timezone: input.timezone }),
-        ...(input.clockFormat !== undefined && { clockFormat: input.clockFormat }),
-      } });
+        `UPDATE orgs SET name = coalesce($1, name), timezone = coalesce($2, timezone)
+         WHERE id = $3 RETURNING id, name, slug`,
+        [input.name ?? null, input.timezone ?? null, actor.orgId],
+      );
+      if (!rows[0]) {
+        throw new OrgNotFoundError();
+      }
+      await recordAudit(db, {
+        actor,
+        action: 'org.update',
+        entity: 'org',
+        entityId: actor.orgId,
+        data: {
+          ...(input.name !== undefined && { name: input.name }),
+          ...(input.timezone !== undefined && { timezone: input.timezone }),
+        },
+      });
+
       return rows[0];
     });
   }
@@ -54,8 +86,76 @@ export class PgOrgRepository implements OrgRepository {
   listMembers(orgId: string): Promise<Member[]> {
     return withOrg(this.pool, orgId, async db => {
       const { rows } = await db.query<Member>(
-        `SELECT u.id, u.name, u.email, m.role FROM org_members m JOIN users u ON u.id = m.user_id ORDER BY u.name`);
+        `SELECT u.id, u.name, u.email, m.role FROM org_members m JOIN users u ON u.id = m.user_id ORDER BY u.name`,
+      );
+
       return rows;
     });
+  }
+
+  /** buxa_archive_camp (migration 0013) checks the owner role, refuses an archived camp and writes the audit row in one statement. */
+  async archive(actor: Actor): Promise<{ archivedAt: string }> {
+    try {
+      return await withOrg(this.pool, actor.orgId, async db => {
+        const { rows } = await db.query<{ archived_at: Date }>('SELECT buxa_archive_camp($1, $2) AS archived_at', [
+          actor.orgId,
+          actor.userId,
+        ]);
+
+        return { archivedAt: rows[0].archived_at.toISOString() };
+      });
+    } catch (error) {
+      throw mapCampFunctionError(error);
+    }
+  }
+
+  /** buxa_unarchive_camp (migration 0017) checks the owner role, refuses a camp that is not archived and writes the audit row. */
+  async unarchive(actor: Actor): Promise<void> {
+    try {
+      await withOrg(this.pool, actor.orgId, db =>
+        db.query('SELECT buxa_unarchive_camp($1, $2)', [actor.orgId, actor.userId]),
+      );
+    } catch (error) {
+      throw mapCampFunctionError(error);
+    }
+  }
+
+  /** buxa_delete_camp (migration 0013) checks the owner role and the exact name, then deletes the camp; the rows go with it. */
+  async deleteCamp(actor: Actor, confirmName: string): Promise<void> {
+    try {
+      await withOrg(this.pool, actor.orgId, db =>
+        db.query('SELECT buxa_delete_camp($1, $2, $3)', [actor.orgId, actor.userId, confirmName]),
+      );
+    } catch (error) {
+      throw mapCampFunctionError(error);
+    }
+  }
+
+  /** buxa_archived_camps_of (migration 0013) runs as the function owner, because the camp is not the current one. */
+  archivedCampsOf(userId: string): Promise<ArchivedCampRecord[]> {
+    return withOrg(this.pool, null, async db => {
+      const { rows } = await db.query<{ id: string; name: string; archived_at: Date; role: Role }>(
+        'SELECT camp_id AS id, camp_name AS name, camp_archived_at AS archived_at, camp_role AS role FROM buxa_archived_camps_of($1)',
+        [userId],
+      );
+
+      return rows.map(r => ({ id: r.id, name: r.name, archivedAt: r.archived_at.toISOString(), role: r.role }));
+    });
+  }
+}
+
+/** Maps the errors the 0013 functions raise to the ones the service and the client understand. Anything else is rethrown. */
+function mapCampFunctionError(error: unknown): unknown {
+  const code = (error as { code?: unknown } | null)?.code;
+  const message = errorMessage(error);
+  switch (code) {
+    case '42501':
+      return forbidden(message);
+    case 'P0002':
+      return new OrgNotFoundError();
+    case '22023':
+      return conflict(message);
+    default:
+      return error;
   }
 }

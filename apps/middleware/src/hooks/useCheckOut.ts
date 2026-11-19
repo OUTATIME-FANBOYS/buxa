@@ -18,11 +18,14 @@ export function useCheckOut(personId: string, actions: CheckOutActions) {
   const close = useCallback(() => dispatch({ type: 'close' }), []);
   const patch = useCallback((change: Partial<CheckOutDraft>) => dispatch({ type: 'draft', patch: change }), []);
 
-  const submit = useCallback(async (draft: CheckOutDraft) => {
-    dispatch({ type: 'submitted' });
-    const outcome = await actions.checkOut(checkOutInputFor(personId, draft));
-    dispatch({ type: 'answered', outcome });
-  }, [personId, actions]);
+  const submit = useCallback(
+    async (draft: CheckOutDraft) => {
+      dispatch({ type: 'submitted' });
+      const outcome = await actions.checkOut(checkOutInputFor(personId, draft));
+      dispatch({ type: 'answered', outcome });
+    },
+    [personId, actions],
+  );
 
   return { state, open, close, patch, submit };
 }

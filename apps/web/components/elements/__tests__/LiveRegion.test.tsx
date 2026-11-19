@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { LiveRegion } from '@/components/elements/export';
+import { LiveRegion } from '@/components/elements';
 
 describe('LiveRegion', () => {
   it('is a visually hidden polite status that carries the message', () => {

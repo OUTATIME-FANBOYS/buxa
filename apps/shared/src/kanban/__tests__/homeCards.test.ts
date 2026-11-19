@@ -3,13 +3,22 @@ import type { CampHome, CheckInsByDay } from '../../camp/campHomeTypes';
 import { dayChange, homeCards } from '../homeCards';
 
 const series = (counts: number[], complete = true): CheckInsByDay => ({
-  days: counts.map((count, i) => ({ date: `2026-11-${String(i + 1).padStart(2, '0')}`, count })), complete,
+  days: counts.map((count, i) => ({ date: `2026-11-${String(i + 1).padStart(2, '0')}`, count, minors: null })),
+  complete,
 });
 
 const camp: CampHome = {
-  campId: 'o1', name: 'Lake Camp', firstName: 'Priya', canRename: true,
-  people: 40, onSite: 12, checkedInToday: 20, validMemberships: 30, upcomingSessions: [],
-  checkInsByDay: series([5, 9, 20]), onSiteByAge: { adults: 10, minors: 2 },
+  campId: 'o1',
+  name: 'Lake Camp',
+  firstName: 'Priya',
+  canRename: true,
+  people: 40,
+  onSite: 12,
+  checkedInToday: 20,
+  validMemberships: 30,
+  upcomingSessions: [],
+  checkInsByDay: series([5, 9, 20]),
+  onSiteByAge: { adults: 10, minors: 2 },
   membershipStatus: { valid: 30, notStarted: 0, expired: 6, none: 4 },
 };
 
@@ -32,7 +41,13 @@ describe('homeCards', () => {
   });
 
   it('leaves out a camp fact the viewer may not read', () => {
-    const cards = homeCards({ ...camp, onSite: null, checkedInToday: null, checkInsByDay: null, validMemberships: null });
+    const cards = homeCards({
+      ...camp,
+      onSite: null,
+      checkedInToday: null,
+      checkInsByDay: null,
+      validMemberships: null,
+    });
     expect(cards).toEqual([]);
     expect(homeCards({ ...camp, onSite: null }).map(c => c.label)).toEqual(['Checked in today', 'Valid memberships']);
   });

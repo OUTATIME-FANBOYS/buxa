@@ -8,5 +8,7 @@ import type { ActionOutcome } from '@buxa/shared';
 
 /** Check a person in. Every refusal comes back as a result the screen can explain; an override needs a written reason. */
 export async function checkInAction(input: unknown): Promise<ActionOutcome<CheckInResult>> {
-  return runAttendanceAction(CheckInInputSchema, input, (actor, data) => getRuntime().services.attendance.checkIn(actor, data));
+  return runAttendanceAction(CheckInInputSchema, input, (actor, data) =>
+    getRuntime().services.attendance.checkIn(actor, data),
+  );
 }

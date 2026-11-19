@@ -14,6 +14,7 @@ export async function scanCodeAction(input: unknown): Promise<ActionOutcome<Look
     await enforceRateLimit(runtime.rateLimiter, RATE_RULES.scanCode, actor.userId);
     const { services } = runtime;
     const scan = await services.credentials.scan(actor, data.raw);
+
     return lookupFor(scan, scan.kind === 'person' ? await services.attendance.onSite(actor) : []);
   });
 }

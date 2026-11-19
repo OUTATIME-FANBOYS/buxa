@@ -6,10 +6,21 @@ import type { ActionContext } from './context';
 /** Task commands: ids are minted here, rules live in the domain. */
 export function taskActions({ set }: ActionContext) {
   return {
-    createTask(d: D.TaskDraft): string { const id = uid(); set(s => D.createTask(s, id, d)); return id; },
+    createTask(d: D.TaskDraft): string {
+      const id = uid();
+      set(s => D.createTask(s, id, d));
+
+      return id;
+    },
     updateTask: (id: string, patch: D.TaskPatch) => set(s => D.updateTask(s, id, patch)),
-    moveTask: (id: string, columnId: string, beforeId: string | null) => set(s => D.moveTask(s, id, columnId, beforeId)),
-    duplicateTask(id: string): string { const nid = uid(); set(s => D.duplicateTask(s, id, nid)); return nid; },
+    moveTask: (id: string, columnId: string, beforeId: string | null) =>
+      set(s => D.moveTask(s, id, columnId, beforeId)),
+    duplicateTask(id: string): string {
+      const nid = uid();
+      set(s => D.duplicateTask(s, id, nid));
+
+      return nid;
+    },
     archiveTask: (id: string, archived: boolean) => set(s => D.archiveTask(s, id, archived)),
     deleteTask: (id: string) => set(s => D.deleteTask(s, id)),
     restoreTask: (t: Task) => set(s => D.restoreTask(s, t)),

@@ -1,22 +1,25 @@
 import { notFound } from 'next/navigation';
 import { authorize, toLocalDate } from '@buxa/domain';
-import { Empty } from '@/components/components/export';
-import { PageHeader } from '@/components/components/export';
+import { Empty } from '@/components/components';
+import { PageHeader } from '@/components/components';
 import { loadLogEntries, loadPeopleOptions } from '@buxa/server/composers/index.server';
-import { Notice } from '@/components/components/export';
-import { LogFilters } from '@/components/components/attendance/export';
-import { LogTable } from '@/components/components/attendance/export';
+import { Notice } from '@/components/components';
+import { LogFilters } from '@/components/components/attendance';
+import { LogTable } from '@/components/components/attendance';
 import { campActor, campClock } from '@buxa/server/composers/index.server';
 import { attendanceExportPath } from '@buxa/shared';
 import { parseLogFilter } from '@buxa/shared';
 import { HELP_LINK_LABEL, helpLink } from '@buxa/shared';
+import { Button } from '@/components/elements';
 
 type SearchParams = Readonly<Record<string, string | string[] | undefined>>;
 
 /** The attendance log for the chosen camp days (default: today, camp time), with an optional person and the CSV download. */
 export async function AttendanceScreen({ searchParams }: { searchParams: SearchParams }) {
   const actor = await campActor();
-  if (!actor) notFound();
+  if (!actor) {
+    notFound();
+  }
   if (!authorize(actor, 'attendance:read').allow) {
     return (
       <div className="page">
@@ -34,16 +37,30 @@ export async function AttendanceScreen({ searchParams }: { searchParams: SearchP
   const canExport = authorize(actor, 'attendance:export').allow;
   const values = parsed.ok
     ? { from: parsed.filter.from, to: parsed.filter.to, personId: parsed.filter.personId ?? '' }
-    : { from: readValue(searchParams, 'from'), to: readValue(searchParams, 'to'), personId: readValue(searchParams, 'personId') };
+    : {
+        from: readValue(searchParams, 'from'),
+        to: readValue(searchParams, 'to'),
+        personId: readValue(searchParams, 'personId'),
+      };
 
   return (
     <div className="page">
-      <PageHeader title="Attendance" subtitle="Who came in and out, in camp time." actions={<a className="btn" href={helpLink('exports')}>{HELP_LINK_LABEL}</a>} />
+      <PageHeader
+        title="Attendance"
+        subtitle="Who came in and out, in camp time."
+        actions={<Button href={helpLink('exports')}>{HELP_LINK_LABEL}</Button>}
+      />
       <LogFilters values={values} people={people}>
-        {parsed.ok && canExport && <a className="btn log-export" href={attendanceExportPath(parsed.filter)} download>Download CSV</a>}
+        {parsed.ok && canExport && (
+          <Button className="log-export" icon="download" href={attendanceExportPath(parsed.filter)} download>
+            Download CSV
+          </Button>
+        )}
       </LogFilters>
       {!parsed.ok && <Notice tone="crit" title="Check the dates" body={parsed.message} />}
-      {parsed.ok && entries.length === 0 && <Empty icon="list" title="No visits for these days" body="Try a wider range, or another person." />}
+      {parsed.ok && entries.length === 0 && (
+        <Empty icon="list" title="No visits for these days" body="Try a wider range, or another person." />
+      )}
       {parsed.ok && entries.length > 0 && <LogTable entries={entries} timeZone={timeZone} clockFormat={clockFormat} />}
     </div>
   );
@@ -51,5 +68,6 @@ export async function AttendanceScreen({ searchParams }: { searchParams: SearchP
 
 const readValue = (params: SearchParams, name: string): string => {
   const value = params[name];
+
   return typeof value === 'string' ? value : '';
 };

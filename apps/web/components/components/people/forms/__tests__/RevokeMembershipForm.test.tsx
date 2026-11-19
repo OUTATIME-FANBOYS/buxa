@@ -1,8 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { RevokeMembershipForm } from '@/components/components/people/forms/export';
+import { RevokeMembershipForm } from '@/components/components/people/forms';
+import { settle } from '@buxa/domain';
 
-vi.mock('@buxa/server/composers/people/revokeMembershipAction', () => ({ revokeMembershipAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/people/revokeMembershipAction', () => ({
+  revokeMembershipAction: () => settle(() => ({ status: 'idle' })),
+}));
 
 describe('RevokeMembershipForm', () => {
   it('requires a reason and carries the membership and person ids', () => {
