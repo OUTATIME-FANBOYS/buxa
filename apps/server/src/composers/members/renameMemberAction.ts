@@ -39,7 +39,7 @@ export async function renameMemberAction(input: { userId: string; name: string }
   }
 
   try {
-    const renamed = await repos.renameMember(actor.orgId, input.userId, parsed.data.name);
+    const renamed = await repos.renameMember(actor, input.userId, parsed.data.name);
     if (!renamed) {
       return failure('That person is not in this camp.');
     }

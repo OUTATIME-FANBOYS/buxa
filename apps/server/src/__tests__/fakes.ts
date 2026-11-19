@@ -10,7 +10,7 @@ import type {
   OrgSummary,
   User,
 } from '@buxa/contracts';
-import { DEFAULT_CLOCK_FORMAT, type Role } from '@buxa/domain';
+import { DEFAULT_CLOCK_FORMAT, type Actor, type Role } from '@buxa/domain';
 import type { Identity } from '../auth/identity';
 import { InMemoryAttendanceRepository } from '../attendance/InMemoryAttendanceRepository';
 import { conflict } from '../http/errors';
@@ -121,14 +121,15 @@ export class InMemoryStore implements UserRepository, OrgRepository {
   async roleIn(orgId: string, userId: string): Promise<Membership['role'] | null> {
     return this.members.find(m => m.orgId === orgId && m.userId === userId)?.role ?? null;
   }
-  async renameMember(orgId: string, userId: string, name: string): Promise<Pick<User, 'id' | 'email' | 'name'> | null> {
+  async renameMember(actor: Actor, userId: string, name: string): Promise<Pick<User, 'id' | 'email' | 'name'> | null> {
     const user = this.users.get(userId);
-    const inCamp = this.members.some(m => m.orgId === orgId && m.userId === userId);
+    const inCamp = this.members.some(m => m.orgId === actor.orgId && m.userId === userId);
     if (!user || !inCamp) {
       return null;
     }
     Object.assign(user, splitName(name));
     user.name = name;
+    this.database.record(actor, 'member.rename', 'user', userId, { name });
 
     return { id: user.id, email: user.email, name: user.name };
   }
