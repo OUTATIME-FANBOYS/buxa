@@ -72,6 +72,8 @@
 .cal-task {
   display: flex;
   align-items: center;
+  /* .button centres its content; a pill starts its text at the dot, so short titles line up with long ones. */
+  justify-content: flex-start;
   gap: 4px;
   text-align: left;
   height: 22px;
@@ -123,7 +125,8 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--pc);
+  /* Always reserved and never blank: an unknown priority falls back to the low (grey) token. */
+  background: var(--pc, var(--p-low));
   flex: none;
 }
 .cal-title {
