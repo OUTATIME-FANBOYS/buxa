@@ -1,6 +1,8 @@
 import type { Pool } from 'pg';
 import type { ClockFormat, Membership, User } from '@buxa/contracts';
 import { isUniqueViolation, withOrg } from '@buxa/db';
+import type { Actor } from '@buxa/domain';
+import { recordAudit } from '../audit/recordAudit';
 import type { Identity } from '../auth/identity';
 import { EmailInUseError, type UserRepository } from './UserRepository';
 
@@ -77,15 +79,19 @@ export class PgUserRepository implements UserRepository {
     return rows[0]?.role ?? null;
   }
 
-  async renameMember(orgId: string, userId: string, name: string): Promise<Pick<User, 'id' | 'email' | 'name'> | null> {
-    const { rows } = await withOrg(this.pool, orgId, db =>
-      db.query<Pick<User, 'id' | 'email' | 'name'>>(
+  renameMember(actor: Actor, userId: string, name: string): Promise<Pick<User, 'id' | 'email' | 'name'> | null> {
+    return withOrg(this.pool, actor.orgId, async db => {
+      const { rows } = await db.query<Pick<User, 'id' | 'email' | 'name'>>(
         'SELECT user_id AS id, user_email AS email, user_name AS name FROM buxa_rename_member($1, $2, $3)',
-        [orgId, userId, name],
-      ),
-    );
+        [actor.orgId, userId, name],
+      );
+      if (!rows[0]) {
+        return null;
+      }
+      await recordAudit(db, { actor, action: 'member.rename', entity: 'user', entityId: userId, data: { name } });
 
-    return rows[0] ?? null;
+      return rows[0];
+    });
   }
 
   archivedMembershipsOf(userId: string): Promise<Membership[]> {

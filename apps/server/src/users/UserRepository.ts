@@ -1,4 +1,5 @@
 import type { ClockFormat, Membership, User } from '@buxa/contracts';
+import type { Actor } from '@buxa/domain';
 import type { Identity } from '../auth/identity';
 
 /** Raised when a different identity already owns this email address. */
@@ -27,6 +28,6 @@ export interface UserRepository {
   setClockFormat(userId: string, clockFormat: ClockFormat): Promise<User>;
   /** The role `userId` holds in the camp, or null if they are not in it. Read inside that camp's row-level security. */
   roleIn(orgId: string, userId: string): Promise<Membership['role'] | null>;
-  /** Renames a member of the camp, for an admin or owner. Refuses (null) anyone not in the camp. The caller checks the rank. */
-  renameMember(orgId: string, userId: string, name: string): Promise<Pick<User, 'id' | 'email' | 'name'> | null>;
+  /** Renames a member of the camp, for an admin or owner, and audits it in the same transaction. Refuses (null) anyone not in the camp, and writes no audit row then. The caller checks the rank. */
+  renameMember(actor: Actor, userId: string, name: string): Promise<Pick<User, 'id' | 'email' | 'name'> | null>;
 }
