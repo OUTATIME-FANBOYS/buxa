@@ -34,7 +34,7 @@ describe('CalendarView', () => {
     expect(html).toContain(task.title);
   });
   it('gives each pill its full title on hover and its priority on the dot', () => {
-    const task = { ...seed.tasks[0], title: 'Plan the trip', priority: 'high', tags: [], due: '2027-07-10' };
+    const task = { ...seed.tasks[0], title: 'Plan the trip', priority: 'high' as const, tags: [], due: '2027-07-10' };
     const html = renderToStaticMarkup(<CalendarView tasks={[task]} canCreate={false} />);
     expect(html).toContain('title="Plan the trip"');
     expect(html).toMatch(/class="button button--ghost button--sm cal-task prio-bg-high[ "]/);
