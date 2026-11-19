@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { PersonSummary } from '@buxa/contracts';
@@ -6,11 +7,17 @@ import { LogFilters } from '@/components/components/attendance';
 const people = [{ id: 'p-1', givenName: 'Ada', familyName: 'Lee', preferredName: null }] as unknown as PersonSummary[];
 
 describe('LogFilters', () => {
-  it('is a plain GET form for the log, with the dates and the chosen person', () => {
+  it('uses next/form, so Show navigates on the client rather than reloading the page', () => {
+    const source = readFileSync(new URL('../LogFilters.tsx', import.meta.url), 'utf8');
+    expect(source).toContain("import Form from 'next/form';");
+    expect(source).not.toMatch(/<form[\s>]/);
+  });
+  it('is a bookmarkable GET form for the log, with the dates and the chosen person', () => {
     const html = renderToStaticMarkup(
       <LogFilters values={{ from: '2027-07-01', to: '2027-07-03', personId: 'p-1' }} people={people} />,
     );
-    expect(html).toContain('method="get"');
+    expect(html).toContain('action="/camp/attendance"');
+    expect(html).not.toContain('method="post"');
     expect(html).toContain('role="search"');
     expect(html).toContain('name="from" value="2027-07-01"');
     expect(html).toContain('name="to" value="2027-07-03"');
