@@ -7,6 +7,7 @@ vi.mock('@/actions/classes', () => ({ addClassAction: vi.fn(), updateClassAction
 
 const SESSION = '11111111-1111-4111-8111-111111111111';
 const CLASS = '22222222-2222-4222-8222-222222222222';
+const INSTRUCTOR = '33333333-3333-4333-8333-333333333333';
 
 const cls: Class = {
   id: CLASS,
@@ -53,11 +54,42 @@ describe('ClassForm: the fields of a class', () => {
     expect(html).not.toContain('Description');
   });
 
-  it('limits Camp Size to whole numbers from 3 to 30 in the form', () => {
+  it('limits Camp Size to whole numbers from 3 to 30 in the form, with no hint text', () => {
     const html = render();
     const input = html.match(/<input[^>]*name="capacity"[^>]*>/)?.[0] ?? '';
     expect(input).toContain('min="3"');
     expect(input).toContain('max="30"');
+    expect(html).not.toContain('A whole number from');
+  });
+
+  it('limits the youngest and oldest age to whole numbers from 3 to 20 in the form', () => {
+    const html = render();
+    for (const name of ['minAge', 'maxAge']) {
+      const input = html.match(new RegExp(`<input[^>]*name="${name}"[^>]*>`))?.[0] ?? '';
+      expect(input, name).toContain('min="3"');
+      expect(input, name).toContain('max="20"');
+    }
+  });
+
+  it('shows the instructors as a dropdown and a scrolling tag box, with the label aligned with the others', () => {
+    const html = render({ instructors: [{ id: INSTRUCTOR, name: 'Ana Ruiz' }] });
+    expect(html).toContain('>Instructors</label>');
+    expect(html).toContain('<select');
+    expect(html).toContain('Add an instructor');
+    expect(html).not.toContain('type="checkbox"');
+  });
+
+  it('starts the chosen instructors as tags, and posts each one as an instructorIds field', () => {
+    const html = render({
+      instructors: [
+        { id: INSTRUCTOR, name: 'Ana Ruiz' },
+        { id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', name: 'Ben Cole' },
+      ],
+      cls: { ...cls, instructorIds: [INSTRUCTOR], instructors: [{ id: INSTRUCTOR, name: 'Ana Ruiz' }] },
+    });
+    expect(html).toContain('aria-label="Remove Ana Ruiz"');
+    expect(html).toContain(`name="instructorIds" value="${INSTRUCTOR}"`);
+    expect(html).not.toContain('name="instructorIds" value="bbbbbbbb');
   });
 });
 

@@ -7,6 +7,7 @@ export * from './EnrolForm';
 export * from './ErrorReportButton';
 export * from './ImportForm';
 export * from './ImportResults';
+export * from './InstructorPicker';
 export * from './NewClassButton';
 export * from './NewSessionButton';
 export * from './NewSessionForm';

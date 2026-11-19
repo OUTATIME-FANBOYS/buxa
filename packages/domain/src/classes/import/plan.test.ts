@@ -168,6 +168,15 @@ describe('planImport: field checks (each row gets its own result)', () => {
 });
 
 describe('planImport: a class carries its own ages and camp size', () => {
+  it('refuses ages outside 3 to 20, on the age that is out of range', () => {
+    const p = plan([row({ age_min: '2', age_max: '21' }, 2)]);
+    expect(p.results[0]).toMatchObject({ status: 'refused' });
+    expect(p.results[0]?.problems).toEqual([
+      { field: 'age_min', message: 'Ages are whole numbers from 3 to 20.' },
+      { field: 'age_max', message: 'Ages are whole numbers from 3 to 20.' },
+    ]);
+  });
+
   it('writes the ages from the row, not from any other class of the same name', () => {
     const p = plan([row({ age_min: '6', age_max: '12' }, 2)]);
     expect(p.results[0]).toMatchObject({ status: 'create' });

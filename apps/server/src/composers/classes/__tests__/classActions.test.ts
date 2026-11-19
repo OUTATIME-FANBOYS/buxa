@@ -110,6 +110,18 @@ describe('addClassAction (the time range and the camp size)', () => {
     );
   });
 
+  it.each([
+    ['2', '12'],
+    ['8', '21'],
+  ])(
+    'refuses ages %s to %s on the server (outside 3 to 20), with the message, and adds nothing',
+    async (minAge, maxAge) => {
+      const state = await addClassAction(idle, formOf({ ...cls, minAge, maxAge }));
+      expect(JSON.stringify(state)).toContain('Ages are whole numbers from 3 to 20.');
+      expect(h.classes.addClass).not.toHaveBeenCalled();
+    },
+  );
+
   it.each(['2', '31'])(
     'refuses a camp size of %s on the server, with the message, and adds nothing',
     async capacity => {

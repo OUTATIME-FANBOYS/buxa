@@ -4,8 +4,17 @@
  * name, ages, camp size, location and instructors. Campers enrol in a Class.
  */
 import { z } from 'zod';
-import { isValidAgeRange, isValidSpan, MAX_AGE_LIMIT, MAX_CAMP_SIZE, MIN_CAMP_SIZE } from '@buxa/domain';
+import {
+  isValidAgeRange,
+  isValidSpan,
+  MAX_AGE_LIMIT,
+  MAX_CAMP_SIZE,
+  MAX_CLASS_AGE,
+  MIN_CAMP_SIZE,
+  MIN_CLASS_AGE,
+} from '@buxa/domain';
 
+/** Ages as stored and read back: 0 to 120, so an open-ended class (stored as NULL) reads as its full range. */
 export const AgeRangeSchema = z
   .object({
     minAge: z.number().int().min(0).max(MAX_AGE_LIMIT),
@@ -13,6 +22,17 @@ export const AgeRangeSchema = z
   })
   .refine(isValidAgeRange, { message: 'The youngest age cannot be above the oldest.', path: ['maxAge'] });
 export type AgeRangeInput = z.infer<typeof AgeRangeSchema>;
+
+/** A class's ages as written: whole numbers from 3 to 20. The form shows the same limits; the server does not trust the browser. */
+export const CLASS_AGE_MESSAGE = `Ages are whole numbers from ${MIN_CLASS_AGE} to ${MAX_CLASS_AGE}.`;
+const ClassAgeSchema = z
+  .number({ message: CLASS_AGE_MESSAGE })
+  .int(CLASS_AGE_MESSAGE)
+  .min(MIN_CLASS_AGE, CLASS_AGE_MESSAGE)
+  .max(MAX_CLASS_AGE, CLASS_AGE_MESSAGE);
+export const ClassAgeRangeInputSchema = z
+  .object({ minAge: ClassAgeSchema, maxAge: ClassAgeSchema })
+  .refine(isValidAgeRange, { message: 'The youngest age cannot be above the oldest.', path: ['maxAge'] });
 
 /** A camp size is a whole number of places from 3 to 30. The form shows the same limits; the server does not trust the browser. */
 export const CAMP_SIZE_MESSAGE = `Camp Size must be a whole number from ${MIN_CAMP_SIZE} to ${MAX_CAMP_SIZE}.`;
@@ -82,7 +102,7 @@ export type Class = z.infer<typeof ClassSchema>;
 export const ClassInputSchema = z
   .object({
     name: NameSchema,
-    ageRange: AgeRangeSchema,
+    ageRange: ClassAgeRangeInputSchema,
     capacity: CampSizeSchema,
     startsAt: InstantSchema,
     endsAt: InstantSchema,

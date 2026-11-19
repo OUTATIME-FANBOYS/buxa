@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { classWithinSession, isValidCampSize, MAX_CAMP_SIZE, MIN_CAMP_SIZE } from '../src';
+import { classWithinSession, isClassAge, isValidCampSize, MAX_CAMP_SIZE, MIN_CAMP_SIZE } from '../src';
 
 describe('camp size', () => {
   it('accepts whole numbers from 3 to 30 only', () => {
@@ -7,6 +7,13 @@ describe('camp size', () => {
     expect(MAX_CAMP_SIZE).toBe(30);
     expect([2, 2.5, 31, 0, -1, Number.NaN].map(isValidCampSize)).toEqual([false, false, false, false, false, false]);
     expect([3, 12, 30].map(isValidCampSize)).toEqual([true, true, true]);
+  });
+});
+
+describe('class ages', () => {
+  it('accepts whole ages from 3 to 20 only', () => {
+    expect([2, 2.5, 21, 0, 120, Number.NaN].map(isClassAge)).toEqual([false, false, false, false, false, false]);
+    expect([3, 8, 20].map(isClassAge)).toEqual([true, true, true]);
   });
 });
 

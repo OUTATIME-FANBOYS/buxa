@@ -2,12 +2,13 @@
 
 import { useActionState, useEffect, useRef } from 'react';
 import { Button } from '@/components/elements';
-import { Checkbox, DateTimeField, NumberField, TextField } from '@/components/atoms';
+import { DateTimeField, NumberField, TextField } from '@/components/atoms';
 import { sessionPath } from '@/config/routes';
 import { fieldError, idle } from '@buxa/shared';
-import { MAX_CAMP_SIZE, MIN_CAMP_SIZE } from '@buxa/domain';
+import { MAX_CAMP_SIZE, MAX_CLASS_AGE, MIN_CAMP_SIZE, MIN_CLASS_AGE } from '@buxa/domain';
 import { addClassAction, updateClassAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
+import { InstructorPicker } from './InstructorPicker';
 import type { Class } from '@buxa/contracts';
 
 export interface InstructorChoice {
@@ -74,7 +75,6 @@ export function ClassForm({
   }, [state, editing, onSaved]);
 
   const err = (name: string) => fieldError(state, name);
-  const chosen = new Set(cls?.instructorIds ?? []);
 
   return (
     <form
@@ -98,22 +98,23 @@ export function ClassForm({
         autoComplete="off"
         autoFocus={!inDialog}
       />
-      <div className="form-row buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-end buxa:[&>.field]:flex-[1_1_120px] buxa:[&>.field]:min-w-0 buxa:[&>.button]:flex-none">
-        <TextField
+      {/* The three fields share one row and start on the same line (items-start), so their labels and inputs align. */}
+      <div className="form-row buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-start buxa:[&>.field]:flex-[1_1_120px] buxa:[&>.field]:min-w-0">
+        <NumberField
           label="Youngest age *"
           name="minAge"
-          inputMode="numeric"
-          defaultValue={cls ? String(cls.ageRange.minAge) : ''}
+          minValue={MIN_CLASS_AGE}
+          maxValue={MAX_CLASS_AGE}
+          defaultValue={cls?.ageRange.minAge}
           error={err('minAge')}
-          autoComplete="off"
         />
-        <TextField
+        <NumberField
           label="Oldest age *"
           name="maxAge"
-          inputMode="numeric"
-          defaultValue={cls ? String(cls.ageRange.maxAge) : ''}
+          minValue={MIN_CLASS_AGE}
+          maxValue={MAX_CLASS_AGE}
+          defaultValue={cls?.ageRange.maxAge}
           error={err('maxAge')}
-          autoComplete="off"
         />
         <NumberField
           label="Camp Size *"
@@ -122,7 +123,6 @@ export function ClassForm({
           maxValue={MAX_CAMP_SIZE}
           defaultValue={cls?.capacity}
           error={err('capacity')}
-          hint={`A whole number from ${MIN_CAMP_SIZE} to ${MAX_CAMP_SIZE}.`}
         />
       </div>
       <div className="form-row buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-end buxa:[&>.field]:flex-[1_1_200px] buxa:[&>.field]:min-w-0">
@@ -149,28 +149,7 @@ export function ClassForm({
         maxLength={200}
         autoComplete="off"
       />
-      <fieldset className="plain buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
-        <legend className="field-label buxa:text-[length:var(--fs-b)] buxa:font-semibold buxa:text-[var(--text-2)]">
-          Instructors
-        </legend>
-        {instructors.length === 0 ? (
-          <p className="muted">No one has the instructor role yet. Add them under People, then come back.</p>
-        ) : (
-          <div className="people-checks">
-            {instructors.map(i => (
-              <Checkbox
-                key={i.id}
-                className="people-check"
-                name="instructorIds"
-                value={i.id}
-                defaultSelected={chosen.has(i.id)}
-              >
-                {i.name}
-              </Checkbox>
-            ))}
-          </div>
-        )}
-      </fieldset>
+      <InstructorPicker instructors={instructors} defaultIds={cls?.instructorIds ?? []} />
       <ActionMessage state={state} />
       <div className="classes-actions">
         {inDialog ? (

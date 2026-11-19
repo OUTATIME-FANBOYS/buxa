@@ -6,7 +6,10 @@ import { Button } from '@/components/elements';
 import type { Class } from '@buxa/contracts';
 import { ClassForm, type InstructorChoice } from './ClassForm';
 
-/** Opens a class's edit form in a dialog. The dialog closes when the change is saved, on Cancel, or on Escape. */
+/**
+ * Opens a class's edit form in a dialog. The button is an icon with an accessible name and a tooltip. The dialog closes when the
+ * change is saved, on Cancel, or on Escape.
+ */
 export function EditClassButton({
   cls,
   sessionName,
@@ -26,12 +29,14 @@ export function EditClassButton({
       <Button
         type="button"
         variant="ghost"
-        className="classes-target"
+        size="sm"
+        iconOnly
+        icon="edit"
+        aria-label={`Edit ${cls.name}`}
+        title="Edit class"
         aria-haspopup="dialog"
         onClick={() => setOpen(true)}
-      >
-        Edit {cls.name}
-      </Button>
+      />
       {open && (
         <Dialog title="Edit class" onClose={close} className="class-dialog">
           <ClassForm
