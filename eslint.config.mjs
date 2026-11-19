@@ -34,6 +34,8 @@ export default tseslint.config(
     ignores: [
       '**/node_modules/**',
       '**/.next/**',
+      '.vercel/**',
+      '**/.vercel/**',
       '**/dist/**',
       '**/coverage/**',
       '.claude/**',
@@ -81,7 +83,7 @@ export default tseslint.config(
     plugins: { '@typescript-eslint': tseslint.plugin },
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
-      // Debt: 77 existing `!` assertions (see the PR body). Warning until each one is restructured, not asserted away.
+      // Debt: 23 existing `!` assertions (down from 77) and 41 `require-await` warnings across test fakes and handlers. Warning until each one is restructured, not asserted away.
       '@typescript-eslint/no-non-null-assertion': 'warn',
       '@typescript-eslint/no-unused-vars': 'error',
       'no-console': ['error', { allow: ['warn', 'error'] }],

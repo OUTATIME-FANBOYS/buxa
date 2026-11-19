@@ -126,13 +126,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
-          fail-on-cache-miss: true
+      - uses: ./.github/actions/setup-cached-node
       - run: npm run typecheck
 
   lint:
@@ -142,13 +136,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
-          fail-on-cache-miss: true
+      - uses: ./.github/actions/setup-cached-node
       - run: npm run lint
       - name: Prettier check
         run: npm run format:check
@@ -163,13 +151,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
-          fail-on-cache-miss: true
+      - uses: ./.github/actions/setup-cached-node
       - run: npm run test:unit
 
   database:
@@ -198,15 +180,13 @@ jobs:
       DATABASE_URL: postgres://buxa:buxa@localhost:5433/buxa
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
-          fail-on-cache-miss: true
+      - uses: ./.github/actions/setup-cached-node
       - name: Run migrations
         run: npm run db:migrate
+      - name: Verify production migration via vercel-build
+        env:
+          VERCEL_ENV: production
+        run: npx tsx scripts/vercel-build.ts --migrate-only
       - name: Database-backed tests
         run: npm run test:db
 
@@ -217,7 +197,7 @@ jobs:
         env:
           PGPASSWORD: admin
         run: |
-          psql -h localhost -p 5434 -U postgres -c "CREATE ROLE deployer LOGIN PASSWORD 'deployer' CREATEROLE BYPASSRLS NOSUPERUSER" -c "CREATE DATABASE buxa_managed OWNER deployer"
+          psql -h localhost -p 5434 -U postgres -c "CREATE ROLE deployer LOGIN PASSWORD 'deployer' CREATEROLE BYPASSRLS CREATEDB NOSUPERUSER" -c "CREATE DATABASE buxa_managed OWNER deployer"
           export DATABASE_URL=postgres://deployer:deployer@localhost:5434/buxa_managed
           npm run db:migrate
           npm run test:db
@@ -236,14 +216,11 @@ jobs:
       DATABASE_URL: postgres://buxa:buxa@localhost:5433/buxa
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
-          fail-on-cache-miss: true
-      - run: npm run build
+      - uses: ./.github/actions/setup-cached-node
+      - name: Build web app (vercel-build)
+        run: npx tsx scripts/vercel-build.ts
+      - name: Smoke test web routes at runtime
+        run: npm run smoke
 
   verify:
     name: Verify build
