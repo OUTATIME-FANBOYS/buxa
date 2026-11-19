@@ -33,4 +33,22 @@ describe('CalendarView', () => {
     expect(html).toContain('today');
     expect(html).toContain(task.title);
   });
+  it('gives each pill its full title on hover and its priority on the dot', () => {
+    const task = { ...seed.tasks[0], title: 'Plan the trip', priority: 'high' as const, tags: [], due: '2027-07-10' };
+    const html = renderToStaticMarkup(<CalendarView tasks={[task]} canCreate={false} />);
+    expect(html).toContain('title="Plan the trip"');
+    expect(html).toMatch(/class="button button--ghost button--sm cal-task prio-bg-high[ "]/);
+  });
+  it('tints a pill by its first tag, the same tag always giving the same tint, and leaves untagged pills untinted', () => {
+    const base = { ...seed.tasks[0], due: '2027-07-10' };
+    const tagged = renderToStaticMarkup(<CalendarView tasks={[{ ...base, tags: ['family'] }]} canCreate={false} />);
+    const again = renderToStaticMarkup(
+      <CalendarView tasks={[{ ...base, tags: ['family', 'other'] }]} canCreate={false} />,
+    );
+    const untagged = renderToStaticMarkup(<CalendarView tasks={[{ ...base, tags: [] }]} canCreate={false} />);
+    const typeOf = (html: string) => html.match(/cal-type-\d/)?.[0];
+    expect(typeOf(tagged)).toMatch(/^cal-type-[1-5]$/);
+    expect(typeOf(again)).toBe(typeOf(tagged));
+    expect(typeOf(untagged)).toBeUndefined();
+  });
 });

@@ -72,22 +72,56 @@
 .cal-task {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   text-align: left;
-  padding: 2px 6px;
+  height: 22px;
+  padding: 0 6px;
   border-radius: 4px;
-  font-size: var(--fs-s);
+  font-size: 11px;
   font-weight: 600;
-  background: color-mix(in srgb, var(--pc) 12%, var(--surface));
+  /* The body is the task's type tint (--cal-bg, set by a cal-type-* class); the dot is its priority (--pc). */
+  --button-bg: var(--cal-bg, var(--surface));
+  --button-bg-hover: color-mix(in srgb, var(--cal-bg, var(--surface)) 82%, var(--text));
+  --button-fg: var(--text);
   min-width: 0;
   width: 100%;
 }
-.cal-task:hover {
-  background: color-mix(in srgb, var(--pc) 22%, var(--surface));
+/* A coarse pointer keeps the 44px touch target from button.css. */
+@media (pointer: coarse) {
+  .cal-task {
+    height: var(--control-touch);
+  }
+}
+.cal-task.prio-bg-low {
+  --pc: var(--p-low);
+}
+.cal-task.prio-bg-medium {
+  --pc: var(--p-medium);
+}
+.cal-task.prio-bg-high {
+  --pc: var(--p-high);
+}
+.cal-task.prio-bg-critical {
+  --pc: var(--p-critical);
+}
+.cal-task.cal-type-1 {
+  --cal-bg: var(--type-1);
+}
+.cal-task.cal-type-2 {
+  --cal-bg: var(--type-2);
+}
+.cal-task.cal-type-3 {
+  --cal-bg: var(--type-3);
+}
+.cal-task.cal-type-4 {
+  --cal-bg: var(--type-4);
+}
+.cal-task.cal-type-5 {
+  --cal-bg: var(--type-5);
 }
 .cal-dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: var(--pc);
   flex: none;

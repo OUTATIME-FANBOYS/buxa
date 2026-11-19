@@ -53,4 +53,11 @@ describe('TaskProperties', () => {
     expect(html).toContain('Due date is before the start.');
     expect(html).toMatch(/<option value="critical" selected="">Critical<\/option>/);
   });
+  it('colours the priority field with the chosen priority token and draws its signal inside the field', () => {
+    const task = { ...seed.tasks[0], priority: 'critical', tags: [] } as never;
+    const html = renderToStaticMarkup(<TaskProperties task={task} project={project} d={draft as never} />);
+    expect(html).toContain('border-[var(--p-critical)]!');
+    expect(html).toContain('text-[var(--p-critical)]!');
+    expect(html).toMatch(/<div class="buxa:relative"><span class="prio prio-critical /);
+  });
 });
