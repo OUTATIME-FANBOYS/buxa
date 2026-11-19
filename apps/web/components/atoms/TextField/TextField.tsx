@@ -1,17 +1,11 @@
 'use client';
 
-import { Description } from '@heroui/react/description';
-import { FieldError } from '@heroui/react/field-error';
-import { Input } from '@heroui/react/input';
-import { Label } from '@heroui/react/label';
-import { TextField as HeroTextField } from '@heroui/react/textfield';
-import type { FocusEvent, KeyboardEvent, ReactNode, Ref } from 'react';
+import { useId, useState, type FocusEvent, type KeyboardEvent, type ReactNode, type Ref } from 'react';
 
 /*
- * A labelled single-line text input. The label is visible unless `hideLabel` (then it is still the accessible name),
- * a validation error replaces the hint, and the error is announced and tied to the input (aria-invalid,
- * aria-describedby) by HeroUI's FieldError. Controlled with `value` and `onChange`, or uncontrolled with `defaultValue`;
- * `name` submits with the form.
+ * A labelled single-line text input. Plain HTML: the label is visible unless `hideLabel` (then it is still the accessible name),
+ * a validation error replaces the hint and is announced, and the input is marked invalid. Controlled with `value` and
+ * `onChange`, or uncontrolled with `defaultValue`; `name` submits with the form.
  */
 export interface TextFieldProps {
   label: string;
@@ -73,37 +67,56 @@ export function TextField({
   autoCapitalize,
   className,
 }: TextFieldProps) {
+  const generated = useId();
+  const inputId = id ?? generated;
+  const hintId = `${inputId}-hint`;
+  const [own, setOwn] = useState(defaultValue ?? '');
+  const current = value ?? own;
+
   return (
-    <HeroTextField
-      id={id}
-      name={name}
-      value={value}
-      defaultValue={defaultValue}
-      onChange={onChange}
-      type={type}
-      isInvalid={Boolean(error)}
-      isRequired={isRequired}
-      isDisabled={isDisabled}
-      className={className}
-      fullWidth
-    >
-      <Label className={hideLabel ? 'sr-only' : undefined}>{label}</Label>
-      <Input
+    <div className={`buxa:grid buxa:min-w-0 buxa:gap-2 ${className ?? ''}`}>
+      <label className={hideLabel ? 'sr-only' : 'field-label'} htmlFor={inputId}>
+        {label}
+        {isRequired ? ' *' : null}
+      </label>
+      <input
+        ref={inputRef}
+        id={inputId}
+        name={name}
+        type={type}
+        value={current}
         maxLength={maxLength}
         minLength={minLength}
         placeholder={placeholder}
         autoComplete={autoComplete}
         inputMode={inputMode}
-        ref={inputRef}
-        onKeyDown={onKeyDown}
-        {...inputProps}
-        enterKeyHint={enterKeyHint}
+        autoFocus={autoFocus}
+        required={isRequired}
+        disabled={isDisabled}
         spellCheck={spellCheck}
         autoCapitalize={autoCapitalize}
-        autoFocus={autoFocus}
+        enterKeyHint={enterKeyHint}
         data-autofocus={autoFocus ? true : undefined}
+        aria-invalid={Boolean(error) || undefined}
+        aria-describedby={error || hint ? hintId : undefined}
+        list={inputProps?.list}
+        onBlur={inputProps?.onBlur}
+        onKeyDown={onKeyDown}
+        onChange={e => {
+          setOwn(e.target.value);
+          onChange?.(e.target.value);
+        }}
+        className="buxa:box-border buxa:h-[var(--control-h)] buxa:w-full buxa:min-w-0 buxa:rounded-[var(--r-1)] buxa:border buxa:border-[var(--line)] buxa:bg-[var(--surface)] buxa:px-3 buxa:font-[inherit] buxa:text-[var(--text)] buxa:outline-none buxa:focus-visible:outline-2 buxa:focus-visible:outline-[var(--focus)] buxa:aria-[invalid=true]:border-[var(--crit)] buxa:disabled:opacity-60 buxa:disabled:cursor-not-allowed"
       />
-      {error ? <FieldError>{error}</FieldError> : hint ? <Description>{hint}</Description> : null}
-    </HeroTextField>
+      {error ? (
+        <p id={hintId} className="field-error" role="alert">
+          {error}
+        </p>
+      ) : hint ? (
+        <p id={hintId} className="field-hint">
+          {hint}
+        </p>
+      ) : null}
+    </div>
   );
 }

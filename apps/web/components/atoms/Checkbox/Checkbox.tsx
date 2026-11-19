@@ -1,10 +1,10 @@
 'use client';
 
-import { Checkbox as HeroCheckbox } from '@heroui/react/checkbox';
-import type { ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 
 /*
- * A single on/off choice with its label. `name` and `value` submit with the form when checked, as a native checkbox does.
+ * A single on/off choice with its label. Plain HTML: a native checkbox, styled by the app's own rules, so it needs no HeroUI
+ * styles. `name` and `value` submit with the form when checked, as a native checkbox does.
  * Controlled with `isSelected` and `onChange`, or uncontrolled with `defaultSelected`.
  */
 export interface CheckboxProps {
@@ -32,22 +32,31 @@ export function Checkbox({
   isInvalid,
   className,
 }: CheckboxProps) {
+  const [own, setOwn] = useState(defaultSelected ?? false);
+  const checked = isSelected ?? own;
+  const id = useId();
+
   return (
-    <HeroCheckbox
-      name={name}
-      value={value}
-      isSelected={isSelected}
-      defaultSelected={defaultSelected}
-      onChange={onChange}
-      isDisabled={isDisabled}
-      isRequired={isRequired}
-      isInvalid={isInvalid}
-      className={className}
+    <label
+      className={`check-field buxa:inline-flex buxa:items-center buxa:gap-[var(--s2)] buxa:cursor-pointer ${className ?? ''}`}
+      htmlFor={id}
     >
-      <HeroCheckbox.Control>
-        <HeroCheckbox.Indicator />
-      </HeroCheckbox.Control>
-      <HeroCheckbox.Content>{children}</HeroCheckbox.Content>
-    </HeroCheckbox>
+      <input
+        id={id}
+        type="checkbox"
+        className="buxa:m-0 buxa:disabled:cursor-default"
+        name={name}
+        value={value}
+        checked={checked}
+        required={isRequired}
+        disabled={isDisabled}
+        aria-invalid={isInvalid || undefined}
+        onChange={e => {
+          setOwn(e.target.checked);
+          onChange?.(e.target.checked);
+        }}
+      />
+      <span className="check-field__label buxa:text-[length:var(--fs-m,15px)] buxa:leading-[1.4]">{children}</span>
+    </label>
   );
 }

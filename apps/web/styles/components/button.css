@@ -1,10 +1,8 @@
 /* ---------- Buttons ----------
  * Rendered by components/elements/Button.tsx, which is the only place that builds these class names.
  *
- * The classes button, button--primary, button--outline ... are HeroUI's variant names (buttonVariants from @heroui/styles).
- * HeroUI's own button.css is written with @apply on unprefixed Tailwind utilities, which the prefixed build
- * (styles/tailwind.css) cannot read, so its rules are written here in plain CSS. Colours come only from the
- * HeroUI names in heroui-theme.css, which point at tokens.css. The buxa-button classes add Buxa's sizes.
+ * The classes button, button--primary, button--outline ... are the app's own names, rendered by atoms/Button.
+ * Colours come only from the tokens in tokens.css. The buxa-button classes add Buxa's sizes.
  *
  * Shape: every button is a pill (fully rounded ends), as HeroUI's examples are.
  * Variants: primary (filled accent), secondary (filled surface, edged), tertiary (quieter filled surface),

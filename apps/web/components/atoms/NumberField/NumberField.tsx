@@ -1,14 +1,11 @@
 'use client';
 
-import { Description } from '@heroui/react/description';
-import { FieldError } from '@heroui/react/field-error';
-import { Label } from '@heroui/react/label';
-import { NumberField as HeroNumberField } from '@heroui/react/number-field';
-import type { ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 
 /*
- * A labelled numeric input with no steppers, for counts, ages and capacities. Its value is a number, or NaN while the
- * field is empty (HeroUI's convention); `name` submits the digits, so a server form still reads a string.
+ * A labelled numeric input with no steppers, for counts, ages and capacities. Plain HTML: a native number input whose
+ * spinner is hidden. Its value is a number, or NaN while the field is empty; `name` submits the digits, so a server form
+ * still reads a string.
  */
 export interface NumberFieldProps {
   label: string;
@@ -41,26 +38,47 @@ export function NumberField({
   isDisabled,
   id,
 }: NumberFieldProps) {
+  const generated = useId();
+  const inputId = id ?? generated;
+  const hintId = `${inputId}-hint`;
+  const [own, setOwn] = useState<number | undefined>(defaultValue);
+  const current = value ?? own;
+
   return (
-    <HeroNumberField
-      id={id}
-      name={name}
-      value={value}
-      defaultValue={defaultValue}
-      onChange={onChange}
-      minValue={minValue}
-      maxValue={maxValue}
-      isInvalid={Boolean(error)}
-      isRequired={isRequired}
-      isDisabled={isDisabled}
-      formatOptions={{ useGrouping: false }}
-      fullWidth
-    >
-      <Label>{label}</Label>
-      <HeroNumberField.Group>
-        <HeroNumberField.Input placeholder={placeholder} inputMode="numeric" />
-      </HeroNumberField.Group>
-      {error ? <FieldError>{error}</FieldError> : hint ? <Description>{hint}</Description> : null}
-    </HeroNumberField>
+    <div className="buxa:grid buxa:min-w-0 buxa:gap-2">
+      <label className="field-label" htmlFor={inputId}>
+        {label}
+        {isRequired ? ' *' : null}
+      </label>
+      <input
+        id={inputId}
+        name={name}
+        type="number"
+        inputMode="numeric"
+        value={current === undefined || Number.isNaN(current) ? '' : current}
+        min={minValue}
+        max={maxValue}
+        placeholder={placeholder}
+        required={isRequired}
+        disabled={isDisabled}
+        aria-invalid={Boolean(error) || undefined}
+        aria-describedby={error || hint ? hintId : undefined}
+        onChange={e => {
+          const next = e.target.value === '' ? Number.NaN : Number(e.target.value);
+          setOwn(next);
+          onChange?.(next);
+        }}
+        className="buxa:box-border buxa:h-[var(--control-h)] buxa:w-full buxa:min-w-0 buxa:rounded-[var(--r-1)] buxa:border buxa:border-[var(--line)] buxa:bg-[var(--surface)] buxa:px-3 buxa:font-[inherit] buxa:text-[var(--text)] buxa:outline-none buxa:focus-visible:outline-2 buxa:focus-visible:outline-[var(--focus)] buxa:aria-[invalid=true]:border-[var(--crit)] buxa:disabled:opacity-60 buxa:disabled:cursor-not-allowed buxa:[appearance:textfield] buxa:[&::-webkit-inner-spin-button]:appearance-none buxa:[&::-webkit-outer-spin-button]:appearance-none"
+      />
+      {error ? (
+        <p id={hintId} className="field-error" role="alert">
+          {error}
+        </p>
+      ) : hint ? (
+        <p id={hintId} className="field-hint">
+          {hint}
+        </p>
+      ) : null}
+    </div>
   );
 }

@@ -5,6 +5,7 @@ import type { ActionOutcome } from '@buxa/shared';
 import { searchPeopleAction } from '@/actions/attendance';
 import type { PersonCard } from '@buxa/shared';
 import { Button, SearchField } from '@/components/atoms';
+import { Pill } from '@/components/elements';
 import { StatusPill } from './StatusPill';
 import { attendanceDisplayName } from '@buxa/shared';
 
@@ -51,8 +52,8 @@ export function NameSearch({ onPick }: { onPick: (card: PersonCard) => void }) {
             <li key={card.person.id}>
               <Button variant="ghost" className="name-result" onClick={() => onPick(card)}>
                 <span className="name-result-name">{attendanceDisplayName(card.person)}</span>
+                {card.onSiteSince && <Pill tone="brand">On site</Pill>}
                 <StatusPill status={card.person.status} />
-                {card.onSiteSince && <span className="muted small">On site</span>}
               </Button>
             </li>
           ))}

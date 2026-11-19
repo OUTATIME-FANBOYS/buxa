@@ -50,6 +50,10 @@
   /* Role pills only: viewer is blue, teacher (planned, phase 3) is green-blue. Text on soft is 4.5:1 or better. */
   --role-viewer: #1d4f8c;
   --role-viewer-soft: #dbe8f7;
+  --role-guardian: #a3206a;
+  --role-guardian-soft: #fbe3f0;
+  --role-camper: #7a1b2e;
+  --role-camper-soft: #f6e1e5;
   --role-teacher: #0b5a5e;
   --role-teacher-soft: #d5eeee;
   --accent-ink: #ffffff;
@@ -141,6 +145,10 @@
   --neutral-ink: #b9bec9;
   --role-viewer: #9cc3f0;
   --role-viewer-soft: #1a2b43;
+  --role-guardian: #f49ccc;
+  --role-guardian-soft: #3f1d33;
+  --role-camper: #e7a0ab;
+  --role-camper-soft: #3d1d24;
   --role-teacher: #7fd6d0;
   --role-teacher-soft: #173a3b;
   --accent-ink: #1e2026;
@@ -241,6 +249,21 @@
   --tone-soft: var(--role-viewer-soft);
   --tone-ink: var(--role-viewer);
   --tone-f: var(--role-viewer);
+}
+/* Guardians are pink and campers maroon, so the two are told apart at a glance on the people list. */
+.tone-role-guardian,
+.pill-role-guardian {
+  --tone: var(--role-guardian);
+  --tone-soft: var(--role-guardian-soft);
+  --tone-ink: var(--role-guardian);
+  --tone-f: var(--role-guardian);
+}
+.tone-role-camper,
+.pill-role-camper {
+  --tone: var(--role-camper);
+  --tone-soft: var(--role-camper-soft);
+  --tone-ink: var(--role-camper);
+  --tone-f: var(--role-camper);
 }
 /* hero: the same violet family, for highlights that are not AI activity */
 .tone-hero,

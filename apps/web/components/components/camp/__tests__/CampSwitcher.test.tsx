@@ -18,7 +18,7 @@ describe('CampSwitcher', () => {
   it('the trigger shows the full camp name, not an icon-sized square, and keeps the name for a truncated view', () => {
     const current = { orgId: 'o-2', name: 'Camp Birchwood Riverside Outdoor Centre' } as unknown as Membership;
     const html = renderToStaticMarkup(<CampSwitcher camps={[current]} current={current} />);
-    expect(html).toMatch(/<button[^>]*class="[^"]*\bcamp-switch\b[^"]*"[^>]*aria-label="Switch camp"/);
+    expect(html).toMatch(/<button[^>]*aria-label="Switch camp"[^>]*class="[^"]*\bcamp-switch\b/);
     expect(html).toContain('>Camp Birchwood Riverside Outdoor Centre</span>');
     // Prettier breaks rules over several lines and uses single quotes, so the text is flattened before matching.
     const css = readFileSync(new URL('../../../../styles/features/camp.css', import.meta.url), 'utf8')

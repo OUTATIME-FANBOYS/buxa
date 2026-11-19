@@ -56,12 +56,8 @@ export function DisplayNameCard({
 
       return;
     }
-    // Only a success reaches here; the idle state of the action's result type is never returned after a save.
-    if (saved.status !== 'success') {
-      return;
-    }
     setErrors({});
-    toast(saved.message ?? 'Profile saved');
+    toast(saved.status === 'success' ? (saved.message ?? 'Name saved') : 'Name saved');
     onSaved({ firstName: first.trim(), lastName: last.trim() || null });
   };
 

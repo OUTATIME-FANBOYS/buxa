@@ -21,6 +21,6 @@ describe('CommentComposer', () => {
     expect(html).toContain('aria-label="Write a comment"');
     expect(html).toContain('Use @ to mention');
     expect(html).toContain('⌘ Enter to send');
-    expect(html).toMatch(/<button[^>]*class="button button--sm button--primary"[^>]*disabled=""/);
+    expect(html).toMatch(/<button[^>]*disabled=""[^>]*class="button button--primary button--sm"/);
   });
 });
