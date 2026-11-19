@@ -45,8 +45,8 @@ describe('EnrolmentTable', () => {
         clockFormat="24h"
       />,
     );
-    expect(html).toContain('Cancel enrolment');
-    expect(html).toContain('for Ada Lovelace');
+    expect(html).toContain('Withdraw');
+    expect(html).toContain('aria-label="Withdraw Ada Lovelace"');
   });
 
   it('shows no cancel button and no actions column to a viewer', () => {
@@ -59,7 +59,7 @@ describe('EnrolmentTable', () => {
         clockFormat="24h"
       />,
     );
-    expect(html).not.toContain('Cancel enrolment');
+    expect(html).not.toContain('Withdraw');
     expect(html).not.toContain('Actions');
   });
 
@@ -74,6 +74,6 @@ describe('EnrolmentTable', () => {
       />,
     );
     expect(html).toContain('Cancelled');
-    expect(html).not.toContain('Cancel enrolment');
+    expect(html).not.toContain('Withdraw');
   });
 });

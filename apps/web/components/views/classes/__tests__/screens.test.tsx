@@ -163,7 +163,7 @@ describe('ClassPage (one session and its classes)', () => {
   it('lists the enrolled campers by name, with a cancel button for staff', async () => {
     const html = render(await ClassPage({ classId: SESSION_ID, searchParams: { class: CLASS_ID } }));
     expect(html).toContain('Ada Lovelace');
-    expect(html).toContain('Cancel enrolment');
+    expect(html).toContain('Withdraw');
   });
 
   it('gives a viewer the schedule and names, with no add, edit, delete, enrol or cancel controls', async () => {
@@ -174,7 +174,7 @@ describe('ClassPage (one session and its classes)', () => {
     expect(html).not.toContain('Edit Robotics');
     expect(html).not.toContain('Delete Robotics');
     expect(html).not.toContain('Add to waitlist');
-    expect(html).not.toContain('Cancel enrolment');
+    expect(html).not.toContain('Withdraw');
   });
 
   it('says the viewer cannot see who is enrolled, when the service refuses the list', async () => {
