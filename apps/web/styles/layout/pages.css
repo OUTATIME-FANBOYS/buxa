@@ -164,6 +164,19 @@
 .stat-strong .stat-num {
   color: var(--tone);
 }
+/* A stat with a series: the number on the left, its small line on the right (stacked on a phone, see responsive.css). */
+.stat.has-spark {
+  grid-template-columns: 1fr auto;
+  column-gap: var(--s3);
+}
+.stat.has-spark > .stat-top {
+  grid-column: 1 / -1;
+}
+.stat-spark {
+  grid-column: 2;
+  grid-row: 2 / span 2;
+  align-self: end;
+}
 .stat.tone-crit .stat-icon {
   background: var(--f-crit);
   color: var(--on-fill);

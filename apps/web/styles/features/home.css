@@ -109,7 +109,7 @@
   width: 62%;
   margin: 0 auto;
   min-height: 0;
-  border-radius: 3px 3px 0 0;
+  border-radius: var(--r-2) var(--r-2) 0 0;
   overflow: hidden;
 }
 .home-seg {

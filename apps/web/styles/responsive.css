@@ -202,6 +202,17 @@
     left: 0;
   }
 }
+/* Phone: a stat's line drops below its number, and the chart cards' headers wrap. */
+@media (max-width: 560px) {
+  .stat.has-spark {
+    grid-template-columns: 1fr;
+  }
+  .stat-spark {
+    grid-column: 1;
+    grid-row: auto;
+    margin-top: var(--s2);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

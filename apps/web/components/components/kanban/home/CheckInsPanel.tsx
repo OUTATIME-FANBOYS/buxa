@@ -45,7 +45,7 @@ export function CheckInsPanel({ series }: { series: CheckInsByDay | null }) {
   const band = [`0,100`, ...days.map((day, i) => `${i + 0.5},${100 - (day.count / peak) * 100}`), `${n},100`].join(' ');
 
   return (
-    <section className="panel home-chart" aria-labelledby="check-ins-title">
+    <section className="panel chart-card home-chart" aria-labelledby="check-ins-title">
       <div className="panel-head home-chart-head">
         <h2 id="check-ins-title">Check-ins per day</h2>
         <Segmented<string>
