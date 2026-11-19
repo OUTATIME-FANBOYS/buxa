@@ -34,10 +34,11 @@ export function DeleteClassButton({
     <>
       <Button
         type="button"
-        variant="ghost"
+        variant="danger-soft"
         size="sm"
         iconOnly
         icon="trash"
+        className="classes-delete"
         aria-label={`Delete ${className}`}
         title="Delete class"
         aria-haspopup="dialog"
