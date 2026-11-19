@@ -53,6 +53,16 @@ describe('TaskProperties', () => {
     expect(html).toContain('Due date is before the start.');
     expect(html).toMatch(/<option value="critical" selected="">Critical<\/option>/);
   });
+  it('colours the status field by its status and shows the status emoji inside it and on each option', () => {
+    const col = project.columns[2];
+    const task = { ...seed.tasks[0], columnId: col.id, tags: [] } as never;
+    const html = renderToStaticMarkup(<TaskProperties task={task} project={project} d={draft as never} />);
+    expect(html).toContain('border-[var(--st-progress)]!');
+    expect(html).toContain('text-[var(--st-progress)]!');
+    expect(html).toContain('aria-hidden="true"');
+    expect(html).toContain(`>🔨 ${col.name}</option>`);
+    expect(html).toContain('>📝 To Do</option>');
+  });
   it('gives the New task form the same priority field as the drawer: the signal inside the select, not over the label', () => {
     const html = renderToStaticMarkup(<TaskProperties task={null} project={project} d={draft as never} />);
     expect(html).toMatch(/<div class="buxa:relative"><span class="prio prio-medium /);

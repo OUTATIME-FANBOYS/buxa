@@ -9,6 +9,16 @@ import { PRIORITIES, PRIORITY_LABEL } from '@buxa/shared';
 import { DatePicker, Select } from '@/components/atoms';
 import { firstNameOf } from '@buxa/shared/names';
 import { TagInput } from './TagInput';
+import { statusMark, type StatusMark } from './statusMark';
+
+// The status field takes its status's token for the border and the text (the --st-* tokens in tokens.css).
+const STATUS_FIELD: Record<StatusMark['token'], string> = {
+  backlog: 'buxa:[&_select]:border-[var(--st-backlog)]! buxa:[&_select]:text-[var(--st-backlog)]!',
+  todo: 'buxa:[&_select]:border-[var(--st-todo)]! buxa:[&_select]:text-[var(--st-todo)]!',
+  progress: 'buxa:[&_select]:border-[var(--st-progress)]! buxa:[&_select]:text-[var(--st-progress)]!',
+  review: 'buxa:[&_select]:border-[var(--st-review)]! buxa:[&_select]:text-[var(--st-review)]!',
+  done: 'buxa:[&_select]:border-[var(--st-done)]! buxa:[&_select]:text-[var(--st-done)]!',
+};
 
 // The priority field takes its chosen priority's token for the border and the text (the same tokens as PriorityMark).
 const PRIORITY_FIELD: Record<Priority, string> = {
@@ -22,11 +32,24 @@ const PRIORITY_FIELD: Record<Priority, string> = {
 export function TaskProperties({ task, project, d }: { task: Task | null; project: Project; d: TaskDraft }) {
   const { actions, members, wsTasks } = useStore();
   const allTags = useMemo(() => Array.from(new Set(wsTasks.flatMap(t => t.tags))).sort(), [wsTasks]);
+  const currentColumn = project.columns.find(c => c.id === (task?.columnId ?? d.columnId));
+  const currentMark = currentColumn ? statusMark(currentColumn) : undefined;
 
   return (
     <div className="props buxa:grid buxa:grid-cols-[1fr_1fr] buxa:gap-[var(--s4)]">
       <Select
         label="Status"
+        className={currentMark ? STATUS_FIELD[currentMark.token] : undefined}
+        leading={
+          currentMark ? (
+            <span
+              aria-hidden="true"
+              className="buxa:absolute buxa:left-[10px] buxa:top-1/2 buxa:-translate-y-1/2 buxa:pointer-events-none buxa:text-[length:var(--fs-s)] buxa:leading-none"
+            >
+              {currentMark.emoji}
+            </span>
+          ) : undefined
+        }
         value={task?.columnId ?? d.columnId}
         onChange={value => {
           if (value === null) {
@@ -38,7 +61,7 @@ export function TaskProperties({ task, project, d }: { task: Task | null; projec
             d.setColumnId(value);
           }
         }}
-        options={project.columns.map(c => ({ value: c.id, label: c.name }))}
+        options={project.columns.map(c => ({ value: c.id, label: `${statusMark(c).emoji} ${c.name}` }))}
       />
       <Select
         label="Priority"
