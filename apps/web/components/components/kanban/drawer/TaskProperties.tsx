@@ -5,7 +5,6 @@ import { useMemo } from 'react';
 import type { Priority, Project, Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
 import type { TaskDraft } from '@buxa/middleware/hooks/hooks';
-import { Field } from '@/components/elements';
 import { PRIORITIES, PRIORITY_LABEL } from '@buxa/shared';
 import { DatePicker, Select } from '@/components/atoms';
 import { firstNameOf } from '@buxa/shared/names';
@@ -87,13 +86,17 @@ export function TaskProperties({ task, project, d }: { task: Task | null; projec
         value={d.due}
         onChange={value => d.changeDates(d.start, value ?? '', 'due')}
       />
-      <Field label="Tags">
+      {/* Same wrapper and label gap as the Select and DatePicker fields beside it, so the row lines up. */}
+      <div className="select-field buxa:grid buxa:gap-[var(--s2)] buxa:min-w-0">
+        <span className="field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]">
+          Tags
+        </span>
         <TagInput
           tags={task?.tags ?? d.tags}
           suggestions={allTags}
           onChange={t => (task ? actions.updateTask(task.id, { tags: t }) : d.setTags(t))}
         />
-      </Field>
+      </div>
     </div>
   );
 }

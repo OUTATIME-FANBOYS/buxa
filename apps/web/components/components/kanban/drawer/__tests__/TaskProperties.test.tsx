@@ -53,6 +53,17 @@ describe('TaskProperties', () => {
     expect(html).toContain('Due date is before the start.');
     expect(html).toMatch(/<option value="critical" selected="">Critical<\/option>/);
   });
+  it('gives the New task form the same priority field as the drawer: the signal inside the select, not over the label', () => {
+    const html = renderToStaticMarkup(<TaskProperties task={null} project={project} d={draft as never} />);
+    expect(html).toMatch(/<div class="buxa:relative"><span class="prio prio-medium /);
+    expect(html).not.toMatch(/top-\[10px\]/);
+  });
+  it('lines the Tags field up with its neighbours: same wrapper as the selects and dates, and a control-height box', () => {
+    const html = renderToStaticMarkup(<TaskProperties task={null} project={project} d={draft as never} />);
+    expect(html).toMatch(/<div class="select-field [^"]*"><span class="field-label [^"]*">Tags<\/span>/);
+    expect(html).toContain('min-h-[var(--control-h)]');
+    expect(html).not.toContain('min-h-[36px]');
+  });
   it('colours the priority field with the chosen priority token and draws its signal inside the field', () => {
     const task = { ...seed.tasks[0], priority: 'critical', tags: [] } as never;
     const html = renderToStaticMarkup(<TaskProperties task={task} project={project} d={draft as never} />);
