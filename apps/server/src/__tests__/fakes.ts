@@ -15,6 +15,7 @@ import type { Identity } from '../auth/identity';
 import { InMemoryAttendanceRepository } from '../attendance/InMemoryAttendanceRepository';
 import { conflict } from '../http/errors';
 import { InMemoryClassRepository } from '../classes/InMemoryClassRepository';
+import type { SeatHoldRepository } from '../holds/SeatHoldRepository';
 import { InMemoryImportRepository } from '../classes/import/InMemoryImportRepository';
 import { InMemoryRegistrationRepository } from '../registration/InMemoryRegistrationRepository';
 import { InMemoryCredentialRepository } from '../credentials/InMemoryCredentialRepository';
@@ -266,9 +267,20 @@ export class InMemoryStore implements UserRepository, OrgRepository {
       classes,
       imports: new InMemoryImportRepository(classes),
       registration: new InMemoryRegistrationRepository({}),
+      seatHolds: unavailableSeatHolds,
     };
   }
 }
+
+/**
+ * Seat holds need the database (their capacity rule is in migration 0023), so the in-memory store has none. Holds are tested
+ * against Postgres in holds/__tests__; a test that reaches this stub fails loudly.
+ */
+const unavailableSeatHolds: SeatHoldRepository = {
+  placeHold: () => Promise.reject(new Error('Seat holds are only available on Postgres')),
+  releaseHold: () => Promise.reject(new Error('Seat holds are only available on Postgres')),
+  releaseExpiredHolds: () => Promise.reject(new Error('Seat holds are only available on Postgres')),
+};
 
 /** Repositories backed by memory, plus the audit log they write, for tests. */
 export type InMemoryRepositories = Repositories & { readonly audit: readonly AuditRecord[] };

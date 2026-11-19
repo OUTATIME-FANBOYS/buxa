@@ -40,6 +40,7 @@ const MATRIX: Record<Action, string> = {
   'events:update': '..YY',
   'events:delete': '..YY',
   'classes:manage': '.YYY',
+  'holds:manage': '.YYY',
   'tasks:read': 'YYYY',
   'tasks:create': '.YYY',
   'tasks:update': '.YYY',

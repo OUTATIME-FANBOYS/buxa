@@ -156,7 +156,7 @@ const SESSION_COLUMNS = `p.id, p.name, p.description, to_char(p.starts_on, 'YYYY
 const CLASS_COLUMNS = `s.id, s.class_id AS session_id, p.name AS session_name, s.name, s.age_min, s.age_max, s.capacity,
   s.starts_at, s.ends_at, s.location,
   p.price_minor, p.price_currency, p.early_bird_minor, to_char(p.early_bird_until, 'YYYY-MM-DD') AS early_bird_until,
-  (SELECT count(*)::int FROM enrolments e WHERE e.session_id = s.id AND e.status = 'enrolled') AS seats_taken,
+  session_seats_taken(s.id) AS seats_taken,
   (SELECT count(*)::int FROM enrolments e WHERE e.session_id = s.id AND e.status = 'waitlisted') AS waitlisted,
   COALESCE((SELECT json_agg(json_build_object('id', i.id::text, 'name', trim(i.given_name || ' ' || i.family_name))
                              ORDER BY i.family_name, i.given_name, i.id)

@@ -31,5 +31,9 @@ export const AUDIT_ACTIONS = [
   'registration_form.update',
   'registration_form.publish',
   'registration.submit',
+  'enrolment.promote',
+  'hold.create',
+  'hold.release',
+  'hold.expire',
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
