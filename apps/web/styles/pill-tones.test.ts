@@ -62,18 +62,18 @@ describe('pill text contrast', () => {
       expect(contrast(hex(light, `hue-${h}-ink`), glass), h).toBeGreaterThanOrEqual(4.5);
     }
   });
-  it('is 4.5:1 or better in dark mode: the hue on the 6% glass', () => {
+  it('is 4.5:1 or better in dark mode: the paler ink on the 16% glass', () => {
     for (const h of HUES) {
-      const glass = over(hex(dark, `hue-${h}`), SURFACE.dark, 0.06);
-      expect(contrast(hex(dark, `hue-${h}`), glass), h).toBeGreaterThanOrEqual(4.5);
+      const glass = over(hex(dark, `hue-${h}`), SURFACE.dark, 0.16);
+      expect(contrast(hex(dark, `hue-${h}-ink`), glass), h).toBeGreaterThanOrEqual(4.5);
     }
   });
 });
 
 describe('pill look', () => {
-  it('is filled in light mode (no border) and outlined in dark mode (a 1px border in the tone colour)', () => {
+  it('has no border in either theme: the colour carries the shape', () => {
     expect(pill).toMatch(/\.pill \{[^}]*background: var\(--tone-soft\);[^}]*border: 0;/);
-    expect(pill).toMatch(/\[data-theme='dark'\] \.pill \{[^}]*border: 1px solid var\(--tone\);/);
+    expect(pill).not.toMatch(/1px solid/);
   });
   it('keeps the blur and the top highlight', () => {
     expect(pill).toMatch(/backdrop-filter: blur\(12px\)/);
