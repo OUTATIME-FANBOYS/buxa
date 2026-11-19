@@ -26,7 +26,7 @@ describe('OnSiteRow card', () => {
   it('shows the name, a warn-tone Minor pill and the checked-in and checked-out lines', () => {
     const html = renderToStaticMarkup(<OnSiteRow row={row} canRecord={false} canOverride={false} />);
     expect(html).toContain('<span class="onsite-name">Mia Cole</span>');
-    expect(html).toContain('<span class="pill pill-warn">Minor</span>');
+    expect(html).toMatch(/<span class="pill pill-warn [^"]*">Minor<\/span>/);
     expect(html).not.toContain('pill-neutral');
     expect(html).toContain('<p>Checked in: 09:05</p>');
     expect(html).toContain('<p>Checked out: —</p>');
