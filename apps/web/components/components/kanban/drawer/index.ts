@@ -7,3 +7,4 @@ export * from './TaskDrawerHeader';
 export * from './TaskForm';
 export * from './TaskProperties';
 export * from './TaskSections';
+export * from './statusMark';

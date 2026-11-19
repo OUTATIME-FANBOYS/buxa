@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { MembershipStatusCounts } from '@buxa/shared/camp/campHomeTypes';
 import { ROUTES } from '@/config/routes';
-import { ChartCard } from '@/components/components/charts/ChartCard';
+import { ChartCard } from '@/components/components/charts';
 import { donutSegments } from './homeChartMath';
 
 const RADIUS = 42;

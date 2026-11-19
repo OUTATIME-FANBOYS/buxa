@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ROUTES } from '@/config/routes';
-import { ChartCard } from '@/components/components/charts/ChartCard';
+import { ChartCard } from '@/components/components/charts';
 import { PARENTS_LABEL, STUDENTS_LABEL } from './ageGroups';
 
 /**

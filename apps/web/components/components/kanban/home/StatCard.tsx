@@ -1,6 +1,6 @@
 import { Icon, Pill } from '@/components/elements';
 import { type Tone } from '@buxa/shared';
-import { Sparkline } from '@/components/components/charts/Sparkline';
+import { Sparkline } from '@/components/components/charts';
 
 interface StatCardProps {
   label: string;

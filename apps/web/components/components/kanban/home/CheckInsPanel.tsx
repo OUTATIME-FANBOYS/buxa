@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { CheckInsByDay } from '@buxa/shared/camp/campHomeTypes';
 import { periodChange } from '@buxa/shared/kanban/homeCards';
 import { Pill, Segmented } from '@/components/elements';
-import { ChartCard } from '@/components/components/charts/ChartCard';
+import { ChartCard } from '@/components/components/charts';
 import {
   CHECK_IN_RANGES,
   type CheckInRange,

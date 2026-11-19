@@ -1,6 +1,6 @@
 import type { Column } from '@buxa/shared';
 import { StatusIcon } from '@/components/atoms/Icon';
-import { statusMark } from './drawer/statusMark';
+import { statusMark } from './drawer';
 
 /**
  * A status as a liquid-glass pill: its line icon, then its name. The colour and icon come from the one status map (statusMark),
