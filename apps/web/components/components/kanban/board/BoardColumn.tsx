@@ -1,7 +1,7 @@
 import type { Column, Project, Task } from '@buxa/shared';
 import type { BoardDnd } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Icon, Button } from '@/components/elements';
+import { Icon, Button, KindDot } from '@/components/elements';
 import { Menu } from '@/components/components';
 import type { useBoardDnd } from '@buxa/middleware/hooks/hooks';
 import { QuickAdd } from './QuickAdd';
@@ -64,7 +64,7 @@ export function BoardColumn({
             <Icon name="grip" size={14} />
           </span>
         )}
-        <i className={`kind-dot kind-${col.kind}`} aria-hidden="true" />
+        <KindDot kind={col.kind} />
         <h2>{col.name}</h2>
         <span className="count" aria-label={`${items.length} tasks`}>
           {items.length}

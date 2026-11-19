@@ -18,7 +18,6 @@
  *      layout/pages.css                page scaffolding: headers, panels, stats, lists, cards, empty states.
  *   5. features/kanban/filters.css     filter bar, chips, segmented control.
  *   6. components/popover-menu-dialog.css  popovers, menus, notifications, dialogs, drawer and its contents, keyframes.
- *   7. components/signals.css          priority, due date, meta, pills, dots.
  *   8. features/kanban/board.css       board, columns, cards, drag ghost.
  *      components/table.css            data tables.
  *      features/kanban/calendar.css, timeline.css, charts.css
@@ -54,7 +53,6 @@
 @import './layout/pages.css';
 @import './features/kanban/filters.css';
 @import './components/popover-menu-dialog.css';
-@import './components/signals.css';
 @import './features/kanban/board.css';
 @import './components/table.css';
 @import './features/kanban/calendar.css';

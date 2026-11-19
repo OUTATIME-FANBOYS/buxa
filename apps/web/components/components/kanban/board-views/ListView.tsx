@@ -121,7 +121,7 @@ export function ListView({
                       </span>
                     ))}
                     {sp.total > 0 && (
-                      <span className="meta">
+                      <span className="meta buxa:inline-flex buxa:items-center buxa:gap-[3px] buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]">
                         <Icon name="check" size={12} />
                         {sp.done}/{sp.total}
                       </span>

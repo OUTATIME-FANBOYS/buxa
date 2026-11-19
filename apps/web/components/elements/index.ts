@@ -1,6 +1,7 @@
 export * from '../atoms';
 export * from './Avatar';
 export * from './Field';
+export * from './KindDot';
 export * from './Legend';
 export * from './LiveRegion';
 export * from './Pill';

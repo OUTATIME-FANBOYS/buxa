@@ -96,19 +96,28 @@ export const TaskCard = memo(function TaskCard({ task, project, readOnly, draggi
         <PriorityMark priority={task.priority} />
         <DueChip due={task.due} kind={kind} />
         {sp.total > 0 && (
-          <span className="meta" title="Subtasks">
+          <span
+            className="meta buxa:inline-flex buxa:items-center buxa:gap-[3px] buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]"
+            title="Subtasks"
+          >
             <Icon name="check" size={12} />
             {sp.done}/{sp.total}
           </span>
         )}
         {task.comments.length > 0 && (
-          <span className="meta" title="Comments">
+          <span
+            className="meta buxa:inline-flex buxa:items-center buxa:gap-[3px] buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]"
+            title="Comments"
+          >
             <Icon name="message" size={12} />
             {task.comments.length}
           </span>
         )}
         {task.attachments.length > 0 && (
-          <span className="meta" title="Attachments">
+          <span
+            className="meta buxa:inline-flex buxa:items-center buxa:gap-[3px] buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]"
+            title="Attachments"
+          >
             <Icon name="clip" size={12} />
             {task.attachments.length}
           </span>
