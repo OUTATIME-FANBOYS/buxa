@@ -73,7 +73,7 @@ export function TimeFormatCard({
         <Segmented
           label="Format"
           value={shown}
-          onChange={value => void choose(value as ClockFormat)}
+          onChange={value => void choose(value)}
           options={TIME_FORMATS}
           className={CARD_SEGMENTED}
         />

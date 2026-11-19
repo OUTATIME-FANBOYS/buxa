@@ -38,7 +38,7 @@ export function AppearanceCard({ className }: { className?: string }) {
         <Segmented
           label="Theme"
           value={theme}
-          onChange={value => setTheme(value as ThemePref)}
+          onChange={value => setTheme(value)}
           options={APPEARANCE}
           className={CARD_SEGMENTED}
         />
