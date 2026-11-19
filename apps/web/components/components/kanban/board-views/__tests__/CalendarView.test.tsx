@@ -33,16 +33,17 @@ describe('CalendarView', () => {
     expect(html).toContain('today');
     expect(html).toContain(task.title);
   });
-  it('gives each pill its full title on hover and its priority on the dot', () => {
+  it('gives each pill its full title on hover and its priority as an icon named for screen readers', () => {
     const task = { ...seed.tasks[0], title: 'Plan the trip', priority: 'high' as const, due: '2027-07-10' };
     const html = renderToStaticMarkup(<CalendarView tasks={[task]} canCreate={false} />);
     expect(html).toContain('title="Plan the trip"');
-    expect(html).toMatch(/class="button button--ghost button--sm cal-task prio-bg-high[ "]/);
+    expect(html).toMatch(/class="button button--ghost button--sm cal-task[ "]/);
+    expect(html).toMatch(/<svg[^>]*class="[^"]*text-\[var\(--p-high\)\][^"]*cal-dot"/);
   });
-  it('leaves every pill untinted: its body is the surface, and only the priority dot carries colour', () => {
+  it('leaves every pill untinted: its body is the surface, and only the priority icon carries colour', () => {
     const base = { ...seed.tasks[0], priority: 'high' as const, due: '2027-07-10' };
     const html = renderToStaticMarkup(<CalendarView tasks={[base]} canCreate={false} />);
     expect(html).not.toMatch(/cal-type-/);
-    expect(html).toMatch(/cal-task prio-bg-high/);
+    expect(html).not.toMatch(/prio-bg-/);
   });
 });

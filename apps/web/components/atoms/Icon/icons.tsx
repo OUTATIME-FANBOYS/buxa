@@ -70,7 +70,8 @@ import {
 
 /**
  * The icon name set. Call sites use <Icon name="..."/> with one of these keys;
- * each maps to the closest lucide-react glyph. Nobody hand-draws icon SVG.
+ * each maps to the closest lucide-react glyph. The four priority icons are the exception: no lucide glyph is a circle with an
+ * arrow, a triangle or a dash, so PriorityIcon (below) draws them on the same 24-unit grid.
  * The brand mark (BrandMark) is not in this set.
  */
 export const ICONS: Record<string, LucideIcon> = {
@@ -141,3 +142,77 @@ export const ICONS: Record<string, LucideIcon> = {
   'file-up': FileUp,
   'file-down': FileDown,
 };
+
+export type PriorityGlyph = 'critical' | 'high' | 'medium' | 'low';
+
+// Each priority takes its existing --p-* token, the same colour as the priority field, so the icon stays linked to it.
+const PRIORITY_GLYPH_COLOUR: Record<PriorityGlyph, string> = {
+  critical: 'buxa:text-[var(--p-critical)]',
+  high: 'buxa:text-[var(--p-high)]',
+  medium: 'buxa:text-[var(--p-medium)]',
+  low: 'buxa:text-[var(--p-low)]',
+};
+
+/**
+ * A priority as an icon, on the same 24-unit grid as the set above. Critical is a red circle with an up arrow, high an orange
+ * circle with an up triangle, medium a blue circle with a dash, and low a grey outline circle with a down arrow. The mark
+ * inside a filled circle is drawn in the surface colour. Decorative: the caller's title or screen-reader text names the priority.
+ */
+export function PriorityIcon({
+  priority,
+  size = 14,
+  className = '',
+}: {
+  priority: PriorityGlyph;
+  size?: number;
+  className?: string;
+}) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+      className={[PRIORITY_GLYPH_COLOUR[priority], className].filter(Boolean).join(' ')}
+    >
+      {priority === 'low' ? (
+        <>
+          <circle cx="12" cy="12" r="10.25" fill="none" stroke="currentColor" strokeWidth="1.75" />
+          <path
+            d="M12 7.25v9.5M8.5 13.25 12 16.75l3.5-3.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </>
+      ) : (
+        <>
+          <circle cx="12" cy="12" r="11" fill="currentColor" />
+          {priority === 'critical' && (
+            <path
+              d="M12 16.5V7.75M8.5 11.25 12 7.75l3.5 3.5"
+              fill="none"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="buxa:stroke-[var(--surface)]"
+            />
+          )}
+          {priority === 'high' && <path d="M12 7.25 16.75 16.25H7.25Z" className="buxa:fill-[var(--surface)]" />}
+          {priority === 'medium' && (
+            <path
+              d="M7.5 12h9"
+              fill="none"
+              strokeWidth="2.25"
+              strokeLinecap="round"
+              className="buxa:stroke-[var(--surface)]"
+            />
+          )}
+        </>
+      )}
+    </svg>
+  );
+}
