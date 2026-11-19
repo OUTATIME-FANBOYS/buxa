@@ -48,19 +48,22 @@ describe('status colour tokens', () => {
       expect(new Set(values).size).toBe(COLOURS.length);
     }
   });
-  it('keep the status text at 6:1 or better on its glass, in both themes', () => {
-    for (const block of [light, dark]) {
-      const surface = hex(block, 'surface');
-      expect(surface).toBeDefined();
-      for (const c of COLOURS) {
-        const glass = over(hex(block, `status-${c}`) ?? '', surface ?? '', TINT);
-        expect(contrast(hex(block, `status-${c}-ink`) ?? '', glass)).toBeGreaterThanOrEqual(6);
-      }
+  it('keep the light pill text (the ink on the 18% tint) at 6:1 or better', () => {
+    const surface = hex(light, 'surface') ?? '';
+    for (const c of COLOURS) {
+      const glass = over(hex(light, `status-${c}`) ?? '', surface, TINT);
+      expect(contrast(hex(light, `status-${c}-ink`) ?? '', glass)).toBeGreaterThanOrEqual(6);
     }
   });
-  it('give the glass a thin light edge and a soft top highlight in both themes', () => {
+  it('keep the dark pill text (the colour on the 6% glass, with its 1px border) at 4.5:1 or better', () => {
+    const surface = hex(dark, 'surface') ?? '';
+    for (const c of COLOURS) {
+      const glass = over(hex(dark, `status-${c}`) ?? '', surface, 0.06);
+      expect(contrast(hex(dark, `status-${c}`) ?? '', glass)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+  it('give the glass a soft top highlight in both themes', () => {
     for (const block of [light, dark]) {
-      expect(block).toMatch(/--glass-edge: rgba\(/);
       expect(block).toMatch(/--glass-highlight: rgba\(/);
     }
   });

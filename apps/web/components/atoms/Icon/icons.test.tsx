@@ -1,7 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ICONS } from '@/components/elements';
-import { PriorityIcon } from './icons';
+import { PriorityIcon, StatusIcon } from './icons';
+
+describe('StatusIcon', () => {
+  it('draws in currentColor, and the in-progress glyph is a dashed clock', () => {
+    const dashed = renderToStaticMarkup(<StatusIcon glyph="dashed-clock" />);
+    expect(dashed).toContain('stroke="currentColor"');
+    expect(dashed).toContain('stroke-dasharray="3.2 3.2"');
+    expect(dashed).toContain('aria-hidden="true"');
+  });
+  it('gives each lucide-backed status its own glyph', () => {
+    expect(renderToStaticMarkup(<StatusIcon glyph="clock" />)).toContain('lucide-clock');
+    expect(renderToStaticMarkup(<StatusIcon glyph="send" />)).toContain('lucide-send');
+    expect(renderToStaticMarkup(<StatusIcon glyph="search" />)).toContain('lucide-search');
+    expect(renderToStaticMarkup(<StatusIcon glyph="circle-check" />)).toContain('lucide-circle-check');
+  });
+});
 
 describe('icon set', () => {
   it('has a lucide glyph for every name the app asks for', () => {
