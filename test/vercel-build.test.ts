@@ -20,10 +20,14 @@ describe('vercel-build script (scripts/vercel-build.ts)', () => {
     expect(result).toEqual([]);
   });
 
-  it('throws an error if VERCEL_ENV is production but no database URL is provided', async () => {
+  it('throws an error if VERCEL_ENV is production but no migration URL is provided', async () => {
     process.env.VERCEL_ENV = 'production';
-    await expect(applyMigrations()).rejects.toThrow(
-      'A production build needs MIGRATION_DATABASE_URL (or DATABASE_URL) to apply database migrations.',
-    );
+    await expect(applyMigrations()).rejects.toThrow('MIGRATION_DATABASE_URL is not set');
+  });
+
+  it('never uses the runtime DATABASE_URL to migrate', async () => {
+    process.env.VERCEL_ENV = 'production';
+    process.env.DATABASE_URL = 'postgres://app:generated@127.0.0.1:1/db';
+    await expect(applyMigrations()).rejects.toThrow('MIGRATION_DATABASE_URL is not set');
   });
 });

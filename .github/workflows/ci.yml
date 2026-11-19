@@ -178,6 +178,8 @@ jobs:
           --health-cmd "pg_isready -U postgres" --health-interval 3s --health-retries 20
     env:
       DATABASE_URL: postgres://buxa:buxa@localhost:5433/buxa
+      # Migrations use only the migration login (the migrate command refuses DATABASE_URL). Locally this is the same superuser.
+      MIGRATION_DATABASE_URL: postgres://buxa:buxa@localhost:5433/buxa
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-cached-node
@@ -199,6 +201,7 @@ jobs:
         run: |
           psql -h localhost -p 5434 -U postgres -c "CREATE ROLE deployer LOGIN PASSWORD 'deployer' CREATEROLE BYPASSRLS CREATEDB NOSUPERUSER" -c "CREATE DATABASE buxa_managed OWNER deployer"
           export DATABASE_URL=postgres://deployer:deployer@localhost:5434/buxa_managed
+          export MIGRATION_DATABASE_URL=$DATABASE_URL
           npm run db:migrate
           npm run test:db
 

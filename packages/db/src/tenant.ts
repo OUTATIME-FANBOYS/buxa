@@ -1,6 +1,7 @@
 import type { Pool, PoolClient } from 'pg';
 import { isUuid } from '@buxa/domain';
 import { errorMessage } from './errors';
+import { assertRestrictedLogin } from './connection';
 
 /**
  * Runs `work` in one transaction: committed if it returns, rolled back if it throws.
@@ -36,9 +37,14 @@ export async function transaction<T>(pool: Pool, work: (db: PoolClient) => Promi
  * The only way request code touches tenant data: a transaction run as the restricted `buxa_app` role with the
  * organisation fixed, so row-level security decides what is visible. With no org (null) every tenant table reads as empty.
  */
-export function withOrg<T>(pool: Pool, orgId: string | null, work: (db: PoolClient) => Promise<T>): Promise<T> {
+export async function withOrg<T>(pool: Pool, orgId: string | null, work: (db: PoolClient) => Promise<T>): Promise<T> {
   if (orgId !== null && !isUuid(orgId)) {
-    return Promise.reject(new Error('Invalid organisation id'));
+    throw new Error('Invalid organisation id');
+  }
+  // In production, tenant data is served only through a login that row-level security applies to. The check is
+  // memoised per pool, so it costs one query per instance. Tests and local runs skip it.
+  if (process.env.NODE_ENV === 'production') {
+    await assertRestrictedLogin(pool);
   }
 
   return transaction(pool, async db => {
