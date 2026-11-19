@@ -33,7 +33,7 @@ Paste secrets only into Vercel's form, never into the repo or a chat.
 ## Database requirements
 
 - Postgres 15 or newer. Row-level security is how tenants are kept apart, so it is not optional.
-- Migrations are the `.sql` files in `packages/db/migrations`, applied in filename order. The current set is `0001` to `0012`. Do not add a migration under a number that is already used.
+- Migrations are the `.sql` files in `packages/db/migrations`, applied in filename order. The current set is `0001` to `0022`. Do not add a migration under a number that is already used.
   There are two logins. They must be different.
 
 - **Migration login** (`MIGRATION_DATABASE_URL`; locally, `DATABASE_URL`). Applies migrations. It needs `CREATEROLE` and must be able to bypass row-level security (a superuser, or Supabase's `postgres` role). Migration `0004` lets it switch to `buxa_app`. The three privileged functions from migration `0009` run with its rights, so it keeps that ability.
@@ -69,6 +69,14 @@ The code path is covered by `apps/server/src/users/__tests__/runtimeLogin.pg.tes
 3. A **production** build applies pending migrations first (each migration is one transaction, so nothing is half-applied), then builds the app. Preview and other builds never touch the schema.
 4. Pull requests get a **preview** deployment at their own address, against the same database but never migrating it: a PR that adds a migration will not see its new tables in the preview until it is merged. Test those locally.
 5. After a deploy, check `<address>/ready` (expect `{"status":"ready"}`), then sign in.
+
+## Migration 0022: sessions and classes
+
+`0022_sessions_parent_classes.sql` gives sessions a date range and classes a time range, and backfills existing rows in the camp's time zone. It is expand only: nothing is dropped, and its drop guard check passes without an approval line.
+
+- **Risk while both releases run.** During a deploy the old release is still serving. Sessions that the new release creates have no default capacity, and the old classes list may fail to render them until the old release is gone. Run this deploy in a quiet window and keep the two releases side by side for as short a time as possible.
+- **Nothing is lost.** The old release keeps working on the migrated schema. Rolling back the application does not undo the migration; the rows that the new release wrote stay in the database.
+- The full data model and the list of what is and is not done are in `docs/plans/sessions-classes.md`.
 
 ## Setting it up (you do these; they need your accounts)
 
