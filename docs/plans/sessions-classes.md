@@ -12,11 +12,11 @@ Status: proposal for v0.3 (branch `v0.3/feat/sessions-classes`), migration `0022
 
 The tables keep their names because the release still running during a deploy reads and writes them; a rename would break it at once. Until a later contract release, the physical names are inverted relative to the terms above:
 
-| Table | Holds | Term in the app |
-|-------|-------|-----------------|
-| `classes` | the parent rows (formerly the class template) | Session |
-| `sessions` | the time-range rows (formerly the occurrences) | Class |
-| `enrolments.session_id`, `session_instructors.session_id` | point at `sessions` | Class |
+| Table                                                     | Holds                                          | Term in the app |
+| --------------------------------------------------------- | ---------------------------------------------- | --------------- |
+| `classes`                                                 | the parent rows (formerly the class template)  | Session         |
+| `sessions`                                                | the time-range rows (formerly the occurrences) | Class           |
+| `enrolments.session_id`, `session_instructors.session_id` | point at `sessions`                            | Class           |
 
 ## Changes in 0022 (expand only)
 

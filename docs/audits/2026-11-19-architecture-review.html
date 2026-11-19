@@ -1,77 +1,100 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Architecture review for Buxa</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script type="module">
-  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
-  mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
-</script>
-<style>
-  .seam { border-style: dashed; }
-  .leak { color: #dc2626; }
-  .deep { background: linear-gradient(135deg, #0f172a, #1e293b); color: #f8fafc; }
-  .serif { font-family: ui-serif, Georgia, "Times New Roman", serif; }
-</style>
-</head>
-<body class="bg-stone-50 text-slate-900 font-sans">
-<main class="max-w-5xl mx-auto px-6 py-12 space-y-12">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Architecture review for Buxa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+      mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+    </script>
+    <style>
+      .seam {
+        border-style: dashed;
+      }
+      .leak {
+        color: #dc2626;
+      }
+      .deep {
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        color: #f8fafc;
+      }
+      .serif {
+        font-family: ui-serif, Georgia, 'Times New Roman', serif;
+      }
+    </style>
+  </head>
+  <body class="bg-stone-50 text-slate-900 font-sans">
+    <main class="max-w-5xl mx-auto px-6 py-12 space-y-12">
+      <header class="space-y-4">
+        <p class="text-xs uppercase tracking-wider text-slate-500">Architecture review</p>
+        <h1 class="serif text-4xl">Buxa</h1>
+        <p class="text-sm text-slate-500">
+          Scanned 18 November 2026 · branch v0.3/chore/engineering-audit · 7 candidates
+        </p>
+        <ul class="flex flex-wrap gap-4 text-xs text-slate-600">
+          <li class="flex items-center gap-2">
+            <span class="inline-block w-5 h-3 rounded-sm bg-slate-800"></span>deep module
+          </li>
+          <li class="flex items-center gap-2">
+            <span class="inline-block w-5 h-3 rounded-sm border border-slate-400"></span>shallow module
+          </li>
+          <li class="flex items-center gap-2">
+            <span class="inline-block w-5 border-t border-dashed border-slate-500"></span>seam
+          </li>
+          <li class="flex items-center gap-2">
+            <span class="inline-block w-5 border-t-2 border-red-600"></span>leakage
+          </li>
+        </ul>
+      </header>
 
-<header class="space-y-4">
-  <p class="text-xs uppercase tracking-wider text-slate-500">Architecture review</p>
-  <h1 class="serif text-4xl">Buxa</h1>
-  <p class="text-sm text-slate-500">Scanned 18 November 2026 · branch v0.3/chore/engineering-audit · 7 candidates</p>
-  <ul class="flex flex-wrap gap-4 text-xs text-slate-600">
-    <li class="flex items-center gap-2"><span class="inline-block w-5 h-3 rounded-sm bg-slate-800"></span>deep module</li>
-    <li class="flex items-center gap-2"><span class="inline-block w-5 h-3 rounded-sm border border-slate-400"></span>shallow module</li>
-    <li class="flex items-center gap-2"><span class="inline-block w-5 border-t border-dashed border-slate-500"></span>seam</li>
-    <li class="flex items-center gap-2"><span class="inline-block w-5 border-t-2 border-red-600"></span>leakage</li>
-  </ul>
-</header>
+      <section id="candidates" class="space-y-10">
+        <!-- A -->
+        <article id="camp-context" class="bg-white rounded-lg border border-slate-200 p-6 space-y-5">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="rounded-full bg-emerald-100 text-emerald-800 text-xs px-3 py-1">Strong</span>
+            <span class="rounded-full bg-slate-100 text-slate-700 text-xs px-3 py-1">in-process</span>
+          </div>
+          <h2 class="serif text-2xl">Deepen the camp context</h2>
+          <p class="font-mono text-sm text-slate-600 space-y-1">
+            <span class="block">apps/server/src/composers/people/camp.ts</span>
+            <span class="block">apps/server/src/composers/attendance/campActor.ts</span>
+            <span class="block">apps/server/src/services/shared/views.ts</span>
+            <span class="block">apps/server/src/runtime.ts (timezoneOf, line 136)</span>
+          </p>
 
-<section id="candidates" class="space-y-10">
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 p-4 space-y-2">
+              <p class="text-xs uppercase tracking-wider text-slate-500">Before: three resolvers</p>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <div class="border border-slate-400 rounded p-2">
+                  currentActor<br /><span class="text-slate-500">throws</span>
+                </div>
+                <div class="border border-slate-400 rounded p-2">
+                  campActor<br /><span class="text-slate-500">nullable</span>
+                </div>
+                <div class="border border-slate-400 rounded p-2">campZone(orgs, id)</div>
+                <div class="border border-slate-400 rounded p-2">campZone(actor)</div>
+                <div class="border border-slate-400 rounded p-2 col-span-2">timezoneOf closure</div>
+              </div>
+              <div class="h-8 border-l-2 border-red-600 ml-4"></div>
+              <div class="border border-slate-400 rounded p-2 text-xs">
+                orgs.get, read again per call (3 to 4 times per Home request)
+              </div>
+            </div>
+            <div class="rounded-lg border border-slate-200 p-4 space-y-2">
+              <p class="text-xs uppercase tracking-wider text-slate-500">After: one module</p>
+              <div class="deep rounded-lg p-5 h-full flex flex-col justify-between min-h-[12rem]">
+                <p class="text-xs uppercase tracking-wider text-slate-300">Camp context</p>
+                <p class="text-sm">resolve(request) returns actor and zone once</p>
+                <p class="text-xs text-slate-300">internal: role, zone, cache, errors</p>
+              </div>
+            </div>
+          </div>
 
-<!-- A -->
-<article id="camp-context" class="bg-white rounded-lg border border-slate-200 p-6 space-y-5">
-  <div class="flex flex-wrap items-center gap-2">
-    <span class="rounded-full bg-emerald-100 text-emerald-800 text-xs px-3 py-1">Strong</span>
-    <span class="rounded-full bg-slate-100 text-slate-700 text-xs px-3 py-1">in-process</span>
-  </div>
-  <h2 class="serif text-2xl">Deepen the camp context</h2>
-  <p class="font-mono text-sm text-slate-600 space-y-1">
-    <span class="block">apps/server/src/composers/people/camp.ts</span>
-    <span class="block">apps/server/src/composers/attendance/campActor.ts</span>
-    <span class="block">apps/server/src/services/shared/views.ts</span>
-    <span class="block">apps/server/src/runtime.ts (timezoneOf, line 136)</span>
-  </p>
-
-  <div class="grid md:grid-cols-2 gap-4">
-    <div class="rounded-lg border border-slate-200 p-4 space-y-2">
-      <p class="text-xs uppercase tracking-wider text-slate-500">Before: three resolvers</p>
-      <div class="grid grid-cols-2 gap-2 text-xs">
-        <div class="border border-slate-400 rounded p-2">currentActor<br><span class="text-slate-500">throws</span></div>
-        <div class="border border-slate-400 rounded p-2">campActor<br><span class="text-slate-500">nullable</span></div>
-        <div class="border border-slate-400 rounded p-2">campZone(orgs, id)</div>
-        <div class="border border-slate-400 rounded p-2">campZone(actor)</div>
-        <div class="border border-slate-400 rounded p-2 col-span-2">timezoneOf closure</div>
-      </div>
-      <div class="h-8 border-l-2 border-red-600 ml-4"></div>
-      <div class="border border-slate-400 rounded p-2 text-xs">orgs.get, read again per call (3 to 4 times per Home request)</div>
-    </div>
-    <div class="rounded-lg border border-slate-200 p-4 space-y-2">
-      <p class="text-xs uppercase tracking-wider text-slate-500">After: one module</p>
-      <div class="deep rounded-lg p-5 h-full flex flex-col justify-between min-h-[12rem]">
-        <p class="text-xs uppercase tracking-wider text-slate-300">Camp context</p>
-        <p class="text-sm">resolve(request) returns actor and zone once</p>
-        <p class="text-xs text-slate-300">internal: role, zone, cache, errors</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="rounded-lg border border-slate-200 bg-white p-4">
-<pre class="mermaid">
+          <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <pre class="mermaid">
 flowchart LR
   H[Home and attendance composers] --> C1[currentActor]
   H --> C2[campActor]
@@ -86,252 +109,313 @@ flowchart LR
   classDef leak stroke:#dc2626,stroke-width:2px;
   class O leak
 </pre>
-  </div>
+          </div>
 
-  <p class="text-sm text-slate-700"><span class="font-medium">Problem:</span> the same concept, the camp's zone and the signed-in actor, is resolved three ways. One throws, one returns null, and the zone is read from the database on each call.</p>
-  <p class="text-sm text-slate-700"><span class="font-medium">Solution:</span> one camp context module resolves the actor and zone once per request and passes the result to services.</p>
-  <ul class="text-sm list-disc pl-5 text-slate-700">
-    <li>Locality: a change to zone rules lands in one place</li>
-    <li>Leverage: one resolver, every composer calls it</li>
-    <li>Tests: one interface, no stubbing of orgs.get in each service</li>
-    <li>Repeated reads of the camp row go away with it</li>
-  </ul>
-</article>
+          <p class="text-sm text-slate-700">
+            <span class="font-medium">Problem:</span> the same concept, the camp's zone and the signed-in actor, is
+            resolved three ways. One throws, one returns null, and the zone is read from the database on each call.
+          </p>
+          <p class="text-sm text-slate-700">
+            <span class="font-medium">Solution:</span> one camp context module resolves the actor and zone once per
+            request and passes the result to services.
+          </p>
+          <ul class="text-sm list-disc pl-5 text-slate-700">
+            <li>Locality: a change to zone rules lands in one place</li>
+            <li>Leverage: one resolver, every composer calls it</li>
+            <li>Tests: one interface, no stubbing of orgs.get in each service</li>
+            <li>Repeated reads of the camp row go away with it</li>
+          </ul>
+        </article>
 
-<!-- B -->
-<article id="error-model" class="bg-white rounded-lg border border-slate-200 p-6 space-y-5">
-  <div class="flex flex-wrap items-center gap-2">
-    <span class="rounded-full bg-amber-100 text-amber-800 text-xs px-3 py-1">Worth exploring</span>
-    <span class="rounded-full bg-slate-100 text-slate-700 text-xs px-3 py-1">in-process</span>
-  </div>
-  <h2 class="serif text-2xl">One error model, one translator at the composer seam</h2>
-  <p class="font-mono text-sm text-slate-600 space-y-1">
-    <span class="block">apps/server/src/services/shared/errors.ts (guard, line 41)</span>
-    <span class="block">apps/server/src/classes/outcome.ts (attempt, line 46)</span>
-    <span class="block">apps/server/src/composers/people/failures.ts</span>
-    <span class="block">apps/server/src/composers/camp/failures.ts</span>
-  </p>
-  <div class="grid md:grid-cols-2 gap-4">
-    <div class="rounded-lg border border-slate-200 p-4 space-y-2 text-xs">
-      <p class="uppercase tracking-wider text-slate-500">Before</p>
-      <div class="border border-slate-400 rounded p-2">guard: throws HttpError</div>
-      <div class="border border-slate-400 rounded p-2">attempt: returns Outcome</div>
-      <div class="grid grid-cols-2 gap-2">
-        <div class="border border-slate-400 rounded p-2">people translator</div>
-        <div class="border border-slate-400 rounded p-2">camp translator</div>
-      </div>
-    </div>
-    <div class="rounded-lg border border-slate-200 p-4 space-y-2 text-xs">
-      <p class="uppercase tracking-wider text-slate-500">After</p>
-      <div class="deep rounded-lg p-5 min-h-[9rem] flex flex-col justify-between">
-        <p class="uppercase tracking-wider text-slate-300">Typed errors + one translator</p>
-        <p class="text-slate-300">per-form copy as an override table</p>
-      </div>
-    </div>
-  </div>
-  <p class="text-sm text-slate-700"><span class="font-medium">Problem:</span> two error models need two translators. The 403 message is also copied in both.</p>
-  <p class="text-sm text-slate-700"><span class="font-medium">Solution:</span> services throw one typed error, and a single translator at the composer seam maps it to responses and form fields.</p>
-  <ul class="text-sm list-disc pl-5 text-slate-700">
-    <li>Locality: error rules live in one module</li>
-    <li>Leverage: one translator for all composers</li>
-    <li>Cost: test churn in services that rely on Outcome</li>
-  </ul>
-</article>
+        <!-- B -->
+        <article id="error-model" class="bg-white rounded-lg border border-slate-200 p-6 space-y-5">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="rounded-full bg-amber-100 text-amber-800 text-xs px-3 py-1">Worth exploring</span>
+            <span class="rounded-full bg-slate-100 text-slate-700 text-xs px-3 py-1">in-process</span>
+          </div>
+          <h2 class="serif text-2xl">One error model, one translator at the composer seam</h2>
+          <p class="font-mono text-sm text-slate-600 space-y-1">
+            <span class="block">apps/server/src/services/shared/errors.ts (guard, line 41)</span>
+            <span class="block">apps/server/src/classes/outcome.ts (attempt, line 46)</span>
+            <span class="block">apps/server/src/composers/people/failures.ts</span>
+            <span class="block">apps/server/src/composers/camp/failures.ts</span>
+          </p>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 p-4 space-y-2 text-xs">
+              <p class="uppercase tracking-wider text-slate-500">Before</p>
+              <div class="border border-slate-400 rounded p-2">guard: throws HttpError</div>
+              <div class="border border-slate-400 rounded p-2">attempt: returns Outcome</div>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="border border-slate-400 rounded p-2">people translator</div>
+                <div class="border border-slate-400 rounded p-2">camp translator</div>
+              </div>
+            </div>
+            <div class="rounded-lg border border-slate-200 p-4 space-y-2 text-xs">
+              <p class="uppercase tracking-wider text-slate-500">After</p>
+              <div class="deep rounded-lg p-5 min-h-[9rem] flex flex-col justify-between">
+                <p class="uppercase tracking-wider text-slate-300">Typed errors + one translator</p>
+                <p class="text-slate-300">per-form copy as an override table</p>
+              </div>
+            </div>
+          </div>
+          <p class="text-sm text-slate-700">
+            <span class="font-medium">Problem:</span> two error models need two translators. The 403 message is also
+            copied in both.
+          </p>
+          <p class="text-sm text-slate-700">
+            <span class="font-medium">Solution:</span> services throw one typed error, and a single translator at the
+            composer seam maps it to responses and form fields.
+          </p>
+          <ul class="text-sm list-disc pl-5 text-slate-700">
+            <li>Locality: error rules live in one module</li>
+            <li>Leverage: one translator for all composers</li>
+            <li>Cost: test churn in services that rely on Outcome</li>
+          </ul>
+        </article>
 
-<!-- C -->
-<article id="domain-rules" class="bg-white rounded-lg border border-slate-200 p-6 space-y-5">
-  <div class="flex flex-wrap items-center gap-2">
-    <span class="rounded-full bg-emerald-100 text-emerald-800 text-xs px-3 py-1">Strong</span>
-    <span class="rounded-full bg-slate-100 text-slate-700 text-xs px-3 py-1">ports &amp; adapters</span>
-  </div>
-  <h2 class="serif text-2xl">Move the camper and status rules into the domain module</h2>
-  <p class="font-mono text-sm text-slate-600 space-y-1">
-    <span class="block">apps/server/src/composers/people/createPersonAction.ts (56-62)</span>
-    <span class="block">apps/server/src/services/people/createPeopleService.ts (131, 143, 155)</span>
-    <span class="block">apps/server/src/services/people/rules.ts</span>
-    <span class="block">apps/shared/src/people/status.ts, apps/shared/src/attendance/status.ts</span>
-  </p>
-  <div class="grid md:grid-cols-2 gap-4">
-    <div class="rounded-lg border border-slate-200 p-4 space-y-2 text-xs">
-      <p class="uppercase tracking-wider text-slate-500">Before</p>
-      <div class="border border-slate-400 rounded p-2">composer: field error copy</div>
-      <div class="border border-slate-400 rounded p-2">service: CAMPER_NEEDS_GUARDIAN</div>
-      <div class="border border-slate-400 rounded p-2">UI: expired means warn here, crit there</div>
-    </div>
-    <div class="rounded-lg border border-slate-200 p-4 space-y-2 text-xs">
-      <p class="uppercase tracking-wider text-slate-500">After</p>
-      <div class="deep rounded-lg p-5 min-h-[9rem] flex flex-col justify-between">
-        <p class="uppercase tracking-wider text-slate-300">packages/domain/people</p>
-        <p class="text-slate-300">one rule, one status map; composers map refusals to fields</p>
-      </div>
-    </div>
-  </div>
-  <p class="text-sm text-slate-700"><span class="font-medium">Problem:</span> the camper rule has two copies with different messages, and one membership status shows two colours and labels.</p>
-  <p class="text-sm text-slate-700"><span class="font-medium">Solution:</span> domain owns the rules and the status map. Services enforce them, and composers only map refusals to fields.</p>
-  <ul class="text-sm list-disc pl-5 text-slate-700">
-    <li>Locality: a rule change is one edit, tested once</li>
-    <li>Leverage: every caller gets the same answer</li>
-    <li>Makes rules.ts a deletable pass-through</li>
-  </ul>
-</article>
+        <!-- C -->
+        <article id="domain-rules" class="bg-white rounded-lg border border-slate-200 p-6 space-y-5">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="rounded-full bg-emerald-100 text-emerald-800 text-xs px-3 py-1">Strong</span>
+            <span class="rounded-full bg-slate-100 text-slate-700 text-xs px-3 py-1">ports &amp; adapters</span>
+          </div>
+          <h2 class="serif text-2xl">Move the camper and status rules into the domain module</h2>
+          <p class="font-mono text-sm text-slate-600 space-y-1">
+            <span class="block">apps/server/src/composers/people/createPersonAction.ts (56-62)</span>
+            <span class="block">apps/server/src/services/people/createPeopleService.ts (131, 143, 155)</span>
+            <span class="block">apps/server/src/services/people/rules.ts</span>
+            <span class="block">apps/shared/src/people/status.ts, apps/shared/src/attendance/status.ts</span>
+          </p>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 p-4 space-y-2 text-xs">
+              <p class="uppercase tracking-wider text-slate-500">Before</p>
+              <div class="border border-slate-400 rounded p-2">composer: field error copy</div>
+              <div class="border border-slate-400 rounded p-2">service: CAMPER_NEEDS_GUARDIAN</div>
+              <div class="border border-slate-400 rounded p-2">UI: expired means warn here, crit there</div>
+            </div>
+            <div class="rounded-lg border border-slate-200 p-4 space-y-2 text-xs">
+              <p class="uppercase tracking-wider text-slate-500">After</p>
+              <div class="deep rounded-lg p-5 min-h-[9rem] flex flex-col justify-between">
+                <p class="uppercase tracking-wider text-slate-300">packages/domain/people</p>
+                <p class="text-slate-300">one rule, one status map; composers map refusals to fields</p>
+              </div>
+            </div>
+          </div>
+          <p class="text-sm text-slate-700">
+            <span class="font-medium">Problem:</span> the camper rule has two copies with different messages, and one
+            membership status shows two colours and labels.
+          </p>
+          <p class="text-sm text-slate-700">
+            <span class="font-medium">Solution:</span> domain owns the rules and the status map. Services enforce them,
+            and composers only map refusals to fields.
+          </p>
+          <ul class="text-sm list-disc pl-5 text-slate-700">
+            <li>Locality: a rule change is one edit, tested once</li>
+            <li>Leverage: every caller gets the same answer</li>
+            <li>Makes rules.ts a deletable pass-through</li>
+          </ul>
+        </article>
 
-<!-- D -->
-<article id="shared-barrel" class="bg-white rounded-lg border border-slate-200 p-6 space-y-5">
-  <div class="flex flex-wrap items-center gap-2">
-    <span class="rounded-full bg-amber-100 text-amber-800 text-xs px-3 py-1">Worth exploring</span>
-    <span class="rounded-full bg-slate-100 text-slate-700 text-xs px-3 py-1">in-process</span>
-  </div>
-  <h2 class="serif text-2xl">Replace the shared barrel with subpath modules</h2>
-  <p class="font-mono text-sm text-slate-600"><span class="block">apps/shared/src/index.ts (lines 33-60)</span></p>
-  <div class="grid md:grid-cols-2 gap-4">
-    <div class="rounded-lg border border-slate-200 p-4 text-xs space-y-2">
-      <p class="uppercase tracking-wider text-slate-500">Before: one barrel</p>
-      <div class="border border-slate-400 rounded p-3 min-h-[8rem]">
-        <p>camp, attendance, help, QR, kanban</p>
-        <p class="text-slate-500 mt-2">228 files import the barrel</p>
-      </div>
-    </div>
-    <div class="rounded-lg border border-slate-200 p-4 text-xs space-y-2">
-      <p class="uppercase tracking-wider text-slate-500">After: subpath modules</p>
-      <div class="grid grid-cols-2 gap-2">
-        <div class="border border-slate-400 rounded p-2">camp</div>
-        <div class="border border-slate-400 rounded p-2">attendance</div>
-        <div class="border border-slate-400 rounded p-2 col-span-2">kanban (separate)</div>
-      </div>
-      <p class="text-slate-500">79 files already use subpaths</p>
-    </div>
-  </div>
-  <p class="text-sm text-slate-700"><span class="font-medium">Problem:</span> one barrel couples camp and kanban code, so an edit to one rebuilds and re-tests the other.</p>
-  <p class="text-sm text-slate-700"><span class="font-medium">Solution:</span> move the 228 importers to subpaths, then drop the kanban re-exports from the camp barrel.</p>
-  <ul class="text-sm list-disc pl-5 text-slate-700">
-    <li>Locality: kanban edits stop touching camp</li>
-    <li>Interface shrinks; each module names its own surface</li>
-    <li>Cost: a large mechanical import change, best done in steps</li>
-  </ul>
-</article>
+        <!-- D -->
+        <article id="shared-barrel" class="bg-white rounded-lg border border-slate-200 p-6 space-y-5">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="rounded-full bg-amber-100 text-amber-800 text-xs px-3 py-1">Worth exploring</span>
+            <span class="rounded-full bg-slate-100 text-slate-700 text-xs px-3 py-1">in-process</span>
+          </div>
+          <h2 class="serif text-2xl">Replace the shared barrel with subpath modules</h2>
+          <p class="font-mono text-sm text-slate-600">
+            <span class="block">apps/shared/src/index.ts (lines 33-60)</span>
+          </p>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 p-4 text-xs space-y-2">
+              <p class="uppercase tracking-wider text-slate-500">Before: one barrel</p>
+              <div class="border border-slate-400 rounded p-3 min-h-[8rem]">
+                <p>camp, attendance, help, QR, kanban</p>
+                <p class="text-slate-500 mt-2">228 files import the barrel</p>
+              </div>
+            </div>
+            <div class="rounded-lg border border-slate-200 p-4 text-xs space-y-2">
+              <p class="uppercase tracking-wider text-slate-500">After: subpath modules</p>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="border border-slate-400 rounded p-2">camp</div>
+                <div class="border border-slate-400 rounded p-2">attendance</div>
+                <div class="border border-slate-400 rounded p-2 col-span-2">kanban (separate)</div>
+              </div>
+              <p class="text-slate-500">79 files already use subpaths</p>
+            </div>
+          </div>
+          <p class="text-sm text-slate-700">
+            <span class="font-medium">Problem:</span> one barrel couples camp and kanban code, so an edit to one
+            rebuilds and re-tests the other.
+          </p>
+          <p class="text-sm text-slate-700">
+            <span class="font-medium">Solution:</span> move the 228 importers to subpaths, then drop the kanban
+            re-exports from the camp barrel.
+          </p>
+          <ul class="text-sm list-disc pl-5 text-slate-700">
+            <li>Locality: kanban edits stop touching camp</li>
+            <li>Interface shrinks; each module names its own surface</li>
+            <li>Cost: a large mechanical import change, best done in steps</li>
+          </ul>
+        </article>
 
-<!-- E -->
-<article id="overlay" class="bg-white rounded-lg border border-slate-200 p-6 space-y-5">
-  <div class="flex flex-wrap items-center gap-2">
-    <span class="rounded-full bg-emerald-100 text-emerald-800 text-xs px-3 py-1">Strong</span>
-    <span class="rounded-full bg-slate-100 text-slate-700 text-xs px-3 py-1">in-process</span>
-  </div>
-  <h2 class="serif text-2xl">One overlay module for Popover, Dialog and Menu</h2>
-  <p class="font-mono text-sm text-slate-600 space-y-1">
-    <span class="block">apps/web/components/components/Popover.tsx (66-84)</span>
-    <span class="block">apps/web/components/components/Dialog.tsx (99)</span>
-    <span class="block">apps/web/components/components/Menu.tsx (144-158)</span>
-    <span class="block">plus 5 more components that handle Escape</span>
-  </p>
-  <div class="grid md:grid-cols-2 gap-4">
-    <div class="rounded-lg border border-slate-200 p-4 text-xs space-y-2">
-      <p class="uppercase tracking-wider text-slate-500">Before: each overlay re-implements</p>
-      <div class="grid grid-cols-3 gap-2">
-        <div class="border border-slate-400 rounded p-2">Popover keys</div>
-        <div class="border border-slate-400 rounded p-2">Dialog keys</div>
-        <div class="border border-slate-400 rounded p-2">Menu keys</div>
-      </div>
-      <div class="h-6 border-l-2 border-red-600 ml-4"></div>
-      <div class="border border-slate-400 rounded p-2">focus and Escape bugs fixed 8 times</div>
-    </div>
-    <div class="rounded-lg border border-slate-200 p-4 text-xs space-y-2">
-      <p class="uppercase tracking-wider text-slate-500">After</p>
-      <div class="deep rounded-lg p-5 min-h-[9rem] flex flex-col justify-between">
-        <p class="uppercase tracking-wider text-slate-300">Overlay</p>
-        <p class="text-slate-300">open, onClose, anchor. Focus and keys inside.</p>
-      </div>
-    </div>
-  </div>
-  <p class="text-sm text-slate-700"><span class="font-medium">Problem:</span> focus and keyboard handling is repeated in every overlay, so each keyboard fix has to be made several times.</p>
-  <p class="text-sm text-slate-700"><span class="font-medium">Solution:</span> one overlay module with a small interface (open, close, anchor). The focus and key logic moves inside it.</p>
-  <ul class="text-sm list-disc pl-5 text-slate-700">
-    <li>Leverage: one keyboard fix covers every overlay</li>
-    <li>Tests hit one interface, not each component</li>
-  </ul>
-</article>
+        <!-- E -->
+        <article id="overlay" class="bg-white rounded-lg border border-slate-200 p-6 space-y-5">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="rounded-full bg-emerald-100 text-emerald-800 text-xs px-3 py-1">Strong</span>
+            <span class="rounded-full bg-slate-100 text-slate-700 text-xs px-3 py-1">in-process</span>
+          </div>
+          <h2 class="serif text-2xl">One overlay module for Popover, Dialog and Menu</h2>
+          <p class="font-mono text-sm text-slate-600 space-y-1">
+            <span class="block">apps/web/components/components/Popover.tsx (66-84)</span>
+            <span class="block">apps/web/components/components/Dialog.tsx (99)</span>
+            <span class="block">apps/web/components/components/Menu.tsx (144-158)</span>
+            <span class="block">plus 5 more components that handle Escape</span>
+          </p>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 p-4 text-xs space-y-2">
+              <p class="uppercase tracking-wider text-slate-500">Before: each overlay re-implements</p>
+              <div class="grid grid-cols-3 gap-2">
+                <div class="border border-slate-400 rounded p-2">Popover keys</div>
+                <div class="border border-slate-400 rounded p-2">Dialog keys</div>
+                <div class="border border-slate-400 rounded p-2">Menu keys</div>
+              </div>
+              <div class="h-6 border-l-2 border-red-600 ml-4"></div>
+              <div class="border border-slate-400 rounded p-2">focus and Escape bugs fixed 8 times</div>
+            </div>
+            <div class="rounded-lg border border-slate-200 p-4 text-xs space-y-2">
+              <p class="uppercase tracking-wider text-slate-500">After</p>
+              <div class="deep rounded-lg p-5 min-h-[9rem] flex flex-col justify-between">
+                <p class="uppercase tracking-wider text-slate-300">Overlay</p>
+                <p class="text-slate-300">open, onClose, anchor. Focus and keys inside.</p>
+              </div>
+            </div>
+          </div>
+          <p class="text-sm text-slate-700">
+            <span class="font-medium">Problem:</span> focus and keyboard handling is repeated in every overlay, so each
+            keyboard fix has to be made several times.
+          </p>
+          <p class="text-sm text-slate-700">
+            <span class="font-medium">Solution:</span> one overlay module with a small interface (open, close, anchor).
+            The focus and key logic moves inside it.
+          </p>
+          <ul class="text-sm list-disc pl-5 text-slate-700">
+            <li>Leverage: one keyboard fix covers every overlay</li>
+            <li>Tests hit one interface, not each component</li>
+          </ul>
+        </article>
 
-<!-- F -->
-<article id="sync-state" class="bg-white rounded-lg border border-slate-200 p-6 space-y-5">
-  <div class="flex flex-wrap items-center gap-2">
-    <span class="rounded-full bg-amber-100 text-amber-800 text-xs px-3 py-1">Worth exploring</span>
-    <span class="rounded-full bg-slate-100 text-slate-700 text-xs px-3 py-1">local-substitutable</span>
-  </div>
-  <h2 class="serif text-2xl">One explicit state machine for sync, save and theme</h2>
-  <p class="font-mono text-sm text-slate-600 space-y-1">
-    <span class="block">apps/shared/src/kanban/sync.ts (291 lines, no tests for flushNow, adopt, start)</span>
-    <span class="block">apps/middleware/src/store/persistence.ts, useAutosave.ts, useStoreEngine.ts</span>
-    <span class="block">apps/web/components/components/camp/useAppearance.ts</span>
-  </p>
-  <div class="grid md:grid-cols-2 gap-4">
-    <div class="rounded-lg border border-slate-200 p-4 text-xs space-y-2">
-      <p class="uppercase tracking-wider text-slate-500">Before: four status holders</p>
-      <div class="grid grid-cols-2 gap-2">
-        <div class="border border-slate-400 rounded p-2">SyncState</div>
-        <div class="border border-slate-400 rounded p-2">syncRef</div>
-        <div class="border border-slate-400 rounded p-2">saveStatus</div>
-        <div class="border border-slate-400 rounded p-2">theme copy</div>
-      </div>
-      <div class="h-6 border-l-2 border-red-600 ml-4"></div>
-      <div class="border border-slate-400 rounded p-2">demotes to local, drops edits</div>
-    </div>
-    <div class="rounded-lg border border-slate-200 p-4 text-xs space-y-2">
-      <p class="uppercase tracking-wider text-slate-500">After</p>
-      <div class="deep rounded-lg p-5 min-h-[9rem] flex flex-col justify-between">
-        <p class="uppercase tracking-wider text-slate-300">Transition table</p>
-        <p class="text-slate-300">connecting to synced or offline(retryAt); save: idle, dirty, saving, saved, failed</p>
-      </div>
-    </div>
-  </div>
-  <p class="text-sm text-slate-700"><span class="font-medium">Problem:</span> the sync machine has no state model and no tests, and status lives in four places. A failed start demotes the session permanently.</p>
-  <p class="text-sm text-slate-700"><span class="font-medium">Solution:</span> a transition table for sync, a separate save reducer, and one theme store.</p>
-  <ul class="text-sm list-disc pl-5 text-slate-700">
-    <li>Locality: transitions are testable through one reducer</li>
-    <li>Removes the data-loss paths the audit found</li>
-  </ul>
-  <div class="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-    <span class="font-medium">Contradicts ADR 0001, but worth reopening:</span> ADR 0001 moves the product off whole-app browser state. Deepening this machine invests in code that ADR retires. Reopen only if the kanban board stays a product feature. If it does not, the better move is to delete the sync code.
-  </div>
-</article>
+        <!-- F -->
+        <article id="sync-state" class="bg-white rounded-lg border border-slate-200 p-6 space-y-5">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="rounded-full bg-amber-100 text-amber-800 text-xs px-3 py-1">Worth exploring</span>
+            <span class="rounded-full bg-slate-100 text-slate-700 text-xs px-3 py-1">local-substitutable</span>
+          </div>
+          <h2 class="serif text-2xl">One explicit state machine for sync, save and theme</h2>
+          <p class="font-mono text-sm text-slate-600 space-y-1">
+            <span class="block">apps/shared/src/kanban/sync.ts (291 lines, no tests for flushNow, adopt, start)</span>
+            <span class="block">apps/middleware/src/store/persistence.ts, useAutosave.ts, useStoreEngine.ts</span>
+            <span class="block">apps/web/components/components/camp/useAppearance.ts</span>
+          </p>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 p-4 text-xs space-y-2">
+              <p class="uppercase tracking-wider text-slate-500">Before: four status holders</p>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="border border-slate-400 rounded p-2">SyncState</div>
+                <div class="border border-slate-400 rounded p-2">syncRef</div>
+                <div class="border border-slate-400 rounded p-2">saveStatus</div>
+                <div class="border border-slate-400 rounded p-2">theme copy</div>
+              </div>
+              <div class="h-6 border-l-2 border-red-600 ml-4"></div>
+              <div class="border border-slate-400 rounded p-2">demotes to local, drops edits</div>
+            </div>
+            <div class="rounded-lg border border-slate-200 p-4 text-xs space-y-2">
+              <p class="uppercase tracking-wider text-slate-500">After</p>
+              <div class="deep rounded-lg p-5 min-h-[9rem] flex flex-col justify-between">
+                <p class="uppercase tracking-wider text-slate-300">Transition table</p>
+                <p class="text-slate-300">
+                  connecting to synced or offline(retryAt); save: idle, dirty, saving, saved, failed
+                </p>
+              </div>
+            </div>
+          </div>
+          <p class="text-sm text-slate-700">
+            <span class="font-medium">Problem:</span> the sync machine has no state model and no tests, and status lives
+            in four places. A failed start demotes the session permanently.
+          </p>
+          <p class="text-sm text-slate-700">
+            <span class="font-medium">Solution:</span> a transition table for sync, a separate save reducer, and one
+            theme store.
+          </p>
+          <ul class="text-sm list-disc pl-5 text-slate-700">
+            <li>Locality: transitions are testable through one reducer</li>
+            <li>Removes the data-loss paths the audit found</li>
+          </ul>
+          <div class="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+            <span class="font-medium">Contradicts ADR 0001, but worth reopening:</span> ADR 0001 moves the product off
+            whole-app browser state. Deepening this machine invests in code that ADR retires. Reopen only if the kanban
+            board stays a product feature. If it does not, the better move is to delete the sync code.
+          </div>
+        </article>
 
-<!-- G -->
-<article id="reports" class="bg-white rounded-lg border border-slate-200 p-6 space-y-5">
-  <div class="flex flex-wrap items-center gap-2">
-    <span class="rounded-full bg-slate-200 text-slate-700 text-xs px-3 py-1">Speculative</span>
-    <span class="rounded-full bg-slate-100 text-slate-700 text-xs px-3 py-1">in-process</span>
-  </div>
-  <h2 class="serif text-2xl">Move report derivations out of the view</h2>
-  <p class="font-mono text-sm text-slate-600"><span class="block">apps/web/components/views/kanban/Reports.tsx (249 lines, derivations 23-94)</span></p>
-  <div class="grid md:grid-cols-2 gap-4">
-    <div class="rounded-lg border border-slate-200 p-4 text-xs space-y-2">
-      <p class="uppercase tracking-wider text-slate-500">Before: view derives and renders</p>
-      <div class="border border-slate-400 rounded p-3 min-h-[8rem]">Reports view: rules, buckets, chart data, markup</div>
-    </div>
-    <div class="rounded-lg border border-slate-200 p-4 text-xs space-y-2">
-      <p class="uppercase tracking-wider text-slate-500">After</p>
-      <div class="grid grid-cols-2 gap-2">
-        <div class="deep rounded p-3">report module (pure)</div>
-        <div class="border border-slate-400 rounded p-3">view renders only</div>
-      </div>
-    </div>
-  </div>
-  <p class="text-sm text-slate-700"><span class="font-medium">Problem:</span> the business rules for reports live in the view, so they can only be tested through rendering.</p>
-  <p class="text-sm text-slate-700"><span class="font-medium">Solution:</span> a pure report module that the view calls. The view shrinks to rendering.</p>
-  <ul class="text-sm list-disc pl-5 text-slate-700">
-    <li>Tests hit the report interface, with no DOM</li>
-    <li>Fixes the silent unit change on the 90-day range</li>
-  </ul>
-</article>
+        <!-- G -->
+        <article id="reports" class="bg-white rounded-lg border border-slate-200 p-6 space-y-5">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="rounded-full bg-slate-200 text-slate-700 text-xs px-3 py-1">Speculative</span>
+            <span class="rounded-full bg-slate-100 text-slate-700 text-xs px-3 py-1">in-process</span>
+          </div>
+          <h2 class="serif text-2xl">Move report derivations out of the view</h2>
+          <p class="font-mono text-sm text-slate-600">
+            <span class="block">apps/web/components/views/kanban/Reports.tsx (249 lines, derivations 23-94)</span>
+          </p>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 p-4 text-xs space-y-2">
+              <p class="uppercase tracking-wider text-slate-500">Before: view derives and renders</p>
+              <div class="border border-slate-400 rounded p-3 min-h-[8rem]">
+                Reports view: rules, buckets, chart data, markup
+              </div>
+            </div>
+            <div class="rounded-lg border border-slate-200 p-4 text-xs space-y-2">
+              <p class="uppercase tracking-wider text-slate-500">After</p>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="deep rounded p-3">report module (pure)</div>
+                <div class="border border-slate-400 rounded p-3">view renders only</div>
+              </div>
+            </div>
+          </div>
+          <p class="text-sm text-slate-700">
+            <span class="font-medium">Problem:</span> the business rules for reports live in the view, so they can only
+            be tested through rendering.
+          </p>
+          <p class="text-sm text-slate-700">
+            <span class="font-medium">Solution:</span> a pure report module that the view calls. The view shrinks to
+            rendering.
+          </p>
+          <ul class="text-sm list-disc pl-5 text-slate-700">
+            <li>Tests hit the report interface, with no DOM</li>
+            <li>Fixes the silent unit change on the 90-day range</li>
+          </ul>
+        </article>
+      </section>
 
-</section>
+      <section id="top-recommendation" class="bg-white rounded-lg border-2 border-emerald-500 p-6 space-y-3">
+        <p class="text-xs uppercase tracking-wider text-emerald-700">Top recommendation</p>
+        <h2 class="serif text-2xl"><a class="underline" href="#camp-context">Deepen the camp context</a></h2>
+        <p class="text-sm text-slate-700">
+          It is strong, in-process, and conflicts with no ADR. The same zone and actor are resolved three ways today,
+          and the camp row is read again on most requests. One resolver removes the duplication and most of the repeated
+          reads. Start here, then take the domain rules (<a class="underline" href="#domain-rules">candidate C</a>)
+          next.
+        </p>
+        <p class="text-sm text-slate-500">
+          Separate from this review: the member-rename audit row and the owner-only archive grant are small fixes, and
+          they should not wait for any refactor.
+        </p>
+      </section>
 
-<section id="top-recommendation" class="bg-white rounded-lg border-2 border-emerald-500 p-6 space-y-3">
-  <p class="text-xs uppercase tracking-wider text-emerald-700">Top recommendation</p>
-  <h2 class="serif text-2xl"><a class="underline" href="#camp-context">Deepen the camp context</a></h2>
-  <p class="text-sm text-slate-700">It is strong, in-process, and conflicts with no ADR. The same zone and actor are resolved three ways today, and the camp row is read again on most requests. One resolver removes the duplication and most of the repeated reads. Start here, then take the domain rules (<a class="underline" href="#domain-rules">candidate C</a>) next.</p>
-  <p class="text-sm text-slate-500">Separate from this review: the member-rename audit row and the owner-only archive grant are small fixes, and they should not wait for any refactor.</p>
-</section>
-
-<footer class="text-xs text-slate-400">Read-only scan. Counts were checked with grep on the current branch. Nothing in the repo was changed.</footer>
-</main>
-</body>
+      <footer class="text-xs text-slate-400">
+        Read-only scan. Counts were checked with grep on the current branch. Nothing in the repo was changed.
+      </footer>
+    </main>
+  </body>
 </html>

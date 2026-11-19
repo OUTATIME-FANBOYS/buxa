@@ -8,10 +8,14 @@
   color: var(--tone-ink);
   border: 1px solid var(--tone);
 }
-.notice p { margin: 0; }
+.notice p {
+  margin: 0;
+}
 .notice-title {
   display: flex;
   align-items: center;
   gap: var(--s2);
 }
-.notice--compact { font-weight: 500; }
+.notice--compact {
+  font-weight: 500;
+}
