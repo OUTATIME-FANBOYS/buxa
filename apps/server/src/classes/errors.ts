@@ -78,6 +78,15 @@ export class InstructorNotFoundError extends Error {
 }
 
 /** The refusals an adapter throws from inside the enrolment transaction, so nothing is written. Each carries the domain refusal. */
+/** A class's teacher must be a member of this camp with the teacher role. */
+export class TeacherNotFoundError extends Error {
+  readonly kind = 'teacher-not-found';
+  constructor() {
+    super('Teacher not found');
+    this.name = 'TeacherNotFoundError';
+  }
+}
+
 export class SessionFullError extends Error {
   readonly kind = 'session-full';
   constructor(readonly refusal: Extract<Refusal, { reason: 'session_full' }>) {
@@ -165,6 +174,7 @@ export type ClassErrorKind =
   | 'household-not-found'
   | 'hold-not-found'
   | 'hold-exists'
+  | 'teacher-not-found'
   | EnrolmentRefusalError['kind'];
 
 export const isClassError = (e: unknown, kind: ClassErrorKind): boolean =>

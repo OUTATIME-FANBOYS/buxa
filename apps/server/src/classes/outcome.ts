@@ -18,6 +18,7 @@ export type FailureReason =
   | 'household_not_found'
   | 'hold_not_found'
   | 'hold_exists'
+  | 'teacher_not_found'
   | Refusal['reason'];
 
 export interface Failure {
@@ -37,11 +38,13 @@ const NOT_FOUND: Record<
   | 'camper-not-found'
   | 'instructor-not-found'
   | 'household-not-found'
-  | 'hold-not-found',
+  | 'hold-not-found'
+  | 'teacher-not-found',
   Failure
 > = {
   'household-not-found': { reason: 'household_not_found', message: 'That household does not exist in this camp.' },
   'hold-not-found': { reason: 'hold_not_found', message: 'That hold no longer exists, or it has been released.' },
+  'teacher-not-found': { reason: 'teacher_not_found', message: 'One of the teachers is not a teacher in this camp.' },
   'class-not-found': { reason: 'class_not_found', message: 'That class no longer exists.' },
   'session-not-found': { reason: 'session_not_found', message: 'That session no longer exists.' },
   'enrolment-not-found': {

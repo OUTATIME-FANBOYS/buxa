@@ -141,6 +141,8 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0023_registration_forms.sql',
       '0024_session_prices.sql',
       '0025_seat_holds.sql',
+      '0026_teacher_role.sql',
+      '0027_class_teachers.sql',
     ]);
   });
 

@@ -343,6 +343,12 @@
   --tone-ink: var(--hue-blue-ink);
   --tone-f: var(--hue-blue);
 }
+.tone-role-teacher {
+  --tone: var(--hue-orange);
+  --tone-soft: var(--hue-orange-soft);
+  --tone-ink: var(--hue-orange-ink);
+  --tone-f: var(--hue-orange);
+}
 .tone-role-guardian {
   --tone: var(--hue-pink);
   --tone-soft: var(--hue-pink-soft);

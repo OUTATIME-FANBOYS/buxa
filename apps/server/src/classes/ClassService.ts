@@ -11,6 +11,7 @@ import type {
 } from '@buxa/contracts';
 import { assertAllowed } from '../auth/authorize';
 import type { ClassRecord, ClassRepository } from './ClassRepository';
+import { teacherScopeOf, type TeacherScope } from './teacherScope';
 import { ClassNotFoundError, ClassOutsideSessionError, SessionNotFoundError } from './errors';
 import { createEnrolmentMethods } from './EnrolmentService';
 import { attempt, ok, type Outcome } from './outcome';
@@ -32,6 +33,8 @@ export interface ClassService {
   addClass(actor: Actor, sessionId: string, input: ClassInput): Promise<Outcome<Class>>;
   updateClass(actor: Actor, classId: string, input: ClassInput): Promise<Outcome<Class>>;
   deleteClass(actor: Actor, classId: string): Promise<Outcome<null>>;
+  /** Replaces the class's teachers. Staff and admins (classes:manage). Each user must hold the teacher role in this camp. */
+  setTeachers(actor: Actor, classId: string, userIds: readonly string[]): Promise<Outcome<null>>;
   listEnrolments(actor: Actor, classId: string): Promise<Outcome<Enrolment[]>>;
   enrol(actor: Actor, input: EnrolInput): Promise<Outcome<Enrolment>>;
   cancelEnrolment(actor: Actor, input: CancelEnrolmentInput): Promise<Outcome<Enrolment>>;
@@ -79,16 +82,33 @@ function toRecord(input: ClassInput): ClassRecord {
   };
 }
 
+/** The sessions that hold at least one of the teacher's classes. */
+async function sessionIdsOf(repo: ClassRepository, orgId: string, scope: TeacherScope): Promise<Set<string>> {
+  const found = await Promise.all([...scope.classIds].map(id => repo.getClass(orgId, id)));
+
+  return new Set(found.flatMap(c => (c ? [c.sessionId] : [])));
+}
+
 export function createClassService({ repo, timezoneOf }: ClassServiceDeps): ClassService {
   return {
     async listSessions(actor) {
-      assertAllowed(actor, 'events:read');
+      // A teacher sees only the sessions that hold one of its classes.
+      const scope = await teacherScopeOf(repo, actor);
+      assertAllowed(actor, 'events:read', { assignedToClass: scope === null ? undefined : true });
+      const sessions = await repo.listSessions(actor.orgId);
+      if (scope === null) {
+        return ok(sessions);
+      }
+      const mine = await sessionIdsOf(repo, actor.orgId, scope);
 
-      return ok(await repo.listSessions(actor.orgId));
+      return ok(sessions.filter(s => mine.has(s.id)));
     },
 
     async getSession(actor, sessionId) {
-      assertAllowed(actor, 'events:read');
+      const scope = await teacherScopeOf(repo, actor);
+      const assignedToClass =
+        scope === null ? undefined : (await sessionIdsOf(repo, actor.orgId, scope)).has(sessionId);
+      assertAllowed(actor, 'events:read', { assignedToClass });
 
       return attempt(
         async () => {
@@ -116,13 +136,24 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
     },
 
     async listClasses(actor, sessionId) {
-      assertAllowed(actor, 'events:read');
+      const scope = await teacherScopeOf(repo, actor);
+      assertAllowed(actor, 'events:read', { assignedToClass: scope === null ? undefined : true });
 
-      return attempt(() => repo.listClasses(actor.orgId, sessionId), await timezoneOf(actor.orgId));
+      return attempt(
+        async () => {
+          const all = await repo.listClasses(actor.orgId, sessionId);
+
+          return scope === null ? all : all.filter(c => scope.classIds.has(c.id));
+        },
+        await timezoneOf(actor.orgId),
+      );
     },
 
     async getClass(actor, classId) {
-      assertAllowed(actor, 'events:read');
+      const scope = await teacherScopeOf(repo, actor);
+      assertAllowed(actor, 'events:read', {
+        assignedToClass: scope === null ? undefined : scope.classIds.has(classId),
+      });
 
       return attempt(
         async () => {
@@ -176,9 +207,25 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
       );
     },
 
+    async setTeachers(actor, classId, userIds) {
+      assertAllowed(actor, 'classes:manage');
+
+      return attempt(
+        async () => {
+          await repo.replaceTeachers(actor, classId, userIds);
+
+          return null;
+        },
+        await timezoneOf(actor.orgId),
+      );
+    },
+
     async listEnrolments(actor, classId) {
       // Viewers see who is enrolled, by name. Contact details are not part of an enrolment at all.
-      assertAllowed(actor, 'people:read');
+      const scope = await teacherScopeOf(repo, actor);
+      assertAllowed(actor, 'people:read', {
+        assignedToClass: scope === null ? undefined : scope.classIds.has(classId),
+      });
 
       return attempt(() => repo.listEnrolments(actor.orgId, classId), await timezoneOf(actor.orgId));
     },

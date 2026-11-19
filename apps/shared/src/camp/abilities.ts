@@ -6,14 +6,16 @@ export const ROLE_LABEL: Readonly<Record<Role, string>> = {
   admin: 'Admin',
   staff: 'Staff',
   viewer: 'Viewer',
+  teacher: 'Teacher',
 };
 
-/** The pill colour for each camp role: owner violet, admin orange, staff green, viewer blue. */
+/** The pill colour for each camp role: owner violet, admin teal, staff lime, viewer blue, teacher orange. */
 export const ROLE_TONE: Readonly<Record<Role, RoleTone>> = {
   owner: 'role-owner',
   admin: 'role-admin',
   staff: 'role-staff',
   viewer: 'role-viewer',
+  teacher: 'role-teacher',
 };
 
 /** The abilities worth showing a person, in plain words. */

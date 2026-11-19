@@ -62,4 +62,16 @@ export interface ClassRepository {
   enrol(actor: Actor, request: EnrolRequest, rule: EnrolmentRule): Promise<Enrolment>;
   /** Frees the seat and the time. Audits `enrolment.cancel`. Throws EnrolmentNotFoundError (also when already cancelled). */
   cancelEnrolment(actor: Actor, enrolmentId: string, note: string | null): Promise<Enrolment>;
+  /**
+   * The classes a teacher is assigned to in this camp. Only members with the teacher role count, so a person who stopped being a
+   * teacher has no classes even before their assignments are cleared. Used by the assigned-classes scope (teacherScope.ts).
+   */
+  assignedClassIds(orgId: string, userId: string): Promise<string[]>;
+  /** The people with an enrolled (not waitlisted or cancelled) place in any of the classes. */
+  camperIdsIn(orgId: string, classIds: readonly string[]): Promise<string[]>;
+  /**
+   * Replaces a class's teachers (staff and admins, classes:manage). Audits `class.update`. Throws ClassNotFoundError, or
+   * TeacherNotFoundError for a user who is not a teacher in this camp.
+   */
+  replaceTeachers(actor: Actor, classId: string, userIds: readonly string[]): Promise<void>;
 }

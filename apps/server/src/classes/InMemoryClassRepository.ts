@@ -20,6 +20,7 @@ import {
   EnrolmentNotFoundError,
   InstructorNotFoundError,
   SessionNotFoundError,
+  TeacherNotFoundError,
   refusalError,
 } from './errors';
 import { settle } from '@buxa/domain';
@@ -73,6 +74,10 @@ export class InMemoryClassRepository implements ClassRepository {
   private readonly classes = new Map<string, StoredClass>();
   private readonly enrolments = new Map<string, StoredEnrolment>();
   private readonly campers = new Map<string, StoredCamper>();
+  /** Camp id to the user ids that hold the teacher role there. */
+  private readonly teacherUsers = new Map<string, Set<string>>();
+  /** Class id to the teacher user ids assigned to it. */
+  private readonly teachersOf = new Map<string, Set<string>>();
   private readonly locks = new Map<string, Promise<void>>();
 
   constructor(private readonly now: Clock = systemClock) {}
@@ -311,6 +316,51 @@ export class InMemoryClassRepository implements ClassRepository {
         return this.toEnrolment(row);
       });
     });
+  }
+
+  /** Test seed: a member of the camp with the teacher role (Postgres keeps this in org_members). */
+  seedTeacher(orgId: string, userId: string): void {
+    const set = this.teacherUsers.get(orgId) ?? new Set<string>();
+    set.add(userId);
+    this.teacherUsers.set(orgId, set);
+  }
+
+  assignedClassIds(orgId: string, userId: string): Promise<string[]> {
+    if (!this.teacherUsers.get(orgId)?.has(userId)) {
+      return Promise.resolve([]);
+    }
+    const ids = [...this.classes.values()]
+      .filter(c => c.orgId === orgId && this.teachersOf.get(c.id)?.has(userId))
+      .map(c => c.id);
+
+    return Promise.resolve(ids);
+  }
+
+  camperIdsIn(orgId: string, classIds: readonly string[]): Promise<string[]> {
+    const wanted = new Set(classIds);
+    const ids = new Set<string>();
+    for (const e of this.enrolments.values()) {
+      if (e.orgId === orgId && wanted.has(e.classId) && e.status === 'enrolled') {
+        ids.add(e.camperId);
+      }
+    }
+
+    return Promise.resolve([...ids]);
+  }
+
+  replaceTeachers(actor: Actor, classId: string, userIds: readonly string[]): Promise<void> {
+    if (!this.classIn(actor.orgId, classId)) {
+      return Promise.reject(new ClassNotFoundError());
+    }
+    const unique = [...new Set(userIds)];
+    const members = this.teacherUsers.get(actor.orgId) ?? new Set<string>();
+    if (unique.some(id => !members.has(id))) {
+      return Promise.reject(new TeacherNotFoundError());
+    }
+    this.teachersOf.set(classId, new Set(unique));
+    this.record(actor, 'class.update', 'class', classId, { teacherIds: unique });
+
+    return Promise.resolve();
   }
 
   private async exclusive<T>(key: string, work: () => Promise<T>): Promise<T> {

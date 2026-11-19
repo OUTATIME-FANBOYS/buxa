@@ -4,10 +4,11 @@
  * Rules fail closed: an unknown role, a missing context or another organisation is always a denial.
  */
 
-export const ROLES = ['viewer', 'staff', 'admin', 'owner'] as const;
+/** `teacher` runs its own classes. It sits outside the viewer-to-owner ladder: it holds some grants a viewer lacks and no tasks. */
+export const ROLES = ['viewer', 'staff', 'admin', 'owner', 'teacher'] as const;
 export type Role = (typeof ROLES)[number];
 
-const RANK: Record<Role, number> = { viewer: 0, staff: 1, admin: 2, owner: 3 };
+const RANK: Record<Role, number> = { viewer: 0, staff: 1, admin: 2, owner: 3, teacher: 0 };
 export const rank = (r: Role) => RANK[r];
 
 /** `resource:verb`. Add actions here first; the compiler then forces a decision for each role. */
@@ -107,6 +108,14 @@ const OWNER: Action[] = [
   'data:export',
   'data:erase',
 ];
+const TEACHER: Action[] = [
+  'org:read',
+  'members:leave',
+  'events:read',
+  'people:read',
+  'attendance:read',
+  'attendance:record',
+];
 
 /** What each role may attempt. Rules below can still deny an action the role has. */
 export const GRANTS: Record<Role, ReadonlySet<Action>> = {
@@ -114,7 +123,20 @@ export const GRANTS: Record<Role, ReadonlySet<Action>> = {
   staff: new Set(STAFF),
   admin: new Set(ADMIN),
   owner: new Set(OWNER),
+  teacher: new Set(TEACHER),
 };
+
+/**
+ * Assigned-classes scope. A teacher may use these actions only on a class it is assigned to. The caller works out whether the
+ * class (or the person's class, or the sessions in a list) is one of the teacher's and passes `assignedToClass: true`; without it
+ * a teacher is refused with `not_assigned`. Other roles are not affected.
+ */
+const ASSIGNED_CLASSES_ONLY: ReadonlySet<Action> = new Set([
+  'events:read',
+  'people:read',
+  'attendance:read',
+  'attendance:record',
+]);
 
 export interface Actor {
   userId: string;
@@ -139,9 +161,12 @@ export interface Resource {
   newRole?: Role;
   /** Owners in the org right now, including the actor if they are one. */
   ownerCount?: number;
+  /** Teachers only: true when the class (or the person's or the list's class) is one the teacher is assigned to. */
+  assignedToClass?: boolean;
 }
 
 export type Reason =
+  | 'not_assigned'
   | 'role_not_allowed'
   | 'other_org'
   | 'missing_context'
@@ -167,6 +192,9 @@ export function authorize(actor: Actor, action: Action, res: Resource = {}): Dec
   }
   if (!GRANTS[actor.role].has(action)) {
     return no('role_not_allowed');
+  }
+  if (actor.role === 'teacher' && ASSIGNED_CLASSES_ONLY.has(action) && res.assignedToClass !== true) {
+    return no('not_assigned');
   }
 
   const mine = rank(actor.role);

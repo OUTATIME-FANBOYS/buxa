@@ -54,7 +54,8 @@ describe('the sidebar groups', () => {
 
 describe('navFor', () => {
   it('shows every item to staff and above; a viewer sees no attendance items (check-in, on site, attendance)', () => {
-    for (const role of ROLES.filter(r => r !== 'viewer')) {
+    // Teachers have their own short sidebar (see teacherNav.test.ts), so they are not in this list.
+    for (const role of ROLES.filter(r => r !== 'viewer' && r !== 'teacher')) {
       expect(hrefs(role)).toEqual(CAMP_NAV.map(item => item.href));
     }
     const attendance: string[] = [ROUTES.checkIn, ROUTES.onSite, ROUTES.attendance, ROUTES.registration];

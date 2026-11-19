@@ -123,7 +123,7 @@ export const ArchivedCampSchema = z.object({
   id: z.string(),
   name: z.string(),
   archivedAt: z.string(),
-  role: z.enum(['viewer', 'staff', 'admin', 'owner']),
+  role: RoleSchema,
 });
 export type ArchivedCamp = z.infer<typeof ArchivedCampSchema>;
 export const ArchivedCampsSchema = z.array(ArchivedCampSchema);
