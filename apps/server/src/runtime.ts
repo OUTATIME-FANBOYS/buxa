@@ -16,6 +16,7 @@ import { createImportService, type ImportService } from './classes/import/Import
 import { createMembershipService } from './services/memberships/createMembershipService';
 import { createOrgService, type OrgService } from './services/orgs';
 import { createPeopleService } from './services/people/createPeopleService';
+import { createRegistrationService, type RegistrationService } from './registration/RegistrationService';
 import { systemClock } from './services/clock';
 import { type AttendanceService } from './services/attendance/AttendanceService';
 import { type CredentialService } from './services/credentials/CredentialService';
@@ -47,6 +48,7 @@ export interface Services {
   attendance: AttendanceService;
   classes: ClassService;
   imports: ImportService;
+  registration: RegistrationService;
 }
 
 export interface RuntimeOptions {
@@ -128,6 +130,7 @@ export function createServices(repositories: Repositories, clock: Clock): Servic
     credentials: createCredentialService({ credentials, people, memberships, attendance, orgs, clock }),
     attendance: createAttendanceService({ attendance, people, memberships, orgs, clock }),
     ...createClassServices(repositories),
+    registration: createRegistrationService(repositories.registration),
   };
 }
 

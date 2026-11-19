@@ -26,5 +26,9 @@ export const AUDIT_ACTIONS = [
   'enrolment.create',
   'enrolment.cancel',
   'enrolment.override',
+  'registration_form.create',
+  'registration_form.update',
+  'registration_form.publish',
+  'registration.submit',
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

@@ -136,3 +136,4 @@ export const ErrorBodySchema = z.object({
 export * from './people';
 export * from './attendance';
 export * from './classes';
+export * from './registration';

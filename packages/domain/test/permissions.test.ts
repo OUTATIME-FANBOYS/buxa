@@ -47,6 +47,9 @@ const MATRIX: Record<Action, string> = {
   'tasks:comment': '.YYY',
   'tasks:delete': '..YY',
   'tasks:manage_board': '..YY',
+  'registration:read': '.YYY',
+  'registration:submit': '.YYY',
+  'registration:manage': '..YY',
 };
 
 describe('role grants', () => {
