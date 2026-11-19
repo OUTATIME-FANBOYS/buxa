@@ -1,0 +1,49 @@
+/*
+ * Status pills: a liquid-glass chip with a line icon and the status name. Each status's colour is a token in tokens.css, mapped
+ * in statusMark.ts (one map). Light mode is the filled pill: the colour tints the glass and the text is the status's -ink. Dark
+ * mode is a stronger tint (16%) with the paler ink as text. Neither has a border. Both keep the blur and the soft top highlight.
+ * Text is at 4.5:1 or better on the pill in both themes. The padding is 8px on all four sides.
+ */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 8px;
+  border-radius: 999px;
+  font-size: var(--fs-s);
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--sp-ink);
+  background: color-mix(in srgb, var(--sp) 18%, transparent);
+  border: 0;
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    var(--shadow-1);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  backdrop-filter: blur(12px) saturate(160%);
+}
+[data-theme='dark'] .status-pill {
+  background: color-mix(in srgb, var(--sp) 16%, transparent);
+}
+.status-pill.status-pink {
+  --sp: var(--status-pink);
+  --sp-ink: var(--status-pink-ink);
+}
+.status-pill.status-blue {
+  --sp: var(--status-blue);
+  --sp-ink: var(--status-blue-ink);
+}
+.status-pill.status-orange {
+  --sp: var(--status-orange);
+  --sp-ink: var(--status-orange-ink);
+}
+.status-pill.status-purple {
+  --sp: var(--status-purple);
+  --sp-ink: var(--status-purple-ink);
+}
+.status-pill.status-green {
+  --sp: var(--status-green);
+  --sp-ink: var(--status-green-ink);
+}

@@ -16,7 +16,7 @@ export function createEnrolmentMethods({ repo, timezoneOf }: ClassServiceDeps): 
       const timeZone = await timezoneOf(actor.orgId);
       const rule = enrolmentRule({ actor, input, timeZone });
 
-      return attempt(() => repo.enrol(actor, { sessionId: input.sessionId, camperId: input.camperId }, rule), timeZone);
+      return attempt(() => repo.enrol(actor, { classId: input.classId, camperId: input.camperId }, rule), timeZone);
     },
 
     async cancelEnrolment(actor, input) {

@@ -15,6 +15,7 @@ const TONE_ICON: Record<Tone, string> = {
   warn: 'alert',
   crit: 'alert',
   agent: 'agent',
+  info: 'info',
 };
 
 /** A message with an icon, a title and words, in the tone's colours. Problems are announced assertively; everything else politely. */

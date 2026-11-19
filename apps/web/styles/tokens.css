@@ -44,6 +44,7 @@
   --agent-soft: #efe7f4;
   --agent-ink: #36213e;
   --f-agent: #7b5597;
+  --f-info: #2f6fd1;
   /* Semantic control aliases used by the shared button styles. */
   --accent-foreground: var(--accent-ink);
   --accent-hover: var(--accent-deep);
@@ -57,13 +58,6 @@
   --f-neutral: #6b7480;
   --neutral-soft: #e0e6eb;
   --neutral-ink: #4a4e5c;
-  /* Role pills only: viewer is blue, teacher (planned, phase 3) is green-blue. Text on soft is 4.5:1 or better. */
-  --role-viewer: #1d4f8c;
-  --role-viewer-soft: #dbe8f7;
-  --role-guardian: #a3206a;
-  --role-guardian-soft: #fbe3f0;
-  --role-camper: #7a1b2e;
-  --role-camper-soft: #f6e1e5;
   --accent-ink: #ffffff;
   --on-solid: #ffffff;
   --on-inverse-accent: #9fd6d7;
@@ -89,10 +83,62 @@
   --p-medium: var(--accent);
   --p-high: var(--warn);
   --p-critical: var(--crit);
+  /* The rainbow for pills and tones: a hue, its ink (text on the 18% tint) and its soft tint. */
+  --hue-pink: #be185d;
+  --hue-pink-ink: #831843;
+  --hue-pink-soft: color-mix(in srgb, var(--hue-pink) 18%, transparent);
+  --hue-red: #b91c1c;
+  --hue-red-ink: #7f1d1d;
+  --hue-red-soft: color-mix(in srgb, var(--hue-red) 18%, transparent);
+  --hue-orange: #c2410c;
+  --hue-orange-ink: #7c2d12;
+  --hue-orange-soft: color-mix(in srgb, var(--hue-orange) 18%, transparent);
+  --hue-yellow: #a16207;
+  --hue-yellow-ink: #713f12;
+  --hue-yellow-soft: color-mix(in srgb, var(--hue-yellow) 18%, transparent);
+  --hue-lime: #4d7c0f;
+  --hue-lime-ink: #365314;
+  --hue-lime-soft: color-mix(in srgb, var(--hue-lime) 18%, transparent);
+  --hue-green: #047857;
+  --hue-green-ink: #064e3b;
+  --hue-green-soft: color-mix(in srgb, var(--hue-green) 18%, transparent);
+  --hue-teal: #0f766e;
+  --hue-teal-ink: #134e4a;
+  --hue-teal-soft: color-mix(in srgb, var(--hue-teal) 18%, transparent);
+  --hue-blue: #1d4ed8;
+  --hue-blue-ink: #1e3a8a;
+  --hue-blue-soft: color-mix(in srgb, var(--hue-blue) 18%, transparent);
+  --hue-violet: #6d28d9;
+  --hue-violet-ink: #4c1d95;
+  --hue-violet-soft: color-mix(in srgb, var(--hue-violet) 18%, transparent);
+  --hue-purple: #7e22ce;
+  --hue-purple-ink: #581c87;
+  --hue-purple-soft: color-mix(in srgb, var(--hue-purple) 18%, transparent);
+  --hue-grey: #4b5563;
+  --hue-grey-ink: #1f2937;
+  --hue-grey-soft: color-mix(in srgb, var(--hue-grey) 18%, transparent);
+  /* Status colours (liquid-glass pills and the status field). The colour tints the glass (18%); the -ink is the text, at 6:1
+     or better on the tinted glass over the surface. Backlog pink, To Do blue, In Progress orange, In Review purple, Done green. */
+  --status-pink: #be185d;
+  --status-pink-ink: #831843;
+  --status-blue: #1d4ed8;
+  --status-blue-ink: #1e3a8a;
+  --status-orange: #c2410c;
+  --status-orange-ink: #7c2d12;
+  --status-purple: #7e22ce;
+  --status-purple-ink: #581c87;
+  --status-green: #047857;
+  --status-green-ink: #064e3b;
+  /* The glass sheen: a soft highlight along the top edge of a liquid-glass pill. */
+  --glass-highlight: rgba(255, 255, 255, 0.9);
   --track: #c9d1d8;
   --grid: #d8dee4;
   --shadow-1: 0 1px 2px rgba(39, 41, 50, 0.06);
   --shadow: 0 1px 2px rgba(39, 41, 50, 0.06), 0 12px 32px rgba(39, 41, 50, 0.12);
+  /* Chart cards: a soft shadow, and an area that fades to the card. */
+  --card-shadow: 0 1px 2px rgba(39, 41, 50, 0.06), 0 8px 24px rgba(39, 41, 50, 0.1);
+  --chart-area-top: 0.3;
+  --chart-area-bottom: 0;
   --r-1: 6px;
   --r-2: 8px;
   --r-3: 12px;
@@ -148,15 +194,10 @@
   --agent-soft: #34263f;
   --agent-ink: #e0d0ee;
   --f-agent: #9b7bb8;
+  --f-info: #6fa8ff;
   --f-neutral: #8a90a0;
   --neutral-soft: #373a46;
   --neutral-ink: #b9bec9;
-  --role-viewer: #9cc3f0;
-  --role-viewer-soft: #1a2b43;
-  --role-guardian: #f49ccc;
-  --role-guardian-soft: #3f1d33;
-  --role-camper: #e7a0ab;
-  --role-camper-soft: #3d1d24;
   --accent-ink: #1e2026;
   --on-solid: #1e2026;
   --on-inverse-accent: #7a2e12;
@@ -176,86 +217,141 @@
     radial-gradient(1px 1px at 22% 80%, rgba(231, 236, 239, 0.45) 0, transparent 2px),
     radial-gradient(1.5px 1.5px at 86% 58%, rgba(231, 236, 239, 0.6) 0, transparent 2px);
   --auth-tint: #55333a;
+  /* Medium priority is teal in light mode, but --accent is coral in dark mode, the same family as --p-high (amber).
+     Give it its own teal here so the four priority dots stay distinct. */
+  --p-medium: #7fd1d1;
+  /* Dark status colours: the glass tints with the colour (18%), and the ink is a paler step of the same hue (6:1 or better). */
+  --status-pink: #f9a8d4;
+  --status-pink-ink: #fbcfe8;
+  --status-blue: #93c5fd;
+  --status-blue-ink: #bfdbfe;
+  --status-orange: #fdba74;
+  --status-orange-ink: #fed7aa;
+  --status-purple: #d8b4fe;
+  --status-purple-ink: #e9d5ff;
+  --status-green: #6ee7b7;
+  --status-green-ink: #a7f3d0;
+  /* Dark rainbow: the same hues, paler, on a 16% tint, with the paler ink as text. */
+  --hue-pink: #f9a8d4;
+  --hue-pink-ink: #fbcfe8;
+  --hue-pink-soft: color-mix(in srgb, var(--hue-pink) 16%, transparent);
+  --hue-red: #fca5a5;
+  --hue-red-ink: #fecaca;
+  --hue-red-soft: color-mix(in srgb, var(--hue-red) 16%, transparent);
+  --hue-orange: #fdba74;
+  --hue-orange-ink: #fed7aa;
+  --hue-orange-soft: color-mix(in srgb, var(--hue-orange) 16%, transparent);
+  --hue-yellow: #fde047;
+  --hue-yellow-ink: #fef08a;
+  --hue-yellow-soft: color-mix(in srgb, var(--hue-yellow) 16%, transparent);
+  --hue-lime: #bef264;
+  --hue-lime-ink: #d9f99d;
+  --hue-lime-soft: color-mix(in srgb, var(--hue-lime) 16%, transparent);
+  --hue-green: #6ee7b7;
+  --hue-green-ink: #a7f3d0;
+  --hue-green-soft: color-mix(in srgb, var(--hue-green) 16%, transparent);
+  --hue-teal: #5eead4;
+  --hue-teal-ink: #99f6e4;
+  --hue-teal-soft: color-mix(in srgb, var(--hue-teal) 16%, transparent);
+  --hue-blue: #93c5fd;
+  --hue-blue-ink: #bfdbfe;
+  --hue-blue-soft: color-mix(in srgb, var(--hue-blue) 16%, transparent);
+  --hue-violet: #c4b5fd;
+  --hue-violet-ink: #ddd6fe;
+  --hue-violet-soft: color-mix(in srgb, var(--hue-violet) 16%, transparent);
+  --hue-purple: #d8b4fe;
+  --hue-purple-ink: #e9d5ff;
+  --hue-purple-soft: color-mix(in srgb, var(--hue-purple) 16%, transparent);
+  --hue-grey: #d1d5db;
+  --hue-grey-ink: #e5e7eb;
+  --hue-grey-soft: color-mix(in srgb, var(--hue-grey) 16%, transparent);
+  --glass-highlight: rgba(255, 255, 255, 0.22);
+  /* Dark variants of the calendar type tints: deep, low-chroma, with the dark text colour on top. */
   --track: #3a3e4b;
   --grid: #31343f;
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35);
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.5);
+  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.4);
+  --chart-area-top: 0.42;
   color-scheme: dark;
 }
-/* Tones: one class sets the four steps, components read them. */
-.tone-neutral,
-.pill-neutral {
-  --tone: var(--text-2);
-  --tone-soft: var(--neutral-soft);
-  --tone-ink: var(--neutral-ink);
-  --tone-f: var(--f-neutral);
+/* Tones and pills: one class per tone or role sets the four steps, from the rainbow above. The map from tone to hue
+   is TONE_HUE and ROLE_HUE in shared/src/tones.ts; a test keeps this list in step with that map. */
+.tone-neutral {
+  --tone: var(--hue-grey);
+  --tone-soft: var(--hue-grey-soft);
+  --tone-ink: var(--hue-grey-ink);
+  --tone-f: var(--hue-grey);
 }
-.tone-brand,
-.pill-brand {
-  --tone: var(--accent);
-  --tone-soft: var(--accent-soft);
-  --tone-ink: var(--accent-deep);
-  --tone-f: var(--f-brand);
+.tone-brand {
+  --tone: var(--hue-yellow);
+  --tone-soft: var(--hue-yellow-soft);
+  --tone-ink: var(--hue-yellow-ink);
+  --tone-f: var(--hue-yellow);
 }
-.tone-ok,
-.pill-ok,
-.tone-role-staff,
-.pill-role-staff {
-  --tone: var(--ok);
-  --tone-soft: var(--ok-soft);
-  --tone-ink: var(--ok-ink);
-  --tone-f: var(--f-ok);
+.tone-ok {
+  --tone: var(--hue-green);
+  --tone-soft: var(--hue-green-soft);
+  --tone-ink: var(--hue-green-ink);
+  --tone-f: var(--hue-green);
 }
-.tone-warn,
-.pill-warn,
-.tone-role-admin,
-.pill-role-admin {
-  --tone: var(--warn);
-  --tone-soft: var(--warn-soft);
-  --tone-ink: var(--warn-ink);
-  --tone-f: var(--f-warn);
+.tone-warn {
+  --tone: var(--hue-orange);
+  --tone-soft: var(--hue-orange-soft);
+  --tone-ink: var(--hue-orange-ink);
+  --tone-f: var(--hue-orange);
 }
-.tone-crit,
-.pill-crit {
-  --tone: var(--crit);
-  --tone-soft: var(--crit-soft);
-  --tone-ink: var(--crit-ink);
-  --tone-f: var(--f-crit);
+.tone-crit {
+  --tone: var(--hue-red);
+  --tone-soft: var(--hue-red-soft);
+  --tone-ink: var(--hue-red-ink);
+  --tone-f: var(--hue-red);
 }
-.tone-agent,
-.pill-agent {
-  --tone: var(--agent);
-  --tone-soft: var(--agent-soft);
-  --tone-ink: var(--agent-ink);
-  --tone-f: var(--f-agent);
+.tone-agent {
+  --tone: var(--hue-purple);
+  --tone-soft: var(--hue-purple-soft);
+  --tone-ink: var(--hue-purple-ink);
+  --tone-f: var(--hue-purple);
 }
-/* Camp roles on the Team access page: owner violet, admin orange (warn), staff green (ok), viewer blue. */
-.tone-role-owner,
-.pill-role-owner {
-  --tone: var(--agent);
-  --tone-soft: var(--agent-soft);
-  --tone-ink: var(--agent-ink);
-  --tone-f: var(--f-agent);
+.tone-info {
+  --tone: var(--hue-blue);
+  --tone-soft: var(--hue-blue-soft);
+  --tone-ink: var(--hue-blue-ink);
+  --tone-f: var(--hue-blue);
 }
-.tone-role-viewer,
-.pill-role-viewer {
-  --tone: var(--role-viewer);
-  --tone-soft: var(--role-viewer-soft);
-  --tone-ink: var(--role-viewer);
-  --tone-f: var(--role-viewer);
+.tone-role-owner {
+  --tone: var(--hue-violet);
+  --tone-soft: var(--hue-violet-soft);
+  --tone-ink: var(--hue-violet-ink);
+  --tone-f: var(--hue-violet);
 }
-/* Guardians are pink and campers maroon, so the two are told apart at a glance on the people list. */
-.tone-role-guardian,
-.pill-role-guardian {
-  --tone: var(--role-guardian);
-  --tone-soft: var(--role-guardian-soft);
-  --tone-ink: var(--role-guardian);
-  --tone-f: var(--role-guardian);
+.tone-role-admin {
+  --tone: var(--hue-teal);
+  --tone-soft: var(--hue-teal-soft);
+  --tone-ink: var(--hue-teal-ink);
+  --tone-f: var(--hue-teal);
 }
-.tone-role-camper,
-.pill-role-camper {
-  --tone: var(--role-camper);
-  --tone-soft: var(--role-camper-soft);
-  --tone-ink: var(--role-camper);
-  --tone-f: var(--role-camper);
+.tone-role-staff {
+  --tone: var(--hue-lime);
+  --tone-soft: var(--hue-lime-soft);
+  --tone-ink: var(--hue-lime-ink);
+  --tone-f: var(--hue-lime);
+}
+.tone-role-viewer {
+  --tone: var(--hue-blue);
+  --tone-soft: var(--hue-blue-soft);
+  --tone-ink: var(--hue-blue-ink);
+  --tone-f: var(--hue-blue);
+}
+.tone-role-guardian {
+  --tone: var(--hue-pink);
+  --tone-soft: var(--hue-pink-soft);
+  --tone-ink: var(--hue-pink-ink);
+  --tone-f: var(--hue-pink);
+}
+.tone-role-camper {
+  --tone: var(--hue-purple);
+  --tone-soft: var(--hue-purple-soft);
+  --tone-ink: var(--hue-purple-ink);
+  --tone-f: var(--hue-purple);
 }

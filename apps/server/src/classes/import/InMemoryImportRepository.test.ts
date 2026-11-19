@@ -21,15 +21,8 @@ importRepositoryContract(() => {
 
 /** A class, created through the class repository so the import can read its name. */
 async function setupClass(classes: InMemoryClassRepository, name: string): Promise<string> {
-  return (
-    await classes.createClass(actor, {
-      name,
-      description: '',
-      ageRange: { minAge: 6, maxAge: 14 },
-      capacity: 10,
-      instructorRatio: null,
-    })
-  ).id;
+  return (await classes.createSession(actor, { name, description: '', startsOn: '2027-07-01', endsOn: '2027-07-31' }))
+    .id;
 }
 
 const create = (
@@ -43,6 +36,8 @@ const create = (
   kind: 'create',
   sessionId: null,
   classId,
+  name: 'Robotics',
+  ageRange: { minAge: 6, maxAge: 14 },
   startsAt,
   endsAt,
   location: 'Lab 2',

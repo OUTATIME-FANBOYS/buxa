@@ -27,6 +27,7 @@ describe('migration drops', () => {
     const offenders = files.filter(f => {
       if (SHIPPED_WITH_DROPS.has(f)) return false;
       const sql = readFileSync(join(DIR, f), 'utf8');
+
       return DROP.test(withoutComments(sql)) && !APPROVAL.test(sql);
     });
     expect(

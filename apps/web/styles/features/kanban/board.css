@@ -160,32 +160,27 @@ body.dragging-card * {
     opacity: 1;
   }
 }
-.tags {
-  display: flex;
-  gap: var(--s1);
-  flex-wrap: wrap;
-}
-.tag.hue-brand {
-  background: var(--accent-soft);
-  color: var(--accent-deep);
-}
-.tag.hue-ok {
-  background: var(--ok-soft);
-  color: var(--ok-ink);
-}
-.tag.hue-crit {
-  background: var(--crit-soft);
-  color: var(--crit-ink);
-}
-.tag.hue-agent {
-  background: var(--agent-soft);
-  color: var(--agent-ink);
-}
+/* One line: priority, due date, the counts, the Archived badge and the avatar last. The title wraps above it. */
 .card-meta {
   display: flex;
   align-items: center;
-  gap: var(--s3);
-  flex-wrap: wrap;
+  gap: var(--s2);
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+.card-meta > * {
+  flex: none;
+}
+/* The due date is the one item that gives way when the card is narrow. */
+.card-meta .due {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.card-meta .grow {
+  flex: 1 1 0;
+  min-width: 0;
 }
 .drop-line {
   height: 3px;

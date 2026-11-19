@@ -19,10 +19,10 @@ describe('MembersTable', () => {
     const roles = ['owner', 'admin', 'staff', 'viewer'] as const;
     const rows = roles.map((role, i) => ({ id: `m-${i}`, name: `Person ${role}`, email: `${role}@example.com`, role }));
     const html = renderToStaticMarkup(<MembersTable members={rows} showEmail={false} />);
-    expect(html).toMatch(/pill pill-role-owner [^"]*">Owner</);
-    expect(html).toMatch(/pill pill-role-admin [^"]*">Admin</);
-    expect(html).toMatch(/pill pill-role-staff [^"]*">Staff</);
-    expect(html).toMatch(/pill pill-role-viewer [^"]*">Viewer</);
+    expect(html).toMatch(/pill tone-role-owner">Owner</);
+    expect(html).toMatch(/pill tone-role-admin">Admin</);
+    expect(html).toMatch(/pill tone-role-staff">Staff</);
+    expect(html).toMatch(/pill tone-role-viewer">Viewer</);
   });
   it('maps every camp role to a role tone', () => {
     expect(ROLE_TONE).toEqual({ owner: 'role-owner', admin: 'role-admin', staff: 'role-staff', viewer: 'role-viewer' });

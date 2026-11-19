@@ -71,4 +71,30 @@ describe('Dialog', () => {
     expect(document.querySelector('.drawer')).not.toBeNull();
     expect(document.querySelector('.dialog-head')).toBeNull();
   });
+
+  it('makes the whole drawer body the scroll container, so long content (subtasks, files) scrolls inside the panel', () => {
+    act(() =>
+      root.render(
+        <Dialog title="Task" drawer onClose={() => undefined}>
+          <p>x</p>
+        </Dialog>,
+      ),
+    );
+    const body = document.querySelector<HTMLElement>('.drawer > .drawer-body');
+    expect(body?.className).toContain('buxa:overflow-y-auto');
+    expect(body?.className).toContain('buxa:min-h-0');
+    expect(body?.className).toContain('buxa:flex-1');
+  });
+
+  it('gives the drawer scrim one row the height of the window, so the drawer is no taller than the window', () => {
+    act(() =>
+      root.render(
+        <Dialog title="Task" drawer onClose={() => undefined}>
+          <p>x</p>
+        </Dialog>,
+      ),
+    );
+    expect(document.querySelector('.scrim-drawer')?.className).toContain('buxa:grid-rows-[minmax(0,1fr)]');
+    expect(document.querySelector('.drawer')?.className).toContain('buxa:h-full');
+  });
 });

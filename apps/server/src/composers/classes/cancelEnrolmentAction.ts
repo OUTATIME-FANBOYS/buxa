@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { isUuid } from '@buxa/domain';
-import { classPath } from '@buxa/shared/config/routes';
+import { sessionPath } from '@buxa/shared/config/routes';
 import { failure, success, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../runtime';
 import { currentActor } from '../people/camp';
@@ -36,7 +36,7 @@ export async function cancelEnrolmentAction(_previous: ActionState, form: FormDa
     return expectedFailure(error, 'Could not cancel the enrolment.');
   }
 
-  revalidatePath(classPath(classId));
+  revalidatePath(sessionPath(classId));
 
   return success('Enrolment cancelled. The place is free.');
 }

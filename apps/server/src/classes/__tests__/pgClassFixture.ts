@@ -87,40 +87,44 @@ export async function createClassFixture(pool: Pool): Promise<ClassFixture> {
   };
 }
 
-/** A class in the camp: Robotics, ages 8 to 12 by default, with the given default capacity. */
-export function makeClass(
+/** A session (the parent) covering July 2027. */
+export function makeSession(
   repo: PgClassRepository,
   actor: Actor,
-  overrides: {
-    name?: string;
-    capacity?: number;
-    ageRange?: { minAge: number; maxAge: number };
-    instructorRatio?: { instructors: number; campers: number } | null;
-  } = {},
+  overrides: { name?: string; startsOn?: LocalDate; endsOn?: LocalDate } = {},
 ) {
-  return repo.createClass(actor, {
-    name: overrides.name ?? 'Robotics',
-    description: 'Build and program small robots.',
-    ageRange: overrides.ageRange ?? { minAge: 8, maxAge: 12 },
-    capacity: overrides.capacity ?? 5,
-    instructorRatio: overrides.instructorRatio ?? null,
+  return repo.createSession(actor, {
+    name: overrides.name ?? 'Summer camp',
+    description: 'Two weeks in July.',
+    startsOn: overrides.startsOn ?? '2027-07-01',
+    endsOn: overrides.endsOn ?? '2027-07-31',
   });
 }
 
-/** A session on Monday 5 July 2027 between two camp-local hours (Sydney, UTC+10). */
+/**
+ * A class's input on Monday 5 July 2027 between two camp-local hours (Sydney, UTC+10): Robotics, ages 8 to 12, camp size 5 by
+ * default. Pass the overrides a test needs.
+ */
 export function sessionInput(
   fromHour: number,
   toHour: number,
-  extra: { capacity?: number; instructorIds?: string[] } = {},
+  extra: {
+    name?: string;
+    capacity?: number;
+    ageRange?: { minAge: number; maxAge: number };
+    instructorIds?: string[];
+  } = {},
 ) {
   const at = (h: number) => `2027-07-05T${String(h).padStart(2, '0')}:00:00+10:00`;
 
   return {
+    name: extra.name ?? 'Robotics',
+    ageRange: extra.ageRange ?? { minAge: 8, maxAge: 12 },
+    capacity: extra.capacity ?? 5,
     startsAt: at(fromHour),
     endsAt: at(toHour),
     location: 'Lab 1',
     instructorIds: extra.instructorIds ?? [],
-    capacity: extra.capacity ?? 5,
   };
 }
 
@@ -131,15 +135,15 @@ export function auditActions(pool: Pool, orgId: string): Promise<string[]> {
   );
 }
 
-/** The data of the newest `session.create` entry in the camp. */
-export function sessionAuditData(pool: Pool, orgId: string): Promise<Record<string, unknown> | undefined> {
+/** The data of the newest `class.create` entry in the camp. */
+export function classAuditData(pool: Pool, orgId: string): Promise<Record<string, unknown> | undefined> {
   return withOrg(
     pool,
     orgId,
     async db =>
       (
         await db.query<{ data: Record<string, unknown> }>(
-          `SELECT data FROM audit_log WHERE action = 'session.create' ORDER BY id DESC LIMIT 1`,
+          `SELECT data FROM audit_log WHERE action = 'class.create' ORDER BY id DESC LIMIT 1`,
         )
       ).rows[0]?.data,
   );

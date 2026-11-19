@@ -12,7 +12,7 @@ Built phase by phase; see `docs/ROADMAP.md`. The repository is public, so it hol
 - **Memberships and badges**: a membership is a date range. Its status (not started, valid, expired or revoked) is computed from the dates. A badge is shown once and stored only as a hash; reissuing it revokes the old one.
 - **Check-in, on site and check-out**, `/camp/check-in` and `/camp/on-site`: scan a badge or search by name. See the flows below.
 - **Attendance log**, `/camp/attendance`: filters and CSV export.
-- **Classes and sessions**, `/camp/classes`: classes with an age range and capacity, sessions with a time, location, instructors and capacity, enrolment (age, overlap, capacity and waitlist), and a CSV import with a preview before anything is saved. The model is in `docs/phases/02-events-calendar.md`.
+- **Sessions and classes**, `/camp/sessions` (the old `/camp/classes` addresses redirect here): sessions with a date range, and the classes in each one with a time range, an age range, a camp size, a location and instructors. Classes can be edited and deleted (a class with enrolments cannot be deleted). Enrolment checks age, overlap, camp size and waitlist, and a CSV import shows a preview before anything is saved. The model is in `docs/phases/02-events-calendar.md` and `docs/plans/sessions-classes.md`.
 - **Camp settings**, `/camp/settings`: the camp's name and clock format (12-hour or 24-hour, default 24-hour). Admins change it.
 - **Team access**, `/camp/members`: the list of members. Inviting, changing roles and removing members are not built yet.
 - **Staff task board**: My tasks, Projects, Boards, Calendar and Agents in the sidebar. See "The staff task board" below.

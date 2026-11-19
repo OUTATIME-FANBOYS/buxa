@@ -28,6 +28,7 @@ describe('translateRepositoryError', () => {
   it('leaves other errors alone, so they still become a 500', () => {
     const unique = pgError('23505');
     expect(translateRepositoryError(unique)).toBe(unique);
+
     const plain = new Error('connection reset');
     expect(translateRepositoryError(plain)).toBe(plain);
   });

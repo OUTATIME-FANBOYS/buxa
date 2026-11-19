@@ -11,7 +11,7 @@ describe('DueChip', () => {
 
   it('says when a task is due today, with a clock', () => {
     const html = renderToStaticMarkup(<DueChip due="2027-07-10" kind="open" />);
-    expect(html).toContain('due due-soon');
+    expect(html).toContain('pill tone-warn due');
     expect(html).toContain('Today');
   });
   it('shows an overdue task in words, not colour alone', () => {
@@ -19,7 +19,7 @@ describe('DueChip', () => {
   });
   it('shows a finished task with its date and a check', () => {
     const html = renderToStaticMarkup(<DueChip due="2027-07-02" kind="done" />);
-    expect(html).toContain('due-done');
+    expect(html).toContain('pill tone-ok due');
   });
   it('renders nothing without a due date', () => {
     expect(renderToStaticMarkup(<DueChip kind="open" />)).toBe('');

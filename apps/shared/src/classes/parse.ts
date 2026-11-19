@@ -1,12 +1,12 @@
 import { parseCampLocal } from '@buxa/domain';
 import {
   CancelEnrolmentInputSchema,
+  ClassInputSchema,
   EnrolInputSchema,
-  NewClassInputSchema,
   NewSessionInputSchema,
   type CancelEnrolmentInput,
+  type ClassInput,
   type EnrolInput,
-  type NewClassInput,
   type NewSessionInput,
 } from '@buxa/contracts';
 import { failure, type FieldErrors } from '../actionState';
@@ -67,38 +67,12 @@ function withProblems<T>(
   return { ok: false, state: failure(CHECK_FIELDS, fieldErrors) };
 }
 
-export function classForm(form: FormData): PersonParsed<NewClassInput> {
+/** A class: its name, ages, camp size, its own time range (typed in the camp's clock), location and instructors. */
+export function classForm(form: FormData, timeZone: string): PersonParsed<ClassInput> {
   const problems: FieldErrors = {};
   const minAge = numberField(form, 'minAge', problems, 'Enter the youngest age.');
   const maxAge = numberField(form, 'maxAge', problems, 'Enter the oldest age.');
-  const capacity = numberField(form, 'capacity', problems, 'Enter the default number of places.');
-  const instructors = numberField(form, 'ratioInstructors', problems);
-  const campers = numberField(form, 'ratioCampers', problems);
-  const ratioSet = instructors !== undefined || campers !== undefined;
-  if (ratioSet && (instructors === undefined || campers === undefined)) {
-    problems[instructors === undefined ? 'ratioInstructors' : 'ratioCampers'] ??=
-      'Give both numbers of the ratio, or leave both empty.';
-  }
-
-  // The contract reports the age-range refinement under `ageRange`; the form shows it on the oldest-age field.
-  return withProblems(
-    problems,
-    () =>
-      parseWith<NewClassInput>(NewClassInputSchema, {
-        name: field(form, 'name'),
-        description: field(form, 'description'),
-        ageRange: { minAge, maxAge },
-        capacity,
-        instructorRatio:
-          ratioSet && instructors !== undefined && campers !== undefined ? { instructors, campers } : null,
-      }),
-    { ageRange: 'maxAge' },
-  );
-}
-
-/** A session. Times are typed in the camp's own clock and converted to instants here, so the contract always gets an offset. */
-export function sessionForm(form: FormData, timeZone: string): PersonParsed<NewSessionInput> {
-  const problems: FieldErrors = {};
+  const capacity = numberField(form, 'capacity', problems, 'Enter the camp size.');
   const starts = parseCampLocal(field(form, 'startsAt'), timeZone);
   const ends = parseCampLocal(field(form, 'endsAt'), timeZone);
   if (!starts.ok) {
@@ -107,15 +81,42 @@ export function sessionForm(form: FormData, timeZone: string): PersonParsed<NewS
   if (!ends.ok) {
     problems.endsAt = ends.message;
   }
-  const capacity = numberField(form, 'capacity', problems);
+
+  // The contract reports the age-range refinement under `ageRange`; the form shows it on the oldest-age field.
+  return withProblems(
+    problems,
+    () =>
+      parseWith<ClassInput>(ClassInputSchema, {
+        name: field(form, 'name'),
+        ageRange: { minAge, maxAge },
+        capacity,
+        startsAt: starts.ok ? starts.instant : undefined,
+        endsAt: ends.ok ? ends.instant : undefined,
+        location: field(form, 'location'),
+        instructorIds: fieldAll(form, 'instructorIds'),
+      }),
+    { ageRange: 'maxAge' },
+  );
+}
+
+/** A session (the parent): its name, description and first and last day, picked as calendar dates. */
+export function sessionForm(form: FormData): PersonParsed<NewSessionInput> {
+  const problems: FieldErrors = {};
+  const startsOn = field(form, 'startsOn');
+  const endsOn = field(form, 'endsOn');
+  if (startsOn === '') {
+    problems.startsOn = 'Choose the first day.';
+  }
+  if (endsOn === '') {
+    problems.endsOn = 'Choose the last day.';
+  }
 
   return withProblems(problems, () =>
     parseWith<NewSessionInput>(NewSessionInputSchema, {
-      startsAt: starts.ok ? starts.instant : undefined,
-      endsAt: ends.ok ? ends.instant : undefined,
-      location: field(form, 'location'),
-      instructorIds: fieldAll(form, 'instructorIds'),
-      capacity,
+      name: field(form, 'name'),
+      description: field(form, 'description'),
+      startsOn,
+      endsOn,
     }),
   );
 }
@@ -130,7 +131,7 @@ export function enrolForm(form: FormData): PersonParsed<EnrolInput> {
 
   return withProblems(problems, () =>
     parseWith<EnrolInput>(EnrolInputSchema, {
-      sessionId: field(form, 'sessionId'),
+      classId: field(form, 'classId'),
       camperId: field(form, 'camperId'),
       waitlistIfFull: field(form, 'intent') === 'waitlist',
       ...(reason ? { override: { reason } } : {}),

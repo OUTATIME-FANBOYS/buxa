@@ -10,7 +10,6 @@ const task = (id: string, columnId: string, over: Partial<Task> = {}): Task => (
   title: id,
   description: '',
   priority: 'medium',
-  tags: [],
   subtasks: [],
   comments: [],
   attachments: [],

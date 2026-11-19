@@ -163,7 +163,10 @@ async function main(): Promise<void> {
         });
 
         const status = res.status;
-        if (status >= 500) {
+        // /ready reports database health, so it answers 503 when no database is configured (as in this build job). The
+        // database job checks it with a real database, so only that one response is accepted here.
+        const healthNoDatabase = target.url === '/ready' && status === 503;
+        if (status >= 500 && !healthNoDatabase) {
           const text = await res.text().catch(() => '');
           failures.push({ route: target, status, text });
           console.error(`  FAIL [${status}] ${target.method} ${target.url} (${target.file})`);

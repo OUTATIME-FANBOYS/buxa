@@ -14,7 +14,7 @@ describe('the sidebar groups', () => {
   it('lists the items of each group in order', () => {
     expect(CAMP_NAV_GROUPS.map(group => group.items.map(item => item.label))).toEqual([
       ['Home'],
-      ['Check-in', 'On site', 'People', 'Attendance', 'Classes'],
+      ['Sessions', 'Check-in', 'On site', 'People', 'Attendance'],
       ['My tasks', 'Projects', 'Boards', 'Calendar', 'Agents'],
       ['Team access'],
     ]);
@@ -42,7 +42,7 @@ describe('the sidebar groups', () => {
       'On site': 'attendance:read',
       People: 'people:read',
       Attendance: 'attendance:read',
-      Classes: 'events:read',
+      Sessions: 'events:read',
       'Team access': 'members:read',
       Home: undefined,
       'My tasks': undefined,

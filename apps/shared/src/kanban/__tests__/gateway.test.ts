@@ -72,7 +72,6 @@ describe('writes become proposals, judged by policy', () => {
         column: 'to do',
         priority: 'high',
         assignee: 'Hannah Lindqvist',
-        tags: ['Allergies'],
         reason: 'Found missing allergy notes',
       }),
     );
@@ -86,7 +85,6 @@ describe('writes become proposals, judged by policy', () => {
       columnId: col('To Do'),
       priority: 'high',
       assigneeId: USER.hannah,
-      tags: ['allergies'],
       createdBy: AGENT_ID,
     });
   });
@@ -193,7 +191,6 @@ describe('tasks created with only the required fields', () => {
     expect(t).toMatchObject({
       description: '',
       priority: 'medium',
-      tags: [],
       subtasks: [],
       comments: [],
       archived: false,

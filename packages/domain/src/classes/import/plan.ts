@@ -1,4 +1,4 @@
-import { isValidAgeRange, MAX_AGE_LIMIT, type AgeRange } from '../ageRange';
+import { isClassAge, isValidAgeRange, MAX_CLASS_AGE, MIN_CLASS_AGE, type AgeRange } from '../ageRange';
 import { findClash, isValidSpan } from '../interval';
 import { formatClash } from '../refusals';
 import { parseCampLocal } from './campTime';
@@ -19,11 +19,10 @@ const MAX_LOCATION = 200;
 const MAX_KEY = 100;
 const MAX_INSTRUCTORS = 50;
 
+/** A session (the parent) an import row can name. Its ages and camp size belong to each class, so the row carries its own. */
 export interface ClassRef {
   id: string;
   name: string;
-  ageRange: AgeRange;
-  capacity: number;
 }
 
 /** A session already in the camp, with its times as ISO instants (any offset). */
@@ -70,6 +69,9 @@ export interface PlannedWrite {
   kind: 'create' | 'update';
   sessionId: string | null;
   classId: string;
+  /** The class's own name and ages, from the row. */
+  name: string;
+  ageRange: AgeRange;
   startsAt: string;
   endsAt: string;
   location: string;
@@ -94,6 +96,7 @@ interface Checked {
   problems: RowProblem[];
   parsed: null | {
     cls: ClassRef;
+    ageRange: AgeRange;
     startsAt: string;
     endsAt: string;
     location: string;
@@ -157,18 +160,15 @@ function checkFields(row: ImportRow, classes: ClassRef[], timeZone: string): Che
     problems.push(problem('age_max', 'Enter the oldest age as a whole number.'));
   }
   if (minAge !== null && maxAge !== null) {
-    if (!isValidAgeRange({ minAge, maxAge })) {
-      const outOfBounds = minAge > MAX_AGE_LIMIT || maxAge > MAX_AGE_LIMIT;
-      problems.push(
-        problem(
-          'age_max',
-          outOfBounds ? `Ages must be between 0 and ${MAX_AGE_LIMIT}.` : 'The youngest age cannot be above the oldest.',
-        ),
-      );
-    } else if (cls && (cls.ageRange.minAge !== minAge || cls.ageRange.maxAge !== maxAge)) {
-      problems.push(
-        problem('age_min', `${cls.name} is for ages ${cls.ageRange.minAge} to ${cls.ageRange.maxAge}. Use those ages.`),
-      );
+    const ageMessage = `Ages are whole numbers from ${MIN_CLASS_AGE} to ${MAX_CLASS_AGE}.`;
+    if (!isClassAge(minAge)) {
+      problems.push(problem('age_min', ageMessage));
+    }
+    if (!isClassAge(maxAge)) {
+      problems.push(problem('age_max', ageMessage));
+    }
+    if (isClassAge(minAge) && isClassAge(maxAge) && !isValidAgeRange({ minAge, maxAge })) {
+      problems.push(problem('age_max', 'The youngest age cannot be above the oldest.'));
     }
   }
 
@@ -210,7 +210,7 @@ function checkFields(row: ImportRow, classes: ClassRef[], timeZone: string): Che
     problems.push(problem('external_key', `Keep the external key under ${MAX_KEY} characters.`));
   }
 
-  if (problems.length > 0 || !cls || !start.ok || !end.ok || capacity === null) {
+  if (problems.length > 0 || !cls || !start.ok || !end.ok || capacity === null || minAge === null || maxAge === null) {
     return { problems, parsed: null };
   }
 
@@ -218,6 +218,7 @@ function checkFields(row: ImportRow, classes: ClassRef[], timeZone: string): Che
     problems,
     parsed: {
       cls,
+      ageRange: { minAge, maxAge },
       startsAt: start.instant,
       endsAt: end.instant,
       location: c.location,
@@ -265,7 +266,7 @@ export function planImport({ rows, classes, sessions, timeZone }: PlanInput): Im
       refuse(row, problems);
       continue;
     }
-    const { cls, startsAt, endsAt, location, capacity, key, instructorNames, ratio } = parsed;
+    const { cls, ageRange, startsAt, endsAt, location, capacity, key, instructorNames, ratio } = parsed;
 
     if (key !== null && keyRows.has(key)) {
       refuse(row, [
@@ -330,6 +331,8 @@ export function planImport({ rows, classes, sessions, timeZone }: PlanInput): Im
       kind: status === 'update' ? 'update' : 'create',
       sessionId: target?.id ?? null,
       classId: cls.id,
+      name: cls.name,
+      ageRange,
       startsAt,
       endsAt,
       location,

@@ -4,15 +4,21 @@ import { forbidden } from '../../../http/errors';
 
 const h = vi.hoisted(() => ({
   orgs: { getCamp: vi.fn() },
-  classes: { listClasses: vi.fn(), getClass: vi.fn(), listSessions: vi.fn(), listEnrolments: vi.fn() },
+  classes: {
+    listSessions: vi.fn(),
+    getSession: vi.fn(),
+    listClasses: vi.fn(),
+    listEnrolments: vi.fn(),
+  },
   people: { list: vi.fn() },
 }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: h }) }));
 
 const { campZone } = await import('../../attendance/campActor');
-const { loadClasses, loadClassPage, loadEnrolments, loadPeopleWithRole } = await import('../load');
+const { loadSessions, loadSessionPage, loadEnrolments, loadPeopleWithRole } = await import('../load');
 
 const actor = {} as Actor;
+const session = { id: 's1', name: 'Summer camp' } as never;
 const cls = { id: 'c1', name: 'Painting' } as never;
 
 beforeEach(() => {
@@ -26,39 +32,39 @@ describe('campZone', () => {
   });
 });
 
-describe('loadClasses', () => {
-  it('wraps the classes the service returns', async () => {
-    h.classes.listClasses.mockResolvedValue({ ok: true, value: [cls] });
-    expect(await loadClasses(actor)).toEqual({ ok: true, value: [cls] });
+describe('loadSessions', () => {
+  it('wraps the sessions the service returns', async () => {
+    h.classes.listSessions.mockResolvedValue({ ok: true, value: [session] });
+    expect(await loadSessions(actor)).toEqual({ ok: true, value: [session] });
   });
 
   it('reports forbidden when the service refuses the actor', async () => {
-    h.classes.listClasses.mockRejectedValue(forbidden('no access'));
-    expect(await loadClasses(actor)).toEqual({ ok: false, reason: 'forbidden' });
+    h.classes.listSessions.mockRejectedValue(forbidden('no access'));
+    expect(await loadSessions(actor)).toEqual({ ok: false, reason: 'forbidden' });
   });
 
   it('reports not-found when the service returns a failure outcome', async () => {
-    h.classes.listClasses.mockResolvedValue({ ok: false, failure: { message: 'gone' } });
-    expect(await loadClasses(actor)).toEqual({ ok: false, reason: 'not-found' });
+    h.classes.listSessions.mockResolvedValue({ ok: false, failure: { message: 'gone' } });
+    expect(await loadSessions(actor)).toEqual({ ok: false, reason: 'not-found' });
   });
 
   it('rethrows errors that are not HTTP errors, for the error boundary', async () => {
-    h.classes.listClasses.mockRejectedValue(new Error('database down'));
-    await expect(loadClasses(actor)).rejects.toThrow('database down');
+    h.classes.listSessions.mockRejectedValue(new Error('database down'));
+    await expect(loadSessions(actor)).rejects.toThrow('database down');
   });
 });
 
-describe('loadClassPage', () => {
-  it('returns the class with its sessions', async () => {
-    h.classes.getClass.mockResolvedValue({ ok: true, value: cls });
-    h.classes.listSessions.mockResolvedValue({ ok: true, value: [] });
-    expect(await loadClassPage(actor, 'c1')).toEqual({ ok: true, value: { cls, sessions: [] } });
+describe('loadSessionPage', () => {
+  it('returns the session with its classes', async () => {
+    h.classes.getSession.mockResolvedValue({ ok: true, value: session });
+    h.classes.listClasses.mockResolvedValue({ ok: true, value: [cls] });
+    expect(await loadSessionPage(actor, 's1')).toEqual({ ok: true, value: { session, classes: [cls] } });
   });
 
-  it('reports not-found when the class is not in this camp', async () => {
-    h.classes.getClass.mockResolvedValue({ ok: false, failure: { message: 'no class' } });
-    expect(await loadClassPage(actor, 'c9')).toEqual({ ok: false, reason: 'not-found' });
-    expect(h.classes.listSessions).not.toHaveBeenCalled();
+  it('reports not-found when the session is not in this camp', async () => {
+    h.classes.getSession.mockResolvedValue({ ok: false, failure: { message: 'no session' } });
+    expect(await loadSessionPage(actor, 's9')).toEqual({ ok: false, reason: 'not-found' });
+    expect(h.classes.listClasses).not.toHaveBeenCalled();
   });
 });
 
@@ -73,8 +79,8 @@ describe('loadPeopleWithRole', () => {
 });
 
 describe('loadEnrolments', () => {
-  it('reports not-found when the session cannot be read', async () => {
-    h.classes.listEnrolments.mockResolvedValue({ ok: false, failure: { message: 'no session' } });
-    expect(await loadEnrolments(actor, 's1')).toEqual({ ok: false, reason: 'not-found' });
+  it('reports not-found when the class cannot be read', async () => {
+    h.classes.listEnrolments.mockResolvedValue({ ok: false, failure: { message: 'no class' } });
+    expect(await loadEnrolments(actor, 'c1')).toEqual({ ok: false, reason: 'not-found' });
   });
 });

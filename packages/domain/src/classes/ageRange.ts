@@ -9,6 +9,14 @@ export interface AgeRange {
 
 export const MAX_AGE_LIMIT = 120;
 
+/** The ages a class can be set for, when it is written: a whole number from 3 to 20, in the form, the server and the import. */
+export const MIN_CLASS_AGE = 3;
+export const MAX_CLASS_AGE = 20;
+
+export function isClassAge(age: number): boolean {
+  return Number.isInteger(age) && age >= MIN_CLASS_AGE && age <= MAX_CLASS_AGE;
+}
+
 export function isValidAgeRange(r: AgeRange): boolean {
   return (
     Number.isInteger(r.minAge) &&

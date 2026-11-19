@@ -48,7 +48,7 @@ export async function importClassesAction(_previous: ImportState, form: FormData
       return { status: 'preview', fileName: preview.fileName, text, counts: preview.counts, results: preview.results };
     }
     const done = await services.confirm(actor, preview);
-    revalidatePath(ROUTES.classes);
+    revalidatePath(ROUTES.sessions);
 
     return {
       status: 'done',

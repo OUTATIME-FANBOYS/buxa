@@ -7,7 +7,7 @@ import { useStore } from '@buxa/middleware/providers/providers';
 import { Empty } from '@/components/components';
 import { Progress } from '@/components/elements';
 import { Segmented } from '@/components/elements';
-import { Bars } from '@/components/components/charts';
+import { Bars, ChartCard } from '@/components/components/charts';
 import { HBars } from '@/components/components/charts';
 import { Legend } from '@/components/elements';
 import { Ring } from '@/components/elements';
@@ -127,6 +127,10 @@ export function Reports() {
           note={`${((total / Number(range)) * 7).toFixed(1)} per week`}
           tone="brand"
           icon="chart"
+          spark={{
+            values: series.map(s => s.value),
+            ariaLabel: `Tasks completed per ${Number(range) > 30 ? 'week' : 'day'}, last ${range} days`,
+          }}
         />
         <Stat
           label="Avg. time to complete"
@@ -144,15 +148,24 @@ export function Reports() {
         />
       </div>
       <div className="grid-2">
-        <section className="panel">
-          <h2>Tasks completed over time</h2>
+        <ChartCard
+          title="Tasks completed over time"
+          value={total}
+          subtitle={`${((total / Number(range)) * 7).toFixed(1)} per week`}
+          legend={[{ name: 'Completed', tone: 'ok' }]}
+          table={{
+            caption: `Tasks completed over the last ${range} days, ${total} in total`,
+            headers: [Number(range) > 30 ? 'Week' : 'Day', 'Tasks completed'],
+            rows: series.map(s => ({ label: s.title, value: s.value })),
+          }}
+        >
           <Bars
             tone="ok"
             data={series}
             ariaLabel={`Tasks completed over the last ${range} days, ${total} in total`}
             unit={Number(range) > 30 ? 'tasks that week' : 'tasks'}
           />
-        </section>
+        </ChartCard>
         <section className="panel">
           <h2>Project progress</h2>
           <ul className="proj-bars big">

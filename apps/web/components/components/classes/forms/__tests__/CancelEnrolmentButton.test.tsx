@@ -9,8 +9,8 @@ describe('CancelEnrolmentButton', () => {
     const html = renderToStaticMarkup(
       <CancelEnrolmentButton classId="c1" enrolmentId="e1" camperName="Ada Lovelace" />,
     );
-    expect(html).toContain('Cancel enrolment');
-    expect(html).toContain('for Ada Lovelace');
+    expect(html).toContain('Withdraw');
+    expect(html).toContain('aria-label="Withdraw Ada Lovelace"');
     expect(html).toContain('name="enrolmentId" value="e1"');
     expect(html).toContain('name="classId" value="c1"');
   });

@@ -40,7 +40,6 @@ export function BoardPage({ projectId }: { projectId?: string }) {
   }, [target?.id]);
 
   const all = useMemo(() => s.tasks.filter(t => t.projectId === target?.id), [s.tasks, target?.id]);
-  const tags = useMemo(() => Array.from(new Set(all.flatMap(t => t.tags))).sort(), [all]);
   const visible = useMemo(
     () =>
       sortTasks(
@@ -134,7 +133,7 @@ export function BoardPage({ projectId }: { projectId?: string }) {
           )}
         </div>
       </header>
-      <FilterBar filter={filter} setFilter={setFilter} project={target} tags={tags} />
+      <FilterBar filter={filter} setFilter={setFilter} project={target} />
       <div className="view">
         {view === 'board' && (
           <BoardView project={target} tasks={visible} readOnly={readOnly} manual={filter.sort === 'manual'} />

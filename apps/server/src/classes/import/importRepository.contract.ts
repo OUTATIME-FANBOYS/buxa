@@ -23,16 +23,16 @@ export function importRepositoryContract(factory: () => Promise<ImportFixture>):
       await fx.close();
     });
 
+    /** A session (the parent a spreadsheet row names) with a date range that covers the rows used below. */
     const createClass = async (name: string): Promise<string> => {
-      const cls = await fx.classes.createClass(fx.actor, {
+      const session = await fx.classes.createSession(fx.actor, {
         name,
         description: '',
-        ageRange: { minAge: 6, maxAge: 14 },
-        capacity: 10,
-        instructorRatio: null,
+        startsOn: '2027-07-01',
+        endsOn: '2027-07-31',
       });
 
-      return cls.id;
+      return session.id;
     };
 
     const create = (classId: string, over: Partial<PlannedWrite> = {}): PlannedWrite => ({
@@ -40,6 +40,8 @@ export function importRepositoryContract(factory: () => Promise<ImportFixture>):
       kind: 'create',
       sessionId: null,
       classId,
+      name: 'Robotics',
+      ageRange: { minAge: 6, maxAge: 14 },
       startsAt: '2027-07-05T03:00:00.000Z',
       endsAt: '2027-07-05T05:00:00.000Z',
       location: 'Lab 2',

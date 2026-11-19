@@ -1,5 +1,7 @@
 import { describeRefusal, type Refusal } from '@buxa/domain';
-import { isClassError, isEnrolmentRefusal } from './errors';
+import { ClassOutsideSessionError, isClassError, isEnrolmentRefusal } from './errors';
+
+const isOutsideSession = (e: unknown): e is ClassOutsideSessionError => isClassError(e, 'class-outside-session');
 
 /** An expected business outcome. Permission failures are not outcomes: they throw a 403 (assertAllowed). */
 export type Outcome<T> = { ok: true; value: T } | { ok: false; failure: Failure };
@@ -7,6 +9,9 @@ export type Outcome<T> = { ok: true; value: T } | { ok: false; failure: Failure 
 export type FailureReason =
   | 'class_not_found'
   | 'session_not_found'
+  | 'class_outside_session'
+  | 'capacity_below_enrolled'
+  | 'class_has_enrolments'
   | 'enrolment_not_found'
   | 'camper_not_found'
   | 'instructor_not_found'
@@ -51,6 +56,35 @@ export async function attempt<T>(work: () => Promise<T>, timeZone: string): Prom
       if (isClassError(e, kind)) {
         return { ok: false, failure: NOT_FOUND[kind] };
       }
+    }
+    if (isOutsideSession(e)) {
+      const { startsOn, endsOn } = e;
+
+      return {
+        ok: false,
+        failure: {
+          reason: 'class_outside_session',
+          message: `The class must fall on days between ${startsOn} and ${endsOn}, the session's first and last day.`,
+        },
+      };
+    }
+    if (isClassError(e, 'capacity-below-enrolled')) {
+      return {
+        ok: false,
+        failure: {
+          reason: 'capacity_below_enrolled',
+          message: 'The camp size cannot go below the places already taken.',
+        },
+      };
+    }
+    if (isClassError(e, 'class-has-enrolments')) {
+      return {
+        ok: false,
+        failure: {
+          reason: 'class_has_enrolments',
+          message: 'This class has enrolments, so it cannot be deleted. Cancel them first.',
+        },
+      };
     }
     if (isEnrolmentRefusal(e)) {
       return {

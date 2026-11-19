@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, afterEach, describe, expect, it } from
 import pg from 'pg';
 import { migrate, withOrg } from '@buxa/db';
 import { CamperNotFoundError, ClassNotFoundError, EnrolmentNotFoundError, SessionNotFoundError } from '../errors';
-import { createClassFixture, enrolRule, makeClass, sessionInput, type ClassFixture } from './pgClassFixture';
+import { createClassFixture, enrolRule, makeSession, sessionInput, type ClassFixture } from './pgClassFixture';
 
 const url = process.env.DATABASE_URL;
 
@@ -16,19 +16,20 @@ describe.skipIf(!url)('classes on Postgres: request role and camp isolation', ()
   });
 
   let fx: ClassFixture;
+  /** The session (the date range) in camp A. */
+  let parentId: string;
+  /** The class (the time range) in camp A. */
   let classId: string;
-  let sessionId: string;
   let enrolmentId: string;
   let instructorId: string;
 
   beforeEach(async () => {
     fx = await createClassFixture(pool);
     instructorId = await fx.addPerson(fx.orgA, '1980-01-01', 'Ivy');
-    classId = (await makeClass(fx.repo, fx.actor, { instructorRatio: { instructors: 1, campers: 8 } })).id;
-    sessionId = (await fx.repo.addSession(fx.actor, classId, sessionInput(9, 12, { instructorIds: [instructorId] })))
-      .id;
+    parentId = (await makeSession(fx.repo, fx.actor)).id;
+    classId = (await fx.repo.addClass(fx.actor, parentId, sessionInput(9, 12, { instructorIds: [instructorId] }))).id;
     const camper = await fx.addPerson(fx.orgA, '2016-03-01', 'Ada');
-    enrolmentId = (await fx.repo.enrol(fx.actor, { sessionId, camperId: camper }, enrolRule())).id;
+    enrolmentId = (await fx.repo.enrol(fx.actor, { classId, camperId: camper }, enrolRule())).id;
   });
   afterEach(async () => {
     await fx.close();
@@ -39,10 +40,10 @@ describe.skipIf(!url)('classes on Postgres: request role and camp isolation', ()
 
   describe('the request role cannot hard-delete', () => {
     it.each([
-      ['classes', 'DELETE FROM classes WHERE id = $1', () => classId],
-      ['sessions', 'DELETE FROM sessions WHERE id = $1', () => sessionId],
+      ['classes', 'DELETE FROM classes WHERE id = $1', () => parentId],
+      ['sessions', 'DELETE FROM sessions WHERE id = $1', () => classId],
       ['enrolments', 'DELETE FROM enrolments WHERE id = $1', () => enrolmentId],
-      ['session_instructors', 'DELETE FROM session_instructors WHERE session_id = $1', () => sessionId],
+      ['session_instructors', 'DELETE FROM session_instructors WHERE session_id = $1', () => classId],
     ])('DELETE on %s is refused with insufficient privilege', async (_table, sql, id) => {
       await expect(asCampA(sql, [id()])).rejects.toMatchObject({ code: '42501' });
     });
@@ -59,11 +60,12 @@ describe.skipIf(!url)('classes on Postgres: request role and camp isolation', ()
   });
 
   describe('a second camp sees none of it', () => {
-    it('lists no classes, and reads no class, session or enrolment by id', async () => {
-      expect(await fx.repo.listClasses(fx.orgB)).toEqual([]);
+    it('lists no sessions, and reads no session, class or enrolment by id', async () => {
+      expect(await fx.repo.listSessions(fx.orgB)).toEqual([]);
+      expect(await fx.repo.getSession(fx.orgB, parentId)).toBeNull();
       expect(await fx.repo.getClass(fx.orgB, classId)).toBeNull();
-      await expect(fx.repo.listSessions(fx.orgB, classId)).rejects.toBeInstanceOf(ClassNotFoundError);
-      await expect(fx.repo.listEnrolments(fx.orgB, sessionId)).rejects.toBeInstanceOf(SessionNotFoundError);
+      await expect(fx.repo.listClasses(fx.orgB, parentId)).rejects.toBeInstanceOf(SessionNotFoundError);
+      await expect(fx.repo.listEnrolments(fx.orgB, classId)).rejects.toBeInstanceOf(ClassNotFoundError);
     });
 
     it('sees no rows at all in the tables under its own role', async () => {
@@ -87,23 +89,30 @@ describe.skipIf(!url)('classes on Postgres: request role and camp isolation', ()
       expect(rows[0].status).toBe('enrolled');
     });
 
-    it('cannot enrol into a session in camp A, or with a camper from camp A', async () => {
+    it('cannot enrol into a class in camp A, or with a camper from camp A', async () => {
       const campB = await fx.addPerson(fx.orgB, '2016-03-01', 'Bo');
-      await expect(fx.repo.enrol(fx.otherActor, { sessionId, camperId: campB }, enrolRule())).rejects.toBeInstanceOf(
-        SessionNotFoundError,
+      await expect(fx.repo.enrol(fx.otherActor, { classId, camperId: campB }, enrolRule())).rejects.toBeInstanceOf(
+        ClassNotFoundError,
       );
       const campAPerson = await fx.addPerson(fx.orgA, '2016-03-01', 'Cy');
       // The camper is looked up first, so the other camp's camper reads as missing.
       await expect(
-        fx.repo.enrol(fx.otherActor, { sessionId, camperId: campAPerson }, enrolRule()),
+        fx.repo.enrol(fx.otherActor, { classId, camperId: campAPerson }, enrolRule()),
       ).rejects.toBeInstanceOf(CamperNotFoundError);
     });
 
-    it('cannot link a camp-A instructor to a session in camp B', async () => {
-      const bClass = (await makeClass(fx.repo, fx.otherActor, { name: 'Camp B robotics' })).id;
+    it('cannot add a class in camp B that uses an instructor from camp A', async () => {
+      const bSession = (await makeSession(fx.repo, fx.otherActor, { name: 'Camp B summer' })).id;
       await expect(
-        fx.repo.addSession(fx.otherActor, bClass, sessionInput(9, 12, { instructorIds: [instructorId] })),
+        fx.repo.addClass(fx.otherActor, bSession, sessionInput(9, 12, { instructorIds: [instructorId] })),
       ).rejects.toMatchObject({ kind: 'instructor-not-found' });
+    });
+
+    it('cannot delete or edit a class in camp A', async () => {
+      await expect(fx.repo.deleteClass(fx.otherActor, classId)).rejects.toBeInstanceOf(ClassNotFoundError);
+      await expect(fx.repo.updateClass(fx.otherActor, classId, sessionInput(9, 12))).rejects.toBeInstanceOf(
+        ClassNotFoundError,
+      );
     });
   });
 });

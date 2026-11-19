@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import Form from 'next/form';
 import type { PersonSummary } from '@buxa/contracts';
 import { ROUTES } from '@/config/routes';
 import { attendanceDisplayName } from '@buxa/shared';
@@ -10,7 +11,10 @@ interface LogFilterValues {
   personId: string;
 }
 
-/** The log's date range and person filter. A plain GET form, so it works without scripts and the address is shareable. */
+/**
+ * The log's date range and person filter. A GET form (so the address is shareable and works without scripts). next/form navigates
+ * on the client, so "Show" swaps in the new rows without reloading the whole page, as PeopleSearch does.
+ */
 export function LogFilters({
   values,
   people,
@@ -21,9 +25,8 @@ export function LogFilters({
   children?: ReactNode;
 }) {
   return (
-    <form
+    <Form
       className="form-row log-filters buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-end buxa:[&>.field]:flex-[1_1_180px] buxa:[&>.field]:min-w-0 buxa:[&>.button]:flex-none buxa:[&>a.button]:flex-none"
-      method="get"
       action={ROUTES.attendance}
       role="search"
       aria-label="Filter the log"
@@ -43,6 +46,6 @@ export function LogFilters({
         Show
       </Button>
       {children}
-    </form>
+    </Form>
   );
 }

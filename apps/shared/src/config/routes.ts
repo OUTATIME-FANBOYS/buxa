@@ -14,12 +14,13 @@ export const ROUTES = {
   checkIn: '/camp/check-in',
   onSite: '/camp/on-site',
   attendance: '/camp/attendance',
-  // Classes: programs, their sessions and enrolments. Reading needs events:read; creating, enrolling and importing need classes:manage.
-  classes: '/camp/classes',
-  newClass: '/camp/classes/new',
-  classImport: '/camp/classes/import',
-  classImportTemplate: '/camp/classes/import/template',
-  classImportErrorReport: '/camp/classes/import/error-report',
+  // Sessions: date ranges that hold classes, and their enrolments. Reading needs events:read; creating, enrolling and importing need classes:manage.
+  // The old /camp/classes addresses redirect here (apps/web/next.config.ts).
+  sessions: '/camp/sessions',
+  newSession: '/camp/sessions/new',
+  sessionImport: '/camp/sessions/import',
+  sessionImportTemplate: '/camp/sessions/import/template',
+  sessionImportErrorReport: '/camp/sessions/import/error-report',
   // Work: tasks kept in this browser (the kanban demo), shown in the same shell.
   tasks: '/camp/tasks',
   projects: '/camp/projects',
@@ -37,11 +38,11 @@ export type RoutePath = (typeof ROUTES)[keyof typeof ROUTES];
 /** A person's page. Ids are validated by the page, not here. */
 export const personPath = (id: string): string => `${ROUTES.people}/${encodeURIComponent(id)}`;
 
-/** One class: its sessions, capacity and enrolments. */
-export const classPath = (classId: string): string => `${ROUTES.classes}/${encodeURIComponent(classId)}`;
+/** One session: its classes and their enrolments. */
+export const sessionPath = (sessionId: string): string => `${ROUTES.sessions}/${encodeURIComponent(sessionId)}`;
 
-/** The page that adds a session to a class. */
-export const newSessionPath = (classId: string): string => `${classPath(classId)}/sessions/new`;
+/** The page that adds a class to a session. */
+export const newClassPath = (sessionId: string): string => `${sessionPath(sessionId)}/classes/new`;
 
 /** The page that changes a person's details. Needs people:update. */
 export const personEditPath = (id: string): string => `${personPath(id)}/edit`;

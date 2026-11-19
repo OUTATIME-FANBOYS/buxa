@@ -5,7 +5,7 @@ import { createClassService } from '../../../classes/ClassService';
 import { InMemoryClassRepository } from '../../../classes/InMemoryClassRepository';
 import { InMemoryImportRepository } from '../../../classes/import/InMemoryImportRepository';
 import { createImportService } from '../../../classes/import/ImportService';
-import { CAMP_TZ, ORG, as, painting, robotics } from '../../../classes/__tests__/fixtures';
+import { CAMP_TZ, JULY_SESSION, ORG, as } from '../../../classes/__tests__/fixtures';
 import { importClassesAction } from '../importClassesAction';
 import { IMPORT_IDLE, type ImportState } from '@buxa/shared';
 import { settle } from '@buxa/domain';
@@ -46,8 +46,8 @@ const confirmOf = (state: Extract<ImportState, { status: 'preview' }>): FormData
 beforeEach(async () => {
   classes = new InMemoryClassRepository(() => new Date('2027-07-01T00:00:00Z'));
   imports = new InMemoryImportRepository(classes);
-  await classes.createClass(as('admin'), robotics);
-  await classes.createClass(as('admin'), painting);
+  await classes.createSession(as('admin'), { ...JULY_SESSION, name: 'Robotics' });
+  await classes.createSession(as('admin'), { ...JULY_SESSION, name: 'Painting' });
   h.actor = as('admin');
   h.services = {
     imports: createImportService({ classes, imports, timezoneOf: () => settle(() => CAMP_TZ) }),
@@ -61,7 +61,7 @@ describe('importClassesAction: preview (nothing is written)', () => {
     expect(state).toMatchObject({
       status: 'preview',
       fileName: 'season.csv',
-      counts: { create: 2, update: 0, refused: 3 },
+      counts: { create: 3, update: 0, refused: 2 },
     });
     if (state.status !== 'preview') {
       throw new Error('expected a preview');
@@ -71,7 +71,7 @@ describe('importClassesAction: preview (nothing is written)', () => {
       [3, 'refused'],
       [4, 'refused'],
       [5, 'create'],
-      [6, 'refused'],
+      [6, 'create'],
     ]);
   });
 
@@ -83,7 +83,7 @@ describe('importClassesAction: preview (nothing is written)', () => {
     const byRow = Object.fromEntries(state.results.map(r => [r.rowNumber, r.problems]));
     expect(byRow[3]?.[0]?.message).toMatch(/clashes with row 2/i); // clashes with row 2 in the same file
     expect(byRow[4]?.[0]).toMatchObject({ field: 'class_name' }); // no class called "Ghost class"
-    expect(byRow[6]?.[0]).toMatchObject({ field: 'age_min' }); // ages do not match the class
+    expect(byRow[6]).toEqual([]); // a class carries its own ages, so a row with other ages is ready
   });
 
   it('writes nothing during the preview', async () => {
@@ -128,11 +128,11 @@ describe('importClassesAction: confirm (one transaction)', () => {
     expect(done).toMatchObject({
       status: 'done',
       fileName: 'season.csv',
-      written: 2,
-      counts: { create: 2, refused: 3 },
+      written: 3,
+      counts: { create: 3, refused: 2 },
       changedSincePreview: false,
     });
-    expect(await imports.listCampSessions(ORG)).toHaveLength(2);
+    expect(await imports.listCampSessions(ORG)).toHaveLength(3);
   });
 
   it('asks the person to upload again when the preview text is missing', async () => {

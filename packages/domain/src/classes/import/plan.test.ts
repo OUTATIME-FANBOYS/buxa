@@ -5,8 +5,8 @@ import { planImport, type ClassRef, type ExistingSession } from './plan';
 
 const TZ = 'Australia/Sydney';
 
-const ROBOTICS: ClassRef = { id: 'cls-robotics', name: 'Robotics', ageRange: { minAge: 8, maxAge: 12 }, capacity: 2 };
-const ART: ClassRef = { id: 'cls-art', name: 'Art', ageRange: { minAge: 6, maxAge: 14 }, capacity: 10 };
+const ROBOTICS: ClassRef = { id: 'cls-robotics', name: 'Robotics' };
+const ART: ClassRef = { id: 'cls-art', name: 'Art' };
 
 const VALID: Record<ImportColumn, string> = {
   external_key: '',
@@ -105,12 +105,6 @@ describe('planImport: field checks (each row gets its own result)', () => {
       'age_max',
       'The youngest age cannot be above the oldest.',
     ],
-    [
-      'ages that differ from the class',
-      { age_min: '6', age_max: '12' },
-      'age_min',
-      'Robotics is for ages 8 to 12. Use those ages.',
-    ],
     ['zero capacity', { capacity: '0' }, 'capacity', 'Capacity is a whole number of places, from 1 to 500.'],
     [
       'a capacity that is not a number',
@@ -170,6 +164,23 @@ describe('planImport: field checks (each row gets its own result)', () => {
   it('matches the class name ignoring case and surrounding spaces', () => {
     const p = plan([row({ class_name: '  robotics ' }, 2)]);
     expect(p.results[0]?.status).toBe('create');
+  });
+});
+
+describe('planImport: a class carries its own ages and camp size', () => {
+  it('refuses ages outside 3 to 20, on the age that is out of range', () => {
+    const p = plan([row({ age_min: '2', age_max: '21' }, 2)]);
+    expect(p.results[0]).toMatchObject({ status: 'refused' });
+    expect(p.results[0]?.problems).toEqual([
+      { field: 'age_min', message: 'Ages are whole numbers from 3 to 20.' },
+      { field: 'age_max', message: 'Ages are whole numbers from 3 to 20.' },
+    ]);
+  });
+
+  it('writes the ages from the row, not from any other class of the same name', () => {
+    const p = plan([row({ age_min: '6', age_max: '12' }, 2)]);
+    expect(p.results[0]).toMatchObject({ status: 'create' });
+    expect(p.writes[0]).toMatchObject({ name: 'Robotics', ageRange: { minAge: 6, maxAge: 12 } });
   });
 });
 

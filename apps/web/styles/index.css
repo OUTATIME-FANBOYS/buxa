@@ -17,6 +17,7 @@
  *   5. features/kanban/filters.css     filter bar, chips, segmented control.
  *   6. Popover, menu and dialog keyframes live in the Tailwind theme.
  *   8. features/kanban/board.css       board, columns, cards, drag ghost.
+ *      features/kanban/status.css      status pills (liquid glass, one colour per status).
  *      components/table.css            data tables.
  *      features/kanban/calendar.css, timeline.css, charts.css
  *   9. components/toasts.css, layout/auth.css   toasts, sign-in screen.
@@ -45,10 +46,12 @@
 @import './base.css';
 @import './components/button.css';
 @import './components/notices.css';
+@import './components/pill.css';
 @import './layout/shell.css';
 @import './layout/pages.css';
 @import './features/kanban/filters.css';
 @import './features/kanban/board.css';
+@import './features/kanban/status.css';
 @import './components/table.css';
 @import './features/kanban/calendar.css';
 @import './features/kanban/timeline.css';

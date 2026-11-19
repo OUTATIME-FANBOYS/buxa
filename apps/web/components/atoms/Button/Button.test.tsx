@@ -45,7 +45,13 @@ describe('Button', () => {
       ),
     ).toContain('button--header');
     expect(renderToStaticMarkup(<Button variant="primary">Add task</Button>)).not.toContain('button--header');
-    expect(renderToStaticMarkup(<Button variant="primary" size="lg">Check in</Button>)).toContain('button--lg');
+    expect(
+      renderToStaticMarkup(
+        <Button variant="primary" size="lg">
+          Check in
+        </Button>,
+      ),
+    ).toContain('button--lg');
   });
 
   it('renders a link with the same classes when given an href', () => {

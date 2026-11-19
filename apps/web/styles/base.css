@@ -86,8 +86,12 @@ code {
 ::selection {
   background: var(--accent-soft);
 }
+/* Visually hidden, still read by screen readers. The top and left are set so an absolutely positioned hidden element (such as a
+ * table caption) sits at the start of its box, not at its static position at the foot of the page, which stretched the scroll area. */
 .sr-only {
   position: absolute;
+  top: 0;
+  left: 0;
   width: 1px;
   height: 1px;
   overflow: hidden;

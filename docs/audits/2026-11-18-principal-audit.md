@@ -114,6 +114,7 @@ Ranked by impact. This area carries the most risk: several findings can lose use
 3. **Sync demotes itself permanently and drops edits.** `sync.ts:225-226` and `262-263` clear pending and switch to local mode when the health check or start fails, and `start()` never retries. `sync.ts:246` clears pending after the first-run PUT, so edits made during that wait are lost.
    - Suggested: a transition table, `connecting -> synced | offline(retryAt)`, with local mode only by the user's choice.
    - Risk: the browser and server diverge for the session.
+   - Status (functional checkup, v0.3): the first-save part is fixed. `sync.ts` now clears only the edits that the first PUT carried (`h.pending.splice(0, n)`), so edits made during the wait stay pending. The demotion to local mode and the missing retry are still open.
 4. **The sync retry loop can hammer the server.** `sync.ts:128-129` returns without adopting when the server is empty, and `sync.ts:165-168` recurses into `flushNow` with the same version, with no delay or cap.
    - Suggested: `flush: idle | sending | backoff(attempt)`, with a cap.
    - Risk: request flood if a 409 arrives with empty state. Verify with a test that returns 409 with empty state and asserts a bounded number of PUTs.
@@ -211,10 +212,12 @@ Ranked by impact. Nothing was changed, and the live database and Supabase settin
    - Check: rename a member, then `SELECT count(*) FROM audit_log WHERE action LIKE 'member%'`. It returns 0.
    - Suggested: call `recordAudit` inside the same `withOrg` callback.
    - Risk: low. One call, same transaction, no schema change.
+   - Status (functional checkup, v0.3): fixed. `PgUserRepository.ts:91` writes the `member.rename` row, and `renameMember.pg.test.ts` checks one row per successful rename and none for a refused one.
 2. **High: any admin session can set `archived_at`.** `0013_camp_archive.sql:3-4` puts `archived_at` under the table-wide `GRANT SELECT, UPDATE ON orgs` (`0001_foundation.sql:82`). An admin can run `UPDATE orgs SET archived_at = now()` directly, with no owner check and no audit row. `buxa_archive_camp`, `buxa_unarchive_camp` and `buxa_delete_camp` (`0013:40`, `0017:11`, `0013:70`) also trust a passed actor id.
    - Check: `UPDATE orgs SET archived_at = now() WHERE id = current_org()` under a non-owner session returns rowCount 1.
    - Suggested: `REVOKE UPDATE ON orgs FROM buxa_app; GRANT UPDATE (name, timezone) ON orgs TO buxa_app;`. The only direct update, `PgOrgRepository.ts:64`, sets just those two columns. Add a non-owner test to `camp-archive.test.ts`.
    - Risk: low.
+   - Status (functional checkup, v0.3): fixed by migration `0021_orgs_update_columns.sql`, which makes this grant. The non-owner check is in `packages/db/test/orgs-update-columns.test.ts` (a direct `archived_at` update is refused), not in `camp-archive.test.ts`.
 3. **Medium: definer functions trust a caller-supplied user id.** `buxa_memberships_of` (0009), `buxa_upsert_user`, `buxa_set_user_name` and `buxa_set_user_clock_format` (0018), `buxa_archive_camp`, `buxa_unarchive_camp`, `buxa_delete_camp` (0013, 0017), `buxa_rename_member` (0016). Row-level security does not apply to them.
    - Check: `SELECT * FROM buxa_memberships_of('<other user>')` under `withOrg(pool, null)` returns that user's camps.
    - Suggested: `withOrg` sets `app.user_id`, and the functions check it. A larger change; do it when the next definer function is added.
@@ -348,6 +351,7 @@ Ranked by impact. Read-only: static reads, plus `eslint` and `prettier --check`.
 1. **The production build path never runs in CI.** `apps/web/vercel.json:4` runs `scripts/vercel-build.ts`, which applies migrations on production builds (`scripts/vercel-build.ts:15-32`). CI's build job runs `npm run build` (`ci.yml:246`). Nothing in the code references `vercel-build` outside the docs. The only code that changes the production schema is code CI never executes.
    - Suggested: run `npx tsx scripts/vercel-build.ts` in the build job, and once in the database job with `VERCEL_ENV=production` against the test database.
    - Risk: extra CI minutes. A migration failure would block PRs, which is the intent.
+   - Status (functional checkup, v0.3): fixed, as suggested. `.github/workflows/ci.yml` runs `scripts/vercel-build.ts --migrate-only` in the database job and `scripts/vercel-build.ts` in the build job.
 2. **Web routes are not exercised at runtime.** There are 27 pages and 9 route handlers. The in-process harness hand-lists 6 handlers (`apps/web/__tests__/integration/harness.ts:4-9`). The route at `app/(app)/camp/(operations)/classes/import/template/route.ts` is not imported by any test. `next build` only compiles and prerenders static pages, so a 500 on a real page passes today.
    - Suggested: a smoke step that runs `next start` and requests every route, expecting no 5xx. Build the list from the filesystem.
    - Risk: needs env vars and a port, and may be flaky.

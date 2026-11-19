@@ -1,8 +1,8 @@
 import type { Pool } from 'pg';
 import { withOrg } from '@buxa/db';
 import type { Actor } from '@buxa/domain';
-import type { Class, Enrolment, NewClassInput, Session } from '@buxa/contracts';
-import type { ClassRepository, EnrolRequest, EnrolmentRule, NewSessionRecord } from './ClassRepository';
+import type { Class, Enrolment, NewSessionInput, Session } from '@buxa/contracts';
+import type { ClassRecord, ClassRepository, EnrolRequest, EnrolmentRule } from './ClassRepository';
 import { cancelInTransaction, enrolInTransaction } from './PgEnrolmentWrites';
 import {
   getClass,
@@ -11,60 +11,87 @@ import {
   listEnrolmentRows,
   listSessionRows,
   requireClass,
+  requireClassExists,
+  requireSession,
   requireSessionExists,
 } from './PgClassQueries';
-import { insertClass, insertSession } from './PgClassWrites';
+import { deleteClassRow, insertClass, insertSession, updateClassRow } from './PgClassWrites';
+import { translateClassWriteError } from './pgClassErrors';
 
 /**
- * Postgres adapter for classes, sessions and enrolments. Every call runs in withOrg (row-level security), and every write
+ * Postgres adapter for sessions, classes and enrolments. Every call runs in withOrg (row-level security), and every write
  * writes its audit entry in the same transaction. Refusals are thrown from inside the transaction, so nothing is written for them.
  * Driver errors are translated to the domain errors in ./errors.ts (see pgClassErrors.ts) before they leave this file.
  */
 export class PgClassRepository implements ClassRepository {
   constructor(private readonly pool: Pool) {}
 
-  listClasses(orgId: string): Promise<Class[]> {
-    return withOrg(this.pool, orgId, listClassRows);
+  listSessions(orgId: string): Promise<Session[]> {
+    return withOrg(this.pool, orgId, listSessionRows);
+  }
+
+  getSession(orgId: string, sessionId: string): Promise<Session | null> {
+    return withOrg(this.pool, orgId, db => getSession(db, sessionId));
+  }
+
+  createSession(actor: Actor, input: NewSessionInput): Promise<Session> {
+    return withOrg(this.pool, actor.orgId, async db => {
+      const id = await insertSession(db, actor, input);
+
+      return requireSession(db, id);
+    });
+  }
+
+  listClasses(orgId: string, sessionId: string): Promise<Class[]> {
+    return withOrg(this.pool, orgId, async db => {
+      await requireSessionExists(db, sessionId);
+
+      return listClassRows(db, sessionId);
+    });
   }
 
   getClass(orgId: string, classId: string): Promise<Class | null> {
     return withOrg(this.pool, orgId, db => getClass(db, classId));
   }
 
-  createClass(actor: Actor, input: NewClassInput): Promise<Class> {
+  addClass(actor: Actor, sessionId: string, input: ClassRecord): Promise<Class> {
     return withOrg(this.pool, actor.orgId, async db => {
-      const id = await insertClass(db, actor, input);
+      await requireSessionExists(db, sessionId);
+      const id = await insertClass(db, actor, sessionId, input);
 
       return requireClass(db, id);
     });
   }
 
-  addSession(actor: Actor, classId: string, input: NewSessionRecord): Promise<Session> {
-    return withOrg(this.pool, actor.orgId, async db => {
-      await requireClass(db, classId);
-      const id = await insertSession(db, actor, classId, input);
-      const session = await getSession(db, id);
-      if (!session) {
-        throw new Error('A session was written but cannot be read back');
-      }
+  async updateClass(actor: Actor, classId: string, input: ClassRecord): Promise<Class> {
+    try {
+      return await withOrg(this.pool, actor.orgId, async db => {
+        await requireClassExists(db, classId);
+        await updateClassRow(db, actor, classId, input);
 
-      return session;
-    });
+        return requireClass(db, classId);
+      });
+    } catch (error) {
+      throw translateClassWriteError(error);
+    }
   }
 
-  listSessions(orgId: string, classId: string): Promise<Session[]> {
-    return withOrg(this.pool, orgId, async db => {
-      await requireClass(db, classId);
-
-      return listSessionRows(db, classId);
-    });
+  async deleteClass(actor: Actor, classId: string): Promise<void> {
+    try {
+      await withOrg(this.pool, actor.orgId, async db => {
+        const existing = await requireClass(db, classId);
+        await deleteClassRow(db, actor, classId, existing.name);
+      });
+    } catch (error) {
+      throw translateClassWriteError(error);
+    }
   }
 
-  listEnrolments(orgId: string, sessionId: string): Promise<Enrolment[]> {
+  listEnrolments(orgId: string, classId: string): Promise<Enrolment[]> {
     return withOrg(this.pool, orgId, async db => {
-      await requireSessionExists(db, sessionId);
+      await requireClassExists(db, classId);
 
-      return listEnrolmentRows(db, sessionId);
+      return listEnrolmentRows(db, classId);
     });
   }
 

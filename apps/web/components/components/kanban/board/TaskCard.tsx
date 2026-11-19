@@ -9,7 +9,6 @@ import { useTaskDrawer } from '@buxa/middleware/providers/providers';
 import { Avatar } from '@/components/elements';
 import { Icon } from '@/components/elements';
 import { Menu } from '@/components/components';
-import { tagHue } from '@buxa/shared';
 import { subtaskProgress } from '@buxa/shared';
 import { justDragged } from '@buxa/shared';
 import { useTaskCommands } from '@buxa/middleware/hooks/hooks';
@@ -82,16 +81,6 @@ export const TaskCard = memo(function TaskCard({ task, project, readOnly, draggi
           items={taskMenuItems(task, project, readOnly, cmd)}
         />
       </div>
-      {task.tags.length > 0 && (
-        <div className="tags">
-          {task.tags.slice(0, 3).map(t => (
-            <span key={t} className={`tag hue-${tagHue(t)} ${TAG}`}>
-              {t}
-            </span>
-          ))}
-          {task.tags.length > 3 && <span className={`tag ${TAG}`}>+{task.tags.length - 3}</span>}
-        </div>
-      )}
       <div className="card-meta">
         <PriorityMark priority={task.priority} />
         <DueChip due={task.due} kind={kind} />

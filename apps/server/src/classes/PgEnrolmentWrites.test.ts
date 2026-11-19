@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { cancelInTransaction, enrolInTransaction } from './PgEnrolmentWrites';
-import { CamperNotFoundError, EnrolmentNotFoundError, SessionNotFoundError } from './errors';
+import { CamperNotFoundError, ClassNotFoundError, EnrolmentNotFoundError } from './errors';
 import { fakeDb } from './__tests__/fakeDb';
 
 const actor = {
@@ -16,16 +16,16 @@ describe('enrolInTransaction guards and lock order', () => {
   it('refuses a malformed camper id without touching the database', async () => {
     const { client, seen } = fakeDb();
     await expect(
-      enrolInTransaction(client as never, actor, { sessionId, camperId: 'nope' }, rule),
+      enrolInTransaction(client as never, actor, { classId: sessionId, camperId: 'nope' }, rule),
     ).rejects.toBeInstanceOf(CamperNotFoundError);
     expect(seen).toHaveLength(0);
   });
 
   it('refuses a camper that row-level security or a missing row hides', async () => {
     const { client } = fakeDb(() => []);
-    await expect(enrolInTransaction(client as never, actor, { sessionId, camperId }, rule)).rejects.toBeInstanceOf(
-      CamperNotFoundError,
-    );
+    await expect(
+      enrolInTransaction(client as never, actor, { classId: sessionId, camperId }, rule),
+    ).rejects.toBeInstanceOf(CamperNotFoundError);
   });
 
   it('locks the camper row first, then the session row, before any rule runs', async () => {
@@ -36,9 +36,9 @@ describe('enrolInTransaction guards and lock order', () => {
 
       return [];
     });
-    await expect(enrolInTransaction(client as never, actor, { sessionId, camperId }, rule)).rejects.toBeInstanceOf(
-      SessionNotFoundError,
-    );
+    await expect(
+      enrolInTransaction(client as never, actor, { classId: sessionId, camperId }, rule),
+    ).rejects.toBeInstanceOf(ClassNotFoundError);
     expect(seen).toHaveLength(2);
     expect(seen[0].sql).toMatch(/FROM people[\s\S]*FOR UPDATE/);
     expect(seen[1].sql).toMatch(/FOR UPDATE OF s/);
@@ -48,12 +48,12 @@ describe('enrolInTransaction guards and lock order', () => {
     const { client, seen } = fakeDb(() => [{ date_of_birth: null }]);
     let called = false;
     await expect(
-      enrolInTransaction(client as never, actor, { sessionId: 'x', camperId }, () => {
+      enrolInTransaction(client as never, actor, { classId: 'x', camperId }, () => {
         called = true;
 
         return rule();
       }),
-    ).rejects.toBeInstanceOf(SessionNotFoundError);
+    ).rejects.toBeInstanceOf(ClassNotFoundError);
     expect(called).toBe(false);
     expect(seen).toHaveLength(1);
   });

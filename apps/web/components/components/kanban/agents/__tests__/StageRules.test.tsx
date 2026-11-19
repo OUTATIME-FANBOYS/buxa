@@ -27,7 +27,7 @@ describe('StageRules', () => {
   });
   it('shows the rule in words, read-only, for others', () => {
     const html = renderToStaticMarkup(<StageRules agent={agent} canManage={false} />);
-    expect(html).toContain('pill-warn');
+    expect(html).toContain('tone-warn');
     expect(html).toContain('Ask me');
     expect(html).not.toContain('<select');
   });
