@@ -2,13 +2,7 @@
 export type Tone = 'neutral' | 'brand' | 'ok' | 'warn' | 'crit' | 'agent' | 'info';
 /** Camp role pills only (see ROLE_TONE in camp/abilities). Not status colours, so they are kept out of `Tone`. */
 export type RoleTone =
-  | 'role-owner'
-  | 'role-admin'
-  | 'role-staff'
-  | 'role-viewer'
-  | 'role-teacher'
-  | 'role-guardian'
-  | 'role-camper';
+  'role-owner' | 'role-admin' | 'role-staff' | 'role-viewer' | 'role-teacher' | 'role-guardian' | 'role-camper';
 
 /**
  * The rainbow hues a pill can take (tokens.css: --hue-<name>). One map, below, says which hue each tone and role takes; change a

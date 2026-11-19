@@ -82,7 +82,10 @@ describe('teacher: assigned classes only', () => {
   it('is refused the scoped actions unless the class is one it is assigned to', () => {
     for (const a of scoped) {
       expect(authorize(as(T), a, { orgId: ORG })).toEqual({ allow: false, reason: 'not_assigned' });
-      expect(authorize(as(T), a, { orgId: ORG, assignedToClass: false })).toEqual({ allow: false, reason: 'not_assigned' });
+      expect(authorize(as(T), a, { orgId: ORG, assignedToClass: false })).toEqual({
+        allow: false,
+        reason: 'not_assigned',
+      });
       expect(authorize(as(T), a, { orgId: ORG, assignedToClass: true })).toEqual({ allow: true });
     }
   });

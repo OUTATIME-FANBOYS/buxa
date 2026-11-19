@@ -19,7 +19,7 @@ async function build() {
   const teacher = camp.actor('teacher');
   const staff = camp.actor('staff');
   const viewer = camp.actor('viewer');
-  const classes = createClassService({ repo: camp.repos.classes, timezoneOf: async () => 'UTC' });
+  const classes = createClassService({ repo: camp.repos.classes, timezoneOf: () => Promise.resolve('UTC') });
 
   const adult = (givenName: string) =>
     camp.people.create(admin, { givenName, familyName: 'Camp', roles: ['participant'] });
@@ -59,7 +59,21 @@ async function build() {
   }
   expect((await classes.setTeachers(admin, roboticsId, [teacher.userId])).ok).toBe(true);
 
-  return { camp, admin, teacher, staff, viewer, classes, sessionId: session.value.id, roboticsId, paintingId, kim, lia, mo, ned };
+  return {
+    camp,
+    admin,
+    teacher,
+    staff,
+    viewer,
+    classes,
+    sessionId: session.value.id,
+    roboticsId,
+    paintingId,
+    kim,
+    lia,
+    mo,
+    ned,
+  };
 }
 
 describe('teacher: attendance is limited to its classes', () => {
@@ -72,7 +86,9 @@ describe('teacher: attendance is limited to its classes', () => {
   it('is refused check-in and check-out of a camper in another class, or in no class (403)', async () => {
     const { camp, teacher, mo, ned } = await build();
     for (const person of [mo, ned]) {
-      expect((await thrown(() => camp.attendance.checkIn(teacher, { personId: person.id, method: 'manual' }))).statusCode).toBe(403);
+      expect(
+        (await thrown(() => camp.attendance.checkIn(teacher, { personId: person.id, method: 'manual' }))).statusCode,
+      ).toBe(403);
       expect((await thrown(() => camp.attendance.checkOut(teacher, { personId: person.id }))).statusCode).toBe(403);
     }
   });
@@ -138,7 +154,9 @@ describe('teacher: people and classes are limited to its classes, read-only', ()
     expect((await classes.setTeachers(admin, roboticsId, [])).ok).toBe(true);
     const mine = await classes.listClasses(teacher, sessionId);
     expect(mine.ok && mine.value).toEqual([]);
-    expect((await thrown(() => camp.attendance.checkIn(teacher, { personId: kim.id, method: 'manual' }))).statusCode).toBe(403);
+    expect(
+      (await thrown(() => camp.attendance.checkIn(teacher, { personId: kim.id, method: 'manual' }))).statusCode,
+    ).toBe(403);
   });
 });
 

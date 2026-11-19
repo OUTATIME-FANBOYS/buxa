@@ -22,9 +22,18 @@ describe.skipIf(!url)('teacher scope on Postgres (row-level security)', () => {
   beforeAll(async () => {
     await migrate(pool);
     const org = async (name: string) =>
-      (await pool.query<{ id: string }>(`INSERT INTO orgs(name, slug) VALUES ($1, $2) RETURNING id`, [name, `${name.toLowerCase().replace(/\s/g, '-')}-${tag}`])).rows[0].id;
+      (
+        await pool.query<{ id: string }>(`INSERT INTO orgs(name, slug) VALUES ($1, $2) RETURNING id`, [
+          name,
+          `${name.toLowerCase().replace(/\s/g, '-')}-${tag}`,
+        ])
+      ).rows[0].id;
     const user = async (label: string) =>
-      (await pool.query<{ id: string }>(`INSERT INTO users(email, name) VALUES ($1, 'Test') RETURNING id`, [`${label}-${tag}@t.test`])).rows[0].id;
+      (
+        await pool.query<{ id: string }>(`INSERT INTO users(email, name) VALUES ($1, 'Test') RETURNING id`, [
+          `${label}-${tag}@t.test`,
+        ])
+      ).rows[0].id;
     orgA = await org('Camp A');
     orgB = await org('Camp B');
     adminA = await user('admin-a');
@@ -35,7 +44,10 @@ describe.skipIf(!url)('teacher scope on Postgres (row-level security)', () => {
       [orgA, adminA, teacherA, orgB, teacherB],
     );
     const parent = (
-      await pool.query<{ id: string }>(`INSERT INTO classes (org_id, name, default_capacity) VALUES ($1, $2, 5) RETURNING id`, [orgA, `A ${tag}`])
+      await pool.query<{ id: string }>(
+        `INSERT INTO classes (org_id, name, default_capacity) VALUES ($1, $2, 5) RETURNING id`,
+        [orgA, `A ${tag}`],
+      )
     ).rows[0].id;
     sessionA = (
       await pool.query<{ id: string }>(
@@ -50,10 +62,11 @@ describe.skipIf(!url)('teacher scope on Postgres (row-level security)', () => {
         [orgA],
       )
     ).rows[0].id;
-    await pool.query(
-      `INSERT INTO enrolments (org_id, session_id, person_id, status) VALUES ($1, $2, $3, 'enrolled')`,
-      [orgA, sessionA, personA],
-    );
+    await pool.query(`INSERT INTO enrolments (org_id, session_id, person_id, status) VALUES ($1, $2, $3, 'enrolled')`, [
+      orgA,
+      sessionA,
+      personA,
+    ]);
   });
 
   afterAll(async () => {
@@ -77,11 +90,11 @@ describe.skipIf(!url)('teacher scope on Postgres (row-level security)', () => {
   });
 
   it('refuses to assign a user who is not a teacher in this camp, or a class from another camp', async () => {
-    await expect(repo.replaceTeachers({ userId: adminA, orgId: orgA, role: 'admin' }, sessionA, [teacherB])).rejects.toBeInstanceOf(
-      TeacherNotFoundError,
-    );
-    await expect(repo.replaceTeachers({ userId: adminA, orgId: orgB, role: 'admin' }, sessionA, [teacherB])).rejects.toBeInstanceOf(
-      ClassNotFoundError,
-    );
+    await expect(
+      repo.replaceTeachers({ userId: adminA, orgId: orgA, role: 'admin' }, sessionA, [teacherB]),
+    ).rejects.toBeInstanceOf(TeacherNotFoundError);
+    await expect(
+      repo.replaceTeachers({ userId: adminA, orgId: orgB, role: 'admin' }, sessionA, [teacherB]),
+    ).rejects.toBeInstanceOf(ClassNotFoundError);
   });
 });

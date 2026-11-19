@@ -108,7 +108,14 @@ const OWNER: Action[] = [
   'data:export',
   'data:erase',
 ];
-const TEACHER: Action[] = ['org:read', 'members:leave', 'events:read', 'people:read', 'attendance:read', 'attendance:record'];
+const TEACHER: Action[] = [
+  'org:read',
+  'members:leave',
+  'events:read',
+  'people:read',
+  'attendance:read',
+  'attendance:record',
+];
 
 /** What each role may attempt. Rules below can still deny an action the role has. */
 export const GRANTS: Record<Role, ReadonlySet<Action>> = {
@@ -124,7 +131,12 @@ export const GRANTS: Record<Role, ReadonlySet<Action>> = {
  * class (or the person's class, or the sessions in a list) is one of the teacher's and passes `assignedToClass: true`; without it
  * a teacher is refused with `not_assigned`. Other roles are not affected.
  */
-const ASSIGNED_CLASSES_ONLY: ReadonlySet<Action> = new Set(['events:read', 'people:read', 'attendance:read', 'attendance:record']);
+const ASSIGNED_CLASSES_ONLY: ReadonlySet<Action> = new Set([
+  'events:read',
+  'people:read',
+  'attendance:read',
+  'attendance:record',
+]);
 
 export interface Actor {
   userId: string;

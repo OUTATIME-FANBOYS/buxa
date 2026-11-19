@@ -19,9 +19,18 @@ describe.skipIf(!url)('teacher role and class assignments (row-level security)',
   beforeAll(async () => {
     await migrate(pool);
     const org = async (name: string) =>
-      (await pool.query<{ id: string }>(`INSERT INTO orgs(name, slug) VALUES ($1, $2) RETURNING id`, [name, `${name.toLowerCase().replace(/\s/g, '-')}-${tag}`])).rows[0].id;
+      (
+        await pool.query<{ id: string }>(`INSERT INTO orgs(name, slug) VALUES ($1, $2) RETURNING id`, [
+          name,
+          `${name.toLowerCase().replace(/\s/g, '-')}-${tag}`,
+        ])
+      ).rows[0].id;
     const user = async (email: string) =>
-      (await pool.query<{ id: string }>(`INSERT INTO users(email, name) VALUES ($1, 'Test') RETURNING id`, [`${email}-${tag}@t.test`])).rows[0].id;
+      (
+        await pool.query<{ id: string }>(`INSERT INTO users(email, name) VALUES ($1, 'Test') RETURNING id`, [
+          `${email}-${tag}@t.test`,
+        ])
+      ).rows[0].id;
     campA = await org('Camp A');
     campB = await org('Camp B');
     teacherA = await user('teacher-a');
@@ -33,7 +42,10 @@ describe.skipIf(!url)('teacher role and class assignments (row-level security)',
     );
     const sessionFor = async (org: string, name: string) => {
       const parent = (
-        await pool.query<{ id: string }>(`INSERT INTO classes (org_id, name, default_capacity) VALUES ($1, $2, 5) RETURNING id`, [org, name])
+        await pool.query<{ id: string }>(
+          `INSERT INTO classes (org_id, name, default_capacity) VALUES ($1, $2, 5) RETURNING id`,
+          [org, name],
+        )
       ).rows[0].id;
 
       return (
@@ -68,7 +80,11 @@ describe.skipIf(!url)('teacher role and class assignments (row-level security)',
     await withOrg(pool, campA, async db => {
       expect((await db.query<Row>('SELECT session_id FROM class_teachers')).rows).toEqual([]);
       await expect(
-        db.query(`INSERT INTO class_teachers (org_id, session_id, user_id) VALUES ($1, $2, $3)`, [campB, classB, teacherB]),
+        db.query(`INSERT INTO class_teachers (org_id, session_id, user_id) VALUES ($1, $2, $3)`, [
+          campB,
+          classB,
+          teacherB,
+        ]),
       ).rejects.toThrow();
     });
     await withOrg(pool, campB, async db => {
@@ -82,9 +98,13 @@ describe.skipIf(!url)('teacher role and class assignments (row-level security)',
       withOrg(pool, campA, db => db.query(`SELECT buxa_replace_class_teachers($1, $2, $3)`, [campA, classA, [adminA]])),
     ).rejects.toThrow('Teacher not found');
     await expect(
-      withOrg(pool, campA, db => db.query(`SELECT buxa_replace_class_teachers($1, $2, $3)`, [campA, classA, [teacherB]])),
+      withOrg(pool, campA, db =>
+        db.query(`SELECT buxa_replace_class_teachers($1, $2, $3)`, [campA, classA, [teacherB]]),
+      ),
     ).rejects.toThrow('Teacher not found');
-    await withOrg(pool, campA, db => db.query(`SELECT buxa_replace_class_teachers($1, $2, $3)`, [campA, classA, [teacherA]]));
+    await withOrg(pool, campA, db =>
+      db.query(`SELECT buxa_replace_class_teachers($1, $2, $3)`, [campA, classA, [teacherA]]),
+    );
     await withOrg(pool, campA, async db => {
       expect((await db.query<Row>('SELECT user_id FROM class_teachers')).rows.map(r => r.user_id)).toEqual([teacherA]);
     });
@@ -92,7 +112,10 @@ describe.skipIf(!url)('teacher role and class assignments (row-level security)',
 
   it('a member who stops being a teacher loses their class assignments', async () => {
     await pool.query(`UPDATE org_members SET role = 'viewer' WHERE org_id = $1 AND user_id = $2`, [campA, teacherA]);
-    const r = await pool.query<Row>('SELECT 1 FROM class_teachers WHERE org_id = $1 AND user_id = $2', [campA, teacherA]);
+    const r = await pool.query<Row>('SELECT 1 FROM class_teachers WHERE org_id = $1 AND user_id = $2', [
+      campA,
+      teacherA,
+    ]);
     expect(r.rows).toEqual([]);
     await pool.query(`UPDATE org_members SET role = 'teacher' WHERE org_id = $1 AND user_id = $2`, [campA, teacherA]);
   });

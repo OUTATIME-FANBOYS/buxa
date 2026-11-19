@@ -348,18 +348,19 @@ export class InMemoryClassRepository implements ClassRepository {
     return Promise.resolve([...ids]);
   }
 
-  async replaceTeachers(actor: Actor, classId: string, userIds: readonly string[]): Promise<void> {
-    const existing = this.classIn(actor.orgId, classId);
-    if (!existing) {
-      throw new ClassNotFoundError();
+  replaceTeachers(actor: Actor, classId: string, userIds: readonly string[]): Promise<void> {
+    if (!this.classIn(actor.orgId, classId)) {
+      return Promise.reject(new ClassNotFoundError());
     }
     const unique = [...new Set(userIds)];
     const members = this.teacherUsers.get(actor.orgId) ?? new Set<string>();
     if (unique.some(id => !members.has(id))) {
-      throw new TeacherNotFoundError();
+      return Promise.reject(new TeacherNotFoundError());
     }
     this.teachersOf.set(classId, new Set(unique));
     this.record(actor, 'class.update', 'class', classId, { teacherIds: unique });
+
+    return Promise.resolve();
   }
 
   private async exclusive<T>(key: string, work: () => Promise<T>): Promise<T> {

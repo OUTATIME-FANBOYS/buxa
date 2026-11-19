@@ -322,7 +322,9 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
 
     async getHousehold(actor, id) {
       // Households name people outside a teacher's classes, so a teacher is refused them (assignedToClass: false).
-      assertAllowed(actor, 'people:read', { assignedToClass: (await teacherScopeOf(classes, actor)) === null ? undefined : false });
+      assertAllowed(actor, 'people:read', {
+        assignedToClass: (await teacherScopeOf(classes, actor)) === null ? undefined : false,
+      });
       const record = await people.getHousehold(actor.orgId, id);
       if (!record) {
         throw notFound('Household not found');
@@ -332,7 +334,9 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
     },
 
     async listHouseholds(actor) {
-      assertAllowed(actor, 'people:read', { assignedToClass: (await teacherScopeOf(classes, actor)) === null ? undefined : false });
+      assertAllowed(actor, 'people:read', {
+        assignedToClass: (await teacherScopeOf(classes, actor)) === null ? undefined : false,
+      });
 
       return toHouseholds(people, actor.orgId, await people.listHouseholds(actor.orgId), seesCustody(actor));
     },
