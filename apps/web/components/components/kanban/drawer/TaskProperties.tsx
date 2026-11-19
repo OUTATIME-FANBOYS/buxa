@@ -52,8 +52,7 @@ export function TaskProperties({ task, project, d }: { task: Task | null; projec
               d.setColumnId(value);
             }
           }}
-          // The emoji is in each option's label, so the chosen one shows its emoji beside its name, once.
-          options={project.columns.map(c => ({ value: c.id, label: `${statusMark(c).emoji} ${c.name}` }))}
+          options={project.columns.map(c => ({ value: c.id, label: c.name }))}
         />
         <Select
           label="Priority"

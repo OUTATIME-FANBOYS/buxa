@@ -1,29 +1,30 @@
 import type { Column } from '@buxa/shared';
 
+import type { StatusGlyph } from '@/components/atoms/Icon';
+
 /*
- * One mark per status, used everywhere a status is shown: the status dropdown's emoji and colour now, and any later surface
- * that names a status should import from here so the marks stay the same. A status is a project column. The seeded names get
- * their own mark; a column the owner named (or renamed) falls back to the mark for its kind (open, active, done).
+ * One mark per status, used everywhere a status is shown (the pill, the dropdown and any later surface). A status is a project
+ * column. The seeded names get their own mark; a column the owner named (or renamed) takes the mark for its kind.
  */
 /** The five status colours. Each is a `--status-<colour>` token (and `--status-<colour>-ink` for text) in tokens.css. */
 export type StatusColour = 'pink' | 'blue' | 'orange' | 'purple' | 'green';
 
 export interface StatusMark {
-  emoji: string;
+  /** The line icon that stands for the status (StatusIcon). */
+  glyph: StatusGlyph;
   colour: StatusColour;
 }
 
-// The one map from status to colour. To recolour a status, change its colour here; the pill, the dropdown and any later
-// surface read it through statusMark().
+// The one map from status to glyph and colour. To change a status, change it here; everything reads it through statusMark().
 const BY_NAME: Record<string, StatusMark> = {
-  backlog: { emoji: '📥', colour: 'pink' },
-  'to do': { emoji: '📝', colour: 'blue' },
-  'in progress': { emoji: '🔨', colour: 'orange' },
-  'in review': { emoji: '🔍', colour: 'purple' },
-  done: { emoji: '✅', colour: 'green' },
+  backlog: { glyph: 'clock', colour: 'pink' },
+  'to do': { glyph: 'send', colour: 'blue' },
+  'in progress': { glyph: 'dashed-clock', colour: 'orange' },
+  'in review': { glyph: 'search', colour: 'purple' },
+  done: { glyph: 'circle-check', colour: 'green' },
 };
 
-// A column the owner named (or renamed) takes the colour of its kind: open is blue, active orange, done green.
+// A column the owner named (or renamed) takes the mark of its kind: open is To Do, active In Progress, done Done.
 const BY_KIND: Record<Column['kind'], StatusMark> = {
   open: BY_NAME['to do'],
   active: BY_NAME['in progress'],

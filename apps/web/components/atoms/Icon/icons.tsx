@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleAlert,
+  CircleCheck,
   CircleHelp,
   Clock,
   Copy,
@@ -142,6 +143,47 @@ export const ICONS: Record<string, LucideIcon> = {
   'file-up': FileUp,
   'file-down': FileDown,
 };
+
+/** The status glyphs: lucide where one fits, and a dashed clock for "in progress", which lucide does not have. */
+export type StatusGlyph = 'clock' | 'dashed-clock' | 'send' | 'search' | 'circle-check';
+
+/**
+ * A status as a line icon on the set's 24-unit grid, in currentColor. Backlog a clock, To Do a send arrow, In Progress a dashed
+ * clock, In Review a magnifier, Done a check in a circle. Decorative: the status name is the text beside it.
+ */
+export function StatusIcon({
+  glyph,
+  size = 14,
+  className = '',
+}: {
+  glyph: StatusGlyph;
+  size?: number;
+  className?: string;
+}) {
+  if (glyph === 'dashed-clock') {
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.75}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+        focusable="false"
+        className={className}
+      >
+        <circle cx="12" cy="12" r="10" strokeDasharray="3.2 3.2" />
+        <path d="M12 6.5V12l3.5 2" />
+      </svg>
+    );
+  }
+  const Glyph = { clock: Clock, send: Send, search: Search, 'circle-check': CircleCheck }[glyph];
+
+  return <Glyph className={className} size={size} strokeWidth={1.75} aria-hidden="true" focusable="false" />;
+}
 
 export type PriorityGlyph = 'critical' | 'high' | 'medium' | 'low';
 
