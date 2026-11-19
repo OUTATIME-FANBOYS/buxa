@@ -178,3 +178,11 @@ form.class-form {
 .classes-delete:focus-visible {
   opacity: 1;
 }
+
+/* The round row buttons read as buttons at rest: a visible border from the existing border token. Delete takes the red of its fill. */
+.classes-row-actions .button--icon-only {
+  border: 1px solid var(--border);
+}
+.classes-row-actions .classes-delete.button--icon-only {
+  border-color: var(--crit);
+}
