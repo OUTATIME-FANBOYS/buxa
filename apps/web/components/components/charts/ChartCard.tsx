@@ -10,10 +10,11 @@ export interface ChartCardTable {
 /**
  * A chart in a card, in the stat-card style: the title on top with an optional control on the right, the main value in bold with an
  * optional change badge and a grey subtitle, then the chart, a legend of coloured dots and an optional table view.
- * The card lifts on hover with a gentle tilt; the tilt is off under reduced motion (charts.css).
+ * The card's shadow deepens on hover; it does not move.
  */
 export function ChartCard({
   title,
+  titleId: givenTitleId,
   action,
   value,
   badge,
@@ -23,6 +24,8 @@ export function ChartCard({
   children,
 }: {
   title: string;
+  /** The heading's id, when the section must keep an id other code points at. */
+  titleId?: string;
   action?: ReactNode;
   value: ReactNode;
   badge?: ReactNode;
@@ -31,7 +34,8 @@ export function ChartCard({
   table?: ChartCardTable;
   children: ReactNode;
 }) {
-  const titleId = `chart-${useId().replace(/:/g, '')}`;
+  const generatedId = `chart-${useId().replace(/:/g, '')}`;
+  const titleId = givenTitleId ?? generatedId;
 
   return (
     <section className="panel chart-card" aria-labelledby={titleId}>

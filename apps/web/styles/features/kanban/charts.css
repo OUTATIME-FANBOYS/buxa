@@ -189,7 +189,6 @@
 }
 .chart-card {
   box-shadow: var(--card-shadow);
-  transform-style: preserve-3d;
 }
 .chart-card-head {
   flex-wrap: wrap;
@@ -262,15 +261,12 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* The tilt: a gentle 3D lean on hover. Only with motion allowed, so reduced motion keeps the card flat. */
+/* Hover changes the shadow only: no 3D move. The fade is skipped under reduced motion. */
+.chart-card:hover {
+  box-shadow: var(--shadow);
+}
 @media (prefers-reduced-motion: no-preference) {
   .chart-card {
-    transition:
-      transform 240ms var(--ease),
-      box-shadow 240ms var(--ease);
-  }
-  .chart-card:hover {
-    transform: perspective(var(--tilt-perspective)) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
-    box-shadow: var(--shadow);
+    transition: box-shadow 240ms var(--ease);
   }
 }
