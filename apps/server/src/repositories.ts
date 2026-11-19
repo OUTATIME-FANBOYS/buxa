@@ -3,6 +3,8 @@ import { PgAttendanceRepository } from './attendance/PgAttendanceRepository';
 import { type AttendanceRepository } from './attendance/AttendanceRepository';
 import type { ClassRepository } from './classes/ClassRepository';
 import { PgClassRepository } from './classes/PgClassRepository';
+import type { ImportRepository } from './classes/import/ImportRepository';
+import { PgImportRepository } from './classes/import/PgImportRepository';
 import { PgCredentialRepository } from './credentials/PgCredentialRepository';
 import { type CredentialRepository } from './credentials/CredentialRepository';
 import { PgMembershipRepository } from './memberships/PgMembershipRepository';
@@ -22,8 +24,10 @@ export interface Repositories {
   memberships: MembershipRepository;
   credentials: CredentialRepository;
   attendance: AttendanceRepository;
-  /** Classes, sessions and enrolments (phase 2). The Postgres adapter in production; the in-memory one is for tests. */
+  /** Classes, sessions and enrolments. The Postgres adapter in production; the in-memory one is for tests. */
   classes: ClassRepository;
+  /** The bulk import of classes' sessions. The Postgres adapter in production; the in-memory one is for tests. */
+  imports: ImportRepository;
 }
 
 export const createPgRepositories = (pool: Pool): Repositories => ({
@@ -34,4 +38,5 @@ export const createPgRepositories = (pool: Pool): Repositories => ({
   credentials: new PgCredentialRepository(pool),
   attendance: new PgAttendanceRepository(pool),
   classes: new PgClassRepository(pool),
+  imports: new PgImportRepository(pool),
 });

@@ -2,7 +2,13 @@ import { randomUUID } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { isAlreadyCheckedIn, isNotOnSite } from '../AttendanceRepository';
 import { isPersonNotFound } from '../../people/PeopleRepository';
-import { expectRejection, ISO_INSTANT, samplePerson, type RepositoryFactory, type RepositoryFixture } from '../../people/__tests__/fixture';
+import {
+  expectRejection,
+  ISO_INSTANT,
+  samplePerson,
+  type RepositoryFactory,
+  type RepositoryFixture,
+} from '../../people/__tests__/fixture';
 
 const MORNING = '2027-07-01T09:12:00.000Z';
 const NOON = '2027-07-01T12:00:00.000Z';
@@ -12,14 +18,22 @@ const NEXT_DAY = '2027-07-02T09:00:00.000Z';
 export function attendanceRepositoryContract(factory: RepositoryFactory): void {
   describe('AttendanceRepository contract', () => {
     let fx: RepositoryFixture;
-    beforeEach(async () => { fx = await factory(); });
-    afterEach(async () => { await fx.close(); });
+    beforeEach(async () => {
+      fx = await factory();
+    });
+    afterEach(async () => {
+      await fx.close();
+    });
 
     const newPerson = async (): Promise<string> => (await fx.repos.people.create(fx.actor, samplePerson())).id;
     const arrive = (personId: string, at = MORNING, overrideReason: string | null = null) =>
       fx.repos.attendance.checkIn(fx.actor, { personId, at, method: 'qr', overrideReason, note: null });
-    const leave = (personId: string, at = NOON, collectedByPersonId: string | null = null, overrideReason: string | null = null) =>
-      fx.repos.attendance.checkOut(fx.actor, { personId, at, collectedByPersonId, overrideReason, note: null });
+    const leave = (
+      personId: string,
+      at = NOON,
+      collectedByPersonId: string | null = null,
+      overrideReason: string | null = null,
+    ) => fx.repos.attendance.checkOut(fx.actor, { personId, at, collectedByPersonId, overrideReason, note: null });
 
     it('checks a person in: the visit is open, with ISO instants and the actor', async () => {
       const personId = await newPerson();
@@ -48,7 +62,7 @@ export function attendanceRepositoryContract(factory: RepositoryFactory): void {
       expect(await fx.repos.attendance.onSite(fx.actor.orgId)).toHaveLength(1);
     });
 
-    it('throws PersonNotFoundError for an unknown person or another organisation\'s person', async () => {
+    it("throws PersonNotFoundError for an unknown person or another organisation's person", async () => {
       await expectRejection(arrive(randomUUID()), isPersonNotFound);
       const theirs = (await fx.repos.people.create(fx.otherActor, samplePerson())).id;
       await expectRejection(arrive(theirs), isPersonNotFound);
@@ -59,7 +73,11 @@ export function attendanceRepositoryContract(factory: RepositoryFactory): void {
       const guardian = await newPerson();
       await arrive(child);
       const closed = await leave(child, NOON, guardian);
-      expect(closed).toMatchObject({ checkedOutAt: NOON, checkedOutBy: fx.actor.userId, collectedByPersonId: guardian });
+      expect(closed).toMatchObject({
+        checkedOutAt: NOON,
+        checkedOutBy: fx.actor.userId,
+        collectedByPersonId: guardian,
+      });
       expect(closed.checkedOutAt).toMatch(ISO_INSTANT);
       expect(await fx.repos.attendance.openFor(fx.actor.orgId, child)).toBeNull();
       expect(await fx.repos.attendance.onSite(fx.actor.orgId)).toEqual([]);
@@ -104,14 +122,21 @@ export function attendanceRepositoryContract(factory: RepositoryFactory): void {
       const personId = await newPerson();
       const visit = await arrive(personId, MORNING, 'Parent confirmed by phone');
       expect(visit.overrideReason).toBe('Parent confirmed by phone');
-      expect((await fx.auditActions()).filter(a => a.startsWith('attendance.'))).toEqual(['attendance.check_in', 'attendance.override']);
+      expect((await fx.auditActions()).filter(a => a.startsWith('attendance.'))).toEqual([
+        'attendance.check_in',
+        'attendance.override',
+      ]);
     });
 
     it('audits check_in and check_out, and a check-out override reason separately', async () => {
       const personId = await newPerson();
       await arrive(personId);
       await leave(personId, NOON, null, 'Left early with consent');
-      expect((await fx.auditActions()).filter(a => a.startsWith('attendance.'))).toEqual(['attendance.check_in', 'attendance.check_out', 'attendance.override']);
+      expect((await fx.auditActions()).filter(a => a.startsWith('attendance.'))).toEqual([
+        'attendance.check_in',
+        'attendance.check_out',
+        'attendance.override',
+      ]);
     });
 
     it('log returns visits in [from, to), newest first, optionally for one person or on site only', async () => {
@@ -125,7 +150,9 @@ export function attendanceRepositoryContract(factory: RepositoryFactory): void {
       const all = { from: '2027-07-01T00:00:00.000Z', to: '2027-07-03T00:00:00.000Z' };
       expect((await fx.repos.attendance.log(fx.actor.orgId, all)).map(v => v.personId)).toEqual([b, a]);
       expect(await fx.repos.attendance.log(fx.actor.orgId, { ...all, personId: a })).toHaveLength(1);
-      expect((await fx.repos.attendance.log(fx.actor.orgId, { ...all, onSiteOnly: true })).map(v => v.personId)).toEqual([b]);
+      expect(
+        (await fx.repos.attendance.log(fx.actor.orgId, { ...all, onSiteOnly: true })).map(v => v.personId),
+      ).toEqual([b]);
       expect(await fx.repos.attendance.log(fx.actor.orgId, { ...all, personId: 'not-a-uuid' })).toEqual([]);
     });
 
@@ -134,8 +161,22 @@ export function attendanceRepositoryContract(factory: RepositoryFactory): void {
       await arrive(personId);
       expect(await fx.repos.attendance.openFor(fx.otherActor.orgId, personId)).toBeNull();
       expect(await fx.repos.attendance.onSite(fx.otherActor.orgId)).toEqual([]);
-      expect(await fx.repos.attendance.log(fx.otherActor.orgId, { from: '2027-01-01T00:00:00.000Z', to: '2028-01-01T00:00:00.000Z' })).toEqual([]);
-      await expectRejection(fx.repos.attendance.checkOut(fx.otherActor, { personId, at: NOON, collectedByPersonId: null, overrideReason: null, note: null }), isNotOnSite);
+      expect(
+        await fx.repos.attendance.log(fx.otherActor.orgId, {
+          from: '2027-01-01T00:00:00.000Z',
+          to: '2028-01-01T00:00:00.000Z',
+        }),
+      ).toEqual([]);
+      await expectRejection(
+        fx.repos.attendance.checkOut(fx.otherActor, {
+          personId,
+          at: NOON,
+          collectedByPersonId: null,
+          overrideReason: null,
+          note: null,
+        }),
+        isNotOnSite,
+      );
     });
   });
 }

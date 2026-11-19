@@ -4,5 +4,7 @@
  * `theme.test.ts` fails if they ever differ.
  */
 export const THEME_KEY = 'buxa.theme';
-/** The key an earlier version used. Read as a fallback and removed once the new one is saved. */
+/** The key from before the rename. Read as a fallback, then deleted once the current key is saved. */
 export const LEGACY_THEME_KEY = 'tessera.theme';
+/** Fired on `window` whenever the theme is chosen outside the kanban store (the account menu), so the store follows the same choice. */
+export const THEME_EVENT = 'buxa:theme';

@@ -1,15 +1,127 @@
 /* ---------- Classes (programs, sessions, enrolments, bulk import) ---------- */
 /* Every control on these screens is at least 44px tall, for touch and for keyboard users alike. */
-.classes-target { min-height: 44px; }
-.classes-actions { display: flex; flex-wrap: wrap; gap: var(--s3); align-items: center; }
-.classes-inline { display: inline-flex; flex-wrap: wrap; gap: var(--s2); align-items: center; }
-.classes-form, .classes-enrol, .classes-import { max-width: 680px; }
-.classes-facts { margin: 0; }
-.classes-columns { display: inline-block; max-width: 100%; overflow-wrap: anywhere; font-size: var(--fs-s); }
-.classes-problems { margin: 0; padding-left: var(--s4); display: grid; gap: var(--s1); }
-.classes-import-table td:nth-child(7) { min-width: 220px; white-space: normal; }
-.classes-enrolments { padding-top: var(--s4); border-top: 1px solid var(--line); }
+.classes-target {
+  min-height: 44px;
+}
+.classes-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  align-items: center;
+}
+.classes-inline {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  align-items: center;
+}
+.classes-form,
+.classes-enrol,
+.classes-import {
+  max-width: 680px;
+}
+.classes-facts {
+  margin: 0;
+}
+.classes-columns {
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-size: var(--fs-s);
+}
+.classes-problems {
+  margin: 0;
+  padding-left: var(--s4);
+  display: grid;
+  gap: var(--s1);
+}
+.classes-import-table td:nth-child(7) {
+  min-width: 220px;
+  white-space: normal;
+}
+.classes-enrolments {
+  padding-top: var(--s4);
+  border-top: 1px solid var(--line);
+}
 @media (max-width: 720px) {
-  .classes-form .form-row > .field, .classes-enrol .form-row > .field { flex-basis: 100%; }
-  .classes-actions .btn { flex: 1 1 100%; }
+  .classes-form .form-row > .field,
+  .classes-enrol .form-row > .field {
+    flex-basis: 100%;
+  }
+  .classes-actions .button {
+    flex: 1 1 100%;
+  }
+}
+
+/* ---------- New class: the page and the dialog share one layout (the same scale as Add person) ----------
+ * Type: section headings and field labels are --fs-b bold; helper and error text is --fs-s.
+ * Space: 8px (--s2) inside a field, 16px (--s4) between fields in a row, 24px (--s5) between sections and above the buttons.
+ * Controls: 36px (--control-compact) with a mouse or keyboard; 44px (--control-touch) on a touch screen. */
+form.class-form {
+  display: grid;
+  gap: var(--s5);
+  align-content: start;
+  min-width: 0;
+  font-size: var(--fs-b);
+  --control-h: var(--control-compact);
+}
+.dialog.class-dialog {
+  width: min(640px, 100%);
+}
+.class-form .class-section {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+  display: grid;
+  gap: var(--s4);
+  align-content: start;
+}
+.class-form .class-legend {
+  padding: 0;
+  margin: 0;
+  font-size: var(--fs-b);
+  font-weight: 700;
+  color: var(--text);
+}
+.class-form .class-helper,
+.class-form .field-hint,
+.class-form .field-error {
+  margin: 0;
+  font-size: var(--fs-s);
+  line-height: 1.4;
+}
+.class-form .class-helper,
+.class-form .field-hint {
+  color: var(--text-3);
+}
+.class-form .field {
+  gap: var(--s2);
+}
+.class-form .field-label {
+  font-size: var(--fs-b);
+  font-weight: 600;
+  color: var(--text);
+}
+.class-form .form-row {
+  gap: var(--s4);
+}
+.class-form .button {
+  font-size: var(--fs-b);
+}
+.class-form .classes-actions {
+  justify-content: flex-end;
+  padding-top: var(--s4);
+  border-top: 1px solid var(--line);
+}
+@media (pointer: coarse) {
+  /* Touch: the touch target again, and 16px text so iOS does not zoom into an input. */
+  form.class-form {
+    --control-h: var(--control-touch);
+  }
+  .class-form input:not([type='checkbox']),
+  .class-form select,
+  .class-form textarea {
+    font-size: 16px;
+  }
 }

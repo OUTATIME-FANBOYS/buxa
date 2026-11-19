@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { StatCard } from '@/components/components/kanban/home/export';
+import { StatCard } from '@/components/components/kanban/home';
 
 describe('StatCard', () => {
   it('shows one number with its label, in the tone it is given', () => {

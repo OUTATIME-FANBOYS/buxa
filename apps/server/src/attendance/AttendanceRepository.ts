@@ -15,22 +15,47 @@ export interface CheckInRecord {
   note: string | null;
 }
 
-export interface NewCheckIn { personId: string; at: string; method: CheckInMethod; overrideReason: string | null; note: string | null }
-export interface NewCheckOut { personId: string; at: string; collectedByPersonId: string | null; overrideReason: string | null; note: string | null }
+export interface NewCheckIn {
+  personId: string;
+  at: string;
+  method: CheckInMethod;
+  overrideReason: string | null;
+  note: string | null;
+}
+export interface NewCheckOut {
+  personId: string;
+  at: string;
+  collectedByPersonId: string | null;
+  overrideReason: string | null;
+  note: string | null;
+}
 /** `from` and `to` are instants (the service converts the camp's local days). `from` inclusive, `to` exclusive. */
-export interface AttendanceQuery { from: string; to: string; personId?: string; onSiteOnly?: boolean }
+export interface AttendanceQuery {
+  from: string;
+  to: string;
+  personId?: string;
+  onSiteOnly?: boolean;
+}
 
 export class AlreadyCheckedInError extends Error {
   readonly kind = 'already-checked-in';
-  constructor() { super('Already checked in'); this.name = 'AlreadyCheckedInError'; }
+  constructor() {
+    super('Already checked in');
+    this.name = 'AlreadyCheckedInError';
+  }
 }
-export const isAlreadyCheckedIn = (e: unknown): e is AlreadyCheckedInError => e instanceof Error && (e as { kind?: unknown }).kind === 'already-checked-in';
+export const isAlreadyCheckedIn = (e: unknown): e is AlreadyCheckedInError =>
+  e instanceof Error && (e as { kind?: unknown }).kind === 'already-checked-in';
 
 export class NotOnSiteError extends Error {
   readonly kind = 'not-on-site';
-  constructor() { super('Not on site'); this.name = 'NotOnSiteError'; }
+  constructor() {
+    super('Not on site');
+    this.name = 'NotOnSiteError';
+  }
 }
-export const isNotOnSite = (e: unknown): e is NotOnSiteError => e instanceof Error && (e as { kind?: unknown }).kind === 'not-on-site';
+export const isNotOnSite = (e: unknown): e is NotOnSiteError =>
+  e instanceof Error && (e as { kind?: unknown }).kind === 'not-on-site';
 
 /** Most rows one query returns; a log longer than this is exported in date slices. */
 export const MAX_LOG_ROWS = 5000;

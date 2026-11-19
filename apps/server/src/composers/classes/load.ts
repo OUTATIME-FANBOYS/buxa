@@ -11,8 +11,12 @@ async function guarded<T>(work: () => Promise<T>): Promise<Loaded<T>> {
   try {
     return { ok: true, value: await work() };
   } catch (error) {
-    if (isHttpError(error) && error.statusCode === 403) return { ok: false, reason: 'forbidden' };
-    if (isHttpError(error) && error.statusCode === 404) return { ok: false, reason: 'not-found' };
+    if (isHttpError(error) && error.statusCode === 403) {
+      return { ok: false, reason: 'forbidden' };
+    }
+    if (isHttpError(error) && error.statusCode === 404) {
+      return { ok: false, reason: 'not-found' };
+    }
     throw error;
   }
 }
@@ -21,27 +25,42 @@ async function guarded<T>(work: () => Promise<T>): Promise<Loaded<T>> {
 export async function loadClasses(actor: Actor): Promise<Loaded<Class[]>> {
   return guarded(async () => {
     const outcome = await getRuntime().services.classes.listClasses(actor);
-    if (!outcome.ok) throw notFound(outcome.failure.message);
+    if (!outcome.ok) {
+      throw notFound(outcome.failure.message);
+    }
+
     return outcome.value;
   });
 }
 
 /** One class and its sessions. Not found when the class is not in this camp. */
-export async function loadClassPage(actor: Actor, classId: string): Promise<Loaded<{ cls: Class; sessions: Session[] }>> {
+export async function loadClassPage(
+  actor: Actor,
+  classId: string,
+): Promise<Loaded<{ cls: Class; sessions: Session[] }>> {
   return guarded(async () => {
     const services = getRuntime().services.classes;
     const cls = await services.getClass(actor, classId);
-    if (!cls.ok) throw notFound(cls.failure.message);
+    if (!cls.ok) {
+      throw notFound(cls.failure.message);
+    }
     const sessions = await services.listSessions(actor, classId);
-    if (!sessions.ok) throw notFound(sessions.failure.message);
+    if (!sessions.ok) {
+      throw notFound(sessions.failure.message);
+    }
+
     return { cls: cls.value, sessions: sessions.value };
   });
 }
 
 /** The names of the people with one camp role (for the enrol and instructor choices). Needs people:read. */
-export async function loadPeopleWithRole(actor: Actor, role: CampRole): Promise<Loaded<{ id: string; name: string }[]>> {
+export async function loadPeopleWithRole(
+  actor: Actor,
+  role: CampRole,
+): Promise<Loaded<{ id: string; name: string }[]>> {
   return guarded(async () => {
     const people = await getRuntime().services.people.list(actor, { role });
+
     return people.map(p => ({ id: p.id, name: `${p.givenName} ${p.familyName}` }));
   });
 }
@@ -50,7 +69,10 @@ export async function loadPeopleWithRole(actor: Actor, role: CampRole): Promise<
 export async function loadEnrolments(actor: Actor, sessionId: string): Promise<Loaded<Enrolment[]>> {
   return guarded(async () => {
     const outcome = await getRuntime().services.classes.listEnrolments(actor, sessionId);
-    if (!outcome.ok) throw notFound(outcome.failure.message);
+    if (!outcome.ok) {
+      throw notFound(outcome.failure.message);
+    }
+
     return outcome.value;
   });
 }

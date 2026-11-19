@@ -1,9 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { Person } from '@buxa/contracts';
-import { PersonHeader } from '@/components/components/people/export';
+import { PersonHeader } from '@/components/components/people';
 
-const person = { givenName: 'Ada', familyName: 'Lee', preferredName: null, roles: [], status: 'valid', onSite: false, archived: false } as unknown as Person;
+const person = {
+  givenName: 'Ada',
+  familyName: 'Lee',
+  preferredName: null,
+  roles: [],
+  status: 'valid',
+  onSite: false,
+  archived: false,
+} as unknown as Person;
 
 describe('PersonHeader', () => {
   it('shows the name and the membership status in words', () => {
@@ -13,7 +21,7 @@ describe('PersonHeader', () => {
     expect(html).not.toContain('Archived');
   });
   it('says so when the person is archived, and shows on-site only when they are on site', () => {
-    const html = renderToStaticMarkup(<PersonHeader person={{ ...person, archived: true, onSite: true } as unknown as Person} />);
+    const html = renderToStaticMarkup(<PersonHeader person={{ ...person, archived: true, onSite: true }} />);
     expect(html).toContain('Archived');
     expect(html).toContain('On site');
   });

@@ -11,14 +11,27 @@ describe('readImportFile: header', () => {
   it('accepts the template header and maps each data row by column name', () => {
     const r = read(`${HEADER}\r\n${ROW}\r\n`);
     expect(r.ok).toBe(true);
-    if (!r.ok) return;
-    expect(r.rows).toEqual([{
-      rowNumber: 2,
-      cells: {
-        external_key: 'EXT-1', class_name: 'Robotics', starts_at: '2027-07-05T09:00', ends_at: '2027-07-05T12:00', location: 'Lab 1',
-        age_min: '8', age_max: '12', capacity: '2', instructor_names: 'Ana;Ben', ratio_campers: '1', ratio_instructors: '8',
+    if (!r.ok) {
+      return;
+    }
+    expect(r.rows).toEqual([
+      {
+        rowNumber: 2,
+        cells: {
+          external_key: 'EXT-1',
+          class_name: 'Robotics',
+          starts_at: '2027-07-05T09:00',
+          ends_at: '2027-07-05T12:00',
+          location: 'Lab 1',
+          age_min: '8',
+          age_max: '12',
+          capacity: '2',
+          instructor_names: 'Ana;Ben',
+          ratio_campers: '1',
+          ratio_instructors: '8',
+        },
       },
-    }]);
+    ]);
   });
 
   it('accepts the columns in any order, matched by name', () => {
@@ -30,27 +43,41 @@ describe('readImportFile: header', () => {
 
   it('names the exact column that is missing', () => {
     const without = IMPORT_COLUMNS.filter(c => c !== 'ends_at').join(',');
-    expect(read(`${without}\n`)).toEqual({ ok: false, message: 'The column "ends_at" is missing from the header row.' });
+    expect(read(`${without}\n`)).toEqual({
+      ok: false,
+      message: 'The column "ends_at" is missing from the header row.',
+    });
   });
 
   it('names a misspelled column as missing, and the misspelt one as not part of the template', () => {
     const misspelt = HEADER.replace('starts_at', 'start_at');
     const r = read(`${misspelt}\n`);
     expect(r.ok).toBe(false);
-    if (r.ok) return;
+    if (r.ok) {
+      return;
+    }
     expect(r.message).toBe('The column "starts_at" is missing from the header row.');
   });
 
   it('names an unknown extra column', () => {
-    expect(read(`${HEADER},notes\n`)).toEqual({ ok: false, message: 'The column "notes" is not part of the template. Check the spelling.' });
+    expect(read(`${HEADER},notes\n`)).toEqual({
+      ok: false,
+      message: 'The column "notes" is not part of the template. Check the spelling.',
+    });
   });
 
   it('names a column that appears twice', () => {
-    expect(read(`${HEADER},location\n`)).toEqual({ ok: false, message: 'The column "location" appears more than once.' });
+    expect(read(`${HEADER},location\n`)).toEqual({
+      ok: false,
+      message: 'The column "location" appears more than once.',
+    });
   });
 
   it('refuses an empty file', () => {
-    expect(read('﻿\r\n\r\n')).toEqual({ ok: false, message: 'The file is empty. Download the template and fill it in.' });
+    expect(read('﻿\r\n\r\n')).toEqual({
+      ok: false,
+      message: 'The file is empty. Download the template and fill it in.',
+    });
   });
 });
 
@@ -66,7 +93,10 @@ describe('readImportFile: rows and limits', () => {
   });
 
   it('refuses a row with a value beyond the last column', () => {
-    expect(read(`${HEADER}\n${ROW},extra\n`)).toEqual({ ok: false, message: 'Row 2 has more cells than the header row.' });
+    expect(read(`${HEADER}\n${ROW},extra\n`)).toEqual({
+      ok: false,
+      message: 'Row 2 has more cells than the header row.',
+    });
   });
 
   it('accepts a file with the row limit and refuses one row more', () => {
@@ -90,6 +120,9 @@ describe('readImportFile: rows and limits', () => {
   });
 
   it('reports a parse error with its line', () => {
-    expect(read(`${HEADER}\n"${ROW}\n`)).toEqual({ ok: false, message: 'Line 2: A quote opened on line 2 is never closed.' });
+    expect(read(`${HEADER}\n"${ROW}\n`)).toEqual({
+      ok: false,
+      message: 'Line 2: A quote opened on line 2 is never closed.',
+    });
   });
 });

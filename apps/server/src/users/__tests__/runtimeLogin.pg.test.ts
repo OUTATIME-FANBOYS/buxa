@@ -4,6 +4,7 @@ import pg from 'pg';
 import { migrate, withOrg } from '@buxa/db';
 import { PgUserRepository } from '../PgUserRepository';
 import { PgOrgRepository } from '../../orgs/PgOrgRepository';
+import { requirePresent } from '@buxa/domain';
 
 const url = process.env.DATABASE_URL;
 
@@ -19,9 +20,11 @@ describe.skipIf(!url)('runtime login without row-level-security bypass (S-06)', 
 
   beforeAll(async () => {
     await migrate(admin);
-    await admin.query(`CREATE ROLE "${role}" LOGIN PASSWORD '${password}' NOSUPERUSER NOBYPASSRLS NOCREATEROLE NOCREATEDB`);
+    await admin.query(
+      `CREATE ROLE "${role}" LOGIN PASSWORD '${password}' NOSUPERUSER NOBYPASSRLS NOCREATEROLE NOCREATEDB`,
+    );
     await admin.query(`GRANT buxa_app TO "${role}"`);
-    const runtimeUrl = new URL(url as string);
+    const runtimeUrl = new URL(requirePresent(url, 'url'));
     runtimeUrl.username = role;
     runtimeUrl.password = password;
     runtime = new pg.Pool({ connectionString: runtimeUrl.toString(), max: 2 });
@@ -34,7 +37,9 @@ describe.skipIf(!url)('runtime login without row-level-security bypass (S-06)', 
   });
 
   it('the runtime login has no bypass and no CREATEROLE', async () => {
-    const r = await admin.query('SELECT rolsuper, rolbypassrls, rolcreaterole FROM pg_roles WHERE rolname = $1', [role]);
+    const r = await admin.query('SELECT rolsuper, rolbypassrls, rolcreaterole FROM pg_roles WHERE rolname = $1', [
+      role,
+    ]);
     expect(r.rows[0]).toEqual({ rolsuper: false, rolbypassrls: false, rolcreaterole: false });
   });
 
@@ -51,13 +56,18 @@ describe.skipIf(!url)('runtime login without row-level-security bypass (S-06)', 
     const email = `runtime-${tag}@privs.test`;
 
     const user = await users.upsertFromIdentity({ authId, email, name: 'Runtime Owner' });
-    expect(user).toEqual({ id: expect.any(String), email, name: 'Runtime Owner' });
+    expect(typeof user.id).toBe('string');
+    expect(Object.keys(user).sort()).toEqual(['clockFormat', 'email', 'firstName', 'id', 'lastName', 'name']);
+    expect(user).toMatchObject({ email, name: 'Runtime Owner' });
     // The same provider id updates the row rather than creating a second one.
     const again = await users.upsertFromIdentity({ authId, email, name: 'Runtime Owner' });
     expect(again.id).toBe(user.id);
 
     expect(await users.membershipsOf(user.id)).toEqual([]);
-    const org = await orgs.createWithOwner({ name: `Runtime camp ${tag}`, slug: `runtime-camp-${tag}`, timezone: 'UTC' }, user.id);
+    const org = await orgs.createWithOwner(
+      { name: `Runtime camp ${tag}`, slug: `runtime-camp-${tag}`, timezone: 'UTC' },
+      user.id,
+    );
     expect(org).toMatchObject({ name: `Runtime camp ${tag}`, slug: `runtime-camp-${tag}`, role: 'owner' });
 
     expect(await users.membershipsOf(user.id)).toEqual([
@@ -70,9 +80,19 @@ describe.skipIf(!url)('runtime login without row-level-security bypass (S-06)', 
   it('a second camp is hidden from the first one, even though the runtime login created both', async () => {
     const users = new PgUserRepository(runtime);
     const orgs = new PgOrgRepository(runtime);
-    const owner = await users.upsertFromIdentity({ authId: randomUUID(), email: `other-${tag}@privs.test`, name: 'Other Owner' });
-    const other = await orgs.createWithOwner({ name: `Other camp ${tag}`, slug: `other-camp-${tag}`, timezone: 'UTC' }, owner.id);
-    const first = await orgs.createWithOwner({ name: `First camp ${tag}`, slug: `first-camp-${tag}`, timezone: 'UTC' }, owner.id);
+    const owner = await users.upsertFromIdentity({
+      authId: randomUUID(),
+      email: `other-${tag}@privs.test`,
+      name: 'Other Owner',
+    });
+    const other = await orgs.createWithOwner(
+      { name: `Other camp ${tag}`, slug: `other-camp-${tag}`, timezone: 'UTC' },
+      owner.id,
+    );
+    const first = await orgs.createWithOwner(
+      { name: `First camp ${tag}`, slug: `first-camp-${tag}`, timezone: 'UTC' },
+      owner.id,
+    );
 
     const seenFromFirst = await withOrg(runtime, first.id, db => db.query<{ id: string }>('SELECT id FROM orgs'));
     expect(seenFromFirst.rows.map(r => r.id)).toEqual([first.id]);

@@ -2,8 +2,11 @@
 export function formOf(values: Record<string, string | string[]>): FormData {
   const form = new FormData();
   for (const [name, value] of Object.entries(values)) {
-    for (const item of Array.isArray(value) ? value : [value]) form.append(name, item);
+    for (const item of Array.isArray(value) ? value : [value]) {
+      form.append(name, item);
+    }
   }
+
   return form;
 }
 

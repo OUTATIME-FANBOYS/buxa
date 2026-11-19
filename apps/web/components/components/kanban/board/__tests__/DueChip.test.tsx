@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { DueChip } from '@/components/components/kanban/board/export';
+import { DueChip } from '@/components/components/kanban/board';
 
 describe('DueChip', () => {
-  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date(2027, 6, 10, 12)); });
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2027, 6, 10, 12));
+  });
   afterEach(() => vi.useRealTimers());
 
   it('says when a task is due today, with a clock', () => {

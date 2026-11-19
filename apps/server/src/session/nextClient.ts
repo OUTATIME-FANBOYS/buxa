@@ -10,11 +10,17 @@ import { createSessionClient } from './supabaseClient';
  */
 export async function requestSessionClient(): Promise<SupabaseClient | null> {
   const store = await cookies();
+
   return createSessionClient({
     getAll: () => store.getAll(),
     setAll(list) {
-      try { for (const { name, value, options } of list) store.set(name, value, options); }
-      catch { /* read-only context (Server Component render) */ }
+      try {
+        for (const { name, value, options } of list) {
+          store.set(name, value, options);
+        }
+      } catch {
+        /* read-only context (Server Component render) */
+      }
     },
   });
 }

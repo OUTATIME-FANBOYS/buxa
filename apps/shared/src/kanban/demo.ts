@@ -12,6 +12,9 @@ export function buildDemo(): AppState {
   const director: AppState = { ...s, session: { userId: USER.rosa } };
   const pending = director.proposals.filter(p => p.status === 'pending');
   let n = pending[0] ? A.decide(director, pending[0].id, 'approve') : director;
-  if (pending[1]) n = A.decide(n, pending[1].id, 'reject');
+  if (pending[1]) {
+    n = A.decide(n, pending[1].id, 'reject');
+  }
+
   return { ...n, session: { userId: null } };
 }

@@ -37,7 +37,12 @@ describe('csvCell', () => {
 
 describe('encodeCsv', () => {
   it('ends every row with CRLF', () => {
-    expect(encodeCsv([['a', 'b'], ['c', 'd']])).toBe('a,b\r\nc,d\r\n');
+    expect(
+      encodeCsv([
+        ['a', 'b'],
+        ['c', 'd'],
+      ]),
+    ).toBe('a,b\r\nc,d\r\n');
   });
 
   it('encodes no rows as the empty string', () => {
@@ -49,8 +54,16 @@ describe('encodeCsv', () => {
   });
 
   it('round-trips a tricky record through a minimal RFC 4180 reader', () => {
-    const text = encodeCsv([['name', 'note'], ['Ada, "the first"', 'multi\nline'], ['@admin', '']]);
-    expect(parseCsv(text)).toEqual([['name', 'note'], ['Ada, "the first"', 'multi\nline'], ["'@admin", '']]);
+    const text = encodeCsv([
+      ['name', 'note'],
+      ['Ada, "the first"', 'multi\nline'],
+      ['@admin', ''],
+    ]);
+    expect(parseCsv(text)).toEqual([
+      ['name', 'note'],
+      ['Ada, "the first"', 'multi\nline'],
+      ["'@admin", ''],
+    ]);
   });
 });
 
@@ -63,13 +76,29 @@ function parseCsv(text: string): string[][] {
   for (let i = 0; i < text.length; i += 1) {
     const ch = text.charAt(i);
     if (quoted) {
-      if (ch === '"' && text.charAt(i + 1) === '"') { cell += '"'; i += 1; }
-      else if (ch === '"') quoted = false;
-      else cell += ch;
-    } else if (ch === '"') quoted = true;
-    else if (ch === ',') { row.push(cell); cell = ''; }
-    else if (ch === '\r' && text.charAt(i + 1) === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; i += 1; }
-    else cell += ch;
+      if (ch === '"' && text.charAt(i + 1) === '"') {
+        cell += '"';
+        i += 1;
+      } else if (ch === '"') {
+        quoted = false;
+      } else {
+        cell += ch;
+      }
+    } else if (ch === '"') {
+      quoted = true;
+    } else if (ch === ',') {
+      row.push(cell);
+      cell = '';
+    } else if (ch === '\r' && text.charAt(i + 1) === '\n') {
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = '';
+      i += 1;
+    } else {
+      cell += ch;
+    }
   }
+
   return rows;
 }

@@ -1,4 +1,6 @@
-export interface TokenInfo { exists: boolean; createdAt: string | null; lastSeen: string | null }
+import type { TokenInfo } from './types';
+
+export type { TokenInfo };
 
 /**
  * Where "connect this agent to Claude" stands. One phase at a time, so the dialog can never show a token while
@@ -28,12 +30,19 @@ export const UNREACHABLE = 'Could not reach the Buxa server.';
 /** Events that do not fit the current phase are ignored. */
 export function connectionReducer(s: AgentConnection, e: AgentConnectionEvent): AgentConnection {
   switch (e.type) {
-    case 'loaded': return s.phase === 'loading' ? { phase: 'ready', info: e.info } : s;
-    case 'loadFailed': return s.phase === 'loading' ? { phase: 'unreachable' } : s;
-    case 'issueStarted': return s.phase === 'ready' ? { phase: 'issuing', info: s.info } : s;
-    case 'issued': return s.phase === 'issuing' ? { phase: 'issued', info: { ...s.info, exists: true }, token: e.token } : s;
-    case 'issueFailed': return s.phase === 'issuing' ? { phase: 'ready', info: s.info, error: ISSUE_FAILED } : s;
-    case 'infoRefreshed': return s.phase === 'issued' ? { ...s, info: e.info } : s;
-    case 'revoked': return s.phase === 'ready' ? { phase: 'ready', info: e.info } : s;
+    case 'loaded':
+      return s.phase === 'loading' ? { phase: 'ready', info: e.info } : s;
+    case 'loadFailed':
+      return s.phase === 'loading' ? { phase: 'unreachable' } : s;
+    case 'issueStarted':
+      return s.phase === 'ready' ? { phase: 'issuing', info: s.info } : s;
+    case 'issued':
+      return s.phase === 'issuing' ? { phase: 'issued', info: { ...s.info, exists: true }, token: e.token } : s;
+    case 'issueFailed':
+      return s.phase === 'issuing' ? { phase: 'ready', info: s.info, error: ISSUE_FAILED } : s;
+    case 'infoRefreshed':
+      return s.phase === 'issued' ? { ...s, info: e.info } : s;
+    case 'revoked':
+      return s.phase === 'ready' ? { phase: 'ready', info: e.info } : s;
   }
 }

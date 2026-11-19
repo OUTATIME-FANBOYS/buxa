@@ -1,6 +1,11 @@
 import { personPath } from '@/config/routes';
+import { Button } from '@/components/elements';
+import { SearchField } from '@/components/atoms';
 
-export interface PersonFinderProps { personId: string; query: string }
+interface PersonFinderProps {
+  personId: string;
+  query: string;
+}
 
 /**
  * A plain GET form that searches the camp by name for someone to link. Bookmarkable (`?q=`) and works without JavaScript.
@@ -8,12 +13,14 @@ export interface PersonFinderProps { personId: string; query: string }
  */
 export function PersonFinder({ personId, query }: PersonFinderProps) {
   return (
-    <form role="search" method="get" action={personPath(personId)} className="form-row">
-      <label className="field">
-        <span className="field-label">Find someone by name</span>
-        <input type="search" name="q" defaultValue={query} maxLength={80} autoComplete="off" />
-      </label>
-      <button className="btn" type="submit">Search</button>
+    <form
+      role="search"
+      method="get"
+      action={personPath(personId)}
+      className="form-row buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-end buxa:[&>.field]:flex-[1_1_180px] buxa:[&>.field]:min-w-0 buxa:[&>.button]:flex-none buxa:[&>a.button]:flex-none"
+    >
+      <SearchField label="Find someone by name" name="q" defaultValue={query} maxLength={80} autoComplete="off" />
+      <Button type="submit" iconOnly icon="search" aria-label="Search people by name" />
     </form>
   );
 }

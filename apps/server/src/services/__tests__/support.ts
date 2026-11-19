@@ -37,7 +37,11 @@ export async function createCamp(timeZone = 'UTC', start = '2027-07-10T12:00:00Z
   const org = await store.createWithOwner({ name: 'Summer Camp', slug: 'summer-camp', timezone: timeZone }, owner.id);
   const users = new Map<Role, string>([['owner', owner.id]]);
   for (const role of ['admin', 'staff', 'viewer'] as const) {
-    const user = await store.upsertFromIdentity({ authId: `${role}-user`, email: `${role}@example.org`, name: `${role[0].toUpperCase()}${role.slice(1)} User` });
+    const user = await store.upsertFromIdentity({
+      authId: `${role}-user`,
+      email: `${role}@example.org`,
+      name: `${role[0].toUpperCase()}${role.slice(1)} User`,
+    });
     store.members.push({ orgId: org.id, userId: user.id, role });
     users.set(role, user.id);
   }
@@ -46,14 +50,44 @@ export async function createCamp(timeZone = 'UTC', start = '2027-07-10T12:00:00Z
     repos,
     store,
     orgId: org.id,
-    people: createPeopleService({ people: repos.people, memberships: repos.memberships, credentials: repos.credentials, attendance: repos.attendance, orgs: repos.orgs, clock }),
-    memberships: createMembershipService({ memberships: repos.memberships, people: repos.people, orgs: repos.orgs, clock }),
-    credentials: createCredentialService({ credentials: repos.credentials, people: repos.people, memberships: repos.memberships, attendance: repos.attendance, orgs: repos.orgs, clock }),
-    attendance: createAttendanceService({ attendance: repos.attendance, people: repos.people, memberships: repos.memberships, orgs: repos.orgs, clock }),
-    at(iso) { now = new Date(iso); },
+    people: createPeopleService({
+      people: repos.people,
+      memberships: repos.memberships,
+      credentials: repos.credentials,
+      attendance: repos.attendance,
+      orgs: repos.orgs,
+      clock,
+    }),
+    memberships: createMembershipService({
+      memberships: repos.memberships,
+      people: repos.people,
+      orgs: repos.orgs,
+      clock,
+    }),
+    credentials: createCredentialService({
+      credentials: repos.credentials,
+      people: repos.people,
+      memberships: repos.memberships,
+      attendance: repos.attendance,
+      orgs: repos.orgs,
+      clock,
+    }),
+    attendance: createAttendanceService({
+      attendance: repos.attendance,
+      people: repos.people,
+      memberships: repos.memberships,
+      orgs: repos.orgs,
+      clock,
+    }),
+    at(iso) {
+      now = new Date(iso);
+    },
     actor(role) {
       const userId = users.get(role);
-      if (!userId) throw new Error(`no ${role} user`);
+      if (!userId) {
+        throw new Error(`no ${role} user`);
+      }
+
       return { userId, orgId: org.id, role };
     },
     audit: () => store.audit,
@@ -62,8 +96,12 @@ export async function createCamp(timeZone = 'UTC', start = '2027-07-10T12:00:00Z
 
 /** Runs `work` and returns the error it threw, or fails the test if it did not throw. */
 export async function thrown(work: () => Promise<unknown>): Promise<{ statusCode?: number; message: string }> {
-  try { await work(); } catch (error) {
-    if (error instanceof Error) return { statusCode: (error as { statusCode?: number }).statusCode, message: error.message };
+  try {
+    await work();
+  } catch (error) {
+    if (error instanceof Error) {
+      return { statusCode: (error as { statusCode?: number }).statusCode, message: error.message };
+    }
     throw error;
   }
   throw new Error('expected an error, none was thrown');

@@ -6,12 +6,19 @@ export function normalizeForSearch(text: string): string {
   return text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
-export interface SearchableName { givenName: string; familyName: string; preferredName: string | null }
+export interface SearchableName {
+  givenName: string;
+  familyName: string;
+  preferredName: string | null;
+}
 
 /** Every word of the query must appear in the given, family or preferred name. The in-memory adapter uses this; Postgres mirrors it. */
 export function matchesName(person: SearchableName, query: string): boolean {
   const words = normalizeForSearch(query).split(' ').filter(Boolean);
-  if (words.length === 0) return false;
+  if (words.length === 0) {
+    return false;
+  }
   const haystack = normalizeForSearch([person.givenName, person.familyName, person.preferredName ?? ''].join(' '));
+
   return words.every(w => haystack.includes(w));
 }

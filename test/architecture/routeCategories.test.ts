@@ -16,7 +16,12 @@ const RESERVED_PARENT = '(parent)';
 /** The Home page (/camp). It sits in (work) because it shares the work shell (WorkArea), and it is the only page allowed at a group's root. */
 const HOME_FILE = '(work)/page.tsx';
 /** The sidebar group label, mapped to the folder that holds its pages. Home's group is empty, and Home lives in (work). */
-const GROUP_FOLDER: Record<string, string> = { '': '(work)', Operations: '(operations)', Work: '(work)', Admin: '(admin)' };
+const GROUP_FOLDER: Record<string, string> = {
+  '': '(work)',
+  Operations: '(operations)',
+  Work: '(work)',
+  Admin: '(admin)',
+};
 
 const isGroup = (segment: string) => segment.startsWith('(') && segment.endsWith(')');
 const isPageFile = (name: string) => name === 'page.tsx' || name === 'route.ts';
@@ -25,6 +30,7 @@ const isPageFile = (name: string) => name === 'page.tsx' || name === 'route.ts';
 function listFiles(dir: string, prefix: string[] = []): string[] {
   return readdirSync(join(dir, ...prefix), { withFileTypes: true }).flatMap(entry => {
     const here = [...prefix, entry.name];
+
     return entry.isDirectory() ? listFiles(dir, here) : [here.join('/')];
   });
 }
@@ -34,7 +40,11 @@ const pageFiles = files.filter(file => isPageFile(file.split('/').pop() ?? ''));
 
 /** The URL a page file serves: group folders are removed, the file name is dropped. */
 const urlOf = (file: string) => {
-  const segments = file.split('/').slice(0, -1).filter(segment => !isGroup(segment));
+  const segments = file
+    .split('/')
+    .slice(0, -1)
+    .filter(segment => !isGroup(segment));
+
   return ['/camp', ...segments].join('/').replace(/\/$/, '');
 };
 
@@ -66,7 +76,9 @@ describe('route categories', () => {
       const folder = GROUP_FOLDER[group.label];
       expect(folder, `no folder for sidebar group "${group.label}"`).toBeDefined();
       for (const item of group.items) {
-        if (folderOf.get(item.href) !== folder) wrong.push(`${item.label} (${item.href}) is in ${folderOf.get(item.href) ?? 'no page'}, not ${folder}`);
+        if (folderOf.get(item.href) !== folder) {
+          wrong.push(`${item.label} (${item.href}) is in ${folderOf.get(item.href) ?? 'no page'}, not ${folder}`);
+        }
       }
     }
     expect(wrong).toEqual([]);

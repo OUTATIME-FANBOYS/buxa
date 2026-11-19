@@ -5,6 +5,7 @@ import { forbidden } from '../../../http/errors';
 import { createPersonAction } from '../createPersonAction';
 import { CAMPER_NEEDS_HOUSEHOLD, CHOOSE_ONE_HOUSEHOLD, NEW_HOUSEHOLD_NO_GUARDIAN } from '@buxa/shared';
 import { formOf, IDS } from './form';
+import { settle } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({
   actor: null as null | { userId: string; orgId: string; role: 'owner' | 'admin' | 'staff' | 'viewer' },
@@ -15,7 +16,7 @@ const h = vi.hoisted(() => ({
 vi.mock('next/cache', () => ({ revalidatePath: h.revalidatePath }));
 vi.mock('next/navigation', () => ({ redirect: h.redirect }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: { people: h.people } }) }));
-vi.mock('../camp', () => ({ currentActor: async () => h.actor }));
+vi.mock('../camp', () => ({ currentActor: () => settle(() => h.actor) }));
 
 const adult = { givenName: 'Anna', familyName: 'Lee', roles: 'guardian' };
 const camper = { givenName: 'Ben', familyName: 'Lee', roles: 'camper' };
@@ -24,14 +25,19 @@ describe('createPersonAction', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     h.actor = { userId: 'u1', orgId: 'o1', role: 'staff' };
-    h.redirect.mockImplementation((to: string) => { throw new Error(`NEXT_REDIRECT ${to}`); });
+    h.redirect.mockImplementation((to: string) => {
+      throw new Error(`NEXT_REDIRECT ${to}`);
+    });
     h.people.create.mockResolvedValue({ id: IDS.person });
     h.people.createHousehold.mockResolvedValue({ id: IDS.household, name: 'Lee family', members: [] });
   });
 
   it('reports the contract messages for missing names and roles, and creates nothing', async () => {
     const state = await createPersonAction(idle, formOf({ givenName: '', familyName: '', roles: [] }));
-    expect(state).toMatchObject({ status: 'error', fieldErrors: { givenName: 'Required.', familyName: 'Required.', roles: 'Choose at least one role.' } });
+    expect(state).toMatchObject({
+      status: 'error',
+      fieldErrors: { givenName: 'Required.', familyName: 'Required.', roles: 'Choose at least one role.' },
+    });
     expect(h.people.create).not.toHaveBeenCalled();
   });
 
@@ -48,7 +54,10 @@ describe('createPersonAction', () => {
   });
 
   it('refuses both an existing household and a new one', async () => {
-    const state = await createPersonAction(idle, formOf({ ...adult, householdId: IDS.household, newHouseholdName: 'Other' }));
+    const state = await createPersonAction(
+      idle,
+      formOf({ ...adult, householdId: IDS.household, newHouseholdName: 'Other' }),
+    );
     expect(state).toMatchObject({ status: 'error', fieldErrors: { householdId: CHOOSE_ONE_HOUSEHOLD } });
   });
 
@@ -59,15 +68,21 @@ describe('createPersonAction', () => {
   });
 
   it('adds a child to an existing household, refreshes the list and opens the new person', async () => {
-    await expect(createPersonAction(idle, formOf({ ...camper, householdId: IDS.household, relationship: 'Son', email: '' })))
-      .rejects.toThrow(`NEXT_REDIRECT ${personPath(IDS.person)}`);
-    expect(h.people.create).toHaveBeenCalledWith(h.actor, expect.objectContaining({ givenName: 'Ben', roles: ['camper'], householdId: IDS.household, relationship: 'Son' }));
+    await expect(
+      createPersonAction(idle, formOf({ ...camper, householdId: IDS.household, relationship: 'Son', email: '' })),
+    ).rejects.toThrow(`NEXT_REDIRECT ${personPath(IDS.person)}`);
+    expect(h.people.create).toHaveBeenCalledWith(
+      h.actor,
+      expect.objectContaining({ givenName: 'Ben', roles: ['camper'], householdId: IDS.household, relationship: 'Son' }),
+    );
     expect(h.people.create.mock.calls[0]?.[1]).not.toHaveProperty('email');
     expect(h.revalidatePath).toHaveBeenCalledWith(ROUTES.people);
   });
 
   it('passes a new household name to the service, which creates it in the same transaction as the guardian', async () => {
-    await expect(createPersonAction(idle, formOf({ ...adult, newHouseholdName: ' Lee family ' }))).rejects.toThrow('NEXT_REDIRECT');
+    await expect(createPersonAction(idle, formOf({ ...adult, newHouseholdName: ' Lee family ' }))).rejects.toThrow(
+      'NEXT_REDIRECT',
+    );
     expect(h.people.createHousehold).not.toHaveBeenCalled();
     expect(h.people.create).toHaveBeenCalledWith(h.actor, expect.objectContaining({ newHouseholdName: 'Lee family' }));
   });

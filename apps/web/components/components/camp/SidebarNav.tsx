@@ -2,12 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Icon } from '@/components/elements/export';
+import { Icon } from '@/components/elements';
 import { isActive, type NavGroup } from '@buxa/shared';
 
-/** The links in their groups, a client island only to mark the current page. */
+/**
+ * The links in their groups, a client island only to mark the current page. A link gives a little when pressed
+ * (the scale and quick transition on :active).
+ */
 export function SidebarNav({ groups }: { groups: readonly NavGroup[] }) {
   const pathname = usePathname();
+
   return (
     <nav>
       {groups.map(group => (
@@ -15,11 +19,17 @@ export function SidebarNav({ groups }: { groups: readonly NavGroup[] }) {
           {group.label && <h2 className="nav-group-label">{group.label}</h2>}
           <ul>
             {group.items.map(item => {
-              const active = isActive(pathname ?? "", item);
+              const active = isActive(pathname ?? '', item);
+
               return (
                 <li key={item.href}>
-                  <Link href={item.href} className={active ? 'active' : ''} aria-current={active ? 'page' : undefined}>
-                    <Icon name={item.icon} size={18} /><span className="collapsible">{item.label}</span>
+                  <Link
+                    href={item.href}
+                    className={`${active ? 'active' : ''} buxa:active:[transform:scale(0.98)] buxa:active:duration-[0.08s]`}
+                    aria-current={active ? 'page' : undefined}
+                  >
+                    <Icon name={item.icon} size={18} />
+                    <span className="collapsible">{item.label}</span>
                   </Link>
                 </li>
               );

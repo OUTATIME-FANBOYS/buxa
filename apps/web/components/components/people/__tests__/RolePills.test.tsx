@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { CAMP_ROLES, CAMP_ROLE_LABELS } from '@buxa/domain';
-import { RolePills } from '@/components/components/people/export';
+import { RolePills } from '@/components/components/people';
 
 describe('RolePills', () => {
   it('shows each role with its label', () => {

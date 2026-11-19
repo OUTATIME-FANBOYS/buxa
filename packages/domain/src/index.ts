@@ -2,5 +2,8 @@ export * from './permissions';
 export * from './ids';
 export * from './slug';
 export * from './audit';
+export * from './clock';
 export * from './people';
 export * from './classes';
+export * from './presence';
+export * from './settle';

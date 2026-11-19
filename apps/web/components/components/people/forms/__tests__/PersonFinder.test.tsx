@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { PersonFinder } from '@/components/components/people/forms/export';
+import { PersonFinder } from '@/components/components/people/forms';
 
 describe('PersonFinder', () => {
   it('is a bookmarkable GET search back on the person’s page, with the query kept', () => {

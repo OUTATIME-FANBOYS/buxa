@@ -1,14 +1,15 @@
 'use client';
 
 import { useActionState } from 'react';
-import { BadgeCard } from '@/components/components/badge/export';
-import { PrintButton } from '@/components/elements/export';
+import { BadgeCard } from '@/components/components/badge';
+import { PrintButton, Button } from '@/components/elements';
+import { HiddenField } from '@/components/atoms';
 import { idle } from '@buxa/shared';
 import { issueBadgeAction, revokeBadgeAction } from '@/actions/people';
 import type { BadgeState } from '@buxa/shared';
 import { FormMessage } from './FormMessage';
 
-export interface BadgeActionsProps {
+interface BadgeActionsProps {
   personId: string;
   hasActiveBadge: boolean;
   personName: string;
@@ -31,24 +32,34 @@ export function BadgeActions({ personId, hasActiveBadge, personName, roleLabel, 
     <div className="stack">
       <div className="row">
         <form action={issueAction}>
-          <input type="hidden" name="personId" value={personId} />
-          <button className="btn btn-primary" disabled={issuing}>{issuing ? 'Making badge…' : hasActiveBadge ? 'Reissue badge' : 'Issue badge'}</button>
+          <HiddenField name="personId" value={personId} />
+          <Button variant="primary" icon="badge" disabled={issuing}>
+            {issuing ? 'Making badge…' : hasActiveBadge ? 'Reissue badge' : 'Issue badge'}
+          </Button>
         </form>
         {hasActiveBadge && (
           <form action={revokeAction}>
-            <input type="hidden" name="personId" value={personId} />
-            <button className="btn btn-danger-ghost btn-ghost" disabled={revoking}>{revoking ? 'Revoking…' : 'Revoke badge'}</button>
+            <HiddenField name="personId" value={personId} />
+            <Button variant="danger-soft" icon="ban" disabled={revoking}>
+              {revoking ? 'Revoking…' : 'Revoke badge'}
+            </Button>
           </form>
         )}
       </div>
-      {hasActiveBadge && !newBadge && <p className="muted">Reissuing replaces the current badge. The old code stops working at once.</p>}
+      {hasActiveBadge && !newBadge && (
+        <p className="muted">Reissuing replaces the current badge. The old code stops working at once.</p>
+      )}
       <FormMessage state={issued.status === 'issued' ? idle : issued} />
       <FormMessage state={revoked} />
       {newBadge && (
         <div className="stack people-badge">
-          <p role="status" className="people-message people-message-ok">New badge. It is shown once: print it now.</p>
+          <p role="status" className="people-message people-message-ok">
+            New badge. It is shown once: print it now.
+          </p>
           <BadgeCard personName={personName} roleLabel={roleLabel} campName={campName} payload={newBadge} />
-          <div><PrintButton /></div>
+          <div>
+            <PrintButton />
+          </div>
         </div>
       )}
     </div>

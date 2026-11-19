@@ -34,14 +34,22 @@ export const lookupEvent = (lookup: Lookup, method: CheckInMethod): CheckInEvent
 
 /** Transitions. While a check-in is being written, only its answer may move the screen. */
 export function checkInReducer(state: CheckInState, event: CheckInEvent): CheckInState {
-  if (state.phase === 'submitting') return event.type === 'answered' ? answered(state, event.outcome) : state;
+  if (state.phase === 'submitting') {
+    return event.type === 'answered' ? answered(state, event.outcome) : state;
+  }
   switch (event.type) {
-    case 'unknown': return { phase: 'unknown' };
-    case 'error': return { phase: 'error', message: event.message };
-    case 'selected': return { phase: 'ready', card: event.card, method: event.method };
-    case 'reset': return CHECK_IN_IDLE;
-    case 'submitted': return submit(state);
-    case 'answered': return state;
+    case 'unknown':
+      return { phase: 'unknown' };
+    case 'error':
+      return { phase: 'error', message: event.message };
+    case 'selected':
+      return { phase: 'ready', card: event.card, method: event.method };
+    case 'reset':
+      return CHECK_IN_IDLE;
+    case 'submitted':
+      return submit(state);
+    case 'answered':
+      return state;
   }
 }
 
@@ -49,12 +57,21 @@ function submit(state: CheckInState): CheckInState {
   if (state.phase === 'ready' || state.phase === 'refused' || state.phase === 'failed') {
     return { phase: 'submitting', card: state.card, method: state.method };
   }
+
   return state;
 }
 
-function answered(state: Extract<CheckInState, { phase: 'submitting' }>, outcome: ActionOutcome<CheckInResult>): CheckInState {
-  if (outcome.kind !== 'ok') return { phase: 'failed', card: state.card, method: state.method, message: outcome.message };
+function answered(
+  state: Extract<CheckInState, { phase: 'submitting' }>,
+  outcome: ActionOutcome<CheckInResult>,
+): CheckInState {
+  if (outcome.kind !== 'ok') {
+    return { phase: 'failed', card: state.card, method: state.method, message: outcome.message };
+  }
   const result = outcome.value;
-  if (result.ok) return { phase: 'done', card: state.card, entry: result.entry, overridden: result.overridden };
+  if (result.ok) {
+    return { phase: 'done', card: state.card, entry: result.entry, overridden: result.overridden };
+  }
+
   return { phase: 'refused', card: state.card, method: state.method, refusal: result };
 }

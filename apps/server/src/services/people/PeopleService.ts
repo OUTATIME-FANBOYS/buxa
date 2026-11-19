@@ -1,4 +1,13 @@
-import type { Household, HouseholdLinkInput, NewHouseholdInput, NewPersonInput, Person, PersonListQuery, PersonPatchInput, PersonSummary } from '@buxa/contracts';
+import type {
+  Household,
+  HouseholdLinkInput,
+  NewHouseholdInput,
+  NewPersonInput,
+  Person,
+  PersonListQuery,
+  PersonPatchInput,
+  PersonSummary,
+} from '@buxa/contracts';
 import type { Actor } from '@buxa/domain';
 import type { AttendanceRepository } from '../../attendance/AttendanceRepository';
 import type { CredentialRepository } from '../../credentials/CredentialRepository';
@@ -38,6 +47,10 @@ export interface PeopleService {
 }
 
 export interface PeopleServiceDeps {
-  people: PeopleRepository; memberships: MembershipRepository; credentials: CredentialRepository; attendance: AttendanceRepository;
-  orgs: OrgRepository; clock: Clock;
+  people: PeopleRepository;
+  memberships: MembershipRepository;
+  credentials: CredentialRepository;
+  attendance: AttendanceRepository;
+  orgs: OrgRepository;
+  clock: Clock;
 }

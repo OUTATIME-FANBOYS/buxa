@@ -9,18 +9,24 @@ describe('parseLogFilter', () => {
   });
 
   it('reads the range and a person', () => {
-    expect(parseLogFilter({ from: '2026-11-10', to: '2026-11-12', personId: PERSON }, '2026-11-13'))
-      .toEqual({ ok: true, filter: { from: '2026-11-10', to: '2026-11-12', personId: PERSON } });
+    expect(parseLogFilter({ from: '2026-11-10', to: '2026-11-12', personId: PERSON }, '2026-11-13')).toEqual({
+      ok: true,
+      filter: { from: '2026-11-10', to: '2026-11-12', personId: PERSON },
+    });
   });
 
   it('treats blank values as missing and takes the first of a repeated name', () => {
-    expect(parseLogFilter({ from: '  ', to: ['2026-11-12', '2026-11-13'], personId: '' }, '2026-11-13'))
-      .toEqual({ ok: true, filter: { from: '2026-11-13', to: '2026-11-13' } });
+    expect(parseLogFilter({ from: '  ', to: ['2026-11-12', '2026-11-13'], personId: '' }, '2026-11-13')).toEqual({
+      ok: true,
+      filter: { from: '2026-11-13', to: '2026-11-13' },
+    });
   });
 
   it('refuses an end date before the start date', () => {
-    expect(parseLogFilter({ from: '2026-11-12', to: '2026-11-10' }, '2026-11-13'))
-      .toEqual({ ok: false, message: 'The end date cannot be before the start date.' });
+    expect(parseLogFilter({ from: '2026-11-12', to: '2026-11-10' }, '2026-11-13')).toEqual({
+      ok: false,
+      message: 'The end date cannot be before the start date.',
+    });
   });
 
   it('refuses a date that does not exist', () => {

@@ -49,14 +49,22 @@ describe.skipIf(!url)('check-in timing on Postgres', () => {
     // 300 people, each with a valid membership and a badge, created through the services so the rules and audit rows apply.
     const people: { personId: string; payload: string }[] = [];
     for (let start = 0; start < CAMP_PEOPLE; start += SEED_CONCURRENCY) {
-      const batch = await Promise.all(Array.from({ length: Math.min(SEED_CONCURRENCY, CAMP_PEOPLE - start) }, async (_, offset) => {
-        const index = start + offset;
-        const input: NewPersonInput = { givenName: `Member ${index}`, familyName: 'Timing', roles: ['participant'] };
-        const person = await services.people.create(actor, input);
-        await services.memberships.add(actor, { personId: person.id, plan: 'Season pass', startsOn: '2020-01-01', endsOn: '2099-12-31' });
-        const badge = await services.credentials.issue(actor, person.id);
-        return { personId: person.id, payload: badge.payload };
-      }));
+      const batch = await Promise.all(
+        Array.from({ length: Math.min(SEED_CONCURRENCY, CAMP_PEOPLE - start) }, async (_, offset) => {
+          const index = start + offset;
+          const input: NewPersonInput = { givenName: `Member ${index}`, familyName: 'Timing', roles: ['participant'] };
+          const person = await services.people.create(actor, input);
+          await services.memberships.add(actor, {
+            personId: person.id,
+            plan: 'Season pass',
+            startsOn: '2020-01-01',
+            endsOn: '2099-12-31',
+          });
+          const badge = await services.credentials.issue(actor, person.id);
+
+          return { personId: person.id, payload: badge.payload };
+        }),
+      );
       people.push(...batch);
     }
     expect(people).toHaveLength(CAMP_PEOPLE);
@@ -74,11 +82,15 @@ describe.skipIf(!url)('check-in timing on Postgres', () => {
       const scan = await services.credentials.scan(actor, person.payload);
       await services.attendance.onSite(actor);
       const scanned = performance.now();
-      if (scan.kind !== 'person') throw new Error('A freshly issued badge did not scan as a person.');
+      if (scan.kind !== 'person') {
+        throw new Error('A freshly issued badge did not scan as a person.');
+      }
 
       const result = await services.attendance.checkIn(actor, { personId: person.personId, method: 'qr' });
       const checked = performance.now();
-      if (!result.ok) throw new Error(`Check-in refused in the timing run: ${result.reason}`);
+      if (!result.ok) {
+        throw new Error(`Check-in refused in the timing run: ${result.reason}`);
+      }
 
       scanMs.push(scanned - started);
       checkInMs.push(checked - scanned);
@@ -92,12 +104,14 @@ describe.skipIf(!url)('check-in timing on Postgres', () => {
     const scan = summarize(scanMs);
     const checkIn = summarize(checkInMs);
     const path = summarize(pathMs);
-    console.log([
-      formatSummary('scan (scan + on-site list)', scan),
-      formatSummary('check-in', checkIn),
-      formatSummary('scan to check-in response', path),
-      `server budget (p95 of scan to check-in response): ${SERVER_P95_BUDGET_MS} ms`,
-    ].join('\n'));
+    console.log(
+      [
+        formatSummary('scan (scan + on-site list)', scan),
+        formatSummary('check-in', checkIn),
+        formatSummary('scan to check-in response', path),
+        `server budget (p95 of scan to check-in response): ${SERVER_P95_BUDGET_MS} ms`,
+      ].join('\n'),
+    );
 
     expect(path.count).toBe(TIMED_CHECK_INS);
     expect(path.p95).toBeLessThan(SERVER_P95_BUDGET_MS);

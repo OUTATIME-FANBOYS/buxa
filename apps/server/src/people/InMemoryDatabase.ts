@@ -26,7 +26,11 @@ export interface StoredPerson {
   createdAt: string;
 }
 
-export interface StoredHouseholdMember { relationship: string; isGuardian: boolean; canPickup: boolean }
+export interface StoredHouseholdMember {
+  relationship: string;
+  isGuardian: boolean;
+  canPickup: boolean;
+}
 
 export interface StoredHousehold {
   id: string;
@@ -71,7 +75,9 @@ export interface StoredCheckIn {
   note: string | null;
 }
 
-interface OrgOwned { orgId: string }
+interface OrgOwned {
+  orgId: string;
+}
 
 /**
  * The state behind the in-memory adapters. One instance is shared by all of them, so a credential can check that its person exists,
@@ -85,12 +91,19 @@ export class InMemoryDatabase {
   readonly checkIns = new Map<string, StoredCheckIn>();
   readonly audit: AuditRecord[] = [];
 
-  record(actor: Pick<Actor, 'userId' | 'orgId'>, action: AuditAction, entity: string, entityId: string, data: Record<string, unknown> = {}): void {
+  record(
+    actor: Pick<Actor, 'userId' | 'orgId'>,
+    action: AuditAction,
+    entity: string,
+    entityId: string,
+    data: Record<string, unknown> = {},
+  ): void {
     this.audit.push({ orgId: actor.orgId, actorId: actor.userId, action, entity, entityId, data });
   }
 
   inOrg<T extends OrgOwned>(rows: Map<string, T>, orgId: string, id: string): T | undefined {
     const row = rows.get(id);
+
     return row !== undefined && row.orgId === orgId ? row : undefined;
   }
 }

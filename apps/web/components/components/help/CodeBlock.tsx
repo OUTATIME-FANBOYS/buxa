@@ -3,7 +3,9 @@ export function CodeBlock({ caption, lines }: { caption: string; lines: readonly
   return (
     <figure className="help-code">
       <figcaption className="muted">{caption}</figcaption>
-      <pre><code>{lines.join('\n')}</code></pre>
+      <pre>
+        <code>{lines.join('\n')}</code>
+      </pre>
     </figure>
   );
 }

@@ -10,11 +10,31 @@ import type { ActionState } from '@buxa/shared';
 export function FormMessage({ state }: { state: ActionState }) {
   const ref = useRef<HTMLParagraphElement>(null);
   const focusable = state.status === 'success' || (state.status === 'error' && !state.fieldErrors);
-  useEffect(() => { if (focusable) ref.current?.focus(); }, [state, focusable]);
+  useEffect(() => {
+    if (focusable) {
+      ref.current?.focus();
+    }
+  }, [state, focusable]);
 
-  if (state.status === 'idle') return null;
-  if (state.status === 'success') {
-    return state.message ? <p ref={ref} tabIndex={-1} role="status" className="people-message people-message-ok">{state.message}</p> : null;
+  if (state.status === 'idle') {
+    return null;
   }
-  return <p ref={ref} tabIndex={-1} role="alert" className="field-error">{state.message}</p>;
+  if (state.status === 'success') {
+    return state.message ? (
+      <p ref={ref} tabIndex={-1} role="status" className="people-message people-message-ok">
+        {state.message}
+      </p>
+    ) : null;
+  }
+
+  return (
+    <p
+      ref={ref}
+      tabIndex={-1}
+      role="alert"
+      className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]"
+    >
+      {state.message}
+    </p>
+  );
 }

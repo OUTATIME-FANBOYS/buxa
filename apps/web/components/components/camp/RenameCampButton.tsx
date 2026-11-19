@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { RenameCampDialog } from './RenameCampDialog';
+import { Button } from '@/components/elements';
 
 /**
  * CONTRACT between chunks B2 (implements this file) and B1 (renders it on the overview page). Props are frozen.
@@ -10,9 +11,12 @@ import { RenameCampDialog } from './RenameCampDialog';
 export function RenameCampButton({ campId, currentName }: { campId: string; currentName: string }) {
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
+
   return (
     <>
-      <button type="button" className="btn" onClick={() => setOpen(true)}>Rename</button>
+      <Button type="button" size="header" onClick={() => setOpen(true)}>
+        Rename
+      </Button>
       {open && <RenameCampDialog campId={campId} currentName={currentName} onClose={close} />}
     </>
   );

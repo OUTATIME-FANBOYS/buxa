@@ -1,5 +1,10 @@
 import type { Actor } from '@buxa/domain';
-import { HouseholdNotFoundError, PersonNotFoundError, type HouseholdLinkRecord, type HouseholdRecord } from './PeopleRepository';
+import {
+  HouseholdNotFoundError,
+  PersonNotFoundError,
+  type HouseholdLinkRecord,
+  type HouseholdRecord,
+} from './PeopleRepository';
 import { compareText, newId, type InMemoryDatabase, type StoredHousehold } from './InMemoryDatabase';
 
 const toRecord = (h: StoredHousehold): HouseholdRecord => ({
@@ -7,7 +12,12 @@ const toRecord = (h: StoredHousehold): HouseholdRecord => ({
   name: h.name,
   members: [...h.members]
     .sort(([a], [b]) => compareText(a, b))
-    .map(([personId, m]) => ({ personId, relationship: m.relationship, isGuardian: m.isGuardian, canPickup: m.canPickup })),
+    .map(([personId, m]) => ({
+      personId,
+      relationship: m.relationship,
+      isGuardian: m.isGuardian,
+      canPickup: m.canPickup,
+    })),
 });
 
 /** Household half of the in-memory people adapter. Mirrors PgHouseholds: same errors, same audit actions, same ordering. */
@@ -18,11 +28,13 @@ export class InMemoryHouseholds {
     const household: StoredHousehold = { id: newId(), orgId: actor.orgId, name, members: new Map() };
     this.db.households.set(household.id, household);
     this.db.record(actor, 'household.create', 'household', household.id);
+
     return toRecord(household);
   }
 
   get(orgId: string, id: string): HouseholdRecord | null {
     const household = this.db.inOrg(this.db.households, orgId, id);
+
     return household ? toRecord(household) : null;
   }
 
@@ -41,10 +53,21 @@ export class InMemoryHouseholds {
   }
 
   link(actor: Actor, link: HouseholdLinkRecord): HouseholdRecord {
-    if (!this.db.inOrg(this.db.people, actor.orgId, link.personId)) throw new PersonNotFoundError();
+    if (!this.db.inOrg(this.db.people, actor.orgId, link.personId)) {
+      throw new PersonNotFoundError();
+    }
     const household = this.require(actor.orgId, link.householdId);
-    household.members.set(link.personId, { relationship: link.relationship, isGuardian: link.isGuardian, canPickup: link.canPickup });
-    this.db.record(actor, 'household.update', 'household', link.householdId, { personId: link.personId, isGuardian: link.isGuardian, canPickup: link.canPickup });
+    household.members.set(link.personId, {
+      relationship: link.relationship,
+      isGuardian: link.isGuardian,
+      canPickup: link.canPickup,
+    });
+    this.db.record(actor, 'household.update', 'household', link.householdId, {
+      personId: link.personId,
+      isGuardian: link.isGuardian,
+      canPickup: link.canPickup,
+    });
+
     return toRecord(household);
   }
 
@@ -53,12 +76,16 @@ export class InMemoryHouseholds {
     if (household.members.delete(personId)) {
       this.db.record(actor, 'household.update', 'household', householdId, { personId });
     }
+
     return toRecord(household);
   }
 
   private require(orgId: string, id: string): StoredHousehold {
     const household = this.db.inOrg(this.db.households, orgId, id);
-    if (!household) throw new HouseholdNotFoundError();
+    if (!household) {
+      throw new HouseholdNotFoundError();
+    }
+
     return household;
   }
 }

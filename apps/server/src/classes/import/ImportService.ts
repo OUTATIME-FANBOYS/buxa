@@ -1,4 +1,14 @@
-import { MAX_IMPORT_ROWS, planImport, readImportFile, type Actor, type ClassRef, type ImportPlan, type ImportRow, type RowResult } from '@buxa/domain';
+import {
+  MAX_IMPORT_ROWS,
+  planImport,
+  readImportFile,
+  type Actor,
+  type ClassRef,
+  type ImportPlan,
+  type ImportRow,
+  type RowResult,
+  settle,
+} from '@buxa/domain';
 import { assertAllowed } from '../../auth/authorize';
 import { badRequest } from '../../http/errors';
 import type { ClassRepository } from '../ClassRepository';
@@ -17,7 +27,10 @@ import { importErrorReportCsv, importTemplateCsv } from './importCsv';
 
 export const MAX_FILE_NAME = 255;
 
-export interface ImportFile { fileName: string; text: string }
+export interface ImportFile {
+  fileName: string;
+  text: string;
+}
 
 /** What the owner sees before confirming. `input` is the file as read, kept so the confirm can re-check it against current data. */
 export interface ImportPreview {
@@ -48,50 +61,81 @@ export interface ImportServiceDeps {
   classes: ClassRepository;
   imports: ImportRepository;
   /** The camp's IANA zone (orgs.timezone): the zone the file's times are written in. */
-  timezoneOf(orgId: string): Promise<string>;
+  timezoneOf: (orgId: string) => Promise<string>;
 }
 
 export function createImportService({ classes, imports, timezoneOf }: ImportServiceDeps): ImportService {
   /** The plan for these rows against the camp's current classes and sessions. Reads only. */
   async function planFor(orgId: string, rows: readonly ImportRow[]): Promise<ImportPlan> {
-    const classRefs: ClassRef[] = (await classes.listClasses(orgId)).map(c => ({ id: c.id, name: c.name, ageRange: c.ageRange, capacity: c.capacity }));
+    const classRefs: ClassRef[] = (await classes.listClasses(orgId)).map(c => ({
+      id: c.id,
+      name: c.name,
+      ageRange: c.ageRange,
+      capacity: c.capacity,
+    }));
     const sessions = await imports.listCampSessions(orgId);
+
     return planImport({ rows: [...rows], classes: classRefs, sessions, timeZone: await timezoneOf(orgId) });
   }
 
   return {
-    async template(actor) {
-      assertAllowed(actor, 'classes:manage');
-      return importTemplateCsv();
+    template(actor) {
+      return settle(() => {
+        assertAllowed(actor, 'classes:manage');
+
+        return importTemplateCsv();
+      });
     },
 
     async preview(actor, file) {
       assertAllowed(actor, 'classes:manage');
       const fileName = file.fileName.trim();
-      if (fileName === '' || fileName.length > MAX_FILE_NAME) throw badRequest(`Give the file a name of ${MAX_FILE_NAME} characters or fewer.`);
+      if (fileName === '' || fileName.length > MAX_FILE_NAME) {
+        throw badRequest(`Give the file a name of ${MAX_FILE_NAME} characters or fewer.`);
+      }
       const read = readImportFile(file.text);
-      if (!read.ok) throw badRequest(read.message);
+      if (!read.ok) {
+        throw badRequest(read.message);
+      }
       const plan = await planFor(actor.orgId, read.rows);
+
       return { fileName, counts: plan.counts, results: plan.results, input: read.rows };
     },
 
     async confirm(actor, preview) {
       assertAllowed(actor, 'classes:manage');
-      if (preview.input.length > MAX_IMPORT_ROWS) throw badRequest(`Import at most ${MAX_IMPORT_ROWS} rows at a time.`);
+      if (preview.input.length > MAX_IMPORT_ROWS) {
+        throw badRequest(`Import at most ${MAX_IMPORT_ROWS} rows at a time.`);
+      }
       // The camp's data may have changed since the preview, so the rows are checked again and only the fresh result is written.
       const fresh = await planFor(actor.orgId, preview.input);
-      await imports.applyImport(actor, {
-        fileName: preview.fileName, rows: preview.input.length, created: fresh.counts.create, updated: fresh.counts.update, refused: fresh.counts.refused,
-      }, fresh.writes);
+      await imports.applyImport(
+        actor,
+        {
+          fileName: preview.fileName,
+          rows: preview.input.length,
+          created: fresh.counts.create,
+          updated: fresh.counts.update,
+          refused: fresh.counts.refused,
+        },
+        fresh.writes,
+      );
+
       return {
-        fileName: preview.fileName, counts: fresh.counts, results: fresh.results, written: fresh.writes.length,
+        fileName: preview.fileName,
+        counts: fresh.counts,
+        results: fresh.results,
+        written: fresh.writes.length,
         changedSincePreview: outcomeOf(preview.results) !== outcomeOf(fresh.results),
       };
     },
 
-    async errorReport(actor, preview) {
-      assertAllowed(actor, 'classes:manage');
-      return importErrorReportCsv(preview.results);
+    errorReport(actor, preview) {
+      return settle(() => {
+        assertAllowed(actor, 'classes:manage');
+
+        return importErrorReportCsv(preview.results);
+      });
     },
   };
 }

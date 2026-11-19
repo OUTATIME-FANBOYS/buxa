@@ -1,0 +1,11 @@
+/*
+ * Tailwind CSS v4, prefixed `buxa`: write utilities as `buxa:flex`, `buxa:gap-2`, and so on.
+ * Our own classes keep the `buxa-` prefix, so the two never collide.
+ *
+ * The theme and the utilities are imported, but not preflight. Preflight is Tailwind's base reset and would
+ * change element defaults the app already styles by hand (svg display, img sizing, placeholder colour, heading
+ * margins). Leaving it out keeps every existing screen rendering as it did before Tailwind was added.
+ * Utilities are generated only for classes that appear in the source, so the CSS stays small.
+ */
+@import 'tailwindcss/theme.css' layer(theme) prefix(buxa);
+@import 'tailwindcss/utilities.css' layer(utilities) prefix(buxa);

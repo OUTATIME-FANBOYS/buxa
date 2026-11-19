@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { NotConfigured } from '@/components/components/auth/export';
+import { NotConfigured } from '@/components/components/auth';
 
 describe('NotConfigured', () => {
   it('explains the two public settings to add and the restart, and never asks for a secret key', () => {

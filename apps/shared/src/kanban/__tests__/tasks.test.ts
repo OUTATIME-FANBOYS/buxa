@@ -1,12 +1,39 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Filter, Task } from '../types';
-import { PRIORITIES, PRIORITY_LABEL, PRIORITY_RANK, dueInfo, emptyFilter, fmtSize, isFilterActive, matchesFilter, sortTasks, subtaskProgress, uid } from '../tasks';
+import {
+  PRIORITIES,
+  PRIORITY_LABEL,
+  PRIORITY_RANK,
+  dueInfo,
+  emptyFilter,
+  fmtSize,
+  isFilterActive,
+  matchesFilter,
+  sortTasks,
+  subtaskProgress,
+  uid,
+} from '../tasks';
 
 const task = (over: Partial<Task> = {}): Task => ({
-  id: 't', projectId: 'p', columnId: 'c', title: 'Write the form', description: 'Family questions', priority: 'medium',
-  tags: ['family'], subtasks: [{ id: 's1', title: 'a', done: true }, { id: 's2', title: 'b', done: false }], comments: [], attachments: [],
-  history: [], archived: false, createdAt: '2027-07-01T00:00:00.000Z', createdBy: 'u', ...over,
-} as Task);
+  id: 't',
+  projectId: 'p',
+  columnId: 'c',
+  title: 'Write the form',
+  description: 'Family questions',
+  priority: 'medium',
+  tags: ['family'],
+  subtasks: [
+    { id: 's1', title: 'a', done: true },
+    { id: 's2', title: 'b', done: false },
+  ],
+  comments: [],
+  attachments: [],
+  history: [],
+  archived: false,
+  createdAt: '2027-07-01T00:00:00.000Z',
+  createdBy: 'u',
+  ...over,
+});
 
 describe('task priorities', () => {
   it('lists the priorities low to critical with labels and ranks', () => {
@@ -17,7 +44,10 @@ describe('task priorities', () => {
 });
 
 describe('dueInfo', () => {
-  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date(2027, 6, 10, 12)); });
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2027, 6, 10, 12));
+  });
   afterEach(() => vi.useRealTimers());
   it('has no info without a due date', () => {
     expect(dueInfo(undefined, 'open')).toBeNull();
@@ -35,7 +65,10 @@ describe('dueInfo', () => {
 });
 
 describe('matchesFilter', () => {
-  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date(2027, 6, 10, 12)); });
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2027, 6, 10, 12));
+  });
   afterEach(() => vi.useRealTimers());
   const f = (over: Partial<Filter>): Filter => ({ ...emptyFilter, ...over });
   it('matches the text query against title and description, case-insensitively', () => {
@@ -69,13 +102,13 @@ describe('filter state and sorting', () => {
     expect(isFilterActive({ ...emptyFilter, due: 'week' })).toBe(true);
   });
   it('sorts by created, priority and due, and keeps manual order', () => {
-    const a = task({ id: 'a', createdAt: '2027-07-01', priority: 'low', due: '2027-07-20' } as Partial<Task>);
-    const b = task({ id: 'b', createdAt: '2027-07-05', priority: 'critical', due: '2027-07-02' } as Partial<Task>);
-    const c = task({ id: 'c', createdAt: '2027-07-03', priority: 'high', due: undefined } as Partial<Task>);
+    const a = task({ id: 'a', createdAt: '2027-07-01', priority: 'low', due: '2027-07-20' });
+    const b = task({ id: 'b', createdAt: '2027-07-05', priority: 'critical', due: '2027-07-02' });
+    const c = task({ id: 'c', createdAt: '2027-07-03', priority: 'high', due: undefined });
     expect(sortTasks([a, b, c], 'manual')).toEqual([a, b, c]);
-    expect(sortTasks([a, b, c], 'created').map((t) => t.id)).toEqual(['b', 'c', 'a']);
-    expect(sortTasks([a, b, c], 'priority').map((t) => t.id)).toEqual(['b', 'c', 'a']);
-    expect(sortTasks([a, b, c], 'due').map((t) => t.id)).toEqual(['b', 'a', 'c']);
+    expect(sortTasks([a, b, c], 'created').map(t => t.id)).toEqual(['b', 'c', 'a']);
+    expect(sortTasks([a, b, c], 'priority').map(t => t.id)).toEqual(['b', 'c', 'a']);
+    expect(sortTasks([a, b, c], 'due').map(t => t.id)).toEqual(['b', 'a', 'c']);
   });
 });
 

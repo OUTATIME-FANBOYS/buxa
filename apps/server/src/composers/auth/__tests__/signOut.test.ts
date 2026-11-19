@@ -1,15 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ROUTES } from '@buxa/shared/config/routes';
 import { signOut } from '../signOut';
+import { settle } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({
-  redirect: vi.fn((url: string) => { throw new Error(`REDIRECT ${url}`); }),
+  redirect: vi.fn((url: string) => {
+    throw new Error(`REDIRECT ${url}`);
+  }),
   cookieDelete: vi.fn(),
   requestSessionClient: vi.fn(),
   signOut: vi.fn(),
 }));
 vi.mock('next/navigation', () => ({ redirect: h.redirect }));
-vi.mock('next/headers', () => ({ cookies: async () => ({ delete: h.cookieDelete }) }));
+vi.mock('next/headers', () => ({ cookies: () => settle(() => ({ delete: h.cookieDelete })) }));
 vi.mock('../../../session', () => ({ CAMP_COOKIE: 'buxa-camp' }));
 vi.mock('../../../session/nextClient', () => ({ requestSessionClient: h.requestSessionClient }));
 

@@ -1,11 +1,12 @@
-import { PageHeader } from '@/components/components/export';
-import { RenameCampButton } from '@/components/components/camp/export';
+import { PageHeader } from '@/components/components';
+import { RenameCampButton } from '@/components/components/camp';
 import type { CampHome } from '@buxa/shared/camp/campHomeTypes';
 import { greetingFor } from '@buxa/shared';
 
 /** The one header for Home: the greeting, the camp as context, and Rename for the roles allowed to rename (checked on the server). */
 export function HomeHeader({ firstName, camp }: { firstName: string; camp: CampHome | null }) {
   const greeting = `${greetingFor(new Date().getHours())}, ${firstName}`;
+
   return (
     <PageHeader
       title={greeting}

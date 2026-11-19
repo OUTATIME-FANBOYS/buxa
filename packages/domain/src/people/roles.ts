@@ -14,4 +14,5 @@ export const CAMP_ROLE_LABELS: Readonly<Record<CampRole, string>> = {
   admin_staff: 'Admin staff',
 };
 
-export const isCampRole = (value: unknown): value is CampRole => typeof value === 'string' && (CAMP_ROLES as readonly string[]).includes(value);
+export const isCampRole = (value: unknown): value is CampRole =>
+  typeof value === 'string' && (CAMP_ROLES as readonly string[]).includes(value);

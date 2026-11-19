@@ -1,11 +1,17 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { Class } from '@buxa/contracts';
-import { ClassesTable } from '@/components/components/classes/export';
+import { ClassesTable } from '@/components/components/classes';
 
 const cls = (over: Partial<Class> = {}): Class => ({
-  id: '11111111-1111-4111-8111-111111111111', name: 'Robotics', description: '', ageRange: { minAge: 8, maxAge: 12 },
-  capacity: 12, instructorRatio: { instructors: 1, campers: 8 }, createdAt: '2027-07-01T00:00:00.000Z', ...over,
+  id: '11111111-1111-4111-8111-111111111111',
+  name: 'Robotics',
+  description: '',
+  ageRange: { minAge: 8, maxAge: 12 },
+  capacity: 12,
+  instructorRatio: { instructors: 1, campers: 8 },
+  createdAt: '2027-07-01T00:00:00.000Z',
+  ...over,
 });
 
 describe('ClassesTable', () => {

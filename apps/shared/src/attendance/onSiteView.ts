@@ -1,3 +1,4 @@
+import type { ClockFormat } from '@buxa/domain';
 import type { PickupOption, OnSiteEntry } from './types';
 import { displayName } from '../name';
 import { formatCampTime } from '../time';
@@ -17,11 +18,11 @@ export interface OnSiteRowView {
   pickupOptions: PickupOption[];
 }
 
-export function toOnSiteRow(row: OnSiteEntryInput, timeZone: string): OnSiteRowView {
+export function toOnSiteRow(row: OnSiteEntryInput, timeZone: string, clockFormat: ClockFormat): OnSiteRowView {
   return {
     personId: row.person.id,
     name: displayName(row.person),
-    arrivedAt: formatCampTime(row.entry.checkedInAt, timeZone),
+    arrivedAt: formatCampTime(row.entry.checkedInAt, timeZone, clockFormat),
     isMinor: row.isMinor,
     pickupOptions: row.pickupOptions,
   };

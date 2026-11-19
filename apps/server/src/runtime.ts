@@ -13,7 +13,6 @@ import { createAttendanceService } from './services/attendance/createAttendanceS
 import { createClassService, type ClassService } from './classes/ClassService';
 import { createCredentialService } from './services/credentials/createCredentialService';
 import { createImportService, type ImportService } from './classes/import/ImportService';
-import type { ImportRepository } from './classes/import/ImportRepository';
 import { createMembershipService } from './services/memberships/createMembershipService';
 import { createOrgService, type OrgService } from './services/orgs';
 import { createPeopleService } from './services/people/createPeopleService';
@@ -22,8 +21,6 @@ import { type AttendanceService } from './services/attendance/AttendanceService'
 import { type CredentialService } from './services/credentials/CredentialService';
 import { type MembershipService } from './services/memberships/MembershipService';
 import { type PeopleService } from './services/people/PeopleService';
-import type { ClassRepository } from './classes/ClassRepository';
-import { unimplemented } from './unimplemented';
 
 export interface Runtime {
   config: Config;
@@ -74,24 +71,56 @@ export function createRuntime(options: RuntimeOptions = {}): Runtime {
   const rateLimiter = options.rateLimiter ?? createPgRateLimiter(pool);
   const base = config.supabaseUrl?.replace(/\/+$/, '');
 
-  const verifier: Verifier | undefined = options.verifier === null ? undefined : options.verifier
-    ?? (base ? createVerifier({ issuer: `${base}/auth/v1`, keys: createRemoteJWKSet(new URL(`${base}/auth/v1/.well-known/jwks.json`)) }) : undefined);
+  const verifier: Verifier | undefined =
+    options.verifier === null
+      ? undefined
+      : (options.verifier ??
+        (base
+          ? createVerifier({
+              issuer: `${base}/auth/v1`,
+              keys: createRemoteJWKSet(new URL(`${base}/auth/v1/.well-known/jwks.json`)),
+            })
+          : undefined));
 
   const startupCheck = (async (): Promise<StartupDecision> => {
-    if (!base || options.verifier !== undefined) return 'ok';
-    const confirmation = config.supabasePublishableKey ? await readEmailConfirmation({ supabaseUrl: base, publishableKey: config.supabasePublishableKey }) : 'unknown';
+    if (!base || options.verifier !== undefined) {
+      return 'ok';
+    }
+    const confirmation = config.supabasePublishableKey
+      ? await readEmailConfirmation({ supabaseUrl: base, publishableKey: config.supabasePublishableKey })
+      : 'unknown';
     const decision = decideStartup(confirmation, config.env);
-    if (decision === 'refuse') log.fatal('Supabase is set to auto-confirm sign-ups. Turn on "Confirm email" (Authentication > Providers > Email) before running in production.');
-    if (decision === 'warn') log.warn({ confirmation }, 'could not verify that Supabase requires email confirmation; check Authentication > Providers > Email');
+    if (decision === 'refuse') {
+      log.fatal(
+        'Supabase is set to auto-confirm sign-ups. Turn on "Confirm email" (Authentication > Providers > Email) before running in production.',
+      );
+    }
+    if (decision === 'warn') {
+      log.warn(
+        { confirmation },
+        'could not verify that Supabase requires email confirmation; check Authentication > Providers > Email',
+      );
+    }
+
     return decision;
   })();
 
-  return { config, log, pool, repositories, verifier, rateLimiter, services: createServices(repositories, options.clock ?? systemClock), startupCheck };
+  return {
+    config,
+    log,
+    pool,
+    repositories,
+    verifier,
+    rateLimiter,
+    services: createServices(repositories, options.clock ?? systemClock),
+    startupCheck,
+  };
 }
 
 /** Services are built from repositories and a clock only, so tests can assemble them without a runtime. */
 export function createServices(repositories: Repositories, clock: Clock): Services {
   const { orgs, people, memberships, credentials, attendance } = repositories;
+
   return {
     orgs: createOrgService(orgs),
     people: createPeopleService({ people, memberships, credentials, attendance, orgs, clock }),
@@ -102,18 +131,14 @@ export function createServices(repositories: Repositories, clock: Clock): Servic
   };
 }
 
-/**
- * Classes, sessions, enrolments and the bulk import. There is no class storage in `Repositories` on this branch yet, so the storage
- * ports are placeholders that throw a clear "not implemented" error. The Postgres adapter replaces them here; screens and actions
- * already call these services.
- */
+/** Classes, sessions, enrolments and the bulk import. Both storages come from `repositories` (Postgres in production). */
 function createClassServices(repositories: Repositories): Pick<Services, 'classes' | 'imports'> {
   const timezoneOf = async (orgId: string): Promise<string> => (await repositories.orgs.get(orgId)).timezone;
-  const classes = unimplemented<ClassRepository>('ClassRepository');
-  const imports = unimplemented<ImportRepository>('ImportRepository');
+  const classes = repositories.classes;
+
   return {
     classes: createClassService({ repo: classes, timezoneOf }),
-    imports: createImportService({ classes, imports, timezoneOf }),
+    imports: createImportService({ classes, imports: repositories.imports, timezoneOf }),
   };
 }
 
@@ -123,6 +148,7 @@ type Holder = { [SLOT]?: Runtime };
 
 export function getRuntime(): Runtime {
   const holder = globalThis as Holder;
+
   return (holder[SLOT] ??= createRuntime());
 }
 

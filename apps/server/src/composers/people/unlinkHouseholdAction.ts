@@ -12,14 +12,22 @@ import { field } from '@buxa/shared';
 /** Take a person out of a household. A camper's last guardian cannot be removed: the service answers 409 with the reason. */
 export async function unlinkHouseholdAction(_previous: ActionState, form: FormData): Promise<ActionState> {
   const actor = await currentActor();
-  if (!actor) return failure(NO_CAMP);
+  if (!actor) {
+    return failure(NO_CAMP);
+  }
   const householdId = field(form, 'householdId');
   const personId = field(form, 'personId');
-  if (!isUuid(householdId) || !isUuid(personId)) return failure('That link is not valid.');
+  if (!isUuid(householdId) || !isUuid(personId)) {
+    return failure('That link is not valid.');
+  }
 
-  try { await getRuntime().services.people.unlinkFromHousehold(actor, householdId, personId); }
-  catch (error) { return expectedFailure(error, 'Could not remove them from the household.'); }
+  try {
+    await getRuntime().services.people.unlinkFromHousehold(actor, householdId, personId);
+  } catch (error) {
+    return expectedFailure(error, 'Could not remove them from the household.');
+  }
 
   revalidatePath(personPath(personId));
+
   return success('Removed from the household.');
 }

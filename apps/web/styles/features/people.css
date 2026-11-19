@@ -1,27 +1,201 @@
 /* ---------- People (members, households, memberships, badges) ---------- */
-.people-head { align-items: center; }
-.people-heading { font-size: var(--fs-l, 18px); font-weight: 600; margin: 0; }
-.people-subheading { font-size: var(--fs-m, 15px); font-weight: 600; margin: 0; color: var(--text-2); }
-.people-subpanel { padding-top: var(--s4); border-top: 1px solid var(--line); }
-.people-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--s4); }
-.people-checks { display: flex; flex-wrap: wrap; gap: var(--s3) var(--s5); }
-.people-check { display: inline-flex; align-items: center; gap: var(--s2); font-weight: 600; }
-.people-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s3); }
-.people-member { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s4); align-items: center; justify-content: space-between; padding-bottom: var(--s3); border-bottom: 1px solid var(--line); }
-.people-member:last-child { border-bottom: 0; padding-bottom: 0; }
-.people-member-main { display: grid; gap: 2px; min-width: 0; }
-.people-facts { display: grid; grid-template-columns: max-content 1fr; gap: var(--s2) var(--s4); margin: 0; }
-.people-facts dt { color: var(--text-2); font-weight: 600; }
-.people-facts dd { margin: 0; overflow-wrap: anywhere; }
-.people-inline { display: inline-flex; flex-wrap: wrap; gap: var(--s2); align-items: center; }
-.people-disclosure > summary { list-style: none; cursor: pointer; }
-.people-disclosure > summary::-webkit-details-marker { display: none; }
-.people-disclosure[open] .people-subpanel { margin-top: var(--s3); }
-.people-message { margin: 0; font-weight: 600; }
-.people-message-ok { color: var(--ok-ink); }
-.people-badge { padding-top: var(--s3); }
-@media (max-width: 720px) { .people-form-grid { grid-template-columns: 1fr; } }
+.people-head {
+  align-items: center;
+}
+.people-heading {
+  font-size: var(--fs-l, 18px);
+  font-weight: 600;
+  margin: 0;
+}
+.people-subheading {
+  font-size: var(--fs-m, 15px);
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-2);
+}
+.people-subpanel {
+  padding-top: var(--s4);
+  border-top: 1px solid var(--line);
+}
+.people-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--s4);
+}
+.people-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3) var(--s5);
+}
+.people-check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  font-weight: 600;
+}
+.people-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s3);
+}
+.people-member {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s4);
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--s3);
+  border-bottom: 1px solid var(--line);
+}
+.people-member:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.people-member-main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.people-facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--s2) var(--s4);
+  margin: 0;
+}
+.people-facts dt {
+  color: var(--text-2);
+  font-weight: 600;
+}
+.people-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.people-inline {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  align-items: center;
+}
+.people-disclosure > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.people-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+.people-disclosure[open] .people-subpanel {
+  margin-top: var(--s3);
+}
+.people-message {
+  margin: 0;
+  font-weight: 600;
+}
+.people-message-ok {
+  color: var(--ok-ink);
+}
+.people-badge {
+  padding-top: var(--s3);
+}
+
+/* ---------- Add person: the page and the People dialog share one layout ----------
+ * Type: section headings and field labels are --fs-b bold; option text is --fs-b regular; helper and error text is --fs-s.
+ * Space: 8px (--s2) inside a field, 16px (--s4) between fields in a row, 24px (--s5) between sections and above the buttons.
+ * Controls: 36px (--control-compact) with a mouse or keyboard; 44px (--control-touch, the touch target) on a touch screen. */
+form.person-form {
+  display: grid;
+  gap: var(--s5);
+  align-content: start;
+  min-width: 0;
+  font-size: var(--fs-b);
+  --control-h: var(--control-compact);
+}
+.dialog.person-dialog {
+  width: min(640px, 100%);
+}
+.person-form .person-section {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+  display: grid;
+  gap: var(--s4);
+  align-content: start;
+}
+.person-form .person-legend {
+  padding: 0;
+  margin: 0;
+  font-size: var(--fs-b);
+  font-weight: 700;
+  color: var(--text);
+}
+.person-form .person-helper,
+.person-form .field-hint,
+.person-form .field-error {
+  margin: 0;
+  font-size: var(--fs-s);
+  line-height: 1.4;
+}
+.person-form .person-helper,
+.person-form .field-hint {
+  color: var(--text-3);
+}
+.person-form .field {
+  gap: var(--s2);
+}
+.person-form .field-label {
+  font-size: var(--fs-b);
+  font-weight: 600;
+  color: var(--text);
+}
+.person-form .people-form-grid {
+  gap: var(--s4);
+}
+.person-form .people-checks {
+  gap: var(--s2) var(--s5);
+}
+.person-form .people-check {
+  font-size: var(--fs-b);
+  font-weight: 400;
+  gap: var(--s2);
+}
+.person-form .button {
+  font-size: var(--fs-b);
+}
+.person-form .person-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--s2);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--line);
+}
+@media (pointer: coarse) {
+  /* Touch: the touch target again, and 16px text so iOS does not zoom into an input. */
+  form.person-form {
+    --control-h: var(--control-touch);
+  }
+  .person-form input:not([type='checkbox']),
+  .person-form select {
+    font-size: 16px;
+  }
+}
+@media (max-width: 720px) {
+  .people-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
 @media print {
-  .sidebar, .topbar, .page-head, .people-form, .btn, button { display: none !important; }
-  .people-badge { padding: 0; }
+  .sidebar,
+  .topbar,
+  .page-head,
+  .people-form,
+  .button,
+  button {
+    display: none !important;
+  }
+  .people-badge {
+    padding: 0;
+  }
 }

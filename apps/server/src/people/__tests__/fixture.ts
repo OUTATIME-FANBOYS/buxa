@@ -45,7 +45,9 @@ export async function expectRejection(promise: Promise<unknown>, guard: (error: 
   try {
     await promise;
   } catch (error) {
-    if (guard(error)) return;
+    if (guard(error)) {
+      return;
+    }
     throw error;
   }
   throw new Error('expected the call to reject');

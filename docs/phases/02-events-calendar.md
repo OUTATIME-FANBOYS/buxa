@@ -1,7 +1,7 @@
 # Phase 2: classes, sessions and enrolment
 
-Status: **spec for review. No code yet** (no enrolment or class code is on `develop`). Roadmap row (phase 2, `docs/ROADMAP.md`): "Events & calendar: programs to sessions, recurring events, capacity, public pages, iCal feed."
-This spec covers the first slice of that row: classes (the roadmap's "programs") and their sessions, and who is enrolled. Recurring events, public pages and the iCal feed are still phase 2 work and come after this slice. Phase 2 is not done until its roadmap exit criteria pass, including the recurrence and public-page tests.
+Status: **built** for this slice (classes, sessions, enrolment, bulk import and the classes screens). Recurring events, public pages and the iCal feed moved to phase 3 (`docs/phases/03-registration.md`). Roadmap row (phase 2, `docs/ROADMAP.md`): "Events & calendar: programs to sessions, capacity, enrolment."
+This spec covers the first slice of that row: classes (the roadmap's "programs") and their sessions, and who is enrolled. Recurring events, public pages and the iCal feed moved to phase 3, so this phase's exit does not depend on them.
 
 ## Words we use
 
@@ -35,9 +35,13 @@ This spec covers the first slice of that row: classes (the roadmap's "programs")
 - Database: row-level security keeps one camp's classes and enrolments invisible to another camp.
 - UI: a full session shows a waitlist option instead of enrolling; a blocked overlap explains which other session it clashes with.
 
+## Owner checks
+
+The owner checks that were carried over from phase 1 (phone timing, install and sign-in from a phone, the production walkthrough, and the 390px and 1280px screen check) moved to one pass after phase 4: see `docs/phases/owner-acceptance.md`. Phase 2 is not blocked on them.
+
 ## Not in this phase
 
-Public class pages, iCal feed, payments, waitlist promotion, automatic ratio enforcement, and check-in per session (check-in stays per camp day for now).
+Recurring events, public class pages and the iCal feed (moved to phase 3), payments, waitlist promotion, automatic ratio enforcement, and check-in per session (check-in stays per camp day for now).
 
 ## Open for review
 
@@ -49,6 +53,7 @@ Public class pages, iCal feed, payments, waitlist promotion, automatic ratio enf
 A camp season can have dozens of camps and many sessions a day, so staff create them in bulk from a spreadsheet.
 
 ### Decisions
+
 1. **CSV template, not PDF.** The app provides a downloadable template (opens in Excel or Google Sheets). A printed or scanned PDF is not parsed. A fillable PDF with the same fields may come later.
 2. **Preview before save.** An upload is checked row by row and saved only when the owner confirms. Nothing is written during preview.
 3. **Each row gets its own result:** ready, or an exact error naming the row, the field and the clash (for example "Robotics 9:00-12:00 overlaps Art 10:00-12:00 for the same camper group").
@@ -58,9 +63,11 @@ A camp season can have dozens of camps and many sessions a day, so staff create 
 7. **Audit.** One audit entry for the upload (who, when, file name, row counts) and one per saved session.
 
 ### Template columns
+
 `external_key`, `class_name`, `starts_at`, `ends_at` (camp local time, ISO format), `location`, `age_min`, `age_max`, `capacity`, `instructor_names` (semicolon separated), `ratio_campers`, `ratio_instructors`.
 
 ### Acceptance criteria
+
 - Staff with `classes:manage` can download the template, upload a filled file, see a preview with every row's result, and confirm.
 - A file with 300 rows previews in under 5 seconds and saves in one transaction.
 - Re-uploading the same file with keys creates no new sessions.
@@ -68,6 +75,7 @@ A camp season can have dozens of camps and many sessions a day, so staff create 
 - A failed confirm saves nothing.
 
 ### Exit tests (added to this phase's list)
+
 - Preview refuses overlaps within the file and against existing sessions (table-driven, including sessions that touch and cross midnight).
 - Re-upload with the same external keys is idempotent.
 - Confirm is atomic: a database error mid-file leaves zero new rows.
@@ -75,4 +83,5 @@ A camp season can have dozens of camps and many sessions a day, so staff create 
 - A viewer cannot upload (403).
 
 ### Not in this feature
+
 Room and instructor double-booking across the whole day (phase 5), PDF parsing, and images of schedules.

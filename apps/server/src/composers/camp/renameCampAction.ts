@@ -13,13 +13,21 @@ import { parseInput, text } from '@buxa/shared';
 export async function renameCampAction(_previous: ActionState, form: FormData): Promise<ActionState> {
   const session = await requireSession();
   const camp = membershipOf(session, text(form, 'campId'));
-  if (!camp) return failure('You are not a member of that camp.');
+  if (!camp) {
+    return failure('You are not a member of that camp.');
+  }
   const parsed = parseInput(OrgPatchInputSchema, { name: text(form, 'name') });
-  if (!parsed.ok) return parsed.state;
+  if (!parsed.ok) {
+    return parsed.state;
+  }
 
-  try { await getRuntime().services.orgs.renameCamp(toActor(session, camp), parsed.data); }
-  catch (error) { return expectedCampFailure(error, 'Could not rename the camp.'); }
+  try {
+    await getRuntime().services.orgs.renameCamp(toActor(session, camp), parsed.data);
+  } catch (error) {
+    return expectedCampFailure(error, 'Could not rename the camp.');
+  }
 
   revalidatePath(ROUTES.camp, 'layout');
+
   return success('Camp renamed');
 }

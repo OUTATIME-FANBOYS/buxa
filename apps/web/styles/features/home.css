@@ -1,0 +1,291 @@
+/*
+ * The camp Home dashboard: two-part rows (a wide chart beside a narrower one, then two even panels), the bar chart, the age bars,
+ * the membership ring and the sessions table. Colours come from tokens.css only, so light and dark themes both apply.
+ */
+
+/* Stat cards: the label on the left and the change chip on the top right, with the number below. */
+.stat-top .stat-change {
+  display: flex;
+  margin-left: auto;
+}
+.stat-change .pill {
+  font-size: var(--fs-s);
+}
+
+/* Rows: the first row is a wide chart beside a narrow one; the second row is two even panels. */
+.home-row {
+  display: grid;
+  gap: var(--s5);
+  align-items: start;
+}
+/* The chart and the age panel share a row: the grid stretches both to the taller one. */
+.home-row-main {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  align-items: stretch;
+}
+.home-row-main > .panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.home-row-even {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+@media (max-width: 900px) {
+  .home-row-main,
+  .home-row-even {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Check-ins chart: stacked columns in HTML, so their labels scale with the text and wrap at phone width. The band is an svg behind
+ * the columns, stretched to the same box (the 18px rows above and below the track are left clear). */
+.home-chart-head {
+  flex-wrap: wrap;
+  gap: var(--s3);
+}
+.home-chart-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2) var(--s3);
+}
+.home-chart-meta p {
+  margin: 0;
+}
+.home-stack {
+  position: relative;
+}
+.home-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 18px;
+  bottom: 18px;
+  width: 100%;
+  height: calc(100% - 36px);
+  pointer-events: none;
+}
+.home-band polygon {
+  fill: var(--track);
+  opacity: 0.55;
+}
+.home-bars {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 2px;
+  align-items: stretch;
+  height: 180px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0;
+}
+.home-bar {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: 18px 1fr 18px;
+  justify-items: center;
+}
+.home-bar-value {
+  font-size: var(--fs-s);
+  color: var(--text-2);
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+}
+.home-bar-track {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  min-height: 0;
+}
+.home-stack-col {
+  display: flex;
+  flex-direction: column;
+  width: 62%;
+  margin: 0 auto;
+  min-height: 0;
+  border-radius: 3px 3px 0 0;
+  overflow: hidden;
+}
+.home-seg {
+  display: block;
+  flex: 1 1 0;
+  min-height: 0;
+}
+.home-seg + .home-seg {
+  margin-top: 1px;
+}
+.home-seg-parents {
+  background: var(--f-brand);
+}
+.home-seg-students {
+  background: var(--f-warn);
+}
+.home-chart-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s4);
+  font-size: var(--fs-b);
+  color: var(--text-2);
+}
+.home-chart-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+}
+.home-sw {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex: none;
+}
+.home-sw.home-seg-parents,
+.home-sw.home-seg-students {
+  flex: none;
+}
+.home-bar-label {
+  font-size: var(--fs-s);
+  color: var(--text-2);
+  line-height: 18px;
+  overflow: visible;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.home-note {
+  margin: 0;
+  padding: var(--s2) var(--s3);
+  border-radius: var(--r-2);
+  background: var(--warn-soft);
+  color: var(--warn-ink);
+}
+.home-table-alt summary {
+  cursor: pointer;
+}
+.home-table-alt[open] summary {
+  margin-bottom: var(--s2);
+}
+
+/* Tables (the chart alternative and the sessions list). */
+.home-table-scroll {
+  overflow-x: auto;
+}
+.home-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-b);
+}
+.home-table th,
+.home-table td {
+  text-align: left;
+  padding: var(--s2) var(--s3);
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.home-table th {
+  font-size: var(--fs-s);
+  font-weight: 600;
+  color: var(--text-2);
+}
+.home-table td:not(:first-child),
+.home-table th:not(:first-child) {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Age groups: one row per group, a bar in proportion to the larger group, the number at the end. */
+.home-age-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s4);
+}
+.home-age-row {
+  display: grid;
+  grid-template-columns: minmax(0, 8rem) minmax(0, 1fr) 2.5rem;
+  align-items: center;
+  gap: var(--s3);
+}
+.home-age-name {
+  font-weight: 600;
+  color: var(--text-2);
+  font-size: var(--fs-b);
+}
+.home-age-track {
+  display: block;
+  height: 14px;
+  background: var(--track);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.home-age-fill {
+  display: block;
+  height: 100%;
+  background: var(--f-brand);
+  border-radius: 999px;
+  min-width: 2px;
+}
+.home-age-num {
+  text-align: right;
+}
+
+/* Membership ring with a legend beside it (stacks on a phone). */
+.home-donut-row {
+  display: flex;
+  gap: var(--s5);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.home-donut {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  flex: none;
+}
+.home-donut svg {
+  display: block;
+}
+.home-donut-total {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  line-height: 1.1;
+}
+.home-donut-total .stat-num {
+  font-size: 22px;
+}
+.home-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s2);
+  flex: 1 1 160px;
+  min-width: 0;
+}
+.home-legend li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s2);
+}
+.home-legend .sw {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+.home-legend-count {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

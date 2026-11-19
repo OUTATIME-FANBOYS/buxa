@@ -4,14 +4,30 @@ import { buildSeed } from '../seed/buildSeed';
 import * as D from '../domain';
 import { summarize } from '../stats';
 import type { AppState } from '../types';
+import { requirePresent } from '@buxa/domain';
 
 let s: AppState;
 const as = (state: AppState, userId: string): AppState => ({ ...state, session: { userId } });
-const proj = () => s.projects.find(p => p.id === PROJECT.registration)!;
-const col = (name: string) => proj().columns.find(c => c.name === name)!.id;
-const task = (id: string) => s.tasks.find(t => t.id === id)!;
+const proj = () =>
+  requirePresent(
+    s.projects.find(p => p.id === PROJECT.registration),
+    's.projects.find(p => p.id === PROJECT.registration)',
+  );
+const col = (name: string) =>
+  requirePresent(
+    proj().columns.find(c => c.name === name),
+    'proj().columns.find(c => c.name === name)',
+  ).id;
+const findTask = (id: string) => s.tasks.find(t => t.id === id);
+const task = (id: string) =>
+  requirePresent(
+    s.tasks.find(t => t.id === id),
+    's.tasks.find(t => t.id === id)',
+  );
 
-beforeEach(() => { s = as(buildSeed(), USER.rosa); });
+beforeEach(() => {
+  s = as(buildSeed(), USER.rosa);
+});
 
 describe('moveTask', () => {
   it('sets completedAt on entering a done column and clears it on leaving', () => {
@@ -86,7 +102,8 @@ describe('updateColumn kind change', () => {
     expect(s.tasks.filter(t => t.columnId === col('Done')).every(t => !t.completedAt)).toBe(true);
   });
   it('renaming alone leaves completion untouched', () => {
-    const id = col('Done'); const before = s.tasks.filter(t => t.columnId === id).map(t => t.completedAt);
+    const id = col('Done');
+    const before = s.tasks.filter(t => t.columnId === id).map(t => t.completedAt);
     s = D.updateColumn(s, PROJECT.registration, id, { name: 'Shipped' });
     expect(s.tasks.filter(t => t.columnId === id).map(t => t.completedAt)).toEqual(before);
   });
@@ -103,8 +120,18 @@ describe('invite', () => {
 
 describe('stats', () => {
   it('one definition of done/overdue/progress', () => {
-    const kindOf = (t: AppState['tasks'][number]) => s.projects.find(p => p.id === t.projectId)!.columns.find(c => c.id === t.columnId)!.kind;
-    const r = summarize(s.tasks.filter(t => t.projectId === PROJECT.registration), kindOf);
+    const kindOf = (t: AppState['tasks'][number]) =>
+      requirePresent(
+        requirePresent(
+          s.projects.find(p => p.id === t.projectId),
+          's.projects.find(p => p.id === t.projectId)',
+        ).columns.find(c => c.id === t.columnId),
+        "requirePresent(s.projects.find(p => p.id === t.projectId), 's.projects.find(p => p.id === t.projectId)').columns.find(c => c.id === t.columnId)",
+      ).kind;
+    const r = summarize(
+      s.tasks.filter(t => t.projectId === PROJECT.registration),
+      kindOf,
+    );
     expect(r.progress.total).toBe(r.done.length + r.open.length);
     expect(r.overdue.every(t => kindOf(t) !== 'done')).toBe(true);
   });
@@ -114,9 +141,9 @@ describe('healthOf', () => {
   const pr = (done: number, total: number) => ({ done, total, pct: total ? (done / total) * 100 : 0 });
   it('classifies a project against its deadline', async () => {
     const { healthOf } = await import('../stats');
-    expect(healthOf(pr(4, 4), '2026-01-01', '2026-06-01')).toBe('done');   // finished beats a passed deadline
+    expect(healthOf(pr(4, 4), '2026-01-01', '2026-06-01')).toBe('done'); // finished beats a passed deadline
     expect(healthOf(pr(1, 4), '2026-05-01', '2026-06-01')).toBe('late');
-    expect(healthOf(pr(1, 4), '2026-06-05', '2026-06-01')).toBe('risk');   // a week out and under 80%
+    expect(healthOf(pr(1, 4), '2026-06-05', '2026-06-01')).toBe('risk'); // a week out and under 80%
     expect(healthOf(pr(9, 10), '2026-06-05', '2026-06-01')).toBe('track'); // close, but nearly done
     expect(healthOf(pr(0, 4), '2026-09-01', '2026-06-01')).toBe('track');
     expect(healthOf(pr(0, 0), undefined, '2026-06-01')).toBe('track');
@@ -125,9 +152,19 @@ describe('healthOf', () => {
 
 describe('createTask defaults', () => {
   it('an explicit undefined never erases a default', () => {
-    const next = D.createTask(s, 'new-1', { projectId: PROJECT.registration, columnId: col('Backlog'), title: 'x', description: undefined, priority: undefined, tags: undefined });
-    expect(task('new-1')).toBeUndefined(); // (s is the old state)
-    const t = next.tasks.find(x => x.id === 'new-1')!;
+    const next = D.createTask(s, 'new-1', {
+      projectId: PROJECT.registration,
+      columnId: col('Backlog'),
+      title: 'x',
+      description: undefined,
+      priority: undefined,
+      tags: undefined,
+    });
+    expect(findTask('new-1')).toBeUndefined(); // (s is the old state)
+    const t = requirePresent(
+      next.tasks.find(x => x.id === 'new-1'),
+      "next.tasks.find(x => x.id === 'new-1')",
+    );
     expect(t).toMatchObject({ description: '', priority: 'medium', tags: [] });
   });
 });

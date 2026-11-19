@@ -1,9 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { BadgeActions } from '@/components/components/people/forms/export';
+import { BadgeActions } from '@/components/components/people/forms';
+import { settle } from '@buxa/domain';
 
-vi.mock('@buxa/server/composers/people/issueBadgeAction', () => ({ issueBadgeAction: async () => ({ status: 'idle' }) }));
-vi.mock('@buxa/server/composers/people/revokeBadgeAction', () => ({ revokeBadgeAction: async () => ({ status: 'idle' }) }));
+vi.mock('@buxa/server/composers/people/issueBadgeAction', () => ({
+  issueBadgeAction: () => settle(() => ({ status: 'idle' })),
+}));
+vi.mock('@buxa/server/composers/people/revokeBadgeAction', () => ({
+  revokeBadgeAction: () => settle(() => ({ status: 'idle' })),
+}));
 
 const base = { personId: 'p-1', personName: 'Ada Lee', roleLabel: 'Camper', campName: 'Camp Birchwood' };
 

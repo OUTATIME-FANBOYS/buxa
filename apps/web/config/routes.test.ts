@@ -8,12 +8,30 @@ describe('ROUTES', () => {
   });
 
   it('puts every work page and camp operations page under /camp', () => {
-    for (const path of Object.values(ROUTES).filter(p => p !== ROUTES.home && p !== ROUTES.signIn)) expect(isCampPath(path)).toBe(true);
+    for (const path of Object.values(ROUTES).filter(p => p !== ROUTES.home && p !== ROUTES.signIn)) {
+      expect(isCampPath(path)).toBe(true);
+    }
   });
 
   it('gives the task pages their /camp addresses', () => {
-    expect([ROUTES.camp, ROUTES.tasks, ROUTES.projects, ROUTES.boards, ROUTES.calendar, ROUTES.agents, ROUTES.reports, ROUTES.settings]).toEqual([
-      '/camp', '/camp/tasks', '/camp/projects', '/camp/boards', '/camp/calendar', '/camp/agents', '/camp/reports', '/camp/settings',
+    expect([
+      ROUTES.camp,
+      ROUTES.tasks,
+      ROUTES.projects,
+      ROUTES.boards,
+      ROUTES.calendar,
+      ROUTES.agents,
+      ROUTES.reports,
+      ROUTES.settings,
+    ]).toEqual([
+      '/camp',
+      '/camp/tasks',
+      '/camp/projects',
+      '/camp/boards',
+      '/camp/calendar',
+      '/camp/agents',
+      '/camp/reports',
+      '/camp/settings',
     ]);
   });
 

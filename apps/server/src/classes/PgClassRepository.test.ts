@@ -3,7 +3,11 @@ import { PgClassRepository } from './PgClassRepository';
 import { CamperNotFoundError } from './errors';
 import { fakeDb } from './__tests__/fakeDb';
 
-const actor = { userId: '11111111-1111-4111-8111-111111111111', orgId: '22222222-2222-4222-8222-222222222222', role: 'owner' as const };
+const actor = {
+  userId: '11111111-1111-4111-8111-111111111111',
+  orgId: '22222222-2222-4222-8222-222222222222',
+  role: 'owner' as const,
+};
 const classId = '55555555-5555-4555-8555-555555555555';
 
 describe('PgClassRepository', () => {
@@ -27,9 +31,11 @@ describe('PgClassRepository', () => {
   it('rolls the transaction back when an enrolment is refused, so nothing is written', async () => {
     const { pool, seen } = fakeDb();
     const repo = new PgClassRepository(pool);
-    await expect(repo.enrol(actor, { sessionId: classId, camperId: 'not-a-uuid' }, () => {
-      throw new Error('the rule must not run for a malformed camper');
-    })).rejects.toBeInstanceOf(CamperNotFoundError);
+    await expect(
+      repo.enrol(actor, { sessionId: classId, camperId: 'not-a-uuid' }, () => {
+        throw new Error('the rule must not run for a malformed camper');
+      }),
+    ).rejects.toBeInstanceOf(CamperNotFoundError);
     const sqls = seen.map(s => s.sql);
     expect(sqls).toContain('ROLLBACK');
     expect(sqls).not.toContain('COMMIT');

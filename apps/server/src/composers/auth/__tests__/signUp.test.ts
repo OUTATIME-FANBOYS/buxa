@@ -4,7 +4,9 @@ import { CONFIRM_EMAIL_MESSAGE, MAINTENANCE_MESSAGE } from '@buxa/shared';
 import { signUp } from '../signUp';
 
 const h = vi.hoisted(() => ({
-  redirect: vi.fn((url: string) => { throw new Error(`REDIRECT ${url}`); }),
+  redirect: vi.fn((url: string) => {
+    throw new Error(`REDIRECT ${url}`);
+  }),
   isServiceRefused: vi.fn(),
   requestSessionClient: vi.fn(),
   signUp: vi.fn(),
@@ -15,7 +17,10 @@ vi.mock('../../../session/nextClient', () => ({ requestSessionClient: h.requestS
 
 const form = (values: Record<string, string>) => {
   const data = new FormData();
-  for (const [k, v] of Object.entries(values)) data.set(k, v);
+  for (const [k, v] of Object.entries(values)) {
+    data.set(k, v);
+  }
+
   return data;
 };
 const valid = { name: 'Ada', email: 'ada@x.io', password: 'longenough' };
@@ -52,7 +57,11 @@ describe('signUp action', () => {
   it('asks for a confirmation email when there is no session yet', async () => {
     h.signUp.mockResolvedValueOnce({ data: { session: null }, error: null });
     expect(await signUp(idle, form(valid))).toEqual({ status: 'success', message: CONFIRM_EMAIL_MESSAGE });
-    expect(h.signUp).toHaveBeenCalledWith({ email: 'ada@x.io', password: 'longenough', options: { data: { name: 'Ada' } } });
+    expect(h.signUp).toHaveBeenCalledWith({
+      email: 'ada@x.io',
+      password: 'longenough',
+      options: { data: { name: 'Ada' } },
+    });
   });
   it('goes straight to the camp when a session is returned', async () => {
     h.signUp.mockResolvedValueOnce({ data: { session: {} }, error: null });

@@ -4,13 +4,18 @@ import { useEffect, useState } from 'react';
 import type { ActionOutcome } from '@buxa/shared';
 import { searchPeopleAction } from '@/actions/attendance';
 import type { PersonCard } from '@buxa/shared';
+import { Button, SearchField } from '@/components/atoms';
+import { Pill } from '@/components/elements';
 import { StatusPill } from './StatusPill';
 import { attendanceDisplayName } from '@buxa/shared';
 
 const DEBOUNCE_MS = 200;
 
 /** What the last search answered, and for which query. A result for an older query is simply not shown. */
-interface Answer { query: string; outcome: ActionOutcome<PersonCard[]> }
+interface Answer {
+  query: string;
+  outcome: ActionOutcome<PersonCard[]>;
+}
 
 /** Type-ahead name search. Results are people with their status in words; choosing one puts them in the result panel. */
 export function NameSearch({ onPick }: { onPick: (card: PersonCard) => void }) {
@@ -21,40 +26,75 @@ export function NameSearch({ onPick }: { onPick: (card: PersonCard) => void }) {
   useEffect(() => {
     let current = true;
     const timer = window.setTimeout(() => {
-      void searchPeopleAction({ query: trimmed }).then(outcome => { if (current) setAnswer({ query: trimmed, outcome }); });
+      void searchPeopleAction({ query: trimmed }).then(outcome => {
+        if (current) {
+          setAnswer({ query: trimmed, outcome });
+        }
+      });
     }, DEBOUNCE_MS);
-    return () => { current = false; window.clearTimeout(timer); };
+
+    return () => {
+      current = false;
+      window.clearTimeout(timer);
+    };
   }, [trimmed]);
 
   const current = answer?.query === trimmed ? answer.outcome : null;
 
   return (
     <div className="name-search">
-      <label className="field">
-        <span className="field-label">Find by name</span>
-        <input type="search" value={query} autoComplete="off" spellCheck={false} aria-controls="name-results"
-          onChange={event => setQuery(event.target.value)} />
-      </label>
+      <SearchField label="Find by name" value={query} onChange={setQuery} />
       <SearchStatus trimmed={trimmed} current={current} />
       <ul id="name-results" className="name-results">
-        {trimmed !== '' && current?.kind === 'ok' && current.value.map(card => (
-          <li key={card.person.id}>
-            <button type="button" className="name-result" onClick={() => onPick(card)}>
-              <span className="name-result-name">{attendanceDisplayName(card.person)}</span>
-              <StatusPill status={card.person.status} />
-              {card.onSiteSince && <span className="muted small">On site</span>}
-            </button>
-          </li>
-        ))}
+        {trimmed !== '' &&
+          current?.kind === 'ok' &&
+          current.value.map(card => (
+            <li key={card.person.id}>
+              <Button variant="ghost" className="name-result" onClick={() => onPick(card)}>
+                <span className="name-result-name">{attendanceDisplayName(card.person)}</span>
+                {card.onSiteSince && <Pill tone="brand">On site</Pill>}
+                <StatusPill status={card.person.status} />
+              </Button>
+            </li>
+          ))}
       </ul>
     </div>
   );
 }
 
 function SearchStatus({ trimmed, current }: { trimmed: string; current: ActionOutcome<PersonCard[]> | null }) {
-  if (trimmed === '') return <p className="muted small" role="status">Type a name to find someone.</p>;
-  if (current === null) return <p className="muted small" role="status">Searching.</p>;
-  if (current.kind !== 'ok') return <p className="field-error" role="alert">{current.message}</p>;
-  if (current.value.length === 0) return <p className="muted small" role="status">No one matches “{trimmed}”.</p>;
-  return <p className="muted small" role="status">{current.value.length} found.</p>;
+  if (trimmed === '') {
+    return (
+      <p className="muted small" role="status">
+        Type a name to find someone.
+      </p>
+    );
+  }
+  if (current === null) {
+    return (
+      <p className="muted small" role="status">
+        Searching.
+      </p>
+    );
+  }
+  if (current.kind !== 'ok') {
+    return (
+      <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
+        {current.message}
+      </p>
+    );
+  }
+  if (current.value.length === 0) {
+    return (
+      <p className="muted small" role="status">
+        No one matches “{trimmed}”.
+      </p>
+    );
+  }
+
+  return (
+    <p className="muted small" role="status">
+      {current.value.length} found.
+    </p>
+  );
 }

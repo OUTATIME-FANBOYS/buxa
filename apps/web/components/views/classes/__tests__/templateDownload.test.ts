@@ -1,10 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
+import { settle } from '@buxa/domain';
 
 const response = new Response('template');
-const classTemplateResponse = vi.fn(async () => response);
+const classTemplateResponse = vi.fn(() => settle(() => response));
 vi.mock('@buxa/server/composers/index.server', () => ({ classTemplateResponse }));
 
-const { classTemplateDownload } = await import('@/components/views/classes/export');
+const { classTemplateDownload } = await import('@/components/views/classes');
 
 describe('classTemplateDownload', () => {
   it('answers with the composer response unchanged', async () => {

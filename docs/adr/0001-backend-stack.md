@@ -4,29 +4,33 @@ Status: accepted (stack); data-access detail amended 2026-11-13. Date: 2026-11-1
 Built so far: Postgres with row-level security, Supabase Auth, Next.js route handlers and the zod contracts, the audit log, and the Postgres rate limiter. Not built yet: the pg-boss job queue, Stripe Connect, Playwright tests and error tracking. Those stay decisions until they land.
 
 ## Context
+
 The prototype keeps whole-app state in the browser and a single JSON file on a local server. That cannot
 support multiple orgs, payments, concurrency-safe seat counts, or children's data.
 
 ## Decision
+
 - **Language:** TypeScript end to end (reuses the pure domain code and tests).
 - **Database:** PostgreSQL. Row-level security for tenant isolation, transactions and constraints for seat
   counts and holds. Managed host (Neon or Supabase) with point-in-time recovery.
 - **API:** ~~Fastify~~ Next.js route handlers (see ADR 0002) with zod validation. Business rules stay in a pure `domain` package that
   the API calls; no rules in route handlers.
-- **Data access:** plain SQL migrations checked in (row-level security is SQL anyway), run by `packages/db`; every migration reviewed in a PR. A typed query layer (Drizzle or similar) can be added later without changing the schema. *(Changed from the first draft, which named Drizzle.)*
+- **Data access:** plain SQL migrations checked in (row-level security is SQL anyway), run by `packages/db`; every migration reviewed in a PR. A typed query layer (Drizzle or similar) can be added later without changing the schema. _(Changed from the first draft, which named Drizzle.)_
 - **Auth:** managed provider (Clerk or Supabase Auth), not hand-rolled, because accounts hold minors' data.
   Authorization is ours: a shared `can(actor, action, resource)` used by API and UI.
 - **Payments:** Stripe Connect (Standard accounts). Webhooks are idempotent and verified.
 - **Jobs:** Postgres-backed queue (pg-boss) for reminders and webhooks. No extra infrastructure at first.
-- **Repo:** npm workspaces: `apps/web`, `packages/domain`, `packages/db`, `packages/contracts`.
+- **Repo:** npm workspaces: `apps/web`, `packages/domain`, `packages/db`, `packages/contracts`. (Amended 2026-11-17: the repository also has `apps/server`, `apps/shared` and `apps/middleware`; see the README layout.)
 - **Observability:** structured logs, error tracking, request ids, audit log table.
 
 ## Why not
+
 - Firebase or document stores: weak fit for relational capacity and payments rules.
 - Microservices: one deployable API until a measured reason appears.
 - Hand-rolled auth: risk is too high for this data.
 
 ## Test strategy
+
 1. Unit tests on `domain` (fast, no I/O).
 2. Integration tests against a real Postgres in CI (migrations applied from scratch).
 3. Tenant-isolation tests: every table, every role, both orgs.
@@ -35,4 +39,5 @@ support multiple orgs, payments, concurrency-safe seat counts, or children's dat
 6. Stripe in test mode with webhook replay.
 
 ## Hosting
+
 Vercel (native Next.js; see ADR 0002 and `docs/deploy.md`). Supabase hosts Postgres and sign-in. No container image. Earlier drafts used a Fastify function and a custom Build Output step; both were replaced when the app moved to Next.js.

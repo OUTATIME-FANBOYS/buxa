@@ -3,7 +3,10 @@
  * a UTF-8 byte-order mark, and blank lines skipped. Each record keeps the line it starts on, so a row can be named to the owner
  * by the row number they see in their spreadsheet. Writing CSV is the web app's `encodeCsv`; this only reads.
  */
-export interface CsvRecord { line: number; cells: string[] }
+export interface CsvRecord {
+  line: number;
+  cells: string[];
+}
 export type CsvParse = { ok: true; records: CsvRecord[] } | { ok: false; line: number; message: string };
 
 const BOM = '﻿';
@@ -22,19 +25,28 @@ export function parseCsvRecords(input: string): CsvParse {
   const endRecord = (): void => {
     cells.push(field);
     const blank = cells.length === 1 && cells[0]?.trim() === '' && !quotedThisRecord;
-    if (!blank) records.push({ line: recordLine, cells });
+    if (!blank) {
+      records.push({ line: recordLine, cells });
+    }
     cells = [];
     field = '';
     quotedThisRecord = false;
   };
 
   for (let i = 0; i < text.length; i++) {
-    const c = text[i] as string;
+    const c = text[i];
     if (inQuotes) {
       if (c === '"') {
-        if (text[i + 1] === '"') { field += '"'; i++; } else { inQuotes = false; }
+        if (text[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
       } else {
-        if (c === '\n') line++;
+        if (c === '\n') {
+          line++;
+        }
         field += c;
       }
       continue;
@@ -57,7 +69,12 @@ export function parseCsvRecords(input: string): CsvParse {
     }
   }
 
-  if (inQuotes) return { ok: false, line: quotedLine, message: `A quote opened on line ${quotedLine} is never closed.` };
-  if (cells.length > 0 || field !== '') endRecord();
+  if (inQuotes) {
+    return { ok: false, line: quotedLine, message: `A quote opened on line ${quotedLine} is never closed.` };
+  }
+  if (cells.length > 0 || field !== '') {
+    endRecord();
+  }
+
   return { ok: true, records };
 }

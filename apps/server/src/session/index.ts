@@ -2,11 +2,10 @@ import 'server-only';
 import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import type { Membership } from '@buxa/contracts';
 import type { Actor } from '@buxa/domain';
 import { ROUTES } from '@buxa/shared/config/routes';
 import { publicEnv } from '@buxa/shared/config/env';
-import type { Session } from '../auth/session';
+import { openableCamps, type CampMembership, type Session } from '../auth/session';
 import { sessionFromToken } from '../auth/sessionFromToken';
 import { MAINTENANCE_PATH, isServiceRefused } from '../availability';
 import { isHttpError } from '../http/errors';
@@ -35,25 +34,41 @@ const ONE_YEAR_SECONDS = 365 * 24 * 60 * 60;
 async function cookieToken(log: Logger): Promise<string | null> {
   try {
     const client = await requestSessionClient();
-    if (!client) return null;
+    if (!client) {
+      return null;
+    }
     const { data, error } = await client.auth.getSession();
-    if (error) log.warn({ reason: error.name }, 'could not read the session; treating the visitor as signed out');
+    if (error) {
+      log.warn({ reason: error.name }, 'could not read the session; treating the visitor as signed out');
+    }
+
     return data.session?.access_token ?? null;
   } catch (error) {
     log.warn({ reason: errorName(error) }, 'could not read the session; treating the visitor as signed out');
+
     return null; // a corrupt or unreadable cookie is the same as no cookie
   }
 }
 
 async function loadSession(): Promise<Session | null> {
   const runtime = getRuntime();
-  if (!runtime.verifier) return null;
+  if (!runtime.verifier) {
+    return null;
+  }
   const token = await cookieToken(runtime.log);
-  if (!token) return null;
+  if (!token) {
+    return null;
+  }
   try {
-    return await sessionFromToken(token, { verifier: runtime.verifier, users: runtime.repositories.users }, runtime.log);
+    return await sessionFromToken(
+      token,
+      { verifier: runtime.verifier, users: runtime.repositories.users },
+      runtime.log,
+    );
   } catch (error) {
-    if (isHttpError(error) && (error.statusCode === 401 || error.statusCode === 409)) return null;
+    if (isHttpError(error) && (error.statusCode === 401 || error.statusCode === 409)) {
+      return null;
+    }
     throw error;
   }
 }
@@ -66,7 +81,10 @@ export const getSession: () => Promise<Session | null> = cache(loadSession);
  * pages that work without a session (the browser demo) use this, so they still render in that case.
  */
 export async function getOptionalSession(): Promise<Session | null> {
-  if (!publicEnv.supabaseUrl || !publicEnv.supabasePublishableKey) return null;
+  if (!publicEnv.supabaseUrl || !publicEnv.supabasePublishableKey) {
+    return null;
+  }
+
   return getSession();
 }
 
@@ -75,19 +93,26 @@ export async function getOptionalSession(): Promise<Session | null> {
  * refuses (audit S-05): they go to the maintenance page instead. Never returns null.
  */
 export async function requireSession(): Promise<Session> {
-  if (await isServiceRefused()) redirect(MAINTENANCE_PATH);
+  if (await isServiceRefused()) {
+    redirect(MAINTENANCE_PATH);
+  }
   const session = await getSession();
-  if (!session) redirect(ROUTES.signIn);
+  if (!session) {
+    redirect(ROUTES.signIn);
+  }
+
   return session;
 }
 
 /**
- * The camp to work in: the selected one if the person still belongs to it, otherwise their first, otherwise null (they have no camp yet).
- * Reads the CAMP_COOKIE; the cookie is validated against `session.memberships`.
+ * The camp to work in: the selected one if the person still belongs to it (active or archived), otherwise their first active camp,
+ * otherwise null (they have no camp yet). Reads the CAMP_COOKIE; the cookie is validated against the session's memberships.
  */
-export async function getCurrentCamp(session: Session): Promise<Membership | null> {
+export async function getCurrentCamp(session: Session): Promise<CampMembership | null> {
   const selected = (await cookies()).get(CAMP_COOKIE)?.value;
-  return session.memberships.find(membership => membership.orgId === selected) ?? session.memberships[0] ?? null;
+  const camps = openableCamps(session);
+
+  return camps.find(camp => camp.orgId === selected) ?? camps.find(camp => !camp.archived) ?? null;
 }
 
 /** Remember the selected camp. Only callable from a Server Action or Route Handler (it writes a cookie). */
@@ -95,7 +120,10 @@ export async function rememberCamp(orgId: string): Promise<void> {
   (await cookies()).set(CAMP_COOKIE, orgId, hardenCookie({ maxAge: ONE_YEAR_SECONDS }));
 }
 
-/** The Actor the permission rules and services expect. Pure. */
-export function toActor(session: Session, camp: Membership): Actor {
-  return { userId: session.user.id, orgId: camp.orgId, role: camp.role };
+/**
+ * The Actor the permission rules and services expect. Pure. This is the one place a camp context becomes an Actor for the
+ * services, so the archived flag is set here (the domain refuses every write while it is set).
+ */
+export function toActor(session: Session, camp: CampMembership): Actor {
+  return { userId: session.user.id, orgId: camp.orgId, role: camp.role, archived: camp.archived };
 }

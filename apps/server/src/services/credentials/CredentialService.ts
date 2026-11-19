@@ -28,6 +28,10 @@ export interface CredentialService {
 }
 
 export interface CredentialServiceDeps {
-  credentials: CredentialRepository; people: PeopleRepository; memberships: MembershipRepository; attendance: AttendanceRepository;
-  orgs: OrgRepository; clock: Clock;
+  credentials: CredentialRepository;
+  people: PeopleRepository;
+  memberships: MembershipRepository;
+  attendance: AttendanceRepository;
+  orgs: OrgRepository;
+  clock: Clock;
 }

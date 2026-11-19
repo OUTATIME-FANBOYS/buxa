@@ -6,20 +6,31 @@ import { selectCampAction } from '../selectCampAction';
 import { formOf, startWorld } from './support';
 
 const mocks = vi.hoisted(() => ({ requireSession: vi.fn(), rememberCamp: vi.fn(), revalidatePath: vi.fn() }));
-vi.mock('../../../session', async importOriginal => ({ ...(await importOriginal<object>()), requireSession: mocks.requireSession, rememberCamp: mocks.rememberCamp }));
+vi.mock('../../../session', async importOriginal => ({
+  ...(await importOriginal<object>()),
+  requireSession: mocks.requireSession,
+  rememberCamp: mocks.rememberCamp,
+}));
 vi.mock('next/cache', () => ({ revalidatePath: mocks.revalidatePath }));
 
 describe('renameCampAction and selectCampAction', () => {
   let world: ReturnType<typeof startWorld>;
-  let owner: string; let viewer: string; let outsider: string; let orgId: string; let otherOrgId: string;
+  let owner: string;
+  let viewer: string;
+  let outsider: string;
+  let orgId: string;
+  let otherOrgId: string;
   const signInAs = (userId: string) => mocks.requireSession.mockImplementation(() => world.sessionOf(userId));
 
   beforeEach(async () => {
     vi.clearAllMocks();
     world = startWorld();
     [owner, viewer, outsider] = [await world.person(), await world.person(), await world.person()];
-    orgId = (await world.store.createWithOwner({ name: 'Sunrise Lake', slug: 'sunrise-lake', timezone: 'UTC' }, owner)).id;
-    otherOrgId = (await world.store.createWithOwner({ name: 'Other Camp', slug: 'other-camp', timezone: 'UTC' }, outsider)).id;
+    orgId = (await world.store.createWithOwner({ name: 'Sunrise Lake', slug: 'sunrise-lake', timezone: 'UTC' }, owner))
+      .id;
+    otherOrgId = (
+      await world.store.createWithOwner({ name: 'Other Camp', slug: 'other-camp', timezone: 'UTC' }, outsider)
+    ).id;
     world.addMember(orgId, viewer, 'viewer');
   });
   afterEach(() => world.stop());

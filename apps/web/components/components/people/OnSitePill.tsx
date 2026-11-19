@@ -1,4 +1,4 @@
-import { Pill } from '@/components/elements/export';
+import { Pill } from '@/components/elements';
 
 /** Checked in and not yet out. Renders nothing otherwise, so "not on site" is never a visible marker. */
 export function OnSitePill({ onSite }: { onSite: boolean | null }) {

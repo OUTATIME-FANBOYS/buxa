@@ -1,14 +1,25 @@
 import { createHash } from 'node:crypto';
 import type { Pool } from 'pg';
 import { tooManyRequests } from '../http/errors';
+import { settle } from '@buxa/domain';
 
 /**
  * Fixed-window rate limits. Every limit is a rule (its name, how many hits, how long the window is) applied to one identity: a
  * user id or a client address. The Postgres limiter keeps its counts in the database, so every serverless instance shares them.
  */
-export interface RateRule { readonly name: string; readonly limit: number; readonly windowSeconds: number }
-export interface RateDecision { allowed: boolean; remaining: number; retryAfterSeconds: number }
-export interface RateLimiter { hit(rule: RateRule, identity: string): Promise<RateDecision> }
+export interface RateRule {
+  readonly name: string;
+  readonly limit: number;
+  readonly windowSeconds: number;
+}
+export interface RateDecision {
+  allowed: boolean;
+  remaining: number;
+  retryAfterSeconds: number;
+}
+export interface RateLimiter {
+  hit(rule: RateRule, identity: string): Promise<RateDecision>;
+}
 
 /** The limits the app uses. They are documented in docs/security.md (section 2): change both together. */
 export const RATE_RULES = {
@@ -33,6 +44,7 @@ export function createPgRateLimiter(pool: Pool): RateLimiter {
         [rateKey(rule, identity), rule.limit, rule.windowSeconds],
       );
       const row = rows[0];
+
       return { allowed: row.allowed, remaining: row.remaining, retryAfterSeconds: row.retry_after_seconds };
     },
   };
@@ -41,17 +53,25 @@ export function createPgRateLimiter(pool: Pool): RateLimiter {
 /** The same rules held in this process's memory. For tests, and for code that runs without a database. Not shared between instances. */
 export function createMemoryRateLimiter(now: () => number = Date.now): RateLimiter {
   const windows = new Map<string, { start: number; count: number }>();
+
   return {
-    async hit(rule, identity) {
-      const key = rateKey(rule, identity);
-      const time = now();
-      const span = rule.windowSeconds * 1000;
-      const previous = windows.get(key);
-      const current = previous && time - previous.start < span ? previous : { start: time, count: 0 };
-      current.count += 1;
-      windows.set(key, current);
-      const retryAfterSeconds = Math.max(Math.ceil((current.start + span - time) / 1000), 1);
-      return { allowed: current.count <= rule.limit, remaining: Math.max(rule.limit - current.count, 0), retryAfterSeconds };
+    hit(rule, identity) {
+      return settle(() => {
+        const key = rateKey(rule, identity);
+        const time = now();
+        const span = rule.windowSeconds * 1000;
+        const previous = windows.get(key);
+        const current = previous && time - previous.start < span ? previous : { start: time, count: 0 };
+        current.count += 1;
+        windows.set(key, current);
+        const retryAfterSeconds = Math.max(Math.ceil((current.start + span - time) / 1000), 1);
+
+        return {
+          allowed: current.count <= rule.limit,
+          remaining: Math.max(rule.limit - current.count, 0),
+          retryAfterSeconds,
+        };
+      });
     },
   };
 }
@@ -59,14 +79,22 @@ export function createMemoryRateLimiter(now: () => number = Date.now): RateLimit
 /** Throws a 429 the client can show when the rule is used up. Call it before the work it guards. */
 export async function enforceRateLimit(limiter: RateLimiter, rule: RateRule, identity: string): Promise<void> {
   const decision = await limiter.hit(rule, identity);
-  if (decision.allowed) return;
-  throw tooManyRequests(decision.retryAfterSeconds, `Too many requests. Try again in ${howLong(decision.retryAfterSeconds)}.`);
+  if (decision.allowed) {
+    return;
+  }
+  throw tooManyRequests(
+    decision.retryAfterSeconds,
+    `Too many requests. Try again in ${howLong(decision.retryAfterSeconds)}.`,
+  );
 }
 
 /** A short, user-facing wait: seconds below a minute and a half, then whole minutes. */
 export function howLong(seconds: number): string {
-  if (seconds < 90) return `${seconds} second${seconds === 1 ? '' : 's'}`;
+  if (seconds < 90) {
+    return `${seconds} second${seconds === 1 ? '' : 's'}`;
+  }
   const minutes = Math.ceil(seconds / 60);
+
   return `${minutes} minute${minutes === 1 ? '' : 's'}`;
 }
 
@@ -75,6 +103,10 @@ export function howLong(seconds: number): string {
  * entry is the one a client cannot forge. (The first entry is whatever the client sent.)
  */
 export function clientAddress(headers: Headers): string {
-  const hops = (headers.get('x-forwarded-for') ?? '').split(',').map(h => h.trim()).filter(Boolean);
+  const hops = (headers.get('x-forwarded-for') ?? '')
+    .split(',')
+    .map(h => h.trim())
+    .filter(Boolean);
+
   return (hops.at(-1) ?? headers.get('x-real-ip') ?? 'unknown').slice(0, 64);
 }

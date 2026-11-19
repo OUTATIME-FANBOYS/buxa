@@ -1,8 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { AppState } from '@buxa/shared';
+import type { AppState, ThemePref } from '@buxa/shared';
 import { createSync, type SyncState, type Updater } from '@buxa/shared';
+import { THEME_EVENT } from '@buxa/shared/config/theme';
 import { createActions } from '@buxa/shared/kanban/actions/createActions';
 import { loadState } from '../store/persistence';
 import { useAutosave } from './useAutosave';
@@ -23,19 +24,56 @@ export function useStoreEngine() {
   useTheme(state.ui.theme);
 
   const set = useCallback((fn: Updater) => {
-    const next = fn(ref.current); if (next === ref.current) return;
-    ref.current = next; setState(next);
-    if (syncRef.current !== 'local') { pending.current.push(fn); engine.current?.changed(); }
+    const next = fn(ref.current);
+    if (next === ref.current) {
+      return;
+    }
+    ref.current = next;
+    setState(next);
+    if (syncRef.current !== 'local') {
+      pending.current.push(fn);
+      engine.current?.changed();
+    }
+  }, []);
+
+  // A theme chosen outside this store (the account menu) updates the store too, so a later save cannot write an old choice back.
+  useEffect(() => {
+    const onTheme = (event: Event) => {
+      const theme = (event as CustomEvent<ThemePref>).detail;
+      const next = { ...ref.current, ui: { ...ref.current.ui, theme } };
+      ref.current = next;
+      setState(next);
+    };
+    window.addEventListener(THEME_EVENT, onTheme);
+
+    return () => window.removeEventListener(THEME_EVENT, onTheme);
   }, []);
 
   useEffect(() => {
     const e = createSync({
-      getState: () => ref.current, commit: s => { ref.current = s; setState(s); }, pending: pending.current,
-      onStatus: (s, info) => { syncRef.current = s; setSync(s); if (info) setServerInfo(info); },
+      getState: () => ref.current,
+      commit: s => {
+        ref.current = s;
+        setState(s);
+      },
+      pending: pending.current,
+      onStatus: (s, info) => {
+        syncRef.current = s;
+        setSync(s);
+        if (info) {
+          setServerInfo(info);
+        }
+      },
     });
-    engine.current = e; return () => { e.stop(); engine.current = null; };
+    engine.current = e;
+
+    return () => {
+      e.stop();
+      engine.current = null;
+    };
   }, []);
 
   const actions = useMemo(() => createActions({ set, get: () => ref.current, replace: s => set(() => s) }), [set]);
+
   return { state, saveStatus, sync, serverInfo, actions };
 }

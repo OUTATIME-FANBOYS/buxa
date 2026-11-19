@@ -47,7 +47,8 @@ describe('summarize', () => {
 
 describe('formatSummary', () => {
   it('prints one line with the label and the three numbers to one decimal place', () => {
-    expect(formatSummary('scan', { count: 100, p50: 41.25, p95: 88, max: 150.333 }))
-      .toBe('scan: n=100  p50 41.3 ms  p95 88.0 ms  max 150.3 ms');
+    expect(formatSummary('scan', { count: 100, p50: 41.25, p95: 88, max: 150.333 })).toBe(
+      'scan: n=100  p50 41.3 ms  p95 88.0 ms  max 150.3 ms',
+    );
   });
 });

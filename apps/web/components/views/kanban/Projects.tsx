@@ -4,45 +4,127 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Avatar } from '@/components/elements/export';
-import { Empty } from '@/components/components/export';
-import { Menu } from '@/components/components/export';
-import { Pill } from '@/components/elements/export';
-import { Progress } from '@/components/elements/export';
+import { Avatar, Button } from '@/components/elements';
+import { Empty } from '@/components/components';
+import { Menu } from '@/components/components';
+import { Pill } from '@/components/elements';
+import { Progress } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
-import { Icon } from '@/components/elements/export';
-import { ProjectDialog } from '@/components/components/kanban/dialogs/export';
+import { Icon } from '@/components/elements';
+import { ProjectDialog } from '@/components/components/kanban/dialogs';
 import { diffDays, fmt, today } from '@buxa/shared';
 import { boardPath } from '@/config/routes';
 import { HEALTH_LABEL, HEALTH_TONE, healthOf, progressOf } from '@buxa/shared';
 import type { Project } from '@buxa/shared';
+import { requirePresent } from '@buxa/domain';
 
 export function Projects() {
-  const { s, actions, projects, workspace, wsTasks, kindOf, members, readOnly } = useStore(); const { confirm, toast } = useUi();
+  const { s, actions, projects, workspace, wsTasks, kindOf, members, readOnly } = useStore();
+  const { confirm, toast } = useUi();
   const router = useRouter();
   const [dlg, setDlg] = useState<{ project?: Project } | null>(null);
   const del = async (p: Project) => {
-    if (await confirm({ title: `Delete “${p.name}”?`, body: 'The board and all of its tasks will be removed. This cannot be undone.', confirmLabel: 'Delete project', danger: true })) { actions.deleteProject(p.id); toast('Project deleted'); }
+    if (
+      await confirm({
+        title: `Delete “${p.name}”?`,
+        body: 'The board and all of its tasks will be removed. This cannot be undone.',
+        confirmLabel: 'Delete project',
+        danger: true,
+      })
+    ) {
+      actions.deleteProject(p.id);
+      toast('Project deleted');
+    }
   };
   void s;
+
   return (
     <div className="page">
-      <header className="page-head"><div className="page-title"><h1>Projects</h1><p className="muted">{workspace?.name} · {projects.length} project{projects.length === 1 ? '' : 's'}</p></div>
-        {!readOnly && <div className="page-actions"><button className="btn btn-primary" onClick={() => setDlg({})}><Icon name="plus" size={16} />New project</button></div>}</header>
-      {projects.length === 0 ? <Empty icon="folder" title="Start your first project" body="Each project gets its own Kanban board." action={!readOnly ? <button className="btn btn-primary" onClick={() => setDlg({})}>New project</button> : undefined} /> : (
+      <header className="page-head">
+        <div className="page-title">
+          <h1>Projects</h1>
+          <p className="muted">
+            {workspace?.name} · {projects.length} project{projects.length === 1 ? '' : 's'}
+          </p>
+        </div>
+        {!readOnly && (
+          <div className="page-actions">
+            <Button variant="primary" size="header" icon="plus" onClick={() => setDlg({})}>
+              New project
+            </Button>
+          </div>
+        )}
+      </header>
+      {projects.length === 0 ? (
+        <Empty
+          icon="folder"
+          title="Start your first project"
+          body="Each project gets its own Kanban board."
+          action={
+            !readOnly ? (
+              <Button variant="primary" icon="plus" onClick={() => setDlg({})}>
+                New project
+              </Button>
+            ) : undefined
+          }
+        />
+      ) : (
         <div className="cards-grid">
           {projects.map(p => {
-            const pr = progressOf(wsTasks.filter(x => x.projectId === p.id), kindOf); const { done: d, total, pct: v } = pr; const h = healthOf(pr, p.deadline);
+            const pr = progressOf(
+              wsTasks.filter(x => x.projectId === p.id),
+              kindOf,
+            );
+            const { done: d, total, pct: v } = pr;
+            const h = healthOf(pr, p.deadline);
             const left = p.deadline ? diffDays(p.deadline, today()) : null;
+
             return (
               <article key={p.id} className={`project-card tone-${HEALTH_TONE[h]}`}>
-                <div className="pc-top"><h2><Link href={boardPath(p.id)} onClick={() => actions.selectProject(p.id)}>{p.name}</Link></h2>
-                  {!readOnly && <Menu label={`Actions for ${p.name}`} trigger={<Icon name="more" />} items={[{ label: 'Open board', icon: 'kanban', onSelect: () => router.push(boardPath(p.id)) }, { label: 'Edit details', icon: 'edit', onSelect: () => setDlg({ project: p }) }, { label: '', divider: true, onSelect() {} }, { label: 'Delete project', icon: 'trash', danger: true, onSelect: () => del(p) }]} />}</div>
-                <div><Pill tone={HEALTH_TONE[h]}>{HEALTH_LABEL[h]}</Pill></div>
+                <div className="pc-top">
+                  <h2>
+                    <Link href={boardPath(p.id)} onClick={() => actions.selectProject(p.id)}>
+                      {p.name}
+                    </Link>
+                  </h2>
+                  {!readOnly && (
+                    <Menu
+                      label={`Actions for ${p.name}`}
+                      trigger={<Icon name="more" />}
+                      items={[
+                        { label: 'Open board', icon: 'kanban', onSelect: () => router.push(boardPath(p.id)) },
+                        { label: 'Edit details', icon: 'edit', onSelect: () => setDlg({ project: p }) },
+                        { label: '', divider: true, onSelect() {} },
+                        { label: 'Delete project', icon: 'trash', danger: true, onSelect: () => void del(p) },
+                      ]}
+                    />
+                  )}
+                </div>
+                <div>
+                  <Pill tone={HEALTH_TONE[h]}>{HEALTH_LABEL[h]}</Pill>
+                </div>
                 <p className="muted clamp">{p.description || 'No description yet.'}</p>
-                <div><div className="pc-row small"><span>{d} of {total} done</span><strong>{Math.round(v)}%</strong></div><Progress value={v} tone={HEALTH_TONE[h]} label={`${p.name} completion`} /></div>
-                <div className="pc-foot"><span className="avatars">{members.slice(0, 4).map(m => <Avatar key={m.userId} user={m.user} size={24} />)}</span>
-                  {p.deadline && <span className={`small ${left! < 0 ? 'text-crit' : 'muted'}`}>{left! < 0 ? 'Past deadline' : `Due ${fmt(p.deadline)}`}</span>}</div>
+                <div>
+                  <div className="pc-row small">
+                    <span>
+                      {d} of {total} done
+                    </span>
+                    <strong>{Math.round(v)}%</strong>
+                  </div>
+                  <Progress value={v} tone={HEALTH_TONE[h]} label={`${p.name} completion`} />
+                </div>
+                <div className="pc-foot">
+                  <span className="avatars">
+                    {members.slice(0, 4).map(m => (
+                      <Avatar key={m.userId} user={m.user} size={24} />
+                    ))}
+                  </span>
+                  {p.deadline && (
+                    <span className={`small ${requirePresent(left, 'left') < 0 ? 'text-crit' : 'muted'}`}>
+                      {requirePresent(left, 'left') < 0 ? 'Past deadline' : `Due ${fmt(p.deadline)}`}
+                    </span>
+                  )}
+                </div>
               </article>
             );
           })}

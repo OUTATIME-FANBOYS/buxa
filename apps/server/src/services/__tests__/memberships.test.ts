@@ -5,30 +5,88 @@ async function setup(start?: string) {
   const camp = await createCamp('UTC', start);
   const admin = camp.actor('admin');
   const ben = await camp.people.create(admin, { givenName: 'Ben', familyName: 'Stone', roles: ['participant'] });
+
   return { camp, admin, ben };
 }
 
 describe('MembershipService', () => {
   it('refuses add and revoke without memberships:manage (403)', async () => {
     const { camp, admin, ben } = await setup();
-    const membership = await camp.memberships.add(admin, { personId: ben.id, plan: 'Summer', startsOn: '2027-07-01', endsOn: '2027-08-31' });
-    expect((await thrown(() => camp.memberships.add(camp.actor('staff'), { personId: ben.id, plan: 'Summer', startsOn: '2027-07-01', endsOn: '2027-08-31' }))).statusCode).toBe(403);
-    expect((await thrown(() => camp.memberships.revoke(camp.actor('staff'), { membershipId: membership.id, reason: 'Moved' }))).statusCode).toBe(403);
+    const membership = await camp.memberships.add(admin, {
+      personId: ben.id,
+      plan: 'Summer',
+      startsOn: '2027-07-01',
+      endsOn: '2027-08-31',
+    });
+    expect(
+      (
+        await thrown(() =>
+          camp.memberships.add(camp.actor('staff'), {
+            personId: ben.id,
+            plan: 'Summer',
+            startsOn: '2027-07-01',
+            endsOn: '2027-08-31',
+          }),
+        )
+      ).statusCode,
+    ).toBe(403);
+    expect(
+      (
+        await thrown(() =>
+          camp.memberships.revoke(camp.actor('staff'), { membershipId: membership.id, reason: 'Moved' }),
+        )
+      ).statusCode,
+    ).toBe(403);
   });
 
   it('refuses an unknown person (404) and an end date before the start (400)', async () => {
     const { camp, admin, ben } = await setup();
-    expect((await thrown(() => camp.memberships.add(admin, { personId: '00000000-0000-4000-8000-000000000000', plan: 'Summer', startsOn: '2027-07-01', endsOn: '2027-08-31' }))).statusCode).toBe(404);
-    expect((await thrown(() => camp.memberships.add(admin, { personId: ben.id, plan: 'Summer', startsOn: '2027-08-31', endsOn: '2027-07-01' }))).statusCode).toBe(400);
+    expect(
+      (
+        await thrown(() =>
+          camp.memberships.add(admin, {
+            personId: '00000000-0000-4000-8000-000000000000',
+            plan: 'Summer',
+            startsOn: '2027-07-01',
+            endsOn: '2027-08-31',
+          }),
+        )
+      ).statusCode,
+    ).toBe(404);
+    expect(
+      (
+        await thrown(() =>
+          camp.memberships.add(admin, {
+            personId: ben.id,
+            plan: 'Summer',
+            startsOn: '2027-08-31',
+            endsOn: '2027-07-01',
+          }),
+        )
+      ).statusCode,
+    ).toBe(400);
   });
 
-  it('computes the status for the camp\'s local day, and lists oldest start first', async () => {
+  it("computes the status for the camp's local day, and lists oldest start first", async () => {
     const { camp, admin, ben } = await setup();
-    await camp.memberships.add(admin, { personId: ben.id, plan: 'August', startsOn: '2027-08-01', endsOn: '2027-08-31' });
-    const summer = await camp.memberships.add(admin, { personId: ben.id, plan: 'July', startsOn: '2027-07-01', endsOn: '2027-07-31' });
+    await camp.memberships.add(admin, {
+      personId: ben.id,
+      plan: 'August',
+      startsOn: '2027-08-01',
+      endsOn: '2027-08-31',
+    });
+    const summer = await camp.memberships.add(admin, {
+      personId: ben.id,
+      plan: 'July',
+      startsOn: '2027-07-01',
+      endsOn: '2027-07-31',
+    });
     expect(summer.status).toBe('valid');
     const list = await camp.memberships.listFor(admin, ben.id);
-    expect(list.map(m => [m.plan, m.status])).toEqual([['July', 'valid'], ['August', 'not_started']]);
+    expect(list.map(m => [m.plan, m.status])).toEqual([
+      ['July', 'valid'],
+      ['August', 'not_started'],
+    ]);
   });
 
   it('marks a membership expired once its end date has passed in the camp zone', async () => {
@@ -42,8 +100,15 @@ describe('MembershipService', () => {
 
   it('revoke needs a reason (400), records it, and keeps the first reason when repeated', async () => {
     const { camp, admin, ben } = await setup();
-    const membership = await camp.memberships.add(admin, { personId: ben.id, plan: 'Summer', startsOn: '2027-07-01', endsOn: '2027-08-31' });
-    expect((await thrown(() => camp.memberships.revoke(admin, { membershipId: membership.id, reason: '   ' }))).statusCode).toBe(400);
+    const membership = await camp.memberships.add(admin, {
+      personId: ben.id,
+      plan: 'Summer',
+      startsOn: '2027-07-01',
+      endsOn: '2027-08-31',
+    });
+    expect(
+      (await thrown(() => camp.memberships.revoke(admin, { membershipId: membership.id, reason: '   ' }))).statusCode,
+    ).toBe(400);
 
     const first = await camp.memberships.revoke(admin, { membershipId: membership.id, reason: 'Left early' });
     expect(first).toMatchObject({ status: 'revoked', revokedReason: 'Left early' });
@@ -55,7 +120,15 @@ describe('MembershipService', () => {
 
   it('refuses an unknown membership on revoke (404) and an unknown person on list (404)', async () => {
     const { camp, admin } = await setup();
-    expect((await thrown(() => camp.memberships.revoke(admin, { membershipId: '00000000-0000-4000-8000-000000000000', reason: 'x' }))).statusCode).toBe(404);
-    expect((await thrown(() => camp.memberships.listFor(admin, '00000000-0000-4000-8000-000000000000'))).statusCode).toBe(404);
+    expect(
+      (
+        await thrown(() =>
+          camp.memberships.revoke(admin, { membershipId: '00000000-0000-4000-8000-000000000000', reason: 'x' }),
+        )
+      ).statusCode,
+    ).toBe(404);
+    expect(
+      (await thrown(() => camp.memberships.listFor(admin, '00000000-0000-4000-8000-000000000000'))).statusCode,
+    ).toBe(404);
   });
 });

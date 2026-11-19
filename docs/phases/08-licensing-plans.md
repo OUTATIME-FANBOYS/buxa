@@ -42,6 +42,7 @@ Depends on: phases 1 to 7 (the features it locks). Payments (phase 9) charge for
 ## Licence for the code (decision needed)
 
 The repository is public on GitHub and has **no LICENSE file**. Without one, the code is all rights reserved by default: others may read it but may not use or copy it. Decide before any release that is shared outside the team:
+
 - proprietary (all rights reserved, recommended while the product is commercial), or
 - an open-source licence (for example MIT or AGPL) if the code should be reusable.
 
