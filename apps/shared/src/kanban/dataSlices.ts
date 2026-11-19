@@ -19,7 +19,7 @@ export const DATA_KEYS = [
 export type DataKey = (typeof DATA_KEYS)[number];
 export type Data = Pick<AppState, DataKey>;
 
-export const pickData = (s: AppState): Data => Object.fromEntries(DATA_KEYS.map(k => [k, s[k]])) as unknown as Data;
+export const pickData = (s: AppState): Data => Object.fromEntries(DATA_KEYS.map(k => [k, s[k]] as const)) as Data;
 export const isData = (d: unknown): d is Data =>
   !!d && typeof d === 'object' && DATA_KEYS.every(k => Array.isArray((d as Record<string, unknown>)[k]));
 

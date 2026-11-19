@@ -21,7 +21,10 @@ export const checked = (form: FormData, name: string): boolean => form.get(name)
  * Optional fields left blank are absent, not empty strings: a blank date or id would otherwise fail its own check.
  * Required fields keep their blank value so the schema answers "Required." rather than "expected a string".
  */
-export function dropBlank(values: Record<string, unknown>, optional: readonly string[]): Record<string, unknown> {
+export function dropBlank(
+  values: Record<string, string | string[]>,
+  optional: readonly string[],
+): Record<string, string | string[]> {
   const out = { ...values };
   for (const key of optional) {
     if (out[key] === '') {

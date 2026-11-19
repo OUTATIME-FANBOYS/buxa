@@ -103,7 +103,7 @@ const SYNC_AVAILABLE = process.env.NEXT_PUBLIC_LEGACY_SYNC === 'true';
 export function createSync(h: Host) {
   let version = 0;
   let last: Data | null = null;
-  let chain: Promise<unknown> = Promise.resolve();
+  let chain: Promise<void> = Promise.resolve();
   let timer: ReturnType<typeof setTimeout> | undefined;
   let retry: ReturnType<typeof setTimeout> | undefined;
   let events: EventSource | null = null;
@@ -111,7 +111,10 @@ export function createSync(h: Host) {
   let active = false;
   const queue = <T>(fn: () => Promise<T>) => {
     const p = chain.then(fn, fn);
-    chain = p.catch(() => undefined);
+    chain = p.then(
+      () => undefined,
+      () => undefined,
+    );
 
     return p;
   };
