@@ -1,5 +1,5 @@
 import { isUuid, MAX_AGE_LIMIT, type ActiveEnrolmentFacts } from '@buxa/domain';
-import type { Class, Enrolment, EnrolmentStatus, Session } from '@buxa/contracts';
+import type { Class, Enrolment, EnrolmentStatus, Session, SessionPriceInput } from '@buxa/contracts';
 import { toIso, type Db } from '../people/pgRows';
 import { ClassNotFoundError, EnrolmentNotFoundError, SessionNotFoundError } from './errors';
 
@@ -19,7 +19,34 @@ export interface SessionRow {
   starts_on: string | null;
   ends_on: string | null;
   class_count: number;
+  is_public: boolean;
   created_at: Date;
+  price_minor: number | null;
+  price_currency: string | null;
+  early_bird_minor: number | null;
+  early_bird_until: string | null;
+}
+
+/** The price columns of a session row (see SESSION_COLUMNS and CLASS_COLUMNS). All NULL when no price is set. */
+export interface PriceRow {
+  price_minor: number | null;
+  price_currency: string | null;
+  early_bird_minor: number | null;
+  early_bird_until: string | null;
+}
+
+/** A session's stored price from its row, or null when it has none. */
+export function toPrice(row: PriceRow): SessionPriceInput | null {
+  if (row.price_minor === null || row.price_currency === null) {
+    return null;
+  }
+
+  return {
+    currency: row.price_currency,
+    regularMinor: row.price_minor,
+    earlyBirdMinor: row.early_bird_minor,
+    earlyBirdUntil: row.early_bird_until,
+  };
 }
 
 /** A class row: its own time range, ages and camp size, with its session's name and the seat counts from the same statement. */
@@ -38,6 +65,10 @@ export interface ClassRow {
   waitlisted: number;
   /** Each instructor's person id and display name, as json from the same statement. */
   instructors: { id: string; name: string }[];
+  price_minor: number | null;
+  price_currency: string | null;
+  early_bird_minor: number | null;
+  early_bird_until: string | null;
 }
 
 export interface EnrolmentRow {
@@ -65,7 +96,9 @@ export function toSession(row: SessionRow): Session {
     startsOn: row.starts_on,
     endsOn: row.ends_on,
     classCount: row.class_count,
+    isPublic: row.is_public,
     createdAt: toIso(row.created_at),
+    price: toPrice(row),
   };
 }
 
@@ -84,6 +117,7 @@ export function toClass(row: ClassRow): Class {
     instructors: row.instructors.map(i => ({ id: i.id, name: i.name })),
     seatsTaken: row.seats_taken,
     waitlisted: row.waitlisted,
+    price: toPrice(row),
   };
 }
 
@@ -116,13 +150,15 @@ export function toActiveFacts(row: {
 }
 
 const SESSION_COLUMNS = `p.id, p.name, p.description, to_char(p.starts_on, 'YYYY-MM-DD') AS starts_on,
-  to_char(p.ends_on, 'YYYY-MM-DD') AS ends_on, p.created_at,
-  (SELECT count(*)::int FROM sessions s WHERE s.class_id = p.id) AS class_count`;
+  to_char(p.ends_on, 'YYYY-MM-DD') AS ends_on, p.is_public, p.created_at,
+  (SELECT count(*)::int FROM sessions s WHERE s.class_id = p.id) AS class_count,
+  p.price_minor, p.price_currency, p.early_bird_minor, to_char(p.early_bird_until, 'YYYY-MM-DD') AS early_bird_until`;
 
 /** Seats and instructors are counted in the same statement, so a class read is one consistent snapshot. */
 const CLASS_COLUMNS = `s.id, s.class_id AS session_id, p.name AS session_name, s.name, s.age_min, s.age_max, s.capacity,
   s.starts_at, s.ends_at, s.location,
-  (SELECT count(*)::int FROM enrolments e WHERE e.session_id = s.id AND e.status = 'enrolled') AS seats_taken,
+  p.price_minor, p.price_currency, p.early_bird_minor, to_char(p.early_bird_until, 'YYYY-MM-DD') AS early_bird_until,
+  session_seats_taken(s.id) AS seats_taken,
   (SELECT count(*)::int FROM enrolments e WHERE e.session_id = s.id AND e.status = 'waitlisted') AS waitlisted,
   COALESCE((SELECT json_agg(json_build_object('id', i.id::text, 'name', trim(i.given_name || ' ' || i.family_name))
                              ORDER BY i.family_name, i.given_name, i.id)

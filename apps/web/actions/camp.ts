@@ -30,7 +30,7 @@ export interface ArchivedCamp {
   name: string;
   archivedAt: string;
   /** The person's role in the camp. Only the owner may unarchive or delete it. */
-  role: 'viewer' | 'staff' | 'admin' | 'owner';
+  role: 'viewer' | 'staff' | 'admin' | 'owner' | 'teacher';
 }
 
 /** Archives the camp (owner only). It is hidden from the switcher, and its data is kept. */

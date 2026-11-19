@@ -1,10 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import type { Actor, ActiveEnrolmentFacts, AuditAction, LocalDate } from '@buxa/domain';
-import type { Class, Enrolment, EnrolmentStatus, NewSessionInput, Session } from '@buxa/contracts';
+import type { Class, Enrolment, EnrolmentStatus, NewSessionInput, Session, SessionPriceInput } from '@buxa/contracts';
+import { priceChangeAudit, samePrice } from './priceAudit';
 import { systemClock, type Clock } from '../services/clock';
 import type { AuditRecord } from '../people/InMemoryDatabase';
 import type { AuditData } from '../audit/types';
 import type {
+  CampClassSpan,
   ClassRecord,
   ClassRepository,
   EnrolRequest,
@@ -19,6 +21,7 @@ import {
   EnrolmentNotFoundError,
   InstructorNotFoundError,
   SessionNotFoundError,
+  TeacherNotFoundError,
   refusalError,
 } from './errors';
 import { settle } from '@buxa/domain';
@@ -31,7 +34,9 @@ interface StoredSession {
   description: string;
   startsOn: LocalDate | null;
   endsOn: LocalDate | null;
+  isPublic: boolean;
   createdAt: string;
+  price: SessionPriceInput | null;
 }
 
 /** A class: a time range under a session, with its own name, ages, camp size and location. */
@@ -71,6 +76,10 @@ export class InMemoryClassRepository implements ClassRepository {
   private readonly classes = new Map<string, StoredClass>();
   private readonly enrolments = new Map<string, StoredEnrolment>();
   private readonly campers = new Map<string, StoredCamper>();
+  /** Camp id to the user ids that hold the teacher role there. */
+  private readonly teacherUsers = new Map<string, Set<string>>();
+  /** Class id to the teacher user ids assigned to it. */
+  private readonly teachersOf = new Map<string, Set<string>>();
   private readonly locks = new Map<string, Promise<void>>();
 
   constructor(private readonly now: Clock = systemClock) {}
@@ -111,13 +120,80 @@ export class InMemoryClassRepository implements ClassRepository {
         description: input.description,
         startsOn: input.startsOn,
         endsOn: input.endsOn,
+        isPublic: input.isPublic ?? false,
         createdAt: this.now().toISOString(),
+        price: input.price ?? null,
       };
       this.sessions.set(row.id, row);
       this.record(actor, 'session.create', 'session', row.id, { name: row.name });
+      if (row.price) {
+        this.record(actor, 'session.price_change', 'session', row.id, priceChangeAudit(null, row.price));
+      }
 
       return this.toSession(row);
     });
+  }
+
+  setSessionPrice(actor: Actor, sessionId: string, price: SessionPriceInput | null): Promise<Session> {
+    return settle(() => {
+      const row = this.sessionIn(actor.orgId, sessionId);
+      if (!row) {
+        throw new SessionNotFoundError();
+      }
+      if (!samePrice(row.price, price)) {
+        this.record(actor, 'session.price_change', 'session', sessionId, priceChangeAudit(row.price, price));
+        row.price = price;
+      }
+
+      return this.toSession(row);
+    });
+  }
+
+  setSessionPublic(actor: Actor, sessionId: string, isPublic: boolean): Promise<Session> {
+    return settle(() => {
+      const row = this.sessionIn(actor.orgId, sessionId);
+      if (!row) {
+        throw new SessionNotFoundError();
+      }
+      row.isPublic = isPublic;
+      this.record(actor, 'session.update', 'session', sessionId, { isPublic });
+
+      return this.toSession(row);
+    });
+  }
+
+  addClasses(actor: Actor, sessionId: string, inputs: ClassRecord[]): Promise<Class[]> {
+    return settle(() => {
+      if (!this.sessionIn(actor.orgId, sessionId)) {
+        throw new SessionNotFoundError();
+      }
+      // Check everything before writing anything, so a failure part-way leaves the camp unchanged (as the transaction does).
+      for (const input of inputs) {
+        this.requireInstructorsInCamp(actor.orgId, input.instructorIds);
+      }
+
+      return inputs.map(input => {
+        const row: StoredClass = { ...input, id: randomUUID(), orgId: actor.orgId, sessionId };
+        this.classes.set(row.id, row);
+        this.record(actor, 'class.create', 'class', row.id, {
+          sessionId,
+          startsAt: row.startsAt,
+          endsAt: row.endsAt,
+          instructorIds: [...new Set(input.instructorIds)],
+        });
+
+        return this.toClass(row);
+      });
+    });
+  }
+
+  listCampClassSpans(orgId: string): Promise<CampClassSpan[]> {
+    return settle(() =>
+      [...this.classes.values()]
+        .filter(c => c.orgId === orgId)
+        .map(c => ({ startsAt: c.startsAt, endsAt: c.endsAt, className: c.name }))
+        .sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
+    );
   }
 
   listClasses(orgId: string, sessionId: string): Promise<Class[]> {
@@ -292,6 +368,51 @@ export class InMemoryClassRepository implements ClassRepository {
     });
   }
 
+  /** Test seed: a member of the camp with the teacher role (Postgres keeps this in org_members). */
+  seedTeacher(orgId: string, userId: string): void {
+    const set = this.teacherUsers.get(orgId) ?? new Set<string>();
+    set.add(userId);
+    this.teacherUsers.set(orgId, set);
+  }
+
+  assignedClassIds(orgId: string, userId: string): Promise<string[]> {
+    if (!this.teacherUsers.get(orgId)?.has(userId)) {
+      return Promise.resolve([]);
+    }
+    const ids = [...this.classes.values()]
+      .filter(c => c.orgId === orgId && this.teachersOf.get(c.id)?.has(userId))
+      .map(c => c.id);
+
+    return Promise.resolve(ids);
+  }
+
+  camperIdsIn(orgId: string, classIds: readonly string[]): Promise<string[]> {
+    const wanted = new Set(classIds);
+    const ids = new Set<string>();
+    for (const e of this.enrolments.values()) {
+      if (e.orgId === orgId && wanted.has(e.classId) && e.status === 'enrolled') {
+        ids.add(e.camperId);
+      }
+    }
+
+    return Promise.resolve([...ids]);
+  }
+
+  replaceTeachers(actor: Actor, classId: string, userIds: readonly string[]): Promise<void> {
+    if (!this.classIn(actor.orgId, classId)) {
+      return Promise.reject(new ClassNotFoundError());
+    }
+    const unique = [...new Set(userIds)];
+    const members = this.teacherUsers.get(actor.orgId) ?? new Set<string>();
+    if (unique.some(id => !members.has(id))) {
+      return Promise.reject(new TeacherNotFoundError());
+    }
+    this.teachersOf.set(classId, new Set(unique));
+    this.record(actor, 'class.update', 'class', classId, { teacherIds: unique });
+
+    return Promise.resolve();
+  }
+
   private async exclusive<T>(key: string, work: () => Promise<T>): Promise<T> {
     const previous = this.locks.get(key) ?? Promise.resolve();
     const run = previous.then(work);
@@ -363,7 +484,9 @@ export class InMemoryClassRepository implements ClassRepository {
       startsOn: s.startsOn,
       endsOn: s.endsOn,
       classCount: [...this.classes.values()].filter(c => c.sessionId === s.id).length,
+      isPublic: s.isPublic,
       createdAt: s.createdAt,
+      price: s.price ? { ...s.price } : null,
     };
   }
 
@@ -384,6 +507,7 @@ export class InMemoryClassRepository implements ClassRepository {
       instructors: c.instructorIds.map(id => ({ id, name: this.campers.get(id)?.name ?? '' })),
       seatsTaken: this.countWhere(c.id, 'enrolled'),
       waitlisted: this.countWhere(c.id, 'waitlisted'),
+      price: session?.price ? { ...session.price } : null,
     };
   }
 

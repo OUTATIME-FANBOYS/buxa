@@ -78,6 +78,15 @@ export class InstructorNotFoundError extends Error {
 }
 
 /** The refusals an adapter throws from inside the enrolment transaction, so nothing is written. Each carries the domain refusal. */
+/** A class's teacher must be a member of this camp with the teacher role. */
+export class TeacherNotFoundError extends Error {
+  readonly kind = 'teacher-not-found';
+  constructor() {
+    super('Teacher not found');
+    this.name = 'TeacherNotFoundError';
+  }
+}
+
 export class SessionFullError extends Error {
   readonly kind = 'session-full';
   constructor(readonly refusal: Extract<Refusal, { reason: 'session_full' }>) {
@@ -127,6 +136,47 @@ export function refusalError(refusal: Refusal): EnrolmentRefusalError {
   }
 }
 
+/** A seat hold names a household that is not in this camp (or a malformed id). */
+export class HouseholdNotFoundError extends Error {
+  readonly kind = 'household-not-found';
+  constructor() {
+    super('Household not found');
+    this.name = 'HouseholdNotFoundError';
+  }
+}
+
+export class HoldNotFoundError extends Error {
+  readonly kind = 'hold-not-found';
+  constructor() {
+    super('Hold not found');
+    this.name = 'HoldNotFoundError';
+  }
+}
+
+/** The household already holds a place in this session. One hold per household per session. */
+export class HoldExistsError extends Error {
+  readonly kind = 'hold-exists';
+  constructor() {
+    super('The household already holds a place in this session');
+    this.name = 'HoldExistsError';
+  }
+}
+
+/**
+ * A recurring rule that cannot be expanded, or a class of the series that clashes with a class already in the camp or with an
+ * earlier class of the same series. Thrown before anything is written, so a refused series saves nothing.
+ */
+export class RecurrenceRefusedError extends Error {
+  readonly kind = 'recurrence-refused';
+  constructor(
+    readonly reason: 'recurrence_invalid' | 'class_clash',
+    message: string,
+  ) {
+    super(message);
+    this.name = 'RecurrenceRefusedError';
+  }
+}
+
 export type ClassErrorKind =
   | 'class-not-found'
   | 'session-not-found'
@@ -136,6 +186,10 @@ export type ClassErrorKind =
   | 'enrolment-not-found'
   | 'camper-not-found'
   | 'instructor-not-found'
+  | 'household-not-found'
+  | 'hold-not-found'
+  | 'hold-exists'
+  | 'teacher-not-found'
   | EnrolmentRefusalError['kind'];
 
 export const isClassError = (e: unknown, kind: ClassErrorKind): boolean =>

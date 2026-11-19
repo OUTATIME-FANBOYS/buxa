@@ -1,5 +1,5 @@
 import type { Actor, EnrolmentDecision, EnrolmentFacts } from '@buxa/domain';
-import type { Class, Enrolment, NewSessionInput, Session } from '@buxa/contracts';
+import type { Class, Enrolment, NewSessionInput, Session, SessionPriceInput } from '@buxa/contracts';
 
 export type { Class, Session, Enrolment } from '@buxa/contracts';
 
@@ -12,6 +12,13 @@ export interface ClassRecord {
   endsAt: string;
   location: string;
   instructorIds: string[];
+}
+
+/** A class's times and name, for every class in the camp: what a new class must not clash with. */
+export interface CampClassSpan {
+  startsAt: string;
+  endsAt: string;
+  className: string;
 }
 
 export interface EnrolRequest {
@@ -36,8 +43,19 @@ export type EnrolmentRule = (facts: GatheredEnrolmentFacts) => EnrolmentDecision
 export interface ClassRepository {
   listSessions(orgId: string): Promise<Session[]>;
   getSession(orgId: string, sessionId: string): Promise<Session | null>;
-  /** Audits `session.create`. */
+  /** Audits `session.create`, and `session.price_change` when the session is created with a price. */
   createSession(actor: Actor, input: NewSessionInput): Promise<Session>;
+  /** Sets or clears a session's price. Audits `session.price_change` with the old and new price. Throws SessionNotFoundError. */
+  setSessionPrice(actor: Actor, sessionId: string, price: SessionPriceInput | null): Promise<Session>;
+  /** Audits `session.update`. Throws SessionNotFoundError. */
+  setSessionPublic(actor: Actor, sessionId: string, isPublic: boolean): Promise<Session>;
+  /**
+   * Writes every class of a series in one transaction, or none. Audits `class.create` for each. Throws SessionNotFoundError,
+   * or InstructorNotFoundError.
+   */
+  addClasses(actor: Actor, sessionId: string, inputs: ClassRecord[]): Promise<Class[]>;
+  /** Times and names of every class in the camp, for the clash check. */
+  listCampClassSpans(orgId: string): Promise<CampClassSpan[]>;
   /** Throws SessionNotFoundError. */
   listClasses(orgId: string, sessionId: string): Promise<Class[]>;
   getClass(orgId: string, classId: string): Promise<Class | null>;
@@ -60,4 +78,16 @@ export interface ClassRepository {
   enrol(actor: Actor, request: EnrolRequest, rule: EnrolmentRule): Promise<Enrolment>;
   /** Frees the seat and the time. Audits `enrolment.cancel`. Throws EnrolmentNotFoundError (also when already cancelled). */
   cancelEnrolment(actor: Actor, enrolmentId: string, note: string | null): Promise<Enrolment>;
+  /**
+   * The classes a teacher is assigned to in this camp. Only members with the teacher role count, so a person who stopped being a
+   * teacher has no classes even before their assignments are cleared. Used by the assigned-classes scope (teacherScope.ts).
+   */
+  assignedClassIds(orgId: string, userId: string): Promise<string[]>;
+  /** The people with an enrolled (not waitlisted or cancelled) place in any of the classes. */
+  camperIdsIn(orgId: string, classIds: readonly string[]): Promise<string[]>;
+  /**
+   * Replaces a class's teachers (staff and admins, classes:manage). Audits `class.update`. Throws ClassNotFoundError, or
+   * TeacherNotFoundError for a user who is not a teacher in this camp.
+   */
+  replaceTeachers(actor: Actor, classId: string, userIds: readonly string[]): Promise<void>;
 }

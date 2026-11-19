@@ -10,6 +10,8 @@ import {
   MAX_AGE_LIMIT,
   MAX_CAMP_SIZE,
   MAX_CLASS_AGE,
+  MAX_MINOR_AMOUNT,
+  MAX_RECURRING_CLASSES,
   MIN_CAMP_SIZE,
   MIN_CLASS_AGE,
 } from '@buxa/domain';
@@ -46,6 +48,27 @@ const NameSchema = z.string().trim().min(1, 'Give the name.').max(120);
 const InstantSchema = z.iso.datetime({ offset: true, message: 'Use a date and time with a time zone offset.' });
 const LocalDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a date like 2027-07-05.');
 
+/**
+ * A session's price, in minor units (cents, yen) with an ISO currency code. Shown for information only: nothing is charged.
+ * The early-bird amount and its end date are given together, and the early-bird amount is not above the regular price.
+ */
+export const SessionPriceSchema = z
+  .object({
+    currency: z.string().regex(/^[A-Z]{3}$/, 'Use a three-letter currency code, for example USD.'),
+    regularMinor: z.number().int().min(0).max(MAX_MINOR_AMOUNT),
+    earlyBirdMinor: z.number().int().min(0).max(MAX_MINOR_AMOUNT).nullable(),
+    earlyBirdUntil: LocalDateSchema.nullable(),
+  })
+  .refine(v => (v.earlyBirdMinor === null) === (v.earlyBirdUntil === null), {
+    message: 'Give the early-bird price and its last day together, or neither.',
+    path: ['earlyBirdUntil'],
+  })
+  .refine(v => v.earlyBirdMinor === null || v.earlyBirdMinor <= v.regularMinor, {
+    message: 'The early-bird price cannot be above the regular price.',
+    path: ['earlyBirdMinor'],
+  });
+export type SessionPriceInput = z.infer<typeof SessionPriceSchema>;
+
 /** A class's instructor as the screens show them: the person's id and name. Names are trimmed and bounded like a person's name. */
 export const ClassInstructorSchema = z.object({
   id: z.string(),
@@ -64,7 +87,11 @@ export const SessionSchema = z.object({
   startsOn: z.string().nullable(),
   endsOn: z.string().nullable(),
   classCount: z.number().int(),
+  /** A public session has a page anyone can read without signing in. */
+  isPublic: z.boolean(),
   createdAt: z.string(),
+  /** The session's price, or null when none is set. Its classes show this same price. */
+  price: SessionPriceSchema.nullable(),
 });
 export type Session = z.infer<typeof SessionSchema>;
 
@@ -74,12 +101,51 @@ export const NewSessionInputSchema = z
     description: z.string().trim().max(2000).default(''),
     startsOn: LocalDateSchema,
     endsOn: LocalDateSchema,
+    price: SessionPriceSchema.nullable().optional(),
+    /** Left out means not public. */
+    isPublic: z.boolean().optional(),
   })
   .refine(v => v.endsOn >= v.startsOn, {
     message: 'The session must end on or after its first day.',
     path: ['endsOn'],
   });
 export type NewSessionInput = z.infer<typeof NewSessionInputSchema>;
+
+export const SetSessionPublicInputSchema = z.object({ isPublic: z.boolean() });
+export type SetSessionPublicInput = z.infer<typeof SetSessionPublicInputSchema>;
+
+const CampDaySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a date in the format 2027-07-05.');
+const ClockTimeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Use a 24-hour time, such as 09:00.');
+
+/** When a series stops: on a date (inclusive), or after a number of classes. */
+export const RecurrenceEndSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('until'), date: CampDaySchema }),
+  z.object({ kind: z.literal('count'), count: z.number().int().min(1).max(MAX_RECURRING_CLASSES) }),
+]);
+
+/** A weekly rule in camp time. The server expands it into classes (see expandClassRule in @buxa/domain). */
+export const ClassRuleSchema = z.object({
+  weekdays: z.array(z.number().int().min(1).max(7)).min(1).max(7),
+  firstDate: CampDaySchema,
+  startTime: ClockTimeSchema,
+  endTime: ClockTimeSchema,
+  end: RecurrenceEndSchema,
+});
+export type ClassRuleInput = z.infer<typeof ClassRuleSchema>;
+
+/**
+ * A recurring series under a session: the class's own fields, with a rule in place of one pair of times. Every generated class
+ * is a normal class with its own enrolments.
+ */
+export const NewRecurringClassInputSchema = z.object({
+  rule: ClassRuleSchema,
+  name: NameSchema,
+  ageRange: ClassAgeRangeInputSchema,
+  capacity: CampSizeSchema,
+  location: z.string().trim().min(1, 'Give the location.').max(200),
+  instructorIds: z.array(z.string().uuid()).max(MAX_CLASS_INSTRUCTORS).default([]),
+});
+export type NewRecurringClassInput = z.infer<typeof NewRecurringClassInputSchema>;
 
 export const ClassSchema = z.object({
   id: z.string(),
@@ -95,6 +161,8 @@ export const ClassSchema = z.object({
   instructors: z.array(ClassInstructorSchema).max(MAX_CLASS_INSTRUCTORS),
   seatsTaken: z.number().int(),
   waitlisted: z.number().int(),
+  /** The price of the session this class runs in. Each class shows its session's price. */
+  price: SessionPriceSchema.nullable(),
 });
 export type Class = z.infer<typeof ClassSchema>;
 

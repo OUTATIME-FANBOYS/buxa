@@ -23,6 +23,7 @@ const cls: Class = {
   instructors: [],
   seatsTaken: 0,
   waitlisted: 0,
+  price: null,
 };
 
 const render = (props: Partial<Parameters<typeof ClassForm>[0]> = {}) =>

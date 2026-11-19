@@ -5,48 +5,52 @@ const ORG = 'org-1';
 const as = (role: Role, userId = 'me'): Actor => ({ userId, orgId: ORG, role });
 
 // The matrix, written out so a reviewer can read it. Y = allowed, . = denied.
-//                          viewer staff admin owner
+//                          viewer staff admin owner teacher
 const MATRIX: Record<Action, string> = {
-  'org:read': 'YYYY',
-  'org:update': '..YY',
-  'org:archive': '...Y',
-  'org:delete': '...Y',
-  'org:unarchive': '...Y',
-  'org:transfer_ownership': '...Y',
-  'members:read': 'YYYY',
-  'members:read_contact': '..YY',
-  'members:invite': '..YY',
-  'members:change_role': '..YY',
-  'members:remove': '..YY',
-  'members:rename': '..YY',
-  'members:leave': 'YYYY',
-  'audit:read': '..YY',
-  'data:export': '...Y',
-  'data:erase': '...Y',
-  'people:read': 'YYYY',
-  'people:read_contact': '.YYY',
-  'people:create': '.YYY',
-  'people:update': '.YYY',
-  'people:delete': '..YY',
-  'people:authorise_pickup': '..YY',
-  'memberships:manage': '..YY',
-  'credentials:manage': '..YY',
-  'attendance:read': '.YYY',
-  'attendance:record': '.YYY',
-  'attendance:override': '..YY',
-  'attendance:export': '..YY',
-  'events:read': 'YYYY',
-  'events:create': '..YY',
-  'events:update': '..YY',
-  'events:delete': '..YY',
-  'classes:manage': '.YYY',
-  'tasks:read': 'YYYY',
-  'tasks:create': '.YYY',
-  'tasks:update': '.YYY',
-  'tasks:move': '.YYY',
-  'tasks:comment': '.YYY',
-  'tasks:delete': '..YY',
-  'tasks:manage_board': '..YY',
+  'org:read': 'YYYYY',
+  'org:update': '..YY.',
+  'org:archive': '...Y.',
+  'org:delete': '...Y.',
+  'org:unarchive': '...Y.',
+  'org:transfer_ownership': '...Y.',
+  'members:read': 'YYYY.',
+  'members:read_contact': '..YY.',
+  'members:invite': '..YY.',
+  'members:change_role': '..YY.',
+  'members:remove': '..YY.',
+  'members:rename': '..YY.',
+  'members:leave': 'YYYYY',
+  'audit:read': '..YY.',
+  'data:export': '...Y.',
+  'data:erase': '...Y.',
+  'people:read': 'YYYYY',
+  'people:read_contact': '.YYY.',
+  'people:create': '.YYY.',
+  'people:update': '.YYY.',
+  'people:delete': '..YY.',
+  'people:authorise_pickup': '..YY.',
+  'memberships:manage': '..YY.',
+  'credentials:manage': '..YY.',
+  'attendance:read': '.YYYY',
+  'attendance:record': '.YYYY',
+  'attendance:override': '..YY.',
+  'attendance:export': '..YY.',
+  'events:read': 'YYYYY',
+  'events:create': '..YY.',
+  'events:update': '..YY.',
+  'events:delete': '..YY.',
+  'classes:manage': '.YYY.',
+  'tasks:read': 'YYYY.',
+  'tasks:create': '.YYY.',
+  'tasks:update': '.YYY.',
+  'tasks:move': '.YYY.',
+  'tasks:comment': '.YYY.',
+  'tasks:delete': '..YY.',
+  'tasks:manage_board': '..YY.',
+  'holds:manage': '.YYY.',
+  'registration:read': '.YYY.',
+  'registration:submit': '.YYY.',
+  'registration:manage': '..YY.',
 };
 
 describe('role grants', () => {
@@ -61,12 +65,72 @@ describe('role grants', () => {
     });
   }
 
-  it('a higher role never has fewer grants than a lower one', () => {
-    for (let i = 1; i < ROLES.length; i++) {
-      for (const a of GRANTS[ROLES[i - 1]]) {
-        expect(GRANTS[ROLES[i]].has(a)).toBe(true);
+  it('a higher role never has fewer grants than a lower one (the ladder; teacher is outside it)', () => {
+    const ladder = ROLES.filter(r => r !== 'teacher');
+    for (let i = 1; i < ladder.length; i++) {
+      for (const a of GRANTS[ladder[i - 1]]) {
+        expect(GRANTS[ladder[i]].has(a)).toBe(true);
       }
     }
+  });
+});
+
+describe('teacher: assigned classes only', () => {
+  const T = 'teacher' as const;
+  const scoped: Action[] = ['events:read', 'people:read', 'attendance:read', 'attendance:record'];
+
+  it('is refused the scoped actions unless the class is one it is assigned to', () => {
+    for (const a of scoped) {
+      expect(authorize(as(T), a, { orgId: ORG })).toEqual({ allow: false, reason: 'not_assigned' });
+      expect(authorize(as(T), a, { orgId: ORG, assignedToClass: false })).toEqual({
+        allow: false,
+        reason: 'not_assigned',
+      });
+      expect(authorize(as(T), a, { orgId: ORG, assignedToClass: true })).toEqual({ allow: true });
+    }
+  });
+
+  it('is allowed on its own classes, and the scope does not change any other role', () => {
+    expect(can(as(T), 'attendance:record', { orgId: ORG, assignedToClass: true })).toBe(true);
+    expect(can(as('viewer'), 'attendance:read')).toBe(false);
+    expect(can(as('staff'), 'attendance:record')).toBe(true);
+    expect(can(as('staff'), 'people:read')).toBe(true);
+  });
+
+  it('is refused contact details, edits, team, admin and money rights even in its own classes', () => {
+    const own = { orgId: ORG, assignedToClass: true };
+    const denied: Action[] = [
+      'people:read_contact',
+      'people:create',
+      'people:update',
+      'people:delete',
+      'classes:manage',
+      'events:create',
+      'events:update',
+      'events:delete',
+      'attendance:override',
+      'attendance:export',
+      'members:read',
+      'members:read_contact',
+      'members:invite',
+      'members:change_role',
+      'members:remove',
+      'audit:read',
+      'org:update',
+      'org:delete',
+      'tasks:read',
+      'tasks:create',
+    ];
+    for (const a of denied) {
+      expect(can(as(T), a, own), a).toBe(false);
+    }
+  });
+
+  it('is refused in another organisation even when assigned', () => {
+    expect(authorize(as(T), 'attendance:record', { orgId: 'org-2', assignedToClass: true })).toEqual({
+      allow: false,
+      reason: 'other_org',
+    });
   });
 });
 
@@ -180,8 +244,9 @@ describe('transferring ownership', () => {
 });
 
 describe('ranks', () => {
-  it('are strictly ordered', () => {
-    expect(ROLES.map(rank)).toEqual([0, 1, 2, 3]);
+  it('are strictly ordered on the ladder, and teacher sits at the bottom with viewer', () => {
+    expect(['viewer', 'staff', 'admin', 'owner'].map(r => rank(r as Role))).toEqual([0, 1, 2, 3]);
+    expect(rank('teacher')).toBe(rank('viewer'));
   });
 });
 

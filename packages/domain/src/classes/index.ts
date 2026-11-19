@@ -4,5 +4,7 @@ export * from './capacity';
 export * from './campSize';
 export * from './sessionDates';
 export * from './enrolment';
+export * from './holds';
 export * from './refusals';
 export * from './import';
+export * from './recurrence';

@@ -138,6 +138,13 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0020_drop_camp_clock.sql',
       '0021_orgs_update_columns.sql',
       '0022_sessions_parent_classes.sql',
+      '0023_registration_forms.sql',
+      '0024_session_prices.sql',
+      '0025_seat_holds.sql',
+      '0026_teacher_role.sql',
+      '0027_class_teachers.sql',
+      '0028_calendar_feed.sql',
+      '0029_public_sessions.sql',
     ]);
   });
 

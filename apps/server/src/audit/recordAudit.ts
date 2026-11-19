@@ -1,9 +1,15 @@
 import type { PoolClient } from 'pg';
-import type { Actor, AuditAction } from '@buxa/domain';
+import type { AuditAction } from '@buxa/domain';
 import type { AuditData } from './types';
 
+/** The actor of an entry. `userId` is null for the system's own work (the expiry cleanup), which has no user. */
+export interface AuditActor {
+  userId: string | null;
+  orgId: string;
+}
+
 export interface AuditEntry {
-  actor: Pick<Actor, 'userId' | 'orgId'>;
+  actor: AuditActor;
   action: AuditAction;
   entity: string;
   entityId: string;

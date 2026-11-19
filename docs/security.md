@@ -26,7 +26,8 @@ section 6 are done and the privacy review is signed off. This page says what is 
 - **Least privilege, enforced now:**
   - In the database (migrations `0004` to `0009`): the request role `buxa_app` cannot read `schema_migrations`, is not a superuser and has no `BYPASSRLS` or `CREATEROLE`. It cannot insert or change users, organisations or memberships directly. It has no delete rights on people, memberships, badges, check-ins or households. Its only cross-organisation paths are three `SECURITY DEFINER` functions with a fixed search path, executable by `buxa_app` only: the sign-in user row, the sign-in membership lookup, and organisation creation. Tests: `packages/db/test/narrow-privileges.test.ts`, `apps/server/src/users/__tests__/runtimeLogin.pg.test.ts`.
   - In the code: every tenant query runs through `withOrg`, which switches to `buxa_app`. Request handling does not use the migration login.
-  - **Not enforced by the database yet:** the login the server connects with is whatever `DATABASE_URL` names. Until the operator creates a separate runtime login with no bypass (`docs/deploy.md`, "Database requirements"), that login is the migration login, which can bypass row-level security for any query that does not go through `withOrg`. Until that step is done, the statements above describe the code, not the live connection.
+  - **Login check in the app:** in production the app reads the attributes of its own database login (`SUPERUSER`, `BYPASSRLS`, and membership of a role with either). A privileged login is refused: `/ready` answers 503 `unrestricted_login`, and tenant queries fail. The web app reads only `DATABASE_URL`, never the migration URL. Tests: `packages/db/test/login-privileges.pg.test.ts` (real logins), `packages/db/test/login-privileges.test.ts`, `apps/web/__tests__/readyLogin.test.ts`, `apps/server/src/__tests__/config.test.ts`.
+  - **Not enforced by the database until the switch is made:** the login the server connects with is whatever `DATABASE_URL` names. Until the operator creates the restricted runtime login and moves `DATABASE_URL` to it (`docs/deploy.md`, "Operator steps"), the live connection is the migration login, and the app refuses to serve it in production. The statements about the live connection hold only after that step has passed `/ready`.
   - Erasure needs a separate, reviewed process.
 - **Audit log:** every write to people, memberships, badges and attendance is recorded in the same transaction. The log cannot be updated, deleted or truncated by the app role.
 - **Authentication:** tokens are verified against Supabase's public keys (ES256 or RS256 only). `none` and shared-secret tokens are rejected. Users are matched by provider id, not email. See `docs/auth.md`.
@@ -79,3 +80,46 @@ Report suspected security issues privately to the repository owner. Do not open 
 - [ ] Error and security monitoring with alerts
 - [ ] External penetration test
 - [ ] Secrets review: no keys in the repository or build logs; rotation plan
+- [ ] Database login isolation: the runtime login is live and `/ready` answers `ready`; the migration login is only in the deploy job's secret store (section 7)
+- [ ] Connection logging and an alert on the migration login are switched on and tested (section 7)
+
+## 7. Database login isolation
+
+Two logins reach the database. The **runtime login** (`DATABASE_URL`) serves requests and has no bypass rights. The **migration login** (`MIGRATION_DATABASE_URL`) changes the schema and can bypass row-level security. The rules below keep the migration login away from the web app and away from the open network. Setup steps are in `docs/deploy.md`.
+
+### 7.1 What the app enforces
+
+- The web app reads only `DATABASE_URL`. If only the migration URL is set, it refuses to start. The migrate command reads only the migration URL, and refuses without it.
+- In production, a login that is a superuser, has `BYPASSRLS`, or is a member of a role with either is refused. `/ready` answers 503 and tenant queries fail. See section 2.
+
+### 7.2 Network rules
+
+- Allow database connections only from the deploy job and from the app's own network.
+- Restrict the migration login to the deploy job's network range where the host supports it. Supabase restricts the whole database, not one login, so there the rule is applied to the database as a whole and the migration login's protection rests on the credential and on section 7.3. A self-hosted Postgres can restrict a login in `pg_hba.conf`.
+- Do not open the direct (non-pooled) port to the internet from the app.
+- The steps and the reasons are in `docs/deploy.md`, "Network rules". Nothing here is automated.
+
+### 7.3 Monitoring
+
+- **Log every connection by the migration login.** In Postgres, run once as an admin: `ALTER ROLE <migration login> SET log_connections = on;` and `ALTER ROLE <migration login> SET log_disconnections = on;`. The server log then records each login with its address and time. Some hosts do not let you set this per login; where that is so, enable connection logging for the whole database instead and say so in the deploy log. On Supabase, send the Postgres logs to the project's log explorer (or a log drain you already use), so no new service is needed.
+- **Use the migration history as the audit trail.** Every migration applied is a row in `schema_migrations` with its time (`at`). A row with a time outside a deploy window means a schema change happened outside the deploy. Check it after each deploy.
+- **Alert on any use outside a deploy.** Alert on any connection by the migration login whose time is outside a deploy job's run, and on any connection from an address that is not the deploy job's. Route the alert to the owner. There is no alerting service in the repository yet (section 3 lists error and security monitoring as planned); until one exists, the owner checks the log explorer after each deploy and weekly.
+- **Test the alert once** by connecting with the migration login from outside the deploy job and confirming that the alert fires. Record the date in the deploy log.
+
+### 7.4 Rotation
+
+- **On a schedule:** rotate the migration login's password every 90 days, and the runtime login's every 90 days too. Generate the new value on your machine, store it in the deploy job's secret (migration) or Vercel's form (runtime), then `ALTER ROLE <login> PASSWORD '<new>';`. Deploy, and check `/ready` for the runtime login.
+- **After any suspected leak:** rotate both logins at once, the same way, and treat the leak as an incident. Check `pg_stat_activity` and the connection log for the period since the value could have been seen. Then review `schema_migrations` for any change nobody made.
+- Never paste a password into a chat, a ticket, a commit or a log. If a value is pasted anywhere, treat it as leaked and rotate it.
+
+### 7.5 The honest limit
+
+If someone gets the migration password and can reach the database, row-level policies do not stop them. The migration login can bypass row-level security by design, because schema changes need it. Row-level security protects tenants from the app's own mistakes and from a leaked runtime login; it does not protect against a leaked migration login. What protects the migration login is:
+
+1. **Credential secrecy:** one secret, in the deploy job only, never in the web environment, a log or a repository.
+2. **Network rules** (section 7.2), where the host allows them.
+3. **Monitoring and rotation** (sections 7.3 and 7.4), so a misuse is seen and the password stops working.
+
+On a managed host such as Supabase, the owner role (`postgres`) may not be removable, and the app's migration login may be that owner. Then this limit is permanent for that host, and the controls above are the whole defence. Do not describe the database as protected from a stolen migration password while this is the case.
+
+Also, a schema change made by the migration login is not checked by row-level security at all. Review each migration as code.

@@ -14,7 +14,7 @@ describe('the sidebar groups', () => {
   it('lists the items of each group in order', () => {
     expect(CAMP_NAV_GROUPS.map(group => group.items.map(item => item.label))).toEqual([
       ['Home'],
-      ['Sessions', 'Check-in', 'On site', 'People', 'Attendance'],
+      ['Sessions', 'Registration', 'Check-in', 'On site', 'People', 'Attendance'],
       ['My tasks', 'Projects', 'Boards', 'Calendar', 'Agents'],
       ['Team access'],
     ]);
@@ -43,6 +43,7 @@ describe('the sidebar groups', () => {
       People: 'people:read',
       Attendance: 'attendance:read',
       Sessions: 'events:read',
+      Registration: 'registration:read',
       'Team access': 'members:read',
       Home: undefined,
       'My tasks': undefined,
@@ -53,10 +54,11 @@ describe('the sidebar groups', () => {
 
 describe('navFor', () => {
   it('shows every item to staff and above; a viewer sees no attendance items (check-in, on site, attendance)', () => {
-    for (const role of ROLES.filter(r => r !== 'viewer')) {
+    // Teachers have their own short sidebar (see teacherNav.test.ts), so they are not in this list.
+    for (const role of ROLES.filter(r => r !== 'viewer' && r !== 'teacher')) {
       expect(hrefs(role)).toEqual(CAMP_NAV.map(item => item.href));
     }
-    const attendance: string[] = [ROUTES.checkIn, ROUTES.onSite, ROUTES.attendance];
+    const attendance: string[] = [ROUTES.checkIn, ROUTES.onSite, ROUTES.attendance, ROUTES.registration];
     expect(hrefs('viewer')).toEqual(CAMP_NAV.map(item => item.href).filter(h => !attendance.includes(h)));
   });
 

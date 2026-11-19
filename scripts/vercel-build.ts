@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
-import { errorMessage, migrate, poolConfigFor } from '@buxa/db';
+import { errorMessage, migrate, migrationDatabaseUrl, poolConfigFor } from '@buxa/db';
 
 const webDir = fileURLToPath(new URL('../apps/web', import.meta.url));
 const env = (name: string) => process.env[name]?.trim() || undefined;
@@ -19,10 +19,8 @@ export async function applyMigrations(): Promise<string[]> {
 
     return [];
   }
-  const url = env('MIGRATION_DATABASE_URL') ?? env('DATABASE_URL');
-  if (!url) {
-    throw new Error('A production build needs MIGRATION_DATABASE_URL (or DATABASE_URL) to apply database migrations.');
-  }
+  // Only the migration login applies schema changes. DATABASE_URL (the restricted runtime login) is never used here.
+  const url = migrationDatabaseUrl(process.env);
   const pool = new pg.Pool(poolConfigFor(url));
   try {
     const applied = await migrate(pool);

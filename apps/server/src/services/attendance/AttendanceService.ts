@@ -1,6 +1,7 @@
 import type { AttendanceEntry, AttendanceFilter, CheckInInput, CheckOutInput } from '@buxa/contracts';
 import type { Actor } from '@buxa/domain';
 import type { AttendanceRepository } from '../../attendance/AttendanceRepository';
+import type { TeacherScopeSource } from '../../classes/teacherScope';
 import type { MembershipRepository } from '../../memberships/MembershipRepository';
 import type { OrgRepository } from '../../orgs/OrgRepository';
 import type { PeopleRepository } from '../../people/PeopleRepository';
@@ -29,6 +30,8 @@ export interface AttendanceService {
 
 export interface AttendanceServiceDeps {
   attendance: AttendanceRepository;
+  /** Teachers see and record only their classes' campers; this supplies that scope (see classes/teacherScope.ts). */
+  classes: TeacherScopeSource;
   people: PeopleRepository;
   memberships: MembershipRepository;
   orgs: OrgRepository;

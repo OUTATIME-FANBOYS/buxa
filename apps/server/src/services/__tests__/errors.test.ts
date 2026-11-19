@@ -67,7 +67,12 @@ describe('the camp service', () => {
         throw new OrgNotFoundError();
       }),
     );
-    const error: unknown = await service.getCamp(owner).catch((e: unknown) => e);
+    let error: unknown;
+    try {
+      await service.getCamp(owner);
+    } catch (e) {
+      error = e;
+    }
     expect(error).toMatchObject({ statusCode: 404, message: 'Camp not found' });
   });
 

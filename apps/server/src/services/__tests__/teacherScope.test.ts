@@ -1,0 +1,183 @@
+import { describe, expect, it } from 'vitest';
+import { createClassService } from '../../classes/ClassService';
+import type { InMemoryClassRepository } from '../../classes/InMemoryClassRepository';
+import { painting, robotics, JULY_SESSION } from '../../classes/__tests__/fixtures';
+import { createCamp, thrown, type Camp } from './support';
+
+/*
+ * The assigned-classes scope, enforced in the services (not only hidden in the UI). Camp: Kim and Lia are in Robotics (assigned
+ * to the teacher); Mo is in Painting (not assigned); Ned is in no class. Every refusal is a 403 with no data.
+ */
+
+const FILTER = { from: '2027-07-10', to: '2027-07-10' } as const;
+const ROBOTICS_TIMES = { startsAt: '2027-07-10T09:00:00Z', endsAt: '2027-07-10T12:00:00Z' };
+const PAINTING_TIMES = { startsAt: '2027-07-10T13:00:00Z', endsAt: '2027-07-10T15:00:00Z' };
+
+async function build() {
+  const camp: Camp = await createCamp('UTC', '2027-07-10T09:00:00Z');
+  const admin = camp.actor('admin');
+  const teacher = camp.actor('teacher');
+  const staff = camp.actor('staff');
+  const viewer = camp.actor('viewer');
+  const classes = createClassService({ repo: camp.repos.classes, timezoneOf: () => Promise.resolve('UTC') });
+
+  const adult = (givenName: string) =>
+    camp.people.create(admin, { givenName, familyName: 'Camp', roles: ['participant'] });
+  const kim = await adult('Kim');
+  const lia = await adult('Lia');
+  const mo = await adult('Mo');
+  const ned = await adult('Ned');
+  const store = camp.repos.classes as InMemoryClassRepository;
+  for (const p of [kim, lia, mo, ned]) {
+    await camp.memberships.add(admin, { personId: p.id, plan: 'Summer', startsOn: '2027-07-01', endsOn: '2027-08-31' });
+    store.seedCamper(camp.orgId, p.id, p.givenName, '2015-03-01');
+  }
+
+  const session = await classes.createSession(admin, JULY_SESSION);
+  if (!session.ok) {
+    throw new Error('session');
+  }
+  const addClass = async (cls: typeof robotics, times: typeof ROBOTICS_TIMES) => {
+    const added = await classes.addClass(admin, session.value.id, { ...cls, ...times });
+    if (!added.ok) {
+      throw new Error(added.failure.message);
+    }
+
+    return added.value.id;
+  };
+  const roboticsId = await addClass(robotics, ROBOTICS_TIMES);
+  const paintingId = await addClass(painting, PAINTING_TIMES);
+  for (const [classId, camperId] of [
+    [roboticsId, kim.id],
+    [roboticsId, lia.id],
+    [paintingId, mo.id],
+  ] as const) {
+    const r = await classes.enrol(admin, { classId, camperId, waitlistIfFull: false });
+    if (!r.ok) {
+      throw new Error(r.failure.message);
+    }
+  }
+  expect((await classes.setTeachers(admin, roboticsId, [teacher.userId])).ok).toBe(true);
+
+  return {
+    camp,
+    admin,
+    teacher,
+    staff,
+    viewer,
+    classes,
+    sessionId: session.value.id,
+    roboticsId,
+    paintingId,
+    kim,
+    lia,
+    mo,
+    ned,
+  };
+}
+
+describe('teacher: attendance is limited to its classes', () => {
+  it('checks in and out its own campers', async () => {
+    const { camp, teacher, kim } = await build();
+    expect((await camp.attendance.checkIn(teacher, { personId: kim.id, method: 'manual' })).ok).toBe(true);
+    expect((await camp.attendance.checkOut(teacher, { personId: kim.id })).ok).toBe(true);
+  });
+
+  it('is refused check-in and check-out of a camper in another class, or in no class (403)', async () => {
+    const { camp, teacher, mo, ned } = await build();
+    for (const person of [mo, ned]) {
+      expect(
+        (await thrown(() => camp.attendance.checkIn(teacher, { personId: person.id, method: 'manual' }))).statusCode,
+      ).toBe(403);
+      expect((await thrown(() => camp.attendance.checkOut(teacher, { personId: person.id }))).statusCode).toBe(403);
+    }
+  });
+
+  it('lists only its own campers on site and in the log', async () => {
+    const { camp, teacher, staff, kim, mo } = await build();
+    await camp.attendance.checkIn(teacher, { personId: kim.id, method: 'manual' });
+    await camp.attendance.checkIn(staff, { personId: mo.id, method: 'manual' });
+
+    expect((await camp.attendance.onSite(teacher)).map(e => e.person.id)).toEqual([kim.id]);
+    expect((await camp.attendance.onSite(staff)).map(e => e.person.id).sort()).toEqual([kim.id, mo.id].sort());
+    expect((await camp.attendance.log(teacher, FILTER)).map(e => e.personId)).toEqual([kim.id]);
+  });
+
+  it('refuses another camper history (403) and shows its own', async () => {
+    const { camp, teacher, kim, mo } = await build();
+    await camp.attendance.checkIn(teacher, { personId: kim.id, method: 'manual' });
+    expect((await camp.attendance.history(teacher, kim.id)).length).toBe(1);
+    expect((await thrown(() => camp.attendance.history(teacher, mo.id))).statusCode).toBe(403);
+  });
+
+  it('is refused the export and overrides (no attendance:export or attendance:override)', async () => {
+    const { camp, teacher } = await build();
+    expect((await thrown(() => camp.attendance.exportCsv(teacher, FILTER))).statusCode).toBe(403);
+  });
+});
+
+describe('teacher: people and classes are limited to its classes, read-only', () => {
+  it('lists only the campers in its classes and refuses the others by id', async () => {
+    const { camp, teacher, kim, lia, mo } = await build();
+    expect((await camp.people.list(teacher)).map(p => p.id).sort()).toEqual([kim.id, lia.id].sort());
+    expect((await camp.people.get(teacher, kim.id)).id).toBe(kim.id);
+    expect((await thrown(() => camp.people.get(teacher, mo.id))).statusCode).toBe(403);
+  });
+
+  it('is refused households (they name people outside its classes) and every edit to people', async () => {
+    const { camp, teacher, kim } = await build();
+    expect((await thrown(() => camp.people.listHouseholds(teacher))).statusCode).toBe(403);
+    expect((await thrown(() => camp.people.update(teacher, kim.id, { givenName: 'X' }))).statusCode).toBe(403);
+  });
+
+  it('sees its sessions, its classes and their campers, and nothing of other classes', async () => {
+    const { classes, teacher, sessionId, roboticsId, paintingId, kim, lia } = await build();
+    const sessions = await classes.listSessions(teacher);
+    expect(sessions.ok && sessions.value.map(s => s.id)).toEqual([sessionId]);
+    const mine = await classes.listClasses(teacher, sessionId);
+    expect(mine.ok && mine.value.map(c => c.id)).toEqual([roboticsId]);
+    expect((await classes.getClass(teacher, roboticsId)).ok).toBe(true);
+    expect((await thrown(() => classes.getClass(teacher, paintingId))).statusCode).toBe(403);
+    expect((await thrown(() => classes.listEnrolments(teacher, paintingId))).statusCode).toBe(403);
+    const roster = await classes.listEnrolments(teacher, roboticsId);
+    expect(roster.ok && roster.value.map(e => e.camperId).sort()).toEqual([kim.id, lia.id].sort());
+  });
+
+  it('is refused every class change and cannot assign teachers', async () => {
+    const { classes, teacher, roboticsId } = await build();
+    expect((await thrown(() => classes.setTeachers(teacher, roboticsId, [teacher.userId]))).statusCode).toBe(403);
+    expect((await thrown(() => classes.deleteClass(teacher, roboticsId))).statusCode).toBe(403);
+  });
+
+  it('loses its scope when its assignment is removed', async () => {
+    const { classes, admin, teacher, sessionId, roboticsId, camp, kim } = await build();
+    expect((await classes.setTeachers(admin, roboticsId, [])).ok).toBe(true);
+    const mine = await classes.listClasses(teacher, sessionId);
+    expect(mine.ok && mine.value).toEqual([]);
+    expect(
+      (await thrown(() => camp.attendance.checkIn(teacher, { personId: kim.id, method: 'manual' }))).statusCode,
+    ).toBe(403);
+  });
+});
+
+describe('teacher: assignment rules', () => {
+  it('a class is assigned only to members with the teacher role', async () => {
+    const { classes, admin, staff, roboticsId } = await build();
+    const r = await classes.setTeachers(admin, roboticsId, [staff.userId]);
+    expect(r).toMatchObject({ ok: false, failure: { reason: 'teacher_not_found' } });
+  });
+
+  it('staff may assign teachers, and a teacher of another camp cannot be assigned here', async () => {
+    const { classes, staff, roboticsId, admin } = await build();
+    expect((await classes.setTeachers(staff, roboticsId, [])).ok).toBe(true);
+    const other = await createCamp('UTC', '2027-07-10T09:00:00Z');
+    const r = await classes.setTeachers(admin, roboticsId, [other.actor('teacher').userId]);
+    expect(r).toMatchObject({ ok: false, failure: { reason: 'teacher_not_found' } });
+  });
+
+  it("a teacher of another camp is refused this camp's classes (no assignment here, so 403)", async () => {
+    const { classes, roboticsId } = await build();
+    const other = await createCamp('UTC', '2027-07-10T09:00:00Z');
+    expect((await thrown(() => classes.getClass(other.actor('teacher'), roboticsId))).statusCode).toBe(403);
+  });
+});
