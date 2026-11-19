@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { isUuid } from '@buxa/domain';
-import { classPath } from '@buxa/shared/config/routes';
+import { sessionPath } from '@buxa/shared/config/routes';
 import { failure, success, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../runtime';
 import { currentActor } from '../people/camp';
@@ -45,7 +45,7 @@ export async function enrolAction(_previous: ActionState, form: FormData): Promi
     return expectedFailure(error, 'Could not enrol the camper.');
   }
 
-  revalidatePath(classPath(classId));
+  revalidatePath(sessionPath(classId));
 
   return success(message);
 }

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can, isUuid } from '@buxa/domain';
-import { ROUTES, classPath } from '@/config/routes';
+import { ROUTES, sessionPath } from '@/config/routes';
 import { Empty, PageHeader } from '@/components/components';
 import { campClock } from '@buxa/server/composers/index.server';
 import { currentActor } from '@buxa/server/composers/index.server';
@@ -60,7 +60,7 @@ export async function ClassPage({
   return (
     <div className="page">
       <nav aria-label="Breadcrumb" className="muted">
-        <Link className="link" href={ROUTES.classes}>
+        <Link className="link" href={ROUTES.sessions}>
           Sessions
         </Link>{' '}
         / {session.name}
@@ -172,7 +172,7 @@ export async function ClassPage({
       )}
       {selected && (
         <p className="muted">
-          <Button variant="ghost" href={classPath(session.id)}>
+          <Button variant="ghost" href={sessionPath(session.id)}>
             Clear the class choice
           </Button>
         </p>

@@ -21,7 +21,7 @@ export function UpcomingSessionsPanel({ sessions }: { sessions: readonly Upcomin
       <div className="panel-head">
         <h2 id="upcoming-classes-title">Upcoming classes</h2>
         {sessions !== null && (
-          <Link className="link" href={ROUTES.classes}>
+          <Link className="link" href={ROUTES.sessions}>
             See all<span className="sr-only"> classes</span>
           </Link>
         )}

@@ -33,6 +33,6 @@ describe('smoke-routes route discovery', () => {
     expect(urls.has('/health')).toBe(true);
     expect(urls.has('/ready')).toBe(true);
     expect(urls.has('/v1/me')).toBe(true);
-    expect(urls.has('/camp/classes/import/template')).toBe(true);
+    expect(urls.has('/camp/sessions/import/template')).toBe(true);
   });
 });

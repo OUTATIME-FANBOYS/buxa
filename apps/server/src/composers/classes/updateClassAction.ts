@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { isUuid } from '@buxa/domain';
-import { classPath } from '@buxa/shared/config/routes';
+import { sessionPath } from '@buxa/shared/config/routes';
 import { classForm, failure, field, success, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../runtime';
 import { currentActor } from '../people/camp';
@@ -40,7 +40,7 @@ export async function updateClassAction(_previous: ActionState, form: FormData):
   }
 
   if (sessionId) {
-    revalidatePath(classPath(sessionId));
+    revalidatePath(sessionPath(sessionId));
   }
 
   return success('Class saved.');

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Session } from '@buxa/contracts';
-import { classPath } from '@/config/routes';
+import { sessionPath } from '@/config/routes';
 
 /** The camp's sessions: name, the date range it covers, and how many classes it holds. */
 export function SessionsTable({ sessions }: { sessions: readonly Session[] }) {
@@ -19,7 +19,7 @@ export function SessionsTable({ sessions }: { sessions: readonly Session[] }) {
           {sessions.map(session => (
             <tr key={session.id}>
               <td>
-                <Link className="row-title classes-target" href={classPath(session.id)}>
+                <Link className="row-title classes-target" href={sessionPath(session.id)}>
                   {session.name}
                 </Link>
               </td>

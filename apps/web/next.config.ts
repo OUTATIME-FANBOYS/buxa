@@ -31,6 +31,15 @@ const config: NextConfig = {
       return [
         { source: '/kanban', destination: '/camp', permanent: false },
         { source: '/kanban/:path*', destination: '/camp', permanent: false },
+        // /camp/classes moved to /camp/sessions. Permanent, so old bookmarks open the new address. The session-with-new-class
+        // form comes first: its old address was /camp/classes/:id/sessions/new, now /camp/sessions/:id/classes/new.
+        {
+          source: '/camp/classes/:sessionId/sessions/new',
+          destination: '/camp/sessions/:sessionId/classes/new',
+          permanent: true,
+        },
+        { source: '/camp/classes', destination: '/camp/sessions', permanent: true },
+        { source: '/camp/classes/:path*', destination: '/camp/sessions/:path*', permanent: true },
       ];
     });
   },

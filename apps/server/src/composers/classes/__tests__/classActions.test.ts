@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { classPath } from '@buxa/shared/config/routes';
+import { sessionPath } from '@buxa/shared/config/routes';
 import { idle } from '@buxa/shared';
 import { addClassAction } from '../addClassAction';
 import { createSessionAction } from '../createSessionAction';
@@ -59,7 +59,9 @@ describe('createSessionAction (the date range)', () => {
   });
 
   it('creates the session from its dates and opens its page', async () => {
-    await expect(createSessionAction(idle, formOf(session))).rejects.toThrow(`NEXT_REDIRECT ${classPath(IDS.session)}`);
+    await expect(createSessionAction(idle, formOf(session))).rejects.toThrow(
+      `NEXT_REDIRECT ${sessionPath(IDS.session)}`,
+    );
     expect(h.classes.createSession).toHaveBeenCalledWith(h.actor, {
       name: 'Summer camp',
       description: 'Two weeks',
@@ -157,7 +159,7 @@ describe('updateClassAction', () => {
       message: 'Class saved.',
     });
     expect(h.classes.updateClass).toHaveBeenCalledWith(h.actor, IDS.cls, expect.objectContaining({ capacity: 3 }));
-    expect(h.revalidatePath).toHaveBeenCalledWith(classPath(IDS.session));
+    expect(h.revalidatePath).toHaveBeenCalledWith(sessionPath(IDS.session));
   });
 
   it('refuses a camp size above 30 on the server, and changes nothing', async () => {
@@ -197,7 +199,7 @@ describe('deleteClassAction', () => {
       message: 'Class deleted.',
     });
     expect(h.classes.deleteClass).toHaveBeenCalledWith(h.actor, IDS.cls);
-    expect(h.revalidatePath).toHaveBeenCalledWith(classPath(IDS.session));
+    expect(h.revalidatePath).toHaveBeenCalledWith(sessionPath(IDS.session));
   });
 
   it('refuses, with the reason, a class that has enrolments', async () => {

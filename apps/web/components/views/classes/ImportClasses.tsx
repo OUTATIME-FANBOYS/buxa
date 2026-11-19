@@ -25,7 +25,7 @@ export async function ImportClasses() {
           title="You cannot import sessions"
           body={FORBIDDEN_MANAGE}
           action={
-            <Button className="classes-target" href={ROUTES.classes}>
+            <Button className="classes-target" href={ROUTES.sessions}>
               Back to classes
             </Button>
           }
@@ -40,7 +40,7 @@ export async function ImportClasses() {
         title="Import classes and sessions"
         subtitle="Create many sessions from a spreadsheet. Every row is checked the same way as a manual entry."
         actions={
-          <Button className="classes-target" icon="download" href={ROUTES.classImportTemplate} download>
+          <Button className="classes-target" icon="download" href={ROUTES.sessionImportTemplate} download>
             Download the template (CSV)
           </Button>
         }

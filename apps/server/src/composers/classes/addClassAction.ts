@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { isUuid } from '@buxa/domain';
-import { classPath } from '@buxa/shared/config/routes';
+import { sessionPath } from '@buxa/shared/config/routes';
 import { classForm, failure, field, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../runtime';
 import { currentActor } from '../people/camp';
@@ -37,7 +37,7 @@ export async function addClassAction(_previous: ActionState, form: FormData): Pr
     return expectedFailure(error, 'Could not add the class.');
   }
 
-  revalidatePath(classPath(sessionId));
+  revalidatePath(sessionPath(sessionId));
 
   return { status: 'success', message: 'Class added.' };
 }

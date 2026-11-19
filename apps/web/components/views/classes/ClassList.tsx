@@ -23,7 +23,7 @@ export async function ClassList() {
 
   const actions = canManage ? (
     <>
-      <Button className="classes-target" icon="import" href={ROUTES.classImport}>
+      <Button className="classes-target" icon="import" href={ROUTES.sessionImport}>
         Import classes
       </Button>
       <NewSessionButton />

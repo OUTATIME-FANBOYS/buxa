@@ -50,7 +50,7 @@ describe('ClassesTable: the classes of one session', () => {
   });
 
   it('links the enrolments of a class by its id, on the session page', () => {
-    expect(render(false)).toContain(`/camp/classes/${SESSION}?class=22222222-2222-4222-8222-222222222222#enrolments`);
+    expect(render(false)).toContain(`/camp/sessions/${SESSION}?class=22222222-2222-4222-8222-222222222222#enrolments`);
   });
 
   it('offers Edit and Delete to staff only', () => {

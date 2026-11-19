@@ -118,7 +118,7 @@ describe('ClassList (the Sessions page)', () => {
     const html = render(await ClassList());
     expect(html).toContain('Summer camp');
     expect(html).toContain('>New session</button>');
-    expect(html).toContain('href="/camp/classes/import"');
+    expect(html).toContain('href="/camp/sessions/import"');
   });
 
   it('shows a viewer the sessions with no create or import buttons', async () => {
@@ -126,7 +126,7 @@ describe('ClassList (the Sessions page)', () => {
     const html = render(await ClassList());
     expect(html).toContain('Summer camp');
     expect(html).not.toContain('New session');
-    expect(html).not.toContain('href="/camp/classes/import"');
+    expect(html).not.toContain('href="/camp/sessions/import"');
   });
 
   it('shows a forbidden state, not an error, when the service refuses the read', async () => {
@@ -240,7 +240,7 @@ describe('NewClass (add a class to a session)', () => {
 describe('ImportClasses (bulk import)', () => {
   it('offers the template, the upload and the column list to staff', async () => {
     const html = render(await ImportClasses());
-    expect(html).toContain('href="/camp/classes/import/template"');
+    expect(html).toContain('href="/camp/sessions/import/template"');
     expect(html).toContain('type="file"');
     expect(html).toContain('external_key, class_name, starts_at');
   });

@@ -33,8 +33,8 @@ export const CAMP_NAV_GROUPS: readonly NavGroup[] = [
   {
     label: 'Operations',
     items: [
-      // The Sessions entry is the list of sessions (a date range each, holding classes). Its address stays /camp/classes.
-      { href: ROUTES.classes, label: 'Sessions', icon: 'calendar', requires: 'events:read' },
+      // The Sessions entry is the list of sessions (a date range each, holding classes). Its address stays /camp/sessions.
+      { href: ROUTES.sessions, label: 'Sessions', icon: 'calendar', requires: 'events:read' },
       { href: ROUTES.checkIn, label: 'Check-in', icon: 'check', requires: 'attendance:record' },
       { href: ROUTES.onSite, label: 'On site', icon: 'clock', requires: 'attendance:read' },
       { href: ROUTES.people, label: 'People', icon: 'users', requires: 'people:read' },

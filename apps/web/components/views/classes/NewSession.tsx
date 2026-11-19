@@ -21,7 +21,7 @@ export async function NewSession() {
           title="You cannot create sessions"
           body={FORBIDDEN_MANAGE}
           action={
-            <Button className="classes-target" href={ROUTES.classes}>
+            <Button className="classes-target" href={ROUTES.sessions}>
               Back to sessions
             </Button>
           }

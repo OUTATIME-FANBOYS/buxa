@@ -61,7 +61,7 @@ export function NewSessionForm({
             Cancel
           </Button>
         ) : (
-          <Button variant="ghost" className="classes-target" href={ROUTES.classes}>
+          <Button variant="ghost" className="classes-target" href={ROUTES.sessions}>
             Cancel
           </Button>
         )}
