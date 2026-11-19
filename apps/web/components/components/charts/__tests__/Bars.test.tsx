@@ -18,6 +18,13 @@ describe('Bars', () => {
     expect(html).toContain('class="axis"');
     expect(html).toContain('>Mon</text>');
   });
+  it('fills each bar with a gradient from its tone and draws dashed guides, with no axis numbers', () => {
+    const html = renderToStaticMarkup(<Bars ariaLabel="x" tone="ok" data={[{ label: 'a', value: 4 }]} />);
+    expect(html).toMatch(/<linearGradient id="bars-[^"]*-ok" [^>]*class="chart-tone-ok"/);
+    expect(html).toMatch(/class="chart-bar" d="[^"]*" fill="url\(#bars-[^"]*-ok\)"/);
+    expect(html).toContain('class="chart-guide"');
+    expect(html).not.toContain('class="axis">0<');
+  });
   it('draws a bar only for days with a value', () => {
     const html = renderToStaticMarkup(<Bars ariaLabel="x" data={[{ label: 'a', value: 0 }]} />);
     expect(html).not.toContain('<path');
