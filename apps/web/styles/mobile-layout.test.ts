@@ -69,21 +69,31 @@ describe('Add person form on a touch screen', () => {
   });
 });
 
+// The settings page's classes are Tailwind utilities on its markup, in components/components/settings/styles.ts.
+const settingsStyles = read('../components/components/settings/styles.ts');
+const settingsPage = read('../components/views/kanban/Settings.tsx');
+const cardSegmented = read('../components/components/settings/AppearanceCard.tsx');
+const timeFormatCard = read('../components/components/settings/TimeFormatCard.tsx');
+
 describe('settings grid', () => {
   it('is one full-width column at every width, with no fixed page width', () => {
-    const settings = read('./features/settings.css');
-    expect(settings).toContain('.settings-grid { display: grid; grid-template-columns: minmax(0, 1fr);');
-    expect(settings).not.toMatch(/\.settings-grid\s*{[^}]*repeat\(2/);
-    expect(settings).not.toContain('min-width: 1280px');
-    expect(settings).toContain('.page.settings-page { max-width: none; }');
+    expect(settingsStyles).toContain(
+      "SETTINGS_GRID = 'buxa:grid buxa:grid-cols-[minmax(0,1fr)] buxa:gap-[var(--s5)] buxa:items-stretch'",
+    );
+    expect(settingsPage).toContain('className={`settings-grid ${SETTINGS_GRID}`}');
+    expect(settingsStyles).not.toMatch(/SETTINGS_GRID = '[^']*repeat\(2/);
+    expect(settingsStyles).not.toContain('1280px');
+    expect(settingsPage).toContain('className="page settings-page buxa:max-w-none!"');
   });
 
   it('keeps the segmented controls (theme, clock) inside their card at every width', () => {
-    const settings = read('./features/settings.css');
-    expect(settings).toContain(
-      '.settings-page .segmented { display: flex; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }',
+    expect(settingsStyles).toContain(
+      "CARD_SEGMENTED = 'buxa:flex! buxa:w-full buxa:max-w-full buxa:min-w-0 buxa:box-border! buxa:[&_button]:h-auto!",
     );
-    expect(settings).toContain('.settings-page .segmented button { flex: 1 1 0; min-width: 0;');
-    expect(settings).toContain('overflow-wrap: anywhere;');
+    expect(settingsStyles).toContain('buxa:[&_button]:flex-[1_1_0]!');
+    expect(settingsStyles).toContain('buxa:[&_button]:min-w-0!');
+    expect(settingsStyles).toContain('buxa:[&_button]:[overflow-wrap:anywhere]!');
+    expect(cardSegmented).toContain('className={CARD_SEGMENTED}');
+    expect(timeFormatCard).toContain('className={CARD_SEGMENTED}');
   });
 });

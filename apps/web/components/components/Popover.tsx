@@ -3,6 +3,10 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
+// The glass panel: blurred material, a hairline edge, a soft shadow. Its pop-in is the pop keyframes (popover-menu-dialog.css).
+const POPOVER =
+  'buxa:fixed buxa:z-[60] buxa:bg-[var(--material)] buxa:[-webkit-backdrop-filter:blur(24px)_saturate(170%)] buxa:[backdrop-filter:blur(24px)_saturate(170%)] buxa:border buxa:border-[color-mix(in_srgb,var(--line)_80%,transparent)] buxa:rounded-[var(--r-2)] buxa:shadow-[var(--shadow)] buxa:p-[var(--s1)] buxa:min-w-[180px] buxa:max-h-[min(70vh,480px)] buxa:overflow-auto buxa:[animation:pop_0.18s_var(--ease-out)]';
+
 export function Popover({
   anchor,
   onClose,
@@ -90,7 +94,7 @@ export function Popover({
   return createPortal(
     <div
       ref={ref}
-      className={`popover ${className}`}
+      className={`popover ${POPOVER} ${className}`}
       role="dialog"
       aria-label={label}
       style={{

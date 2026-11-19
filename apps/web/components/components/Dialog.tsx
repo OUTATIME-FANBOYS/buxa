@@ -6,6 +6,28 @@ import { project, reduceMotion, rubberband, springAnimate, VelocityTracker } fro
 import { FOCUSABLE } from '@buxa/shared';
 import { Button } from '@/components/elements';
 
+// The scrim behind a dialog or drawer. Its fade and the panel's pop or slide are keyframes in popover-menu-dialog.css.
+const SCRIM =
+  'buxa:fixed buxa:inset-0 buxa:z-[50] buxa:grid buxa:bg-[rgba(15,15,12,0.4)] buxa:[[data-theme=dark]_&]:bg-[rgba(0,0,0,0.6)]';
+const DIALOG_SCRIM = 'buxa:place-items-center buxa:p-[var(--s4)]';
+const DRAWER_SCRIM =
+  'buxa:[backdrop-filter:blur(2px)] buxa:[-webkit-backdrop-filter:blur(2px)] buxa:[place-items:stretch_end] buxa:p-0';
+const FADE_IN = 'buxa:[animation:fade_0.16s_var(--ease)]';
+const FADE_OUT = 'buxa:[animation:fadeOut_0.2s_linear_forwards]';
+const DIALOG =
+  'buxa:w-[min(440px,100%)] buxa:bg-[var(--surface)] buxa:rounded-[var(--r-3)] buxa:shadow-[var(--shadow)] buxa:flex buxa:flex-col buxa:max-h-[90dvh] buxa:origin-[50%_40%]';
+const DIALOG_IN = 'buxa:[animation:pop_0.2s_var(--ease-out)]';
+const DIALOG_OUT = 'buxa:[animation:popOut_0.17s_cubic-bezier(0.4,0,1,1)_forwards]';
+const DRAWER =
+  'buxa:w-[min(580px,100vw)] buxa:h-full buxa:bg-[var(--surface)] buxa:shadow-[var(--shadow)] buxa:flex buxa:flex-col buxa:will-change-[translate]';
+const DRAWER_IN = 'buxa:[animation:slide_0.28s_var(--ease-out)]';
+const DRAWER_OUT = 'buxa:[animation:slideOut_0.2s_cubic-bezier(0.4,0,1,1)_forwards]';
+const HEAD = 'buxa:flex buxa:justify-between buxa:items-center buxa:[padding:var(--s4)_var(--s5)_0]';
+const BODY = 'buxa:[padding:var(--s4)_var(--s5)_var(--s5)] buxa:overflow-auto';
+const DRAWER_BODY =
+  'buxa:overflow-auto buxa:[padding:0_var(--s5)_var(--s6)] buxa:grid buxa:gap-[var(--s5)] buxa:content-start buxa:flex-1';
+const FOOT = 'buxa:flex buxa:justify-end buxa:gap-[var(--s2)] buxa:[padding:0_var(--s5)_var(--s5)]';
+
 interface Swipe {
   id: number;
   x0: number;
@@ -172,7 +194,7 @@ export function Dialog({
   return createPortal(
     <div
       ref={scrim}
-      className={`scrim ${drawer ? 'scrim-drawer' : ''} ${leaving ? 'leaving' : ''}`}
+      className={`scrim ${SCRIM} ${drawer ? `scrim-drawer ${DRAWER_SCRIM}` : DIALOG_SCRIM} ${leaving ? FADE_OUT : FADE_IN} ${leaving ? 'leaving' : ''}`}
       onMouseDown={e => {
         if (e.target === e.currentTarget) {
           close();
@@ -185,7 +207,7 @@ export function Dialog({
         aria-modal="true"
         aria-label={labelledBy ? undefined : title}
         aria-labelledby={labelledBy}
-        className={`${drawer ? 'drawer' : 'dialog'} ${wide ? 'dialog-wide' : ''} ${className} ${leaving ? 'leaving' : ''}`}
+        className={`${drawer ? `drawer ${DRAWER} ${leaving ? DRAWER_OUT : DRAWER_IN}` : `dialog ${DIALOG} ${leaving ? DIALOG_OUT : DIALOG_IN}`} ${wide ? 'dialog-wide' : ''} ${className} ${leaving ? 'leaving' : ''}`}
         onKeyDown={onKey}
         onPointerDown={onPD}
         onPointerMove={onPM}
@@ -193,15 +215,15 @@ export function Dialog({
         onPointerCancel={onPU}
       >
         {title && !drawer && (
-          <header className="dialog-head">
+          <header className={`dialog-head ${HEAD}`}>
             <h2>{title}</h2>
             <Button iconOnly icon="x" onClick={close} aria-label="Close" />
           </header>
         )}
-        <div className={drawer ? 'drawer-body' : 'dialog-body'}>
+        <div className={drawer ? `drawer-body ${DRAWER_BODY}` : `dialog-body ${BODY}`}>
           {typeof children === 'function' ? children(close) : children}
         </div>
-        {footer && <footer className="dialog-foot">{footer}</footer>}
+        {footer && <footer className={`dialog-foot ${FOOT}`}>{footer}</footer>}
       </div>
     </div>,
     document.body,

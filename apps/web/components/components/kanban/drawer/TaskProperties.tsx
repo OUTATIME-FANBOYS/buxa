@@ -17,7 +17,7 @@ export function TaskProperties({ task, project, d }: { task: Task | null; projec
   const allTags = useMemo(() => Array.from(new Set(wsTasks.flatMap(t => t.tags))).sort(), [wsTasks]);
 
   return (
-    <div className="props">
+    <div className="props buxa:grid buxa:grid-cols-[1fr_1fr] buxa:gap-[var(--s4)]">
       <Select
         label="Status"
         value={task?.columnId ?? d.columnId}
@@ -33,8 +33,11 @@ export function TaskProperties({ task, project, d }: { task: Task | null; projec
         }}
         options={project.columns.map(c => ({ value: c.id, label: c.name }))}
       />
-      <span className="select-with">
-        <PriorityMark priority={task?.priority ?? d.priority} />
+      <span className="select-with buxa:relative buxa:block buxa:[&_select]:pl-[32px]!">
+        <PriorityMark
+          priority={task?.priority ?? d.priority}
+          className="buxa:absolute buxa:left-[10px] buxa:top-[10px] buxa:pointer-events-none"
+        />
         <Select
           label="Priority"
           value={task?.priority ?? d.priority}

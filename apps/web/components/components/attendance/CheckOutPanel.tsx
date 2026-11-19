@@ -57,8 +57,10 @@ export function CheckOutPanel(props: CheckOutPanelProps) {
       {noGuardianLine && <p className="muted">No guardian who may collect this child is linked yet.</p>}
       {row.isMinor !== false && canOverride && (
         <div className="stack">
-          <label className="field" htmlFor={reasonId}>
-            <span className="field-label">Admin override: reason (only if no guardian can collect)</span>
+          <label className="field buxa:grid buxa:gap-[6px] buxa:content-start" htmlFor={reasonId}>
+            <span className="field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]">
+              Admin override: reason (only if no guardian can collect)
+            </span>
             <textarea
               id={reasonId}
               rows={2}

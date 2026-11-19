@@ -24,6 +24,6 @@ describe('SidebarNav', () => {
   it('marks the link for the current page as the current page', () => {
     const html = renderToStaticMarkup(<SidebarNav groups={groups} />);
     expect(html).toContain('aria-current="page"');
-    expect(html).toMatch(/class="active" aria-current="page"/);
+    expect(html).toMatch(/class="active [^"]*" aria-current="page"/);
   });
 });

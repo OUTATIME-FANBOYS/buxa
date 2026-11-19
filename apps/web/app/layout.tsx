@@ -4,6 +4,7 @@ import { connection } from 'next/server';
 import Script from 'next/script';
 import type { ReactNode } from 'react';
 import { BRAND } from '@/config/brand';
+import { FIELD_DEFAULTS } from '../styles/fieldDefaults';
 import '../styles/index.css';
 
 export const metadata: Metadata = {
@@ -39,7 +40,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     // suppressHydrationWarning: the theme script sets data-theme before React hydrates, on purpose.
     <html lang="en" suppressHydrationWarning>
-      <body>
+      <body className={FIELD_DEFAULTS}>
         {/* Sets light/dark before first paint to avoid a flash. An external file with this request's nonce. */}
         <Script src="/theme-init.js" strategy="beforeInteractive" nonce={nonce} />
         {children}

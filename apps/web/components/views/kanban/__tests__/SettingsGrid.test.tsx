@@ -204,9 +204,11 @@ describe('the settings page', () => {
     expect(document.body.textContent).toContain('Enter your first name.');
   });
 
-  it('shows the time format as a dropdown with the saved choice', () => {
+  it('shows the time format as a choice with the saved clock selected', () => {
     render();
-    expect(tile('Time format').textContent).toContain('12-hour (9:05 AM)');
+    const card = tile('Time format');
+    expect(card.textContent).toContain('12-hour');
+    expect(card.querySelector('[role="radio"][aria-checked="true"]')?.textContent).toContain('12-hour');
   });
 
   it('has no Save button in the time format card', () => {
@@ -283,16 +285,20 @@ describe('the settings page', () => {
 });
 
 describe('the settings layout styles', () => {
-  // Vitest runs from the repository root (npm test), so the stylesheet is read from there.
-  const css = readFileSync(resolve(process.cwd(), 'apps/web/styles/features/settings.css'), 'utf8');
+  // The layout is Tailwind utilities on the markup. Vitest runs from the repository root (npm test), so the files are read from there.
+  const read = (path: string) => readFileSync(resolve(process.cwd(), path), 'utf8');
+  const page = read('apps/web/components/views/kanban/Settings.tsx');
+  const classes = read('apps/web/components/components/settings/styles.ts');
 
   it('defines one full-width column, with no half-width tiles', () => {
-    expect(css).toMatch(/\.settings-grid\s*{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
-    expect(css).not.toContain('settings-tile--half');
+    expect(classes).toMatch(/SETTINGS_GRID = '[^']*buxa:grid-cols-\[minmax\(0,1fr\)\]/);
+    expect(page).toContain('className={`settings-grid ${SETTINGS_GRID}`}');
+    expect(page).not.toContain('settings-tile--half');
   });
 
   it('keeps the cards stacked at every width', () => {
-    expect(css).not.toMatch(/\.settings-grid\s*{[^}]*repeat\(2/);
-    expect(css).not.toContain('min-width: 1280px');
+    expect(classes).not.toMatch(/SETTINGS_GRID = '[^']*repeat\(2/);
+    expect(classes).not.toContain('1280px');
+    expect(page).not.toContain('1280px');
   });
 });

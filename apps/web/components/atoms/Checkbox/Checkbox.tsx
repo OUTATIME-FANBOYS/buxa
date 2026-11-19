@@ -37,10 +37,14 @@ export function Checkbox({
   const id = useId();
 
   return (
-    <label className={`check-field ${className ?? ''}`} htmlFor={id}>
+    <label
+      className={`check-field buxa:inline-flex buxa:items-center buxa:gap-[var(--s2)] buxa:cursor-pointer ${className ?? ''}`}
+      htmlFor={id}
+    >
       <input
         id={id}
         type="checkbox"
+        className="buxa:m-0 buxa:disabled:cursor-default"
         name={name}
         value={value}
         checked={checked}
@@ -52,7 +56,7 @@ export function Checkbox({
           onChange?.(e.target.checked);
         }}
       />
-      <span className="check-field__label">{children}</span>
+      <span className="check-field__label buxa:text-[length:var(--fs-m,15px)] buxa:leading-[1.4]">{children}</span>
     </label>
   );
 }

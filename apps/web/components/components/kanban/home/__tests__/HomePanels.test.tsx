@@ -152,6 +152,6 @@ describe('HomeStats', () => {
     expect(html.match(/class="stat tone-/g)?.length).toBe(3);
     expect(html).toContain('stats-home');
     expect(html).toContain('+15 vs yesterday');
-    expect(html).toContain('stat-info');
+    expect(html).toContain('stat-label');
   });
 });

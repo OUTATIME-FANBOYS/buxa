@@ -12,12 +12,16 @@ export function Field({
   hint?: string;
 }) {
   return (
-    <label className="field">
-      <span className="field-label">{label}</span>
+    <label className="field buxa:grid buxa:gap-[6px] buxa:content-start">
+      <span className="field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]">
+        {label}
+      </span>
       {children}
-      {hint && !error && <span className="field-hint">{hint}</span>}
+      {hint && !error && (
+        <span className="field-hint buxa:text-[length:var(--fs-s)] buxa:text-[var(--text-3)]">{hint}</span>
+      )}
       {error && (
-        <span className="field-error" role="alert">
+        <span className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
           {error}
         </span>
       )}

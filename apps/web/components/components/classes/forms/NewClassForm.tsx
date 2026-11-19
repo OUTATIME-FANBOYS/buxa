@@ -50,7 +50,7 @@ export function NewClassForm({
       <Field label="Description" error={err('description')} hint="What campers do in this class. Shown to staff.">
         <textarea name="description" rows={3} maxLength={2000} aria-invalid={err('description') ? true : undefined} />
       </Field>
-      <div className="form-row">
+      <div className="form-row buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-end buxa:[&>.field]:flex-[1_1_180px] buxa:[&>.field]:min-w-0 buxa:[&>.button]:flex-none buxa:[&>a.button]:flex-none">
         <TextField label="Youngest age *" name="minAge" inputMode="numeric" error={err('minAge')} autoComplete="off" />
         <TextField label="Oldest age *" name="maxAge" inputMode="numeric" error={err('maxAge')} autoComplete="off" />
       </div>
@@ -62,10 +62,12 @@ export function NewClassForm({
         hint="Each new session starts with this many places. A session can change its own."
         autoComplete="off"
       />
-      <fieldset className="plain class-section">
+      <fieldset className="plain class-section buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
         <legend className="class-legend">Instructor ratio (optional)</legend>
-        <p className="field-hint">For example 1 instructor for 8 campers. Saved with the class. Not enforced yet.</p>
-        <div className="form-row">
+        <p className="field-hint buxa:text-[length:var(--fs-s)] buxa:text-[var(--text-3)]">
+          For example 1 instructor for 8 campers. Saved with the class. Not enforced yet.
+        </p>
+        <div className="form-row buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-end buxa:[&>.field]:flex-[1_1_180px] buxa:[&>.field]:min-w-0 buxa:[&>.button]:flex-none buxa:[&>a.button]:flex-none">
           <TextField
             label="Instructors"
             name="ratioInstructors"

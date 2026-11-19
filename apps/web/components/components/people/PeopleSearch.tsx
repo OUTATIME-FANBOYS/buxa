@@ -11,7 +11,11 @@ import { SearchField, Select } from '@/components/atoms';
  */
 export function PeopleSearch({ params }: { params: ListParams }) {
   return (
-    <Form role="search" action={ROUTES.people} className="form-row">
+    <Form
+      role="search"
+      action={ROUTES.people}
+      className="form-row buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-end buxa:[&>.field]:flex-[1_1_180px] buxa:[&>.field]:min-w-0 buxa:[&>.button]:flex-none buxa:[&>a.button]:flex-none"
+    >
       <SearchField label="Search by name" name="q" defaultValue={params.q} maxLength={80} autoComplete="off" />
       <Select
         label="Role"

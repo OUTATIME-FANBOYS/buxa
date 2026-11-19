@@ -166,7 +166,7 @@ export function Button({
 
   return (
     <button
-      {...(rest as ButtonHTMLAttributes<HTMLButtonElement>)}
+      {...rest}
       {...widgetAttrs}
       ref={ref as Ref<HTMLButtonElement>}
       type={type ?? 'submit'}

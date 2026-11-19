@@ -87,7 +87,7 @@ export function ConnectAgentDialog({ agentId, name, onClose }: { agentId: string
           changes, always within the permissions you set here.
         </p>
         {error && (
-          <p className="field-error" role="alert">
+          <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
             {error}
           </p>
         )}

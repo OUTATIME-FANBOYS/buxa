@@ -10,9 +10,9 @@ describe('ActionMessage', () => {
   });
 
   it('announces a form-level error as an alert', () => {
-    expect(renderToStaticMarkup(<ActionMessage state={{ status: 'error', message: 'Choose a camp first.' }} />)).toBe(
-      '<p role="alert" class="field-error">Choose a camp first.</p>',
-    );
+    expect(
+      renderToStaticMarkup(<ActionMessage state={{ status: 'error', message: 'Choose a camp first.' }} />),
+    ).toMatch(/^<p role="alert" class="field-error [^"]*">Choose a camp first\.<\/p>$/);
   });
 
   it('shows nothing for a field error, which the field itself announces', () => {

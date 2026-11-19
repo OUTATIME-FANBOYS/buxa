@@ -7,14 +7,17 @@ export function Segmented<T extends string>({
   onChange,
   options,
   label,
+  className,
 }: {
   value: T;
   onChange: (v: T) => void;
   options: { value: T; label: string; icon?: string }[];
   label: string;
+  /** Extra classes for the group, for a screen that sizes it (the settings cards). */
+  className?: string;
 }) {
   return (
-    <div className="segmented" role="radiogroup" aria-label={label}>
+    <div className={`segmented ${className ?? ''}`.trim()} role="radiogroup" aria-label={label}>
       {options.map(o => (
         <Button
           key={o.value}

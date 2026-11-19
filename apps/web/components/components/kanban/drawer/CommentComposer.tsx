@@ -27,7 +27,7 @@ export function CommentComposer({ taskId, members }: { taskId: string; members: 
   };
 
   return (
-    <div className="composer">
+    <div className="composer buxa:grid buxa:gap-[var(--s2)] buxa:relative">
       <textarea
         rows={2}
         value={comment}
@@ -42,13 +42,17 @@ export function CommentComposer({ taskId, members }: { taskId: string; members: 
         }}
       />
       {suggestions.length > 0 && (
-        <ul className="mentions" role="listbox">
+        <ul
+          className="mentions buxa:absolute buxa:bottom-[48px] buxa:left-0 buxa:bg-[var(--surface)] buxa:border buxa:border-[var(--line)] buxa:rounded-[var(--r-2)] buxa:shadow-[var(--shadow)] buxa:[padding:var(--s1)]! buxa:z-[3]"
+          role="listbox"
+        >
           {suggestions.map(m => (
             <li key={m.id}>
               <Button
                 variant="ghost"
                 size="sm"
                 type="button"
+                className="buxa:block! buxa:w-full! buxa:text-left buxa:[padding:6px_var(--s3)]! buxa:rounded-[var(--r-1)]! buxa:hover:bg-[var(--hover)]!"
                 onClick={() => setComment(comment.replace(/@[\p{L}]*$/u, '@' + m.name.split(' ')[0] + ' '))}
               >
                 {m.name}

@@ -5,7 +5,7 @@ import { Button } from '@/components/elements';
 describe('Button', () => {
   it('renders the default as the secondary variant, a submit button, in the md size', () => {
     const html = renderToStaticMarkup(<Button>Cancel</Button>);
-    expect(html).toMatch(/<button[^>]*class="button button--md button--secondary"[^>]*>Cancel<\/button>/);
+    expect(html).toMatch(/<button[^>]*class="button button--secondary"[^>]*>Cancel<\/button>/);
     expect(html).toContain('type="submit"');
   });
 
@@ -55,6 +55,6 @@ describe('Button', () => {
         Next
       </Button>,
     );
-    expect(html).toMatch(/<a class="button button--md button--ghost" href="\/x">Next<\/a>/);
+    expect(html).toMatch(/<a class="button button--ghost" href="\/x">Next<\/a>/);
   });
 });

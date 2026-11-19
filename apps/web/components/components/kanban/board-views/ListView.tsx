@@ -1,6 +1,6 @@
 'use client';
 
-import { PriorityMark } from '@/components/elements';
+import { PriorityMark, TAG } from '@/components/elements';
 import { useMemo, useState } from 'react';
 import type { Project, Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
@@ -116,12 +116,12 @@ export function ListView({
                   <div className="row-sub">
                     {showProject && <span className="muted small">{proj.name}</span>}
                     {t.tags.slice(0, 3).map(g => (
-                      <span key={g} className="tag">
+                      <span key={g} className={`tag ${TAG}`}>
                         {g}
                       </span>
                     ))}
                     {sp.total > 0 && (
-                      <span className="meta">
+                      <span className="meta buxa:inline-flex buxa:items-center buxa:gap-[3px] buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]">
                         <Icon name="check" size={12} />
                         {sp.done}/{sp.total}
                       </span>

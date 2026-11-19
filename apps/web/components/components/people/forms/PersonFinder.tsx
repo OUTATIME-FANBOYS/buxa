@@ -13,7 +13,12 @@ interface PersonFinderProps {
  */
 export function PersonFinder({ personId, query }: PersonFinderProps) {
   return (
-    <form role="search" method="get" action={personPath(personId)} className="form-row">
+    <form
+      role="search"
+      method="get"
+      action={personPath(personId)}
+      className="form-row buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-end buxa:[&>.field]:flex-[1_1_180px] buxa:[&>.field]:min-w-0 buxa:[&>.button]:flex-none buxa:[&>a.button]:flex-none"
+    >
       <SearchField label="Find someone by name" name="q" defaultValue={query} maxLength={80} autoComplete="off" />
       <Button type="submit" iconOnly icon="search" aria-label="Search people by name" />
     </form>

@@ -22,8 +22,11 @@ export function TaskDrawerHeader({
   const col = project.columns.find(c => c.id === task?.columnId);
 
   return (
-    <div className="drawer-head" data-sheet-handle>
-      <div className="muted small crumbs-mini">
+    <div
+      className="drawer-head buxa:[touch-action:none] buxa:cursor-grab buxa:flex buxa:items-center buxa:gap-[var(--s1)] buxa:[padding:var(--s3)_0_0] buxa:sticky buxa:top-0 buxa:bg-[var(--surface)] buxa:z-[2]"
+      data-sheet-handle
+    >
+      <div className="muted small crumbs-mini buxa:flex buxa:items-center buxa:gap-[4px]">
         {project.name} <Icon name="right" size={12} /> {task ? col?.name : 'New task'}
       </div>
       <span className="grow" />

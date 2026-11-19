@@ -60,15 +60,22 @@ export function SearchField({
     onChange?.(next);
   };
 
+  // The glyph sits inside the field on the left, the clear button on the right.
   return (
-    <div className={`search-field ${className ?? ''}`}>
+    <div className={`search-field buxa:grid buxa:gap-[var(--s2)] buxa:min-w-0 ${className ?? ''}`}>
       {label ? (
-        <label className="field-label" htmlFor={inputId}>
+        <label
+          className="field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]"
+          htmlFor={inputId}
+        >
           {label}
         </label>
       ) : null}
-      <div className="search-field__box">
-        <span className="search-field__icon" aria-hidden="true">
+      <div className="search-field__box buxa:relative buxa:flex buxa:items-center">
+        <span
+          className="search-field__icon buxa:absolute buxa:left-[12px] buxa:flex buxa:text-[var(--muted)] buxa:pointer-events-none"
+          aria-hidden="true"
+        >
           <Icon name="search" size={16} />
         </span>
         <input
@@ -86,10 +93,15 @@ export function SearchField({
           autoFocus={autoFocus}
           disabled={isDisabled}
           onChange={e => set(e.target.value)}
-          className="search-field__input"
+          className="search-field__input buxa:w-full buxa:box-border buxa:pl-[36px]! buxa:pr-[36px]!"
         />
         {current && !isDisabled ? (
-          <button type="button" className="search-field__clear" aria-label="Clear search" onClick={() => set('')}>
+          <button
+            type="button"
+            className="search-field__clear buxa:absolute buxa:right-[6px] buxa:flex buxa:items-center buxa:justify-center buxa:w-[28px] buxa:h-[28px] buxa:rounded-full buxa:text-[var(--muted)]! buxa:hover:bg-[var(--hover)]!"
+            aria-label="Clear search"
+            onClick={() => set('')}
+          >
             <Icon name="close" size={14} />
           </button>
         ) : null}

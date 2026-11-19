@@ -73,6 +73,8 @@ describe('FilterBar', () => {
         <FilterBar filter={emptyFilter} setFilter={setFilter} project={project} tags={[]} />
       </UiProvider>,
     );
-    expect(html).toMatch(/class="button button--icon-only [^"]*chip buxa-chip-menu"[^>]*aria-label="Sort tasks"/);
+    expect(html).toMatch(
+      /aria-label="Sort tasks"[^>]*class="button button--secondary button--icon-only chip buxa-chip-menu"/,
+    );
   });
 });

@@ -74,7 +74,7 @@ export function LinkHouseholdForm({
         )}
       </div>
       {err('canPickup') && (
-        <p className="field-error" role="alert">
+        <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
           {err('canPickup')}
         </p>
       )}

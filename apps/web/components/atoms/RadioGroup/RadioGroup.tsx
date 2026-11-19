@@ -42,13 +42,22 @@ export function RadioGroup({
   const current = value !== undefined ? value : own;
 
   return (
-    <fieldset className="plain radio-group" aria-invalid={Boolean(error) || undefined} disabled={isDisabled}>
-      <legend className="field-label">
+    // One choice per row: the native radio, then the label; the question is the legend. The name, with its note on the line
+    // below in a smaller, muted size.
+    <fieldset
+      className="plain radio-group buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s3)]"
+      aria-invalid={Boolean(error) || undefined}
+      disabled={isDisabled}
+    >
+      <legend className="field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)] buxa:p-0 buxa:mb-[var(--s2)]">
         {label}
         {isRequired ? ' *' : null}
       </legend>
       {options.map(option => (
-        <label key={option.value} className="radio-option">
+        <label
+          key={option.value}
+          className="radio-option buxa:flex buxa:items-center buxa:gap-[var(--s2)] buxa:cursor-pointer"
+        >
           <input
             type="radio"
             name={name ?? groupName}
@@ -60,14 +69,20 @@ export function RadioGroup({
               onChange?.(option.value);
             }}
           />
-          <span className="radio-option__text">
-            <span className="radio-option__label">{option.label}</span>
-            {option.description ? <span className="radio-option__note">{option.description}</span> : null}
+          <span className="radio-option__text buxa:flex buxa:flex-col buxa:gap-[2px] buxa:min-w-0">
+            <span className="radio-option__label buxa:text-[length:var(--fs-m,15px)] buxa:leading-[1.4]">
+              {option.label}
+            </span>
+            {option.description ? (
+              <span className="radio-option__note buxa:text-[length:var(--fs-s,13px)] buxa:leading-[1.4] buxa:text-[var(--muted)]">
+                {option.description}
+              </span>
+            ) : null}
           </span>
         </label>
       ))}
       {error ? (
-        <p className="field-error" role="alert">
+        <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
           {error}
         </p>
       ) : null}

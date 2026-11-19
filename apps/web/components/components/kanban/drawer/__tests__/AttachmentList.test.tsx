@@ -19,7 +19,7 @@ describe('AttachmentList', () => {
   it('lists each file with its size and a remove control for editors', () => {
     h.store = { actions: {} };
     const html = renderToStaticMarkup(<AttachmentList task={task} ro={false} />);
-    expect(html).toContain('<span class="file-name">form.pdf</span>');
+    expect(html).toMatch(/<span class="file-name [^"]*">form\.pdf<\/span>/);
     expect(html).toContain('2 KB');
     expect(html).toContain('aria-label="Remove form.pdf"');
     expect(html).toContain('button--sm');

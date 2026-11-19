@@ -23,8 +23,10 @@ export function OverrideForm({ busy, onSubmit }: Props) {
 
   return (
     <form className="override-form" onSubmit={submit} aria-label="Override this refusal">
-      <label className="field" htmlFor={fieldId}>
-        <span className="field-label">Reason for overriding (required)</span>
+      <label className="field buxa:grid buxa:gap-[6px] buxa:content-start" htmlFor={fieldId}>
+        <span className="field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]">
+          Reason for overriding (required)
+        </span>
         <textarea
           id={fieldId}
           rows={3}
@@ -32,7 +34,9 @@ export function OverrideForm({ busy, onSubmit }: Props) {
           onChange={event => setReason(event.target.value)}
           maxLength={500}
         />
-        <span className="field-hint">This is written on the record with the check-in.</span>
+        <span className="field-hint buxa:text-[length:var(--fs-s)] buxa:text-[var(--text-3)]">
+          This is written on the record with the check-in.
+        </span>
       </label>
       <Button variant="danger" type="submit" icon="check" className="att-btn-lg" disabled={busy || trimmed === ''}>
         Check in anyway

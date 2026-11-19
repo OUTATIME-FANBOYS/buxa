@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Pill } from '@/components/elements';
+import { KindDot, Pill } from '@/components/elements';
 import { Select } from '@/components/atoms';
 import { TRUST_TONE } from '@buxa/shared';
 import type { Agent, Trust } from '@buxa/shared';
@@ -45,7 +45,7 @@ export function StageRules({ agent, canManage }: { agent: Agent; canManage: bool
           <li key={c.id}>
             <span>
               {c.name}
-              <i className={`kind-dot kind-${c.kind} stage-dot`} aria-hidden="true" />
+              <KindDot kind={c.kind} className="stage-dot" />
             </span>
             {canManage ? (
               <Select

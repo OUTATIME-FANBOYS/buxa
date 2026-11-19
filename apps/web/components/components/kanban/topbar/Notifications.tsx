@@ -10,6 +10,19 @@ import { ago, diffDays, today } from '@buxa/shared';
 
 const NOTICE_ICON: Record<string, string> = { mention: 'at', comment: 'message', complete: 'check', invite: 'users' };
 
+// The panel's head stays at the top while the list scrolls under it.
+const HEAD =
+  'buxa:flex buxa:justify-between buxa:[padding:var(--s3)_var(--s4)] buxa:border-b buxa:border-[var(--line)] buxa:sticky buxa:top-0 buxa:bg-[var(--surface)]';
+// A notification is a full-width row (its button styles are forced: .button is unlayered CSS).
+const ITEM =
+  'buxa:flex! buxa:gap-[var(--s3)] buxa:items-start buxa:w-full! buxa:[padding:var(--s3)_var(--s4)]! buxa:text-left buxa:hover:bg-[var(--hover)]!';
+const UNREAD = 'buxa:bg-[color-mix(in_srgb,var(--coral)_12%,var(--surface))]!';
+// The round dot: neutral by default, red when overdue, amber when due soon.
+const DOT = 'buxa:w-[26px] buxa:h-[26px] buxa:rounded-full buxa:grid buxa:place-items-center buxa:flex-none';
+const DOT_NEUTRAL = 'buxa:bg-[var(--surface-3)] buxa:text-[var(--text-2)]';
+const DOT_CRIT = 'buxa:bg-[var(--crit-soft)] buxa:text-[var(--crit-ink)]';
+const DOT_WARN = 'buxa:bg-[var(--warn-soft)] buxa:text-[var(--warn-ink)]';
+
 export function Notifications() {
   const { s, me, wsTasks, kindOf, actions } = useStore();
   const { openTask } = useTaskDrawer();
@@ -64,8 +77,15 @@ export function Notifications() {
         {unread > 0 && <span className="badge">{unread > 9 ? '9+' : unread}</span>}
       </Button>
       {open && (
-        <Popover anchor={btn.current} onClose={close} align="end" width={360} label="Notifications" className="notif">
-          <div className="notif-head">
+        <Popover
+          anchor={btn.current}
+          onClose={close}
+          align="end"
+          width={360}
+          label="Notifications"
+          className="notif buxa:p-0!"
+        >
+          <div className={`notif-head ${HEAD}`}>
             <strong>Notifications</strong>
             <Button
               variant="ghost"
@@ -84,13 +104,13 @@ export function Notifications() {
               <Button
                 key={r.id}
                 variant="ghost"
-                className="notif-item"
+                className={`notif-item ${ITEM}`}
                 onClick={() => {
                   close();
                   openTask(r.taskId);
                 }}
               >
-                <span className={`notif-dot ${r.overdue ? 'crit' : 'warn'}`}>
+                <span className={`notif-dot ${DOT} ${r.overdue ? `crit ${DOT_CRIT}` : `warn ${DOT_WARN}`}`}>
                   <Icon name="clock" size={14} />
                 </span>
                 <span>{r.text}</span>
@@ -101,7 +121,7 @@ export function Notifications() {
               <Button
                 key={n.id}
                 variant="ghost"
-                className={`notif-item ${n.read ? '' : 'unread'}`}
+                className={`notif-item ${ITEM} ${n.read ? '' : `unread ${UNREAD}`}`}
                 onClick={() => {
                   actions.markNoticeRead(n.id);
                   if (n.taskId && s.tasks.some(t => t.id === n.taskId)) {
@@ -110,7 +130,7 @@ export function Notifications() {
                   }
                 }}
               >
-                <span className="notif-dot">
+                <span className={`notif-dot ${DOT} ${DOT_NEUTRAL}`}>
                   <Icon name={NOTICE_ICON[n.kind] ?? 'tasks'} size={14} />
                 </span>
                 <span>

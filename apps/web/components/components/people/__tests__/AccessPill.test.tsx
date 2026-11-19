@@ -4,8 +4,8 @@ import { AccessPill } from '@/components/components/people';
 
 describe('AccessPill', () => {
   it('shows the membership status in words, in its tone', () => {
-    expect(renderToStaticMarkup(<AccessPill status="valid" />)).toBe(
-      '<span class="pill pill-ok"><i class="pill-dot" aria-hidden="true"></i>Valid</span>',
+    expect(renderToStaticMarkup(<AccessPill status="valid" />)).toMatch(
+      /^<span class="pill pill-ok [^"]*"><i class="pill-dot [^"]*" aria-hidden="true"><\/i>Valid<\/span>$/,
     );
     expect(renderToStaticMarkup(<AccessPill status="revoked" />)).toContain('Revoked');
   });

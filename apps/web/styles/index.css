@@ -13,12 +13,10 @@
  *      heroui-theme.css               HeroUI's theme variable names, each pointing at a token above (no new colours).
  *   2. base.css                        resets, element defaults, utility classes (.muted, .row, .stack, .sr-only ...).
  *   3. components/button.css           the Button component's classes (HeroUI-based, see that file).
- *      components/buttons-fields.css   inputs, selects, form fields.
  *   4. layout/shell.css                app shell: sidebar, topbar, search, avatars, main column.
  *      layout/pages.css                page scaffolding: headers, panels, stats, lists, cards, empty states.
  *   5. features/kanban/filters.css     filter bar, chips, segmented control.
  *   6. components/popover-menu-dialog.css  popovers, menus, notifications, dialogs, drawer and its contents, keyframes.
- *   7. components/signals.css          priority, due date, meta, pills, dots.
  *   8. features/kanban/board.css       board, columns, cards, drag ghost.
  *      components/table.css            data tables.
  *      features/kanban/calendar.css, timeline.css, charts.css
@@ -30,7 +28,6 @@
  *  12. features/camp.css               camp area (setup, steps, abilities).
  *  13. features/people.css             people screens: lists, households, memberships, badges (print).
  *  14. features/help.css               the help page: sections, steps, example tables and code samples.
- *  15. features/settings.css           the settings grid: one column on a phone, more as the page widens.
  *  16. features/home.css               the camp Home dashboard: chart rows, bars, membership ring, sessions table.
  *
  * Where does a new style go?
@@ -49,12 +46,10 @@
 @import './heroui-theme.css';
 @import './base.css';
 @import './components/button.css';
-@import './components/buttons-fields.css';
 @import './layout/shell.css';
 @import './layout/pages.css';
 @import './features/kanban/filters.css';
 @import './components/popover-menu-dialog.css';
-@import './components/signals.css';
 @import './features/kanban/board.css';
 @import './components/table.css';
 @import './features/kanban/calendar.css';
@@ -69,7 +64,6 @@
 @import './features/people.css';
 @import './features/classes.css';
 @import './features/help.css';
-@import './features/settings.css';
 @import './features/home.css';
 @import './features/badge-scanner.css';
 @import './features/install.css';

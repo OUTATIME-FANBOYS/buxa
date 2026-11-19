@@ -39,7 +39,7 @@ describe('Discussion', () => {
         <Discussion task={task} ro members={members} userById={userById} />
       </UiProvider>,
     );
-    expect(html).toContain('<mark class="mention">@Tom</mark>');
+    expect(html).toMatch(/<mark class="mention [^"]*">@Tom<\/mark>/);
     expect(html).toContain(`<strong>${seed.users[0].name}</strong>`);
     expect(html).not.toContain('aria-label="Write a comment"');
   });
@@ -54,7 +54,7 @@ describe('Discussion', () => {
       </UiProvider>,
     );
     expect(html).toContain('role="tab"');
-    expect(html).toContain('class="thread"');
+    expect(html).toContain('class="thread ');
     expect(html).not.toContain('class="history"');
   });
 });

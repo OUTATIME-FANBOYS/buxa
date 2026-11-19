@@ -1,6 +1,6 @@
 'use client';
 
-import { PriorityMark } from '@/components/elements';
+import { PriorityMark, TAG } from '@/components/elements';
 import { memo } from 'react';
 import type { Project, Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
@@ -85,36 +85,45 @@ export const TaskCard = memo(function TaskCard({ task, project, readOnly, draggi
       {task.tags.length > 0 && (
         <div className="tags">
           {task.tags.slice(0, 3).map(t => (
-            <span key={t} className={`tag hue-${tagHue(t)}`}>
+            <span key={t} className={`tag hue-${tagHue(t)} ${TAG}`}>
               {t}
             </span>
           ))}
-          {task.tags.length > 3 && <span className="tag">+{task.tags.length - 3}</span>}
+          {task.tags.length > 3 && <span className={`tag ${TAG}`}>+{task.tags.length - 3}</span>}
         </div>
       )}
       <div className="card-meta">
         <PriorityMark priority={task.priority} />
         <DueChip due={task.due} kind={kind} />
         {sp.total > 0 && (
-          <span className="meta" title="Subtasks">
+          <span
+            className="meta buxa:inline-flex buxa:items-center buxa:gap-[3px] buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]"
+            title="Subtasks"
+          >
             <Icon name="check" size={12} />
             {sp.done}/{sp.total}
           </span>
         )}
         {task.comments.length > 0 && (
-          <span className="meta" title="Comments">
+          <span
+            className="meta buxa:inline-flex buxa:items-center buxa:gap-[3px] buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]"
+            title="Comments"
+          >
             <Icon name="message" size={12} />
             {task.comments.length}
           </span>
         )}
         {task.attachments.length > 0 && (
-          <span className="meta" title="Attachments">
+          <span
+            className="meta buxa:inline-flex buxa:items-center buxa:gap-[3px] buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]"
+            title="Attachments"
+          >
             <Icon name="clip" size={12} />
             {task.attachments.length}
           </span>
         )}
         <span className="grow" />
-        {task.archived && <span className="tag">Archived</span>}
+        {task.archived && <span className={`tag ${TAG}`}>Archived</span>}
         <Avatar user={user} size={22} />
       </div>
     </article>

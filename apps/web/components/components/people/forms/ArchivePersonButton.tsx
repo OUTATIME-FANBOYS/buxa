@@ -39,7 +39,7 @@ export function ArchivePersonButton({ personId, personName }: { personId: string
         {pending ? 'Archiving…' : 'Archive person'}
       </Button>
       {error && (
-        <p className="field-error" role="alert">
+        <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
           {error}
         </p>
       )}

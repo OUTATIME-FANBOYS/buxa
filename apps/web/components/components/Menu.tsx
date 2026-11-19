@@ -24,6 +24,14 @@ export interface MenuItem {
 
 const isItem = (x: MenuItem | false | null): x is MenuItem => !!x;
 
+// A menu row. Rows are buttons (or links) that carry the shared button styles, so every override they need is forced (!).
+const ROW =
+  'buxa:box-border buxa:flex! buxa:items-center buxa:gap-[var(--s3)] buxa:h-[34px]! buxa:px-[var(--s3)]! buxa:py-0! buxa:rounded-[var(--r-1)]! buxa:whitespace-nowrap buxa:w-full! buxa:no-underline buxa:text-[inherit]! buxa:hover:bg-[var(--hover)]! buxa:focus-visible:bg-[var(--hover)]! buxa:focus-visible:outline-none! buxa:disabled:opacity-[0.4]! buxa:disabled:cursor-default!';
+// A choice in a flyout: a radio-style row, as wide as the flyout and left aligned.
+const CHOICE =
+  'buxa:box-border buxa:flex! buxa:items-center buxa:gap-[var(--s3)] buxa:h-[32px]! buxa:px-[var(--s3)]! buxa:py-0! buxa:border-0! buxa:rounded-[var(--r-1)]! buxa:bg-transparent! buxa:[font:inherit]! buxa:text-[inherit]! buxa:whitespace-nowrap buxa:w-full! buxa:justify-start! buxa:text-left! buxa:cursor-pointer buxa:hover:bg-[var(--hover)]! buxa:focus-visible:bg-[var(--hover)]! buxa:focus-visible:outline-none!';
+const CHECK = 'buxa:ml-auto buxa:text-[var(--accent)]';
+
 /** A menu item that opens a group of choices beneath it. */
 /**
  * A menu item that opens its choices in a flyout beside it. The flyout opens on hover (and on click, for touch and keyboard), and
@@ -53,12 +61,16 @@ function SubMenu({ item, onChosen }: { item: MenuItem & { submenu: MenuItem[] };
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={panel}
-        className="menu-sub-trigger"
+        className={`menu-sub-trigger ${ROW}`}
         onClick={() => setOpen(o => !o)}
       >
         {item.icon ? <Icon name={item.icon} size={15} /> : <span style={{ width: 15 }} />}
         <span>{item.label}</span>
-        <Icon name="right" size={14} className={`menu-chev${open ? ' is-open' : ''}`} />
+        <Icon
+          name="right"
+          size={14}
+          className={`menu-chev buxa:ml-auto buxa:text-[var(--muted)] ${open ? 'is-open' : ''}`}
+        />
       </Button>
       {open && row.current && (
         <Popover
@@ -66,14 +78,14 @@ function SubMenu({ item, onChosen }: { item: MenuItem & { submenu: MenuItem[] };
           onClose={() => setOpen(false)}
           side="beside"
           label={item.label}
-          className="menu menu-flyout"
+          className="menu menu-flyout buxa:w-max buxa:min-w-0!"
         >
           <div
             id={panel}
             role="group"
             aria-label={item.label}
             data-menu-flyout
-            className="menu-sub"
+            className="menu-sub buxa:grid buxa:pl-0 buxa:justify-items-stretch buxa:text-left"
             onMouseEnter={stay}
             onMouseLeave={later}
           >
@@ -84,14 +96,14 @@ function SubMenu({ item, onChosen }: { item: MenuItem & { submenu: MenuItem[] };
                 type="button"
                 role="menuitemradio"
                 aria-checked={!!choice.checked}
-                className="menu-sub-item"
+                className={`menu-sub-item ${CHOICE}`}
                 onClick={() => {
                   onChosen();
                   choice.onSelect?.();
                 }}
               >
-                <span>{choice.label}</span>
-                {choice.checked && <Icon name="check" size={14} className="menu-check" />}
+                <span className="buxa:flex-[1_1_auto] buxa:text-left">{choice.label}</span>
+                {choice.checked && <Icon name="check" size={14} className={`menu-check ${CHECK}`} />}
               </Button>
             ))}
           </div>
@@ -169,15 +181,29 @@ export function Menu({
       </Button>
       {open && (
         <Popover anchor={btn.current} onClose={close} align={align} label={label} className="menu">
-          <div role="menu" aria-label={label} onKeyDown={onKey} onClick={e => e.stopPropagation()}>
+          <div
+            className="buxa:grid"
+            role="menu"
+            aria-label={label}
+            onKeyDown={onKey}
+            onClick={e => e.stopPropagation()}
+          >
             {header && (
-              <p className="menu-head" role="presentation">
+              <p
+                className="menu-head buxa:py-[var(--s2)] buxa:px-[var(--s3)] buxa:font-semibold buxa:text-[var(--text)] buxa:whitespace-nowrap buxa:overflow-hidden buxa:text-ellipsis buxa:max-w-[240px]"
+                role="presentation"
+              >
                 {header}
               </p>
             )}
             {list.map((it, i) => {
               if (it.divider) {
-                return <hr key={i} />;
+                return (
+                  <hr
+                    key={i}
+                    className="buxa:[margin:var(--s1)_0] buxa:border-0 buxa:border-t buxa:border-[var(--line)]"
+                  />
+                );
               }
               if (it.submenu) {
                 return (
@@ -195,7 +221,7 @@ export function Menu({
                 <>
                   {it.icon ? <Icon name={it.icon} size={15} /> : <span style={{ width: 15 }} />}
                   <span>{it.label}</span>
-                  {it.checked && <Icon name="check" size={14} className="menu-check" />}
+                  {it.checked && <Icon name="check" size={14} className={`menu-check ${CHECK}`} />}
                 </>
               );
               if (it.href) {
@@ -204,7 +230,7 @@ export function Menu({
                     key={i}
                     role="menuitem"
                     href={it.href}
-                    className={it.danger ? 'danger' : ''}
+                    className={`${it.danger ? 'danger' : ''} ${ROW}`}
                     onClick={() => {
                       close();
                       it.onSelect?.();
@@ -222,7 +248,7 @@ export function Menu({
                   role="menuitem"
                   type="button"
                   disabled={it.disabled}
-                  className={it.danger ? 'danger' : ''}
+                  className={`${it.danger ? 'danger buxa:text-[var(--crit)]!' : ''} ${ROW}`}
                   onClick={() => {
                     close();
                     btn.current?.focus();
