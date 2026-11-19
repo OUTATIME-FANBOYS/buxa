@@ -79,10 +79,11 @@ describe('TaskProperties', () => {
     expect(html).toMatch(/<div class="buxa:relative"><span class="prio prio-medium /);
     expect(html).not.toMatch(/top-\[10px\]/);
   });
-  it('lines the Tags field up with its neighbours: same wrapper as the selects and dates, and a control-height box', () => {
+  it('lines the Tags field up with its neighbours: same wrapper as the selects and dates, and a fixed three-row box that scrolls', () => {
     const html = renderToStaticMarkup(<TaskProperties task={null} project={project} d={draft as never} />);
     expect(html).toMatch(/<div class="select-field [^"]*"><span class="field-label [^"]*">Tags<\/span>/);
-    expect(html).toContain('min-h-[var(--control-h)]');
+    expect(html).toContain('buxa:h-[88px]');
+    expect(html).toContain('buxa:overflow-y-auto');
     expect(html).not.toContain('min-h-[36px]');
   });
   it('colours the priority field with the chosen priority token and draws its signal inside the field', () => {

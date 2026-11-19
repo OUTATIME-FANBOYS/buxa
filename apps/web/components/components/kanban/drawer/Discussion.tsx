@@ -30,11 +30,12 @@ const mentions = (b: string) =>
     ),
   );
 
-// A tab: a text button with a 2px underline. The chosen tab's text and underline take the accent (forced: .button is unlayered CSS).
+// A tab: a text button. The chosen tab is a soft background in a small rounded rectangle, with no border or underline. The
+// focus ring shows for the keyboard only (focus-visible), so a click leaves no ring (forced: .button is unlayered CSS).
 const TAB =
-  'buxa:[padding:var(--s2)_0]! buxa:font-semibold buxa:mb-[-1px] buxa:[border-bottom-width:2px]! buxa:[border-bottom-style:solid]!';
-const TAB_OFF = 'buxa:text-[var(--text-2)]! buxa:[border-bottom-color:transparent]!';
-const TAB_ON = 'buxa:text-[var(--text)]! buxa:border-[var(--accent)]!';
+  'buxa:[padding:var(--s1)_var(--s2)]! buxa:font-semibold buxa:rounded-[var(--r-1)]! buxa:border-0! buxa:outline-none! buxa:focus-visible:outline-2! buxa:focus-visible:outline-solid! buxa:focus-visible:outline-[var(--focus)]!';
+const TAB_OFF = 'buxa:text-[var(--text-2)]! buxa:bg-transparent!';
+const TAB_ON = 'buxa:text-[var(--text)]! buxa:bg-[var(--surface-3)]!';
 
 /** Comments and activity, as two tabs. */
 export function Discussion({ task, ro, members, userById }: DiscussionProps) {
@@ -42,7 +43,7 @@ export function Discussion({ task, ro, members, userById }: DiscussionProps) {
 
   return (
     <section className="section buxa:grid buxa:gap-[var(--s3)]">
-      <div className="tabs buxa:flex buxa:gap-[var(--s4)] buxa:border-b buxa:border-[var(--line)]" role="tablist">
+      <div className="tabs buxa:flex buxa:gap-[var(--s1)]" role="tablist">
         <Button
           variant="ghost"
           size="sm"
