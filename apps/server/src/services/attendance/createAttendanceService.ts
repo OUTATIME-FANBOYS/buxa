@@ -1,5 +1,5 @@
 import type { AttendanceEntry, AttendanceFilter, CheckInInput, CheckOutInput } from '@buxa/contracts';
-import { can, decideCheckIn, decideCheckOut, isMinor, personAccess, toLocalDate } from '@buxa/domain';
+import { can, decideCheckIn, decideCheckOut, isMinor, personAccess, toLocalDate, type Actor } from '@buxa/domain';
 import { encodeCsv, type CsvCell } from '@buxa/shared';
 import { assertAllowed } from '../../auth/authorize';
 import { badRequest, notFound } from '../../http/errors';
@@ -50,6 +50,16 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
     };
 
     return attendance.log(orgId, query);
+  }
+
+  /**
+   * Visits as the screens show them. Who collected a child is a guardian's name, so it is withheld from anyone without
+   * people:read_contact (staff and above see it; a teacher does not).
+   */
+  async function entriesOf(actor: Actor, records: CheckInRecord[]): Promise<AttendanceEntry[]> {
+    const entries = await toEntries(deps, actor.orgId, records);
+
+    return can(actor, 'people:read_contact') ? entries : entries.map(e => ({ ...e, collectedByName: null }));
   }
 
   /** Keeps only the records of the teacher's campers. Null scope (not a teacher) keeps everything. */
@@ -103,7 +113,7 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
           overrideReason: decision.kind === 'allow_override' ? decision.reason : null,
           note: input.note ?? null,
         });
-        const [entry] = await toEntries(deps, orgId, [record]);
+        const [entry] = await entriesOf(actor, [record]);
 
         return { ok: true, entry, overridden };
       } catch (error) {
@@ -156,7 +166,10 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
         if (decision.reason === 'override_needs_reason') {
           return { ok: false, reason: 'override_needs_reason' };
         }
-        const guardians = await pickupOptionsFor(people, orgId, input.personId);
+        // The guardians a child can be collected by are guardian names: only people:read_contact sees them.
+        const guardians = can(actor, 'people:read_contact')
+          ? await pickupOptionsFor(people, orgId, input.personId)
+          : [];
 
         return { ok: false, reason: decision.reason, canOverride: decision.canOverride, guardians };
       }
@@ -169,7 +182,7 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
           overrideReason: decision.kind === 'allow_override' ? decision.reason : null,
           note: input.note ?? null,
         });
-        const [entry] = await toEntries(deps, orgId, [record]);
+        const [entry] = await entriesOf(actor, [record]);
 
         return { ok: true, entry, overridden: decision.kind === 'allow_override' };
       } catch (error) {
@@ -195,7 +208,7 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       const [persons, groups, entries, onSite] = await Promise.all([
         people.getMany(orgId, ids),
         memberships.forPeople(orgId, ids),
-        toEntries(deps, orgId, records),
+        entriesOf(actor, records),
         onSiteByPerson(attendance, orgId),
       ]);
       const byId = new Map(persons.map(p => [p.id, p] as const));
@@ -219,7 +232,7 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
             true,
           ),
           isMinor: minor,
-          pickupOptions: minor === true ? await pickupOptionsFor(people, orgId, person.id) : [],
+          pickupOptions: seeContact && minor === true ? await pickupOptionsFor(people, orgId, person.id) : [],
         });
       }
 
@@ -232,7 +245,7 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       const orgId = actor.orgId;
       const records = inScope(scope, await recordsFor(orgId, filter, await campZone(orgs, orgId)));
 
-      return toEntries(deps, orgId, records);
+      return entriesOf(actor, records);
     },
 
     async history(actor, personId) {
@@ -244,7 +257,7 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       }
       const records = await attendance.log(orgId, { from: EARLIEST, to: LATEST, personId });
 
-      return toEntries(deps, orgId, records);
+      return entriesOf(actor, records);
     },
 
     async exportCsv(actor, filter) {
@@ -254,7 +267,7 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       if (records.length >= MAX_LOG_ROWS) {
         throw badRequest('That is too many visits to export at once. Choose a shorter date range.');
       }
-      const entries = await toEntries(deps, orgId, records);
+      const entries = await entriesOf(actor, records);
 
       return encodeCsv([EXPORT_HEADER, ...entries.map(exportRow)]);
     },

@@ -105,7 +105,8 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       phone: seeContact ? record.phone : null,
       isMinor: seeContact ? isMinor(record, today) : null,
       memberships: custody ? ms.map(m => toPersonMembership(m, today)) : null,
-      households: await toHouseholds(people, orgId, households, custody),
+      // A teacher sees no households: their members are guardians and other families, by name.
+      households: actor.role === 'teacher' ? [] : await toHouseholds(people, orgId, households, custody),
       hasActiveBadge: custody ? badge !== null : null,
     };
   }
