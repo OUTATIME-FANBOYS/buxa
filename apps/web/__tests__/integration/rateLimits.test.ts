@@ -66,10 +66,11 @@ describe('/ready', () => {
     env = startRuntime({ verifier: idp.verifier, rateLimiter: createMemoryRateLimiter() });
     const query = vi
       .spyOn(env.runtime.pool, 'query')
-      .mockImplementation((async (sql: string) =>
+      .mockImplementation(async (sql: string) =>
         sql.includes('rolbypassrls')
           ? { rows: [{ superuser: false, bypass_rls: false, member_of_privileged_role: false }] }
-          : { rows: [] }) as never);
+          : { rows: [] },
+      );
     expect((await ready(new Request('http://localhost/ready'))).status).toBe(200);
     expect((await ready(new Request('http://localhost/ready'))).status).toBe(200);
     const pings = query.mock.calls.filter(([sql]) => sql === 'SELECT 1');
