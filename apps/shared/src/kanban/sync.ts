@@ -241,12 +241,14 @@ export function createSync(h: Host) {
       }
       if (r.empty || !r.data) {
         // first run: this browser's data becomes the server's
+        // Count the edits this PUT carries before awaiting. Edits made during the wait are not in `data`, so they must stay pending.
         const data = pickData(h.getState());
+        const n = h.pending.length;
         const put = await serverApi.putState(r.version, data);
         if (put.status === 200) {
           version = requirePresent(put.version, 'put.version');
           last = data;
-          h.pending.length = 0;
+          h.pending.splice(0, n);
         } else {
           await pull();
         }
