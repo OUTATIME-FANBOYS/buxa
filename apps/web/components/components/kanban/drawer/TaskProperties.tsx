@@ -40,16 +40,6 @@ export function TaskProperties({ task, project, d }: { task: Task | null; projec
       <Select
         label="Status"
         className={currentMark ? STATUS_FIELD[currentMark.token] : undefined}
-        leading={
-          currentMark ? (
-            <span
-              aria-hidden="true"
-              className="buxa:absolute buxa:left-[10px] buxa:top-1/2 buxa:-translate-y-1/2 buxa:pointer-events-none buxa:text-[length:var(--fs-s)] buxa:leading-none"
-            >
-              {currentMark.emoji}
-            </span>
-          ) : undefined
-        }
         value={task?.columnId ?? d.columnId}
         onChange={value => {
           if (value === null) {
@@ -61,6 +51,7 @@ export function TaskProperties({ task, project, d }: { task: Task | null; projec
             d.setColumnId(value);
           }
         }}
+        // The emoji is in each option's label, so the chosen one shows its emoji beside its name, once.
         options={project.columns.map(c => ({ value: c.id, label: `${statusMark(c).emoji} ${c.name}` }))}
       />
       <Select

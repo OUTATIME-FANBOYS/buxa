@@ -53,15 +53,26 @@ describe('TaskProperties', () => {
     expect(html).toContain('Due date is before the start.');
     expect(html).toMatch(/<option value="critical" selected="">Critical<\/option>/);
   });
-  it('colours the status field by its status and shows the status emoji inside it and on each option', () => {
+  it('colours the status field by its status and keeps the status emoji on each option', () => {
     const col = project.columns[2];
     const task = { ...seed.tasks[0], columnId: col.id, tags: [] } as never;
     const html = renderToStaticMarkup(<TaskProperties task={task} project={project} d={draft as never} />);
     expect(html).toContain('border-[var(--st-progress)]!');
     expect(html).toContain('text-[var(--st-progress)]!');
-    expect(html).toContain('aria-hidden="true"');
     expect(html).toContain(`>🔨 ${col.name}</option>`);
     expect(html).toContain('>📝 To Do</option>');
+  });
+  it('shows the status emoji once, beside the chosen value, and not in a slot over the field', () => {
+    const col = project.columns[2];
+    const task = { ...seed.tasks[0], columnId: col.id, tags: [] } as never;
+    const html = renderToStaticMarkup(<TaskProperties task={task} project={project} d={draft as never} />);
+    const field = html.slice(html.indexOf('>Status</label>'), html.indexOf('</select>') + '</select>'.length);
+    const emoji = /\p{Extended_Pictographic}/gu;
+    // Outside the options there is no emoji at all: no leading slot laid over the select.
+    expect(field.replace(/<option[\s\S]*?<\/option>/g, '').match(emoji)).toBeNull();
+    // The chosen option carries its one emoji, and the list keeps one per option.
+    expect(field).toMatch(new RegExp(`<option value="${col.id}" selected="">🔨 ${col.name}</option>`));
+    expect(field.match(emoji)).toHaveLength(project.columns.length);
   });
   it('gives the New task form the same priority field as the drawer: the signal inside the select, not over the label', () => {
     const html = renderToStaticMarkup(<TaskProperties task={null} project={project} d={draft as never} />);
