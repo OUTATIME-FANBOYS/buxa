@@ -18,7 +18,7 @@ describe('NewPersonForm', () => {
     const html = renderToStaticMarkup(
       <NewPersonForm household={null} households={[{ id: 'h-1', name: 'The Coles' } as never]} />,
     );
-    expect(html).toContain('>Existing household</span>');
+    expect(html).toContain('>Existing household</label>');
     expect(html).toContain('New household name');
     expect(html).toContain('>Add person</button>');
   });

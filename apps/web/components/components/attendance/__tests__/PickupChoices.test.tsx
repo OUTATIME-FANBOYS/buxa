@@ -13,7 +13,7 @@ describe('PickupChoices', () => {
       <PickupChoices name="collector" options={options} value="g-2" onChange={() => undefined} />,
     );
     expect(html).toContain('Who is collecting?');
-    expect(html).toMatch(/data-slot="radio-group"/);
+    expect(html).toMatch(/class="plain radio-group/);
     expect(html.match(/type="radio"/g)).toHaveLength(2);
     expect(html.match(/checked=""/g)).toHaveLength(1);
     expect(html.indexOf('value="g-2"')).toBeGreaterThan(html.indexOf('checked=""') - 200);
