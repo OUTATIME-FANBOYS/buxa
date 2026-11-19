@@ -45,7 +45,7 @@ describe('ClassesTable: the classes of one session', () => {
     expect(html).toContain('8 to 12');
     expect(html).toContain('Lab 1');
     expect(html).toContain('Ana Ruiz');
-    expect(html).toContain('9 places left');
+    expect(html).toContain('>9 left<');
     expect(html).not.toContain('Instructor ratio');
   });
 

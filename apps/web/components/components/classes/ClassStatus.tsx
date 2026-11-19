@@ -13,7 +13,7 @@ export function classState(cls: Pick<Class, 'capacity' | 'seatsTaken' | 'waitlis
     return { label: cls.waitlisted > 0 ? 'Full, with a waitlist' : 'Full', tone: 'warn', full: true };
   }
 
-  return { label: left === 1 ? '1 place left' : `${left} places left`, tone: 'ok', full: false };
+  return { label: `${left} left`, tone: 'ok', full: false };
 }
 
 export function ClassStatus({ cls }: { cls: Pick<Class, 'capacity' | 'seatsTaken' | 'waitlisted'> }) {
