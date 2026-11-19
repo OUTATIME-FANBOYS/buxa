@@ -95,12 +95,6 @@
   --st-progress: #a34a07;
   --st-review: #4f2d66;
   --st-done: #096d4c;
-  /* Task type tints for calendar pills: very pastel, with the app's text colour on top (well over 4.5:1). */
-  --type-1: #e3eefb;
-  --type-2: #efe6f7;
-  --type-3: #e2f4ea;
-  --type-4: #fdf0e0;
-  --type-5: #fbe5ec;
   --track: #c9d1d8;
   --grid: #d8dee4;
   --shadow-1: 0 1px 2px rgba(39, 41, 50, 0.06);
@@ -198,11 +192,6 @@
   --st-review: #c9b2d9;
   --st-done: #3fcf8e;
   /* Dark variants of the calendar type tints: deep, low-chroma, with the dark text colour on top. */
-  --type-1: #1f2b3d;
-  --type-2: #2b2338;
-  --type-3: #1c3026;
-  --type-4: #36291b;
-  --type-5: #35212a;
   --track: #3a3e4b;
   --grid: #31343f;
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35);

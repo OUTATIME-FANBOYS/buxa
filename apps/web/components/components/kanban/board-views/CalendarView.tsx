@@ -10,23 +10,6 @@ import { fmt, parse, toISO, today } from '@buxa/shared';
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const monthStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
 
-/**
- * A task has no type field, so its first tag stands in for one: the tag is hashed to one of the five pastel type
- * tints (cal-type-1..5, tokens.css). A task with no tags gets no tint.
- */
-function typeClass(task: Task): string {
-  const tag = task.tags[0];
-  if (!tag) {
-    return '';
-  }
-  let hash = 0;
-  for (let i = 0; i < tag.length; i++) {
-    hash = (hash * 31 + tag.charCodeAt(i)) >>> 0;
-  }
-
-  return `cal-type-${(hash % 5) + 1}`;
-}
-
 /** The 42 days (six Mondays-first weeks) that cover the month at `cursor`. */
 function gridDays(cursor: Date): string[] {
   const startOffset = (cursor.getDay() + 6) % 7;
@@ -124,7 +107,7 @@ export function CalendarView({
                   key={t.id}
                   variant="ghost"
                   size="sm"
-                  className={`cal-task prio-bg-${t.priority} ${typeClass(t)} ${kindOf(t) === 'done' ? 'is-done' : ''}`}
+                  className={`cal-task prio-bg-${t.priority} ${kindOf(t) === 'done' ? 'is-done' : ''}`}
                   onClick={() => openTask(t.id)}
                   title={t.title}
                 >

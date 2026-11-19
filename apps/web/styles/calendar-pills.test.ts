@@ -26,11 +26,10 @@ describe('calendar task pills', () => {
       expect(calendar).toContain(`.cal-task.prio-bg-${p} { --pc: var(--p-${p}); }`);
     }
   });
-  it('define five pastel type tints in both the light and the dark theme', () => {
-    for (let n = 1; n <= 5; n++) {
-      expect(calendar).toContain(`.cal-task.cal-type-${n} { --cal-bg: var(--type-${n}); }`);
-      expect(light).toMatch(new RegExp(`--type-${n}: #[0-9a-f]{6};`));
-      expect(dark).toMatch(new RegExp(`--type-${n}: #[0-9a-f]{6};`));
-    }
+  it('have no type tint: the body is the surface, and the priority dot is the only colour', () => {
+    expect(calendar).not.toContain('cal-type');
+    expect(calendar).not.toContain('--cal-bg');
+    expect(light).not.toMatch(/--type-[1-5]:/);
+    expect(dark).not.toMatch(/--type-[1-5]:/);
   });
 });
