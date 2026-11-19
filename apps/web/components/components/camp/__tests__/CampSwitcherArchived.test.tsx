@@ -46,6 +46,15 @@ describe('CampSwitcher with archived camps', () => {
     expect(items).not.toContain('Archived');
   });
 
+  it('outlines "New camp…" in the ok green, and its text sits at the left edge of the row', () => {
+    act(() => root.render(<CampSwitcher camps={[live]} current={live} archivedCamps={[]} />));
+    open();
+    const row = item('New camp…');
+    expect(row?.className).toContain('border-[var(--ok)]!');
+    expect(row?.className).toContain('pl-0!');
+    expect(item('Camp Birchwood')?.className).not.toContain('border-[var(--ok)]!');
+  });
+
   it('"Show archived" opens the archived list, which selects a camp the same way as a live camp', async () => {
     act(() => root.render(<CampSwitcher camps={[live]} current={live} archivedCamps={[CEDAR]} />));
     open();

@@ -20,13 +20,19 @@ export interface MenuItem {
   disabled?: boolean;
   checked?: boolean;
   submenu?: MenuItem[];
+  /** Outlines the row in a status token (ok: green), for an item that should stand out, such as "New camp". */
+  tone?: 'ok';
 }
 
 const isItem = (x: MenuItem | false | null): x is MenuItem => !!x;
 
+const TONE: Record<NonNullable<MenuItem['tone']>, string> = {
+  ok: 'buxa:border! buxa:border-solid! buxa:border-[var(--ok)]!',
+};
+
 // A menu row. Rows are buttons (or links) that carry the shared button styles, so every override they need is forced (!).
 const ROW =
-  'buxa:box-border buxa:flex! buxa:items-center buxa:justify-start! buxa:text-left! buxa:gap-[var(--s3)] buxa:h-[34px]! buxa:px-[var(--s3)]! buxa:py-0! buxa:rounded-[var(--r-1)]! buxa:whitespace-nowrap buxa:w-full! buxa:no-underline buxa:text-[inherit]! buxa:hover:bg-[var(--hover)]! buxa:focus-visible:bg-[var(--hover)]! buxa:focus-visible:outline-none! buxa:disabled:opacity-[0.4]! buxa:disabled:cursor-default!';
+  'buxa:box-border buxa:flex! buxa:items-center buxa:justify-start! buxa:text-left! buxa:gap-[var(--s3)] buxa:h-[34px]! buxa:pl-0! buxa:pr-[var(--s3)]! buxa:py-0! buxa:rounded-[var(--r-1)]! buxa:whitespace-nowrap buxa:w-full! buxa:no-underline buxa:text-[inherit]! buxa:hover:bg-[var(--hover)]! buxa:focus-visible:bg-[var(--hover)]! buxa:focus-visible:outline-none! buxa:disabled:opacity-[0.4]! buxa:disabled:cursor-default!';
 // A choice in a flyout: a radio-style row, as wide as the flyout and left aligned.
 const CHOICE =
   'buxa:box-border buxa:flex! buxa:items-center buxa:gap-[var(--s3)] buxa:h-[32px]! buxa:px-[var(--s3)]! buxa:py-0! buxa:border-0! buxa:rounded-[var(--r-1)]! buxa:bg-transparent! buxa:[font:inherit]! buxa:text-[inherit]! buxa:whitespace-nowrap buxa:w-full! buxa:justify-start! buxa:text-left! buxa:cursor-pointer buxa:hover:bg-[var(--hover)]! buxa:focus-visible:bg-[var(--hover)]! buxa:focus-visible:outline-none!';
@@ -265,7 +271,7 @@ export function Menu({
                     key={i}
                     role="menuitem"
                     href={it.href}
-                    className={`${it.danger ? 'danger' : ''} ${ROW}`}
+                    className={`${it.danger ? 'danger' : ''} ${it.tone ? TONE[it.tone] : ''} ${ROW}`}
                     onClick={() => {
                       close();
                       it.onSelect?.();
@@ -283,7 +289,7 @@ export function Menu({
                   role="menuitem"
                   type="button"
                   disabled={it.disabled}
-                  className={`${it.danger ? 'danger buxa:text-[var(--crit)]!' : ''} ${ROW}`}
+                  className={`${it.danger ? 'danger buxa:text-[var(--crit)]!' : ''} ${it.tone ? TONE[it.tone] : ''} ${ROW}`}
                   onClick={() => {
                     close();
                     btn.current?.focus();
