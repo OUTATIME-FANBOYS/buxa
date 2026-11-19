@@ -46,7 +46,7 @@ export function DisplayNameCard({
       return;
     }
     setErrors({});
-    toast(saved.message);
+    toast(saved.status === 'success' ? (saved.message ?? 'Name saved') : 'Name saved');
     onSaved({ firstName: first.trim(), lastName: last.trim() || null });
   };
 
