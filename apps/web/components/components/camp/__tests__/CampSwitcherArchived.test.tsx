@@ -32,32 +32,40 @@ describe('CampSwitcher with archived camps', () => {
       document.querySelector<HTMLButtonElement>('button[aria-label="Switch camp"]')?.click();
     });
   const labels = () => Array.from(document.querySelectorAll('[role="menuitem"]')).map(i => i.textContent?.trim());
+  const item = (text: string) =>
+    Array.from(document.querySelectorAll<HTMLElement>('[role="menuitem"]')).find(i => i.textContent?.trim() === text);
 
-  it('lists archived camps under an "Archived" label, after the live camps', () => {
+  it('ends the menu with one "Show archived" item, after "New camp…", and lists no archived camps inline', () => {
     act(() => root.render(<CampSwitcher camps={[live]} current={live} archivedCamps={[CEDAR]} />));
     open();
     const items = labels();
-    const label = items.indexOf('Archived');
-    expect(label).toBeGreaterThan(items.indexOf('Camp Birchwood'));
-    expect(items[label + 1]).toBe('Camp Cedar');
-    expect(document.querySelector('[role="menuitem"][disabled]')?.textContent?.trim()).toBe('Archived');
+    expect(items.filter(t => t === 'Show archived')).toHaveLength(1);
+    expect(items.indexOf('Show archived')).toBe(items.length - 1);
+    expect(items.indexOf('New camp…')).toBeLessThan(items.indexOf('Show archived'));
+    expect(items).not.toContain('Camp Cedar');
+    expect(items).not.toContain('Archived');
   });
 
-  it('opens an archived camp by selecting it, the same way as a live camp', async () => {
+  it('"Show archived" opens the archived list, which selects a camp the same way as a live camp', async () => {
     act(() => root.render(<CampSwitcher camps={[live]} current={live} archivedCamps={[CEDAR]} />));
     open();
-    const cedar = Array.from(document.querySelectorAll<HTMLElement>('[role="menuitem"]')).find(
+    act(() => {
+      item('Show archived')?.click();
+    });
+    const cedar = Array.from(document.querySelectorAll<HTMLElement>('[role="menuitemradio"]')).find(
       i => i.textContent?.trim() === 'Camp Cedar',
     );
+    expect(cedar).toBeDefined();
     await act(async () => {
       cedar?.click();
     });
     expect(h.select).toHaveBeenCalledWith('o-9');
   });
 
-  it('shows no Archived label when there are no archived camps', () => {
+  it('shows no "Show archived" item when there are no archived camps', () => {
     act(() => root.render(<CampSwitcher camps={[live]} current={live} />));
     open();
+    expect(labels()).not.toContain('Show archived');
     expect(labels()).not.toContain('Archived');
   });
 });

@@ -94,7 +94,7 @@ export function DangerZone({ campId, campName }: { campId: string; campName: str
         >
           <p>
             Archiving hides {campName} from your camp list. Its people, tasks, attendance and records are kept. You can
-            still open it read-only from the camp switcher, under Archived.
+            still open it read-only from the camp switcher, under Show archived.
           </p>
           {errorLine}
         </Dialog>
