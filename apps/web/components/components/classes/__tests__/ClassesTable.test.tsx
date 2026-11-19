@@ -54,7 +54,9 @@ describe('ClassesTable: the classes of one session', () => {
   });
 
   it('offers Edit and Delete to staff only', () => {
-    expect(render(true)).toContain('Edit Robotics');
+    expect(render(true)).toContain('aria-label="Edit Robotics"');
+    expect(render(true)).toContain('title="Edit class"');
+    expect(render(true)).toContain('aria-label="Delete Robotics"');
     expect(render(true)).toContain('Delete Robotics');
     expect(render(false)).not.toContain('Edit Robotics');
     expect(render(false)).not.toContain('Delete Robotics');

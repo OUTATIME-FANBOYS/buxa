@@ -1,4 +1,4 @@
-import { isValidAgeRange, MAX_AGE_LIMIT, type AgeRange } from '../ageRange';
+import { isClassAge, isValidAgeRange, MAX_CLASS_AGE, MIN_CLASS_AGE, type AgeRange } from '../ageRange';
 import { findClash, isValidSpan } from '../interval';
 import { formatClash } from '../refusals';
 import { parseCampLocal } from './campTime';
@@ -160,14 +160,15 @@ function checkFields(row: ImportRow, classes: ClassRef[], timeZone: string): Che
     problems.push(problem('age_max', 'Enter the oldest age as a whole number.'));
   }
   if (minAge !== null && maxAge !== null) {
-    if (!isValidAgeRange({ minAge, maxAge })) {
-      const outOfBounds = minAge > MAX_AGE_LIMIT || maxAge > MAX_AGE_LIMIT;
-      problems.push(
-        problem(
-          'age_max',
-          outOfBounds ? `Ages must be between 0 and ${MAX_AGE_LIMIT}.` : 'The youngest age cannot be above the oldest.',
-        ),
-      );
+    const ageMessage = `Ages are whole numbers from ${MIN_CLASS_AGE} to ${MAX_CLASS_AGE}.`;
+    if (!isClassAge(minAge)) {
+      problems.push(problem('age_min', ageMessage));
+    }
+    if (!isClassAge(maxAge)) {
+      problems.push(problem('age_max', ageMessage));
+    }
+    if (isClassAge(minAge) && isClassAge(maxAge) && !isValidAgeRange({ minAge, maxAge })) {
+      problems.push(problem('age_max', 'The youngest age cannot be above the oldest.'));
     }
   }
 

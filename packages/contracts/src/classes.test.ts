@@ -67,6 +67,29 @@ describe('camp size (the places in a class): a whole number from 3 to 30', () =>
   });
 });
 
+describe('class ages: whole numbers from 3 to 20, on input', () => {
+  const withAges = (minAge: number, maxAge: number) =>
+    ClassInputSchema.safeParse({ ...classFields, ...times, ageRange: { minAge, maxAge } });
+
+  it.each([3, 8, 20])('accepts %i as a youngest and oldest age', n => {
+    expect(withAges(n, 20).success).toBe(true);
+    expect(withAges(3, n).success).toBe(n >= 3);
+  });
+
+  it.each([2, 21, 0, 120, 8.5])('refuses %s, with the message the form shows', n => {
+    const result = withAges(n, 20);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.map(i => i.message)).toContain('Ages are whole numbers from 3 to 20.');
+    }
+    expect(withAges(3, n).success).toBe(false);
+  });
+
+  it('keeps the youngest age at or below the oldest', () => {
+    expect(withAges(12, 8).success).toBe(false);
+  });
+});
+
 describe('class time range', () => {
   it('refuses a class that ends before it starts, on the end field', () => {
     const r = ClassInputSchema.safeParse({ ...classFields, startsAt: times.endsAt, endsAt: times.startsAt });

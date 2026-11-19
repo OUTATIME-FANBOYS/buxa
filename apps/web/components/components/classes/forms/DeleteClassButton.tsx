@@ -35,12 +35,14 @@ export function DeleteClassButton({
       <Button
         type="button"
         variant="ghost"
-        className="classes-target"
+        size="sm"
+        iconOnly
+        icon="trash"
+        aria-label={`Delete ${className}`}
+        title="Delete class"
         aria-haspopup="dialog"
         onClick={() => setOpen(true)}
-      >
-        Delete {className}
-      </Button>
+      />
       {open && (
         <Dialog title="Delete class?" onClose={close} className="class-dialog">
           <form action={formAction} className="class-form">

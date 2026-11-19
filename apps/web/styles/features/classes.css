@@ -140,3 +140,31 @@ form.class-form {
   flex-wrap: wrap;
   gap: var(--s2);
 }
+
+/* Instructors: the chosen ones as tags in a box of fixed height that scrolls, so the dialog does not grow with each one. */
+.instructor-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  max-height: 7.5rem;
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--s2);
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: var(--r-2);
+}
+
+.instructor-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 var(--s3);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--fs-b);
+  cursor: pointer;
+}
