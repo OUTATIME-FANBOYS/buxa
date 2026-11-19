@@ -3,9 +3,9 @@
 import { useId, useState, type KeyboardEvent } from 'react';
 import { Button, TAG } from '@/components/elements';
 
-// The chips and the input they sit in: one wrapping line with no fixed height. The input's own defaults are forced (!).
+// The chips and the input they sit in: a fixed box about three rows tall that scrolls, so adding tags never grows the field. The input's own defaults are forced (!).
 const BOX =
-  'buxa:flex buxa:flex-wrap buxa:gap-[var(--s1)] buxa:items-center buxa:border buxa:border-[var(--line-strong)] buxa:rounded-[var(--r-1)] buxa:[padding:3px_var(--s2)] buxa:min-h-[var(--control-h)] buxa:bg-[var(--surface)] buxa:focus-within:[outline:2px_solid_var(--accent)] buxa:focus-within:[outline-offset:-1px] buxa:focus-within:border-[var(--accent)] buxa:[&_input]:border-0! buxa:[&_input]:flex-1 buxa:[&_input]:min-w-[80px] buxa:[&_input]:h-[28px]! buxa:[&_input]:p-0! buxa:[&_input]:bg-transparent! buxa:[&_input:focus-visible]:outline-none!';
+  'buxa:flex buxa:flex-wrap buxa:gap-[var(--s1)] buxa:items-center buxa:border buxa:border-[var(--line-strong)] buxa:rounded-[var(--r-1)] buxa:[padding:3px_var(--s2)] buxa:h-[88px] buxa:content-start buxa:overflow-y-auto buxa:bg-[var(--surface)] buxa:focus-within:[outline:2px_solid_var(--accent)] buxa:focus-within:[outline-offset:-1px] buxa:focus-within:border-[var(--accent)] buxa:[&_input]:border-0! buxa:[&_input]:flex-1 buxa:[&_input]:min-w-[80px] buxa:[&_input]:h-[28px]! buxa:[&_input]:p-0! buxa:[&_input]:bg-transparent! buxa:[&_input:focus-visible]:outline-none!';
 // A chip is a thin rounded rectangle, not a pill: it sits at the height of the text beside it.
 const CHIP = 'buxa:rounded-[var(--r-1)]! buxa:[padding:0_2px_0_6px]! buxa:leading-[16px]!';
 // A chip's remove button: a small grid, quiet, and text on hover.
