@@ -52,6 +52,9 @@ export const ACTIONS = [
   'tasks:comment',
   'tasks:delete',
   'tasks:manage_board',
+  'registration:read',
+  'registration:submit',
+  'registration:manage',
 ] as const;
 export type Action = (typeof ACTIONS)[number];
 
@@ -68,6 +71,8 @@ const STAFF: Action[] = [
   'tasks:update',
   'tasks:move',
   'tasks:comment',
+  'registration:read',
+  'registration:submit',
 ];
 const ADMIN: Action[] = [
   ...STAFF,
@@ -89,6 +94,7 @@ const ADMIN: Action[] = [
   'events:delete',
   'tasks:delete',
   'tasks:manage_board',
+  'registration:manage',
 ];
 const OWNER: Action[] = [
   ...ADMIN,

@@ -5,5 +5,6 @@ export * from './audit';
 export * from './clock';
 export * from './people';
 export * from './classes';
+export * from './registration';
 export * from './presence';
 export * from './settle';

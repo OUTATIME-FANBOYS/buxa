@@ -16,6 +16,7 @@ import { InMemoryAttendanceRepository } from '../attendance/InMemoryAttendanceRe
 import { conflict } from '../http/errors';
 import { InMemoryClassRepository } from '../classes/InMemoryClassRepository';
 import { InMemoryImportRepository } from '../classes/import/InMemoryImportRepository';
+import { InMemoryRegistrationRepository } from '../registration/InMemoryRegistrationRepository';
 import { InMemoryCredentialRepository } from '../credentials/InMemoryCredentialRepository';
 import { InMemoryMembershipRepository } from '../memberships/InMemoryMembershipRepository';
 import { OrgNotFoundError, SlugTakenError, type ArchivedCampRecord, type OrgRepository } from '../orgs/OrgRepository';
@@ -264,6 +265,7 @@ export class InMemoryStore implements UserRepository, OrgRepository {
       attendance: new InMemoryAttendanceRepository(db),
       classes,
       imports: new InMemoryImportRepository(classes),
+      registration: new InMemoryRegistrationRepository({}),
     };
   }
 }

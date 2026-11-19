@@ -96,6 +96,7 @@ describe('CampFrame', () => {
     expect(labels(frame.props.nav)).toEqual([
       'Home',
       'Sessions',
+      'Registration',
       'Check-in',
       'On site',
       'People',

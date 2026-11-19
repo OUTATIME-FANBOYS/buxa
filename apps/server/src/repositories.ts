@@ -13,6 +13,8 @@ import { PgOrgRepository } from './orgs/PgOrgRepository';
 import type { OrgRepository } from './orgs/OrgRepository';
 import { PgPeopleRepository } from './people/PgPeopleRepository';
 import { type PeopleRepository } from './people/PeopleRepository';
+import { PgRegistrationRepository } from './registration/PgRegistrationRepository';
+import type { RegistrationRepository } from './registration/RegistrationRepository';
 import { PgUserRepository } from './users/PgUserRepository';
 import type { UserRepository } from './users/UserRepository';
 
@@ -28,6 +30,8 @@ export interface Repositories {
   classes: ClassRepository;
   /** The bulk import of classes' sessions. The Postgres adapter in production; the in-memory one is for tests. */
   imports: ImportRepository;
+  /** Registration forms and submissions. The Postgres adapter in production; the in-memory one is for tests. */
+  registration: RegistrationRepository;
 }
 
 export const createPgRepositories = (pool: Pool): Repositories => ({
@@ -39,4 +43,5 @@ export const createPgRepositories = (pool: Pool): Repositories => ({
   attendance: new PgAttendanceRepository(pool),
   classes: new PgClassRepository(pool),
   imports: new PgImportRepository(pool),
+  registration: new PgRegistrationRepository(pool),
 });

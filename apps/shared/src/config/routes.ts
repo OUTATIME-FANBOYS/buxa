@@ -21,6 +21,10 @@ export const ROUTES = {
   sessionImport: '/camp/sessions/import',
   sessionImportTemplate: '/camp/sessions/import/template',
   sessionImportErrorReport: '/camp/sessions/import/error-report',
+  // Registration: forms per season that cover sessions. Reading submissions needs registration:read; building a form needs
+  // registration:manage; taking a registration needs registration:submit.
+  registration: '/camp/registration',
+  newRegistrationForm: '/camp/registration/new',
   // Work: tasks kept in this browser (the kanban demo), shown in the same shell.
   tasks: '/camp/tasks',
   projects: '/camp/projects',
@@ -40,6 +44,12 @@ export const personPath = (id: string): string => `${ROUTES.people}/${encodeURIC
 
 /** One session: its classes and their enrolments. */
 export const sessionPath = (sessionId: string): string => `${ROUTES.sessions}/${encodeURIComponent(sessionId)}`;
+
+/** One registration form: its questions, publishing and submissions by session. */
+export const registrationFormPath = (formId: string): string => `${ROUTES.registration}/${encodeURIComponent(formId)}`;
+
+/** The page where staff take a registration for a family, on a published form. */
+export const registrationRegisterPath = (formId: string): string => `${registrationFormPath(formId)}/register`;
 
 /** The page that adds a class to a session. */
 export const newClassPath = (sessionId: string): string => `${sessionPath(sessionId)}/classes/new`;
