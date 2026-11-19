@@ -10,8 +10,8 @@ export function AttachmentList({ task, ro }: { task: Task; ro: boolean }) {
   const { busy, input, upload } = useAttachmentUpload(task.id);
 
   return (
-    <section className="section">
-      <div className="section-head">
+    <section className="section buxa:grid buxa:gap-[var(--s3)]">
+      <div className="section-head buxa:flex buxa:justify-between buxa:items-center">
         <h3>Attachments</h3>
         {!ro && (
           <>
@@ -27,9 +27,14 @@ export function AttachmentList({ task, ro }: { task: Task; ro: boolean }) {
       )}
       <ul className="files">
         {task.attachments.map(a => (
-          <li key={a.id}>
+          <li
+            key={a.id}
+            className="buxa:flex buxa:items-center buxa:gap-[var(--s3)] buxa:[padding:6px_0] buxa:text-[var(--text-2)]"
+          >
             <Icon name="clip" size={15} />
-            <span className="file-name">{a.name}</span>
+            <span className="file-name buxa:flex-1 buxa:text-[var(--text)] buxa:overflow-hidden buxa:text-ellipsis buxa:whitespace-nowrap">
+              {a.name}
+            </span>
             <span className="muted small">{fmtSize(a.size)}</span>
             {a.dataUrl && (
               <Button iconOnly icon="download" href={a.dataUrl} download={a.name} aria-label={`Download ${a.name}`} />

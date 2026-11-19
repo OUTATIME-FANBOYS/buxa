@@ -1,6 +1,7 @@
 'use client';
 
 import { PriorityMark } from '@/components/elements';
+import { TAG } from '@/components/elements/tag';
 import { useMemo, useState } from 'react';
 import type { Project, Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
@@ -116,7 +117,7 @@ export function ListView({
                   <div className="row-sub">
                     {showProject && <span className="muted small">{proj.name}</span>}
                     {t.tags.slice(0, 3).map(g => (
-                      <span key={g} className="tag">
+                      <span key={g} className={`tag ${TAG}`}>
                         {g}
                       </span>
                     ))}

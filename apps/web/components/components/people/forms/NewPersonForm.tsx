@@ -57,7 +57,7 @@ export function NewPersonForm({
         Fields marked with an asterisk are required.
       </p>
 
-      <fieldset className="plain person-section">
+      <fieldset className="plain person-section buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
         <legend className="person-legend">Name</legend>
         <div className="people-form-grid">
           <TextField
@@ -86,7 +86,7 @@ export function NewPersonForm({
         </div>
       </fieldset>
 
-      <fieldset className="plain person-section">
+      <fieldset className="plain person-section buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
         <legend className="person-legend">Roles *</legend>
         <p className="person-helper">Choose everything that applies. Someone can be a parent and an instructor.</p>
         <div className="people-checks">
@@ -103,7 +103,7 @@ export function NewPersonForm({
         )}
       </fieldset>
 
-      <fieldset className="plain person-section">
+      <fieldset className="plain person-section buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
         <legend className="person-legend">Household</legend>
         {household ? (
           <>
@@ -152,7 +152,7 @@ export function NewPersonForm({
         )}
       </fieldset>
 
-      <fieldset className="plain person-section">
+      <fieldset className="plain person-section buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
         <legend className="person-legend">Contact and age</legend>
         <div className="people-form-grid">
           <DatePicker

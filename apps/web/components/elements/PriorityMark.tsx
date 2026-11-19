@@ -11,12 +11,21 @@ const PRIORITY_COLOUR: Record<Priority, string> = {
 const PRIO =
   'buxa:inline-flex buxa:items-center buxa:gap-[6px] buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--pc)]';
 
-export function PriorityMark({ priority, label = false }: { priority: Priority; label?: boolean }) {
+export function PriorityMark({
+  priority,
+  label = false,
+  className = '',
+}: {
+  priority: Priority;
+  label?: boolean;
+  /** Extra classes for the mark, for a screen that places it (the task form's priority field). */
+  className?: string;
+}) {
   const n = PRIORITIES.indexOf(priority) + 1;
 
   return (
     <span
-      className={`prio prio-${priority} ${PRIORITY_COLOUR[priority]} ${PRIO}`}
+      className={`prio prio-${priority} ${PRIORITY_COLOUR[priority]} ${PRIO} ${className}`}
       title={`${PRIORITY_LABEL[priority]} priority`}
     >
       <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">

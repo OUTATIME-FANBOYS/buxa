@@ -5,7 +5,13 @@ import { Field, Button } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { useTaskCommands } from '@buxa/middleware/hooks/hooks';
 import { useTaskDraft } from '@buxa/middleware/hooks/hooks';
+import { TAG } from '@/components/elements/tag';
 import { TaskDrawerHeader } from './TaskDrawerHeader';
+
+// The title: a large, borderless text area that shows an edge only on hover (its own rules beat the field defaults, so they
+// are forced).
+const TITLE_INPUT =
+  'buxa:text-[length:var(--fs-h)]! buxa:font-semibold! buxa:tracking-[-0.01em] buxa:border-transparent! buxa:[padding:var(--s2)]! buxa:[margin:0_calc(var(--s2)*-1)] buxa:w-[calc(100%+var(--s4))]! buxa:resize-none! buxa:[field-sizing:content] buxa:min-h-[44px] buxa:bg-transparent! buxa:enabled:hover:bg-[var(--hover)]! buxa:enabled:hover:border-transparent!';
 import { TaskProperties } from './TaskProperties';
 import { TaskSections } from './TaskSections';
 
@@ -46,12 +52,13 @@ export function TaskForm({ task, project, defaults, onClose }: TaskFormProps) {
             disabled={ro}
             className="plain buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]"
           >
-            <div className="drawer-title">
+            <div className="drawer-title buxa:grid buxa:gap-[var(--s1)]">
               <label className="sr-only" htmlFor="drawer-title">
                 Title
               </label>
               <textarea
                 id="drawer-title"
+                className={TITLE_INPUT}
                 rows={1}
                 value={d.title}
                 placeholder="Task title"
@@ -78,7 +85,7 @@ export function TaskForm({ task, project, defaults, onClose }: TaskFormProps) {
                   {d.errs.title}
                 </span>
               )}
-              {task?.archived && <span className="tag">Archived</span>}
+              {task?.archived && <span className={`tag ${TAG}`}>Archived</span>}
             </div>
             <TaskProperties task={task} project={project} d={d} />
             <Field label="Description">
@@ -98,7 +105,7 @@ export function TaskForm({ task, project, defaults, onClose }: TaskFormProps) {
           {task ? (
             <TaskSections task={task} ro={ro} members={members.map(m => m.user)} userById={userById} />
           ) : (
-            <div className="row-end sticky-foot">
+            <div className="row-end sticky-foot buxa:sticky buxa:bottom-0 buxa:bg-[var(--surface)] buxa:pt-[var(--s3)]">
               <Button onClick={close}>Cancel</Button>
               <Button variant="primary" icon="plus" onClick={d.create}>
                 Create task

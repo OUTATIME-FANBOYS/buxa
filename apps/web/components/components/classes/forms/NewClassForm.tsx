@@ -62,7 +62,7 @@ export function NewClassForm({
         hint="Each new session starts with this many places. A session can change its own."
         autoComplete="off"
       />
-      <fieldset className="plain class-section">
+      <fieldset className="plain class-section buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
         <legend className="class-legend">Instructor ratio (optional)</legend>
         <p className="field-hint buxa:text-[length:var(--fs-s)] buxa:text-[var(--text-3)]">
           For example 1 instructor for 8 campers. Saved with the class. Not enforced yet.

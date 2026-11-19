@@ -14,8 +14,8 @@ export function SubtaskList({ task, ro }: { task: Task; ro: boolean }) {
   const sp = subtaskProgress(task);
 
   return (
-    <section className="section">
-      <div className="section-head">
+    <section className="section buxa:grid buxa:gap-[var(--s3)]">
+      <div className="section-head buxa:flex buxa:justify-between buxa:items-center">
         <h3>Subtasks</h3>
         {sp.total > 0 && (
           <span className="muted small">
@@ -24,11 +24,14 @@ export function SubtaskList({ task, ro }: { task: Task; ro: boolean }) {
         )}
       </div>
       {sp.total > 0 && <Progress value={(sp.done / sp.total) * 100} label="Subtask progress" />}
-      <ul className="checklist">
+      <ul className="checklist buxa:[&_label]:flex buxa:[&_label]:gap-[var(--s3)] buxa:[&_label]:items-center buxa:[&_label]:[padding:6px_0] buxa:[&_label]:flex-1 buxa:[&_label]:cursor-pointer">
         {task.subtasks.map(st => (
-          <li key={st.id}>
+          <li
+            key={st.id}
+            className="buxa:flex buxa:items-center buxa:justify-between buxa:gap-[var(--s2)] buxa:rounded-[var(--r-1)] buxa:[padding:2px_var(--s1)] buxa:hover:bg-[var(--hover)]"
+          >
             <Checkbox isSelected={st.done} isDisabled={ro} onChange={() => actions.toggleSubtask(task.id, st.id)}>
-              <span className={st.done ? 'done' : ''}>{st.title}</span>
+              <span className={st.done ? 'done buxa:line-through buxa:text-[var(--text-3)]' : ''}>{st.title}</span>
             </Checkbox>
             {!ro && (
               <Button
@@ -43,7 +46,7 @@ export function SubtaskList({ task, ro }: { task: Task; ro: boolean }) {
       </ul>
       {!ro && (
         <form
-          className="inline-form"
+          className="inline-form buxa:flex buxa:gap-[var(--s2)]"
           onSubmit={e => {
             e.preventDefault();
             const t = sub.trim();

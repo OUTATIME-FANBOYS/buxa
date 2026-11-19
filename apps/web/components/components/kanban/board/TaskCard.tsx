@@ -1,6 +1,7 @@
 'use client';
 
 import { PriorityMark } from '@/components/elements';
+import { TAG } from '@/components/elements/tag';
 import { memo } from 'react';
 import type { Project, Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
@@ -85,11 +86,11 @@ export const TaskCard = memo(function TaskCard({ task, project, readOnly, draggi
       {task.tags.length > 0 && (
         <div className="tags">
           {task.tags.slice(0, 3).map(t => (
-            <span key={t} className={`tag hue-${tagHue(t)}`}>
+            <span key={t} className={`tag hue-${tagHue(t)} ${TAG}`}>
               {t}
             </span>
           ))}
-          {task.tags.length > 3 && <span className="tag">+{task.tags.length - 3}</span>}
+          {task.tags.length > 3 && <span className={`tag ${TAG}`}>+{task.tags.length - 3}</span>}
         </div>
       )}
       <div className="card-meta">
@@ -123,7 +124,7 @@ export const TaskCard = memo(function TaskCard({ task, project, readOnly, draggi
           </span>
         )}
         <span className="grow" />
-        {task.archived && <span className="tag">Archived</span>}
+        {task.archived && <span className={`tag ${TAG}`}>Archived</span>}
         <Avatar user={user} size={22} />
       </div>
     </article>
