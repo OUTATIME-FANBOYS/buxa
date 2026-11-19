@@ -42,7 +42,10 @@ export function TaskForm({ task, project, defaults, onClose }: TaskFormProps) {
       {close => (
         <>
           <TaskDrawerHeader task={task} project={project} readOnly={ro} onClose={close} onDelete={() => void del()} />
-          <fieldset disabled={ro} className="plain">
+          <fieldset
+            disabled={ro}
+            className="plain buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]"
+          >
             <div className="drawer-title">
               <label className="sr-only" htmlFor="drawer-title">
                 Title
@@ -71,7 +74,7 @@ export function TaskForm({ task, project, defaults, onClose }: TaskFormProps) {
                 }}
               />
               {d.errs.title && (
-                <span className="field-error" role="alert">
+                <span className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
                   {d.errs.title}
                 </span>
               )}

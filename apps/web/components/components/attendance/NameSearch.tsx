@@ -78,7 +78,7 @@ function SearchStatus({ trimmed, current }: { trimmed: string; current: ActionOu
   }
   if (current.kind !== 'ok') {
     return (
-      <p className="field-error" role="alert">
+      <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
         {current.message}
       </p>
     );

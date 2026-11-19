@@ -20,4 +20,4 @@ export const SETTINGS_TILE_TEXT = 'buxa:mt-[var(--s1)]! buxa:text-[14px] buxa:le
 /** The theme and clock choices in a settings card: the group fills the card's control and never runs past its border, and
  * the options share the width and wrap their labels. */
 export const CARD_SEGMENTED =
-  'buxa:flex! buxa:w-full buxa:max-w-full buxa:min-w-0 buxa:box-border! [&_button]:buxa:h-auto! [&_button]:buxa:min-h-[30px]! [&_button]:buxa:flex-[1_1_0]! [&_button]:buxa:min-w-0! [&_button]:buxa:px-[var(--s2)]! [&_button]:buxa:py-[4px]! [&_button]:buxa:justify-center! [&_button]:buxa:text-center! [&_button]:buxa:whitespace-normal! [&_button]:buxa:[overflow-wrap:anywhere]! [&_button]:buxa:leading-[1.25]!';
+  'buxa:flex! buxa:w-full buxa:max-w-full buxa:min-w-0 buxa:box-border! buxa:[&_button]:h-auto! buxa:[&_button]:min-h-[30px]! buxa:[&_button]:flex-[1_1_0]! buxa:[&_button]:min-w-0! buxa:[&_button]:px-[var(--s2)]! buxa:[&_button]:py-[4px]! buxa:[&_button]:justify-center! buxa:[&_button]:text-center! buxa:[&_button]:whitespace-normal! buxa:[&_button]:[overflow-wrap:anywhere]! buxa:[&_button]:leading-[1.25]!';

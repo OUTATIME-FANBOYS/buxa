@@ -88,11 +88,11 @@ describe('settings grid', () => {
 
   it('keeps the segmented controls (theme, clock) inside their card at every width', () => {
     expect(settingsStyles).toContain(
-      "CARD_SEGMENTED = 'buxa:flex! buxa:w-full buxa:max-w-full buxa:min-w-0 buxa:box-border! [&_button]:buxa:h-auto!",
+      "CARD_SEGMENTED = 'buxa:flex! buxa:w-full buxa:max-w-full buxa:min-w-0 buxa:box-border! buxa:[&_button]:h-auto!",
     );
-    expect(settingsStyles).toContain('[&_button]:buxa:flex-[1_1_0]!');
-    expect(settingsStyles).toContain('[&_button]:buxa:min-w-0!');
-    expect(settingsStyles).toContain('[&_button]:buxa:[overflow-wrap:anywhere]!');
+    expect(settingsStyles).toContain('buxa:[&_button]:flex-[1_1_0]!');
+    expect(settingsStyles).toContain('buxa:[&_button]:min-w-0!');
+    expect(settingsStyles).toContain('buxa:[&_button]:[overflow-wrap:anywhere]!');
     expect(cardSegmented).toContain('className={CARD_SEGMENTED}');
     expect(timeFormatCard).toContain('className={CARD_SEGMENTED}');
   });

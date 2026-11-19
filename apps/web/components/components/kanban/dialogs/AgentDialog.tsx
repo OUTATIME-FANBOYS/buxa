@@ -62,8 +62,10 @@ export function AgentDialog({ onClose }: { onClose: () => void }) {
             placeholder="One sentence people will see when reviewing its work."
           />
         </Field>
-        <fieldset className="field">
-          <legend className="field-label">Projects it may touch</legend>
+        <fieldset className="field buxa:grid buxa:gap-[6px] buxa:content-start">
+          <legend className="field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]">
+            Projects it may touch
+          </legend>
           {projects.map(p => (
             <Checkbox
               key={p.id}

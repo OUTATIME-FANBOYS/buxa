@@ -103,7 +103,7 @@ export function ArchivedCampsCard({ camps }: { camps: readonly ArchivedCamp[] })
             and records are unchanged.
           </p>
           {error && (
-            <p className="field-error" role="alert">
+            <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
               {error}
             </p>
           )}

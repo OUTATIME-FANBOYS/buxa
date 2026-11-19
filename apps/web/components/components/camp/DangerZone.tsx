@@ -46,7 +46,7 @@ export function DangerZone({ campId, campName }: { campId: string; campName: str
   };
 
   const errorLine = error ? (
-    <p className="field-error" role="alert">
+    <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
       {error}
     </p>
   ) : null;

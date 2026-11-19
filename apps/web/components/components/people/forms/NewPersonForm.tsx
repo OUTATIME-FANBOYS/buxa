@@ -97,7 +97,7 @@ export function NewPersonForm({
           ))}
         </div>
         {err('roles') && (
-          <p className="field-error" role="alert">
+          <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
             {err('roles')}
           </p>
         )}
@@ -146,7 +146,7 @@ export function NewPersonForm({
           maxLength={40}
         />
         {household && err('householdId') && (
-          <p className="field-error" role="alert">
+          <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
             {err('householdId')}
           </p>
         )}

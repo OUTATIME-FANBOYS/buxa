@@ -9,6 +9,8 @@ describe('Pill', () => {
     );
   });
   it('defaults to the neutral tone and hides the dot when asked', () => {
-    expect(renderToStaticMarkup(<Pill dot={false}>x</Pill>)).toMatch(/^<span class="pill pill-neutral [^"]*">x<\/span>$/);
+    expect(renderToStaticMarkup(<Pill dot={false}>x</Pill>)).toMatch(
+      /^<span class="pill pill-neutral [^"]*">x<\/span>$/,
+    );
   });
 });

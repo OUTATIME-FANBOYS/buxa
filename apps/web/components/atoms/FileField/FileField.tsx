@@ -47,11 +47,13 @@ export function FileField({
   }
 
   return (
-    <label className="field">
-      <span className="field-label">{label}</span>
+    <label className="field buxa:grid buxa:gap-[6px] buxa:content-start">
+      <span className="field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]">
+        {label}
+      </span>
       {input}
       {error ? (
-        <span className="field-error" role="alert">
+        <span className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
           {error}
         </span>
       ) : null}

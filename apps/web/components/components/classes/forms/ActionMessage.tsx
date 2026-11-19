@@ -14,7 +14,7 @@ export function ActionMessage({ state }: { state: ActionState }) {
   }
   if (state.status === 'error' && !state.fieldErrors) {
     return (
-      <p role="alert" className="field-error">
+      <p role="alert" className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]">
         {state.message}
       </p>
     );

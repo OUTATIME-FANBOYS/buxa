@@ -9,7 +9,7 @@ describe('Field', () => {
         <input />
       </Field>,
     );
-    expect(html).toContain('<label class="field"><span class="field-label">Email</span><input/>');
+    expect(html).toMatch(/<label class="field [^"]*"><span class="field-label [^"]*">Email<\/span><input\/>/);
   });
   it('shows the hint when there is no error', () => {
     expect(
@@ -18,7 +18,7 @@ describe('Field', () => {
           <input />
         </Field>,
       ),
-    ).toContain('<span class="field-hint">Optional</span>');
+    ).toMatch(/<span class="field-hint [^"]*">Optional<\/span>/);
   });
   it('shows the error as an alert and hides the hint', () => {
     const html = renderToStaticMarkup(

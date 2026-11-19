@@ -39,7 +39,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         {...bind('password')}
       />
       {state.status === 'error' && (
-        <p className="field-error" role="alert">
+        <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
           {state.message}
         </p>
       )}

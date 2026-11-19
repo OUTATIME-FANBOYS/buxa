@@ -35,7 +35,9 @@ describe('server-safe components', () => {
     expect(renderToStaticMarkup(<Pill tone="ok">Done</Pill>)).toMatch(
       /^<span class="pill pill-ok [^"]*"><i class="pill-dot [^"]*" aria-hidden="true"><\/i>Done<\/span>$/,
     );
-    expect(renderToStaticMarkup(<Pill dot={false}>x</Pill>)).toMatch(/^<span class="pill pill-neutral [^"]*">x<\/span>$/);
+    expect(renderToStaticMarkup(<Pill dot={false}>x</Pill>)).toMatch(
+      /^<span class="pill pill-neutral [^"]*">x<\/span>$/,
+    );
   });
   it('Avatar renders person, agent and unassigned', () => {
     const { Avatar } = ui;
@@ -61,7 +63,7 @@ describe('server-safe components', () => {
           <input />
         </Field>,
       ),
-    ).toContain('<span class="field-error" role="alert">Bad</span>');
+    ).toMatch(/<span class="field-error [^"]*" role="alert">Bad<\/span>/);
     expect(renderToStaticMarkup(<Progress value={250} />)).toContain('aria-valuenow="100"');
     expect(renderToStaticMarkup(<Icon name="check" size={20} />)).toContain('width="20"');
   });

@@ -28,7 +28,12 @@ export function FormMessage({ state }: { state: ActionState }) {
   }
 
   return (
-    <p ref={ref} tabIndex={-1} role="alert" className="field-error">
+    <p
+      ref={ref}
+      tabIndex={-1}
+      role="alert"
+      className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]"
+    >
       {state.message}
     </p>
   );

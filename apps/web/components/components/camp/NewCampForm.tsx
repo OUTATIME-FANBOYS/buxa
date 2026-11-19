@@ -58,7 +58,7 @@ export function NewCampForm({ first }: { first: boolean }) {
             hint="Used in links to your camp. Lowercase letters, numbers and dashes."
           />
           {formMessage && (
-            <p className="field-error" role="alert">
+            <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
               {formMessage}
             </p>
           )}

@@ -52,9 +52,17 @@ export function Select({
   const hasPlaceholder = placeholder !== undefined;
   const current = value === undefined ? undefined : (value ?? '');
 
+  // A field-height select with the app's chevron (set in fieldDefaults), the label above it, and the width of its column.
   return (
-    <div className={`select-field ${className ?? ''}`}>
-      <label className={hideLabel ? 'sr-only' : 'field-label'} htmlFor={selectId}>
+    <div className={`select-field buxa:grid buxa:gap-[var(--s2)] buxa:min-w-0 ${className ?? ''}`}>
+      <label
+        className={
+          hideLabel
+            ? 'sr-only'
+            : 'field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]'
+        }
+        htmlFor={selectId}
+      >
         {label}
         {isRequired ? ' *' : null}
       </label>
@@ -66,7 +74,7 @@ export function Select({
         aria-invalid={Boolean(error) || undefined}
         {...(current !== undefined ? { value: current } : { defaultValue: defaultValue ?? '' })}
         onChange={e => onChange?.(e.target.value === '' ? null : e.target.value)}
-        className="select-field__input"
+        className="select-field__input buxa:min-w-0"
       >
         {hasPlaceholder ? (
           <option value="" disabled={isRequired}>
@@ -80,11 +88,11 @@ export function Select({
         ))}
       </select>
       {error ? (
-        <p className="field-error" role="alert">
+        <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
           {error}
         </p>
       ) : hint ? (
-        <p className="field-hint">{hint}</p>
+        <p className="field-hint buxa:text-[length:var(--fs-s)] buxa:text-[var(--text-3)]">{hint}</p>
       ) : null}
     </div>
   );

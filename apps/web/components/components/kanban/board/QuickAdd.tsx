@@ -47,7 +47,7 @@ export function QuickAdd({ project, column, onDone }: { project: Project; column
         }}
       />
       {err && (
-        <span className="field-error" role="alert">
+        <span className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
           {err}
         </span>
       )}

@@ -54,7 +54,7 @@ export function NewSessionForm({
         Class: <strong>{className}</strong>. Instructor ratio:{' '}
         {ratio ? `${ratio.instructors} instructor for ${ratio.campers} campers` : 'not set on this class'}.
       </p>
-      <div className="form-row">
+      <div className="form-row buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-end buxa:[&>.field]:flex-[1_1_180px] buxa:[&>.field]:min-w-0 buxa:[&>.button]:flex-none buxa:[&>a.button]:flex-none">
         <TextField
           label="Starts *"
           name="startsAt"
@@ -81,8 +81,10 @@ export function NewSessionForm({
         hint={`Leave empty to use the class default (${defaultCapacity}).`}
         autoComplete="off"
       />
-      <fieldset className="plain">
-        <legend className="field-label">Instructors</legend>
+      <fieldset className="plain buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
+        <legend className="field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]">
+          Instructors
+        </legend>
         {instructors.length === 0 ? (
           <p className="muted">No one has the instructor role yet. Add them under People, then come back.</p>
         ) : (

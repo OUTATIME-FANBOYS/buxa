@@ -40,8 +40,10 @@ export function EditPersonForm({ person }: { person: EditablePerson }) {
         Fields marked with an asterisk are required.
       </p>
 
-      <fieldset className="plain">
-        <legend className="field-label">Name</legend>
+      <fieldset className="plain buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
+        <legend className="field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]">
+          Name
+        </legend>
         <div className="people-form-grid">
           <TextField
             label="First name *"
@@ -72,9 +74,11 @@ export function EditPersonForm({ person }: { person: EditablePerson }) {
         </div>
       </fieldset>
 
-      <fieldset className="plain">
-        <legend className="field-label">Roles *</legend>
-        <p className="field-hint">
+      <fieldset className="plain buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
+        <legend className="field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]">
+          Roles *
+        </legend>
+        <p className="field-hint buxa:text-[length:var(--fs-s)] buxa:text-[var(--text-3)]">
           Choose everything that applies. A camper must stay in a household that has a parent or guardian.
         </p>
         <div className="people-checks">
@@ -91,14 +95,16 @@ export function EditPersonForm({ person }: { person: EditablePerson }) {
           ))}
         </div>
         {err('roles') && (
-          <p className="field-error" role="alert">
+          <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
             {err('roles')}
           </p>
         )}
       </fieldset>
 
-      <fieldset className="plain">
-        <legend className="field-label">Contact and age</legend>
+      <fieldset className="plain buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
+        <legend className="field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]">
+          Contact and age
+        </legend>
         <div className="people-form-grid">
           <DatePicker
             label="Date of birth"

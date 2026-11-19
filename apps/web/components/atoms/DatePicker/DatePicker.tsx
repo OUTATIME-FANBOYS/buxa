@@ -41,8 +41,11 @@ export function DatePicker({
   const controlled = value !== undefined ? { value: value ?? '' } : { defaultValue: defaultValue ?? '' };
 
   return (
-    <div className="select-field">
-      <label className="field-label" htmlFor={inputId}>
+    <div className="select-field buxa:grid buxa:gap-[var(--s2)] buxa:min-w-0">
+      <label
+        className="field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]"
+        htmlFor={inputId}
+      >
         {label}
         {isRequired ? ' *' : null}
       </label>
@@ -57,14 +60,14 @@ export function DatePicker({
         aria-invalid={Boolean(error) || undefined}
         {...controlled}
         onChange={e => onChange?.(e.target.value === '' ? null : e.target.value)}
-        className="select-field__input"
+        className="select-field__input buxa:min-w-0"
       />
       {error ? (
-        <p className="field-error" role="alert">
+        <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
           {error}
         </p>
       ) : hint ? (
-        <p className="field-hint">{hint}</p>
+        <p className="field-hint buxa:text-[length:var(--fs-s)] buxa:text-[var(--text-3)]">{hint}</p>
       ) : null}
     </div>
   );

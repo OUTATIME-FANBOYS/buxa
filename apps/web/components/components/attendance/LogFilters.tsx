@@ -22,7 +22,7 @@ export function LogFilters({
 }) {
   return (
     <form
-      className="form-row log-filters"
+      className="form-row log-filters buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-end buxa:[&>.field]:flex-[1_1_180px] buxa:[&>.field]:min-w-0 buxa:[&>.button]:flex-none buxa:[&>a.button]:flex-none"
       method="get"
       action={ROUTES.attendance}
       role="search"

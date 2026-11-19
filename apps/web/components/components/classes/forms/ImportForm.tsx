@@ -33,7 +33,7 @@ export function ImportForm() {
       </form>
 
       {state.status === 'error' && (
-        <p role="alert" className="field-error">
+        <p role="alert" className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]">
           {state.message}
         </p>
       )}
@@ -67,7 +67,7 @@ export function ImportForm() {
             {state.fileName}: {state.written} sessions saved. {state.counts.refused} rows were refused and not saved.
           </p>
           {state.changedSincePreview && (
-            <p className="field-error">
+            <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]">
               The camp&apos;s sessions changed after the preview, so some rows may have a different result from what you
               saw. Check the schedule.
             </p>

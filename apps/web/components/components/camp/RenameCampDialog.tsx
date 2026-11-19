@@ -62,7 +62,7 @@ export function RenameCampDialog({
           autoFocus
         />
         {formMessage && (
-          <p className="field-error" role="alert">
+          <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
             {formMessage}
           </p>
         )}
