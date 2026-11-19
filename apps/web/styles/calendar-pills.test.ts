@@ -14,6 +14,13 @@ describe('calendar task pills', () => {
     expect(calendar).toContain('font-size: 11px;');
     expect(calendar).toContain('.cal-task { height: var(--control-touch); }');
   });
+  it('start their text at the dot, so a short title is not centred and indented', () => {
+    expect(calendar).toMatch(/\.cal-task \{[^}]*justify-content: flex-start;/);
+    expect(calendar).toMatch(/\.cal-dot \{[^}]*background: var\(--pc, var\(--p-low\)\);/);
+  });
+  it('give medium priority its own dark-mode token, distinct from the coral accent and the amber high token', () => {
+    expect(dark).toContain('--p-medium: #7fd1d1;');
+  });
   it('take the priority colour on the dot from the existing priority tokens', () => {
     for (const p of ['low', 'medium', 'high', 'critical']) {
       expect(calendar).toContain(`.cal-task.prio-bg-${p} { --pc: var(--p-${p}); }`);
