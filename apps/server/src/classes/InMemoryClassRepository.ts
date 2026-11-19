@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { Actor, ActiveEnrolmentFacts, AuditAction, LocalDate } from '@buxa/domain';
-import type { Class, Enrolment, EnrolmentStatus, NewSessionInput, Session } from '@buxa/contracts';
+import type { Class, Enrolment, EnrolmentStatus, NewSessionInput, Session, SessionPriceInput } from '@buxa/contracts';
+import { priceChangeAudit, samePrice } from './priceAudit';
 import { systemClock, type Clock } from '../services/clock';
 import type { AuditRecord } from '../people/InMemoryDatabase';
 import type { AuditData } from '../audit/types';
@@ -32,6 +33,7 @@ interface StoredSession {
   startsOn: LocalDate | null;
   endsOn: LocalDate | null;
   createdAt: string;
+  price: SessionPriceInput | null;
 }
 
 /** A class: a time range under a session, with its own name, ages, camp size and location. */
@@ -112,9 +114,28 @@ export class InMemoryClassRepository implements ClassRepository {
         startsOn: input.startsOn,
         endsOn: input.endsOn,
         createdAt: this.now().toISOString(),
+        price: input.price ?? null,
       };
       this.sessions.set(row.id, row);
       this.record(actor, 'session.create', 'session', row.id, { name: row.name });
+      if (row.price) {
+        this.record(actor, 'session.price_change', 'session', row.id, priceChangeAudit(null, row.price));
+      }
+
+      return this.toSession(row);
+    });
+  }
+
+  setSessionPrice(actor: Actor, sessionId: string, price: SessionPriceInput | null): Promise<Session> {
+    return settle(() => {
+      const row = this.sessionIn(actor.orgId, sessionId);
+      if (!row) {
+        throw new SessionNotFoundError();
+      }
+      if (!samePrice(row.price, price)) {
+        this.record(actor, 'session.price_change', 'session', sessionId, priceChangeAudit(row.price, price));
+        row.price = price;
+      }
 
       return this.toSession(row);
     });
@@ -364,6 +385,7 @@ export class InMemoryClassRepository implements ClassRepository {
       endsOn: s.endsOn,
       classCount: [...this.classes.values()].filter(c => c.sessionId === s.id).length,
       createdAt: s.createdAt,
+      price: s.price ? { ...s.price } : null,
     };
   }
 
@@ -384,6 +406,7 @@ export class InMemoryClassRepository implements ClassRepository {
       instructors: c.instructorIds.map(id => ({ id, name: this.campers.get(id)?.name ?? '' })),
       seatsTaken: this.countWhere(c.id, 'enrolled'),
       waitlisted: this.countWhere(c.id, 'waitlisted'),
+      price: session?.price ? { ...session.price } : null,
     };
   }
 

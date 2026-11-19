@@ -1,6 +1,6 @@
 # Phase 3: registration
 
-Status: **in progress.** Sign-up forms are built on branch `v0.3/feat/registration-forms`. Holds and the waitlist are not built (another branch carries holds; the seam is described below). Roadmap row: "Registration: sign-up forms with custom fields, holds, waitlist. No card payments yet (demo only)." Card payments and refunds moved to phase 9 (`09-payments-go-live.md`).
+Status: **in progress.** Sign-up forms are built on branch `v0.3/feat/registration-forms`. Prices are built on branch `v0.3/feat/session-prices` (see the Prices section). Holds and the waitlist are not built (another branch carries holds; the seam is described below). Roadmap row: "Registration: sign-up forms with custom fields, holds, waitlist. No card payments yet (demo only)." Card payments and refunds moved to phase 9 (`09-payments-go-live.md`).
 Depends on: phase 2 (sessions and enrolments).
 
 ## What is built (sign-up forms)
@@ -37,6 +37,16 @@ These were in the phase 2 roadmap row and moved here so that phase 2 closes on c
 - Staff UI to create a series and to make an existing class public. The branch has the server side only.
 - Token rotation from Settings. Settings is still being reworked, so the button waits for that.
 - The token is in the feed URL's query string. Calendar apps cannot send headers, so the token has to be in the URL. The remaining risk is platform request logs; check their retention.
+
+## Prices (built, branch `v0.3/feat/session-prices`)
+
+- A price belongs to a **session** (the parent row in `classes`), so every class in it shows the same price. Stored as integer minor units with an ISO 4217 code, plus an optional early-bird amount and its last day (migration `0024_session_prices.sql`). Nothing is charged.
+- **Early-bird rule:** the early-bird amount is shown while today, as a calendar day in the camp's time zone, is on or before the early-bird last day. From the next day, the regular price is shown. Tested in `packages/domain/test/session-prices.test.ts` (boundary day, 23:30 in the camp zone, and the day after).
+- **Rounding:** amounts are integers, and typed input is never rounded. Extra decimal places are refused (`parseMoney`). Formatting uses integer arithmetic only.
+- **Who:** staff and above (`classes:manage`). A viewer is refused by the service and the server action. The permission matrix is unchanged.
+- **Audit:** every change writes `session.price_change` with the previous and new price (minor units). An unchanged price writes nothing. Session creation with a price writes one entry.
+- **Screens:** the New session form takes a price; the session page has a Set/Change price dialog; the session and selected-class details show the price for today.
+- **Not yet:** the class form does not set the price (the price is per session). Multi-currency conversion is out of scope.
 
 ## Words we use
 

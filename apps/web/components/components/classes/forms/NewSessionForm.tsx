@@ -7,6 +7,7 @@ import { ROUTES } from '@/config/routes';
 import { fieldError, idle } from '@buxa/shared';
 import { createSessionAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
+import { PriceFields } from './PriceFields';
 
 /**
  * A new session: its name, description and first and last day (calendar dates; the session holds the classes that run in it).
@@ -54,6 +55,7 @@ export function NewSessionForm({
         <DatePicker label="First day" name="startsOn" error={err('startsOn')} isRequired />
         <DatePicker label="Last day" name="endsOn" error={err('endsOn')} isRequired />
       </div>
+      <PriceFields error={err} />
       <ActionMessage state={state} />
       <div className="classes-actions">
         {inDialog ? (

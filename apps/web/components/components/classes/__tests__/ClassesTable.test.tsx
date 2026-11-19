@@ -21,6 +21,7 @@ const cls = (over: Partial<Class> = {}): Class => ({
   instructors: [{ id: '33333333-3333-4333-8333-333333333333', name: 'Ana Ruiz' }],
   seatsTaken: 3,
   waitlisted: 0,
+  price: null,
   ...over,
 });
 

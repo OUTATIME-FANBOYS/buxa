@@ -62,6 +62,7 @@ const parent: Session = {
   endsOn: '2027-07-14',
   classCount: 1,
   createdAt: '2027-07-01T00:00:00.000Z',
+  price: null,
 };
 // Full: two places, both taken, and one on the waitlist. Monday 5 July 2027, 09:00 to 12:00 in Sydney.
 const full: Class = {
@@ -78,6 +79,7 @@ const full: Class = {
   instructors: [{ id: INSTRUCTOR_ID, name: 'Ivy Chen' }],
   seatsTaken: 2,
   waitlisted: 1,
+  price: null,
 };
 const enrolment: Enrolment = {
   id: '44444444-4444-4444-8444-444444444444',

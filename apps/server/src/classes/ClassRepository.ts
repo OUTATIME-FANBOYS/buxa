@@ -1,5 +1,5 @@
 import type { Actor, EnrolmentDecision, EnrolmentFacts } from '@buxa/domain';
-import type { Class, Enrolment, NewSessionInput, Session } from '@buxa/contracts';
+import type { Class, Enrolment, NewSessionInput, Session, SessionPriceInput } from '@buxa/contracts';
 
 export type { Class, Session, Enrolment } from '@buxa/contracts';
 
@@ -36,8 +36,10 @@ export type EnrolmentRule = (facts: GatheredEnrolmentFacts) => EnrolmentDecision
 export interface ClassRepository {
   listSessions(orgId: string): Promise<Session[]>;
   getSession(orgId: string, sessionId: string): Promise<Session | null>;
-  /** Audits `session.create`. */
+  /** Audits `session.create`, and `session.price_change` when the session is created with a price. */
   createSession(actor: Actor, input: NewSessionInput): Promise<Session>;
+  /** Sets or clears a session's price. Audits `session.price_change` with the old and new price. Throws SessionNotFoundError. */
+  setSessionPrice(actor: Actor, sessionId: string, price: SessionPriceInput | null): Promise<Session>;
   /** Throws SessionNotFoundError. */
   listClasses(orgId: string, sessionId: string): Promise<Class[]>;
   getClass(orgId: string, classId: string): Promise<Class | null>;

@@ -7,8 +7,8 @@ import { campClock } from '@buxa/server/composers/index.server';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_ENROLMENTS, FORBIDDEN_READ } from '@buxa/shared';
 import { loadSessionPage, loadEnrolments, loadPeopleWithRole } from '@buxa/server/composers/index.server';
-import { ClassesTable, EnrolmentTable, instructorNames } from '@/components/components/classes';
-import { EnrolForm, NewClassButton } from '@/components/components/classes/forms';
+import { ClassesTable, EnrolmentTable, instructorNames, PriceFact } from '@/components/components/classes';
+import { EnrolForm, NewClassButton, SessionPriceButton } from '@/components/components/classes/forms';
 import { formatCampDateTime } from '@buxa/shared';
 import { Button } from '@/components/elements';
 
@@ -85,6 +85,11 @@ export async function ClassPage({
         <dd>{dates}</dd>
         <dt>Classes</dt>
         <dd>{classes.length}</dd>
+        <PriceFact
+          price={session.price}
+          timeZone={timeZone}
+          action={canManage && <SessionPriceButton sessionId={session.id} price={session.price} />}
+        />
       </dl>
 
       <section aria-labelledby="classes-heading" className="stack">
@@ -141,6 +146,7 @@ export async function ClassPage({
             <dd>{selected.location}</dd>
             <dt>Instructors</dt>
             <dd>{instructorNames(selected)}</dd>
+            <PriceFact price={selected.price} timeZone={timeZone} />
           </dl>
           <p aria-live="polite" className="muted">
             {selected.seatsTaken} of {selected.capacity} places taken, {selected.waitlisted} on the waitlist.

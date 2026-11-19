@@ -67,6 +67,7 @@ describe('createSessionAction (the date range)', () => {
       description: 'Two weeks',
       startsOn: '2027-07-01',
       endsOn: '2027-07-14',
+      price: null,
     });
   });
 

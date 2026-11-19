@@ -6,6 +6,7 @@ import { createSessionAction as createSessionActionImpl } from '@buxa/server/com
 import { addClassAction as addClassActionImpl } from '@buxa/server/composers/classes/addClassAction';
 import { updateClassAction as updateClassActionImpl } from '@buxa/server/composers/classes/updateClassAction';
 import { deleteClassAction as deleteClassActionImpl } from '@buxa/server/composers/classes/deleteClassAction';
+import { setSessionPriceAction as setSessionPriceActionImpl } from '@buxa/server/composers/classes/setSessionPriceAction';
 
 // Server action wrappers for the classes screens. Client components import this module, never @buxa/server. Next.js allows only
 // async functions to be exported from a 'use server' file, so each action is wrapped rather than re-exported.
@@ -36,4 +37,8 @@ export async function updateClassAction(...args: Parameters<typeof updateClassAc
 
 export async function deleteClassAction(...args: Parameters<typeof deleteClassActionImpl>) {
   return deleteClassActionImpl(...args);
+}
+
+export async function setSessionPriceAction(...args: Parameters<typeof setSessionPriceActionImpl>) {
+  return setSessionPriceActionImpl(...args);
 }

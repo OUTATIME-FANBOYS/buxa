@@ -21,6 +21,10 @@ const sessionRow = (over: Partial<SessionRow> = {}): SessionRow => ({
   ends_on: '2027-07-31',
   class_count: 2,
   created_at: created,
+  price_minor: null,
+  price_currency: null,
+  early_bird_minor: null,
+  early_bird_until: null,
   ...over,
 });
 
@@ -41,6 +45,10 @@ const classRow = (over: Partial<ClassRow> = {}): ClassRow => ({
     { id: 'i1', name: 'Ada Test' },
     { id: 'i2', name: 'Ben Test' },
   ],
+  price_minor: null,
+  price_currency: null,
+  early_bird_minor: null,
+  early_bird_until: null,
   ...over,
 });
 
@@ -66,6 +74,7 @@ describe('toSession', () => {
       endsOn: '2027-07-31',
       classCount: 2,
       createdAt: '2027-07-01T00:00:00.000Z',
+      price: null,
     });
   });
 
@@ -94,6 +103,7 @@ describe('toClass', () => {
       ],
       seatsTaken: 2,
       waitlisted: 1,
+      price: null,
     });
     expect(mapped.instructors).not.toBe(classRow().instructors);
   });
