@@ -1,6 +1,6 @@
 /*
  * The default look of every input, select and textarea in the app. These are element selectors rather than classes, so they
- * reach the fields HeroUI renders as well as the plain ones. They sit on <body> as variants, so the portals (dialogs,
+ * reach plain fields and fields rendered by shared components. They sit on <body> as variants, so the portals (dialogs,
  * menus, popovers) get them too.
  *
  * Utilities live in a Tailwind layer, and the app's unlayered CSS (base.css: input, select and textarea reset to

@@ -26,7 +26,7 @@ function TokenReveal({ name, token, url }: { name: string; token: string; url: s
 
   return (
     <>
-      <p className="notice-box" role="status">
+      <p className="notice notice--compact tone-warn" role="status">
         Copy this now. It is shown once, and anyone who holds it can act as {name}. Treat it like a password.
       </p>
       <Field label="Claude Code (run in a terminal)">

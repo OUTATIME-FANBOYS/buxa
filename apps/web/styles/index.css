@@ -10,13 +10,12 @@
  *   0. tailwind.css                    Tailwind v4 theme and utilities, prefixed `buxa:` (no preflight, see that file).
  *   1. tokens.css                      the single source of colours, spacing, radii, type scale, motion.
  *                                      Dark theme overrides sit next to the light values. Also the `.tone-*` classes.
- *      heroui-theme.css               HeroUI's theme variable names, each pointing at a token above (no new colours).
  *   2. base.css                        resets, element defaults, utility classes (.muted, .row, .stack, .sr-only ...).
- *   3. components/button.css           the Button component's classes (HeroUI-based, see that file).
+ *   3. components/button.css           the shared Button component's classes.
  *   4. layout/shell.css                app shell: sidebar, topbar, search, avatars, main column.
  *      layout/pages.css                page scaffolding: headers, panels, stats, lists, cards, empty states.
  *   5. features/kanban/filters.css     filter bar, chips, segmented control.
- *   6. components/popover-menu-dialog.css  popovers, menus, notifications, dialogs, drawer and its contents, keyframes.
+ *   6. Popover, menu and dialog keyframes live in the Tailwind theme.
  *   8. features/kanban/board.css       board, columns, cards, drag ghost.
  *      components/table.css            data tables.
  *      features/kanban/calendar.css, timeline.css, charts.css
@@ -43,13 +42,12 @@
  */
 @import './tailwind.css';
 @import './tokens.css';
-@import './heroui-theme.css';
 @import './base.css';
 @import './components/button.css';
+@import './components/notices.css';
 @import './layout/shell.css';
 @import './layout/pages.css';
 @import './features/kanban/filters.css';
-@import './components/popover-menu-dialog.css';
 @import './features/kanban/board.css';
 @import './components/table.css';
 @import './features/kanban/calendar.css';

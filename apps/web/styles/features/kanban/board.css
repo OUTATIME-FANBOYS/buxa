@@ -63,7 +63,7 @@
   gap: var(--s2);
   align-content: start;
   min-height: 44px;
-  padding: 2px;
+  padding: var(--s1);
   flex: 0 1 auto;
 }
 .card {
@@ -74,7 +74,7 @@
   padding: var(--s3);
   display: grid;
   gap: var(--s3);
-  cursor: pointer;
+  cursor: grab;
   transition:
     background 0.12s,
     transform 0.3s var(--ease-out);
@@ -92,9 +92,6 @@
 }
 [data-theme='dark'] .card:hover {
   background: var(--hover);
-}
-.card {
-  cursor: grab;
 }
 .card.is-dragging {
   opacity: 0.3;
@@ -126,7 +123,7 @@
 }
 body.dragging-card,
 body.dragging-card * {
-  cursor: grabbing !important;
+  cursor: grabbing;
   -webkit-user-select: none;
   user-select: none;
 }
@@ -193,7 +190,7 @@ body.dragging-card * {
 .drop-line {
   height: 3px;
   background: var(--accent);
-  border-radius: 2px;
+  border-radius: var(--r-1);
   margin: -1px 0 var(--s2);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
 }

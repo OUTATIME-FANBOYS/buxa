@@ -194,13 +194,6 @@
   justify-self: start;
 }
 
-.notice-box {
-  background: var(--warn-soft);
-  color: var(--warn-ink);
-  border-radius: var(--r-2);
-  padding: var(--s3) var(--s4);
-  font-weight: 500;
-}
 .copy-box {
   display: flex;
   gap: var(--s3);

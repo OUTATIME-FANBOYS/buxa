@@ -38,7 +38,7 @@ export function OverrideForm({ busy, onSubmit }: Props) {
           This is written on the record with the check-in.
         </span>
       </label>
-      <Button variant="danger" type="submit" icon="check" className="att-btn-lg" disabled={busy || trimmed === ''}>
+      <Button variant="danger" size="lg" type="submit" icon="check" disabled={busy || trimmed === ''}>
         Check in anyway
       </Button>
     </form>

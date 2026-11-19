@@ -115,13 +115,6 @@
   grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
   gap: var(--s3);
 }
-.home-count {
-  margin: 0;
-  display: flex;
-  align-items: baseline;
-  gap: var(--s2);
-  flex-wrap: wrap;
-}
 .stat {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -172,7 +165,7 @@
   color: var(--tone);
 }
 .stat.tone-crit .stat-icon {
-  background: var(--coral);
+  background: var(--f-crit);
   color: var(--on-fill);
 }
 .stat.tone-ok .stat-icon {
@@ -271,17 +264,16 @@
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--s5);
 }
-.project-card {
-  background: var(--surface);
-  border: 1px solid var(--line);
+.card.card--project {
   border-radius: var(--r-3);
+  cursor: pointer;
   padding: var(--s5);
   display: grid;
   gap: var(--s4);
   align-content: start;
   transition: transform 0.15s var(--ease);
 }
-.project-card:hover {
+.card.card--project:hover {
   transform: translateY(-1px);
   border-color: var(--line-strong);
   box-shadow: var(--shadow-1);

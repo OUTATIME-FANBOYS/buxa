@@ -1,13 +1,8 @@
 /* ---------- Attendance: check-in, on site, log ---------- */
-/* Touch targets: every control on these screens is at least 44px high. */
-.att-btn-lg,
+/* Names and choices keep a 44px touch target; the compact buttons grow to 44px on coarse pointers. */
 .name-result,
 .choice {
   min-height: 44px;
-}
-.att-btn-lg {
-  height: 52px;
-  font-size: 16px;
 }
 /* Desktop: scan and find on the left, the result on the right. Phone: scan, result, then find, so the result is never below the name list. */
 .checkin {
@@ -99,7 +94,7 @@
   gap: var(--s3);
 }
 .result-name {
-  font-size: 28px;
+  font-size: var(--fs-n);
   line-height: 1.2;
   margin: 0;
   overflow-wrap: anywhere;
@@ -116,23 +111,6 @@
   width: 100%;
 }
 
-.notice {
-  border-radius: var(--r-3);
-  padding: var(--s3) var(--s4);
-  display: grid;
-  gap: var(--s1);
-  background: var(--tone-soft);
-  color: var(--tone-ink);
-  border: 1px solid var(--tone);
-}
-.notice p {
-  margin: 0;
-}
-.notice-title {
-  display: flex;
-  align-items: center;
-  gap: var(--s2);
-}
 .override-form {
   display: grid;
   gap: var(--s3);
@@ -195,14 +173,8 @@
   margin: 0;
   line-height: 1.4;
 }
-/* The card and dialog buttons are a compact 44px: the control height the touch rule allows, not the 52px check-in size. */
-.onsite-btn {
-  height: 36px;
-  min-height: 36px;
-  padding: 0 var(--s3);
-  font-size: 14px;
-}
-.onsite-row .onsite-btn {
+/* Compact check-out actions use the shared header size; coarse pointers raise them to the 44px touch target. */
+.onsite-row .button--header {
   width: 100%;
   margin-top: var(--s1);
 }
@@ -216,16 +188,6 @@
 .checkout-panel {
   display: grid;
   gap: var(--s3);
-}
-.pickup-choices {
-  gap: var(--s2);
-}
-.pickup-choices legend.field-label {
-  font-size: var(--fs-b);
-  margin-bottom: var(--s2);
-}
-.pickup-choices .choice > span:not(.muted) {
-  font-size: 16px;
 }
 .choice {
   display: flex;
