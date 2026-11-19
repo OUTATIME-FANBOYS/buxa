@@ -40,7 +40,6 @@ const task = (id: string, title: string): Task => ({
   title,
   description: '',
   priority: 'medium',
-  tags: [],
   subtasks: [],
   comments: [],
   attachments: [],

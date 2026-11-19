@@ -2,7 +2,6 @@ export * from './AttachmentList';
 export * from './CommentComposer';
 export * from './Discussion';
 export * from './SubtaskList';
-export * from './TagInput';
 export * from './TaskDrawer';
 export * from './TaskDrawerHeader';
 export * from './TaskForm';

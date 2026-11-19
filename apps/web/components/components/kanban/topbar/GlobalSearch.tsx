@@ -18,12 +18,7 @@ export function GlobalSearch({ inputRef }: { inputRef: React.RefObject<HTMLInput
     }
 
     return wsTasks
-      .filter(
-        x =>
-          x.title.toLowerCase().includes(t) ||
-          x.description.toLowerCase().includes(t) ||
-          x.tags.some(g => g.includes(t)),
-      )
+      .filter(x => x.title.toLowerCase().includes(t) || x.description.toLowerCase().includes(t))
       .slice(0, 8);
   }, [q, wsTasks]);
   const pick = (id: string) => {
