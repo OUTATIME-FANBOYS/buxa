@@ -19,6 +19,7 @@ function readRecent(): string[] {
     const raw = localStorage.getItem(RECENT_KEY);
     if (!raw) return [];
     const parsed: unknown = raw.startsWith('[') ? JSON.parse(raw) : [raw];
+
     return Array.isArray(parsed)
       ? parsed.filter((id): id is string => typeof id === 'string').slice(0, RECENT_LIMIT)
       : [];
@@ -72,6 +73,7 @@ export function CampSwitcher({
     const ia = recent.indexOf(a.orgId);
     const ib = recent.indexOf(b.orgId);
     if (ia !== -1 || ib !== -1) return (ia === -1 ? Infinity : ia) - (ib === -1 ? Infinity : ib);
+
     return byName(a, b);
   };
   const ordered = [...camps].sort(byRecent);
