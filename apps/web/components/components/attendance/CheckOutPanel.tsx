@@ -75,11 +75,11 @@ export function CheckOutPanel(props: CheckOutPanelProps) {
       {failure && <Notice tone="crit" title="Not checked out" body={failure} />}
       <div className="checkout-actions">
         {onCancel && (
-          <Button type="button" className="onsite-btn" onClick={onCancel}>
+          <Button size="header" type="button" onClick={onCancel}>
             Cancel
           </Button>
         )}
-        <Button variant="primary" type="submit" className="onsite-btn" disabled={!submittable}>
+        <Button variant="primary" size="header" type="submit" disabled={!submittable}>
           {busy ? 'Checking out…' : 'Check out'}
         </Button>
       </div>

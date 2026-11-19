@@ -37,7 +37,7 @@ describe('homeCards', () => {
 
   it('gives every card a palette tone', () => {
     const tones = homeCards(camp).map(c => c.tone);
-    expect(tones.every(t => ['neutral', 'brand', 'ok', 'warn', 'crit', 'agent', 'hero'].includes(t))).toBe(true);
+    expect(tones.every(t => ['neutral', 'brand', 'ok', 'warn', 'crit', 'agent'].includes(t))).toBe(true);
   });
 
   it('leaves out a camp fact the viewer may not read', () => {

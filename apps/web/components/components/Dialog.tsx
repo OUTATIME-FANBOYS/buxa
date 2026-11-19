@@ -6,9 +6,9 @@ import { project, reduceMotion, rubberband, springAnimate, VelocityTracker } fro
 import { FOCUSABLE } from '@buxa/shared';
 import { Button } from '@/components/elements';
 
-// The scrim behind a dialog or drawer. Its fade and the panel's pop or slide are keyframes in popover-menu-dialog.css.
+// The scrim behind a dialog or drawer. Its fade and the panel's pop or slide keyframes live in the Tailwind theme.
 const SCRIM =
-  'buxa:fixed buxa:inset-0 buxa:z-[50] buxa:grid buxa:bg-[rgba(15,15,12,0.4)] buxa:[[data-theme=dark]_&]:bg-[rgba(0,0,0,0.6)]';
+  'buxa:fixed buxa:inset-0 buxa:z-[50] buxa:grid buxa:bg-[var(--scrim)] buxa:[[data-theme=dark]_&]:bg-[var(--scrim-dark)]';
 const DIALOG_SCRIM = 'buxa:place-items-center buxa:p-[var(--s4)]';
 const DRAWER_SCRIM =
   'buxa:[backdrop-filter:blur(2px)] buxa:[-webkit-backdrop-filter:blur(2px)] buxa:[place-items:stretch_end] buxa:p-0';

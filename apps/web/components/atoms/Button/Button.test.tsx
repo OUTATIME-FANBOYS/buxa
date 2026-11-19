@@ -12,12 +12,10 @@ describe('Button', () => {
   it.each([
     ['primary', 'button--primary'],
     ['secondary', 'button--secondary'],
-    ['tertiary', 'button--tertiary'],
-    ['outline', 'button--outline'],
     ['ghost', 'button--ghost'],
     ['danger', 'button--danger'],
     ['danger-soft', 'button--danger-soft'],
-  ] as const)('maps the %s variant to its HeroUI class', (variant, cls) => {
+  ] as const)('maps the %s variant to its button class', (variant, cls) => {
     expect(renderToStaticMarkup(<Button variant={variant}>Go</Button>)).toContain(cls);
   });
 
@@ -38,15 +36,16 @@ describe('Button', () => {
     expect(html).toContain('<svg');
   });
 
-  it('keeps the header size as one compact class', () => {
+  it('keeps the header and large sizes as semantic classes', () => {
     expect(
       renderToStaticMarkup(
         <Button variant="primary" size="header">
           Add task
         </Button>,
       ),
-    ).toContain('buxa-button--header');
-    expect(renderToStaticMarkup(<Button variant="primary">Add task</Button>)).not.toContain('buxa-button--header');
+    ).toContain('button--header');
+    expect(renderToStaticMarkup(<Button variant="primary">Add task</Button>)).not.toContain('button--header');
+    expect(renderToStaticMarkup(<Button variant="primary" size="lg">Check in</Button>)).toContain('button--lg');
   });
 
   it('renders a link with the same classes when given an href', () => {

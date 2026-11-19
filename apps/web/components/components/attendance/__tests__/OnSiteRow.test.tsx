@@ -44,7 +44,7 @@ describe('OnSiteRow card', () => {
     const html = renderToStaticMarkup(<OnSiteRow row={row} canRecord canOverride={false} />);
     expect(html).toContain('aria-expanded="false"');
     expect(html).toContain('aria-haspopup="dialog"');
-    expect(html).toMatch(/<button[^>]*class="[^"]*button--primary[^"]*onsite-btn"[^>]*>Check out<\/button>/);
+    expect(html).toMatch(/<button[^>]*class="[^"]*button--primary[^"]*button--header"[^>]*>Check out<\/button>/);
   });
 });
 
@@ -64,8 +64,8 @@ describe('OnSiteRow check-out dialog', () => {
     vi.useFakeTimers();
     act(() => root.render(<OnSiteRow row={row} canRecord canOverride={false} />));
     const trigger = requirePresent(
-      document.querySelector<HTMLButtonElement>('button.onsite-btn'),
-      "document.querySelector<HTMLButtonElement>('button.onsite-btn')",
+      document.querySelector<HTMLButtonElement>('button.button--header'),
+      "document.querySelector<HTMLButtonElement>('button.button--header')",
     );
     expect(document.querySelector('[role="dialog"]')).toBeNull();
 
@@ -95,8 +95,8 @@ describe('OnSiteRow check-out dialog', () => {
     act(() => root.render(<OnSiteRow row={row} canRecord canOverride={false} />));
     act(() => {
       requirePresent(
-        document.querySelector<HTMLButtonElement>('button.onsite-btn'),
-        "document.querySelector<HTMLButtonElement>('button.onsite-btn')",
+        document.querySelector<HTMLButtonElement>('button.button--header'),
+        "document.querySelector<HTMLButtonElement>('button.button--header')",
       ).click();
     });
     const cancel = requirePresent(

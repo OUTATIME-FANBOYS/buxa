@@ -1,12 +1,12 @@
 /* ---------- Buttons ----------
- * Rendered by components/elements/Button.tsx, which is the only place that builds these class names.
+ * Rendered by components/atoms/Button/Button.tsx, which is the only place that builds these class names.
  *
- * The classes button, button--primary, button--outline ... are the app's own names, rendered by atoms/Button.
- * Colours come only from the tokens in tokens.css. The buxa-button classes add Buxa's sizes.
+ * The classes button, button--primary, button--ghost ... are the app's own names, rendered by atoms/Button.
+ * Colours come only from the tokens in tokens.css.
  *
- * Shape: every button is a pill (fully rounded ends), as HeroUI's examples are.
- * Variants: primary (filled accent), secondary (filled surface, edged), tertiary (quieter filled surface),
- * outline (edge only), ghost (text only), danger (filled red), danger-soft (tinted red, red text).
+ * Shape: every button is a pill (fully rounded ends).
+ * Variants: primary (filled accent), secondary (filled surface, edged), ghost (text only),
+ * danger (filled red), danger-soft (tinted red, red text).
  *
  * States: hover (only on a device that hovers), pressed (:active or data-pressed), focus-visible, disabled.
  * Pressed uses the hover fill. Disabled is exempt from contrast (WCAG 1.4.3), so it is only faded.
@@ -61,20 +61,6 @@
   --button-fg: var(--text);
   --button-edge: var(--line);
   box-shadow: var(--shadow-1);
-}
-/* A quieter filled surface: no edge, no shadow, secondary text. */
-.button--tertiary {
-  --button-bg: var(--surface-2);
-  --button-bg-hover: var(--hover);
-  --button-fg: var(--text-2);
-  --button-fg-hover: var(--text);
-}
-/* Border only, on whatever surface it sits on. */
-.button--outline {
-  --button-bg: transparent;
-  --button-bg-hover: var(--hover);
-  --button-fg: var(--text);
-  --button-edge: var(--border);
 }
 /* Text only: quiet actions, navigation-like links, Clear. */
 .button--ghost {
@@ -134,8 +120,13 @@
   height: 30px;
   padding: 0 var(--s3);
 }
+.button--lg {
+  height: 52px;
+  padding: 0 var(--s5);
+  font-size: 16px;
+}
 /* Header actions (New project, New task, Add task, Rename): one compact size on a mouse or keyboard device. */
-.buxa-button--header {
+.button--header {
   height: 36px;
   padding: 0 var(--s4);
 }
@@ -159,7 +150,7 @@
 /* Touch: 44px on a coarse pointer, whatever the desktop size. */
 @media (pointer: coarse) {
   .button--sm,
-  .buxa-button--header,
+  .button--header,
   .button--icon-only {
     height: var(--control-touch);
   }

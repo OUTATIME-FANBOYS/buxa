@@ -44,6 +44,16 @@
   --agent-soft: #efe7f4;
   --agent-ink: #36213e;
   --f-agent: #7b5597;
+  /* Semantic control aliases used by the shared button styles. */
+  --accent-foreground: var(--accent-ink);
+  --accent-hover: var(--accent-deep);
+  --danger: var(--crit);
+  --danger-foreground: var(--on-solid);
+  --danger-hover: var(--crit-ink);
+  --danger-soft: var(--crit-soft);
+  --danger-soft-foreground: var(--crit-ink);
+  --border: var(--control);
+  --focus: var(--accent);
   --f-neutral: #6b7480;
   --neutral-soft: #e0e6eb;
   --neutral-ink: #4a4e5c;
@@ -54,14 +64,12 @@
   --role-guardian-soft: #fbe3f0;
   --role-camper: #7a1b2e;
   --role-camper-soft: #f6e1e5;
-  --role-teacher: #0b5a5e;
-  --role-teacher-soft: #d5eeee;
   --accent-ink: #ffffff;
   --on-solid: #ffffff;
   --on-inverse-accent: #9fd6d7;
-  --coral: #f05d5e;
-  --on-coral: #14161c;
   --on-fill: #14161c;
+  --scrim: rgba(15, 15, 12, 0.4);
+  --scrim-dark: rgba(0, 0, 0, 0.6);
   --hero-bg: #eef1f4;
   --hero-fg: #272932;
   --hero-fg-2: #4a4e5c;
@@ -100,7 +108,7 @@
   --fs-b: 0.875rem;
   --fs-h: 1.375rem;
   --fs-n: 1.75rem;
-  --control-h: 44px; /* one height for inputs, selects and buttons; 44px is also the touch target */
+  --control-h: 44px; /* default height for inputs, selects and buttons */
   --control-compact: 36px; /* denser controls on a mouse or keyboard device (the Add person form); coarse pointers keep 44px */
   --control-touch: 44px;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -149,13 +157,9 @@
   --role-guardian-soft: #3f1d33;
   --role-camper: #e7a0ab;
   --role-camper-soft: #3d1d24;
-  --role-teacher: #7fd6d0;
-  --role-teacher-soft: #173a3b;
   --accent-ink: #1e2026;
   --on-solid: #1e2026;
   --on-inverse-accent: #7a2e12;
-  --coral: #f05d5e;
-  --on-coral: #14161c;
   --on-fill: #14161c;
   --hero-bg: #1b1f29;
   --hero-fg: #e7ecef;
@@ -194,14 +198,18 @@
   --tone-f: var(--f-brand);
 }
 .tone-ok,
-.pill-ok {
+.pill-ok,
+.tone-role-staff,
+.pill-role-staff {
   --tone: var(--ok);
   --tone-soft: var(--ok-soft);
   --tone-ink: var(--ok-ink);
   --tone-f: var(--f-ok);
 }
 .tone-warn,
-.pill-warn {
+.pill-warn,
+.tone-role-admin,
+.pill-role-admin {
   --tone: var(--warn);
   --tone-soft: var(--warn-soft);
   --tone-ink: var(--warn-ink);
@@ -229,20 +237,6 @@
   --tone-ink: var(--agent-ink);
   --tone-f: var(--f-agent);
 }
-.tone-role-admin,
-.pill-role-admin {
-  --tone: var(--warn);
-  --tone-soft: var(--warn-soft);
-  --tone-ink: var(--warn-ink);
-  --tone-f: var(--f-warn);
-}
-.tone-role-staff,
-.pill-role-staff {
-  --tone: var(--ok);
-  --tone-soft: var(--ok-soft);
-  --tone-ink: var(--ok-ink);
-  --tone-f: var(--f-ok);
-}
 .tone-role-viewer,
 .pill-role-viewer {
   --tone: var(--role-viewer);
@@ -264,12 +258,4 @@
   --tone-soft: var(--role-camper-soft);
   --tone-ink: var(--role-camper);
   --tone-f: var(--role-camper);
-}
-/* hero: the same violet family, for highlights that are not AI activity */
-.tone-hero,
-.pill-hero {
-  --tone: var(--agent);
-  --tone-soft: var(--agent-soft);
-  --tone-ink: var(--agent-ink);
-  --tone-f: var(--f-agent);
 }
