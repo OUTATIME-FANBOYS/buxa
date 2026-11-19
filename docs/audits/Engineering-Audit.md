@@ -28,6 +28,6 @@ Periodic reviews of the codebase live in this folder, each with its findings and
 
 **Skills:** use `andrej-karpathy-skills:karpathy-guidelines` to judge every change for surgical scope and checkable success, and `jony-ive` to judge the UI and component design against purpose, restraint and consistent spacing and type.
 
-Use `mattpocock-skills:improve-codebase-architecture` for the architecture review: find shallow modules and seams that should be deepened, and propose the change before making it.
+Use `mattpocock-skills:improve-codebase-architecture` for the architecture review: find shallow modules and seams that should be deepened, and propose the change before making it. That skill is user-only, so the owner triggers it and the audit works from its output. Use `mattpocock-skills:codebase-design` for the shared vocabulary (deep modules, seams, adapters) when judging the findings.
 
 **Output:** one file per audit, named `YYYY-MM-DD-principal-audit.md`, with findings ranked by impact, the evidence for each, the proposed change, and the decision (accepted, deferred or rejected).
