@@ -4,6 +4,16 @@ import { InMemoryStore } from '../../__tests__/fakes';
 import { isHttpError } from '../../http/errors';
 import { createOrgService } from '../orgs';
 
+/** The camp row the test expects to exist; a missing one fails the test with a clear message. */
+function orgOf<T>(orgs: Map<string, T>, orgId: string): T {
+  const org = orgs.get(orgId);
+  if (!org) {
+    throw new Error(`no camp ${orgId} in the store`);
+  }
+
+  return org;
+}
+
 const OWNER = '00000000-0000-4000-8000-0000000000a1';
 const ADMIN = '00000000-0000-4000-8000-0000000000a2';
 const VIEWER = '00000000-0000-4000-8000-0000000000a3';
@@ -37,7 +47,7 @@ describe('archive camp', () => {
     const result = await service.archiveCamp(as(OWNER, 'owner'), orgId);
 
     expect(result.archivedAt).toEqual(expect.any(String));
-    expect(store.orgs.get(orgId)!.archivedAt).toBe(result.archivedAt);
+    expect(orgOf(store.orgs, orgId).archivedAt).toBe(result.archivedAt);
     expect(store.orgs.has(orgId)).toBe(true);
     expect(store.members.filter(m => m.orgId === orgId)).toHaveLength(3);
   });
@@ -48,7 +58,7 @@ describe('archive camp', () => {
     const error = await refusal(service.archiveCamp(as(userId, role), orgId));
 
     expect(isHttpError(error) && error.statusCode).toBe(403);
-    expect(store.orgs.get(orgId)!.archivedAt).toBeNull();
+    expect(orgOf(store.orgs, orgId).archivedAt).toBeNull();
   });
 
   it('records the archive in the audit log', async () => {
@@ -154,8 +164,8 @@ describe('unarchive camp', () => {
 
     await service.unarchiveCamp({ ...as(OWNER, 'owner'), archived: true }, orgId);
 
-    expect(store.orgs.get(orgId)!.archivedAt).toBeNull();
-    expect(store.orgs.get(orgId)!.name).toBe(NAME);
+    expect(orgOf(store.orgs, orgId).archivedAt).toBeNull();
+    expect(orgOf(store.orgs, orgId).name).toBe(NAME);
     expect(store.members.filter(m => m.orgId === orgId)).toHaveLength(3);
     expect((await store.membershipsOf(OWNER)).map(m => m.orgId)).toContain(orgId);
     expect(await service.listArchivedCamps(OWNER)).toEqual([]);
@@ -179,7 +189,7 @@ describe('unarchive camp', () => {
     const error = await refusal(service.unarchiveCamp({ ...as(userId, role), archived: true }, orgId));
 
     expect(isHttpError(error) && error.statusCode).toBe(403);
-    expect(store.orgs.get(orgId)!.archivedAt).not.toBeNull();
+    expect(orgOf(store.orgs, orgId).archivedAt).not.toBeNull();
   });
 
   it('refuses a camp that is not archived, with a clear message, and changes nothing', async () => {
@@ -189,7 +199,7 @@ describe('unarchive camp', () => {
 
     expect(isHttpError(error) && error.statusCode).toBe(409);
     expect(error).toMatchObject({ message: 'This camp is not archived' });
-    expect(store.orgs.get(orgId)!.archivedAt).toBeNull();
+    expect(orgOf(store.orgs, orgId).archivedAt).toBeNull();
     expect(store.audit.filter(a => a.action === 'org.unarchive')).toHaveLength(0);
   });
 });
