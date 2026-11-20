@@ -6,6 +6,7 @@ import { TaskTopBar } from '@/components/components/kanban/topbar';
 import { WorkArea } from '@/components/views/kanban';
 import { getCurrentCamp, requireSession } from '@buxa/server/session/index';
 import { listArchivedCamps } from '@/actions/camp';
+import { loadNotifications } from '@buxa/server/composers/notifications/loadNotifications';
 
 /**
  * The shell for the work pages: home, tasks, projects, boards, calendar, agents and reports.
@@ -19,6 +20,7 @@ export default async function WorkLayout({ children }: { children: ReactNode }) 
   const archivedCamps = await listArchivedCamps();
   // An archived camp opens read-only: the store and the services refuse every write, and the page shows the banner.
   const archived = camp?.archived ?? false;
+  const notifications = await loadNotifications();
 
   return (
     <WorkArea user={user} campRole={camp?.role ?? null} archived={archived}>
@@ -26,7 +28,13 @@ export default async function WorkLayout({ children }: { children: ReactNode }) 
         role={camp?.role ?? null}
         archived={archived}
         topBarStart={<CampSwitcher camps={session.memberships} current={camp} archivedCamps={archivedCamps} />}
-        topBarEnd={<TaskTopBar account={<AccountMenu user={session.user} />} />}
+        topBarEnd={
+          <TaskTopBar
+            account={<AccountMenu user={session.user} />}
+            items={notifications.rows}
+            unread={notifications.unread}
+          />
+        }
       >
         {children}
       </WorkFrame>

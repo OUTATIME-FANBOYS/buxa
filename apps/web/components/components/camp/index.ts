@@ -1,4 +1,5 @@
 export * from './AccountMenu';
+export * from './HeaderTools';
 export * from './ArchivedBanner';
 export * from './CampSwitcher';
 export * from './MembersTable';

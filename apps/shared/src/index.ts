@@ -79,5 +79,6 @@ export * from './classes/importState';
 export * from './classes/localTime';
 export * from './classes/parse';
 export * from './classes/sessionDeletion';
+export * from './notifications/notifications';
 export * from './registration/copy';
 export * from './registration/parse';
