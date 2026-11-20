@@ -20,7 +20,7 @@ const TARGET_ARGUMENTS: Record<string, string[]> = {
 /**
  * The v0.2.3 overloads, kept by the expand step (migration 0032) for the release still serving. They take the user as an
  * argument, which the rule above forbids, so each is listed here with its name and argument count. The contract step
- * (packages/db/pending/0033_session_membership_contract.sql) drops them; this list must then be emptied, and the stale-entry
+ * (packages/db/migrations/0034_session_membership_contract.sql) drops them; this list must then be emptied, and the stale-entry
  * check below fails until it is.
  */
 const LEGACY_UNTIL_CONTRACT = new Set([

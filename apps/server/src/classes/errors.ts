@@ -63,7 +63,7 @@ export class ClassHasEnrolmentsError extends Error {
 
 export const SESSION_HAS_CLASSES_MESSAGE = 'This session has classes. Delete them first.';
 
-/** A session (the parent) that still holds classes cannot be deleted. Migration 0033 refuses it at the database too. */
+/** A session (the parent) that still holds classes cannot be deleted. Migration 0035 refuses it at the database too. */
 export class SessionHasClassesError extends Error {
   readonly kind = 'session-has-classes';
   constructor() {

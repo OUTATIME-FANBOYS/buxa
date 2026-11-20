@@ -110,7 +110,7 @@ export async function updateSessionRow(
 }
 
 /**
- * Deletes a session through buxa_delete_session_v2 (migration 0033). The database refuses a session that holds classes; the app
+ * Deletes a session through buxa_delete_session_v2 (migration 0035). The database refuses a session that holds classes; the app
  * checks classes:manage with authorize() before it calls this. Audits `session.delete`.
  */
 export async function deleteSessionRow(db: Db, actor: Actor, sessionId: string, name: string): Promise<void> {

@@ -48,7 +48,7 @@ export function translateClassWriteError(error: unknown): unknown {
   return error;
 }
 
-/** Turns the errors of a session delete into domain errors: a session that holds classes (migration 0033), or one not in the camp. */
+/** Turns the errors of a session delete into domain errors: a session that holds classes (migration 0035), or one not in the camp. */
 export function translateSessionDeleteError(error: unknown): unknown {
   if (isPgError(error, FOREIGN_KEY_VIOLATION, 'classes_has_classes')) {
     return new SessionHasClassesError();

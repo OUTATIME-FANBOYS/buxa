@@ -5,7 +5,7 @@
 --   - The new functions take the signed-in user from current_user_id() (app.user_id, set by withOrg), not from an argument.
 --     They are overloads of the old names where the argument list differs, or _v2 names where it does not.
 --   - The row policies are unchanged. They stop trusting a bare app.org_id only in the contract step (migration pending in
---     packages/db/pending/0033_session_membership_contract.sql), after the old release is retired.
+--     packages/db/migrations/0034_session_membership_contract.sql), after the old release is retired.
 -- Until then the old SECURITY DEFINER functions still accept a user id argument; that is the open part of audit 5.1.
 -- The one drop below is of buxa_set_member_option from 0030, which has not shipped, so no released code calls it.
 -- drop-approved: v0.3

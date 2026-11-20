@@ -6,7 +6,7 @@ const url = process.env.DATABASE_URL;
 
 // The expand step (migration 0032) must keep every function the released v0.2.3 code calls, with the same arguments, so that
 // sign-in, camp archive and delete, rename and class edits keep working while both releases run. This test fails if one is
-// dropped or changed. It goes when the contract step (packages/db/pending/0033) drops them on purpose.
+// dropped or changed. It goes when the contract step (packages/db/migrations/0034) drops them on purpose.
 const RELEASED_CALLS: [name: string, args: string][] = [
   ['buxa_memberships_of', 'p_user_id uuid'],
   ['buxa_archived_camps_of', 'p_user_id uuid'],

@@ -4,11 +4,11 @@ import pg from 'pg';
 import { migrate, withOrg } from '../src';
 import { memberOf } from './support';
 
-// Migration 0033: a session (a row of `classes`) that holds a class cannot be deleted, at the database. The foreign key from
+// Migration 0035: a session (a row of `classes`) that holds a class cannot be deleted, at the database. The foreign key from
 // sessions cascades, so the trigger is what refuses it. These need a real Postgres (DATABASE_URL).
 const url = process.env.DATABASE_URL;
 
-describe.skipIf(!url)('session delete guard (migration 0033)', () => {
+describe.skipIf(!url)('session delete guard (migration 0035)', () => {
   const pool = new pg.Pool({ connectionString: url });
   const tag = randomBytes(6).toString('hex');
   let org = '';

@@ -38,8 +38,8 @@ const cls = {
   minAge: '8',
   maxAge: '12',
   capacity: '12',
-  startsAt: '2027-07-05T09:00',
-  endsAt: '2027-07-05T12:00',
+  startsAt: '2027-07-04T23:00:00.000Z',
+  endsAt: '2027-07-05T02:00:00.000Z',
   location: 'Lab 1',
 };
 const classOk = { ok: true, value: { id: IDS.cls, sessionId: IDS.session } };
@@ -68,6 +68,7 @@ describe('createSessionAction (the date range)', () => {
       startsOn: '2027-07-01',
       endsOn: '2027-07-14',
       price: null,
+      isPublic: false,
     });
   });
 
@@ -94,7 +95,7 @@ describe('addClassAction (the time range and the camp size)', () => {
     h.classes.addClass.mockResolvedValue(classOk);
   });
 
-  it('reads the class times in the camp zone and adds the class to the session', async () => {
+  it('takes the posted class instants and adds the class to the session', async () => {
     const state = await addClassAction(idle, formOf(cls));
     expect(state).toEqual({ status: 'success', message: 'Class added.' });
     expect(h.classes.addClass).toHaveBeenCalledWith(
@@ -139,7 +140,7 @@ describe('addClassAction (the time range and the camp size)', () => {
     const state = await addClassAction(idle, formOf({ ...cls, startsAt: 'tomorrow morning' }));
     expect(state).toMatchObject({
       status: 'error',
-      fieldErrors: { startsAt: 'Use the format 2027-07-05T09:00 (camp time).' },
+      fieldErrors: { startsAt: 'That date or time does not exist. Choose another.' },
     });
     expect(h.classes.addClass).not.toHaveBeenCalled();
   });

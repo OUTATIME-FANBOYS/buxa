@@ -158,7 +158,9 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0030_member_options.sql',
       '0031_registration_confirmation.sql',
       '0032_session_membership.sql',
-      '0033_session_delete_guard.sql',
+      '0033_teacher_calendar_tokens.sql',
+      '0034_session_membership_contract.sql',
+      '0035_session_delete_guard.sql',
     ]);
   });
 
