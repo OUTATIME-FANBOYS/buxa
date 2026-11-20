@@ -33,7 +33,7 @@ describe('CalendarView', () => {
 
   it('shows the month of the cursor and a six-week grid of days with Monday first', () => {
     const html = renderToStaticMarkup(<CalendarView tasks={[]} canCreate={false} />);
-    expect(html).toContain('<h2>July 2027</h2>');
+    expect(html).toContain('<h2 class="sr-only">July 2027</h2>');
     expect(html.match(/role="gridcell"/g)).toHaveLength(42);
     expect(html.indexOf('>Mon<')).toBeLessThan(html.indexOf('>Sun<'));
     expect(html).toContain('aria-label="Previous month"');

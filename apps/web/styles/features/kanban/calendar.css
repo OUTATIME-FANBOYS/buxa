@@ -5,6 +5,33 @@
   gap: var(--s2);
   margin-bottom: var(--s3);
 }
+/* The month and year pickers in the heading: glass pills (the header buttons' recipe) on one line, 30px high, 44px on a touch screen. */
+.cal-jump {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+.cal-jump .select-field {
+  width: auto;
+}
+.cal-jump select {
+  height: 30px;
+  width: auto;
+  padding: 0 var(--s4) 0 var(--s3);
+  border: 0;
+  border-radius: 999px;
+  background-color: var(--hue-grey-soft);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  backdrop-filter: blur(12px) saturate(160%);
+  color: var(--text);
+  font-weight: 600;
+}
+@media (pointer: coarse) {
+  .cal-jump select {
+    height: 44px;
+  }
+}
 .calendar,
 .timeline {
   display: grid;

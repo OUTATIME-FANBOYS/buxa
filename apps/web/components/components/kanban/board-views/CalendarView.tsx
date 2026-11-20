@@ -5,6 +5,7 @@ import type { Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
 import { Button } from '@/components/elements';
+import { MonthYearJump } from './MonthYearJump';
 import { PriorityIcon } from '@/components/atoms/Icon';
 import { fmt, parse, toISO, today } from '@buxa/shared';
 
@@ -70,7 +71,8 @@ export function CalendarView({
   return (
     <div className="calendar">
       <div className="cal-head">
-        <h2>{cursor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</h2>
+        <h2 className="sr-only">{cursor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</h2>
+        <MonthYearJump cursor={cursor} onMove={setCursor} />
         <span className="grow" />
         <Button size="sm" onClick={() => setCursor(monthStart(new Date()))}>
           Today
