@@ -22,9 +22,10 @@ const services = vi.hoisted(() => ({
     getClass: vi.fn(),
     listSessions: vi.fn(),
     listEnrolments: vi.fn(),
+    listTeacherAssignments: vi.fn(),
   },
   people: { list: vi.fn() },
-  orgs: { getCamp: vi.fn() },
+  orgs: { getCamp: vi.fn(), listMembers: vi.fn() },
 }));
 const session = vi.hoisted<{ role: Role | null }>(() => ({ role: 'staff' }));
 const notFound = vi.hoisted(() =>
@@ -101,6 +102,8 @@ beforeEach(() => {
     throw new Error('NEXT_NOT_FOUND');
   });
   services.orgs.getCamp.mockResolvedValue({ timezone: TIME_ZONE });
+  services.classes.listTeacherAssignments.mockResolvedValue({ ok: true, value: [] });
+  services.orgs.listMembers.mockResolvedValue({ members: [] });
   services.classes.getSession.mockResolvedValue({ ok: true, value: parent });
   services.classes.getClass.mockResolvedValue({ ok: true, value: painting });
   services.classes.listClasses.mockResolvedValue({ ok: true, value: [painting] });

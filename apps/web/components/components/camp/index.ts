@@ -16,3 +16,4 @@ export * from './ArchivedCampsCard';
 export * from './DangerZone';
 export * from './DeleteCampButton';
 export * from './useAppearance';
+export * from './CalendarLinkCard';

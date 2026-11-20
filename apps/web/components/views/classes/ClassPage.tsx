@@ -6,9 +6,22 @@ import { Empty, PageHeader } from '@/components/components';
 import { campClock } from '@buxa/server/composers/index.server';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_ENROLMENTS, FORBIDDEN_READ } from '@buxa/shared';
-import { loadSessionPage, loadEnrolments, loadPeopleWithRole } from '@buxa/server/composers/index.server';
+import {
+  loadSessionPage,
+  loadEnrolments,
+  loadPeopleWithRole,
+  loadTeacherAssignments,
+  loadMembers,
+} from '@buxa/server/composers/index.server';
 import { ClassesTable, EnrolmentTable, instructorNames, PriceFact } from '@/components/components/classes';
-import { EnrolForm, NewClassButton, SessionPriceButton } from '@/components/components/classes/forms';
+import {
+  EnrolForm,
+  NewClassButton,
+  RecurringSeriesButton,
+  SessionPriceButton,
+  SessionPublicToggle,
+  TeacherAssignments,
+} from '@/components/components/classes/forms';
 import { formatCampDateTime } from '@buxa/shared';
 import { Button } from '@/components/elements';
 
@@ -54,6 +67,16 @@ export async function ClassPage({
   const selected = classes.find(c => c.id === selectedId) ?? null;
   const instructors = canManage ? await loadPeopleWithRole(actor, 'instructor') : null;
   const instructorChoices = instructors?.ok ? instructors.value.map(i => ({ id: i.id, name: i.name })) : [];
+  // The teacher list and each class's assigned teachers, for the teachers panel (staff and admins only).
+  const teacherMembers = canManage ? (await loadMembers(actor)).members.filter(m => m.role === 'teacher') : [];
+  const teacherChoices = teacherMembers.map(t => ({ id: t.id, name: t.name }));
+  const assignments = canManage ? await loadTeacherAssignments(actor, sessionId) : null;
+  const assignedByClass = assignments?.ok ? assignments.value : [];
+  const classTeachers = classes.map(c => ({
+    id: c.id,
+    name: c.name,
+    teacherIds: assignedByClass.filter(a => a.classId === c.id).map(a => a.userId),
+  }));
 
   const enrolments = selected ? await loadEnrolments(actor, selected.id) : null;
   const campers = selected && canManage ? await loadPeopleWithRole(actor, 'camper') : null;
@@ -72,12 +95,15 @@ export async function ClassPage({
         subtitle={session.description || 'No description yet.'}
         actions={
           canManage && (
-            <NewClassButton
-              sessionId={session.id}
-              sessionName={session.name}
-              timeZone={timeZone}
-              instructors={instructorChoices}
-            />
+            <>
+              <RecurringSeriesButton sessionId={session.id} />
+              <NewClassButton
+                sessionId={session.id}
+                sessionName={session.name}
+                timeZone={timeZone}
+                instructors={instructorChoices}
+              />
+            </>
           )
         }
       />
@@ -93,6 +119,8 @@ export async function ClassPage({
           action={canManage && <SessionPriceButton sessionId={session.id} price={session.price} />}
         />
       </dl>
+
+      {canManage && <SessionPublicToggle sessionId={session.id} isPublic={session.isPublic} />}
 
       <section aria-labelledby="classes-heading" className="stack">
         <h2 id="classes-heading" className="people-subheading">
@@ -132,6 +160,15 @@ export async function ClassPage({
           />
         )}
       </section>
+
+      {canManage && classes.length > 0 && (
+        <section aria-labelledby="teachers-heading" className="stack">
+          <h2 id="teachers-heading" className="people-subheading">
+            Teachers
+          </h2>
+          <TeacherAssignments sessionId={session.id} classes={classTeachers} teachers={teacherChoices} />
+        </section>
+      )}
 
       {selected && (
         <section id="enrolments" aria-labelledby="enrolments-heading" className="stack classes-enrolments">
