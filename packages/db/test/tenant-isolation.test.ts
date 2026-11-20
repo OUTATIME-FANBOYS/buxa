@@ -69,7 +69,7 @@ describe.skipIf(!url)('tenant isolation (row-level security)', () => {
 
   it('with no organisation set, every tenant table is empty', async () => {
     await withOrg(pool, ua, null, async db => {
-      for (const t of ['orgs', 'users', 'org_members', 'audit_log', 'member_calendar_tokens']) {
+      for (const t of ['orgs', 'users', 'org_members', 'audit_log', 'member_calendar_tokens', 'member_invites']) {
         expect((await db.query<Row>(`SELECT 1 FROM ${t}`)).rowCount).toBe(0);
       }
     });

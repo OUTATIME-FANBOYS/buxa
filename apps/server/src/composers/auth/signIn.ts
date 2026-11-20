@@ -1,7 +1,8 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { ROUTES } from '@buxa/shared/config/routes';
+import { safeNext } from '@buxa/shared/invites/invitePath';
+import { text } from '@buxa/shared';
 import { failure, type ActionState } from '@buxa/shared';
 import { isServiceRefused } from '../../availability';
 import { requestSessionClient } from '../../session/nextClient';
@@ -26,5 +27,6 @@ export async function signIn(_previous: ActionState, formData: FormData): Promis
   if (error) {
     return failure(describeSignInError(error.message));
   }
-  redirect(ROUTES.camp);
+  // An invite link sends the person back to it after sign-in; any other value goes to the camp home.
+  redirect(safeNext(text(formData, 'next')));
 }

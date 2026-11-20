@@ -26,7 +26,7 @@ const MATRIX: Record<Action, string> = {
   'org:transfer_ownership': '...Y.',
   'members:read': 'YYYY.',
   'members:read_contact': '..YY.',
-  'members:invite': '..YY.',
+  'members:invite': '.YYY.',
   'members:change_role': '..YY.',
   'members:set_options': '..YY.',
   'members:remove': '..YY.',
@@ -186,7 +186,8 @@ describe('fail closed', () => {
     expect(authorize(as('owner'), 'org:transfer_ownership')).toEqual({ allow: false, reason: 'missing_context' });
   });
   it('a role the grant table denies cannot be rescued by context', () => {
-    expect(can(as('staff'), 'members:invite', { newRole: 'viewer' })).toBe(false);
+    expect(can(as('viewer'), 'members:invite', { newRole: 'teacher' })).toBe(false);
+    expect(can(as('teacher'), 'members:invite', { newRole: 'teacher' })).toBe(false);
     expect(can(as('viewer'), 'members:remove', { target: { userId: 'u', role: 'viewer' } })).toBe(false);
   });
 });

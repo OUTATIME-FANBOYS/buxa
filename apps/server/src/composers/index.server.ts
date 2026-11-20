@@ -35,3 +35,5 @@ export * from './classes/load';
 export * from './classes/errorReportResponse';
 export * from './classes/templateResponse';
 export * from './registration/loadRegistration';
+export * from './invites/loadInvitePage';
+export * from './invites/loadOutbox';

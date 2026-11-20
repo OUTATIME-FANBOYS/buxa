@@ -13,6 +13,8 @@ const schema = z
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1).optional(),
     DB_POOL_MAX: z.coerce.number().int().min(1).max(50).default(10),
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
+    // Shows the dev outbox (invite emails, not sent). Off unless set to 1; production never sets it.
+    ENABLE_DEV_OUTBOX: z.enum(['0', '1']).default('0'),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV === 'production' && !env.NEXT_PUBLIC_SUPABASE_URL) {
@@ -32,6 +34,8 @@ export interface Config {
   /** Maximum database connections this instance opens. Keep (instances x this) under the database or pooler limit. */
   dbPoolMax: number;
   logLevel: LogLevel;
+  /** True only when ENABLE_DEV_OUTBOX is 1. The dev outbox page answers not-found otherwise. */
+  devOutboxEnabled: boolean;
 }
 
 /** Reads and validates the environment once, so a bad deploy fails immediately and says why. Secrets are never echoed back. */
@@ -58,5 +62,6 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     supabasePublishableKey: e.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     dbPoolMax: e.DB_POOL_MAX,
     logLevel: e.LOG_LEVEL,
+    devOutboxEnabled: e.ENABLE_DEV_OUTBOX === '1',
   };
 }
