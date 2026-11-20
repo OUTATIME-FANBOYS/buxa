@@ -20,7 +20,6 @@ import {
   NewClassButton,
   RecurringSeriesButton,
   SessionPriceButton,
-  SessionPublicToggle,
   TeacherAssignments,
 } from '@/components/components/classes/forms';
 import { formatCampDateTime } from '@buxa/shared';
@@ -116,8 +115,6 @@ export async function ClassPage({
           action={canManage && <SessionPriceButton sessionId={session.id} price={session.price} />}
         />
       </dl>
-
-      {canManage && <SessionPublicToggle sessionId={session.id} isPublic={session.isPublic} />}
 
       <section aria-labelledby="classes-heading" className="stack">
         <h2 id="classes-heading" className="people-subheading">

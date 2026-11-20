@@ -26,14 +26,7 @@ export function NewClassButton({
 
   return (
     <>
-      <Button
-        variant="primary"
-        type="button"
-        icon="plus"
-        className="classes-target"
-        aria-haspopup="dialog"
-        onClick={() => setOpen(true)}
-      >
+      <Button variant="glass" size="sm" type="button" icon="plus" aria-haspopup="dialog" onClick={() => setOpen(true)}>
         New class
       </Button>
       {open && (

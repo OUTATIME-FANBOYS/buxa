@@ -159,6 +159,23 @@ form.class-form {
   gap: var(--s2);
 }
 
+/* The selection bar above the sessions table: the count, then Clear and Delete selected. */
+.session-selection {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s2) var(--s3);
+  margin-bottom: var(--s3);
+  border-radius: var(--r-2);
+  background: var(--surface-2);
+}
+.session-selection__count {
+  margin: 0;
+  font-weight: 600;
+}
+
 /* Instructors: the chosen ones as tags in a box of fixed height that scrolls, so the dialog does not grow with each one. */
 .instructor-tags {
   display: flex;

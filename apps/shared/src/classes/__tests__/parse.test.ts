@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { classForm, sessionForm, cancelForm, enrolForm, numberField } from '../parse';
+import { classForm, sessionEditForm, sessionForm, cancelForm, enrolForm, numberField } from '../parse';
 import { WHOLE_NUMBER } from '../copy';
 
 function formOf(values: Record<string, string | string[]>): FormData {
@@ -122,6 +122,18 @@ describe('sessionForm: the public flag', () => {
 
   it('keeps the session private when the box is not ticked, as an unticked box posts nothing', () => {
     expect(sessionForm(formOf(SESSION))).toMatchObject({ ok: true, data: { isPublic: false } });
+  });
+});
+
+describe('sessionEditForm: the public flag', () => {
+  const EDIT = { sessionId: 'x', name: 'Winter', description: '', startsOn: '2027-07-05', endsOn: '2027-07-12' };
+
+  it('saves the public flag from the Edit session dialog when the box is ticked', () => {
+    expect(sessionEditForm(formOf({ ...EDIT, isPublic: 'on' }))).toMatchObject({ ok: true, data: { isPublic: true } });
+  });
+
+  it('clears the public flag when the box is unticked', () => {
+    expect(sessionEditForm(formOf(EDIT))).toMatchObject({ ok: true, data: { isPublic: false } });
   });
 });
 

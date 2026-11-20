@@ -111,6 +111,21 @@
 .cal-more {
   justify-self: start;
 }
+/* The "+N" pill: a small glass chip, so it reads as a count and not as a task. */
+.cal-cell .cal-more {
+  min-height: 22px;
+  height: 22px;
+  padding: 0 var(--s2);
+  font-size: var(--fs-s);
+}
+/* A day expanded past its preview: every task, in a list that scrolls inside the cell rather than growing the grid. */
+.cal-day-list {
+  display: grid;
+  gap: 3px;
+  align-content: start;
+  max-height: 220px;
+  overflow-y: auto;
+}
 /* Each chip's 1px border is the colour of its priority token, the same one the priority icon takes. Done chips keep it, muted by
  * the opacity above. */
 .cal-task.cal-prio-critical {

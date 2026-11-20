@@ -44,6 +44,35 @@
 .c-check {
   width: 44px;
 }
+/* The My tasks table (ListView with its project shown): fixed column widths so Status, Priority, Assignee and Due line up under their
+ * headers whatever the title length. Task takes the room left over, and a long title ends in an ellipsis. Rows are compact. */
+.task-table {
+  table-layout: fixed;
+}
+.task-table td {
+  padding: var(--s2) var(--s3);
+  overflow: hidden;
+}
+.task-table .c-status {
+  width: 170px;
+}
+.task-table .c-prio {
+  width: 150px;
+}
+.task-table .c-who {
+  width: 200px;
+}
+.task-table .c-due {
+  width: 120px;
+}
+.task-table .row-title {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .row-title {
   font-weight: 600;
   text-align: left;

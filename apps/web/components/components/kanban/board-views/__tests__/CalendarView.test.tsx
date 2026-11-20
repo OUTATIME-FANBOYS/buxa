@@ -57,18 +57,21 @@ describe('CalendarView', () => {
     const html = renderToStaticMarkup(<CalendarView tasks={[base]} canCreate={false} />);
     expect(html).toMatch(/class="[^"]*cal-task cal-prio-critical[ "]/);
   });
-  it('shows the first three tasks of a day and a "+1 more" control for a fourth', () => {
-    const tasks = dayTasks(4);
-    const html = renderToStaticMarkup(<CalendarView tasks={tasks} canCreate={false} />);
-    expect(countChips(html)).toBe(3);
-    expect(html).toContain('+1 more');
-    expect(html).toContain('button--glass');
+  it('shows every task of a day with five or fewer, and no control', () => {
+    const html = renderToStaticMarkup(<CalendarView tasks={dayTasks(5)} canCreate={false} />);
+    expect(countChips(html)).toBe(5);
+    expect(html).not.toContain('cal-more');
   });
-  it('shows the first three tasks of a day and a "+4 more" control for a seventh', () => {
-    const tasks = dayTasks(7);
-    const html = renderToStaticMarkup(<CalendarView tasks={tasks} canCreate={false} />);
-    expect(countChips(html)).toBe(3);
-    expect(html).toContain('+4 more');
+  it('shows the first five tasks of a day and a "+1" control for a sixth', () => {
+    const html = renderToStaticMarkup(<CalendarView tasks={dayTasks(6)} canCreate={false} />);
+    expect(countChips(html)).toBe(5);
+    expect(html).toMatch(/class="button button--glass button--sm cal-more"[^>]*>\+1</);
+    expect(html).toContain('aria-label="1 more tasks"');
+  });
+  it('shows the first five tasks of a day and a "+2" control for a seventh', () => {
+    const html = renderToStaticMarkup(<CalendarView tasks={dayTasks(7)} canCreate={false} />);
+    expect(countChips(html)).toBe(5);
+    expect(html).toMatch(/cal-more"[^>]*>\+2</);
   });
   it('leaves every pill untinted: its body is the surface, and only the priority icon carries colour', () => {
     const base = { ...seed.tasks[0], priority: 'high' as const, due: '2027-07-10' };

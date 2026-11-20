@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
-import { Empty, PageHeader } from '@/components/components';
+import { Empty, PageHeader, Toast } from '@/components/components';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_READ } from '@buxa/shared';
 import { loadSessions } from '@buxa/server/composers/index.server';
@@ -11,9 +11,10 @@ import { Button } from '@/components/elements';
 
 /**
  * The camp's sessions: each one a date range that holds classes. Anyone who can read classes sees them; only staff with
- * classes:manage see the create and import buttons.
+ * classes:manage see the create, import, edit and delete controls. `deletedName` is set when a session was just deleted (from
+ * `?deleted=`), and shows a toast.
  */
-export async function ClassList() {
+export async function ClassList({ deletedName = null }: { deletedName?: string | null } = {}) {
   const actor = await currentActor();
   if (!actor) {
     notFound();
@@ -47,8 +48,9 @@ export async function ClassList() {
           action={canManage && <NewSessionButton />}
         />
       ) : (
-        <SessionsTable sessions={loaded.value} />
+        <SessionsTable sessions={loaded.value} canManage={canManage} />
       )}
+      {deletedName && <Toast key={deletedName} message={`Deleted "${deletedName}".`} />}
     </div>
   );
 }

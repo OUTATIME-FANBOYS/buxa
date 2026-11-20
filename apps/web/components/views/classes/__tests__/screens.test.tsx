@@ -45,7 +45,6 @@ vi.mock('@/actions/classes', () => ({
   deleteSessionAction: vi.fn(),
   enrolAction: vi.fn(),
   cancelEnrolmentAction: vi.fn(),
-  setSessionPublicAction: vi.fn(),
   addRecurringClassesAction: vi.fn(),
   setTeachersAction: vi.fn(),
   importClassesAction: vi.fn(),
@@ -146,6 +145,17 @@ describe('ClassList (the Sessions page)', () => {
     services.classes.listSessions.mockRejectedValue(forbidden('nope'));
     const html = render(await ClassList());
     expect(html).toContain('You cannot see sessions');
+  });
+
+  it('shows the deleted toast when the list is opened after a delete', async () => {
+    const html = render(await ClassList({ deletedName: 'Art' }));
+    expect(html).toContain('role="status"');
+    expect(html).toContain('Deleted &quot;Art&quot;.');
+  });
+
+  it('shows no toast when nothing was just deleted', async () => {
+    const html = render(await ClassList());
+    expect(html).not.toContain('Deleted &quot;');
   });
 });
 

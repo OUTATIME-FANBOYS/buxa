@@ -25,14 +25,14 @@ function tasks(count: number) {
   }));
 }
 
-/** The chips and the "+N more" / "Show less" control inside the day cell that holds the due date. */
+/** The chips and the "+N" / "Show less" control inside the day cell that holds the due date. */
 const dayCell = (container: HTMLElement) =>
   Array.from(container.querySelectorAll<HTMLElement>('[role="gridcell"]')).find(c => c.classList.contains('today'));
 const chipsIn = (cell: HTMLElement | undefined) => cell?.querySelectorAll('.cal-task').length ?? 0;
 const controlIn = (cell: HTMLElement | undefined, label: string) =>
   Array.from(cell?.querySelectorAll('button') ?? []).find(b => b.textContent === label);
 
-describe('CalendarView "+N more" expands the day in place', () => {
+describe('CalendarView: a day past five tasks', () => {
   let container: HTMLDivElement;
   let root: Root;
 
@@ -54,29 +54,35 @@ describe('CalendarView "+N more" expands the day in place', () => {
       root.render(<CalendarView tasks={list} canCreate={false} />);
     });
 
-  it('a day with 4 tasks shows 3, then all 4 after "+1 more", then 3 again after "Show less"', () => {
-    render(tasks(4));
-    expect(chipsIn(dayCell(container))).toBe(3);
+  it('a day with five tasks shows all five and no control', () => {
+    render(tasks(5));
+    expect(chipsIn(dayCell(container))).toBe(5);
+    expect(dayCell(container)?.querySelector('.cal-more')).toBeNull();
+  });
 
-    act(() => controlIn(dayCell(container), '+1 more')?.click());
-    expect(chipsIn(dayCell(container))).toBe(4);
+  it('a day with six tasks shows five, then all six in a scrollable list after "+1", then five after "Show less"', () => {
+    render(tasks(6));
+    expect(chipsIn(dayCell(container))).toBe(5);
+
+    act(() => controlIn(dayCell(container), '+1')?.click());
+    expect(chipsIn(dayCell(container))).toBe(6);
+    expect(dayCell(container)?.querySelector('.cal-day-list')).not.toBeNull();
     expect(controlIn(dayCell(container), 'Show less')).toBeDefined();
 
     act(() => controlIn(dayCell(container), 'Show less')?.click());
-    expect(chipsIn(dayCell(container))).toBe(3);
+    expect(chipsIn(dayCell(container))).toBe(5);
+    expect(dayCell(container)?.querySelector('.cal-day-list')).toBeNull();
   });
 
-  it('a day with 7 tasks shows 3, then all 7 after "+4 more"', () => {
+  it('a day with seven tasks shows "+2", and all seven after it is clicked', () => {
     render(tasks(7));
-    expect(chipsIn(dayCell(container))).toBe(3);
-
-    act(() => controlIn(dayCell(container), '+4 more')?.click());
+    act(() => controlIn(dayCell(container), '+2')?.click());
     expect(chipsIn(dayCell(container))).toBe(7);
   });
 
   it('keeps the day number in its cell when the day is expanded', () => {
     render(tasks(7));
-    act(() => controlIn(dayCell(container), '+4 more')?.click());
+    act(() => controlIn(dayCell(container), '+2')?.click());
     expect(dayCell(container)?.querySelector('.cal-num span')?.textContent).toBe('10');
   });
 });

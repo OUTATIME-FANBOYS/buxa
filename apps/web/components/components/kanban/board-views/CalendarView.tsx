@@ -9,8 +9,8 @@ import { PriorityIcon } from '@/components/atoms/Icon';
 import { fmt, parse, toISO, today } from '@buxa/shared';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-/** How many tasks a day shows before its "+N more" control. */
-const DAY_PREVIEW = 3;
+/** How many tasks a day shows before its "+N" control. A day with this many or fewer shows them all, with no control. */
+const DAY_PREVIEW = 5;
 const monthStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
 
 /** The 42 days (six Mondays-first weeks) that cover the month at `cursor`. */
@@ -101,6 +101,20 @@ export function CalendarView({
           const shown = isOpen ? list : list.slice(0, DAY_PREVIEW);
           const hidden = list.length - DAY_PREVIEW;
 
+          const chips = shown.map(t => (
+            <Button
+              key={t.id}
+              variant="ghost"
+              size="sm"
+              className={`cal-task cal-prio-${t.priority} ${kindOf(t) === 'done' ? 'is-done' : ''}`}
+              onClick={() => openTask(t.id)}
+              title={t.title}
+            >
+              <PriorityIcon priority={t.priority} size={14} className="cal-dot" />
+              <span className="cal-title">{t.title}</span>
+            </Button>
+          ));
+
           return (
             <div
               key={day}
@@ -119,22 +133,17 @@ export function CalendarView({
                   />
                 )}
               </div>
-              {shown.map(t => (
-                <Button
-                  key={t.id}
-                  variant="ghost"
-                  size="sm"
-                  className={`cal-task cal-prio-${t.priority} ${kindOf(t) === 'done' ? 'is-done' : ''}`}
-                  onClick={() => openTask(t.id)}
-                  title={t.title}
-                >
-                  <PriorityIcon priority={t.priority} size={14} className="cal-dot" />
-                  <span className="cal-title">{t.title}</span>
-                </Button>
-              ))}
+              {isOpen ? <div className="cal-day-list">{chips}</div> : chips}
               {hidden > 0 && (
-                <Button variant="glass" size="sm" className="cal-more" onClick={() => toggleDay(day)}>
-                  {isOpen ? 'Show less' : `+${hidden} more`}
+                <Button
+                  variant="glass"
+                  size="sm"
+                  className="cal-more"
+                  aria-expanded={isOpen}
+                  aria-label={isOpen ? undefined : `${hidden} more tasks`}
+                  onClick={() => toggleDay(day)}
+                >
+                  {isOpen ? 'Show less' : `+${hidden}`}
                 </Button>
               )}
             </div>

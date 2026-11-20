@@ -34,7 +34,14 @@ export function RecurringSeriesButton({ sessionId }: { sessionId: string }) {
 
   return (
     <>
-      <Button type="button" variant="ghost" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+      <Button
+        type="button"
+        variant="glass"
+        size="sm"
+        icon="calendar"
+        aria-haspopup="dialog"
+        onClick={() => setOpen(true)}
+      >
         Add a weekly series
       </Button>
       {open && (
