@@ -1,11 +1,11 @@
 'use client';
 
 import { useActionState, useEffect, useState } from 'react';
-import { Dialog } from '@/components/components';
+import { FormPopUp } from '@/components/components';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { fieldError, idle } from '@buxa/shared';
 import { renameCampAction } from '@/actions/camp';
-import { TextField, Button } from '@/components/elements';
+import { TextField } from '@/components/elements';
 import { HiddenField } from '@/components/atoms';
 
 const FORM_ID = 'rename-camp';
@@ -36,19 +36,15 @@ export function RenameCampDialog({
   const formMessage = state.status === 'error' && !state.fieldErrors ? state.message : undefined;
 
   return (
-    <Dialog
+    <FormPopUp
       title="Rename camp"
-      onClose={onClose}
-      footer={
-        <>
-          <Button type="button" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button variant="primary" icon="save" form={FORM_ID} disabled={pending}>
-            {pending ? 'Saving…' : 'Save'}
-          </Button>
-        </>
-      }
+      formId={FORM_ID}
+      submitLabel="Save"
+      pendingLabel="Saving…"
+      submitIcon="save"
+      pending={pending}
+      onCancel={onClose}
+      className=""
     >
       <form id={FORM_ID} action={formAction}>
         <HiddenField name="campId" value={campId} />
@@ -67,6 +63,6 @@ export function RenameCampDialog({
           </p>
         )}
       </form>
-    </Dialog>
+    </FormPopUp>
   );
 }

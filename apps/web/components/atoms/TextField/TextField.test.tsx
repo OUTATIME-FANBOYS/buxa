@@ -4,6 +4,22 @@ import { TextField } from '@/components/elements';
 
 const base = { label: 'Camp name', name: 'name', value: 'Lake', onChange: () => undefined, maxLength: 60 };
 
+describe('TextField: the required mark and the error state', () => {
+  it('marks a required field with one red asterisk after its label', () => {
+    const html = renderToStaticMarkup(<TextField {...base} isRequired />);
+    expect(html).toMatch(/Camp name<span class="field-required" aria-hidden="true"> \*<\/span>/);
+    expect(html).toContain('required=""');
+  });
+  it('leaves an optional field without an asterisk', () => {
+    expect(renderToStaticMarkup(<TextField {...base} />)).not.toContain('field-required');
+  });
+  it('shows the error in red under the input and marks the input invalid', () => {
+    const html = renderToStaticMarkup(<TextField {...base} error="Enter a name." />);
+    expect(html).toContain('aria-invalid="true"');
+    expect(html).toMatch(/class="field-error"[^>]*role="alert"[^>]*>Enter a name\.</);
+  });
+});
+
 describe('TextField', () => {
   it('renders a labelled input with its value and length limit', () => {
     const html = renderToStaticMarkup(<TextField {...base} />);

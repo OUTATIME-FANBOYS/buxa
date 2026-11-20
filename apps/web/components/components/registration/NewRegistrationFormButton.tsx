@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { Dialog } from '@/components/components/Dialog';
+import { FormPopUp } from '@/components/components';
 import { Button } from '@/components/elements';
 import { FormEditor } from './FormEditor';
 
@@ -22,23 +22,18 @@ export function NewRegistrationFormButton({ sessions }: { sessions: readonly { i
         New registration form
       </Button>
       {open && (
-        <Dialog
+        <FormPopUp
           title="New registration form"
-          onClose={close}
-          className="class-dialog"
-          footer={
-            <>
-              <Button variant="glass" type="button" disabled={pending} onClick={close}>
-                Cancel
-              </Button>
-              <Button type="submit" form={FORM_ID} variant="primary" disabled={pending || sessions.length === 0}>
-                {pending ? 'Saving...' : 'Create form'}
-              </Button>
-            </>
-          }
+          formId={FORM_ID}
+          submitLabel="Create form"
+          pendingLabel="Saving..."
+          submitIcon="plus"
+          pending={pending}
+          submitDisabled={sessions.length === 0}
+          onCancel={close}
         >
           <FormEditor mode="create" variant="dialog" id={FORM_ID} sessions={sessions} onPendingChange={setPending} />
-        </Dialog>
+        </FormPopUp>
       )}
     </>
   );

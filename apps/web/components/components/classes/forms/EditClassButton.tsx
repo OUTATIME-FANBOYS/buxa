@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { Dialog } from '@/components/components/Dialog';
+import { FormPopUp } from '@/components/components';
 import { Button } from '@/components/elements';
 import type { Class } from '@buxa/contracts';
 import { ClassForm, type InstructorChoice } from './ClassForm';
@@ -42,20 +42,14 @@ export function EditClassButton({
         onClick={() => setOpen(true)}
       />
       {open && (
-        <Dialog
+        <FormPopUp
           title="Edit class"
-          onClose={close}
-          className="class-dialog"
-          footer={
-            <>
-              <Button variant="glass" type="button" disabled={pending} onClick={close}>
-                Cancel
-              </Button>
-              <Button type="submit" form={formId} variant="primary" icon="save" disabled={pending}>
-                {pending ? 'Saving...' : 'Save class'}
-              </Button>
-            </>
-          }
+          formId={formId}
+          submitLabel="Save class"
+          pendingLabel="Saving..."
+          submitIcon="save"
+          pending={pending}
+          onCancel={close}
         >
           <ClassForm
             sessionId={cls.sessionId}
@@ -68,7 +62,7 @@ export function EditClassButton({
             onPendingChange={setPending}
             onSaved={close}
           />
-        </Dialog>
+        </FormPopUp>
       )}
     </>
   );

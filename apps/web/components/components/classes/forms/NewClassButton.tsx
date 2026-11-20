@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { Dialog } from '@/components/components/Dialog';
+import { FormPopUp } from '@/components/components';
 import { Button } from '@/components/elements';
 import { ClassForm, type InstructorChoice } from './ClassForm';
 
@@ -30,20 +30,14 @@ export function NewClassButton({
         New class
       </Button>
       {open && (
-        <Dialog
+        <FormPopUp
           title="New class"
-          onClose={close}
-          className="class-dialog"
-          footer={
-            <>
-              <Button variant="glass" type="button" disabled={pending} onClick={close}>
-                Cancel
-              </Button>
-              <Button type="submit" form={FORM_ID} variant="primary" icon="plus" disabled={pending}>
-                {pending ? 'Saving...' : 'Add class'}
-              </Button>
-            </>
-          }
+          formId={FORM_ID}
+          submitLabel="Add class"
+          pendingLabel="Saving..."
+          submitIcon="plus"
+          pending={pending}
+          onCancel={close}
         >
           <ClassForm
             sessionId={sessionId}
@@ -53,7 +47,7 @@ export function NewClassButton({
             formId={FORM_ID}
             onPendingChange={setPending}
           />
-        </Dialog>
+        </FormPopUp>
       )}
     </>
   );

@@ -72,6 +72,29 @@
   margin: 0;
   overflow-wrap: anywhere;
 }
+/* Date of birth and Phone sit side by side at half width each; they stack on a phone. */
+.people-form-half {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s4);
+  align-items: start;
+}
+@media (max-width: 720px) {
+  .people-form-half {
+    grid-template-columns: 1fr;
+  }
+}
+/* The roles, in two headed groups: a heading, then its checkboxes. */
+.person-role-group {
+  display: grid;
+  gap: var(--s2);
+}
+.person-role-heading {
+  margin: 0;
+  font-size: var(--fs-s);
+  font-weight: 600;
+  color: var(--text-2);
+}
 .people-inline {
   display: inline-flex;
   flex-wrap: wrap;

@@ -197,19 +197,19 @@ describe('NewPerson', () => {
     const html = render(await NewPerson({}));
     expect(html).toContain('<legend');
     expect(html).toContain('Parent or guardian');
-    expect(html).toContain('New household name');
+    expect(html).toContain('Last name');
+    expect(html).not.toContain('Preferred name');
     expect(html).toContain('Add person');
   });
 
   it('says the person joins the household when it comes from a guardian page', async () => {
     const html = render(await NewPerson({ householdId: ID.household }));
     expect(html).toContain('Adding to the Lee family household');
-    expect(html).toContain('How they are related');
     expect(html).not.toContain('New household name');
   });
 
   it('explains the rule for a child up front', async () => {
-    expect(render(await NewPerson({}))).toContain('A child needs a household with a parent or guardian');
+    expect(render(await NewPerson({}))).toContain('A child must join a household that has a parent or guardian in it.');
   });
 
   it('tells a viewer they cannot add people', async () => {
@@ -223,12 +223,9 @@ describe('NewPerson', () => {
 describe('NewPerson household picker', () => {
   const stone: Household = { id: '66666666-6666-4666-8666-666666666666', name: 'Stone family', members: [] };
 
-  it('offers the existing households, and says which ones have no guardian yet', async () => {
+  it('loads the camp’s households for the picker (the picker itself shows once a family role is chosen)', async () => {
     services.people.listHouseholds.mockResolvedValueOnce([household, stone]);
-    const html = render(await NewPerson({}));
-    expect(html).toContain(`<option value="${ID.household}">Lee family</option>`);
-    expect(html).toContain(`<option value="${stone.id}">Stone family (no parent or guardian yet)</option>`);
-    expect(html).toContain('Not an existing household');
+    render(await NewPerson({}));
     expect(services.people.listHouseholds).toHaveBeenCalledWith({ userId: 'u1', orgId: 'o1', role: 'staff' });
   });
 
@@ -238,11 +235,10 @@ describe('NewPerson household picker', () => {
     expect(services.people.listHouseholds).not.toHaveBeenCalled();
   });
 
-  it('still offers a new household when the camp has none yet', async () => {
+  it('shows no picker when the camp has no households yet', async () => {
     services.people.listHouseholds.mockResolvedValueOnce([]);
     const html = render(await NewPerson({}));
     expect(html).not.toContain('Existing household');
-    expect(html).toContain('New household name');
   });
 });
 

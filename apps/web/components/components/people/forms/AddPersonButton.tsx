@@ -1,10 +1,12 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { Dialog } from '@/components/components/Dialog';
-import type { HouseholdChoice } from '@buxa/shared';
+import { FormPopUp } from '@/components/components';
+import { ADD_PERSON_INTRO, type HouseholdChoice } from '@buxa/shared';
 import { NewPersonForm } from './NewPersonForm';
 import { Button } from '@/components/elements';
+
+const FORM_ID = 'new-person-form';
 
 /**
  * The People page's Add person button. It opens the add form in a dialog, so the list stays in view; the dialog closes on Escape,
@@ -12,6 +14,7 @@ import { Button } from '@/components/elements';
  */
 export function AddPersonButton({ households }: { households: readonly HouseholdChoice[] }) {
   const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState(false);
   const close = useCallback(() => setOpen(false), []);
 
   return (
@@ -20,10 +23,25 @@ export function AddPersonButton({ households }: { households: readonly Household
         Add person
       </Button>
       {open && (
-        <Dialog title="Add person" onClose={close} className="person-dialog">
-          <p className="person-helper">A child must join a household that has a parent or guardian in it.</p>
-          <NewPersonForm variant="dialog" household={null} households={households} onCancel={close} />
-        </Dialog>
+        <FormPopUp
+          title="Add person"
+          intro={ADD_PERSON_INTRO}
+          formId={FORM_ID}
+          submitLabel="Add person"
+          pendingLabel="Adding…"
+          submitIcon="plus"
+          pending={pending}
+          onCancel={close}
+          className="person-dialog"
+        >
+          <NewPersonForm
+            variant="dialog"
+            formId={FORM_ID}
+            household={null}
+            households={households}
+            onPendingChange={setPending}
+          />
+        </FormPopUp>
       )}
     </>
   );

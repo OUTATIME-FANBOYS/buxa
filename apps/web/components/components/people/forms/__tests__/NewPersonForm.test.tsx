@@ -1,41 +1,54 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { NewPersonForm } from '@/components/components/people/forms';
+import { ADD_PERSON_INTRO } from '@buxa/shared';
 import { settle } from '@buxa/domain';
 
 vi.mock('@buxa/server/composers/people/createPersonAction', () => ({
   createPersonAction: () => settle(() => ({ status: 'idle' })),
 }));
 
-describe('NewPersonForm', () => {
-  it('joins the person to the household they came from when given one', () => {
-    const html = renderToStaticMarkup(<NewPersonForm household={{ id: 'h-1', name: 'The Coles' }} households={[]} />);
-    expect(html).toContain('<input type="hidden" name="householdId" value="h-1"/>');
-    expect(html).toContain('<strong>The Coles</strong>');
-    expect(html).not.toContain('New household name');
-  });
-  it('lets the person join an existing household or start a new one when there is no household yet', () => {
-    const html = renderToStaticMarkup(
-      <NewPersonForm household={null} households={[{ id: 'h-1', name: 'The Coles' } as never]} />,
-    );
-    expect(html).toContain('>Existing household</label>');
-    expect(html).toContain('New household name');
-    expect(html).toContain('>Add person</button>');
-  });
-  it('asks only for a new household name when the camp has no households yet', () => {
+describe('NewPersonForm: the static frame', () => {
+  it('has no Preferred name, and calls the second name field Last name', () => {
     const html = renderToStaticMarkup(<NewPersonForm household={null} households={[]} />);
-    expect(html).not.toContain('Existing household');
-    expect(html).toContain('New household name');
+    expect(html).not.toContain('Preferred name');
+    expect(html).not.toContain('Family name');
+    expect(html).toContain('Last name');
+    expect(html).toContain('First name');
   });
-  it('on its own page it keeps the panel and a Cancel link back to People', () => {
+
+  it('puts Date of birth and Phone on one half-width row, and drops the Contact and age heading', () => {
     const html = renderToStaticMarkup(<NewPersonForm household={null} households={[]} />);
+    expect(html).toMatch(/class="people-form-half"[^>]*>[\s\S]*Date of birth[\s\S]*Phone/);
+    expect(html).not.toContain('Contact and age');
+  });
+
+  it('shows the roles as two headed groups, with the same role names', () => {
+    const html = renderToStaticMarkup(<NewPersonForm household={null} households={[]} />);
+    expect(html).toContain('Family');
+    expect(html).toContain('Staff and participants');
+    expect(html).toContain('Parent or guardian');
+    expect(html).toContain('Choose everything that applies.');
+  });
+
+  it('shows no Household section and no Email field before a role is chosen', () => {
+    const html = renderToStaticMarkup(<NewPersonForm household={null} households={[]} />);
+    expect(html).not.toContain('>Household</legend>');
+    expect(html).not.toContain('name="email"');
+    expect(html).not.toContain('name="householdEmail"');
+  });
+
+  it('shows the intro line, and on its own page keeps the panel and a Cancel link back to People', () => {
+    const html = renderToStaticMarkup(<NewPersonForm household={null} households={[]} />);
+    expect(html).toContain(ADD_PERSON_INTRO);
     expect(html).toContain('class="panel people-form person-form"');
     expect(html).toContain('href="/camp/people"');
   });
-  it('in the dialog it has no panel, and Cancel is a button, not a link away from the list', () => {
-    const html = renderToStaticMarkup(<NewPersonForm household={null} households={[]} variant="dialog" />);
-    expect(html).toContain('class="people-form person-form"');
+
+  it('in the dialog it has no footer of its own: the pop-up footer submits it', () => {
+    const html = renderToStaticMarkup(<NewPersonForm household={null} households={[]} variant="dialog" formId="x" />);
+    expect(html).toContain('<form id="x"');
+    expect(html).not.toContain('person-actions');
     expect(html).not.toContain('href="/camp/people"');
-    expect(html).toMatch(/<button[^>]*type="button"[^>]*class="button button--secondary"[^>]*>Cancel<\/button>/);
   });
 });

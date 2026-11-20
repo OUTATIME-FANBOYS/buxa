@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { Dialog } from '@/components/components/Dialog';
+import { FormPopUp } from '@/components/components';
 import { NewSessionForm } from './NewSessionForm';
 import { Button } from '@/components/elements';
 
@@ -30,23 +30,17 @@ export function NewSessionButton() {
         New session
       </Button>
       {open && (
-        <Dialog
+        <FormPopUp
           title="New session"
-          onClose={close}
-          className="class-dialog"
-          footer={
-            <>
-              <Button variant="glass" type="button" disabled={pending} onClick={close}>
-                Cancel
-              </Button>
-              <Button type="submit" form={FORM_ID} variant="primary" icon="plus" disabled={pending}>
-                {pending ? 'Saving...' : 'Create session'}
-              </Button>
-            </>
-          }
+          formId={FORM_ID}
+          submitLabel="Create session"
+          pendingLabel="Saving..."
+          submitIcon="plus"
+          pending={pending}
+          onCancel={close}
         >
           <NewSessionForm variant="dialog" formId={FORM_ID} onPendingChange={setPending} />
-        </Dialog>
+        </FormPopUp>
       )}
     </>
   );

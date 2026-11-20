@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useCallback, useState } from 'react';
-import { Dialog } from '@/components/components/Dialog';
+import { FormPopUp } from '@/components/components';
 import { Button } from '@/components/elements';
 import { deleteSessionAction } from '@/actions/classes';
 import type { Session } from '@buxa/contracts';
@@ -41,30 +41,25 @@ export function EditSessionButton({ session }: { session: Session }) {
         onClick={() => setOpen(true)}
       />
       {open && (
-        <Dialog
+        <FormPopUp
           title="Edit session"
-          onClose={close}
-          className="class-dialog"
-          footer={
-            <>
-              <Button
-                type={confirming ? 'submit' : 'button'}
-                form={confirming ? deleteFormId : undefined}
-                variant="glass-danger"
-                icon="trash"
-                disabled={pending || deleting}
-                onClick={confirming ? undefined : () => setConfirming(true)}
-              >
-                {deleting ? 'Deleting...' : confirming ? 'Confirm delete' : 'Delete session'}
-              </Button>
-              <span className="buxa:flex-1" />
-              <Button variant="glass" type="button" disabled={pending || deleting} onClick={close}>
-                Cancel
-              </Button>
-              <Button type="submit" form={formId} variant="primary" icon="save" disabled={pending || deleting}>
-                {pending ? 'Saving...' : 'Save session'}
-              </Button>
-            </>
+          formId={formId}
+          submitLabel="Save session"
+          pendingLabel="Saving..."
+          submitIcon="save"
+          pending={pending || deleting}
+          onCancel={close}
+          leading={
+            <Button
+              type={confirming ? 'submit' : 'button'}
+              form={confirming ? deleteFormId : undefined}
+              variant="glass-danger"
+              icon="trash"
+              disabled={pending || deleting}
+              onClick={confirming ? undefined : () => setConfirming(true)}
+            >
+              {deleting ? 'Deleting...' : confirming ? 'Confirm delete' : 'Delete session'}
+            </Button>
           }
         >
           {confirming && (
@@ -77,7 +72,7 @@ export function EditSessionButton({ session }: { session: Session }) {
             <input type="hidden" name="sessionId" value={session.id} />
           </form>
           <ActionMessage state={deleteState} />
-        </Dialog>
+        </FormPopUp>
       )}
     </>
   );

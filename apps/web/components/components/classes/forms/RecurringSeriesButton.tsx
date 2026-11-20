@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useCallback, useEffect, useRef, useState } from 'react';
-import { Dialog } from '@/components/components/Dialog';
+import { FormPopUp } from '@/components/components';
 import { Button, Checkbox, DatePicker, TextField } from '@/components/atoms';
 import { Segmented } from '@/components/elements';
 import { fieldError, idle } from '@buxa/shared';
@@ -45,23 +45,17 @@ export function RecurringSeriesButton({ sessionId }: { sessionId: string }) {
         Add a weekly series
       </Button>
       {open && (
-        <Dialog
+        <FormPopUp
           title="Weekly series"
-          onClose={close}
-          className="class-dialog"
-          footer={
-            <>
-              <Button variant="glass" type="button" disabled={pending} onClick={close}>
-                Cancel
-              </Button>
-              <Button type="submit" form={FORM_ID} variant="primary" disabled={pending}>
-                {pending ? 'Adding...' : 'Add series'}
-              </Button>
-            </>
-          }
+          formId={FORM_ID}
+          submitLabel="Add series"
+          pendingLabel="Adding..."
+          submitIcon="plus"
+          pending={pending}
+          onCancel={close}
         >
           <SeriesForm sessionId={sessionId} onSaved={close} onPendingChange={setPending} />
-        </Dialog>
+        </FormPopUp>
       )}
     </>
   );

@@ -1,5 +1,6 @@
 export * from './AppShellProviders';
 export * from './Dialog';
+export * from './FormPopUp';
 export * from './Empty';
 export * from './ErrorBoundary';
 export * from './ErrorState';

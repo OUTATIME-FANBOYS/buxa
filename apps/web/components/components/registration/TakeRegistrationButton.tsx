@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import type { CustomField } from '@buxa/contracts';
-import { Dialog } from '@/components/components/Dialog';
+import { FormPopUp } from '@/components/components';
 import { Button } from '@/components/elements';
 import { RegisterForm } from './RegisterForm';
 
@@ -31,20 +31,14 @@ export function TakeRegistrationButton({
         Take a registration
       </Button>
       {open && (
-        <Dialog
+        <FormPopUp
           title="Take a registration"
-          onClose={close}
-          className="class-dialog"
-          footer={
-            <>
-              <Button variant="glass" type="button" disabled={pending} onClick={close}>
-                Cancel
-              </Button>
-              <Button type="submit" form={FORM_ID} variant="primary" disabled={pending}>
-                {pending ? 'Recording...' : 'Record registration'}
-              </Button>
-            </>
-          }
+          formId={FORM_ID}
+          submitLabel="Record registration"
+          pendingLabel="Recording..."
+          submitIcon="plus"
+          pending={pending}
+          onCancel={close}
         >
           <RegisterForm
             formId={formId}
@@ -54,7 +48,7 @@ export function TakeRegistrationButton({
             fields={fields}
             onPendingChange={setPending}
           />
-        </Dialog>
+        </FormPopUp>
       )}
     </>
   );

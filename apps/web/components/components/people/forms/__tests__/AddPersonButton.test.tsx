@@ -94,6 +94,8 @@ describe('AddPersonButton (the People page)', () => {
       requirePresent(dialog(), 'dialog()').querySelector('form'),
       "requirePresent(dialog(), 'dialog()').querySelector('form')",
     );
+    // The first name is required in the browser, so it is filled in: the action's own refusal is what this test checks.
+    requirePresent(form.querySelector<HTMLInputElement>('input[name="givenName"]'), 'givenName').value = 'Ada';
     act(() => form.requestSubmit());
     await flush();
     expect(createPerson).toHaveBeenCalledTimes(1);
