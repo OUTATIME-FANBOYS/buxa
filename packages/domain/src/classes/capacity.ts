@@ -8,3 +8,8 @@ export function seatFor(capacity: number, seatsTaken: number): SeatDecision {
 export function seatsLeft(capacity: number, seatsTaken: number): number {
   return Math.max(0, capacity - seatsTaken);
 }
+
+/** A camp size may be set only when it still holds every place already taken. Equal is allowed: the session is then exactly full. */
+export function capacityCovers(capacity: number, seatsTaken: number): boolean {
+  return seatsTaken <= capacity;
+}

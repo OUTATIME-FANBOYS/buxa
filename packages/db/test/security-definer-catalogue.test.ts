@@ -31,6 +31,10 @@ const NO_SIGNED_IN_USER: Record<string, string> = {
   buxa_camp_for_calendar_token: 'calendar feed: resolved by the secret token hash, no signed-in user',
   buxa_calendar_feed_classes:
     'calendar feed: the sessions of the one camp that owns the secret token hash, while not archived',
+  buxa_teacher_for_calendar_token:
+    "teacher calendar feed: the camp of a teacher's own token hash, while the holder is still a teacher (migration 0033)",
+  buxa_teacher_calendar_feed_classes:
+    'teacher calendar feed: only the classes assigned to the one teacher who owns the token hash (migration 0033)',
   buxa_public_session: 'public session page: returns only public fields, for a camp that is not archived',
   buxa_public_classes: 'public session page: returns only public class fields, for a camp that is not archived',
   rate_limit_hit: 'rate-limit counter: reads and writes only its own key, no tenant data',
