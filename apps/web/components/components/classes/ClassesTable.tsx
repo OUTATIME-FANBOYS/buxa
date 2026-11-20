@@ -23,6 +23,7 @@ export function ClassesTable({
   clockFormat,
   selectedId,
   canManage,
+  canEdit,
   instructors,
 }: {
   sessionId: string;
@@ -32,6 +33,8 @@ export function ClassesTable({
   clockFormat: ClockFormat;
   selectedId: string | null;
   canManage: boolean;
+  /** Who may open a class's edit form: staff and above (all fields), or a teacher on its own class (the name only). */
+  canEdit: boolean;
   instructors: readonly InstructorChoice[];
 }) {
   return (
@@ -87,17 +90,16 @@ export function ClassesTable({
                       aria-current={selected ? 'true' : undefined}
                       href={`${sessionPath(sessionId)}?class=${encodeURIComponent(cls.id)}#enrolments`}
                     />
-                    {canManage && (
-                      <>
-                        <EditClassButton
-                          cls={cls}
-                          sessionName={sessionName}
-                          timeZone={timeZone}
-                          instructors={instructors}
-                        />
-                        <DeleteClassButton classId={cls.id} sessionId={sessionId} className={cls.name} />
-                      </>
+                    {canEdit && (
+                      <EditClassButton
+                        cls={cls}
+                        sessionName={sessionName}
+                        timeZone={timeZone}
+                        instructors={instructors}
+                        detailsOnly={!canManage}
+                      />
                     )}
+                    {canManage && <DeleteClassButton classId={cls.id} sessionId={sessionId} className={cls.name} />}
                   </div>
                 </td>
               </tr>

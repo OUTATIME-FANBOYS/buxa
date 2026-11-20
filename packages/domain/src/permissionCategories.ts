@@ -29,7 +29,14 @@ export const CATEGORY_PERMISSIONS = {
     'memberships:manage',
     'credentials:manage',
   ],
-  'Classes and events': ['classes:manage', 'events:read', 'events:create', 'events:update', 'events:delete'],
+  'Classes and events': [
+    'classes:manage',
+    'events:read',
+    'events:create',
+    'events:update',
+    'events:update_details',
+    'events:delete',
+  ],
   Money: [],
   Registration: ['registration:read', 'registration:submit', 'registration:manage', 'holds:manage'],
   Team: [
@@ -38,6 +45,7 @@ export const CATEGORY_PERMISSIONS = {
     'members:read_contact',
     'members:invite',
     'members:change_role',
+    'members:set_options',
     'members:remove',
     // Not in the spec table; grouped with the team it renames members of. See docs/phases/03-registration.md.
     'members:rename',

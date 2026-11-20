@@ -35,6 +35,7 @@ const render = (canManage: boolean, selectedId: string | null = null) =>
       clockFormat="24h"
       selectedId={selectedId}
       canManage={canManage}
+      canEdit={canManage}
       instructors={[]}
     />,
   );

@@ -47,6 +47,8 @@ export async function ClassPage({
 
   const { session, classes } = loaded.value;
   const canManage = can(actor, 'classes:manage');
+  // A teacher sees only its own classes (the list is scoped on the server), so each listed class is one it is assigned to.
+  const canEditOwnClass = can(actor, 'events:update_details', { orgId: actor.orgId, assignedToClass: true });
   const { timeZone, clockFormat } = await campClock(actor);
   const selectedId = pick(searchParams.class);
   const selected = classes.find(c => c.id === selectedId) ?? null;
@@ -125,6 +127,7 @@ export async function ClassPage({
             clockFormat={clockFormat}
             selectedId={selected?.id ?? null}
             canManage={canManage}
+            canEdit={canManage || canEditOwnClass}
             instructors={instructorChoices}
           />
         )}

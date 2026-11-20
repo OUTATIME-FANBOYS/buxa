@@ -23,6 +23,7 @@ export const ACTIONS = [
   'members:read_contact',
   'members:invite',
   'members:change_role',
+  'members:set_options',
   'members:remove',
   'members:rename',
   'members:leave',
@@ -44,6 +45,7 @@ export const ACTIONS = [
   'events:read',
   'events:create',
   'events:update',
+  'events:update_details',
   'events:delete',
   'classes:manage',
   'holds:manage',
@@ -91,6 +93,7 @@ const ADMIN: Action[] = [
   'members:change_role',
   'members:remove',
   'members:rename',
+  'members:set_options',
   'audit:read',
   'people:delete',
   'people:authorise_pickup',
@@ -100,6 +103,7 @@ const ADMIN: Action[] = [
   'attendance:export',
   'events:create',
   'events:update',
+  'events:update_details',
   'events:delete',
   'tasks:delete',
   'tasks:manage_board',
@@ -110,7 +114,7 @@ const TEACHER: Action[] = [
   'org:read',
   'members:leave',
   'events:read',
-  'events:update',
+  'events:update_details',
   'people:read',
   'attendance:read',
 ];
@@ -132,10 +136,22 @@ export const GRANTS: Record<Role, ReadonlySet<Action>> = {
 const ASSIGNED_CLASSES_ONLY: ReadonlySet<Action> = new Set([
   'events:read',
   'events:update',
+  'events:update_details',
   'people:read',
   'attendance:read',
   'attendance:record',
 ]);
+
+/**
+ * Per-person options an admin turns on for a teacher (off by default). An option grants only the one action it names, and only to
+ * a teacher; it is still inside the assigned-classes scope above. Stored per person in `member_options` (migration 0030).
+ */
+export const MEMBER_OPTIONS = ['teacher.check_in_out'] as const;
+export type MemberOption = (typeof MEMBER_OPTIONS)[number];
+export const OPTION_ACTION: Record<MemberOption, Action> = { 'teacher.check_in_out': 'attendance:record' };
+
+/** The fields a teacher may change on a class it is assigned to. Every other class field needs classes:manage. */
+export const TEACHER_CLASS_FIELDS = ['name', 'description'] as const;
 
 export interface Actor {
   userId: string;
@@ -143,6 +159,8 @@ export interface Actor {
   role: Role;
   /** True for an archived camp. Such a camp is read-only: only reads and the owner's delete are allowed. */
   archived?: boolean;
+  /** Options turned on for this person in this camp. Only a teacher's options count (see `MEMBER_OPTIONS`). */
+  options?: readonly MemberOption[];
 }
 
 /** What may still be done in an archived camp: reading it, and the owner deleting it or unarchiving it. Everything else is refused. */
@@ -162,6 +180,8 @@ export interface Resource {
   ownerCount?: number;
   /** Teachers only: true when the class (or the person's or the list's class) is one the teacher is assigned to. */
   assignedToClass?: boolean;
+  /** members:set_options only: the option being set on the target. */
+  option?: MemberOption;
 }
 
 export type Reason =
@@ -174,7 +194,8 @@ export type Reason =
   | 'self_change'
   | 'last_owner'
   | 'unknown_role'
-  | 'archived_camp';
+  | 'archived_camp'
+  | 'option_not_for_role';
 export type Decision = { allow: true } | { allow: false; reason: Reason };
 const ok: Decision = { allow: true };
 const no = (reason: Reason): Decision => ({ allow: false, reason });
@@ -189,7 +210,9 @@ export function authorize(actor: Actor, action: Action, res: Resource = {}): Dec
   if (actor.archived && !readOnlyWhileArchived(action)) {
     return no('archived_camp');
   }
-  if (!GRANTS[actor.role].has(action)) {
+  // An option adds exactly the action it names, and only for a teacher. It never widens any other role.
+  const viaOption = actor.role === 'teacher' && (actor.options ?? []).some(o => OPTION_ACTION[o] === action);
+  if (!GRANTS[actor.role].has(action) && !viaOption) {
     return no('role_not_allowed');
   }
   if (actor.role === 'teacher' && ASSIGNED_CLASSES_ONLY.has(action) && res.assignedToClass !== true) {
@@ -238,6 +261,19 @@ export function authorize(actor: Actor, action: Action, res: Resource = {}): Dec
       if (res.target.userId === actor.userId) {
         return no('self_change');
       } // your own name is saved from your profile
+
+      return above(res.target.role) ? ok : no('not_above_target');
+    }
+    case 'members:set_options': {
+      if (!res.target || !res.option) {
+        return no('missing_context');
+      }
+      if (res.target.userId === actor.userId) {
+        return no('self_change');
+      }
+      if (res.target.role !== 'teacher') {
+        return no('option_not_for_role');
+      }
 
       return above(res.target.role) ? ok : no('not_above_target');
     }

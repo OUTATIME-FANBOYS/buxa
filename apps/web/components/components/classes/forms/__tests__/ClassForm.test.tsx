@@ -123,3 +123,29 @@ describe('campInputValue', () => {
     expect(campInputValue('2027-07-05T02:00:00.000Z', 'Australia/Sydney')).toBe('2027-07-05T12:00');
   });
 });
+
+describe('ClassForm: a teacher edits the name only', () => {
+  it('with detailsOnly, shows the name and nothing else the camp sets', () => {
+    const html = render({ cls, detailsOnly: true });
+    expect(html).toContain('Class name *');
+    expect(html).toContain('name="name"');
+    for (const hidden of [
+      'name="minAge"',
+      'name="maxAge"',
+      'name="capacity"',
+      'name="startsAt"',
+      'name="endsAt"',
+      'name="location"',
+    ]) {
+      expect(html, hidden).not.toContain(hidden);
+    }
+    expect(html).not.toContain('Youngest age');
+    expect(html).not.toContain('Location *');
+  });
+
+  it('without detailsOnly, the camp manager sees every field', () => {
+    const html = render({ cls });
+    expect(html).toContain('name="location"');
+    expect(html).toContain('name="capacity"');
+  });
+});

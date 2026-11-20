@@ -8,6 +8,7 @@ export const AUDIT_ACTIONS = [
   'person.update',
   'person.archive',
   'member.rename',
+  'member.option_set',
   'household.create',
   'household.update',
   'membership.create',

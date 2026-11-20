@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { getCurrentCamp, requireSession, toActor } from '../../session';
 import type { CampMembership, Session } from '../../auth/session';
 import type { Actor } from '@buxa/domain';
+import { withMemberOptions } from '../members/withMemberOptions';
 
 export interface CampContext {
   session: Session;
@@ -17,7 +18,7 @@ export async function findCampContext(): Promise<CampContext | null> {
   const session = await requireSession();
   const camp = await getCurrentCamp(session);
 
-  return camp ? { session, camp, actor: toActor(session, camp) } : null;
+  return camp ? { session, camp, actor: await withMemberOptions(toActor(session, camp)) } : null;
 }
 
 /**

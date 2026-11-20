@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import type { Actor } from '@buxa/domain';
 import { createClassService } from '../../classes/ClassService';
 import type { InMemoryClassRepository } from '../../classes/InMemoryClassRepository';
 import { JULY_SESSION, robotics } from '../../classes/__tests__/fixtures';
 import { createCamp, type Camp } from './support';
+
+// A teacher checks campers in only with the per-person option an admin turns on (MEMBER_OPTIONS). These tests are about what a
+// teacher may see once it can check in, so the option is on here; without it check-in is refused (teacherScope.test.ts).
+const withCheckIn = (actor: Actor): Actor => ({ ...actor, options: ['teacher.check_in_out'] });
 
 /*
  * Guardian names are custody information. A teacher sees its campers and their ages, never a guardian's name: not in pick-up
@@ -14,7 +19,7 @@ const FILTER = { from: '2027-07-10', to: '2027-07-10' } as const;
 async function build() {
   const camp: Camp = await createCamp('UTC', '2027-07-10T09:00:00Z');
   const admin = camp.actor('admin');
-  const teacher = camp.actor('teacher');
+  const teacher = withCheckIn(camp.actor('teacher'));
   const staff = camp.actor('staff');
   const store = camp.repos.classes as InMemoryClassRepository;
   const classes = createClassService({ repo: camp.repos.classes, timezoneOf: () => Promise.resolve('UTC') });

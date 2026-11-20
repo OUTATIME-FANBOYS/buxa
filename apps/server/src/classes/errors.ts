@@ -34,6 +34,15 @@ export class ClassOutsideSessionError extends Error {
   }
 }
 
+/** A teacher changed a class field other than its name and description. Only classes:manage may change those. */
+export class TeacherFieldRefusedError extends Error {
+  readonly kind = 'teacher-field-refused';
+  constructor(readonly fields: readonly string[]) {
+    super(`A teacher can change only the name and description of a class. This would change: ${fields.join(', ')}.`);
+    this.name = 'TeacherFieldRefusedError';
+  }
+}
+
 /** A class cannot be given fewer places than the campers already enrolled in it. */
 export class CapacityBelowEnrolledError extends Error {
   readonly kind = 'capacity-below-enrolled';
@@ -190,6 +199,7 @@ export type ClassErrorKind =
   | 'hold-not-found'
   | 'hold-exists'
   | 'teacher-not-found'
+  | 'teacher-field-refused'
   | EnrolmentRefusalError['kind'];
 
 export const isClassError = (e: unknown, kind: ClassErrorKind): boolean =>

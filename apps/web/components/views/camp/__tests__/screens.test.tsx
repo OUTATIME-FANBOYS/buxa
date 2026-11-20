@@ -15,6 +15,7 @@ const session = vi.hoisted(() => ({
   current: null as null | { user: { id: string; email: string; name: string }; memberships: Membership[] },
   camp: null as Membership | null,
 }));
+const users = vi.hoisted(() => ({ memberOptionsIn: vi.fn(async () => []) }));
 const orgs = vi.hoisted(() => ({
   getCamp: vi.fn(() =>
     settle(() => ({ id: 'o1', name: 'Sunrise', slug: 'sunrise', createdAt: '2026-03-04T10:00:00Z', memberCount: 2 })),
@@ -34,7 +35,7 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/camp',
   useRouter: () => ({ push() {}, refresh() {} }),
 }));
-vi.mock('@buxa/server/runtime', () => ({ getRuntime: () => ({ services: { orgs } }) }));
+vi.mock('@buxa/server/runtime', () => ({ getRuntime: () => ({ services: { orgs }, repositories: { users } }) }));
 vi.mock('@buxa/server/session/index', () => ({
   requireSession: () => settle(() => session.current),
   getCurrentCamp: () => settle(() => session.camp),
@@ -64,6 +65,42 @@ const as = (role: Role) => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+});
+
+const withTeacher = () =>
+  settle(() => ({
+    members: [
+      { id: 'u1', name: 'Maya Chen', email: 'maya@example.com', role: 'owner' },
+      { id: 'u2', name: 'Sam Lee', email: 'sam@example.com', role: 'viewer' },
+      { id: 'u3', name: 'Ana Ruiz', email: 'ana@example.com', role: 'teacher' },
+    ],
+  }));
+
+describe('Members: the check-in switch', () => {
+  it('an admin sees the switch on a teacher, and on no one else', async () => {
+    as('admin');
+    orgs.listMembers.mockReturnValueOnce(withTeacher());
+    const html = renderToStaticMarkup(await Members());
+    expect(html.match(/Check in and out, for/g)).toHaveLength(1);
+    expect(html).toContain('Ana');
+  });
+
+  it('an owner sees the switch on a teacher too', async () => {
+    as('owner');
+    orgs.listMembers.mockReturnValueOnce(withTeacher());
+    const html = renderToStaticMarkup(await Members());
+    expect(html.match(/Check in and out, for/g)).toHaveLength(1);
+  });
+
+  it('staff and viewers see no switch, even on a teacher', async () => {
+    for (const role of ['staff', 'viewer'] as const) {
+      as(role);
+      orgs.listMembers.mockReturnValueOnce(withTeacher());
+      const html = renderToStaticMarkup(await Members());
+      expect(html, role).not.toContain('Check in and out, for');
+      expect(html, role).not.toContain('type="checkbox"');
+    }
+  });
 });
 
 describe('Members', () => {

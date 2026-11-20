@@ -21,6 +21,7 @@ export type FailureReason =
   | 'hold_not_found'
   | 'hold_exists'
   | 'teacher_not_found'
+  | 'teacher_field_refused'
   | Refusal['reason'];
 
 export interface Failure {
@@ -88,6 +89,9 @@ export async function attempt<T>(work: () => Promise<T>, timeZone: string): Prom
           message: `The class must fall on days between ${startsOn} and ${endsOn}, the session's first and last day.`,
         },
       };
+    }
+    if (isClassError(e, 'teacher-field-refused')) {
+      return { ok: false, failure: { reason: 'teacher_field_refused', message: (e as Error).message } };
     }
     if (isClassError(e, 'capacity-below-enrolled')) {
       return {
