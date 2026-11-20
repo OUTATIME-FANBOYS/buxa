@@ -38,7 +38,7 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
 
   /** One person, a guardian, a household, a membership, a badge and an open check-in, all in one organisation. */
   async function seed(org: string, user: string, label: string): Promise<Seeded> {
-    return withOrg(pool, org, async db => {
+    return withOrg(pool, user, org, async db => {
       const person = (
         await db.query<{ id: string }>(
           `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, $2, 'Test') RETURNING id`,
@@ -111,6 +111,12 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
         `b-${tag}@example.test`,
       ])
     ).rows[0].id;
+    await pool.query(`INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'owner'), ($3, $4, 'owner')`, [
+      orgA,
+      userA,
+      orgB,
+      userB,
+    ]);
     a = await seed(orgA, userA, 'Ann');
     b = await seed(orgB, userB, 'Bo');
   });
@@ -122,7 +128,7 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
 
   describe('tenant isolation', () => {
     it.each(TENANT_TABLES)('org A sees only its own %s rows', async table => {
-      const orgs = await withOrg(pool, orgA, async db =>
+      const orgs = await withOrg(pool, userA, orgA, async db =>
         (await db.query<{ org_id: string }>(`SELECT DISTINCT org_id FROM ${table}`)).rows.map(r => r.org_id),
       );
       expect(orgs).toEqual([orgA]);
@@ -130,15 +136,15 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
 
     it('org A cannot insert into org B on any tenant table', async () => {
       await expect(
-        withOrg(pool, orgA, db =>
+        withOrg(pool, userA, orgA, db =>
           db.query(`INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'X', 'Y')`, [orgB]),
         ),
       ).rejects.toThrow(/row-level security/);
       await expect(
-        withOrg(pool, orgA, db => db.query(`INSERT INTO households (org_id, name) VALUES ($1, 'X')`, [orgB])),
+        withOrg(pool, userA, orgA, db => db.query(`INSERT INTO households (org_id, name) VALUES ($1, 'X')`, [orgB])),
       ).rejects.toThrow(/row-level security/);
       await expect(
-        withOrg(pool, orgA, db =>
+        withOrg(pool, userA, orgA, db =>
           db.query(
             `INSERT INTO memberships (org_id, person_id, plan, starts_on, ends_on) VALUES ($1, $2, 'X', '2027-01-01', '2027-01-02')`,
             [orgB, a.person],
@@ -146,7 +152,7 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
         ),
       ).rejects.toThrow(/row-level security/);
       await expect(
-        withOrg(pool, orgA, db =>
+        withOrg(pool, userA, orgA, db =>
           db.query(`INSERT INTO check_ins (org_id, person_id, checked_in_at, method) VALUES ($1, $2, now(), 'qr')`, [
             orgB,
             a.person,
@@ -154,7 +160,7 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
         ),
       ).rejects.toThrow(/row-level security/);
       await expect(
-        withOrg(pool, orgA, db =>
+        withOrg(pool, userA, orgA, db =>
           db.query(`INSERT INTO person_roles (org_id, person_id, role) VALUES ($1, $2, 'camper')`, [orgB, a.person]),
         ),
       ).rejects.toThrow(/row-level security/);
@@ -163,11 +169,13 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
     it('org A cannot change or unlink org B rows (they silently match nothing)', async () => {
       const changed = await withOrg(
         pool,
+        userA,
         orgA,
         async db => (await db.query(`UPDATE people SET given_name = 'hacked' WHERE id = $1`, [b.person])).rowCount,
       );
       const removed = await withOrg(
         pool,
+        userA,
         orgA,
         async db => (await db.query('DELETE FROM person_roles WHERE person_id = $1', [b.person])).rowCount,
       );
@@ -175,6 +183,7 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
       expect(removed).toBe(0);
       const name = await withOrg(
         pool,
+        userB,
         orgB,
         async db =>
           (await db.query<{ given_name: string }>('SELECT given_name FROM people WHERE id = $1', [b.person])).rows[0]
@@ -185,13 +194,13 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
 
     it('org A cannot move its own row into org B', async () => {
       await expect(
-        withOrg(pool, orgA, db => db.query(`UPDATE people SET org_id = $1 WHERE id = $2`, [orgB, a.person])),
+        withOrg(pool, userA, orgA, db => db.query(`UPDATE people SET org_id = $1 WHERE id = $2`, [orgB, a.person])),
       ).rejects.toThrow(/row-level security/);
     });
 
     it('cross-organisation references are refused by composite foreign keys', async () => {
       const fk = (sql: string, params: unknown[]) =>
-        expect(withOrg(pool, orgA, db => db.query(sql, params))).rejects.toMatchObject({ code: '23503' });
+        expect(withOrg(pool, userA, orgA, db => db.query(sql, params))).rejects.toMatchObject({ code: '23503' });
       await fk(`INSERT INTO person_roles (org_id, person_id, role) VALUES ($1, $2, 'instructor')`, [orgA, b.person]);
       await fk(
         `INSERT INTO household_members (org_id, household_id, person_id, relationship) VALUES ($1, $2, $3, 'x')`,
@@ -219,7 +228,7 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
   });
 
   describe('constraints', () => {
-    const asA = <T>(work: (db: pg.PoolClient) => Promise<T>) => withOrg(pool, orgA, work);
+    const asA = <T>(work: (db: pg.PoolClient) => Promise<T>) => withOrg(pool, userA, orgA, work);
 
     it('one open check-in per person (the partial unique index)', async () => {
       await expect(
@@ -389,7 +398,7 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
     });
 
     async function asDelete(table: string, id: string): Promise<unknown> {
-      return withOrg(pool, orgA, db => db.query(`DELETE FROM ${table} WHERE id = $1`, [id]));
+      return withOrg(pool, userA, orgA, db => db.query(`DELETE FROM ${table} WHERE id = $1`, [id]));
     }
   });
 
@@ -397,6 +406,7 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
     it('folds accents and case in SQL, as normalizeForSearch does in the domain', async () => {
       const folded = await withOrg(
         pool,
+        userA,
         orgA,
         async db => (await db.query<{ v: string }>(`SELECT unaccent(lower('José García')) AS v`)).rows[0].v,
       );
@@ -405,14 +415,14 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
 
     it('finds a person by an unaccented word in the joined name', async () => {
       const id = (
-        await withOrg(pool, orgA, db =>
+        await withOrg(pool, userA, orgA, db =>
           db.query<{ id: string }>(
             `INSERT INTO people (org_id, given_name, family_name, preferred_name) VALUES ($1, 'José', 'García', 'Pepe') RETURNING id`,
             [orgA],
           ),
         )
       ).rows[0].id;
-      const found = await withOrg(pool, orgA, async db =>
+      const found = await withOrg(pool, userA, orgA, async db =>
         (
           await db.query<{ id: string }>(
             `SELECT id FROM people WHERE strpos(unaccent(lower(concat_ws(' ', given_name, family_name, preferred_name))), 'jose') > 0`,

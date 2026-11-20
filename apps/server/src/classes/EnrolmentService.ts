@@ -13,7 +13,7 @@ export function createEnrolmentMethods({ repo, timezoneOf }: ClassServiceDeps): 
   return {
     async enrol(actor, input) {
       assertAllowed(actor, 'classes:manage');
-      const timeZone = await timezoneOf(actor.orgId);
+      const timeZone = await timezoneOf(actor);
       const rule = enrolmentRule({ actor, input, timeZone });
 
       return attempt(() => repo.enrol(actor, { classId: input.classId, camperId: input.camperId }, rule), timeZone);
@@ -22,10 +22,7 @@ export function createEnrolmentMethods({ repo, timezoneOf }: ClassServiceDeps): 
     async cancelEnrolment(actor, input) {
       assertAllowed(actor, 'classes:manage');
 
-      return attempt(
-        () => repo.cancelEnrolment(actor, input.enrolmentId, input.note ?? null),
-        await timezoneOf(actor.orgId),
-      );
+      return attempt(() => repo.cancelEnrolment(actor, input.enrolmentId, input.note ?? null), await timezoneOf(actor));
     },
   };
 }

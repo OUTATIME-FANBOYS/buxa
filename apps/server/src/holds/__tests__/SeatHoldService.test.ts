@@ -72,6 +72,6 @@ describe('seat hold service', () => {
 
   it('the cleanup needs no actor and returns how many holds it released', async () => {
     const { repo } = recordingRepo();
-    await expect(service(repo).releaseExpiredHolds(ORG)).resolves.toBe(2);
+    await expect(service(repo).releaseExpiredHolds('user-admin', ORG)).resolves.toBe(2);
   });
 });

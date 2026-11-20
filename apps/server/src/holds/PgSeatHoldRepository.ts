@@ -12,14 +12,14 @@ export class PgSeatHoldRepository implements SeatHoldRepository {
   constructor(private readonly pool: Pool) {}
 
   placeHold(actor: Actor, request: PlaceHoldRequest): Promise<SeatHold> {
-    return withOrg(this.pool, actor.orgId, db => placeHoldInTransaction(db, actor, request));
+    return withOrg(this.pool, actor.userId, actor.orgId, db => placeHoldInTransaction(db, actor, request));
   }
 
   releaseHold(actor: Actor, holdId: string): Promise<SeatHold> {
-    return withOrg(this.pool, actor.orgId, db => releaseHoldInTransaction(db, actor, holdId));
+    return withOrg(this.pool, actor.userId, actor.orgId, db => releaseHoldInTransaction(db, actor, holdId));
   }
 
-  releaseExpiredHolds(orgId: string): Promise<number> {
-    return withOrg(this.pool, orgId, db => releaseExpiredHolds(db, { userId: null, orgId }));
+  releaseExpiredHolds(userId: string, orgId: string): Promise<number> {
+    return withOrg(this.pool, userId, orgId, db => releaseExpiredHolds(db, { userId: null, orgId }));
   }
 }

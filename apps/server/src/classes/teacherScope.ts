@@ -21,8 +21,8 @@ export async function teacherScopeOf(source: TeacherScopeSource, actor: Actor): 
   if (actor.role !== 'teacher') {
     return null;
   }
-  const classIds = await source.assignedClassIds(actor.orgId, actor.userId);
-  const camperIds = await source.camperIdsIn(actor.orgId, classIds);
+  const classIds = await source.assignedClassIds(actor.userId, actor.orgId, actor.userId);
+  const camperIds = await source.camperIdsIn(actor.userId, actor.orgId, classIds);
 
   return { classIds: new Set(classIds), camperIds: new Set(camperIds) };
 }

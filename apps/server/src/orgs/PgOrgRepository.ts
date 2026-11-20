@@ -24,10 +24,10 @@ export class PgOrgRepository implements OrgRepository {
    */
   async createWithOwner(input: NewOrgInput, ownerId: string): Promise<CreatedOrg> {
     try {
-      const { rows } = await withOrg(this.pool, null, db =>
+      const { rows } = await withOrg(this.pool, ownerId, null, db =>
         db.query<OrgSummary>(
-          'SELECT org_id AS id, org_name AS name, org_slug AS slug FROM buxa_create_org($1, $2, $3, $4)',
-          [input.name, input.slug, input.timezone, ownerId],
+          'SELECT org_id AS id, org_name AS name, org_slug AS slug FROM buxa_create_org($1, $2, $3)',
+          [input.name, input.slug, input.timezone],
         ),
       );
 
@@ -37,8 +37,8 @@ export class PgOrgRepository implements OrgRepository {
     }
   }
 
-  get(orgId: string): Promise<Org> {
-    return withOrg(this.pool, orgId, async db => {
+  get(userId: string, orgId: string): Promise<Org> {
+    return withOrg(this.pool, userId, orgId, async db => {
       const { rows } = await db.query<OrgRow>(
         `SELECT id, name, slug, timezone, created_at, (SELECT count(*)::int FROM org_members) AS member_count FROM orgs`,
       );
@@ -59,7 +59,7 @@ export class PgOrgRepository implements OrgRepository {
   }
 
   rename(actor: Actor, input: OrgPatchInput): Promise<OrgSummary> {
-    return withOrg(this.pool, actor.orgId, async db => {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       const { rows } = await db.query<OrgSummary>(
         `UPDATE orgs SET name = coalesce($1, name), timezone = coalesce($2, timezone)
          WHERE id = $3 RETURNING id, name, slug`,
@@ -83,8 +83,8 @@ export class PgOrgRepository implements OrgRepository {
     });
   }
 
-  listMembers(orgId: string): Promise<Member[]> {
-    return withOrg(this.pool, orgId, async db => {
+  listMembers(userId: string, orgId: string): Promise<Member[]> {
+    return withOrg(this.pool, userId, orgId, async db => {
       const { rows } = await db.query<Member>(
         `SELECT u.id, u.name, u.email, m.role FROM org_members m JOIN users u ON u.id = m.user_id ORDER BY u.name`,
       );
@@ -96,10 +96,9 @@ export class PgOrgRepository implements OrgRepository {
   /** buxa_archive_camp (migration 0013) checks the owner role, refuses an archived camp and writes the audit row in one statement. */
   async archive(actor: Actor): Promise<{ archivedAt: string }> {
     try {
-      return await withOrg(this.pool, actor.orgId, async db => {
-        const { rows } = await db.query<{ archived_at: Date }>('SELECT buxa_archive_camp($1, $2) AS archived_at', [
+      return await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        const { rows } = await db.query<{ archived_at: Date }>('SELECT buxa_archive_camp($1) AS archived_at', [
           actor.orgId,
-          actor.userId,
         ]);
 
         return { archivedAt: rows[0].archived_at.toISOString() };
@@ -112,8 +111,8 @@ export class PgOrgRepository implements OrgRepository {
   /** buxa_unarchive_camp (migration 0017) checks the owner role, refuses a camp that is not archived and writes the audit row. */
   async unarchive(actor: Actor): Promise<void> {
     try {
-      await withOrg(this.pool, actor.orgId, db =>
-        db.query('SELECT buxa_unarchive_camp($1, $2)', [actor.orgId, actor.userId]),
+      await withOrg(this.pool, actor.userId, actor.orgId, db =>
+        db.query('SELECT buxa_unarchive_camp($1)', [actor.orgId]),
       );
     } catch (error) {
       throw mapCampFunctionError(error);
@@ -123,8 +122,8 @@ export class PgOrgRepository implements OrgRepository {
   /** buxa_delete_camp (migration 0013) checks the owner role and the exact name, then deletes the camp; the rows go with it. */
   async deleteCamp(actor: Actor, confirmName: string): Promise<void> {
     try {
-      await withOrg(this.pool, actor.orgId, db =>
-        db.query('SELECT buxa_delete_camp($1, $2, $3)', [actor.orgId, actor.userId, confirmName]),
+      await withOrg(this.pool, actor.userId, actor.orgId, db =>
+        db.query('SELECT buxa_delete_camp($1, $2)', [actor.orgId, confirmName]),
       );
     } catch (error) {
       throw mapCampFunctionError(error);
@@ -133,10 +132,9 @@ export class PgOrgRepository implements OrgRepository {
 
   /** buxa_archived_camps_of (migration 0013) runs as the function owner, because the camp is not the current one. */
   archivedCampsOf(userId: string): Promise<ArchivedCampRecord[]> {
-    return withOrg(this.pool, null, async db => {
+    return withOrg(this.pool, userId, null, async db => {
       const { rows } = await db.query<{ id: string; name: string; archived_at: Date; role: Role }>(
-        'SELECT camp_id AS id, camp_name AS name, camp_archived_at AS archived_at, camp_role AS role FROM buxa_archived_camps_of($1)',
-        [userId],
+        'SELECT camp_id AS id, camp_name AS name, camp_archived_at AS archived_at, camp_role AS role FROM buxa_archived_camps_of()',
       );
 
       return rows.map(r => ({ id: r.id, name: r.name, archivedAt: r.archived_at.toISOString(), role: r.role }));

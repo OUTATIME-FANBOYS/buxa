@@ -33,9 +33,9 @@ export const isOrgNotFound = (error: unknown): error is OrgNotFoundError =>
 export interface OrgRepository {
   /** Creates the organisation, makes `ownerId` its owner and records the audit entry, atomically. */
   createWithOwner(input: NewOrgInput, ownerId: string): Promise<CreatedOrg>;
-  get(orgId: string): Promise<Org>;
+  get(userId: string, orgId: string): Promise<Org>;
   rename(actor: Actor, input: OrgPatchInput): Promise<OrgSummary>;
-  listMembers(orgId: string): Promise<Member[]>;
+  listMembers(userId: string, orgId: string): Promise<Member[]>;
   /** Sets the camp's archive time and records the audit entry, atomically. Refuses a camp that is already archived. */
   archive(actor: Actor): Promise<{ archivedAt: string }>;
   /** Clears the archive time and records the audit entry, atomically. Refuses a camp that is not archived. */

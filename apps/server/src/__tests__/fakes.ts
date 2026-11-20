@@ -121,7 +121,7 @@ export class InMemoryStore implements UserRepository, OrgRepository {
 
     return publicUser(user);
   }
-  async roleIn(orgId: string, userId: string): Promise<Membership['role'] | null> {
+  async roleIn(_signedIn: string, orgId: string, userId: string): Promise<Membership['role'] | null> {
     return this.members.find(m => m.orgId === orgId && m.userId === userId)?.role ?? null;
   }
   async renameMember(actor: Actor, userId: string, name: string): Promise<Pick<User, 'id' | 'email' | 'name'> | null> {
@@ -138,10 +138,10 @@ export class InMemoryStore implements UserRepository, OrgRepository {
   }
   /** Options that are on, as `${orgId}:${userId}:${option}`. */
   readonly memberOptions = new Set<string>();
-  async memberOptionsOf(orgId: string, userId: string): Promise<MemberOption[]> {
+  async memberOptionsOf(_viewerId: string, orgId: string, userId: string): Promise<MemberOption[]> {
     return MEMBER_OPTIONS.filter(o => this.memberOptions.has(`${orgId}:${userId}:${o}`));
   }
-  async memberOptionsIn(orgId: string): Promise<{ userId: string; option: MemberOption }[]> {
+  async memberOptionsIn(_viewerId: string, orgId: string): Promise<{ userId: string; option: MemberOption }[]> {
     return [...this.memberOptions]
       .filter(k => k.startsWith(`${orgId}:`))
       .map(k => {
@@ -249,7 +249,7 @@ export class InMemoryStore implements UserRepository, OrgRepository {
 
     return { id: org.id, name: org.name, slug: org.slug, role: 'owner' };
   }
-  async get(orgId: string): Promise<Org> {
+  async get(_userId: string, orgId: string): Promise<Org> {
     const o = this.orgs.get(orgId);
     if (!o) {
       throw new OrgNotFoundError();
@@ -272,7 +272,7 @@ export class InMemoryStore implements UserRepository, OrgRepository {
 
     return { id: o.id, name: o.name, slug: o.slug };
   }
-  async listMembers(orgId: string): Promise<Member[]> {
+  async listMembers(_userId: string, orgId: string): Promise<Member[]> {
     return this.members
       .filter(m => m.orgId === orgId)
       .map(m => {

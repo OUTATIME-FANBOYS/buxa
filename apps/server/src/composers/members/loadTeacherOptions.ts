@@ -26,7 +26,7 @@ export async function loadTeacherOptions(actor: Actor, members: readonly Member[
     return [];
   }
   const on = new Set(
-    (await getRuntime().repositories.users.memberOptionsIn(actor.orgId))
+    (await getRuntime().repositories.users.memberOptionsIn(actor.userId, actor.orgId))
       .filter(o => o.option === 'teacher.check_in_out')
       .map(o => o.userId),
   );

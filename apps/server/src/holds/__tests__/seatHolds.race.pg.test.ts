@@ -22,7 +22,7 @@ const reasonOf = (r: PromiseRejectedResult): unknown => r.reason;
 
 /** Places taken right now: enrolled campers plus unexpired, unreleased holds. Read in its own statement, after the races settle. */
 async function placesTaken(fx: ClassFixture, classId: string): Promise<number> {
-  return withOrg(fx.pool, fx.orgA, async db => {
+  return withOrg(fx.pool, fx.actor.userId, fx.orgA, async db => {
     const { rows } = await db.query<{ taken: number }>(`SELECT session_seats_taken($1)::int AS taken`, [classId]);
 
     return rows[0].taken;
@@ -30,7 +30,7 @@ async function placesTaken(fx: ClassFixture, classId: string): Promise<number> {
 }
 
 async function activeHolds(fx: ClassFixture, classId: string): Promise<number> {
-  return withOrg(fx.pool, fx.orgA, async db => {
+  return withOrg(fx.pool, fx.actor.userId, fx.orgA, async db => {
     const { rows } = await db.query<{ n: number }>(
       `SELECT count(*)::int AS n FROM seat_holds WHERE session_id = $1 AND released_at IS NULL AND expires_at > now()`,
       [classId],
@@ -43,6 +43,7 @@ async function activeHolds(fx: ClassFixture, classId: string): Promise<number> {
 async function addHousehold(fx: ClassFixture, label: string): Promise<string> {
   return withOrg(
     fx.pool,
+    fx.actor.userId,
     fx.orgA,
     async db =>
       (

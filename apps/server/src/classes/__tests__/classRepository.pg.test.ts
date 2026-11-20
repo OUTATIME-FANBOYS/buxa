@@ -47,7 +47,7 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
   describe('sessions (the date range)', () => {
     it('stores a session and reads back exactly what it created', async () => {
       const created = await makeSession(fx.repo, fx.actor);
-      expect(await fx.repo.getSession(fx.orgA, created.id)).toEqual(created);
+      expect(await fx.repo.getSession(fx.actor.userId, fx.orgA, created.id)).toEqual(created);
       expect(created).toMatchObject({
         name: 'Summer camp',
         startsOn: '2027-07-01',
@@ -63,8 +63,8 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
         endsOn: '2027-08-14',
       });
       const early = await makeSession(fx.repo, fx.actor, { name: 'July' });
-      expect((await fx.repo.listSessions(fx.orgA)).map(s => s.id)).toEqual([early.id, late.id]);
-      expect(await fx.repo.listSessions(fx.orgB)).toEqual([]);
+      expect((await fx.repo.listSessions(fx.actor.userId, fx.orgA)).map(s => s.id)).toEqual([early.id, late.id]);
+      expect(await fx.repo.listSessions(fx.otherActor.userId, fx.orgB)).toEqual([]);
     });
 
     it('writes session.create in the same transaction', async () => {
@@ -77,7 +77,7 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
     it('stores a class with its own name, ages, camp size and location, and reads them back', async () => {
       const session = await makeSession(fx.repo, fx.actor);
       const cls = await fx.repo.addClass(fx.actor, session.id, sessionInput(9, 12, { capacity: 7 }));
-      expect(await fx.repo.getClass(fx.orgA, cls.id)).toEqual(cls);
+      expect(await fx.repo.getClass(fx.actor.userId, fx.orgA, cls.id)).toEqual(cls);
       expect(cls).toMatchObject({
         sessionId: session.id,
         sessionName: 'Summer camp',
@@ -99,7 +99,7 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
       );
       const nulls = await pool.query('SELECT age_min, age_max FROM sessions WHERE id = $1', [cls.id]);
       expect(nulls.rows[0]).toEqual({ age_min: 0, age_max: 120 });
-      expect((await fx.repo.getClass(fx.orgA, cls.id))?.ageRange).toEqual({ minAge: 0, maxAge: 120 });
+      expect((await fx.repo.getClass(fx.actor.userId, fx.orgA, cls.id))?.ageRange).toEqual({ minAge: 0, maxAge: 120 });
     });
 
     it('lists the classes of a session by start time, with seats and waitlist counts', async () => {
@@ -110,10 +110,10 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
       const waiting = await fx.addPerson(fx.orgA, '2016-01-01', 'Waiter');
       await fx.repo.enrol(fx.actor, { classId: early.id, camperId: camper }, enrolRule());
       await fx.repo.enrol(fx.actor, { classId: early.id, camperId: waiting }, enrolRule({ waitlistIfFull: true }));
-      const listed = await fx.repo.listClasses(fx.orgA, session.id);
+      const listed = await fx.repo.listClasses(fx.actor.userId, fx.orgA, session.id);
       expect(listed.map(c => c.id)).toEqual([early.id, late.id]);
       expect(listed[0]).toMatchObject({ seatsTaken: 1, waitlisted: 1 });
-      expect((await fx.repo.getSession(fx.orgA, session.id))?.classCount).toBe(2);
+      expect((await fx.repo.getSession(fx.actor.userId, fx.orgA, session.id))?.classCount).toBe(2);
     });
 
     it('widens the session dates to cover a class written on a later day, and never shrinks them', async () => {
@@ -123,14 +123,16 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
         startsAt: '2027-07-07T09:00:00+10:00',
         endsAt: '2027-07-07T12:00:00+10:00',
       });
-      expect(await fx.repo.getSession(fx.orgA, session.id)).toMatchObject({
+      expect(await fx.repo.getSession(fx.actor.userId, fx.orgA, session.id)).toMatchObject({
         startsOn: '2027-07-05',
         endsOn: '2027-07-07',
       });
     });
 
     it('lists the classes of an unknown session as not found', async () => {
-      await expect(fx.repo.listClasses(fx.orgA, randomUUID())).rejects.toBeInstanceOf(SessionNotFoundError);
+      await expect(fx.repo.listClasses(fx.actor.userId, fx.orgA, randomUUID())).rejects.toBeInstanceOf(
+        SessionNotFoundError,
+      );
     });
 
     it('refuses an instructor who is not a person in this camp, and writes nothing', async () => {
@@ -142,7 +144,7 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
       await expect(
         fx.repo.addClass(fx.actor, session.id, sessionInput(9, 12, { instructorIds: [randomUUID()] })),
       ).rejects.toBeInstanceOf(InstructorNotFoundError);
-      expect(await fx.repo.listClasses(fx.orgA, session.id)).toEqual([]);
+      expect(await fx.repo.listClasses(fx.actor.userId, fx.orgA, session.id)).toEqual([]);
     });
 
     it('refuses a class for a session that is not in the camp, and writes nothing', async () => {
@@ -194,7 +196,7 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
       await expect(fx.repo.updateClass(fx.actor, cls.id, sessionInput(9, 12, { capacity: 1 }))).rejects.toBeInstanceOf(
         CapacityBelowEnrolledError,
       );
-      expect((await fx.repo.getClass(fx.orgA, cls.id))?.capacity).toBe(3);
+      expect((await fx.repo.getClass(fx.actor.userId, fx.orgA, cls.id))?.capacity).toBe(3);
     });
 
     it('an edit of a class that is not in the camp is not found', async () => {
@@ -207,7 +209,7 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
       const session = await makeSession(fx.repo, fx.actor);
       const cls = await fx.repo.addClass(fx.actor, session.id, sessionInput(9, 12));
       await fx.repo.deleteClass(fx.actor, cls.id);
-      expect(await fx.repo.getClass(fx.orgA, cls.id)).toBeNull();
+      expect(await fx.repo.getClass(fx.actor.userId, fx.orgA, cls.id)).toBeNull();
       expect(await auditActions(pool, fx.orgA)).toContain('class.delete');
     });
 
@@ -221,14 +223,14 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
       );
       await fx.repo.cancelEnrolment(fx.actor, enrolment.id, null);
       await expect(fx.repo.deleteClass(fx.actor, cls.id)).rejects.toBeInstanceOf(ClassHasEnrolmentsError);
-      expect(await fx.repo.getClass(fx.orgA, cls.id)).not.toBeNull();
+      expect(await fx.repo.getClass(fx.actor.userId, fx.orgA, cls.id)).not.toBeNull();
     });
 
     it('deleting a class of another camp is not found', async () => {
       const session = await makeSession(fx.repo, fx.actor);
       const cls = await fx.repo.addClass(fx.actor, session.id, sessionInput(9, 12));
       await expect(fx.repo.deleteClass(fx.otherActor, cls.id)).rejects.toBeInstanceOf(ClassNotFoundError);
-      expect(await fx.repo.getClass(fx.orgA, cls.id)).not.toBeNull();
+      expect(await fx.repo.getClass(fx.actor.userId, fx.orgA, cls.id)).not.toBeNull();
     });
   });
 
@@ -252,8 +254,8 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
         status: 'enrolled',
         overrideReason: null,
       });
-      expect(await fx.repo.listEnrolments(fx.orgA, classId)).toEqual([enrolment]);
-      expect((await fx.repo.getClass(fx.orgA, classId))?.seatsTaken).toBe(1);
+      expect(await fx.repo.listEnrolments(fx.actor.userId, fx.orgA, classId)).toEqual([enrolment]);
+      expect((await fx.repo.getClass(fx.actor.userId, fx.orgA, classId))?.seatsTaken).toBe(1);
     });
 
     it('writes enrolment.create on success', async () => {
@@ -266,7 +268,7 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
       await expect(fx.repo.enrol(fx.actor, { classId, camperId: tooYoung }, enrolRule())).rejects.toBeInstanceOf(
         AgeOutOfRangeError,
       );
-      expect(await fx.repo.listEnrolments(fx.orgA, classId)).toEqual([]);
+      expect(await fx.repo.listEnrolments(fx.actor.userId, fx.orgA, classId)).toEqual([]);
       expect(await auditActions(pool, fx.orgA)).not.toContain('enrolment.create');
     });
 
@@ -294,7 +296,7 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
         enrolRule({ waitlistIfFull: true }),
       );
       expect(waitlisted.status).toBe('waitlisted');
-      const cls = await fx.repo.getClass(fx.orgA, classId);
+      const cls = await fx.repo.getClass(fx.actor.userId, fx.orgA, classId);
       expect(cls).toMatchObject({ seatsTaken: 2, waitlisted: 1 });
     });
 
@@ -360,7 +362,7 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
           enrolRule({ override: { reason: 'Please' }, actorCanOverride: false }),
         ),
       ).rejects.toBeInstanceOf(EnrolmentRefusedError);
-      expect(await fx.repo.listEnrolments(fx.orgA, classId)).toEqual([]);
+      expect(await fx.repo.listEnrolments(fx.actor.userId, fx.orgA, classId)).toEqual([]);
     });
 
     it('does not let a cancelled enrolment block the same time', async () => {
@@ -384,7 +386,9 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
     });
 
     it('lists enrolments of an unknown class as not found', async () => {
-      await expect(fx.repo.listEnrolments(fx.orgA, randomUUID())).rejects.toBeInstanceOf(ClassNotFoundError);
+      await expect(fx.repo.listEnrolments(fx.actor.userId, fx.orgA, randomUUID())).rejects.toBeInstanceOf(
+        ClassNotFoundError,
+      );
     });
   });
 
@@ -396,8 +400,8 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
       const enrolment = await fx.repo.enrol(fx.actor, { classId: cls.id, camperId: camper }, enrolRule());
       const cancelled = await fx.repo.cancelEnrolment(fx.actor, enrolment.id, 'Moved to another camp');
       expect(cancelled).toMatchObject({ id: enrolment.id, status: 'cancelled' });
-      expect((await fx.repo.getClass(fx.orgA, cls.id))?.seatsTaken).toBe(0);
-      expect(await fx.repo.listEnrolments(fx.orgA, cls.id)).toHaveLength(1);
+      expect((await fx.repo.getClass(fx.actor.userId, fx.orgA, cls.id))?.seatsTaken).toBe(0);
+      expect(await fx.repo.listEnrolments(fx.actor.userId, fx.orgA, cls.id)).toHaveLength(1);
       expect(await auditActions(pool, fx.orgA)).toContain('enrolment.cancel');
     });
 

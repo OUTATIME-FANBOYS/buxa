@@ -170,8 +170,8 @@ describe('PeopleService household rules', () => {
       }),
     );
     expect(error.statusCode).toBe(400);
-    expect(await camp.repos.people.listHouseholds(camp.orgId)).toEqual([]);
-    expect(await camp.repos.people.list(camp.orgId, {})).toEqual([]);
+    expect(await camp.repos.people.listHouseholds('user-admin', camp.orgId)).toEqual([]);
+    expect(await camp.repos.people.list('user-admin', camp.orgId, {})).toEqual([]);
   });
 
   it('adds a camper to a household that has a guardian', async () => {

@@ -30,10 +30,10 @@ export type ConfirmationRule = (status: RegistrationStatus) => RegistrationDecis
  * Holds and the waitlist are not here yet: they add a status on registration_sessions (see migration 0023).
  */
 export interface RegistrationRepository {
-  listForms(orgId: string): Promise<RegistrationForm[]>;
-  getForm(orgId: string, formId: string): Promise<RegistrationForm | null>;
+  listForms(userId: string, orgId: string): Promise<RegistrationForm[]>;
+  getForm(userId: string, orgId: string, formId: string): Promise<RegistrationForm | null>;
   /** The published definitions of a form, or null when the form is missing or never published. */
-  getPublishedVersion(orgId: string, formId: string): Promise<PublishedVersion | null>;
+  getPublishedVersion(userId: string, orgId: string, formId: string): Promise<PublishedVersion | null>;
   /** Audits `registration_form.create`. Throws RegistrationSessionNotFoundError for a session outside the camp. */
   createForm(actor: Actor, input: RegistrationFormInput): Promise<RegistrationForm>;
   /** Audits `registration_form.update`. Throws RegistrationFormNotFoundError or RegistrationSessionNotFoundError. */
@@ -41,7 +41,7 @@ export interface RegistrationRepository {
   /** Freezes the draft as the next version. Audits `registration_form.publish`. Throws RegistrationFormNotFoundError. */
   publishForm(actor: Actor, formId: string): Promise<RegistrationForm>;
   /** Throws RegistrationFormNotFoundError. */
-  listSubmissions(orgId: string, formId: string): Promise<RegistrationRow[]>;
+  listSubmissions(userId: string, orgId: string, formId: string): Promise<RegistrationRow[]>;
   /**
    * Checks the rule inside the transaction and, on allow, writes the registration, its session rows and `registration.submit`.
    * On refuse it throws RegistrationRefusedError and writes nothing. Throws RegistrationFormNotFoundError.

@@ -41,8 +41,8 @@ export type EnrolmentRule = (facts: GatheredEnrolmentFacts) => EnrolmentDecision
  * Refusals are thrown as the errors in ./errors.ts, after the transaction is rolled back, so nothing is written for a refused change.
  */
 export interface ClassRepository {
-  listSessions(orgId: string): Promise<Session[]>;
-  getSession(orgId: string, sessionId: string): Promise<Session | null>;
+  listSessions(userId: string, orgId: string): Promise<Session[]>;
+  getSession(userId: string, orgId: string, sessionId: string): Promise<Session | null>;
   /** Audits `session.create`, and `session.price_change` when the session is created with a price. */
   createSession(actor: Actor, input: NewSessionInput): Promise<Session>;
   /** Sets or clears a session's price. Audits `session.price_change` with the old and new price. Throws SessionNotFoundError. */
@@ -55,10 +55,10 @@ export interface ClassRepository {
    */
   addClasses(actor: Actor, sessionId: string, inputs: ClassRecord[]): Promise<Class[]>;
   /** Times and names of every class in the camp, for the clash check. */
-  listCampClassSpans(orgId: string): Promise<CampClassSpan[]>;
+  listCampClassSpans(userId: string, orgId: string): Promise<CampClassSpan[]>;
   /** Throws SessionNotFoundError. */
-  listClasses(orgId: string, sessionId: string): Promise<Class[]>;
-  getClass(orgId: string, classId: string): Promise<Class | null>;
+  listClasses(userId: string, orgId: string, sessionId: string): Promise<Class[]>;
+  getClass(userId: string, orgId: string, classId: string): Promise<Class | null>;
   /** Audits `class.create`. Throws SessionNotFoundError, or InstructorNotFoundError for an instructor outside the camp. */
   addClass(actor: Actor, sessionId: string, input: ClassRecord): Promise<Class>;
   /**
@@ -69,7 +69,7 @@ export interface ClassRepository {
   /** Audits `class.delete`. Throws ClassNotFoundError, or ClassHasEnrolmentsError when any enrolment exists. */
   deleteClass(actor: Actor, classId: string): Promise<void>;
   /** Throws SessionNotFoundError. */
-  listEnrolments(orgId: string, classId: string): Promise<Enrolment[]>;
+  listEnrolments(userId: string, orgId: string, classId: string): Promise<Enrolment[]>;
   /**
    * The only place that checks and takes a seat. In one transaction, under a lock on the class: gathers the facts, runs `rule`,
    * and on `allow` writes the enrolment and its audit entries (`enrolment.create`, plus `enrolment.override` when an overlap was overridden).
@@ -82,16 +82,16 @@ export interface ClassRepository {
    * The classes a teacher is assigned to in this camp. Only members with the teacher role count, so a person who stopped being a
    * teacher has no classes even before their assignments are cleared. Used by the assigned-classes scope (teacherScope.ts).
    */
-  assignedClassIds(orgId: string, userId: string): Promise<string[]>;
+  assignedClassIds(userId: string, orgId: string, teacherId: string): Promise<string[]>;
   /** The people with an enrolled (not waitlisted or cancelled) place in any of the classes. */
-  camperIdsIn(orgId: string, classIds: readonly string[]): Promise<string[]>;
+  camperIdsIn(userId: string, orgId: string, classIds: readonly string[]): Promise<string[]>;
   /**
    * Replaces a class's teachers (staff and admins, classes:manage). Audits `class.update`. Throws ClassNotFoundError, or
    * TeacherNotFoundError for a user who is not a teacher in this camp.
    */
   replaceTeachers(actor: Actor, classId: string, userIds: readonly string[]): Promise<void>;
   /** Which teachers each class of a session has, for the session page. Row-level security applies. */
-  teacherAssignments(orgId: string, sessionId: string): Promise<TeacherAssignment[]>;
+  teacherAssignments(userId: string, orgId: string, sessionId: string): Promise<TeacherAssignment[]>;
 }
 
 /** A teacher assigned to one class (the class's id, and the teacher's user id). */

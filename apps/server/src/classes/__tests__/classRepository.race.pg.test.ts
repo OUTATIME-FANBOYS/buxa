@@ -42,7 +42,7 @@ describe.skipIf(!url)('enrolment races on Postgres', () => {
         expect(wins, `trial ${trial}`).toHaveLength(1);
         expect(losses, `trial ${trial}`).toHaveLength(1);
         expect(losses[0], `trial ${trial}`).toBeInstanceOf(SessionFullError);
-        expect((await fx.repo.getClass(fx.orgA, cls.id))?.seatsTaken, `trial ${trial}`).toBe(1);
+        expect((await fx.repo.getClass(fx.actor.userId, fx.orgA, cls.id))?.seatsTaken, `trial ${trial}`).toBe(1);
       }
     } finally {
       await fx.close();

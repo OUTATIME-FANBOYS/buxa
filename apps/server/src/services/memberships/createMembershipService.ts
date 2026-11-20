@@ -1,3 +1,4 @@
+import type { Actor } from '@buxa/domain';
 import { assertAllowed } from '../../auth/authorize';
 import { badRequest, notFound } from '../../http/errors';
 import { campToday } from '../shared/campDay';
@@ -8,7 +9,7 @@ import type { MembershipService, MembershipServiceDeps } from './MembershipServi
 export function createMembershipService(deps: MembershipServiceDeps): MembershipService {
   const { memberships, people, orgs, clock } = deps;
 
-  const todayFor = async (orgId: string) => campToday(clock, await campZone(orgs, orgId));
+  const todayFor = async (actor: Pick<Actor, 'userId' | 'orgId'>) => campToday(clock, await campZone(orgs, actor));
 
   return {
     async add(actor, input) {
@@ -16,7 +17,7 @@ export function createMembershipService(deps: MembershipServiceDeps): Membership
       if (input.endsOn < input.startsOn) {
         throw badRequest('The end date cannot be before the start date.');
       }
-      if (!(await people.get(actor.orgId, input.personId))) {
+      if (!(await people.get(actor.userId, actor.orgId, input.personId))) {
         throw notFound('Person not found');
       }
       const record = await guard(() =>
@@ -28,7 +29,7 @@ export function createMembershipService(deps: MembershipServiceDeps): Membership
         }),
       );
 
-      return toPersonMembership(record, await todayFor(actor.orgId));
+      return toPersonMembership(record, await todayFor(actor));
     },
 
     async revoke(actor, input) {
@@ -39,16 +40,16 @@ export function createMembershipService(deps: MembershipServiceDeps): Membership
       }
       const record = await guard(() => memberships.revoke(actor, input.membershipId, reason, clock().toISOString()));
 
-      return toPersonMembership(record, await todayFor(actor.orgId));
+      return toPersonMembership(record, await todayFor(actor));
     },
 
     async listFor(actor, personId) {
       assertAllowed(actor, 'people:read');
-      if (!(await people.get(actor.orgId, personId))) {
+      if (!(await people.get(actor.userId, actor.orgId, personId))) {
         throw notFound('Person not found');
       }
-      const today = await todayFor(actor.orgId);
-      const records = await memberships.forPerson(actor.orgId, personId);
+      const today = await todayFor(actor);
+      const records = await memberships.forPerson(actor.userId, actor.orgId, personId);
 
       return records.map(r => toPersonMembership(r, today));
     },

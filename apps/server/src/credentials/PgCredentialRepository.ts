@@ -51,7 +51,7 @@ export class PgCredentialRepository implements CredentialRepository {
   }
 
   private issueOnce(actor: Actor, personId: string, tokenHash: Buffer, at: string): Promise<CredentialRecord> {
-    return withOrg(this.pool, actor.orgId, async db => {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       if (!(await personExists(db, personId))) {
         throw new PersonNotFoundError();
       }
@@ -82,7 +82,7 @@ export class PgCredentialRepository implements CredentialRepository {
       return Promise.resolve(null);
     }
 
-    return withOrg(this.pool, actor.orgId, async db => {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       const { rows } = await db.query<CredentialRow>(
         `UPDATE credentials SET revoked_at = $2::timestamptz WHERE person_id = $1 AND revoked_at IS NULL RETURNING ${COLUMNS}`,
         [personId, at],
@@ -103,12 +103,12 @@ export class PgCredentialRepository implements CredentialRepository {
     });
   }
 
-  activeFor(orgId: string, personId: string): Promise<CredentialRecord | null> {
-    return withOrg(this.pool, orgId, db => activeOf(db, personId));
+  activeFor(userId: string, orgId: string, personId: string): Promise<CredentialRecord | null> {
+    return withOrg(this.pool, userId, orgId, db => activeOf(db, personId));
   }
 
-  resolve(orgId: string, tokenHash: Buffer): Promise<string | null> {
-    return withOrg(this.pool, orgId, async db => {
+  resolve(userId: string, orgId: string, tokenHash: Buffer): Promise<string | null> {
+    return withOrg(this.pool, userId, orgId, async db => {
       const { rows } = await db.query<{ person_id: string }>(
         'SELECT person_id FROM credentials WHERE token_hash = $1 AND revoked_at IS NULL',
         [tokenHash],
@@ -118,13 +118,13 @@ export class PgCredentialRepository implements CredentialRepository {
     });
   }
 
-  withActive(orgId: string, personIds: readonly string[]): Promise<Set<string>> {
+  withActive(userId: string, orgId: string, personIds: readonly string[]): Promise<Set<string>> {
     const valid = personIds.filter(isUuid);
     if (valid.length === 0) {
       return Promise.resolve(new Set());
     }
 
-    return withOrg(this.pool, orgId, async db => {
+    return withOrg(this.pool, userId, orgId, async db => {
       const { rows } = await db.query<{ person_id: string }>(
         'SELECT DISTINCT person_id FROM credentials WHERE person_id = ANY($1::uuid[]) AND revoked_at IS NULL',
         [valid],

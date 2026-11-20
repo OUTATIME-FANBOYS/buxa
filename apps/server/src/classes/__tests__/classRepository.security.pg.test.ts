@@ -36,7 +36,8 @@ describe.skipIf(!url)('classes on Postgres: request role and camp isolation', ()
   });
 
   /** Runs one statement as the request role, in camp A. Returns the rejection, so a test can check its SQLSTATE. */
-  const asCampA = (sql: string, params: unknown[]) => withOrg(pool, fx.orgA, db => db.query(sql, params));
+  const asCampA = (sql: string, params: unknown[]) =>
+    withOrg(pool, fx.actor.userId, fx.orgA, db => db.query(sql, params));
 
   describe('the request role cannot hard-delete', () => {
     it.each([
@@ -61,17 +62,22 @@ describe.skipIf(!url)('classes on Postgres: request role and camp isolation', ()
 
   describe('a second camp sees none of it', () => {
     it('lists no sessions, and reads no session, class or enrolment by id', async () => {
-      expect(await fx.repo.listSessions(fx.orgB)).toEqual([]);
-      expect(await fx.repo.getSession(fx.orgB, parentId)).toBeNull();
-      expect(await fx.repo.getClass(fx.orgB, classId)).toBeNull();
-      await expect(fx.repo.listClasses(fx.orgB, parentId)).rejects.toBeInstanceOf(SessionNotFoundError);
-      await expect(fx.repo.listEnrolments(fx.orgB, classId)).rejects.toBeInstanceOf(ClassNotFoundError);
+      expect(await fx.repo.listSessions(fx.otherActor.userId, fx.orgB)).toEqual([]);
+      expect(await fx.repo.getSession(fx.otherActor.userId, fx.orgB, parentId)).toBeNull();
+      expect(await fx.repo.getClass(fx.otherActor.userId, fx.orgB, classId)).toBeNull();
+      await expect(fx.repo.listClasses(fx.otherActor.userId, fx.orgB, parentId)).rejects.toBeInstanceOf(
+        SessionNotFoundError,
+      );
+      await expect(fx.repo.listEnrolments(fx.otherActor.userId, fx.orgB, classId)).rejects.toBeInstanceOf(
+        ClassNotFoundError,
+      );
     });
 
     it('sees no rows at all in the tables under its own role', async () => {
       for (const table of ['classes', 'sessions', 'enrolments', 'session_instructors']) {
         const n = await withOrg(
           pool,
+          fx.otherActor.userId,
           fx.orgB,
           async db => (await db.query<{ n: number }>(`SELECT count(*)::int AS n FROM ${table}`)).rows[0].n,
         );

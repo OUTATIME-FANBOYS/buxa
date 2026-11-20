@@ -5,7 +5,7 @@ import { createClassService } from '../../../classes/ClassService';
 import { InMemoryClassRepository } from '../../../classes/InMemoryClassRepository';
 import { InMemoryImportRepository } from '../../../classes/import/InMemoryImportRepository';
 import { createImportService } from '../../../classes/import/ImportService';
-import { CAMP_TZ, JULY_SESSION, ORG, as } from '../../../classes/__tests__/fixtures';
+import { CAMP_TZ, JULY_SESSION, ORG, USER, as } from '../../../classes/__tests__/fixtures';
 import { importClassesAction } from '../importClassesAction';
 import { IMPORT_IDLE, type ImportState } from '@buxa/shared';
 import { settle } from '@buxa/domain';
@@ -88,7 +88,7 @@ describe('importClassesAction: preview (nothing is written)', () => {
 
   it('writes nothing during the preview', async () => {
     await importClassesAction(IMPORT_IDLE, upload(SEASON));
-    expect(await imports.listCampSessions(ORG)).toEqual([]);
+    expect(await imports.listCampSessions(USER, ORG)).toEqual([]);
   });
 
   it('asks for a file when none is chosen, and reads only CSV-sized files', async () => {
@@ -132,7 +132,7 @@ describe('importClassesAction: confirm (one transaction)', () => {
       counts: { create: 3, refused: 2 },
       changedSincePreview: false,
     });
-    expect(await imports.listCampSessions(ORG)).toHaveLength(3);
+    expect(await imports.listCampSessions(USER, ORG)).toHaveLength(3);
   });
 
   it('asks the person to upload again when the preview text is missing', async () => {

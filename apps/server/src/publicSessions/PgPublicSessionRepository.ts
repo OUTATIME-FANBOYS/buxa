@@ -11,7 +11,7 @@ export class PgPublicSessionRepository implements PublicSessionRepository {
   constructor(private readonly pool: Pool) {}
 
   findPublicSession(slug: string, sessionId: string): Promise<PublicSessionRecord | null> {
-    return withOrg(this.pool, null, async db => {
+    return withOrg(this.pool, null, null, async db => {
       const { rows } = await db.query<{
         camp_name: string;
         camp_timezone: string;
@@ -42,7 +42,7 @@ export class PgPublicSessionRepository implements PublicSessionRepository {
   }
 
   listUpcomingClasses(slug: string, sessionId: string, from: Date): Promise<PublicClass[]> {
-    return withOrg(this.pool, null, async db => {
+    return withOrg(this.pool, null, null, async db => {
       const { rows } = await db.query<{
         class_name: string;
         age_min: number | null;

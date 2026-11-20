@@ -69,7 +69,7 @@ describe.skipIf(!url)('PgImportRepository', () => {
           create(art.id, { rowNumber: 3, externalKey: 'ART-1', location: 'Studio' }),
         ]);
 
-        const sessions = await repo.listCampSessions(fx.orgA);
+        const sessions = await repo.listCampSessions(fx.actor.userId, fx.orgA);
         expect(sessions).toHaveLength(2);
         expect(sessions).toEqual(
           expect.arrayContaining([
@@ -112,7 +112,7 @@ describe.skipIf(!url)('PgImportRepository', () => {
           ]),
         ).rejects.toThrow();
 
-        expect(await repo.listCampSessions(fx.orgA)).toEqual([]);
+        expect(await repo.listCampSessions(fx.actor.userId, fx.orgA)).toEqual([]);
         expect(await auditActions(pool, fx.orgA)).toEqual(before);
       } finally {
         await fx.close();
@@ -125,15 +125,15 @@ describe.skipIf(!url)('PgImportRepository', () => {
         const robotics = await makeSession(fx.repo, fx.actor, { name: 'Robotics' });
         await repo.applyImport(fx.actor, upload('season.csv', 1), [create(robotics.id, { externalKey: 'ROB-1' })]);
 
-        expect(await repo.listCampSessions(fx.orgA)).toHaveLength(1);
-        expect(await repo.listCampSessions(fx.orgB)).toEqual([]);
-        expect(await fx.repo.listSessions(fx.orgB)).toEqual([]);
+        expect(await repo.listCampSessions(fx.actor.userId, fx.orgA)).toHaveLength(1);
+        expect(await repo.listCampSessions(fx.otherActor.userId, fx.orgB)).toEqual([]);
+        expect(await fx.repo.listSessions(fx.otherActor.userId, fx.orgB)).toEqual([]);
 
         // Camp B cannot write into camp A's class: the class is invisible to it, so the import refuses the row.
         await expect(
           repo.applyImport(fx.otherActor, upload('steal.csv', 1), [create(robotics.id, { externalKey: 'ROB-2' })]),
         ).rejects.toThrow();
-        expect(await repo.listCampSessions(fx.orgB)).toEqual([]);
+        expect(await repo.listCampSessions(fx.otherActor.userId, fx.orgB)).toEqual([]);
       } finally {
         await fx.close();
       }

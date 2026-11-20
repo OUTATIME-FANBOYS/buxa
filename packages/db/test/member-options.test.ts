@@ -8,12 +8,18 @@ import type { Row } from '../types';
 const url = process.env.DATABASE_URL;
 describe.skipIf(!url)('member options (row-level security)', () => {
   const pool = new pg.Pool({ connectionString: url });
+  // The function reads the signed-in user (app.user_id), so each call runs as the admin who sets the option.
+  const setOption = (adminId: string, orgId: string, memberId: string) =>
+    withOrg(pool, adminId, orgId, db =>
+      db.query(`SELECT buxa_set_member_option($1, $2, 'teacher.check_in_out', true)`, [orgId, memberId]),
+    );
   const tag = Math.random().toString(36).slice(2, 8);
   let campA = '';
   let campB = '';
   let teacherA = '';
   let staffA = '';
   let adminA = '';
+  let adminB = '';
   let teacherB = '';
 
   beforeAll(async () => {
@@ -36,10 +42,11 @@ describe.skipIf(!url)('member options (row-level security)', () => {
     teacherA = await user('teacher-a');
     staffA = await user('staff-a');
     adminA = await user('admin-a');
+    adminB = await user('admin-b');
     teacherB = await user('teacher-b');
     await pool.query<Row>(
-      `INSERT INTO org_members(org_id, user_id, role) VALUES ($1,$2,'teacher'), ($1,$3,'staff'), ($1,$4,'admin'), ($5,$6,'teacher')`,
-      [campA, teacherA, staffA, adminA, campB, teacherB],
+      `INSERT INTO org_members(org_id, user_id, role) VALUES ($1,$2,'teacher'), ($1,$3,'staff'), ($1,$4,'admin'), ($5,$6,'teacher'), ($5,$7,'admin')`,
+      [campA, teacherA, staffA, adminA, campB, teacherB, adminB],
     );
   });
 
@@ -72,11 +79,7 @@ describe.skipIf(!url)('member options (row-level security)', () => {
   });
 
   it('turns check-in on for a teacher of the camp, and records who set it', async () => {
-    await pool.query(`SELECT buxa_set_member_option($1, $2, 'teacher.check_in_out', true, $3)`, [
-      campA,
-      teacherA,
-      adminA,
-    ]);
+    await setOption(adminA, campA, teacherA);
     const row = await pool.query<{ enabled: boolean; set_by: string }>(
       `SELECT enabled, set_by FROM member_options WHERE org_id = $1 AND user_id = $2`,
       [campA, teacherA],
@@ -85,21 +88,13 @@ describe.skipIf(!url)('member options (row-level security)', () => {
   });
 
   it('refuses to set an option on anyone who is not a teacher of that camp', async () => {
-    await expect(
-      pool.query(`SELECT buxa_set_member_option($1, $2, 'teacher.check_in_out', true, $3)`, [campA, staffA, adminA]),
-    ).rejects.toThrow(/Teacher not found/);
-    await expect(
-      pool.query(`SELECT buxa_set_member_option($1, $2, 'teacher.check_in_out', true, $3)`, [campB, teacherA, adminA]),
-    ).rejects.toThrow(/Teacher not found/);
+    await expect(setOption(adminA, campA, staffA)).rejects.toThrow(/Teacher not found/);
+    await expect(setOption(adminB, campB, teacherA)).rejects.toThrow(/Teacher not found/);
   });
 
   it('a camp sees only its own options', async () => {
-    await pool.query(`SELECT buxa_set_member_option($1, $2, 'teacher.check_in_out', true, $3)`, [
-      campB,
-      teacherB,
-      adminA,
-    ]);
-    const seenByA = await withOrg(pool, campA, db =>
+    await setOption(adminB, campB, teacherB);
+    const seenByA = await withOrg(pool, adminA, campA, db =>
       db.query<{ user_id: string }>('SELECT user_id FROM member_options WHERE enabled'),
     );
     expect(seenByA.rows.map(r => r.user_id)).toEqual([teacherA]);

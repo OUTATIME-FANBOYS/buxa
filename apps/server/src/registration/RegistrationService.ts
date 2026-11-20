@@ -53,8 +53,12 @@ function present<T>(values: Record<string, T | undefined>): Record<string, T> {
   return Object.fromEntries(Object.entries(values).filter((e): e is [string, T] => e[1] !== undefined));
 }
 
-async function requireForm(repo: RegistrationRepository, orgId: string, formId: string): Promise<RegistrationForm> {
-  const form = await repo.getForm(orgId, formId);
+async function requireForm(
+  repo: RegistrationRepository,
+  actor: Pick<Actor, 'userId' | 'orgId'>,
+  formId: string,
+): Promise<RegistrationForm> {
+  const form = await repo.getForm(actor.userId, actor.orgId, formId);
   if (!form) {
     throw new RegistrationFormNotFoundError();
   }
@@ -67,13 +71,13 @@ export function createRegistrationService(repo: RegistrationRepository): Registr
     async listForms(actor) {
       assertAllowed(actor, 'registration:read');
 
-      return repo.listForms(actor.orgId);
+      return repo.listForms(actor.userId, actor.orgId);
     },
 
     async getForm(actor, formId) {
       assertAllowed(actor, 'registration:read');
 
-      return requireForm(repo, actor.orgId, formId);
+      return requireForm(repo, actor, formId);
     },
 
     async createForm(actor, input) {
@@ -99,21 +103,21 @@ export function createRegistrationService(repo: RegistrationRepository): Registr
     async listSubmissions(actor, formId) {
       assertAllowed(actor, 'registration:read');
 
-      return repo.listSubmissions(actor.orgId, formId);
+      return repo.listSubmissions(actor.userId, actor.orgId, formId);
     },
 
     async publishedVersion(actor, formId) {
       assertAllowed(actor, 'registration:submit');
-      await requireForm(repo, actor.orgId, formId);
+      await requireForm(repo, actor, formId);
 
-      return repo.getPublishedVersion(actor.orgId, formId);
+      return repo.getPublishedVersion(actor.userId, actor.orgId, formId);
     },
 
     async submit(actor, formId, input) {
       assertAllowed(actor, 'registration:submit');
-      await requireForm(repo, actor.orgId, formId);
+      await requireForm(repo, actor, formId);
 
-      const published = await repo.getPublishedVersion(actor.orgId, formId);
+      const published = await repo.getPublishedVersion(actor.userId, actor.orgId, formId);
       if (!published) {
         throw new RegistrationRefusedError('form_not_published');
       }

@@ -57,7 +57,7 @@ export function importRepositoryContract(factory: () => Promise<ImportFixture>):
     it('creates sessions that list back with the class name, capacity and key, and nothing taken', async () => {
       const classId = await createClass('Robotics');
       await fx.repo.applyImport(fx.actor, upload, [create(classId, { externalKey: 'ROB-1' })]);
-      const sessions = await fx.repo.listCampSessions(fx.actor.orgId);
+      const sessions = await fx.repo.listCampSessions(fx.actor.userId, fx.actor.orgId);
       expect(sessions).toEqual([
         expect.objectContaining({
           classId,
@@ -75,7 +75,7 @@ export function importRepositoryContract(factory: () => Promise<ImportFixture>):
     it('updates an existing session in place: same id, new times and location', async () => {
       const classId = await createClass('Art');
       await fx.repo.applyImport(fx.actor, upload, [create(classId, { externalKey: 'ART-1' })]);
-      const [before] = await fx.repo.listCampSessions(fx.actor.orgId);
+      const [before] = await fx.repo.listCampSessions(fx.actor.userId, fx.actor.orgId);
       if (!before) {
         throw new Error('setup failed');
       }
@@ -88,7 +88,7 @@ export function importRepositoryContract(factory: () => Promise<ImportFixture>):
           endsAt: '2027-07-05T08:00:00.000Z',
         },
       ]);
-      const after = await fx.repo.listCampSessions(fx.actor.orgId);
+      const after = await fx.repo.listCampSessions(fx.actor.userId, fx.actor.orgId);
       expect(after).toHaveLength(1);
       expect(after[0]).toMatchObject({ id: before.id, location: 'Studio', startsAt: '2027-07-05T06:00:00.000Z' });
     });
@@ -99,14 +99,14 @@ export function importRepositoryContract(factory: () => Promise<ImportFixture>):
       await expect(
         fx.repo.applyImport(fx.actor, upload, [create(classId, { externalKey: 'M-2', rowNumber: 2 }), unknown]),
       ).rejects.toThrow();
-      expect(await fx.repo.listCampSessions(fx.actor.orgId)).toEqual([]);
+      expect(await fx.repo.listCampSessions(fx.actor.userId, fx.actor.orgId)).toEqual([]);
     });
 
     it("lists only the actor's camp", async () => {
       const classId = await createClass('Robotics');
       await fx.repo.applyImport(fx.actor, upload, [create(classId)]);
       const other = { ...fx.actor, orgId: randomUUID() };
-      expect(await fx.repo.listCampSessions(other.orgId)).toEqual([]);
+      expect(await fx.repo.listCampSessions(other.userId, other.orgId)).toEqual([]);
     });
   });
 }

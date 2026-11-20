@@ -43,8 +43,8 @@ export class PgImportRepository implements ImportRepository {
     this.now = options.now ?? systemClock;
   }
 
-  listCampSessions(orgId: string): Promise<ExistingSession[]> {
-    return withOrg(this.pool, orgId, async db => {
+  listCampSessions(userId: string, orgId: string): Promise<ExistingSession[]> {
+    return withOrg(this.pool, userId, orgId, async db => {
       const { rows } = await db.query<CampSessionRow>(
         `SELECT s.id, s.class_id, c.name AS class_name, s.starts_at, s.ends_at, s.location, s.capacity, s.external_key,
                 (SELECT count(*)::int FROM enrolments e WHERE e.session_id = s.id AND e.status = 'enrolled') AS seats_taken
@@ -67,7 +67,7 @@ export class PgImportRepository implements ImportRepository {
   }
 
   applyImport(actor: Actor, upload: ImportUpload, writes: readonly PlannedWrite[]): Promise<void> {
-    return withOrg(this.pool, actor.orgId, async db => {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       for (const w of writes) {
         if (w.kind === 'create') {
           await createSession(db, actor, upload, w);

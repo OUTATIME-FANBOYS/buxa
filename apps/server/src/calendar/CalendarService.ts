@@ -18,8 +18,8 @@ export interface CalendarRepository {
   findCampByTokenHash(hash: Buffer): Promise<FeedCamp | null>;
   /** Stores the hash for the camp, replacing any earlier one, and audits `calendar.token_rotate` in the same transaction. */
   saveTokenHash(actor: Actor, hash: Buffer): Promise<void>;
-  /** Every session of the camp, with its class name. Row-level security applies. */
-  listFeedClasses(orgId: string): Promise<FeedClass[]>;
+  /** Every session of the camp that owns the token hash, with its class name. No signed-in user: the token is the access. */
+  listFeedClasses(tokenHash: Buffer): Promise<FeedClass[]>;
 }
 
 export interface CalendarService {
@@ -47,7 +47,7 @@ export function createCalendarService({ repo }: { repo: CalendarRepository }): C
       if (!camp || camp.archived) {
         return null;
       }
-      const classes = await repo.listFeedClasses(camp.orgId);
+      const classes = await repo.listFeedClasses(hashCalendarToken(token));
 
       return serializeCalendar({ campName: camp.name, classes, generatedAt: now });
     },

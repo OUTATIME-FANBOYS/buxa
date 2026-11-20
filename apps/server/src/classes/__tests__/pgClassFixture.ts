@@ -60,6 +60,12 @@ export async function createClassFixture(pool: Pool): Promise<ClassFixture> {
   const orgB = await insertCamp(pool, `classes-b-${tag}`);
   const userA = await insertUser(pool, `owner-a-${tag}@example.test`);
   const userB = await insertUser(pool, `owner-b-${tag}@example.test`);
+  await pool.query(`INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'owner'), ($3, $4, 'owner')`, [
+    orgA,
+    userA,
+    orgB,
+    userB,
+  ]);
 
   return {
     pool,
@@ -71,6 +77,7 @@ export async function createClassFixture(pool: Pool): Promise<ClassFixture> {
     addPerson: (orgId, dob, givenName = 'Camper') =>
       withOrg(
         pool,
+        orgId === orgB ? userB : userA,
         orgId,
         async db =>
           (
@@ -128,17 +135,28 @@ export function sessionInput(
   };
 }
 
+/** A member of the camp, to read as. Found through the test's own pool, which is not row-level security limited. */
+async function memberOfCamp(pool: Pool, orgId: string): Promise<string> {
+  const { rows } = await pool.query<{ user_id: string }>(
+    'SELECT user_id FROM org_members WHERE org_id = $1 ORDER BY created_at LIMIT 1',
+    [orgId],
+  );
+
+  return rows[0].user_id;
+}
+
 /** Reads the audit actions written in one camp, in order. */
-export function auditActions(pool: Pool, orgId: string): Promise<string[]> {
-  return withOrg(pool, orgId, async db =>
+export async function auditActions(pool: Pool, orgId: string): Promise<string[]> {
+  return withOrg(pool, await memberOfCamp(pool, orgId), orgId, async db =>
     (await db.query<{ action: string }>('SELECT action FROM audit_log ORDER BY id')).rows.map(r => r.action),
   );
 }
 
 /** The data of the newest `class.create` entry in the camp. */
-export function classAuditData(pool: Pool, orgId: string): Promise<Record<string, unknown> | undefined> {
+export async function classAuditData(pool: Pool, orgId: string): Promise<Record<string, unknown> | undefined> {
   return withOrg(
     pool,
+    await memberOfCamp(pool, orgId),
     orgId,
     async db =>
       (

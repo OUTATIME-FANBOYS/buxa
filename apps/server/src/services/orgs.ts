@@ -38,7 +38,7 @@ export function createOrgService(orgs: OrgRepository): OrgService {
     async getCamp(actor) {
       assertAllowed(actor, 'org:read');
 
-      return guard(() => orgs.get(actor.orgId));
+      return guard(() => orgs.get(actor.userId, actor.orgId));
     },
     async renameCamp(actor, input) {
       assertAllowed(actor, 'org:update');
@@ -47,7 +47,7 @@ export function createOrgService(orgs: OrgRepository): OrgService {
     },
     async listMembers(actor) {
       assertAllowed(actor, 'members:read');
-      const members = await orgs.listMembers(actor.orgId);
+      const members = await orgs.listMembers(actor.userId, actor.orgId);
       // Staff email addresses are for admins and above. Everyone else gets names and roles.
       const seeEmail = can(actor, 'members:read_contact');
 
@@ -65,7 +65,7 @@ export function createOrgService(orgs: OrgRepository): OrgService {
     },
     async deleteCamp(actor, orgId, confirmName) {
       assertAllowed(actor, 'org:delete', { orgId });
-      const camp = await guard(() => orgs.get(actor.orgId));
+      const camp = await guard(() => orgs.get(actor.userId, actor.orgId));
       if (confirmName !== camp.name) {
         throw badRequest(
           'To delete the camp, type its name exactly as it is written, capitals included. Nothing was deleted.',

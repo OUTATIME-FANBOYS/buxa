@@ -24,7 +24,7 @@ import type {
 /** The session set is replaced by a function (migration 0023): the request role has no DELETE on it. */
 export async function replaceSessions(db: Db, actor: Actor, formId: string, sessionIds: string[]): Promise<void> {
   try {
-    await db.query('SELECT buxa_replace_form_sessions($1, $2, $3::uuid[])', [actor.orgId, formId, sessionIds]);
+    await db.query('SELECT buxa_replace_form_sessions_v2($1, $2, $3::uuid[])', [actor.orgId, formId, sessionIds]);
   } catch (error) {
     throw translateSessionError(error);
   }

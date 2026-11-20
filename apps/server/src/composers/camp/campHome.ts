@@ -43,7 +43,7 @@ export async function loadCampHome(): Promise<CampHome> {
   const minors =
     visitEntries && can(actor, 'people:read_contact')
       ? await minorsAmong(
-          actor.orgId,
+          actor,
           visitEntries.map(v => v.personId),
           today,
         )
@@ -78,8 +78,8 @@ export function daysBefore(day: LocalDate, n: number): LocalDate {
 }
 
 /** The ids among `personIds` who are students (minors) today. Reads the people directly, as the age split needs their dates of birth. */
-async function minorsAmong(orgId: string, personIds: readonly string[], today: LocalDate): Promise<Set<string>> {
-  const records = await getRuntime().repositories.people.getMany(orgId, [...new Set(personIds)]);
+async function minorsAmong(actor: Actor, personIds: readonly string[], today: LocalDate): Promise<Set<string>> {
+  const records = await getRuntime().repositories.people.getMany(actor.userId, actor.orgId, [...new Set(personIds)]);
 
   return new Set(records.filter(person => isMinor(person, today)).map(person => person.id));
 }
