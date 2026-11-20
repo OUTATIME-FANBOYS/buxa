@@ -34,7 +34,7 @@ const toRecord = (row: InviteRow): InviteRecord => ({
   expiresAt: toIso(row.expires_at),
 });
 
-/** The constraint tag the accept function raises with (migration 0037) mapped to the refusal it means. */
+/** The constraint tag the accept function raises with (migration 0038) mapped to the refusal it means. */
 const REFUSALS = new Map<string, InviteRefusal>([
   ['invite_unusable', 'unusable'],
   ['invite_wrong_email', 'wrong-email'],
@@ -117,7 +117,7 @@ export class PgMemberInviteRepository implements MemberInviteRepository {
 
   lookup(person: SignedInPerson, tokenHash: Buffer): Promise<InviteLookup | null> {
     return withOrg(this.pool, person.userId, null, async db => {
-      // buxa_invite_for_accept (migration 0037) returns no row for an unknown, expired or used token.
+      // buxa_invite_for_accept (migration 0038) returns no row for an unknown, expired or used token.
       const { rows } = await db.query<{
         org_id: string;
         org_name: string;

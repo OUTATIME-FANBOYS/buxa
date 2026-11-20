@@ -9,10 +9,10 @@ const url = process.env.DATABASE_URL;
 /** A random 32-byte token hash, as the service stores it. */
 const newHash = (): Buffer => createHash('sha256').update(randomBytes(32)).digest();
 
-// These need a real Postgres: DATABASE_URL and a migrated database (CI provides one). They check migration 0037 directly:
+// These need a real Postgres: DATABASE_URL and a migrated database (CI provides one). They check migration 0038 directly:
 // buxa_accept_invite accepts once and refuses a second use, a different email and an expired invite; the profile function
 // writes only the signed-in person's row; and the invite table is visible to staff and above only.
-describe.skipIf(!url)('teacher invites (migration 0037)', () => {
+describe.skipIf(!url)('teacher invites (migration 0038)', () => {
   const pool = new pg.Pool({ connectionString: url });
   const tag = Math.random().toString(36).slice(2, 8);
   const annEmail = `ann-${tag}@b.test`;

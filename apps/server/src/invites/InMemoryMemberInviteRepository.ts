@@ -20,7 +20,7 @@ interface StoredInvite extends InviteRecord {
   acceptedAt: string | null;
 }
 
-/** The fake keeps the same rules as migration 0037: the same refusal order, and the profile is written only when the join is. */
+/** The fake keeps the same rules as migration 0038: the same refusal order, and the profile is written only when the join is. */
 export class InMemoryMemberInviteRepository implements MemberInviteRepository {
   readonly invites: StoredInvite[] = [];
   readonly audit: { action: string; orgId: string; actorId: string | null; entityId: string; data: object }[] = [];
