@@ -12,7 +12,12 @@ describe('server config', () => {
       supabasePublishableKey: undefined,
       dbPoolMax: 10,
       logLevel: 'info',
+      devOutboxEnabled: false,
     });
+  });
+  it('turns the dev outbox on only for ENABLE_DEV_OUTBOX=1', () => {
+    expect(loadConfig({ ...ok, ENABLE_DEV_OUTBOX: '1' }).devOutboxEnabled).toBe(true);
+    expect(loadConfig({ ...ok, ENABLE_DEV_OUTBOX: '0' }).devOutboxEnabled).toBe(false);
   });
   it('requires DATABASE_URL, with a message that says where to look', () => {
     expect(() => loadConfig({})).toThrow(/DATABASE_URL: is required \(see apps\/web\/\.env\.example\)/);

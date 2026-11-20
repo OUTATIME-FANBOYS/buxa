@@ -25,6 +25,8 @@ import { type AttendanceService } from './services/attendance/AttendanceService'
 import { type CredentialService } from './services/credentials/CredentialService';
 import { type MembershipService } from './services/memberships/MembershipService';
 import { type PeopleService } from './services/people/PeopleService';
+import { createInviteService } from './services/invites/createInviteService';
+import { type InviteService } from './services/invites/InviteService';
 
 export interface Runtime {
   config: Config;
@@ -56,6 +58,8 @@ export interface Services {
   seatHolds: SeatHoldService;
   calendar: CalendarService;
   publicSessions: PublicSessionService;
+  /** Teacher invites: a staff member invites a teacher by email, and the teacher joins with the link. */
+  invites: InviteService;
 }
 
 export interface RuntimeOptions {
@@ -140,6 +144,7 @@ export function createServices(repositories: Repositories, clock: Clock): Servic
     registration: createRegistrationService(repositories.registration),
     calendar: createCalendarService({ repo: repositories.calendar }),
     publicSessions: createPublicSessionService({ repo: repositories.publicSessions }),
+    invites: createInviteService({ invites: repositories.memberInvites }),
   };
 }
 

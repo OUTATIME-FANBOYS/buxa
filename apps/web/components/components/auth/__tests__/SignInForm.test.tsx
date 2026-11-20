@@ -8,7 +8,7 @@ vi.mock('@buxa/server/composers/auth/signUp', () => ({ signUp: () => settle(() =
 
 describe('SignInForm', () => {
   it('opens in sign-in mode and offers to create an account', () => {
-    const html = renderToStaticMarkup(<SignInForm />);
+    const html = renderToStaticMarkup(<SignInForm next="/camp" />);
     expect(html).toContain('<h1>Welcome back</h1>');
     expect(html).toContain('New here?');
     expect(html).toContain('>Create an account</button>');

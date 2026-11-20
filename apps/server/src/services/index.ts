@@ -5,3 +5,4 @@ export * from './memberships';
 export * from './credentials';
 export * from './attendance';
 export * from '../classes/ClassService';
+export * from './invites';

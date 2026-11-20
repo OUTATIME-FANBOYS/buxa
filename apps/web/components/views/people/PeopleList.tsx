@@ -19,7 +19,8 @@ async function listFor(actor: Actor, params: ListParams): Promise<PersonSummary[
 /** The people list with search and role filter. Viewers see names, roles and status; only staff and above see the add button. */
 export async function PeopleList({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
   const actor = await currentActor();
-  if (!actor) {
+  // A teacher has no People list: the sidebar hides it, and the address does not open it either.
+  if (!actor || actor.role === 'teacher') {
     notFound();
   }
   const params = readListParams(searchParams);
