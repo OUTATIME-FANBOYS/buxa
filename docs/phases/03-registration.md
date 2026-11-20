@@ -1,6 +1,6 @@
 # Phase 3: registration
 
-Status: **in progress.** Sign-up forms are built on branch `v0.3/feat/registration-forms`. Prices are built on branch `v0.3/feat/session-prices` (see the Prices section). Holds and the waitlist are not built (another branch carries holds; the seam is described below). Roadmap row: "Registration: sign-up forms with custom fields, holds, waitlist. No card payments yet (demo only)." Card payments and refunds moved to phase 9 (`09-payments-go-live.md`).
+Status: **in progress.** Sign-up forms are built on branch `v0.3/feat/registration-forms`. Prices are built on branch `v0.3/feat/session-prices` (see the Prices section). Seat holds are built on branch `v0.3/feat/seat-holds`. Holds and the waitlist UI, and price display, moved to phases 4 and 6 (see below). Roadmap row: "Registration: sign-up forms with custom fields, confirmation. No card payments yet (demo only)." Card payments and refunds moved to phase 9 (`09-payments-go-live.md`).
 Depends on: phase 2 (sessions and enrolments).
 
 ## What is built (sign-up forms)
@@ -18,9 +18,9 @@ Depends on: phase 2 (sessions and enrolments).
 
 **Not built, and the seam for it:**
 
-- Holds and the waitlist. `registration_sessions.status` is per session place and currently allows only `submitted`. A hold or a waitlist entry adds a status value and its columns there, and a step in `RegistrationService.submit` that takes the place under the session lock. The registration row itself does not change.
+- Holds and the waitlist moved to phase 4 (Seats & rosters). See `04-seats-rosters.md`, "Moved from phase 3".
 - Confirmation as a separate staff action (decision 3). Today a recorded registration is confirmed on entry.
-- Price display. No price is stored or shown yet.
+- Price display on the registration moved to phase 6 (Comms & extras). See `06-comms-extras.md`, "Moved from phase 3". Prices are stored and shown on the session and class screens.
 
 ## Moved from phase 2: recurring events, public class pages and the iCal feed
 
