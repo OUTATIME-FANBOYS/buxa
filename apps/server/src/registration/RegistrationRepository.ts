@@ -1,4 +1,4 @@
-import type { Actor, RegistrationDecision, RegistrationFacts } from '@buxa/domain';
+import type { Actor, RegistrationDecision, RegistrationFacts, RegistrationStatus } from '@buxa/domain';
 import type { CustomField, RegistrationForm, RegistrationFormInput, RegistrationRow } from '@buxa/contracts';
 
 /** The published definitions a submission is checked against. */
@@ -20,6 +20,9 @@ export type RegistrationFactsInTx = Omit<RegistrationFacts, 'requestedSessionIds
 
 /** Pure: the service passes the domain rule, nothing else. Runs under the form's row lock. */
 export type RegistrationRule = (facts: RegistrationFactsInTx) => RegistrationDecision;
+
+/** Pure: decides from the registration's current status whether it may be confirmed (decideConfirmation). Runs under the row lock. */
+export type ConfirmationRule = (status: RegistrationStatus) => RegistrationDecision;
 
 /**
  * Storage for registration forms and submissions. Callers decide whether something may happen (permissions, rules in
@@ -44,4 +47,9 @@ export interface RegistrationRepository {
    * On refuse it throws RegistrationRefusedError and writes nothing. Throws RegistrationFormNotFoundError.
    */
   submit(actor: Actor, registration: NewRegistration, rule: RegistrationRule): Promise<string>;
+  /**
+   * Locks the registration, checks the rule on its status and, on allow, sets it confirmed and audits `registration.confirm`
+   * in the same transaction. On refuse it throws RegistrationRefusedError and writes nothing. Throws RegistrationNotFoundError.
+   */
+  confirm(actor: Actor, registrationId: string, rule: ConfirmationRule): Promise<void>;
 }

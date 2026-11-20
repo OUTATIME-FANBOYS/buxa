@@ -71,7 +71,12 @@ export async function RegistrationFormView({ formId }: { formId: string }) {
 
       <section className="registration-section" aria-labelledby="registration-submissions-heading">
         <h2 id="registration-submissions-heading">Registrations</h2>
-        <SubmissionsBySession sessions={form.sessions} fields={form.fields} submissions={submissions} />
+        <SubmissionsBySession
+          formId={form.id}
+          sessions={form.sessions}
+          fields={form.fields}
+          submissions={submissions}
+        />
       </section>
     </div>
   );

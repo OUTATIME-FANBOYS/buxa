@@ -1,4 +1,4 @@
-import { decideRegistration, type Actor } from '@buxa/domain';
+import { decideConfirmation, decideRegistration, isUuid, type Actor } from '@buxa/domain';
 import {
   buildSubmissionSchema,
   RegistrationFormInputSchema,
@@ -7,7 +7,12 @@ import {
   type RegistrationRow,
 } from '@buxa/contracts';
 import { assertAllowed } from '../auth/authorize';
-import { RegistrationFormNotFoundError, RegistrationInvalidError, RegistrationRefusedError } from './errors';
+import {
+  RegistrationFormNotFoundError,
+  RegistrationInvalidError,
+  RegistrationNotFoundError,
+  RegistrationRefusedError,
+} from './errors';
 import type { PublishedVersion, RegistrationRepository } from './RegistrationRepository';
 
 /**
@@ -28,6 +33,8 @@ export interface RegistrationService {
   publishedVersion(actor: Actor, formId: string): Promise<PublishedVersion | null>;
   /** Records a registration. `input` is untrusted: it is checked against the form's published version. Returns the new id. */
   submit(actor: Actor, formId: string, input: unknown): Promise<string>;
+  /** Confirms a pending registration. Audited as `registration.confirm`. Refuses a registration that is already confirmed. Needs registration:confirm. */
+  confirm(actor: Actor, registrationId: string): Promise<void>;
 }
 
 /** Zod's issues, keyed by the field name the form uses. The first message for a field wins. */
@@ -129,6 +136,15 @@ export function createRegistrationService(repo: RegistrationRepository): Registr
         },
         facts => decideRegistration({ ...facts, requestedSessionIds: sessionIds }),
       );
+    },
+
+    async confirm(actor, registrationId) {
+      assertAllowed(actor, 'registration:confirm');
+      if (!isUuid(registrationId)) {
+        throw new RegistrationNotFoundError();
+      }
+
+      await repo.confirm(actor, registrationId, decideConfirmation);
     },
   };
 }

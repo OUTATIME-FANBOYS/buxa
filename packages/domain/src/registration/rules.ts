@@ -3,7 +3,11 @@
  * Pure: the service passes the facts in, the rule answers. Money is not part of this phase (see docs/phases/03-registration.md).
  */
 
-export type RegistrationRefusal = 'form_not_published' | 'no_sessions' | 'session_not_in_form';
+export type RegistrationRefusal =
+  'form_not_published' | 'no_sessions' | 'session_not_in_form' | 'not_pending' | 'already_confirmed';
+
+/** A registration is recorded as pending and becomes confirmed only by a staff action (decision 3 in docs/phases/03-registration.md). */
+export type RegistrationStatus = 'pending' | 'confirmed';
 
 export type RegistrationDecision = { allow: true } | { allow: false; reason: RegistrationRefusal };
 
@@ -31,4 +35,13 @@ export function decideRegistration(facts: RegistrationFacts): RegistrationDecisi
   }
 
   return { allow: true };
+}
+
+/** Only a pending registration may be confirmed. A confirmed one is refused again, so a second confirmation writes nothing. */
+export function decideConfirmation(status: RegistrationStatus): RegistrationDecision {
+  if (status === 'confirmed') {
+    return { allow: false, reason: 'already_confirmed' };
+  }
+
+  return status === 'pending' ? { allow: true } : { allow: false, reason: 'not_pending' };
 }

@@ -95,8 +95,10 @@ export async function listSubmissionRows(db: Db, formId: string): Promise<Regist
     form_version: number;
     created_at: Date;
     answers: unknown;
+    status: 'pending' | 'confirmed';
+    confirmed_at: Date | null;
   }>(
-    `SELECT r.id, r.form_version, r.created_at, r.answers
+    `SELECT r.id, r.form_version, r.created_at, r.answers, r.status, r.confirmed_at
        FROM registrations r WHERE r.form_id = $1 ORDER BY r.created_at, r.id`,
     [formId],
   );
@@ -119,6 +121,8 @@ export async function listSubmissionRows(db: Db, formId: string): Promise<Regist
       id: r.id,
       formVersion: r.form_version,
       submittedAt: r.created_at.toISOString(),
+      status: r.status,
+      confirmedAt: r.confirmed_at ? r.confirmed_at.toISOString() : null,
       standard: answers.standard,
       custom: answers.custom,
       sessions: sessions.rows

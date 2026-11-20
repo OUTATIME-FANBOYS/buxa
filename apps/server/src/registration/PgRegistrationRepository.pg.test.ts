@@ -148,4 +148,28 @@ describe.skipIf(!url)('registration in Postgres: camps are isolated', () => {
     ).rejects.toBeInstanceOf(RegistrationRefusedError);
     expect(await repo.listSubmissions(ids.campA, form.id)).toEqual(before);
   });
+
+  it('a registration is recorded pending, a staff member confirms it once, and both are audited', async () => {
+    const staffA: Actor = { userId: ids.userA, orgId: ids.campA, role: 'staff' };
+    const form = await service.createForm(actorA, formInput([ids.sessionA]));
+    await service.publishForm(actorA, form.id);
+    const id = await service.submit(staffA, form.id, {
+      formId: form.id,
+      sessionIds: [ids.sessionA],
+      standard,
+      custom: { photos: 'yes' },
+    });
+    const [pending] = await repo.listSubmissions(ids.campA, form.id);
+    expect(pending).toMatchObject({ id, status: 'pending', confirmedAt: null });
+
+    await service.confirm(staffA, id);
+    await expect(service.confirm(staffA, id)).rejects.toMatchObject({ reason: 'already_confirmed' });
+
+    const [confirmed] = await repo.listSubmissions(ids.campA, form.id);
+    expect(confirmed.status).toBe('confirmed');
+    const audit = await withOrg(pool, ids.campA, db =>
+      db.query<{ action: string }>('SELECT action FROM audit_log WHERE entity_id = $1', [id]),
+    );
+    expect(audit.rows.map(r => r.action).sort()).toEqual(['registration.confirm', 'registration.submit']);
+  });
 });

@@ -59,6 +59,7 @@ export const ACTIONS = [
   'registration:read',
   'registration:submit',
   'registration:manage',
+  'registration:confirm',
 ] as const;
 export type Action = (typeof ACTIONS)[number];
 
@@ -81,6 +82,7 @@ const STAFF: Action[] = [
   'tasks:comment',
   'registration:read',
   'registration:submit',
+  'registration:confirm',
 ];
 const ADMIN: Action[] = [
   ...STAFF,

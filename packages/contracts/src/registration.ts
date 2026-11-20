@@ -176,6 +176,9 @@ export const RegistrationRowSchema = z.object({
   id: z.string(),
   formVersion: z.number().int(),
   submittedAt: z.string(),
+  /** Recorded as pending; a staff member confirms it (decision 3). */
+  status: z.enum(['pending', 'confirmed']),
+  confirmedAt: z.string().nullable(),
   standard: z.record(z.string(), z.string().optional()),
   custom: z.record(z.string(), z.union([z.string(), z.boolean()]).optional()),
   sessions: z.array(RegistrationSessionSchema),

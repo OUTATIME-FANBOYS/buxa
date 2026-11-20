@@ -1,10 +1,13 @@
 import type { CustomField, RegistrationRow } from '@buxa/contracts';
 import { STANDARD_FIELDS } from '@buxa/contracts';
 import { fmt, isoDay } from '@buxa/shared';
+import { Pill } from '@/components/elements';
+import { ConfirmRegistration } from './ConfirmRegistration';
 
 /*
  * The registrations for each session of a form, one table per session. A row's answers sit behind a disclosure, so the table stays
- * to the four things staff look up: who, the guardian's phone, when, and which form version they answered.
+ * to the things staff look up: who, the guardian's phone, when, its status, and which form version they answered.
+ * A pending registration has one action, Confirm (decision 3). A confirmed one has no action.
  */
 
 const STANDARD_LABEL = Object.fromEntries(STANDARD_FIELDS.map(f => [f.key, f.label]));
@@ -27,10 +30,12 @@ function answerRows(row: RegistrationRow, fields: readonly CustomField[]): { lab
 }
 
 export function SubmissionsBySession({
+  formId,
   sessions,
   fields,
   submissions,
 }: {
+  formId: string;
   sessions: readonly { id: string; name: string }[];
   fields: readonly CustomField[];
   submissions: readonly RegistrationRow[];
@@ -60,6 +65,7 @@ export function SubmissionsBySession({
                       <th scope="col">Camper</th>
                       <th scope="col">Guardian phone</th>
                       <th scope="col">Submitted</th>
+                      <th scope="col">Status</th>
                       <th scope="col">Answers</th>
                     </tr>
                   </thead>
@@ -71,6 +77,16 @@ export function SubmissionsBySession({
                         </td>
                         <td>{row.standard.guardianPhone}</td>
                         <td>{fmt(isoDay(row.submittedAt), true)}</td>
+                        <td>
+                          {row.status === 'confirmed' ? (
+                            <Pill tone="ok">Confirmed</Pill>
+                          ) : (
+                            <>
+                              <Pill tone="warn">Pending</Pill>
+                              <ConfirmRegistration formId={formId} registrationId={row.id} />
+                            </>
+                          )}
+                        </td>
                         <td>
                           <details>
                             <summary>Answers, version {row.formVersion}</summary>
