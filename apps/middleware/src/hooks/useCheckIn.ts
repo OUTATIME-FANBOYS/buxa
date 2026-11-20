@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useReducer } from 'react';
-import type { CheckInMethod } from '@buxa/contracts';
-import type { ActionOutcome, CheckInResult, Lookup, PersonCard } from '@buxa/shared';
+import type { CheckInInput, CheckInMethod } from '@buxa/contracts';
+import type { ActionOutcome, CheckInResult, Lookup, PersonCard, ScanInput } from '@buxa/shared';
 import { CHECK_IN_IDLE, checkInReducer, lookupEvent } from '@buxa/shared';
 
 /** How long the confirmation stays before the screen clears for the next person. */
@@ -10,8 +10,8 @@ export const CONFIRM_MS = 2000;
 
 /** The server actions the check-in screen calls. The web app passes them in, so this package never imports the server. */
 export interface CheckInActions {
-  checkIn(input: unknown): Promise<ActionOutcome<CheckInResult>>;
-  scanCode(input: unknown): Promise<ActionOutcome<Lookup>>;
+  checkIn(input: CheckInInput): Promise<ActionOutcome<CheckInResult>>;
+  scanCode(input: ScanInput): Promise<ActionOutcome<Lookup>>;
 }
 
 /** The check-in screen's state and its three ways in: a code, a picked name, and the Check in action. */

@@ -28,11 +28,11 @@ describe('FilterBar', () => {
   it('offers the search and the filter chips, with the sort and saved views', () => {
     const html = renderToStaticMarkup(
       <UiProvider Dialog={ConfirmDialog}>
-        <FilterBar filter={emptyFilter} setFilter={setFilter} project={project} tags={[]} />
+        <FilterBar filter={emptyFilter} setFilter={setFilter} project={project} />
       </UiProvider>,
     );
     expect(html).toContain('aria-label="Filter tasks by title or description"');
-    for (const label of ['Priority', 'Assignee', 'Status', 'Due', 'Tags']) {
+    for (const label of ['Priority', 'Assignee', 'Status', 'Due']) {
       expect(html).toContain(`>${label}`);
     }
     expect(html).toContain('Manual order');
@@ -42,7 +42,7 @@ describe('FilterBar', () => {
     const filter: Filter = { ...emptyFilter, priorities: ['high', 'low'], q: 'form' };
     const html = renderToStaticMarkup(
       <UiProvider Dialog={ConfirmDialog}>
-        <FilterBar filter={filter} setFilter={setFilter} project={project} tags={[]} />
+        <FilterBar filter={filter} setFilter={setFilter} project={project} />
       </UiProvider>,
     );
     expect(html).toContain('<span class="chip-count">2</span>');
@@ -51,7 +51,7 @@ describe('FilterBar', () => {
   it('hides the status chip on views that do not group by status', () => {
     const html = renderToStaticMarkup(
       <UiProvider Dialog={ConfirmDialog}>
-        <FilterBar filter={emptyFilter} setFilter={setFilter} project={project} tags={[]} showStatus={false} />
+        <FilterBar filter={emptyFilter} setFilter={setFilter} project={project} showStatus={false} />
       </UiProvider>,
     );
     expect(html).not.toContain('>Status');
@@ -70,7 +70,7 @@ describe('FilterBar', () => {
     expect(responsive).toMatch(/\.filters \{ flex-wrap: wrap; \}/);
     const html = renderToStaticMarkup(
       <UiProvider Dialog={ConfirmDialog}>
-        <FilterBar filter={emptyFilter} setFilter={setFilter} project={project} tags={[]} />
+        <FilterBar filter={emptyFilter} setFilter={setFilter} project={project} />
       </UiProvider>,
     );
     expect(html).toMatch(

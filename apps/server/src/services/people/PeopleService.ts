@@ -10,6 +10,7 @@ import type {
 } from '@buxa/contracts';
 import type { Actor } from '@buxa/domain';
 import type { AttendanceRepository } from '../../attendance/AttendanceRepository';
+import type { TeacherScopeSource } from '../../classes/teacherScope';
 import type { CredentialRepository } from '../../credentials/CredentialRepository';
 import type { MembershipRepository } from '../../memberships/MembershipRepository';
 import type { OrgRepository } from '../../orgs/OrgRepository';
@@ -51,6 +52,8 @@ export interface PeopleServiceDeps {
   memberships: MembershipRepository;
   credentials: CredentialRepository;
   attendance: AttendanceRepository;
+  /** Teachers see only the campers of their classes (see classes/teacherScope.ts). */
+  classes: TeacherScopeSource;
   orgs: OrgRepository;
   clock: Clock;
 }

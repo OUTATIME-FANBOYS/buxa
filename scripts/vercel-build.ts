@@ -5,41 +5,48 @@
  * build, so the previous deployment keeps serving. PREVIEW builds never touch the schema: their environment has no migration credential.
  */
 import { spawnSync } from 'node:child_process';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
-import { errorMessage, migrate, poolConfigFor } from '@buxa/db';
+import { errorMessage, migrate, migrationDatabaseUrl, poolConfigFor } from '@buxa/db';
 
 const webDir = fileURLToPath(new URL('../apps/web', import.meta.url));
 const env = (name: string) => process.env[name]?.trim() || undefined;
 
-async function applyMigrations(): Promise<void> {
+export async function applyMigrations(): Promise<string[]> {
   if (env('VERCEL_ENV') !== 'production') {
     console.log('Migrations: skipped (only production builds change the database schema)');
 
-    return;
+    return [];
   }
-  const url = env('MIGRATION_DATABASE_URL') ?? env('DATABASE_URL');
-  if (!url) {
-    throw new Error('A production build needs MIGRATION_DATABASE_URL (or DATABASE_URL) to apply database migrations.');
-  }
+  // Only the migration login applies schema changes. DATABASE_URL (the restricted runtime login) is never used here.
+  const url = migrationDatabaseUrl(process.env);
   const pool = new pg.Pool(poolConfigFor(url));
   try {
     const applied = await migrate(pool);
     console.log(applied.length ? `Migrations applied: ${applied.join(', ')}` : 'Migrations: up to date');
+
+    return applied;
   } finally {
     await pool.end();
   }
 }
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
   await applyMigrations();
+  if (process.argv.includes('--migrate-only')) {
+    return;
+  }
   const build = spawnSync('npx', ['next', 'build'], { cwd: webDir, stdio: 'inherit' });
   if (build.status !== 0) {
     throw new Error('next build failed.');
   }
 }
 
-main().catch(error => {
-  console.error(errorMessage(error));
-  process.exit(1);
-});
+const isEntry = Boolean(process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url));
+if (isEntry) {
+  main().catch(error => {
+    console.error(errorMessage(error));
+    process.exit(1);
+  });
+}

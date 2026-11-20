@@ -12,7 +12,7 @@ export class PgMembershipRepository implements MembershipRepository {
   constructor(private readonly pool: Pool) {}
 
   add(actor: Actor, input: NewMembershipRecord): Promise<MembershipRecord> {
-    return withOrg(this.pool, actor.orgId, async db => {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       if (!(await personExists(db, input.personId))) {
         throw new PersonNotFoundError();
       }
@@ -34,7 +34,7 @@ export class PgMembershipRepository implements MembershipRepository {
   }
 
   revoke(actor: Actor, id: string, reason: string, at: string): Promise<MembershipRecord> {
-    return withOrg(this.pool, actor.orgId, async db => {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       const current = await requireMembership(db, id);
       if (current.revokedAt === null) {
         await db.query('UPDATE memberships SET revoked_at = $2::timestamptz, revoked_reason = $3 WHERE id = $1', [
@@ -55,20 +55,20 @@ export class PgMembershipRepository implements MembershipRepository {
     });
   }
 
-  forPerson(orgId: string, personId: string): Promise<MembershipRecord[]> {
+  forPerson(userId: string, orgId: string, personId: string): Promise<MembershipRecord[]> {
     if (!isUuid(personId)) {
       return Promise.resolve([]);
     }
 
-    return withOrg(this.pool, orgId, db => queryMemberships(db, 'WHERE person_id = $1', [personId]));
+    return withOrg(this.pool, userId, orgId, db => queryMemberships(db, 'WHERE person_id = $1', [personId]));
   }
 
-  forPeople(orgId: string, personIds: readonly string[]): Promise<MembershipRecord[]> {
+  forPeople(userId: string, orgId: string, personIds: readonly string[]): Promise<MembershipRecord[]> {
     const valid = personIds.filter(isUuid);
     if (valid.length === 0) {
       return Promise.resolve([]);
     }
 
-    return withOrg(this.pool, orgId, db => queryMemberships(db, 'WHERE person_id = ANY($1::uuid[])', [valid]));
+    return withOrg(this.pool, userId, orgId, db => queryMemberships(db, 'WHERE person_id = ANY($1::uuid[])', [valid]));
   }
 }

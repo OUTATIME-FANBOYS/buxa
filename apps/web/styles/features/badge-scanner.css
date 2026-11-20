@@ -40,9 +40,6 @@
   display: grid;
   gap: var(--s2);
 }
-.scan-label {
-  font-weight: 600;
-}
 .scan-input {
   width: 100%;
   min-height: 56px;

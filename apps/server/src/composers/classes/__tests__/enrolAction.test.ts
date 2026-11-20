@@ -40,7 +40,7 @@ describe('enrolAction', () => {
       message: 'Ada Lovelace is enrolled.',
     });
     expect(h.classes.enrol).toHaveBeenCalledWith(h.actor, {
-      sessionId: IDS.session,
+      classId: IDS.cls,
       camperId: IDS.camper,
       waitlistIfFull: false,
     });

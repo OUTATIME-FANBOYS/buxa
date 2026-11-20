@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "next dev apps/web -p 5173",
     "build": "next build apps/web",
+    "build:vercel": "tsx scripts/vercel-build.ts",
+    "smoke": "tsx scripts/smoke-routes.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",

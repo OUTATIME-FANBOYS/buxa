@@ -32,7 +32,7 @@ describe('phone layout for check-in, on site and the log', () => {
   it('on site cards keep the name and the compact check-out button in one row, and the dialog buttons share a row', () => {
     expect(phoneBlock).not.toContain('.onsite-head { flex-direction: column; align-items: stretch; }');
     expect(phoneBlock).toContain('.checkout-actions .button { flex: 1 1 0; }');
-    expect(tsx('attendance/OnSiteRow.tsx')).toContain('onsite-btn');
+    expect(tsx('attendance/OnSiteRow.tsx')).toContain('size="header"');
     expect(tsx('attendance/CheckOutPanel.tsx')).toContain('className="checkout-actions"');
   });
 
@@ -51,7 +51,7 @@ describe('phone layout for check-in, on site and the log', () => {
   });
 
   it('all touch controls use the 44px control height token, not a literal', () => {
-    expect(attendance).toMatch(/\.att-btn-lg, \.name-result, \.choice \{ min-height: 44px; \}/);
+    expect(attendance).toMatch(/\.name-result, \.choice \{ min-height: 44px; \}/);
     expect(read('./tokens.css')).toContain('--control-h: 44px');
   });
 });

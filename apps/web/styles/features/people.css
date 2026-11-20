@@ -193,7 +193,7 @@ form.person-form {
   .people-form,
   .button,
   button {
-    display: none !important;
+    display: none;
   }
   .people-badge {
     padding: 0;

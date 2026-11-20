@@ -1,19 +1,21 @@
 import Link from 'next/link';
 import { ROUTES } from '@/config/routes';
+import { ChartCard } from '@/components/components/charts';
 import { PARENTS_LABEL, STUDENTS_LABEL } from './ageGroups';
 
 /**
  * Parents and guardians, and students, on site now, as bars with their numbers written beside them. A null split means this viewer's
- * role may not see the minor flag (or attendance), so the panel says so rather than guessing.
+ * role may not see the minor flag (or attendance), so the panel says so rather than guessing. The big number is the total on site,
+ * or a dash when the viewer may not see it.
  */
 export function OnSiteAgePanel({ counts }: { counts: { adults: number; minors: number } | null }) {
   return (
-    <section className="panel" aria-labelledby="on-site-age-title">
-      <div className="panel-head">
-        <h2 id="on-site-age-title">
-          On site: {PARENTS_LABEL} and {STUDENTS_LABEL}
-        </h2>
-      </div>
+    <ChartCard
+      titleId="on-site-age-title"
+      title={`On site: ${PARENTS_LABEL} and ${STUDENTS_LABEL}`}
+      value={counts ? counts.adults + counts.minors : '—'}
+      subtitle="on site now"
+    >
       {counts === null ? (
         <p className="muted">Age groups are not shown for your role.</p>
       ) : counts.adults + counts.minors === 0 ? (
@@ -45,6 +47,6 @@ export function OnSiteAgePanel({ counts }: { counts: { adults: number; minors: n
           Open On site
         </Link>
       )}
-    </section>
+    </ChartCard>
   );
 }

@@ -1,3 +1,4 @@
+import type { Actor } from '@buxa/domain';
 import type { AttendanceEntry } from '@buxa/contracts';
 import type { CheckInRecord } from '../../attendance/AttendanceRepository';
 import type { OrgRepository } from '../../orgs/OrgRepository';
@@ -10,15 +11,15 @@ import type { PickupOption } from './AttendanceService';
  */
 export async function toEntries(
   deps: { people: PeopleRepository; orgs: OrgRepository },
-  orgId: string,
+  actor: Pick<Actor, 'userId' | 'orgId'>,
   records: readonly CheckInRecord[],
 ): Promise<AttendanceEntry[]> {
   const personIds = records.flatMap(r =>
     r.collectedByPersonId === null ? [r.personId] : [r.personId, r.collectedByPersonId],
   );
   const [named, staff] = await Promise.all([
-    deps.people.getMany(orgId, [...new Set(personIds)]),
-    deps.orgs.listMembers(orgId),
+    deps.people.getMany(actor.userId, actor.orgId, [...new Set(personIds)]),
+    deps.orgs.listMembers(actor.userId, actor.orgId),
   ]);
   const personNames = new Map(named.map(p => [p.id, displayName(p)] as const));
   const staffNames = new Map(staff.map(m => [m.id, m.name] as const));
@@ -45,11 +46,11 @@ export async function toEntries(
  */
 export async function authorisedCollectors(
   people: PeopleRepository,
-  orgId: string,
+  actor: Pick<Actor, 'userId' | 'orgId'>,
   childId: string,
 ): Promise<Map<string, string>> {
   const found = new Map<string, string>();
-  for (const household of await people.householdsOf(orgId, childId)) {
+  for (const household of await people.householdsOf(actor.userId, actor.orgId, childId)) {
     for (const member of household.members) {
       if (member.isGuardian && member.canPickup && member.personId !== childId && !found.has(member.personId)) {
         found.set(member.personId, member.relationship);
@@ -63,11 +64,11 @@ export async function authorisedCollectors(
 /** The people a child can be collected by, named and sorted by name. */
 export async function pickupOptionsFor(
   people: PeopleRepository,
-  orgId: string,
+  actor: Pick<Actor, 'userId' | 'orgId'>,
   childId: string,
 ): Promise<PickupOption[]> {
-  const collectors = await authorisedCollectors(people, orgId, childId);
-  const named = await people.getMany(orgId, [...collectors.keys()]);
+  const collectors = await authorisedCollectors(people, actor, childId);
+  const named = await people.getMany(actor.userId, actor.orgId, [...collectors.keys()]);
 
   return named
     .map(p => ({ personId: p.id, name: displayName(p), relationship: collectors.get(p.id) ?? '' }))

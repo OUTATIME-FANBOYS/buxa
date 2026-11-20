@@ -35,17 +35,17 @@ export function credentialRepositoryContract(factory: RepositoryFactory): void {
       });
       expect(badge.issuedAt).toMatch(ISO_INSTANT);
       expect(Object.keys(badge)).not.toContain('tokenHash');
-      expect(await fx.repos.credentials.resolve(fx.actor.orgId, tokenHash('one'))).toBe(personId);
-      expect(await fx.repos.credentials.activeFor(fx.actor.orgId, personId)).toEqual(badge);
+      expect(await fx.repos.credentials.resolve(fx.actor.userId, fx.actor.orgId, tokenHash('one'))).toBe(personId);
+      expect(await fx.repos.credentials.activeFor(fx.actor.userId, fx.actor.orgId, personId)).toEqual(badge);
     });
 
     it('reissuing revokes the old badge: its hash stops resolving', async () => {
       const personId = await newPerson();
       const first = await fx.repos.credentials.issue(fx.actor, personId, tokenHash('old'), '2027-06-01T09:00:00.000Z');
       const second = await fx.repos.credentials.issue(fx.actor, personId, tokenHash('new'), '2027-06-02T09:00:00.000Z');
-      expect(await fx.repos.credentials.resolve(fx.actor.orgId, tokenHash('old'))).toBeNull();
-      expect(await fx.repos.credentials.resolve(fx.actor.orgId, tokenHash('new'))).toBe(personId);
-      expect((await fx.repos.credentials.activeFor(fx.actor.orgId, personId))?.id).toBe(second.id);
+      expect(await fx.repos.credentials.resolve(fx.actor.userId, fx.actor.orgId, tokenHash('old'))).toBeNull();
+      expect(await fx.repos.credentials.resolve(fx.actor.userId, fx.actor.orgId, tokenHash('new'))).toBe(personId);
+      expect((await fx.repos.credentials.activeFor(fx.actor.userId, fx.actor.orgId, personId))?.id).toBe(second.id);
       expect(first.id).not.toBe(second.id);
     });
 
@@ -55,15 +55,15 @@ export function credentialRepositoryContract(factory: RepositoryFactory): void {
       const revoked = await fx.repos.credentials.revoke(fx.actor, personId, '2027-06-03T09:00:00.000Z');
       expect(revoked).toMatchObject({ id: badge.id, revokedAt: '2027-06-03T09:00:00.000Z' });
       expect(await fx.repos.credentials.revoke(fx.actor, personId, '2027-06-04T09:00:00.000Z')).toBeNull();
-      expect(await fx.repos.credentials.activeFor(fx.actor.orgId, personId)).toBeNull();
+      expect(await fx.repos.credentials.activeFor(fx.actor.userId, fx.actor.orgId, personId)).toBeNull();
     });
 
     it('a revoked and an unknown hash give the same answer: null', async () => {
       const personId = await newPerson();
       await fx.repos.credentials.issue(fx.actor, personId, tokenHash('gone'), '2027-06-01T09:00:00.000Z');
       await fx.repos.credentials.revoke(fx.actor, personId, '2027-06-03T09:00:00.000Z');
-      expect(await fx.repos.credentials.resolve(fx.actor.orgId, tokenHash('gone'))).toBeNull();
-      expect(await fx.repos.credentials.resolve(fx.actor.orgId, tokenHash('never issued'))).toBeNull();
+      expect(await fx.repos.credentials.resolve(fx.actor.userId, fx.actor.orgId, tokenHash('gone'))).toBeNull();
+      expect(await fx.repos.credentials.resolve(fx.actor.userId, fx.actor.orgId, tokenHash('never issued'))).toBeNull();
     });
 
     it('withActive returns only the people who hold an active badge', async () => {
@@ -73,9 +73,9 @@ export function credentialRepositoryContract(factory: RepositoryFactory): void {
       await fx.repos.credentials.issue(fx.actor, withBadge, tokenHash('b1'), '2027-06-01T09:00:00.000Z');
       await fx.repos.credentials.issue(fx.actor, revokedOnly, tokenHash('b2'), '2027-06-01T09:00:00.000Z');
       await fx.repos.credentials.revoke(fx.actor, revokedOnly, '2027-06-02T09:00:00.000Z');
-      expect([...(await fx.repos.credentials.withActive(fx.actor.orgId, [withBadge, revokedOnly, none]))]).toEqual([
-        withBadge,
-      ]);
+      expect([
+        ...(await fx.repos.credentials.withActive(fx.actor.userId, fx.actor.orgId, [withBadge, revokedOnly, none])),
+      ]).toEqual([withBadge]);
     });
 
     it("issue throws PersonNotFoundError for an unknown person or another organisation's person", async () => {
@@ -93,10 +93,12 @@ export function credentialRepositoryContract(factory: RepositoryFactory): void {
     it('another organisation cannot resolve, read or revoke a badge', async () => {
       const personId = await newPerson();
       await fx.repos.credentials.issue(fx.actor, personId, tokenHash('mine'), '2027-06-01T09:00:00.000Z');
-      expect(await fx.repos.credentials.resolve(fx.otherActor.orgId, tokenHash('mine'))).toBeNull();
-      expect(await fx.repos.credentials.activeFor(fx.otherActor.orgId, personId)).toBeNull();
+      expect(
+        await fx.repos.credentials.resolve(fx.otherActor.userId, fx.otherActor.orgId, tokenHash('mine')),
+      ).toBeNull();
+      expect(await fx.repos.credentials.activeFor(fx.otherActor.userId, fx.otherActor.orgId, personId)).toBeNull();
       expect(await fx.repos.credentials.revoke(fx.otherActor, personId, '2027-06-02T09:00:00.000Z')).toBeNull();
-      expect(await fx.repos.credentials.resolve(fx.actor.orgId, tokenHash('mine'))).toBe(personId);
+      expect(await fx.repos.credentials.resolve(fx.actor.userId, fx.actor.orgId, tokenHash('mine'))).toBe(personId);
     });
 
     it('audits credential.issue (with what it replaced) and credential.revoke', async () => {

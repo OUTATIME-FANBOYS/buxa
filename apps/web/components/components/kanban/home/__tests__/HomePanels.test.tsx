@@ -40,7 +40,6 @@ const task = (id: string, title: string): Task => ({
   title,
   description: '',
   priority: 'medium',
-  tags: [],
   subtasks: [],
   comments: [],
   attachments: [],
@@ -118,7 +117,7 @@ describe('UpcomingSessionsPanel', () => {
     expect(html).toContain('Archery');
     expect(html).toContain('Range 2');
     expect(html).toContain('See all');
-    expect(html).toContain('href="/camp/classes"');
+    expect(html).toContain('href="/camp/sessions"');
   });
 
   it('says so when no sessions are scheduled, and still offers See all', () => {

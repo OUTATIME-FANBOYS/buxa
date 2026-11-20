@@ -71,7 +71,7 @@ export function ResultPanel({ state, timeZone, clockFormat, canOverride, onCheck
               variant="primary"
               ref={primary}
               type="button"
-              className="att-btn-lg"
+              size="lg"
               disabled={!canSubmit}
               onClick={() => onCheckIn(card, state.method)}
             >
@@ -82,7 +82,7 @@ export function ResultPanel({ state, timeZone, clockFormat, canOverride, onCheck
           {state.phase === 'failed' && <Notice tone="crit" title="Not checked in" body={state.message} />}
           {offerOverride && <OverrideForm busy={busy} onSubmit={reason => onCheckIn(card, state.method, reason)} />}
           {(state.phase === 'refused' || state.phase === 'failed') && (
-            <Button variant="ghost" type="button" className="att-btn-lg" onClick={onClear}>
+            <Button variant="ghost" size="lg" type="button" onClick={onClear}>
               Clear and scan the next person
             </Button>
           )}

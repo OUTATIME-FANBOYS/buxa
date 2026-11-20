@@ -1,5 +1,5 @@
 import { isUuid } from '@buxa/domain';
-import type { Db } from '../people/pgRows';
+import type { Db, SqlParam } from '../people/pgRows';
 import { nullableIso } from '../people/pgRows';
 import { MembershipNotFoundError, type MembershipRecord } from './MembershipRepository';
 
@@ -29,7 +29,7 @@ const toRecord = (row: MembershipRow): MembershipRecord => ({
   revokedReason: row.revoked_reason,
 });
 
-export async function queryMemberships(db: Db, where: string, params: unknown[]): Promise<MembershipRecord[]> {
+export async function queryMemberships(db: Db, where: string, params: SqlParam[]): Promise<MembershipRecord[]> {
   const { rows } = await db.query<MembershipRow>(`${SELECT_MEMBERSHIPS} ${where} ORDER BY starts_on, id`, params);
 
   return rows.map(toRecord);

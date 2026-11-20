@@ -85,13 +85,11 @@ export function FilterBar({
   filter,
   setFilter,
   project,
-  tags,
   showStatus = true,
 }: {
   filter: Filter;
   setFilter: (f: Filter) => void;
   project: Project;
-  tags: string[];
   showStatus?: boolean;
 }) {
   const { s, actions, members } = useStore();
@@ -162,14 +160,6 @@ export function FilterBar({
           onChange={v => set({ due: v as DueFilter })}
           options={DUE.map(d => ({ value: d.v, label: d.l }))}
         />
-      </Chip>
-      <Chip label="Tags" count={filter.tags.length}>
-        {tags.length === 0 && <p className="muted small pad">No tags yet.</p>}
-        {tags.map(t => (
-          <Check key={t} checked={filter.tags.includes(t)} onChange={() => set({ tags: toggle(filter.tags, t) })}>
-            {t}
-          </Check>
-        ))}
       </Chip>
       <Menu
         label="Sort tasks"

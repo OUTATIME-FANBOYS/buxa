@@ -1,30 +1,43 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can, isUuid } from '@buxa/domain';
-import { ROUTES, classPath, newSessionPath } from '@/config/routes';
+import { ROUTES, sessionPath } from '@/config/routes';
 import { Empty, PageHeader } from '@/components/components';
 import { campClock } from '@buxa/server/composers/index.server';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_ENROLMENTS, FORBIDDEN_READ } from '@buxa/shared';
-import { loadClassPage, loadEnrolments, loadPeopleWithRole } from '@buxa/server/composers/index.server';
-import { EnrolmentTable } from '@/components/components/classes';
-import { SessionTable, instructorNames } from '@/components/components/classes';
+import {
+  loadSessionPage,
+  loadEnrolments,
+  loadPeopleWithRole,
+  loadTeacherAssignments,
+  loadMembers,
+} from '@buxa/server/composers/index.server';
+import { ClassesTable, EnrolmentTable, instructorNames, PriceFact } from '@/components/components/classes';
+import {
+  EnrolForm,
+  NewClassButton,
+  RecurringSeriesButton,
+  SessionPriceButton,
+  SessionPublicToggle,
+  TeacherAssignments,
+} from '@/components/components/classes/forms';
 import { formatCampDateTime } from '@buxa/shared';
-import { EnrolForm } from '@/components/components/classes/forms';
 import { Button } from '@/components/elements';
 
 const pick = (value: string | string[] | undefined): string | null =>
   typeof value === 'string' && isUuid(value) ? value : null;
 
 /**
- * One class: its ages, default places and instructor ratio, its sessions with capacity and enrolled counts, and (when a session is
- * chosen) who is enrolled there. A full session offers the waitlist instead of a place. Viewers see the schedule and the names
- * enrolled, with no buttons to change anything.
+ * One session: its date range and its classes, each with its ages, camp size, times, location, instructors and seat counts. A
+ * chosen class shows who is enrolled there. A full class offers the waitlist instead of a place. Viewers see the schedule and the
+ * names enrolled, with no buttons to change anything.
  */
 export async function ClassPage({
-  classId,
+  classId: sessionId,
   searchParams,
 }: {
+  /** The session's id: the route segment keeps its historical name. */
   classId: string;
   searchParams: Record<string, string | string[] | undefined>;
 }) {
@@ -32,7 +45,7 @@ export async function ClassPage({
   if (!actor) {
     notFound();
   }
-  const loaded = await loadClassPage(actor, classId);
+  const loaded = await loadSessionPage(actor, sessionId);
   if (!loaded.ok) {
     if (loaded.reason === 'not-found') {
       notFound();
@@ -40,90 +53,131 @@ export async function ClassPage({
 
     return (
       <div className="page">
-        <Empty icon="alert" title="You cannot see this class" body={FORBIDDEN_READ} />
+        <Empty icon="alert" title="You cannot see this session" body={FORBIDDEN_READ} />
       </div>
     );
   }
 
-  const { cls, sessions } = loaded.value;
+  const { session, classes } = loaded.value;
   const canManage = can(actor, 'classes:manage');
+  // A teacher sees only its own classes (the list is scoped on the server), so each listed class is one it is assigned to.
+  const canEditOwnClass = can(actor, 'events:update_details', { orgId: actor.orgId, assignedToClass: true });
   const { timeZone, clockFormat } = await campClock(actor);
-  const selectedId = pick(searchParams.session);
-  const selected = sessions.find(s => s.id === selectedId) ?? null;
+  const selectedId = pick(searchParams.class);
+  const selected = classes.find(c => c.id === selectedId) ?? null;
+  const instructors = canManage ? await loadPeopleWithRole(actor, 'instructor') : null;
+  const instructorChoices = instructors?.ok ? instructors.value.map(i => ({ id: i.id, name: i.name })) : [];
+  // The teacher list and each class's assigned teachers, for the teachers panel (staff and admins only).
+  const teacherMembers = canManage ? (await loadMembers(actor)).members.filter(m => m.role === 'teacher') : [];
+  const teacherChoices = teacherMembers.map(t => ({ id: t.id, name: t.name }));
+  const assignments = canManage ? await loadTeacherAssignments(actor, sessionId) : null;
+  const assignedByClass = assignments?.ok ? assignments.value : [];
+  const classTeachers = classes.map(c => ({
+    id: c.id,
+    name: c.name,
+    teacherIds: assignedByClass.filter(a => a.classId === c.id).map(a => a.userId),
+  }));
 
   const enrolments = selected ? await loadEnrolments(actor, selected.id) : null;
   const campers = selected && canManage ? await loadPeopleWithRole(actor, 'camper') : null;
-  const ratio = cls.instructorRatio ? `${cls.instructorRatio.instructors}:${cls.instructorRatio.campers}` : 'Not set';
+  const dates = session.startsOn && session.endsOn ? `${session.startsOn} to ${session.endsOn}` : 'Dates not set yet';
 
   return (
     <div className="page">
       <nav aria-label="Breadcrumb" className="muted">
-        <Link className="link" href={ROUTES.classes}>
-          Classes
+        <Link className="link" href={ROUTES.sessions}>
+          Sessions
         </Link>{' '}
-        / {cls.name}
+        / {session.name}
       </nav>
       <PageHeader
-        title={cls.name}
-        subtitle={cls.description || 'No description yet.'}
+        title={session.name}
+        subtitle={session.description || 'No description yet.'}
         actions={
           canManage && (
-            <Button variant="primary" className="classes-target" icon="plus" href={newSessionPath(cls.id)}>
-              Add session
-            </Button>
+            <>
+              <RecurringSeriesButton sessionId={session.id} />
+              <NewClassButton
+                sessionId={session.id}
+                sessionName={session.name}
+                timeZone={timeZone}
+                instructors={instructorChoices}
+              />
+            </>
           )
         }
       />
 
       <dl className="people-facts classes-facts">
-        <dt>Ages</dt>
-        <dd>
-          {cls.ageRange.minAge} to {cls.ageRange.maxAge}
-        </dd>
-        <dt>Default places</dt>
-        <dd>{cls.capacity}</dd>
-        <dt>Instructor ratio</dt>
-        <dd>{ratio}</dd>
+        <dt>Dates</dt>
+        <dd>{dates}</dd>
+        <dt>Classes</dt>
+        <dd>{classes.length}</dd>
+        <PriceFact
+          price={session.price}
+          timeZone={timeZone}
+          action={canManage && <SessionPriceButton sessionId={session.id} price={session.price} />}
+        />
       </dl>
 
-      <section aria-labelledby="sessions-heading" className="stack">
-        <h2 id="sessions-heading" className="people-subheading">
-          Sessions
+      {canManage && <SessionPublicToggle sessionId={session.id} isPublic={session.isPublic} />}
+
+      <section aria-labelledby="classes-heading" className="stack">
+        <h2 id="classes-heading" className="people-subheading">
+          Classes
         </h2>
-        {sessions.length === 0 ? (
+        {classes.length === 0 ? (
           <Empty
             icon="calendar"
-            title="No sessions yet"
+            title="No classes yet"
             body={
               canManage
-                ? 'Add the first session, with its time, place and instructors.'
-                : 'No sessions are scheduled for this class yet.'
+                ? 'Add the first class, with its time, ages, camp size and location.'
+                : 'No classes are scheduled in this session yet.'
             }
             action={
               canManage && (
-                <Button variant="primary" className="classes-target" icon="plus" href={newSessionPath(cls.id)}>
-                  Add session
-                </Button>
+                <NewClassButton
+                  sessionId={session.id}
+                  sessionName={session.name}
+                  timeZone={timeZone}
+                  instructors={instructorChoices}
+                />
               )
             }
           />
         ) : (
-          <SessionTable
-            classId={cls.id}
-            sessions={sessions}
+          <ClassesTable
+            sessionId={session.id}
+            sessionName={session.name}
+            classes={classes}
             timeZone={timeZone}
             clockFormat={clockFormat}
             selectedId={selected?.id ?? null}
+            canManage={canManage}
+            canEdit={canManage || canEditOwnClass}
+            instructors={instructorChoices}
           />
         )}
       </section>
+
+      {canManage && classes.length > 0 && (
+        <section aria-labelledby="teachers-heading" className="stack">
+          <h2 id="teachers-heading" className="people-subheading">
+            Teachers
+          </h2>
+          <TeacherAssignments sessionId={session.id} classes={classTeachers} teachers={teacherChoices} />
+        </section>
+      )}
 
       {selected && (
         <section id="enrolments" aria-labelledby="enrolments-heading" className="stack classes-enrolments">
           <h2 id="enrolments-heading" className="people-subheading">
             Enrolments
           </h2>
-          <dl className="people-facts classes-facts" aria-label="Session details">
+          <dl className="people-facts classes-facts" aria-label="Class details">
+            <dt>Class</dt>
+            <dd>{selected.name}</dd>
             <dt>Starts</dt>
             <dd>{formatCampDateTime(selected.startsAt, timeZone, clockFormat)}</dd>
             <dt>Ends</dt>
@@ -132,14 +186,14 @@ export async function ClassPage({
             <dd>{selected.location}</dd>
             <dt>Instructors</dt>
             <dd>{instructorNames(selected)}</dd>
+            <PriceFact price={selected.price} timeZone={timeZone} />
           </dl>
           <p aria-live="polite" className="muted">
             {selected.seatsTaken} of {selected.capacity} places taken, {selected.waitlisted} on the waitlist.
           </p>
           {canManage && campers && (
             <EnrolForm
-              classId={cls.id}
-              sessionId={selected.id}
+              classId={selected.id}
               campers={campers.ok ? campers.value.map(c => ({ id: c.id, name: c.name })) : []}
               full={selected.seatsTaken >= selected.capacity}
               canOverride={can(actor, 'attendance:override')}
@@ -150,7 +204,7 @@ export async function ClassPage({
               <Empty icon="users" title="Nobody is enrolled yet" body="Enrolled and waitlisted campers appear here." />
             ) : (
               <EnrolmentTable
-                classId={cls.id}
+                classId={selected.id}
                 enrolments={enrolments.value}
                 canManage={canManage}
                 timeZone={timeZone}
@@ -162,11 +216,13 @@ export async function ClassPage({
           )}
         </section>
       )}
-      <p className="muted">
-        <Link className="link" href={classPath(cls.id)}>
-          Clear the session choice
-        </Link>
-      </p>
+      {selected && (
+        <p className="muted">
+          <Button variant="ghost" href={sessionPath(session.id)}>
+            Clear the class choice
+          </Button>
+        </p>
+      )}
     </div>
   );
 }

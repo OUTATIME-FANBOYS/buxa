@@ -16,7 +16,7 @@ export function createCredentialService(deps: CredentialServiceDeps): Credential
     async issue(actor, personId) {
       assertAllowed(actor, 'credentials:manage');
       const orgId = actor.orgId;
-      const person = await people.get(orgId, personId);
+      const person = await people.get(actor.userId, orgId, personId);
       if (!person) {
         throw notFound('Person not found');
       }
@@ -40,7 +40,7 @@ export function createCredentialService(deps: CredentialServiceDeps): Credential
 
     async revoke(actor, personId) {
       assertAllowed(actor, 'credentials:manage');
-      if (!(await people.get(actor.orgId, personId))) {
+      if (!(await people.get(actor.userId, actor.orgId, personId))) {
         throw notFound('Person not found');
       }
       await guard(() => credentials.revoke(actor, personId, clock().toISOString()));
@@ -55,19 +55,19 @@ export function createCredentialService(deps: CredentialServiceDeps): Credential
         return UNKNOWN;
       }
 
-      const personId = await credentials.resolve(orgId, hashCredentialToken(token));
+      const personId = await credentials.resolve(actor.userId, orgId, hashCredentialToken(token));
       if (personId === null) {
         return UNKNOWN;
       }
-      const person = await people.get(orgId, personId);
+      const person = await people.get(actor.userId, orgId, personId);
       if (!person || person.archivedAt !== null) {
         return UNKNOWN;
       }
 
-      const today = campToday(clock, await campZone(orgs, orgId));
+      const today = campToday(clock, await campZone(orgs, actor));
       const [ms, open] = await Promise.all([
-        memberships.forPerson(orgId, personId),
-        attendance.openFor(orgId, personId),
+        memberships.forPerson(actor.userId, orgId, personId),
+        attendance.openFor(actor.userId, orgId, personId),
       ]);
 
       return { kind: 'person', person: toSummary(person, ms, open !== null, today, true) };

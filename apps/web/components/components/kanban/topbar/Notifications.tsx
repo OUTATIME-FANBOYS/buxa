@@ -16,7 +16,7 @@ const HEAD =
 // A notification is a full-width row (its button styles are forced: .button is unlayered CSS).
 const ITEM =
   'buxa:flex! buxa:gap-[var(--s3)] buxa:items-start buxa:w-full! buxa:[padding:var(--s3)_var(--s4)]! buxa:text-left buxa:hover:bg-[var(--hover)]!';
-const UNREAD = 'buxa:bg-[color-mix(in_srgb,var(--coral)_12%,var(--surface))]!';
+const UNREAD = 'buxa:bg-[color-mix(in_srgb,var(--f-crit)_12%,var(--surface))]!';
 // The round dot: neutral by default, red when overdue, amber when due soon.
 const DOT = 'buxa:w-[26px] buxa:h-[26px] buxa:rounded-full buxa:grid buxa:place-items-center buxa:flex-none';
 const DOT_NEUTRAL = 'buxa:bg-[var(--surface-3)] buxa:text-[var(--text-2)]';

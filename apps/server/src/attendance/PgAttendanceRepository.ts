@@ -20,19 +20,19 @@ import {
 export class PgAttendanceRepository implements AttendanceRepository {
   constructor(private readonly pool: Pool) {}
 
-  openFor(orgId: string, personId: string): Promise<CheckInRecord | null> {
-    return withOrg(this.pool, orgId, db => openVisit(db, personId));
+  openFor(userId: string, orgId: string, personId: string): Promise<CheckInRecord | null> {
+    return withOrg(this.pool, userId, orgId, db => openVisit(db, personId));
   }
 
-  onSite(orgId: string): Promise<CheckInRecord[]> {
-    return withOrg(this.pool, orgId, db =>
+  onSite(userId: string, orgId: string): Promise<CheckInRecord[]> {
+    return withOrg(this.pool, userId, orgId, db =>
       queryCheckIns(db, 'WHERE checked_out_at IS NULL', [], 'ORDER BY checked_in_at, id'),
     );
   }
 
   async checkIn(actor: Actor, input: NewCheckIn): Promise<CheckInRecord> {
     try {
-      return await withOrg(this.pool, actor.orgId, async db => {
+      return await withOrg(this.pool, actor.userId, actor.orgId, async db => {
         if (!(await personExists(db, input.personId))) {
           throw new PersonNotFoundError();
         }
@@ -46,7 +46,7 @@ export class PgAttendanceRepository implements AttendanceRepository {
   }
 
   checkOut(actor: Actor, input: NewCheckOut): Promise<CheckInRecord> {
-    return withOrg(this.pool, actor.orgId, async db => {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       const visit = await openVisit(db, input.personId);
       if (!visit) {
         throw new NotOnSiteError();
@@ -60,12 +60,12 @@ export class PgAttendanceRepository implements AttendanceRepository {
     });
   }
 
-  log(orgId: string, query: AttendanceQuery): Promise<CheckInRecord[]> {
+  log(userId: string, orgId: string, query: AttendanceQuery): Promise<CheckInRecord[]> {
     if (query.personId !== undefined && !isUuid(query.personId)) {
       return Promise.resolve([]);
     }
 
-    return withOrg(this.pool, orgId, db =>
+    return withOrg(this.pool, userId, orgId, db =>
       queryCheckIns(
         db,
         `WHERE checked_in_at >= $1::timestamptz AND checked_in_at < $2::timestamptz

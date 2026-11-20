@@ -48,6 +48,7 @@ describe.skipIf(!url)('check-out race on Postgres (S-01)', () => {
     try {
       await holder.query('BEGIN');
       await holder.query('SET LOCAL ROLE buxa_app');
+      await holder.query("SELECT set_config('app.user_id', $1, true)", [fx.actor.userId]);
       await holder.query("SELECT set_config('app.org_id', $1, true)", [fx.actor.orgId]);
       await holder.query(
         `UPDATE check_ins SET checked_out_at = $2::timestamptz, checked_out_by = $3, collected_by_person_id = $4
@@ -77,6 +78,7 @@ describe.skipIf(!url)('check-out race on Postgres (S-01)', () => {
 
     const stored = await withOrg(
       pool,
+      fx.actor.userId,
       fx.actor.orgId,
       async db =>
         (
@@ -126,6 +128,7 @@ describe.skipIf(!url)('check-out race on Postgres (S-01)', () => {
 
       const stored = await withOrg(
         pool,
+        fx.actor.userId,
         fx.actor.orgId,
         async db =>
           (

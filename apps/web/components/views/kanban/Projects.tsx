@@ -80,7 +80,7 @@ export function Projects() {
             const left = p.deadline ? diffDays(p.deadline, today()) : null;
 
             return (
-              <article key={p.id} className={`project-card tone-${HEALTH_TONE[h]}`}>
+              <article key={p.id} className={`card card--project tone-${HEALTH_TONE[h]}`}>
                 <div className="pc-top">
                   <h2>
                     <Link href={boardPath(p.id)} onClick={() => actions.selectProject(p.id)}>

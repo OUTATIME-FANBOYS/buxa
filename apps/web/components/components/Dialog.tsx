@@ -6,12 +6,14 @@ import { project, reduceMotion, rubberband, springAnimate, VelocityTracker } fro
 import { FOCUSABLE } from '@buxa/shared';
 import { Button } from '@/components/elements';
 
-// The scrim behind a dialog or drawer. Its fade and the panel's pop or slide are keyframes in popover-menu-dialog.css.
+// The scrim behind a dialog or drawer. Its fade and the panel's pop or slide keyframes live in the Tailwind theme.
 const SCRIM =
-  'buxa:fixed buxa:inset-0 buxa:z-[50] buxa:grid buxa:bg-[rgba(15,15,12,0.4)] buxa:[[data-theme=dark]_&]:bg-[rgba(0,0,0,0.6)]';
+  'buxa:fixed buxa:inset-0 buxa:z-[50] buxa:grid buxa:bg-[var(--scrim)] buxa:[[data-theme=dark]_&]:bg-[var(--scrim-dark)]';
 const DIALOG_SCRIM = 'buxa:place-items-center buxa:p-[var(--s4)]';
+// The drawer's one row is exactly the window's height (minmax(0,1fr), not auto): an auto row grows to the drawer's content, so
+// the drawer would be as tall as its content and the body inside it would never scroll.
 const DRAWER_SCRIM =
-  'buxa:[backdrop-filter:blur(2px)] buxa:[-webkit-backdrop-filter:blur(2px)] buxa:[place-items:stretch_end] buxa:p-0';
+  'buxa:[backdrop-filter:blur(2px)] buxa:[-webkit-backdrop-filter:blur(2px)] buxa:[place-items:stretch_end] buxa:grid-rows-[minmax(0,1fr)] buxa:p-0';
 const FADE_IN = 'buxa:[animation:fade_0.16s_var(--ease)]';
 const FADE_OUT = 'buxa:[animation:fadeOut_0.2s_linear_forwards]';
 const DIALOG =
@@ -24,8 +26,9 @@ const DRAWER_IN = 'buxa:[animation:slide_0.28s_var(--ease-out)]';
 const DRAWER_OUT = 'buxa:[animation:slideOut_0.2s_cubic-bezier(0.4,0,1,1)_forwards]';
 const HEAD = 'buxa:flex buxa:justify-between buxa:items-center buxa:[padding:var(--s4)_var(--s5)_0]';
 const BODY = 'buxa:[padding:var(--s4)_var(--s5)_var(--s5)] buxa:overflow-auto';
+// min-h-0 lets this flex child shrink below its content, so the body (header included, it is sticky) scrolls as one.
 const DRAWER_BODY =
-  'buxa:overflow-auto buxa:[padding:0_var(--s5)_var(--s6)] buxa:grid buxa:gap-[var(--s5)] buxa:content-start buxa:flex-1';
+  'buxa:overflow-y-auto buxa:min-h-0 buxa:[padding:0_var(--s5)_var(--s6)] buxa:grid buxa:gap-[var(--s5)] buxa:content-start buxa:flex-1';
 const FOOT = 'buxa:flex buxa:justify-end buxa:gap-[var(--s2)] buxa:[padding:0_var(--s5)_var(--s5)]';
 
 interface Swipe {

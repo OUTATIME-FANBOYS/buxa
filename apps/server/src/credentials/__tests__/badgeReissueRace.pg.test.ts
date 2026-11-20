@@ -32,6 +32,7 @@ describe.skipIf(!url)('concurrent badge reissue on Postgres (S-15)', () => {
     try {
       await holder.query('BEGIN');
       await holder.query('SET LOCAL ROLE buxa_app');
+      await holder.query("SELECT set_config('app.user_id', $1, true)", [fx.actor.userId]);
       await holder.query("SELECT set_config('app.org_id', $1, true)", [fx.actor.orgId]);
       await holder.query(
         `INSERT INTO credentials (org_id, person_id, token_hash, issued_at, issued_by) VALUES ($1, $2, $3, $4::timestamptz, $5)`,
@@ -54,6 +55,7 @@ describe.skipIf(!url)('concurrent badge reissue on Postgres (S-15)', () => {
 
     const active = await withOrg(
       pool,
+      fx.actor.userId,
       fx.actor.orgId,
       async db =>
         (

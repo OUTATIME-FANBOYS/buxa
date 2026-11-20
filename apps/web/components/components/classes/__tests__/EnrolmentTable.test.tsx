@@ -9,7 +9,6 @@ const CLASS_ID = '11111111-1111-4111-8111-111111111111';
 
 const enrolment = (over: Partial<Enrolment> = {}): Enrolment => ({
   id: '33333333-3333-4333-8333-333333333333',
-  sessionId: '22222222-2222-4222-8222-222222222222',
   classId: CLASS_ID,
   className: 'Robotics',
   camperId: '44444444-4444-4444-8444-444444444444',
@@ -46,8 +45,8 @@ describe('EnrolmentTable', () => {
         clockFormat="24h"
       />,
     );
-    expect(html).toContain('Cancel enrolment');
-    expect(html).toContain('for Ada Lovelace');
+    expect(html).toContain('Withdraw');
+    expect(html).toContain('aria-label="Withdraw Ada Lovelace"');
   });
 
   it('shows no cancel button and no actions column to a viewer', () => {
@@ -60,7 +59,7 @@ describe('EnrolmentTable', () => {
         clockFormat="24h"
       />,
     );
-    expect(html).not.toContain('Cancel enrolment');
+    expect(html).not.toContain('Withdraw');
     expect(html).not.toContain('Actions');
   });
 
@@ -75,6 +74,6 @@ describe('EnrolmentTable', () => {
       />,
     );
     expect(html).toContain('Cancelled');
-    expect(html).not.toContain('Cancel enrolment');
+    expect(html).not.toContain('Withdraw');
   });
 });

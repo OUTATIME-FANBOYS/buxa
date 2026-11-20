@@ -1,4 +1,4 @@
-import { membershipStatus, personAccess, type LocalDate } from '@buxa/domain';
+import { membershipStatus, personAccess, type Actor, type LocalDate } from '@buxa/domain';
 import type { Household, PersonMembership, PersonSummary } from '@buxa/contracts';
 import type { AttendanceRepository, CheckInRecord } from '../../attendance/AttendanceRepository';
 import type { MembershipRecord } from '../../memberships/MembershipRepository';
@@ -10,8 +10,8 @@ export const displayName = (person: Pick<PersonRecord, 'givenName' | 'familyName
   `${person.preferredName ?? person.givenName} ${person.familyName}`;
 
 /** The camp's zone. "Today" and every shown time come from here. */
-export async function campZone(orgs: OrgRepository, orgId: string): Promise<string> {
-  return (await orgs.get(orgId)).timezone;
+export async function campZone(orgs: OrgRepository, actor: Pick<Actor, 'userId' | 'orgId'>): Promise<string> {
+  return (await orgs.get(actor.userId, actor.orgId)).timezone;
 }
 
 export function toPersonMembership(record: MembershipRecord, today: LocalDate): PersonMembership {
@@ -56,12 +56,12 @@ export function toSummary(
  */
 export async function toHouseholds(
   people: PeopleRepository,
-  orgId: string,
+  actor: Pick<Actor, 'userId' | 'orgId'>,
   records: readonly HouseholdRecord[],
   staffView: boolean,
 ): Promise<Household[]> {
   const ids = [...new Set(records.flatMap(h => h.members.map(m => m.personId)))];
-  const byId = new Map((await people.getMany(orgId, ids)).map(p => [p.id, p] as const));
+  const byId = new Map((await people.getMany(actor.userId, actor.orgId, ids)).map(p => [p.id, p] as const));
 
   return records.map(h => ({
     id: h.id,
@@ -89,7 +89,7 @@ export async function toHouseholds(
 /** The open visit for each person who is on site now, keyed by person id. */
 export async function onSiteByPerson(
   attendance: AttendanceRepository,
-  orgId: string,
+  actor: Pick<Actor, 'userId' | 'orgId'>,
 ): Promise<Map<string, CheckInRecord>> {
-  return new Map((await attendance.onSite(orgId)).map(v => [v.personId, v] as const));
+  return new Map((await attendance.onSite(actor.userId, actor.orgId)).map(v => [v.personId, v] as const));
 }

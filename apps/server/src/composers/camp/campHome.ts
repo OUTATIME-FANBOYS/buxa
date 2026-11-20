@@ -1,6 +1,6 @@
 import { authorize, can, isMinor, toLocalDate } from '@buxa/domain';
 import type { Actor, LocalDate } from '@buxa/domain';
-import type { PersonSummary, Session } from '@buxa/contracts';
+import type { Class, PersonSummary } from '@buxa/contracts';
 import type { OnSiteEntry } from '@buxa/shared/attendance/types';
 import { getRuntime } from '../../runtime';
 import { MAX_LOG_ROWS } from '../../attendance/AttendanceRepository';
@@ -43,7 +43,7 @@ export async function loadCampHome(): Promise<CampHome> {
   const minors =
     visitEntries && can(actor, 'people:read_contact')
       ? await minorsAmong(
-          actor.orgId,
+          actor,
           visitEntries.map(v => v.personId),
           today,
         )
@@ -78,8 +78,8 @@ export function daysBefore(day: LocalDate, n: number): LocalDate {
 }
 
 /** The ids among `personIds` who are students (minors) today. Reads the people directly, as the age split needs their dates of birth. */
-async function minorsAmong(orgId: string, personIds: readonly string[], today: LocalDate): Promise<Set<string>> {
-  const records = await getRuntime().repositories.people.getMany(orgId, [...new Set(personIds)]);
+async function minorsAmong(actor: Actor, personIds: readonly string[], today: LocalDate): Promise<Set<string>> {
+  const records = await getRuntime().repositories.people.getMany(actor.userId, actor.orgId, [...new Set(personIds)]);
 
   return new Set(records.filter(person => isMinor(person, today)).map(person => person.id));
 }
@@ -145,26 +145,26 @@ export function membershipCounts(list: readonly PersonSummary[] | null): Members
   return counts;
 }
 
-/** The next sessions of every class, soonest first. Needs events:read (checked by the caller). */
+/** The next classes of every session, soonest first. Needs events:read (checked by the caller). */
 async function upcomingSessions(actor: Actor): Promise<UpcomingSession[]> {
   const { classes } = getRuntime().services;
-  const listed = await classes.listClasses(actor);
+  const listed = await classes.listSessions(actor);
   if (!listed.ok) {
     return [];
   }
   const now = Date.now();
-  const perClass = await Promise.all(
-    listed.value.map(async cls => {
-      const sessions = await classes.listSessions(actor, cls.id);
+  const perSession = await Promise.all(
+    listed.value.map(async session => {
+      const found = await classes.listClasses(actor, session.id);
 
-      return sessions.ok ? sessions.value : [];
+      return found.ok ? found.value : [];
     }),
   );
 
-  return perClass
+  return perSession
     .flat()
-    .filter((s: Session) => Date.parse(s.startsAt) >= now)
+    .filter((c: Class) => Date.parse(c.startsAt) >= now)
     .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt))
     .slice(0, UPCOMING_LIMIT)
-    .map(s => ({ id: s.id, className: s.className, startsAt: s.startsAt, location: s.location }));
+    .map(c => ({ id: c.id, className: c.name, startsAt: c.startsAt, location: c.location }));
 }

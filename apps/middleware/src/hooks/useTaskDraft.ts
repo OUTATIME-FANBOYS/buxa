@@ -25,7 +25,6 @@ export function useTaskDraft(task: Task | null, project: Project, defaults?: { c
   const [columnId, setColumnId] = useState(task?.columnId ?? defaults?.columnId ?? project.columns[0]?.id ?? '');
   const [priority, setPriority] = useState<Priority>(task?.priority ?? 'medium');
   const [assignee, setAssignee] = useState(task?.assigneeId ?? me?.id ?? '');
-  const [tags, setTags] = useState<string[]>(task?.tags ?? []);
   const [errs, setErrs] = useState<Errors>({});
 
   const commitTitle = () => {
@@ -63,7 +62,6 @@ export function useTaskDraft(task: Task | null, project: Project, defaults?: { c
       assigneeId: assignee || undefined,
       start: start || undefined,
       due: due || undefined,
-      tags,
     });
     toast('Task created');
     openTask(id);
@@ -88,8 +86,6 @@ export function useTaskDraft(task: Task | null, project: Project, defaults?: { c
     setPriority,
     assignee,
     setAssignee,
-    tags,
-    setTags,
     errs,
     commitTitle,
     changeDates,

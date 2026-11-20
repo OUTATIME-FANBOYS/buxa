@@ -17,7 +17,7 @@ describe.skipIf(!url)('narrow privileges (S-06)', () => {
   });
 
   it('the request role cannot read the migration history', async () => {
-    await expect(withOrg(pool, null, db => db.query<Row>('SELECT name FROM schema_migrations'))).rejects.toThrow(
+    await expect(withOrg(pool, null, null, db => db.query<Row>('SELECT name FROM schema_migrations'))).rejects.toThrow(
       /permission denied/,
     );
   });
@@ -41,7 +41,10 @@ describe.skipIf(!url)('narrow privileges (S-06)', () => {
     const r = await pool.query<{ proname: string; prosecdef: boolean; proconfig: string[] | null }>(
       `SELECT proname, prosecdef, proconfig FROM pg_proc WHERE proname IN ('buxa_upsert_user', 'buxa_memberships_of', 'buxa_create_org') ORDER BY proname`,
     );
-    expect(r.rows).toHaveLength(3);
+    // The expand step adds overloads of buxa_memberships_of and buxa_create_org, so the rows are checked by name, not counted.
+    expect(new Set(r.rows.map(x => x.proname))).toEqual(
+      new Set(['buxa_upsert_user', 'buxa_memberships_of', 'buxa_create_org']),
+    );
     for (const row of r.rows) {
       expect(row.prosecdef, row.proname).toBe(true);
       expect(row.proconfig, row.proname).toEqual(['search_path=pg_catalog, public']);
@@ -49,11 +52,7 @@ describe.skipIf(!url)('narrow privileges (S-06)', () => {
   });
 
   it('the functions are executable by the request role and by no one else (not PUBLIC)', async () => {
-    const sigs = [
-      'buxa_upsert_user(uuid,text,text)',
-      'buxa_memberships_of(uuid)',
-      'buxa_create_org(text,text,text,uuid)',
-    ];
+    const sigs = ['buxa_upsert_user(uuid,text,text)', 'buxa_memberships_of()', 'buxa_create_org(text,text,text)'];
     for (const sig of sigs) {
       const r = await pool.query<Row>(`SELECT has_function_privilege('buxa_app', $1, 'EXECUTE') AS app`, [sig]);
       expect(r.rows[0].app, sig).toBe(true);
@@ -67,7 +66,7 @@ describe.skipIf(!url)('narrow privileges (S-06)', () => {
   it('the request role can run the sign-in and organisation functions, and reads nothing without an organisation', async () => {
     const tag = Math.random().toString(36).slice(2, 10);
     const authId = (await pool.query<{ id: string }>('SELECT gen_random_uuid() AS id')).rows[0].id;
-    const user = await withOrg(pool, null, db =>
+    const user = await withOrg(pool, null, null, db =>
       db.query<{ id: string }>('SELECT user_id AS id FROM buxa_upsert_user($1, $2, $3)', [
         authId,
         `owner-${tag}@privs.test`,
@@ -75,19 +74,18 @@ describe.skipIf(!url)('narrow privileges (S-06)', () => {
       ]),
     ).then(r => r.rows[0]);
     expect(user.id).toBeTruthy();
-    const org = await withOrg(pool, null, db =>
-      db.query<{ id: string }>('SELECT org_id AS id FROM buxa_create_org($1, $2, $3, $4)', [
+    const org = await withOrg(pool, user.id, null, db =>
+      db.query<{ id: string }>('SELECT org_id AS id FROM buxa_create_org($1, $2, $3)', [
         `Privs ${tag}`,
         `privs-${tag}`,
         'UTC',
-        user.id,
       ]),
     ).then(r => r.rows[0]);
-    const memberships = await withOrg(pool, null, db =>
-      db.query<{ orgId: string }>('SELECT member_org_id AS "orgId" FROM buxa_memberships_of($1)', [user.id]),
+    const memberships = await withOrg(pool, user.id, null, db =>
+      db.query<{ orgId: string }>('SELECT member_org_id AS "orgId" FROM buxa_memberships_of()'),
     ).then(r => r.rows);
     expect(memberships.map(m => m.orgId)).toContain(org.id);
     // Without an organisation, the tables themselves stay empty.
-    expect((await withOrg(pool, null, db => db.query<Row>('SELECT 1 FROM orgs'))).rowCount).toBe(0);
+    expect((await withOrg(pool, null, null, db => db.query<Row>('SELECT 1 FROM orgs'))).rowCount).toBe(0);
   });
 });

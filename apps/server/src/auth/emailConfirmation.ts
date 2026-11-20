@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 /**
  * Whether Supabase makes people confirm their email before they get a session.
  *
@@ -6,6 +8,9 @@
  * This reads that setting from Supabase's public auth settings, so the API can refuse to run in production without it.
  */
 export type EmailConfirmation = 'required' | 'not-required' | 'unknown';
+
+/** The part of Supabase's public auth settings this check reads. Anything else in the reply is ignored. */
+const SupabaseAuthSettings = z.object({ mailer_autoconfirm: z.boolean() });
 export type StartupDecision = 'ok' | 'warn' | 'refuse';
 
 export async function readEmailConfirmation(opts: {
@@ -22,16 +27,12 @@ export async function readEmailConfirmation(opts: {
     if (!response.ok) {
       return 'unknown';
     }
-    const settings: unknown = await response.json();
-    const autoconfirm = (settings as { mailer_autoconfirm?: unknown } | null)?.mailer_autoconfirm;
-    if (autoconfirm === true) {
-      return 'not-required';
-    }
-    if (autoconfirm === false) {
-      return 'required';
+    const settings = SupabaseAuthSettings.safeParse(await response.json());
+    if (!settings.success) {
+      return 'unknown';
     }
 
-    return 'unknown';
+    return settings.data.mailer_autoconfirm ? 'not-required' : 'required';
   } catch {
     return 'unknown';
   }

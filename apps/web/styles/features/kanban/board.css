@@ -63,7 +63,7 @@
   gap: var(--s2);
   align-content: start;
   min-height: 44px;
-  padding: 2px;
+  padding: var(--s1);
   flex: 0 1 auto;
 }
 .card {
@@ -74,7 +74,7 @@
   padding: var(--s3);
   display: grid;
   gap: var(--s3);
-  cursor: pointer;
+  cursor: grab;
   transition:
     background 0.12s,
     transform 0.3s var(--ease-out);
@@ -92,9 +92,6 @@
 }
 [data-theme='dark'] .card:hover {
   background: var(--hover);
-}
-.card {
-  cursor: grab;
 }
 .card.is-dragging {
   opacity: 0.3;
@@ -126,7 +123,7 @@
 }
 body.dragging-card,
 body.dragging-card * {
-  cursor: grabbing !important;
+  cursor: grabbing;
   -webkit-user-select: none;
   user-select: none;
 }
@@ -163,37 +160,32 @@ body.dragging-card * {
     opacity: 1;
   }
 }
-.tags {
-  display: flex;
-  gap: var(--s1);
-  flex-wrap: wrap;
-}
-.tag.hue-brand {
-  background: var(--accent-soft);
-  color: var(--accent-deep);
-}
-.tag.hue-ok {
-  background: var(--ok-soft);
-  color: var(--ok-ink);
-}
-.tag.hue-crit {
-  background: var(--crit-soft);
-  color: var(--crit-ink);
-}
-.tag.hue-agent {
-  background: var(--agent-soft);
-  color: var(--agent-ink);
-}
+/* One line: priority, due date, the counts, the Archived badge and the avatar last. The title wraps above it. */
 .card-meta {
   display: flex;
   align-items: center;
-  gap: var(--s3);
-  flex-wrap: wrap;
+  gap: var(--s2);
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+.card-meta > * {
+  flex: none;
+}
+/* The due date is the one item that gives way when the card is narrow. */
+.card-meta .due {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.card-meta .grow {
+  flex: 1 1 0;
+  min-width: 0;
 }
 .drop-line {
   height: 3px;
   background: var(--accent);
-  border-radius: 2px;
+  border-radius: var(--r-1);
   margin: -1px 0 var(--s2);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
 }

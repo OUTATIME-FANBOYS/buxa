@@ -35,7 +35,7 @@ export function translateRepositoryError(error: unknown): unknown {
 /** Postgres codes for a value the database refuses: 23514 check violation, 22001 too long, 22003 out of range, 22007 bad date, 22P02 bad text. */
 const REJECTED_VALUE_CODES = new Set(['23514', '22001', '22003', '22007', '22P02']);
 export const isRejectedValue = (error: unknown): boolean =>
-  typeof error === 'object' && error !== null && REJECTED_VALUE_CODES.has(String((error as { code?: unknown }).code));
+  typeof error === 'object' && error !== null && 'code' in error && REJECTED_VALUE_CODES.has(String(error.code));
 
 /** Runs a repository call and translates its expected errors. */
 export async function guard<T>(work: () => Promise<T>): Promise<T> {

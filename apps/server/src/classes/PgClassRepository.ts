@@ -1,8 +1,17 @@
 import type { Pool } from 'pg';
 import { withOrg } from '@buxa/db';
-import type { Actor } from '@buxa/domain';
-import type { Class, Enrolment, NewClassInput, Session } from '@buxa/contracts';
-import type { ClassRepository, EnrolRequest, EnrolmentRule, NewSessionRecord } from './ClassRepository';
+import { isUuid, type Actor } from '@buxa/domain';
+import type { Class, Enrolment, NewSessionInput, Session, SessionPriceInput } from '@buxa/contracts';
+import { recordAudit } from '../audit/recordAudit';
+import type {
+  CampClassSpan,
+  ClassRecord,
+  ClassRepository,
+  EnrolRequest,
+  EnrolmentRule,
+  TeacherAssignment,
+} from './ClassRepository';
+import { TeacherNotFoundError } from './errors';
 import { cancelInTransaction, enrolInTransaction } from './PgEnrolmentWrites';
 import {
   getClass,
@@ -11,68 +20,219 @@ import {
   listEnrolmentRows,
   listSessionRows,
   requireClass,
+  requireClassExists,
+  requireSession,
   requireSessionExists,
 } from './PgClassQueries';
-import { insertClass, insertSession } from './PgClassWrites';
+import {
+  deleteClassRow,
+  insertClass,
+  insertSession,
+  setSessionPriceRow,
+  setSessionPublicRow,
+  updateClassRow,
+} from './PgClassWrites';
+import { translateClassWriteError } from './pgClassErrors';
+import { toIso } from '../people/pgRows';
 
 /**
- * Postgres adapter for classes, sessions and enrolments. Every call runs in withOrg (row-level security), and every write
+ * Postgres adapter for sessions, classes and enrolments. Every call runs in withOrg (row-level security), and every write
  * writes its audit entry in the same transaction. Refusals are thrown from inside the transaction, so nothing is written for them.
  * Driver errors are translated to the domain errors in ./errors.ts (see pgClassErrors.ts) before they leave this file.
  */
 export class PgClassRepository implements ClassRepository {
   constructor(private readonly pool: Pool) {}
 
-  listClasses(orgId: string): Promise<Class[]> {
-    return withOrg(this.pool, orgId, listClassRows);
+  listSessions(userId: string, orgId: string): Promise<Session[]> {
+    return withOrg(this.pool, userId, orgId, listSessionRows);
   }
 
-  getClass(orgId: string, classId: string): Promise<Class | null> {
-    return withOrg(this.pool, orgId, db => getClass(db, classId));
+  getSession(userId: string, orgId: string, sessionId: string): Promise<Session | null> {
+    return withOrg(this.pool, userId, orgId, db => getSession(db, sessionId));
   }
 
-  createClass(actor: Actor, input: NewClassInput): Promise<Class> {
-    return withOrg(this.pool, actor.orgId, async db => {
-      const id = await insertClass(db, actor, input);
+  createSession(actor: Actor, input: NewSessionInput): Promise<Session> {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
+      const id = await insertSession(db, actor, input);
+
+      return requireSession(db, id);
+    });
+  }
+
+  setSessionPrice(actor: Actor, sessionId: string, price: SessionPriceInput | null): Promise<Session> {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
+      await setSessionPriceRow(db, actor, sessionId, price);
+
+      return requireSession(db, sessionId);
+    });
+  }
+
+  setSessionPublic(actor: Actor, sessionId: string, isPublic: boolean): Promise<Session> {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
+      await setSessionPublicRow(db, actor, sessionId, isPublic);
+
+      return requireSession(db, sessionId);
+    });
+  }
+
+  addClasses(actor: Actor, sessionId: string, inputs: ClassRecord[]): Promise<Class[]> {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
+      await requireSessionExists(db, sessionId);
+      const written: Class[] = [];
+      for (const input of inputs) {
+        written.push(await requireClass(db, await insertClass(db, actor, sessionId, input)));
+      }
+
+      return written;
+    });
+  }
+
+  listCampClassSpans(userId: string, orgId: string): Promise<CampClassSpan[]> {
+    return withOrg(this.pool, userId, orgId, async db => {
+      const { rows } = await db.query<{ starts_at: Date; ends_at: Date; class_name: string }>(
+        'SELECT s.starts_at, s.ends_at, s.name AS class_name FROM sessions s ORDER BY s.starts_at',
+      );
+
+      return rows.map(r => ({ startsAt: toIso(r.starts_at), endsAt: toIso(r.ends_at), className: r.class_name }));
+    });
+  }
+
+  listClasses(userId: string, orgId: string, sessionId: string): Promise<Class[]> {
+    return withOrg(this.pool, userId, orgId, async db => {
+      await requireSessionExists(db, sessionId);
+
+      return listClassRows(db, sessionId);
+    });
+  }
+
+  getClass(userId: string, orgId: string, classId: string): Promise<Class | null> {
+    return withOrg(this.pool, userId, orgId, db => getClass(db, classId));
+  }
+
+  addClass(actor: Actor, sessionId: string, input: ClassRecord): Promise<Class> {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
+      await requireSessionExists(db, sessionId);
+      const id = await insertClass(db, actor, sessionId, input);
 
       return requireClass(db, id);
     });
   }
 
-  addSession(actor: Actor, classId: string, input: NewSessionRecord): Promise<Session> {
-    return withOrg(this.pool, actor.orgId, async db => {
-      await requireClass(db, classId);
-      const id = await insertSession(db, actor, classId, input);
-      const session = await getSession(db, id);
-      if (!session) {
-        throw new Error('A session was written but cannot be read back');
-      }
+  async updateClass(actor: Actor, classId: string, input: ClassRecord): Promise<Class> {
+    try {
+      return await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        await requireClassExists(db, classId);
+        await updateClassRow(db, actor, classId, input);
 
-      return session;
-    });
+        return requireClass(db, classId);
+      });
+    } catch (error) {
+      throw translateClassWriteError(error);
+    }
   }
 
-  listSessions(orgId: string, classId: string): Promise<Session[]> {
-    return withOrg(this.pool, orgId, async db => {
-      await requireClass(db, classId);
-
-      return listSessionRows(db, classId);
-    });
+  async deleteClass(actor: Actor, classId: string): Promise<void> {
+    try {
+      await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        const existing = await requireClass(db, classId);
+        await deleteClassRow(db, actor, classId, existing.name);
+      });
+    } catch (error) {
+      throw translateClassWriteError(error);
+    }
   }
 
-  listEnrolments(orgId: string, sessionId: string): Promise<Enrolment[]> {
-    return withOrg(this.pool, orgId, async db => {
-      await requireSessionExists(db, sessionId);
+  listEnrolments(userId: string, orgId: string, classId: string): Promise<Enrolment[]> {
+    return withOrg(this.pool, userId, orgId, async db => {
+      await requireClassExists(db, classId);
 
-      return listEnrolmentRows(db, sessionId);
+      return listEnrolmentRows(db, classId);
     });
   }
 
   enrol(actor: Actor, request: EnrolRequest, rule: EnrolmentRule): Promise<Enrolment> {
-    return withOrg(this.pool, actor.orgId, db => enrolInTransaction(db, actor, request, rule));
+    return withOrg(this.pool, actor.userId, actor.orgId, db => enrolInTransaction(db, actor, request, rule));
   }
 
   cancelEnrolment(actor: Actor, enrolmentId: string, note: string | null): Promise<Enrolment> {
-    return withOrg(this.pool, actor.orgId, db => cancelInTransaction(db, actor, enrolmentId, note));
+    return withOrg(this.pool, actor.userId, actor.orgId, db => cancelInTransaction(db, actor, enrolmentId, note));
   }
+
+  assignedClassIds(userId: string, orgId: string, teacherId: string): Promise<string[]> {
+    return withOrg(this.pool, userId, orgId, async db => {
+      if (!isUuid(teacherId)) {
+        return [];
+      }
+      // The join checks the role now, so a person who stopped being a teacher has no classes even before the trigger clears them.
+      const { rows } = await db.query<{ session_id: string }>(
+        `SELECT ct.session_id
+           FROM class_teachers ct
+           JOIN org_members m ON m.org_id = ct.org_id AND m.user_id = ct.user_id
+          WHERE ct.user_id = $1 AND m.role = 'teacher'`,
+        [teacherId],
+      );
+
+      return rows.map(r => r.session_id);
+    });
+  }
+
+  teacherAssignments(userId: string, orgId: string, sessionId: string): Promise<TeacherAssignment[]> {
+    return withOrg(this.pool, userId, orgId, async db => {
+      if (!isUuid(sessionId)) {
+        return [];
+      }
+      // class_teachers.session_id holds the class's id (the sessions table row), and sessions.class_id the parent session.
+      const { rows } = await db.query<TeacherAssignment>(
+        `SELECT ct.session_id AS "classId", ct.user_id AS "userId"
+           FROM class_teachers ct
+           JOIN sessions s ON s.id = ct.session_id
+          WHERE ct.org_id = $1 AND s.class_id = $2`,
+        [orgId, sessionId],
+      );
+
+      return rows;
+    });
+  }
+
+  camperIdsIn(userId: string, orgId: string, classIds: readonly string[]): Promise<string[]> {
+    const ids = classIds.filter(isUuid);
+    if (ids.length === 0) {
+      return Promise.resolve([]);
+    }
+
+    return withOrg(this.pool, userId, orgId, async db => {
+      const { rows } = await db.query<{ person_id: string }>(
+        `SELECT DISTINCT person_id FROM enrolments WHERE session_id = ANY($1::uuid[]) AND status = 'enrolled'`,
+        [ids],
+      );
+
+      return rows.map(r => r.person_id);
+    });
+  }
+
+  async replaceTeachers(actor: Actor, classId: string, userIds: readonly string[]): Promise<void> {
+    const unique = [...new Set(userIds)];
+    try {
+      await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        await db.query('SELECT buxa_replace_class_teachers_v2($1, $2, $3)', [actor.orgId, classId, unique]);
+        await recordAudit(db, {
+          actor,
+          action: 'class.update',
+          entity: 'class',
+          entityId: classId,
+          data: { teacherIds: unique },
+        });
+      });
+    } catch (error) {
+      // The function raises P0002 for a missing class and for a user who is not a teacher here; the message tells them apart.
+      if (isPgError(error) && error.message.includes('Teacher not found')) {
+        throw new TeacherNotFoundError();
+      }
+      throw translateClassWriteError(error);
+    }
+  }
+}
+
+function isPgError(error: unknown): error is Error & { code: string } {
+  return error instanceof Error && 'code' in error && error.code === 'P0002';
 }

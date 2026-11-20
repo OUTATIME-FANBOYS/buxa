@@ -125,3 +125,69 @@ form.class-form {
     font-size: 16px;
   }
 }
+
+/* The class and session dialogs: their labels and hint text sit one step up the type scale (--fs-s to --fs-b). */
+.class-dialog .field-label,
+.class-dialog .field-hint,
+.class-dialog .class-helper,
+.class-dialog .field-error {
+  font-size: var(--fs-b);
+}
+
+/* The row of actions in the classes table: Enrolments, Edit and Delete wrap on a narrow screen. */
+.classes-row-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--s2);
+}
+
+/* Instructors: the chosen ones as tags in a box of fixed height that scrolls, so the dialog does not grow with each one. */
+.instructor-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  max-height: 7.5rem;
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--s2);
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: var(--r-2);
+}
+
+.instructor-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 var(--s3);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--fs-b);
+  cursor: pointer;
+}
+
+/* Delete a class: the trash button is faded red at rest, and clearer red on hover and keyboard focus. */
+.classes-delete {
+  opacity: 0.55;
+}
+.classes-delete:hover:not(:disabled),
+.classes-delete:focus-visible {
+  opacity: 1;
+}
+
+/* The round row buttons read as buttons at rest: a visible border from the existing border token. Delete takes the red of its fill. */
+.classes-row-actions .button--icon-only {
+  border: 1px solid var(--border);
+}
+.classes-row-actions .classes-delete.button--icon-only {
+  border-color: var(--crit);
+}
+
+/* Withdraw an enrolment: a red button with a visible border in the same red as its fill (the danger token). */
+.classes-withdraw {
+  border: 1px solid var(--crit);
+}

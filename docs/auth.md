@@ -65,7 +65,7 @@ The full category table, with what is built and what is planned, is in `docs/pha
 
 **Planned, not built:**
 
-- **Teacher role.** A limited role for the adults who run a class (its own sessions only). Its colour token exists; its rules do not.
+- **Teacher role.** A limited role for the adults who run a class (its own sessions only, and the name of its own classes). Check-in and check-out is off by default; an admin turns it on per person (`member_options`).
 - **Delete and archive a camp.** `org:delete` is in the matrix for owners, but no screen or service uses it, and there is no archive action. Exporting and erasing a camp's data (`data:export`, `data:erase`) are owner-only and not built. Phase 0 requires that deleting an organisation still works while audit rows stay append-only.
 - **Invitations.** Team invites, role changes and removal are not built (the Team page says so).
 

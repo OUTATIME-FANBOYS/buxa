@@ -14,7 +14,8 @@ describe('translateRepositoryError', () => {
       const translated = translateRepositoryError(pgError(code));
       expect(isHttpError(translated)).toBe(true);
       expect(translated).toMatchObject({ statusCode: 400 });
-      expect((translated as Error).message).not.toMatch(/users_pii|database|constraint/i);
+      const message = translated instanceof Error ? translated.message : '';
+      expect(message).not.toMatch(/users_pii|database|constraint/i);
     },
   );
 
@@ -28,6 +29,7 @@ describe('translateRepositoryError', () => {
   it('leaves other errors alone, so they still become a 500', () => {
     const unique = pgError('23505');
     expect(translateRepositoryError(unique)).toBe(unique);
+
     const plain = new Error('connection reset');
     expect(translateRepositoryError(plain)).toBe(plain);
   });
@@ -66,7 +68,12 @@ describe('the camp service', () => {
         throw new OrgNotFoundError();
       }),
     );
-    const error: unknown = await service.getCamp(owner).catch((e: unknown) => e);
+    let error: unknown;
+    try {
+      await service.getCamp(owner);
+    } catch (e) {
+      error = e;
+    }
     expect(error).toMatchObject({ statusCode: 404, message: 'Camp not found' });
   });
 

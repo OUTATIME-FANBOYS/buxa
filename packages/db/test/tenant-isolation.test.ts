@@ -59,7 +59,7 @@ describe.skipIf(!url)('tenant isolation (row-level security)', () => {
   });
 
   it('sees only its own organisation, members, users and audit rows', async () => {
-    await withOrg(pool, a, async db => {
+    await withOrg(pool, ua, a, async db => {
       expect((await db.query<Row>('SELECT id FROM orgs')).rows.map(r => r.id)).toEqual([a]);
       expect((await db.query<Row>('SELECT user_id FROM org_members')).rows.map(r => r.user_id)).toEqual([ua]);
       expect((await db.query<Row>('SELECT id FROM users')).rows.map(r => r.id)).toEqual([ua]);
@@ -68,7 +68,7 @@ describe.skipIf(!url)('tenant isolation (row-level security)', () => {
   });
 
   it('with no organisation set, every tenant table is empty', async () => {
-    await withOrg(pool, null, async db => {
+    await withOrg(pool, ua, null, async db => {
       for (const t of ['orgs', 'users', 'org_members', 'audit_log']) {
         expect((await db.query<Row>(`SELECT 1 FROM ${t}`)).rowCount).toBe(0);
       }
@@ -77,28 +77,30 @@ describe.skipIf(!url)('tenant isolation (row-level security)', () => {
 
   it('cannot write into another organisation', async () => {
     await expect(
-      withOrg(pool, a, db =>
+      withOrg(pool, ua, a, db =>
         db.query<Row>(`INSERT INTO org_members(org_id, user_id, role) VALUES ($1,$2,'viewer')`, [b, ua]),
       ),
     ).rejects.toThrow(/permission denied/);
     await expect(
-      withOrg(pool, a, db => db.query<Row>(`INSERT INTO audit_log(org_id, action, entity) VALUES ($1,'x','y')`, [b])),
+      withOrg(pool, ua, a, db =>
+        db.query<Row>(`INSERT INTO audit_log(org_id, action, entity) VALUES ($1,'x','y')`, [b]),
+      ),
     ).rejects.toThrow(/row-level security/);
   });
 
   it('cannot change or delete another organisation’s rows (silently affects nothing)', async () => {
-    await withOrg(pool, a, async db => {
+    await withOrg(pool, ua, a, async db => {
       expect((await db.query<Row>(`UPDATE orgs SET name = 'hacked' WHERE id = $1`, [b])).rowCount).toBe(0);
     });
     await expect(
-      withOrg(pool, a, db => db.query<Row>(`DELETE FROM org_members WHERE org_id = $1`, [b])),
+      withOrg(pool, ua, a, db => db.query<Row>(`DELETE FROM org_members WHERE org_id = $1`, [b])),
     ).rejects.toThrow(/permission denied/);
     expect((await pool.query<Row>('SELECT name FROM orgs WHERE id = $1', [b])).rows[0].name).toBe('Camp B');
   });
 
   it('cannot move a row to another organisation by updating org_id', async () => {
     await expect(
-      withOrg(pool, a, db => db.query<Row>(`UPDATE org_members SET org_id = $1 WHERE org_id = $2`, [b, a])),
+      withOrg(pool, ua, a, db => db.query<Row>(`UPDATE org_members SET org_id = $1 WHERE org_id = $2`, [b, a])),
     ).rejects.toThrow(/permission denied/);
   });
 
@@ -108,28 +110,28 @@ describe.skipIf(!url)('tenant isolation (row-level security)', () => {
     );
     expect(grants.rows[0]).toEqual({ i: false, u: false, d: false, s: true });
     await expect(
-      withOrg(pool, a, db => db.query<Row>(`UPDATE org_members SET role = 'owner' WHERE user_id = $1`, [ua])),
+      withOrg(pool, ua, a, db => db.query<Row>(`UPDATE org_members SET role = 'owner' WHERE user_id = $1`, [ua])),
     ).rejects.toThrow(/permission denied/);
     await expect(
-      withOrg(pool, a, db =>
+      withOrg(pool, ua, a, db =>
         db.query<Row>(`INSERT INTO org_members(org_id, user_id, role) VALUES ($1,$2,'owner')`, [a, ub]),
       ),
     ).rejects.toThrow(/permission denied/);
-    expect((await withOrg(pool, a, db => db.query<Row>('SELECT 1 FROM org_members'))).rowCount).toBe(1); // reads still work, scoped to the org
+    expect((await withOrg(pool, ua, a, db => db.query<Row>('SELECT 1 FROM org_members'))).rowCount).toBe(1); // reads still work, scoped to the org
   });
 
   it('the audit log is append-only, even for the owner role', async () => {
-    await expect(withOrg(pool, a, db => db.query<Row>(`DELETE FROM audit_log`))).rejects.toThrow();
+    await expect(withOrg(pool, ua, a, db => db.query<Row>(`DELETE FROM audit_log`))).rejects.toThrow();
     await expect(pool.query<Row>(`UPDATE audit_log SET action = 'edited' WHERE org_id = $1`, [a])).rejects.toThrow(
       /append-only/,
     );
-    await withOrg(pool, a, db =>
+    await withOrg(pool, ua, a, db =>
       db.query<Row>(`INSERT INTO audit_log(org_id, action, entity) VALUES ($1,'ok','org')`, [a]),
     );
   });
 
   it('rejects a malformed organisation id before it reaches SQL', async () => {
-    await expect(withOrg(pool, `'; DROP TABLE orgs; --`, () => settle(() => 1))).rejects.toThrow(
+    await expect(withOrg(pool, ua, `'; DROP TABLE orgs; --`, () => settle(() => 1))).rejects.toThrow(
       /Invalid organisation id/,
     );
   });

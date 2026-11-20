@@ -5,8 +5,7 @@ import type { AnchorHTMLAttributes, ButtonHTMLAttributes, MouseEvent, ReactNode,
 import { Icon } from '../Icon';
 
 /*
- * The one button for the app. Call sites write <Button variant="primary">; they do not import HeroUI.
- * Every button is a pill. The variants are HeroUI's names, and each one's colours come from the Buxa tokens:
+ * The one button for the app. Every button is a pill, and each variant's colours come from the Buxa tokens:
  *
  *   primary      filled with the accent: the main action on a screen or in a form
  *   secondary    filled surface with an edge: the default (Cancel, Export, Import)
@@ -20,22 +19,21 @@ import { Icon } from '../Icon';
  * icon; it needs an aria-label, because the icon alone has no name. Use it where a label would repeat the context
  * (search, close, more). Keep a visible label where the action is not obvious.
  *
- * Sizes: md (44px, the default, the height of inputs), sm (30px, dense rows and panels), header (36px on a mouse
- * or keyboard device, for page-header actions). On a coarse pointer every size is 44px (styles/components/button.css).
+ * Sizes: md (44px, the default, the height of inputs), sm (30px, dense rows and panels), lg (52px, check-in actions),
+ * and header (36px for page-header actions). On a coarse pointer compact sizes use a 44px touch target.
  *
  * With `href` it renders a link (next/link, or a plain <a> when it downloads), styled the same way.
- * With `onClick` it runs on press (HeroUI's press handling covers mouse, touch and keyboard).
+ * Native button handling covers mouse, touch and keyboard activation.
  * `type` defaults to "submit", as a native button does, so a button inside a form keeps submitting it.
  */
 
-export type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'outline' | 'ghost' | 'danger' | 'danger-soft';
-export type ButtonSize = 'sm' | 'md' | 'header';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'danger-soft';
+export type ButtonSize = 'sm' | 'md' | 'lg' | 'header';
 
 /** Icon size inside a button: the label's cap height, smaller on the dense size. */
-const ICON_SIZE: Record<ButtonSize, number> = { sm: 14, md: 16, header: 16 };
+const ICON_SIZE: Record<ButtonSize, number> = { sm: 14, md: 16, lg: 16, header: 16 };
 
-/** Buxa size to the HeroUI size class. The heights themselves are in styles/components/button.css. */
-/** The class string for a button, from the button styles in styles/components/button.css. */
+/** The class string for a button, from styles/components/button.css. */
 export function buttonClassName({
   variant = 'secondary',
   size = 'md',
@@ -48,7 +46,8 @@ export function buttonClassName({
     size === 'sm' && 'button--sm',
     iconOnly && 'button--icon-only',
     fullWidth && 'button--full-width',
-    size === 'header' && 'buxa-button--header',
+    size === 'lg' && 'button--lg',
+    size === 'header' && 'button--header',
   ]
     .filter(Boolean)
     .join(' ');
@@ -82,7 +81,7 @@ interface CommonButtonProps extends NativeButtonProps {
   target?: string;
   rel?: string;
   ref?: Ref<HTMLElement>;
-  /** A widget role the button plays (menuitem, radio, tab). HeroUI drops it, so the atom sets it on the element. */
+  /** A widget role the button plays (menuitem, radio, tab). */
   role?: 'menuitem' | 'menuitemradio' | 'radio' | 'tab';
   'aria-checked'?: boolean;
   'aria-selected'?: boolean;

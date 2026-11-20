@@ -1,5 +1,7 @@
 import { describeRefusal, type Refusal } from '@buxa/domain';
-import { isClassError, isEnrolmentRefusal } from './errors';
+import { ClassOutsideSessionError, isClassError, isEnrolmentRefusal } from './errors';
+
+const isOutsideSession = (e: unknown): e is ClassOutsideSessionError => isClassError(e, 'class-outside-session');
 
 /** An expected business outcome. Permission failures are not outcomes: they throw a 403 (assertAllowed). */
 export type Outcome<T> = { ok: true; value: T } | { ok: false; failure: Failure };
@@ -7,9 +9,19 @@ export type Outcome<T> = { ok: true; value: T } | { ok: false; failure: Failure 
 export type FailureReason =
   | 'class_not_found'
   | 'session_not_found'
+  | 'class_outside_session'
+  | 'recurrence_invalid'
+  | 'class_clash'
+  | 'capacity_below_enrolled'
+  | 'class_has_enrolments'
   | 'enrolment_not_found'
   | 'camper_not_found'
   | 'instructor_not_found'
+  | 'household_not_found'
+  | 'hold_not_found'
+  | 'hold_exists'
+  | 'teacher_not_found'
+  | 'teacher_field_refused'
   | Refusal['reason'];
 
 export interface Failure {
@@ -23,9 +35,19 @@ export interface Failure {
 export const ok = <T>(value: T): Outcome<T> => ({ ok: true, value });
 
 const NOT_FOUND: Record<
-  'class-not-found' | 'session-not-found' | 'enrolment-not-found' | 'camper-not-found' | 'instructor-not-found',
+  | 'class-not-found'
+  | 'session-not-found'
+  | 'enrolment-not-found'
+  | 'camper-not-found'
+  | 'instructor-not-found'
+  | 'household-not-found'
+  | 'hold-not-found'
+  | 'teacher-not-found',
   Failure
 > = {
+  'household-not-found': { reason: 'household_not_found', message: 'That household does not exist in this camp.' },
+  'hold-not-found': { reason: 'hold_not_found', message: 'That hold no longer exists, or it has been released.' },
+  'teacher-not-found': { reason: 'teacher_not_found', message: 'One of the teachers is not a teacher in this camp.' },
   'class-not-found': { reason: 'class_not_found', message: 'That class no longer exists.' },
   'session-not-found': { reason: 'session_not_found', message: 'That session no longer exists.' },
   'enrolment-not-found': {
@@ -51,6 +73,49 @@ export async function attempt<T>(work: () => Promise<T>, timeZone: string): Prom
       if (isClassError(e, kind)) {
         return { ok: false, failure: NOT_FOUND[kind] };
       }
+    }
+    if (e instanceof Error && (e as { kind?: unknown }).kind === 'recurrence-refused') {
+      const refused = e as Error & { reason: 'recurrence_invalid' | 'class_clash' };
+
+      return { ok: false, failure: { reason: refused.reason, message: refused.message } };
+    }
+    if (isOutsideSession(e)) {
+      const { startsOn, endsOn } = e;
+
+      return {
+        ok: false,
+        failure: {
+          reason: 'class_outside_session',
+          message: `The class must fall on days between ${startsOn} and ${endsOn}, the session's first and last day.`,
+        },
+      };
+    }
+    if (isClassError(e, 'teacher-field-refused')) {
+      return { ok: false, failure: { reason: 'teacher_field_refused', message: (e as Error).message } };
+    }
+    if (isClassError(e, 'capacity-below-enrolled')) {
+      return {
+        ok: false,
+        failure: {
+          reason: 'capacity_below_enrolled',
+          message: 'The camp size cannot go below the places already taken.',
+        },
+      };
+    }
+    if (isClassError(e, 'class-has-enrolments')) {
+      return {
+        ok: false,
+        failure: {
+          reason: 'class_has_enrolments',
+          message: 'This class has enrolments, so it cannot be deleted. Cancel them first.',
+        },
+      };
+    }
+    if (isClassError(e, 'hold-exists')) {
+      return {
+        ok: false,
+        failure: { reason: 'hold_exists', message: 'This family already holds a place in this session.' },
+      };
     }
     if (isEnrolmentRefusal(e)) {
       return {

@@ -14,17 +14,22 @@ describe('PgClassRepository', () => {
   it('runs every read as the request role inside a transaction fixed to the organisation', async () => {
     const { pool, seen } = fakeDb();
     const repo = new PgClassRepository(pool);
-    expect(await repo.listClasses(actor.orgId)).toEqual([]);
+    expect(await repo.listSessions(actor.userId, actor.orgId)).toEqual([]);
     const sqls = seen.map(s => s.sql);
     expect(sqls[0]).toBe('BEGIN');
     expect(sqls).toContain('SET LOCAL ROLE buxa_app');
-    expect(seen.find(s => s.sql.startsWith('SELECT set_config'))?.params).toEqual([actor.orgId]);
+    expect(seen.filter(s => s.sql.startsWith('SELECT set_config')).map(s => s.params)).toEqual([
+      [actor.userId],
+      [actor.orgId],
+    ]);
     expect(sqls.at(-1)).toBe('COMMIT');
   });
 
   it('refuses a malformed organisation id before it opens a connection', async () => {
     const { pool, seen } = fakeDb();
-    await expect(new PgClassRepository(pool).listClasses('not-a-uuid')).rejects.toThrow('Invalid organisation id');
+    await expect(
+      new PgClassRepository(pool).listSessions('00000000-0000-4000-8000-000000000001', 'not-a-uuid'),
+    ).rejects.toThrow('Invalid organisation id');
     expect(seen).toHaveLength(0);
   });
 
@@ -32,7 +37,7 @@ describe('PgClassRepository', () => {
     const { pool, seen } = fakeDb();
     const repo = new PgClassRepository(pool);
     await expect(
-      repo.enrol(actor, { sessionId: classId, camperId: 'not-a-uuid' }, () => {
+      repo.enrol(actor, { classId, camperId: 'not-a-uuid' }, () => {
         throw new Error('the rule must not run for a malformed camper');
       }),
     ).rejects.toBeInstanceOf(CamperNotFoundError);

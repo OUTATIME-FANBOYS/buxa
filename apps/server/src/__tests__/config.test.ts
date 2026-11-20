@@ -39,3 +39,23 @@ describe('server config', () => {
     expect(() => loadConfig({ ...ok, LOG_LEVEL: 'loud' })).toThrow(/LOG_LEVEL/);
   });
 });
+
+// The migration login is for the migrate command only. The web runtime must never read it, and must never fall back to it.
+describe('web runtime config and the migration login', () => {
+  const migrationOnly = { MIGRATION_DATABASE_URL: 'postgres://migrator:generated@h/db' };
+
+  it('fails when the migration URL is the only database URL set', () => {
+    expect(() => loadConfig(migrationOnly)).toThrow(/DATABASE_URL: is required for the web app/);
+    expect(() => loadConfig(migrationOnly)).toThrow(/never used by the web app/);
+  });
+
+  it('fails in production too, and never uses the migration URL as the runtime URL', () => {
+    expect(() => loadConfig({ ...migrationOnly, NODE_ENV: 'production' })).toThrow(/DATABASE_URL/);
+  });
+
+  it('ignores the migration URL when the runtime URL is set, and never returns it', () => {
+    const config = loadConfig({ ...ok, ...migrationOnly });
+    expect(config.databaseUrl).toBe('postgres://x/y');
+    expect(JSON.stringify(config)).not.toContain('generated');
+  });
+});

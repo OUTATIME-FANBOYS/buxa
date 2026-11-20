@@ -36,6 +36,14 @@ export interface Config {
 
 /** Reads and validates the environment once, so a bad deploy fails immediately and says why. Secrets are never echoed back. */
 export function loadConfig(env: Record<string, string | undefined> = process.env): Config {
+  // The migration login is read only by the migrate command. If it is the only database URL set, say so, because the
+  // web app must never fall back to it.
+  if (!env.DATABASE_URL && env.MIGRATION_DATABASE_URL) {
+    throw new Error(
+      'Invalid configuration:\n  DATABASE_URL: is required for the web app (the restricted runtime login). ' +
+        'MIGRATION_DATABASE_URL is read only by the migrate command and is never used by the web app.',
+    );
+  }
   const result = schema.safeParse(env);
   if (!result.success) {
     const lines = result.error.issues.map(i => `  ${i.path.join('.') || 'env'}: ${i.message}`);

@@ -12,7 +12,19 @@
  *  - an approval is refused if the task changed since the proposal was made (stale)
  *  - a run is only reverted where it is still safe: a person's later work is never overwritten
  */
-import type { Agent, AgentRun, AppState, Change, Proposal, ProposalKind, Trust, Undo, User, Via } from './types';
+import type {
+  Agent,
+  AgentRun,
+  AppState,
+  Change,
+  Proposal,
+  ProposalKind,
+  TaskPatchChange,
+  Trust,
+  Undo,
+  User,
+  Via,
+} from './types';
 import * as D from './domain';
 import { requirePresent } from '@buxa/domain';
 
@@ -71,6 +83,9 @@ export function evaluate(s: AppState, agent: Agent, c: Change): { level: Trust; 
   return level === 'never' ? { level, why: 'Blocked by this agent’s policy.' } : { level };
 }
 
+/** The fields a task patch names. A patch only ever names task fields, so each key indexes a Task. */
+const patchKeys = (patch: TaskPatchChange) => Object.keys(patch) as (keyof TaskPatchChange)[];
+
 /** What the task looks like right now, for the parts a change would touch. */
 function basisOf(s: AppState, c: Change): string | undefined {
   if (c.kind === 'move_task') {
@@ -79,7 +94,7 @@ function basisOf(s: AppState, c: Change): string | undefined {
   if (c.kind === 'update_task') {
     const t = taskOf(s, c.taskId);
 
-    return t ? JSON.stringify(Object.keys(c.patch).map(k => (t as unknown as Record<string, unknown>)[k])) : undefined;
+    return t ? JSON.stringify(patchKeys(c.patch).map(k => t[k])) : undefined;
   }
 
   return undefined;
@@ -150,7 +165,7 @@ function apply(s: AppState, p: Proposal): Applied {
     const id = D.clock.id();
 
     return {
-      state: runAs(s, p.agentId, via, x => D.createTask(x, id, { ...c.draft, tags: c.draft.tags ?? [] })),
+      state: runAs(s, p.agentId, via, x => D.createTask(x, id, { ...c.draft })),
       undo: { kind: 'delete_task', taskId: id },
       taskId: id,
     };
@@ -187,7 +202,7 @@ function apply(s: AppState, p: Proposal): Applied {
       undo: { kind: 'move_back', taskId: t.id, columnId: t.columnId, landedIn: c.columnId },
     };
   }
-  const before = Object.fromEntries(Object.keys(c.patch).map(k => [k, (t as unknown as Record<string, unknown>)[k]]));
+  const before = Object.fromEntries(patchKeys(c.patch).map(k => [k, t[k]] as const)) as TaskPatchChange;
 
   return {
     state: runAs(s, p.agentId, via, x => D.updateTask(x, t.id, c.patch)),
@@ -338,11 +353,7 @@ export function revertRun(s: AppState, runId: string): { state: AppState; revert
         next = D.moveTask(n, t.id, u.columnId, null);
       }
     } else if (u.kind === 'restore_fields') {
-      const same = Object.keys(u.after).every(
-        k =>
-          JSON.stringify((t as unknown as Record<string, unknown>)[k]) ===
-          JSON.stringify((u.after as Record<string, unknown>)[k]),
-      );
+      const same = patchKeys(u.after).every(k => JSON.stringify(t[k]) === JSON.stringify(u.after[k]));
       if (!same) {
         why = 'It has been edited since.';
       } else {
@@ -465,14 +476,9 @@ export function describe(s: AppState, c: Change, undo?: Undo): Description {
       to: colName(t?.projectId, c.columnId),
     });
   }
-  const key = Object.keys(c.patch)[0] as keyof typeof c.patch;
+  const key = patchKeys(c.patch)[0];
   // once applied, the task already holds the new value, so the old one comes from the undo record
-  const old =
-    undo?.kind === 'restore_fields'
-      ? (undo.before as Record<string, unknown>)[key]
-      : t
-        ? (t as unknown as Record<string, unknown>)[key]
-        : '';
+  const old = undo?.kind === 'restore_fields' ? undo.before[key] : t ? t[key] : '';
   // Field values are strings, numbers, booleans, or objects: show objects as JSON, not as "[object Object]".
   const cur = old == null ? '—' : typeof old === 'string' ? old : JSON.stringify(old);
 

@@ -1,13 +1,17 @@
-import { parseCampLocal } from '@buxa/domain';
+import { DEFAULT_CURRENCY, parseCampLocal, parseMoney } from '@buxa/domain';
 import {
   CancelEnrolmentInputSchema,
+  ClassInputSchema,
   EnrolInputSchema,
-  NewClassInputSchema,
+  NewRecurringClassInputSchema,
   NewSessionInputSchema,
+  SessionPriceSchema,
   type CancelEnrolmentInput,
+  type ClassInput,
   type EnrolInput,
-  type NewClassInput,
+  type NewRecurringClassInput,
   type NewSessionInput,
+  type SessionPriceInput,
 } from '@buxa/contracts';
 import { failure, type FieldErrors } from '../actionState';
 import { field, fieldAll, parseWith, type PersonParsed } from '../people/parse';
@@ -67,38 +71,12 @@ function withProblems<T>(
   return { ok: false, state: failure(CHECK_FIELDS, fieldErrors) };
 }
 
-export function classForm(form: FormData): PersonParsed<NewClassInput> {
+/** A class: its name, ages, camp size, its own time range (typed in the camp's clock), location and instructors. */
+export function classForm(form: FormData, timeZone: string): PersonParsed<ClassInput> {
   const problems: FieldErrors = {};
   const minAge = numberField(form, 'minAge', problems, 'Enter the youngest age.');
   const maxAge = numberField(form, 'maxAge', problems, 'Enter the oldest age.');
-  const capacity = numberField(form, 'capacity', problems, 'Enter the default number of places.');
-  const instructors = numberField(form, 'ratioInstructors', problems);
-  const campers = numberField(form, 'ratioCampers', problems);
-  const ratioSet = instructors !== undefined || campers !== undefined;
-  if (ratioSet && (instructors === undefined || campers === undefined)) {
-    problems[instructors === undefined ? 'ratioInstructors' : 'ratioCampers'] ??=
-      'Give both numbers of the ratio, or leave both empty.';
-  }
-
-  // The contract reports the age-range refinement under `ageRange`; the form shows it on the oldest-age field.
-  return withProblems(
-    problems,
-    () =>
-      parseWith<NewClassInput>(NewClassInputSchema, {
-        name: field(form, 'name'),
-        description: field(form, 'description'),
-        ageRange: { minAge, maxAge },
-        capacity,
-        instructorRatio:
-          ratioSet && instructors !== undefined && campers !== undefined ? { instructors, campers } : null,
-      }),
-    { ageRange: 'maxAge' },
-  );
-}
-
-/** A session. Times are typed in the camp's own clock and converted to instants here, so the contract always gets an offset. */
-export function sessionForm(form: FormData, timeZone: string): PersonParsed<NewSessionInput> {
-  const problems: FieldErrors = {};
+  const capacity = numberField(form, 'capacity', problems, 'Enter the camp size.');
   const starts = parseCampLocal(field(form, 'startsAt'), timeZone);
   const ends = parseCampLocal(field(form, 'endsAt'), timeZone);
   if (!starts.ok) {
@@ -107,16 +85,145 @@ export function sessionForm(form: FormData, timeZone: string): PersonParsed<NewS
   if (!ends.ok) {
     problems.endsAt = ends.message;
   }
-  const capacity = numberField(form, 'capacity', problems);
+
+  // The contract reports the age-range refinement under `ageRange`; the form shows it on the oldest-age field.
+  return withProblems(
+    problems,
+    () =>
+      parseWith<ClassInput>(ClassInputSchema, {
+        name: field(form, 'name'),
+        ageRange: { minAge, maxAge },
+        capacity,
+        startsAt: starts.ok ? starts.instant : undefined,
+        endsAt: ends.ok ? ends.instant : undefined,
+        location: field(form, 'location'),
+        instructorIds: fieldAll(form, 'instructorIds'),
+      }),
+    { ageRange: 'maxAge' },
+  );
+}
+
+/**
+ * A recurring series: the class's own fields, a weekly rule (the weekdays ticked, the first date, the start and end times in the
+ * camp's clock) and when it stops (a date, or a number of classes). The server expands the rule; this only reads the form.
+ */
+export function recurringClassForm(form: FormData): PersonParsed<NewRecurringClassInput> {
+  const problems: FieldErrors = {};
+  const minAge = numberField(form, 'minAge', problems, 'Enter the youngest age.');
+  const maxAge = numberField(form, 'maxAge', problems, 'Enter the oldest age.');
+  const capacity = numberField(form, 'capacity', problems, 'Enter the camp size.');
+  const weekdays = fieldAll(form, 'weekdays')
+    .map(Number)
+    .filter(n => Number.isInteger(n));
+  if (weekdays.length === 0) {
+    problems.weekdays = 'Tick at least one day of the week.';
+  }
+  const endKind = field(form, 'endKind') === 'count' ? 'count' : 'until';
+  // The count is asked for only when the series stops after a number of classes.
+  const count =
+    endKind === 'count' ? numberField(form, 'endCount', problems, 'Enter how many classes the series has.') : undefined;
+
+  return withProblems(
+    problems,
+    () =>
+      parseWith<NewRecurringClassInput>(NewRecurringClassInputSchema, {
+        rule: {
+          weekdays,
+          firstDate: field(form, 'firstDate'),
+          startTime: field(form, 'startTime'),
+          endTime: field(form, 'endTime'),
+          end: endKind === 'count' ? { kind: 'count', count } : { kind: 'until', date: field(form, 'endDate') },
+        },
+        name: field(form, 'name'),
+        ageRange: { minAge, maxAge },
+        capacity,
+        location: field(form, 'location'),
+        instructorIds: fieldAll(form, 'instructorIds'),
+      }),
+    { ageRange: 'maxAge' },
+  );
+}
+
+const MONEY_MESSAGES = {
+  format: 'Type an amount like 45 or 45.50.',
+  precision: 'This currency has fewer decimal places. Remove the extra digits.',
+  range: 'That amount is too large.',
+} as const;
+
+/**
+ * The price fields of a session form: `priceAmount`, `priceCurrency` (default USD), `earlyBirdAmount` and `earlyBirdUntil`.
+ * A blank price means no price. Amounts become minor units with parseMoney, which refuses extra decimals rather than rounding.
+ * Returns undefined when a problem was recorded in `problems`.
+ */
+function priceFromForm(form: FormData, problems: FieldErrors): SessionPriceInput | null | undefined {
+  const currency = field(form, 'priceCurrency').trim().toUpperCase() || DEFAULT_CURRENCY;
+  const amount = field(form, 'priceAmount').trim();
+  const early = field(form, 'earlyBirdAmount').trim();
+  const until = field(form, 'earlyBirdUntil').trim();
+  if (amount === '') {
+    if (early !== '' || until !== '') {
+      problems.priceAmount = 'Enter the price, or clear the early-bird fields.';
+
+      return undefined;
+    }
+
+    return null;
+  }
+  const regular = parseMoney(amount, currency);
+  if (!regular.ok) {
+    problems.priceAmount = MONEY_MESSAGES[regular.reason];
+
+    return undefined;
+  }
+  if (early === '' && until === '') {
+    return { currency, regularMinor: regular.minor, earlyBirdMinor: null, earlyBirdUntil: null };
+  }
+  const earlyParsed = early === '' ? null : parseMoney(early, currency);
+  if (earlyParsed && !earlyParsed.ok) {
+    problems.earlyBirdAmount = MONEY_MESSAGES[earlyParsed.reason];
+
+    return undefined;
+  }
+
+  return {
+    currency,
+    regularMinor: regular.minor,
+    earlyBirdMinor: earlyParsed ? earlyParsed.minor : null,
+    earlyBirdUntil: until === '' ? null : until,
+  };
+}
+
+/** A session (the parent): its name, description, first and last day (calendar dates) and an optional price. */
+export function sessionForm(form: FormData): PersonParsed<NewSessionInput> {
+  const problems: FieldErrors = {};
+  const startsOn = field(form, 'startsOn');
+  const endsOn = field(form, 'endsOn');
+  if (startsOn === '') {
+    problems.startsOn = 'Choose the first day.';
+  }
+  if (endsOn === '') {
+    problems.endsOn = 'Choose the last day.';
+  }
+  const price = priceFromForm(form, problems);
 
   return withProblems(problems, () =>
     parseWith<NewSessionInput>(NewSessionInputSchema, {
-      startsAt: starts.ok ? starts.instant : undefined,
-      endsAt: ends.ok ? ends.instant : undefined,
-      location: field(form, 'location'),
-      instructorIds: fieldAll(form, 'instructorIds'),
-      capacity,
+      name: field(form, 'name'),
+      description: field(form, 'description'),
+      startsOn,
+      endsOn,
+      price: price ?? null,
     }),
+  );
+}
+
+/** Sets or clears a session's price (the session's Price dialog). A blank amount clears it. */
+export function sessionPriceForm(form: FormData): PersonParsed<SessionPriceInput | null> {
+  const problems: FieldErrors = {};
+  const price = priceFromForm(form, problems);
+
+  return withProblems(problems, () =>
+    parseWith<SessionPriceInput | null>(SessionPriceSchema.nullable(), price ?? null),
   );
 }
 
@@ -130,7 +237,7 @@ export function enrolForm(form: FormData): PersonParsed<EnrolInput> {
 
   return withProblems(problems, () =>
     parseWith<EnrolInput>(EnrolInputSchema, {
-      sessionId: field(form, 'sessionId'),
+      classId: field(form, 'classId'),
       camperId: field(form, 'camperId'),
       waitlistIfFull: field(form, 'intent') === 'waitlist',
       ...(reason ? { override: { reason } } : {}),

@@ -1,4 +1,5 @@
 import type { ClockFormat, Membership, User } from '@buxa/contracts';
+import type { Actor, MemberOption } from '@buxa/domain';
 import type { Identity } from '../auth/identity';
 
 /** Raised when a different identity already owns this email address. */
@@ -12,7 +13,7 @@ export class EmailInUseError extends Error {
 
 /** True for an EmailInUseError from any copy of this module (see isHttpError for why not `instanceof`). */
 export const isEmailInUse = (error: unknown): error is EmailInUseError =>
-  error instanceof Error && (error as { kind?: unknown }).kind === 'email-in-use';
+  error instanceof Error && 'kind' in error && error.kind === 'email-in-use';
 
 export interface UserRepository {
   /** Finds our user for a verified identity, creating it on first sign-in. Linked by the provider's id, never by email. */
@@ -26,7 +27,16 @@ export interface UserRepository {
   /** Saves the person's own 12-hour or 24-hour clock. The caller passes only the signed-in person's id. */
   setClockFormat(userId: string, clockFormat: ClockFormat): Promise<User>;
   /** The role `userId` holds in the camp, or null if they are not in it. Read inside that camp's row-level security. */
-  roleIn(orgId: string, userId: string): Promise<Membership['role'] | null>;
-  /** Renames a member of the camp, for an admin or owner. Refuses (null) anyone not in the camp. The caller checks the rank. */
-  renameMember(orgId: string, userId: string, name: string): Promise<Pick<User, 'id' | 'email' | 'name'> | null>;
+  roleIn(userId: string, orgId: string, memberId: string): Promise<Membership['role'] | null>;
+  /** Renames a member of the camp, for an admin or owner, and audits it in the same transaction. Refuses (null) anyone not in the camp, and writes no audit row then. The caller checks the rank. */
+  renameMember(actor: Actor, userId: string, name: string): Promise<Pick<User, 'id' | 'email' | 'name'> | null>;
+  /** The options that are on for `userId` in the camp (read inside that camp's row-level security). */
+  memberOptionsOf(viewerId: string, orgId: string, memberId: string): Promise<MemberOption[]>;
+  /** Every option that is on, for each person in the camp. Read inside that camp's row-level security. */
+  memberOptionsIn(viewerId: string, orgId: string): Promise<{ userId: string; option: MemberOption }[]>;
+  /**
+   * Turns one option on or off for a teacher of the camp, and audits it in the same transaction. The database refuses anyone
+   * who is not a teacher there. The caller checks members:set_options and the target first.
+   */
+  setMemberOption(actor: Actor, userId: string, option: MemberOption, enabled: boolean): Promise<void>;
 }

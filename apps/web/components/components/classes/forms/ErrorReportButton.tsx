@@ -14,7 +14,7 @@ export function ErrorReportButton({ fileName, text, refused }: { fileName: strin
   return (
     <form
       method="post"
-      action={ROUTES.classImportErrorReport}
+      action={ROUTES.sessionImportErrorReport}
       className="classes-actions"
       aria-label="Download the error report"
     >

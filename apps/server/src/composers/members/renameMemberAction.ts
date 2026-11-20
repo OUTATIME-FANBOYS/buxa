@@ -26,7 +26,7 @@ export async function renameMemberAction(input: { userId: string; name: string }
   }
 
   const repos = getRuntime().repositories.users;
-  const role = await repos.roleIn(actor.orgId, input.userId);
+  const role = await repos.roleIn(actor.userId, actor.orgId, input.userId);
   if (!role) {
     return failure('That person is not in this camp.');
   }
@@ -39,7 +39,7 @@ export async function renameMemberAction(input: { userId: string; name: string }
   }
 
   try {
-    const renamed = await repos.renameMember(actor.orgId, input.userId, parsed.data.name);
+    const renamed = await repos.renameMember(actor, input.userId, parsed.data.name);
     if (!renamed) {
       return failure('That person is not in this camp.');
     }

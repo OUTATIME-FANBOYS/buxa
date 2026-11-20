@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { insertClass, insertSession, requireInstructors } from './PgClassWrites';
-import { ClassNotFoundError, InstructorNotFoundError } from './errors';
+import { deleteClassRow, insertClass, insertSession, requireInstructors, updateClassRow } from './PgClassWrites';
+import { ClassNotFoundError, InstructorNotFoundError, SessionNotFoundError } from './errors';
 import { fakeDb } from './__tests__/fakeDb';
 
 const actor = {
@@ -8,9 +8,20 @@ const actor = {
   orgId: '22222222-2222-4222-8222-222222222222',
   role: 'owner' as const,
 };
-const classId = '55555555-5555-4555-8555-555555555555';
+const sessionId = '55555555-5555-4555-8555-555555555555';
+const classId = '88888888-8888-4888-8888-888888888888';
 const personA = '66666666-6666-4666-8666-666666666666';
 const personB = '77777777-7777-4777-8777-777777777777';
+
+const classInput = {
+  name: 'Robotics',
+  ageRange: { minAge: 8, maxAge: 12 },
+  capacity: 10,
+  startsAt: '2027-07-05T09:00:00+10:00',
+  endsAt: '2027-07-05T12:00:00+10:00',
+  location: 'Lab 1',
+  instructorIds: [],
+};
 
 describe('requireInstructors', () => {
   it('accepts an empty list without a statement', async () => {
@@ -40,43 +51,74 @@ describe('requireInstructors', () => {
   });
 });
 
-describe('insertClass', () => {
-  it('writes the class and its class.create audit entry in the same transaction, scoped to the actor camp', async () => {
-    const { client, seen } = fakeDb(sql => (sql.startsWith('INSERT INTO classes') ? [{ id: classId }] : undefined));
-    const id = await insertClass(client, actor, {
-      name: 'Robotics',
+describe('insertSession (the date range)', () => {
+  it('writes the session and its session.create audit entry in the same transaction', async () => {
+    const { client, seen } = fakeDb(sql => (sql.startsWith('INSERT INTO classes') ? [{ id: sessionId }] : undefined));
+    const id = await insertSession(client, actor, {
+      name: 'Summer camp',
       description: '',
-      ageRange: { minAge: 8, maxAge: 12 },
-      capacity: 10,
-      instructorRatio: null,
+      startsOn: '2027-07-01',
+      endsOn: '2027-07-31',
     });
-    expect(id).toBe(classId);
+    expect(id).toBe(sessionId);
     expect(seen).toHaveLength(2);
     expect(seen[0].sql).toMatch(/^INSERT INTO classes/);
     expect(seen[1].sql).toMatch(/^INSERT INTO audit_log/);
-    expect(seen[1].params).toEqual([actor.orgId, actor.userId, 'class.create', 'class', classId, { name: 'Robotics' }]);
+    expect(seen[1].params).toEqual([
+      actor.orgId,
+      actor.userId,
+      'session.create',
+      'session',
+      sessionId,
+      { name: 'Summer camp' },
+    ]);
   });
 });
 
-describe('insertSession', () => {
-  const input = {
-    startsAt: '2027-07-05T09:00:00+10:00',
-    endsAt: '2027-07-05T12:00:00+10:00',
-    location: 'Lab 1',
-    instructorIds: [],
-    capacity: 5,
-  };
-
-  it('refuses a session for a class that is not in the camp', async () => {
+describe('insertClass (the time range)', () => {
+  it('refuses a class for a session that is not in the camp', async () => {
     const { client, seen } = fakeDb(() => []);
-    await expect(insertSession(client as never, actor, classId, input)).rejects.toBeInstanceOf(ClassNotFoundError);
+    await expect(insertClass(client as never, actor, sessionId, classInput)).rejects.toBeInstanceOf(
+      SessionNotFoundError,
+    );
     expect(seen).toHaveLength(1);
   });
 
-  it('skips the instructor link when there are no instructors', async () => {
+  it('skips the instructor link when there are no instructors, and audits the class', async () => {
     const { client, seen } = fakeDb(sql => (sql.includes('INSERT INTO sessions') ? [{ id: classId }] : undefined));
-    await insertSession(client, actor, classId, input);
+    await insertClass(client, actor, sessionId, classInput);
     expect(seen.some(s => s.sql.includes('session_instructors'))).toBe(false);
     expect(seen.at(-1)?.sql).toMatch(/audit_log/);
+    expect(seen.at(-1)?.params).toContain('class.create');
+  });
+});
+
+describe('updateClassRow', () => {
+  it('a class that is not in the camp is not found, and nothing else runs', async () => {
+    const { client, seen } = fakeDb(() => []);
+    await expect(updateClassRow(client, actor, classId, classInput)).rejects.toBeInstanceOf(ClassNotFoundError);
+    expect(seen).toHaveLength(1);
+  });
+
+  it('replaces the instructors through the function, and audits the update', async () => {
+    const { client, seen } = fakeDb(sql => {
+      if (sql.startsWith('UPDATE sessions')) {
+        return [{ id: classId }];
+      }
+
+      return sql.includes('FROM people') ? [{ id: personA }] : undefined;
+    });
+    await updateClassRow(client, actor, classId, { ...classInput, instructorIds: [personA] });
+    expect(seen.some(s => s.sql.includes('buxa_replace_class_instructors'))).toBe(true);
+    expect(seen.at(-1)?.params).toContain('class.update');
+  });
+});
+
+describe('deleteClassRow', () => {
+  it('deletes through the function and audits the delete', async () => {
+    const { client, seen } = fakeDb();
+    await deleteClassRow(client, actor, classId, 'Robotics');
+    expect(seen[0].sql).toContain('buxa_delete_class');
+    expect(seen[1].params).toEqual([actor.orgId, actor.userId, 'class.delete', 'class', classId, { name: 'Robotics' }]);
   });
 });

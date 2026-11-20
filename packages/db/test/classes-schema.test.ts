@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 import { migrate, withOrg } from '../src';
+import { memberOf } from './support';
 
 const url = process.env.DATABASE_URL;
 
@@ -23,10 +24,12 @@ describe.skipIf(!url)('phase 2 schema: isolation, constraints and grants', () =>
   let orgB = '';
   let a: Seeded;
   let b: Seeded;
+  let ownerA = '';
+  let ownerB = '';
 
   /** One class, a session, a person and an enrolment, all in one organisation. */
   async function seed(org: string, label: string): Promise<Seeded> {
-    return withOrg(pool, org, async db => {
+    return withOrg(pool, await memberOf(pool, org), org, async db => {
       const person = (
         await db.query<{ id: string }>(
           `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, $2, 'Camper') RETURNING id`,
@@ -69,6 +72,8 @@ describe.skipIf(!url)('phase 2 schema: isolation, constraints and grants', () =>
         `classes-b-${tag}`,
       ])
     ).rows[0].id;
+    ownerA = await memberOf(pool, orgA);
+    ownerB = await memberOf(pool, orgB);
     a = await seed(orgA, 'Ann');
     b = await seed(orgB, 'Bo');
   });
@@ -80,14 +85,14 @@ describe.skipIf(!url)('phase 2 schema: isolation, constraints and grants', () =>
 
   describe('tenant isolation', () => {
     it.each(TENANT_TABLES)('org A sees only its own %s rows', async table => {
-      const orgs = await withOrg(pool, orgA, async db =>
+      const orgs = await withOrg(pool, ownerA, orgA, async db =>
         (await db.query<{ org_id: string }>(`SELECT DISTINCT org_id FROM ${table}`)).rows.map(r => r.org_id),
       );
       expect(orgs).toEqual([orgA]);
     });
 
     it.each(TENANT_TABLES)('org B sees only its own %s rows', async table => {
-      const orgs = await withOrg(pool, orgB, async db =>
+      const orgs = await withOrg(pool, ownerB, orgB, async db =>
         (await db.query<{ org_id: string }>(`SELECT DISTINCT org_id FROM ${table}`)).rows.map(r => r.org_id),
       );
       expect(orgs).toEqual([orgB]);
@@ -95,12 +100,12 @@ describe.skipIf(!url)('phase 2 schema: isolation, constraints and grants', () =>
 
     it('org A cannot insert rows into org B on any phase 2 table', async () => {
       await expect(
-        withOrg(pool, orgA, db =>
+        withOrg(pool, ownerA, orgA, db =>
           db.query(`INSERT INTO classes (org_id, name, default_capacity) VALUES ($1, 'X', 5)`, [orgB]),
         ),
       ).rejects.toThrow(/row-level security/);
       await expect(
-        withOrg(pool, orgA, db =>
+        withOrg(pool, ownerA, orgA, db =>
           db.query(
             `INSERT INTO sessions (org_id, class_id, starts_at, ends_at, location, capacity, ratio_campers, ratio_instructors)
          VALUES ($1, $2, '2027-07-05T09:00:00Z', '2027-07-05T10:00:00Z', 'X', 1, 1, 1)`,
@@ -109,7 +114,7 @@ describe.skipIf(!url)('phase 2 schema: isolation, constraints and grants', () =>
         ),
       ).rejects.toThrow(/row-level security/);
       await expect(
-        withOrg(pool, orgA, db =>
+        withOrg(pool, ownerA, orgA, db =>
           db.query(`INSERT INTO enrolments (org_id, session_id, person_id, status) VALUES ($1, $2, $3, 'enrolled')`, [
             orgB,
             b.session,
@@ -122,11 +127,13 @@ describe.skipIf(!url)('phase 2 schema: isolation, constraints and grants', () =>
     it('org A cannot change or cancel org B rows (they silently match nothing)', async () => {
       const renamed = await withOrg(
         pool,
+        ownerA,
         orgA,
         async db => (await db.query(`UPDATE classes SET name = 'hacked' WHERE id = $1`, [b.classId])).rowCount,
       );
       const cancelled = await withOrg(
         pool,
+        ownerA,
         orgA,
         async db =>
           (
@@ -139,6 +146,7 @@ describe.skipIf(!url)('phase 2 schema: isolation, constraints and grants', () =>
       expect(cancelled).toBe(0);
       const name = await withOrg(
         pool,
+        ownerB,
         orgB,
         async db =>
           (await db.query<{ name: string }>('SELECT name FROM classes WHERE id = $1', [b.classId])).rows[0].name,
@@ -148,13 +156,13 @@ describe.skipIf(!url)('phase 2 schema: isolation, constraints and grants', () =>
 
     it('org A cannot move its own row into org B', async () => {
       await expect(
-        withOrg(pool, orgA, db => db.query(`UPDATE sessions SET org_id = $1 WHERE id = $2`, [orgB, a.session])),
+        withOrg(pool, ownerA, orgA, db => db.query(`UPDATE sessions SET org_id = $1 WHERE id = $2`, [orgB, a.session])),
       ).rejects.toThrow(/row-level security/);
     });
 
     it('cross-organisation references are refused by composite foreign keys', async () => {
       const fk = (sql: string, params: unknown[]) =>
-        expect(withOrg(pool, orgA, db => db.query(sql, params))).rejects.toMatchObject({ code: '23503' });
+        expect(withOrg(pool, ownerA, orgA, db => db.query(sql, params))).rejects.toMatchObject({ code: '23503' });
       // A session in A that points at B's class.
       await fk(
         `INSERT INTO sessions (org_id, class_id, starts_at, ends_at, location, capacity, ratio_campers, ratio_instructors)
@@ -179,7 +187,7 @@ describe.skipIf(!url)('phase 2 schema: isolation, constraints and grants', () =>
   });
 
   describe('constraints', () => {
-    const asA = <T>(work: (db: pg.PoolClient) => Promise<T>) => withOrg(pool, orgA, work);
+    const asA = <T>(work: (db: pg.PoolClient) => Promise<T>) => withOrg(pool, ownerA, orgA, work);
 
     it('one active enrolment per person per session', async () => {
       await expect(

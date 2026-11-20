@@ -1,1 +1,1 @@
-export type ChartTone = 'brand' | 'ok' | 'warn' | 'crit' | 'agent' | 'neutral';
+export type ChartTone = 'brand' | 'ok' | 'warn' | 'crit' | 'agent' | 'info' | 'neutral';

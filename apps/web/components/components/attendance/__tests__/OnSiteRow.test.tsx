@@ -26,8 +26,8 @@ describe('OnSiteRow card', () => {
   it('shows the name, a warn-tone Minor pill and the checked-in and checked-out lines', () => {
     const html = renderToStaticMarkup(<OnSiteRow row={row} canRecord={false} canOverride={false} />);
     expect(html).toContain('<span class="onsite-name">Mia Cole</span>');
-    expect(html).toMatch(/<span class="pill pill-warn [^"]*">Minor<\/span>/);
-    expect(html).not.toContain('pill-neutral');
+    expect(html).toMatch(/<span class="pill tone-warn">Minor<\/span>/);
+    expect(html).not.toContain('tone-neutral');
     expect(html).toContain('<p>Checked in: 09:05</p>');
     expect(html).toContain('<p>Checked out: —</p>');
     expect(html).not.toContain('Check out</button>');
@@ -44,7 +44,7 @@ describe('OnSiteRow card', () => {
     const html = renderToStaticMarkup(<OnSiteRow row={row} canRecord canOverride={false} />);
     expect(html).toContain('aria-expanded="false"');
     expect(html).toContain('aria-haspopup="dialog"');
-    expect(html).toMatch(/<button[^>]*class="[^"]*button--primary[^"]*onsite-btn"[^>]*>Check out<\/button>/);
+    expect(html).toMatch(/<button[^>]*class="[^"]*button--primary[^"]*button--header"[^>]*>Check out<\/button>/);
   });
 });
 
@@ -64,8 +64,8 @@ describe('OnSiteRow check-out dialog', () => {
     vi.useFakeTimers();
     act(() => root.render(<OnSiteRow row={row} canRecord canOverride={false} />));
     const trigger = requirePresent(
-      document.querySelector<HTMLButtonElement>('button.onsite-btn'),
-      "document.querySelector<HTMLButtonElement>('button.onsite-btn')",
+      document.querySelector<HTMLButtonElement>('button.button--header'),
+      "document.querySelector<HTMLButtonElement>('button.button--header')",
     );
     expect(document.querySelector('[role="dialog"]')).toBeNull();
 
@@ -95,8 +95,8 @@ describe('OnSiteRow check-out dialog', () => {
     act(() => root.render(<OnSiteRow row={row} canRecord canOverride={false} />));
     act(() => {
       requirePresent(
-        document.querySelector<HTMLButtonElement>('button.onsite-btn'),
-        "document.querySelector<HTMLButtonElement>('button.onsite-btn')",
+        document.querySelector<HTMLButtonElement>('button.button--header'),
+        "document.querySelector<HTMLButtonElement>('button.button--header')",
       ).click();
     });
     const cancel = requirePresent(

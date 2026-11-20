@@ -5,7 +5,7 @@ import { isUuid, type Actor, type ExistingSession, type PlannedWrite } from '@bu
 import { recordAudit } from '../../audit/recordAudit';
 import { systemClock, type Clock } from '../../services/clock';
 import { toIso, type Db } from '../../people/pgRows';
-import { getClass } from '../PgClassQueries';
+import { getSession } from '../PgClassQueries';
 import { ClassNotFoundError, SessionNotFoundError } from '../errors';
 import type { ImportRepository, ImportUpload } from './ImportRepository';
 
@@ -43,8 +43,8 @@ export class PgImportRepository implements ImportRepository {
     this.now = options.now ?? systemClock;
   }
 
-  listCampSessions(orgId: string): Promise<ExistingSession[]> {
-    return withOrg(this.pool, orgId, async db => {
+  listCampSessions(userId: string, orgId: string): Promise<ExistingSession[]> {
+    return withOrg(this.pool, userId, orgId, async db => {
       const { rows } = await db.query<CampSessionRow>(
         `SELECT s.id, s.class_id, c.name AS class_name, s.starts_at, s.ends_at, s.location, s.capacity, s.external_key,
                 (SELECT count(*)::int FROM enrolments e WHERE e.session_id = s.id AND e.status = 'enrolled') AS seats_taken
@@ -67,7 +67,7 @@ export class PgImportRepository implements ImportRepository {
   }
 
   applyImport(actor: Actor, upload: ImportUpload, writes: readonly PlannedWrite[]): Promise<void> {
-    return withOrg(this.pool, actor.orgId, async db => {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       for (const w of writes) {
         if (w.kind === 'create') {
           await createSession(db, actor, upload, w);
@@ -95,15 +95,25 @@ export class PgImportRepository implements ImportRepository {
 }
 
 async function createSession(db: Db, actor: Actor, upload: ImportUpload, w: PlannedWrite): Promise<void> {
-  if (!(await getClass(db, w.classId))) {
+  if (!(await getSession(db, w.classId))) {
     throw new ClassNotFoundError();
   }
   const { rows } = await db.query<{ id: string }>(
-    `INSERT INTO sessions (org_id, class_id, starts_at, ends_at, location, capacity, external_key, ratio_campers, ratio_instructors)
-     SELECT $1, c.id, $3::timestamptz, $4::timestamptz, $5, $6, $7, c.ratio_campers, c.ratio_instructors
-       FROM classes c WHERE c.id = $2
+    `INSERT INTO sessions (org_id, class_id, name, age_min, age_max, starts_at, ends_at, location, capacity, external_key)
+     VALUES ($1, $2, $3, $4, $5, $6::timestamptz, $7::timestamptz, $8, $9, $10)
      RETURNING id`,
-    [actor.orgId, w.classId, w.startsAt, w.endsAt, w.location, w.capacity, w.externalKey],
+    [
+      actor.orgId,
+      w.classId,
+      w.name,
+      w.ageRange.minAge,
+      w.ageRange.maxAge,
+      w.startsAt,
+      w.endsAt,
+      w.location,
+      w.capacity,
+      w.externalKey,
+    ],
   );
   await recordAudit(db, {
     actor,
@@ -121,7 +131,7 @@ async function createSession(db: Db, actor: Actor, upload: ImportUpload, w: Plan
 }
 
 async function updateSession(db: Db, actor: Actor, upload: ImportUpload, w: PlannedWrite): Promise<void> {
-  if (!(await getClass(db, w.classId))) {
+  if (!(await getSession(db, w.classId))) {
     throw new ClassNotFoundError();
   }
   if (w.sessionId === null || !isUuid(w.sessionId)) {
@@ -129,10 +139,22 @@ async function updateSession(db: Db, actor: Actor, upload: ImportUpload, w: Plan
   }
   const { rows } = await db.query<{ id: string }>(
     `UPDATE sessions
-        SET class_id = $2, starts_at = $3::timestamptz, ends_at = $4::timestamptz, location = $5, capacity = $6, external_key = $7
+        SET class_id = $2, name = $3, age_min = $4, age_max = $5, starts_at = $6::timestamptz, ends_at = $7::timestamptz,
+            location = $8, capacity = $9, external_key = $10
       WHERE id = $1
       RETURNING id`,
-    [w.sessionId, w.classId, w.startsAt, w.endsAt, w.location, w.capacity, w.externalKey],
+    [
+      w.sessionId,
+      w.classId,
+      w.name,
+      w.ageRange.minAge,
+      w.ageRange.maxAge,
+      w.startsAt,
+      w.endsAt,
+      w.location,
+      w.capacity,
+      w.externalKey,
+    ],
   );
   if (rows.length === 0) {
     throw new SessionNotFoundError();
