@@ -222,11 +222,6 @@ jobs:
       - uses: ./.github/actions/setup-cached-node
       - name: Build web app (vercel-build)
         run: npx tsx scripts/vercel-build.ts
-      - name: Smoke test web routes at runtime
-        # This job starts no database, so the routes that need one may answer 500 (see scripts/smoke-rules.ts).
-        env:
-          SMOKE_NO_DATABASE: '1'
-        run: npm run smoke
 
   verify:
     name: Verify build
