@@ -1,7 +1,7 @@
 # Buxa roadmap: camp management
 
 Buxa is a camp and membership platform. The kanban board stays as the **staff operations module**
-(prep and day-of tasks). Agent approvals are parked until the camp core works.
+(prep and day-of tasks). Agent approvals inside the camp flows are phase 7, after the camp core works.
 
 Build order follows the product roadmap: **members & check-in → events & calendar → registration → seats & rosters →
 scheduling → comms & extras → licensing & plans → payments & go-live.** Payments come last because they need every earlier phase.
@@ -53,4 +53,4 @@ exit. The owner's checks for them (phone timing, install and sign-in from a phon
 
 ## Not doing yet
 
-Auto-scheduling, SSO, native apps, non-US payments, agent approvals inside the camp flows.
+Auto-scheduling, SSO, native apps, non-US payments. Agent approvals inside the camp flows are now phase 7 (see `docs/phases/07-staff-board.md`, "AI assistant").
