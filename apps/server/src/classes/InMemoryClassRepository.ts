@@ -311,6 +311,8 @@ export class InMemoryClassRepository implements ClassRepository {
       if (!camper) {
         throw new CamperNotFoundError();
       }
+      // As in Postgres: expired holds give their places back and the waitlist takes them, before the seat count is read.
+      const undoSweep = this.sweepExpiredHolds(cls.id, actor);
       const facts: GatheredEnrolmentFacts = {
         session: {
           sessionId: cls.id,
@@ -328,6 +330,8 @@ export class InMemoryClassRepository implements ClassRepository {
       await yieldToDatabase();
       const decision = rule(facts);
       if (decision.kind === 'refuse') {
+        // A refusal rolls the whole write back in Postgres, so the sweep is undone too.
+        undoSweep();
         throw refusalError(decision);
       }
 
@@ -506,12 +510,12 @@ export class InMemoryClassRepository implements ClassRepository {
 
   /**
    * Moves the first waitlisted campers (in the order they joined) into the places that are free now, as `promoteWaitlist` does in
-   * Postgres. Each promotion is audited under the actor that freed the place.
+   * Postgres. Each promotion is audited under the actor that freed the place. Returns the campers promoted.
    */
-  private promoteWaitlist(classId: string, actor: Actor): void {
+  private promoteWaitlist(classId: string, actor: Actor): StoredEnrolment[] {
     const cls = this.classes.get(classId);
     if (!cls) {
-      return;
+      return [];
     }
     const free = seatsLeft(cls.capacity, this.takenPlaces(classId));
     const waiting = [...this.enrolments.values()]
@@ -521,6 +525,32 @@ export class InMemoryClassRepository implements ClassRepository {
       e.status = 'enrolled';
       this.record(actor, 'enrolment.promote', 'enrolment', e.id, { sessionId: classId, camperId: e.camperId });
     }
+
+    return waiting;
+  }
+
+  /**
+   * Releases the class's expired holds, then promotes the waitlist into the places they return (Postgres does this under the session
+   * lock at the start of an enrolment). Returns an undo that restores the holds, the waitlist and the audit log, for a refused write.
+   */
+  private sweepExpiredHolds(classId: string, actor: Actor): () => void {
+    const now = this.now().getTime();
+    const released = this.seatHolds.filter(h => h.classId === classId && !h.released && Date.parse(h.expiresAt) <= now);
+    for (const h of released) {
+      h.released = true;
+    }
+    const auditMark = this.audit.length;
+    const promoted = this.promoteWaitlist(classId, actor);
+
+    return () => {
+      for (const h of released) {
+        h.released = false;
+      }
+      for (const e of promoted) {
+        e.status = 'waitlisted';
+      }
+      this.audit.splice(auditMark);
+    };
   }
 
   /** The camper's enrolled and waitlisted classes in the camp. Cancelled ones free their time. */
