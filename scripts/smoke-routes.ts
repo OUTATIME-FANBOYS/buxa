@@ -9,6 +9,7 @@ import { existsSync, readdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isAcceptedFailure, noDatabaseDeclared } from './smoke-rules';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const WEB_DIR = join(ROOT, 'apps', 'web');
@@ -163,10 +164,11 @@ async function main(): Promise<void> {
         });
 
         const status = res.status;
-        // /ready reports database health, so it answers 503 when no database is configured (as in this build job). The
-        // database job checks it with a real database, so only that one response is accepted here.
-        const healthNoDatabase = target.url === '/ready' && status === 503;
-        if (status >= 500 && !healthNoDatabase) {
+        // Some routes need a database (see smoke-rules.ts). Only the cases the rule names are accepted; anything else is a failure.
+        const accepted =
+          status >= 500 &&
+          isAcceptedFailure({ url: target.url, file: target.file, status }, noDatabaseDeclared(process.env));
+        if (status >= 500 && !accepted) {
           const text = await res.text().catch(() => '');
           failures.push({ route: target, status, text });
           console.error(`  FAIL [${status}] ${target.method} ${target.url} (${target.file})`);
