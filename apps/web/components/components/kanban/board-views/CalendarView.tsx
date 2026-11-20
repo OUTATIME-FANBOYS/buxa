@@ -5,6 +5,7 @@ import type { Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { useTaskDrawer } from '@buxa/middleware/providers/providers';
 import { Button } from '@/components/elements';
+import { PriorityIcon } from '@/components/atoms/Icon';
 import { fmt, parse, toISO, today } from '@buxa/shared';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -107,11 +108,11 @@ export function CalendarView({
                   key={t.id}
                   variant="ghost"
                   size="sm"
-                  className={`cal-task prio-bg-${t.priority} ${kindOf(t) === 'done' ? 'is-done' : ''}`}
+                  className={`cal-task ${kindOf(t) === 'done' ? 'is-done' : ''}`}
                   onClick={() => openTask(t.id)}
                   title={t.title}
                 >
-                  <span className="cal-dot" />
+                  <PriorityIcon priority={t.priority} size={14} className="cal-dot" />
                   <span className="cal-title">{t.title}</span>
                 </Button>
               ))}

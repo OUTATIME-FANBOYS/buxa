@@ -158,13 +158,12 @@ describe('createTask defaults', () => {
       title: 'x',
       description: undefined,
       priority: undefined,
-      tags: undefined,
     });
     expect(findTask('new-1')).toBeUndefined(); // (s is the old state)
     const t = requirePresent(
       next.tasks.find(x => x.id === 'new-1'),
       "next.tasks.find(x => x.id === 'new-1')",
     );
-    expect(t).toMatchObject({ description: '', priority: 'medium', tags: [] });
+    expect(t).toMatchObject({ description: '', priority: 'medium' });
   });
 });

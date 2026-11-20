@@ -16,7 +16,13 @@ export default async function Page() {
   return (
     <SettingsPage
       user={session.user}
-      camp={{ id: camp.orgId, name: org.name, canDelete: authorize(actor, 'org:delete').allow, archived }}
+      camp={{
+        id: camp.orgId,
+        name: org.name,
+        canDelete: authorize(actor, 'org:delete').allow,
+        canManageFeed: authorize(actor, 'org:update').allow,
+        archived,
+      }}
       archivedCamps={archivedCamps}
     />
   );

@@ -24,7 +24,7 @@ export const TokenBody = z.object({ token: z.string() });
 export const WhoAmIBody = z.object({
   name: z.string(),
   permissions: z.record(z.string(), z.string()),
-  projects: z.array(z.unknown()),
+  projects: z.array(z.object({ id: z.string(), name: z.string() })),
 });
 
 /** The result of a write tool: applied at once, or queued as a proposal for a person to decide. Ids are null when not set. */

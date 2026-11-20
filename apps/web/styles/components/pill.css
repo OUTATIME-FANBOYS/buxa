@@ -1,0 +1,31 @@
+/*
+ * Pills: a liquid-glass chip, the same recipe as the status pills (features/kanban/status.css). The tone's class (.tone-* in
+ * tokens.css) sets the colours. Light mode is the filled pill: the tone tint with the ink text. Dark mode is a stronger tint
+ * (16%) with the paler ink as text. Neither has a border: the colour carries the shape. Both keep the blur and the top highlight.
+ * Pills are spans, not buttons, so they carry no touch target; a pill that became a button would need button.css's 44px target.
+ */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: var(--fs-s);
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: normal;
+  white-space: nowrap;
+  color: var(--tone-ink);
+  background: var(--tone-soft);
+  border: 0;
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  backdrop-filter: blur(12px) saturate(160%);
+}
+.pill-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--tone-f);
+}

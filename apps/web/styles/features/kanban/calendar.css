@@ -72,24 +72,30 @@
 .cal-task {
   display: flex;
   align-items: center;
-  gap: 5px;
+  /* .button centres its content; a pill starts its text at the dot, so short titles line up with long ones. */
+  justify-content: flex-start;
+  gap: 4px;
   text-align: left;
-  padding: 2px 6px;
+  height: 22px;
+  padding: 0 6px;
   border-radius: 4px;
-  font-size: var(--fs-s);
+  font-size: 11px;
   font-weight: 600;
-  background: color-mix(in srgb, var(--pc) 12%, var(--surface));
+  /* The body is the surface; the priority icon at its start carries the priority's colour. */
+  --button-bg: var(--surface);
+  --button-bg-hover: color-mix(in srgb, var(--surface) 82%, var(--text));
+  --button-fg: var(--text);
   min-width: 0;
   width: 100%;
 }
-.cal-task:hover {
-  background: color-mix(in srgb, var(--pc) 22%, var(--surface));
+/* A coarse pointer keeps the 44px touch target from button.css. */
+@media (pointer: coarse) {
+  .cal-task {
+    height: var(--control-touch);
+  }
 }
+/* The priority icon at the start of the pill: its colour is the priority's token, and it is never squeezed. */
 .cal-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--pc);
   flex: none;
 }
 .cal-title {

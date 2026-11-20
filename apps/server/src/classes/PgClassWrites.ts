@@ -1,30 +1,117 @@
 import { isUuid, type Actor } from '@buxa/domain';
-import type { NewClassInput } from '@buxa/contracts';
+import type { NewSessionInput, SessionPriceInput } from '@buxa/contracts';
 import { recordAudit } from '../audit/recordAudit';
 import { type Db } from '../people/pgRows';
-import type { NewSessionRecord } from './ClassRepository';
-import { ClassNotFoundError, InstructorNotFoundError } from './errors';
+import type { ClassRecord } from './ClassRepository';
+import { ClassNotFoundError, InstructorNotFoundError, SessionNotFoundError } from './errors';
+import { toPrice, type PriceRow } from './PgClassQueries';
+import { priceChangeAudit, samePrice } from './priceAudit';
 
-/** Inserts a class and audits it. Returns its id. */
-export async function insertClass(db: Db, actor: Actor, input: NewClassInput): Promise<string> {
+/*
+ * Writes for sessions (the parent rows) and classes (the time-range rows). Each write audits itself in the same transaction.
+ * Table names follow migration 0022: a session is a row of `classes`, a class is a row of `sessions`.
+ */
+
+/** Inserts a session (a date range that holds classes, and an optional price) and audits it. Returns its id. */
+export async function insertSession(db: Db, actor: Actor, input: NewSessionInput): Promise<string> {
+  const price = input.price ?? null;
   const { rows } = await db.query<{ id: string }>(
-    `INSERT INTO classes (org_id, name, description, age_min, age_max, default_capacity, ratio_campers, ratio_instructors)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+    `INSERT INTO classes (org_id, name, description, starts_on, ends_on, price_minor, price_currency, early_bird_minor, early_bird_until, is_public)
+     VALUES ($1, $2, $3, $4::date, $5::date, $6, $7, $8, $9::date, $10) RETURNING id`,
     [
       actor.orgId,
       input.name,
       input.description,
-      input.ageRange.minAge,
-      input.ageRange.maxAge,
-      input.capacity,
-      input.instructorRatio?.campers ?? null,
-      input.instructorRatio?.instructors ?? null,
+      input.startsOn,
+      input.endsOn,
+      price?.regularMinor ?? null,
+      price?.currency ?? null,
+      price?.earlyBirdMinor ?? null,
+      price?.earlyBirdUntil ?? null,
+      input.isPublic ?? false,
     ],
   );
   const id = rows[0].id;
-  await recordAudit(db, { actor, action: 'class.create', entity: 'class', entityId: id, data: { name: input.name } });
+  await recordAudit(db, {
+    actor,
+    action: 'session.create',
+    entity: 'session',
+    entityId: id,
+    data: { name: input.name },
+  });
+  if (price) {
+    await recordAudit(db, {
+      actor,
+      action: 'session.price_change',
+      entity: 'session',
+      entityId: id,
+      data: priceChangeAudit(null, price),
+    });
+  }
 
   return id;
+}
+
+/** Sets whether a session has a public page, and audits it. Throws SessionNotFoundError when the session is not in the camp. */
+export async function setSessionPublicRow(db: Db, actor: Actor, sessionId: string, isPublic: boolean): Promise<void> {
+  const { rows } = await db.query<{ id: string }>(
+    'UPDATE classes SET is_public = $3 WHERE id = $1 AND org_id = $2 RETURNING id',
+    [sessionId, actor.orgId, isPublic],
+  );
+  if (rows.length === 0) {
+    throw new SessionNotFoundError();
+  }
+  await recordAudit(db, {
+    actor,
+    action: 'session.update',
+    entity: 'session',
+    entityId: sessionId,
+    data: { isPublic },
+  });
+}
+
+/**
+ * Sets or clears a session's price. Locks the session row first, so the audit entry records the price that was really replaced.
+ * An unchanged price writes nothing. Throws SessionNotFoundError when the session is not in the camp.
+ */
+export async function setSessionPriceRow(
+  db: Db,
+  actor: Actor,
+  sessionId: string,
+  price: SessionPriceInput | null,
+): Promise<void> {
+  const { rows } = await db.query<PriceRow & { id: string }>(
+    `SELECT id, price_minor, price_currency, early_bird_minor, to_char(early_bird_until, 'YYYY-MM-DD') AS early_bird_until
+       FROM classes WHERE id = $1 AND org_id = $2 FOR UPDATE`,
+    [sessionId, actor.orgId],
+  );
+  if (rows.length === 0) {
+    throw new SessionNotFoundError();
+  }
+  const before = toPrice(rows[0]);
+  if (samePrice(before, price)) {
+    return;
+  }
+  await db.query(
+    `UPDATE classes
+        SET price_minor = $3, price_currency = $4, early_bird_minor = $5, early_bird_until = $6::date
+      WHERE id = $1 AND org_id = $2`,
+    [
+      sessionId,
+      actor.orgId,
+      price?.regularMinor ?? null,
+      price?.currency ?? null,
+      price?.earlyBirdMinor ?? null,
+      price?.earlyBirdUntil ?? null,
+    ],
+  );
+  await recordAudit(db, {
+    actor,
+    action: 'session.price_change',
+    entity: 'session',
+    entityId: sessionId,
+    data: priceChangeAudit(before, price),
+  });
 }
 
 /**
@@ -48,19 +135,29 @@ export async function requireInstructors(db: Db, instructorIds: readonly string[
 }
 
 /**
- * Inserts a session for a class, copying the class's instructor ratio onto it (stored, not enforced), links its instructors
- * and audits it. The class must exist in the camp (the caller checks, and the composite key enforces it too).
+ * Inserts a class under a session and links its instructors. The name and ages are given here; the session's date range is
+ * widened by the database trigger (migration 0022) so it covers the class. The session must exist in the camp.
  */
-export async function insertSession(db: Db, actor: Actor, classId: string, input: NewSessionRecord): Promise<string> {
+export async function insertClass(db: Db, actor: Actor, sessionId: string, input: ClassRecord): Promise<string> {
   const { rows } = await db.query<{ id: string }>(
-    `INSERT INTO sessions (org_id, class_id, starts_at, ends_at, location, capacity, ratio_campers, ratio_instructors)
-     SELECT $1, c.id, $3::timestamptz, $4::timestamptz, $5, $6, c.ratio_campers, c.ratio_instructors
-       FROM classes c WHERE c.id = $2
+    `INSERT INTO sessions (org_id, class_id, name, age_min, age_max, starts_at, ends_at, location, capacity)
+     SELECT $1, p.id, $3, $4, $5, $6::timestamptz, $7::timestamptz, $8, $9
+       FROM classes p WHERE p.id = $2
      RETURNING id`,
-    [actor.orgId, classId, input.startsAt, input.endsAt, input.location, input.capacity],
+    [
+      actor.orgId,
+      sessionId,
+      input.name,
+      input.ageRange.minAge,
+      input.ageRange.maxAge,
+      input.startsAt,
+      input.endsAt,
+      input.location,
+      input.capacity,
+    ],
   );
   if (rows.length === 0) {
-    throw new ClassNotFoundError();
+    throw new SessionNotFoundError();
   }
   const id = rows[0].id;
   const instructors = await requireInstructors(db, input.instructorIds);
@@ -73,11 +170,54 @@ export async function insertSession(db: Db, actor: Actor, classId: string, input
   // The audit keeps the instructors' ids (the people's names are not copied into the log), so a later read can show who was linked.
   await recordAudit(db, {
     actor,
-    action: 'session.create',
-    entity: 'session',
+    action: 'class.create',
+    entity: 'class',
     entityId: id,
-    data: { classId, startsAt: input.startsAt, endsAt: input.endsAt, instructorIds: instructors },
+    data: { sessionId, startsAt: input.startsAt, endsAt: input.endsAt, instructorIds: instructors },
   });
 
   return id;
+}
+
+/**
+ * Updates a class's own fields and replaces its instructors. The camp-size floor is a trigger (migration 0008) and the function
+ * that replaces instructors is in migration 0022. Throws ClassNotFoundError when the class is not in the camp.
+ */
+export async function updateClassRow(db: Db, actor: Actor, classId: string, input: ClassRecord): Promise<void> {
+  const { rows } = await db.query<{ id: string }>(
+    `UPDATE sessions
+        SET name = $3, age_min = $4, age_max = $5, starts_at = $6::timestamptz, ends_at = $7::timestamptz,
+            location = $8, capacity = $9
+      WHERE id = $1 AND org_id = $2
+      RETURNING id`,
+    [
+      classId,
+      actor.orgId,
+      input.name,
+      input.ageRange.minAge,
+      input.ageRange.maxAge,
+      input.startsAt,
+      input.endsAt,
+      input.location,
+      input.capacity,
+    ],
+  );
+  if (rows.length === 0) {
+    throw new ClassNotFoundError();
+  }
+  const instructors = await requireInstructors(db, input.instructorIds);
+  await db.query('SELECT buxa_replace_class_instructors_v2($1, $2, $3::uuid[])', [actor.orgId, classId, instructors]);
+  await recordAudit(db, {
+    actor,
+    action: 'class.update',
+    entity: 'class',
+    entityId: classId,
+    data: { startsAt: input.startsAt, endsAt: input.endsAt, capacity: input.capacity, instructorIds: instructors },
+  });
+}
+
+/** Deletes a class through buxa_delete_class (migration 0022), which refuses a class with enrolments. Audits `class.delete`. */
+export async function deleteClassRow(db: Db, actor: Actor, classId: string, name: string): Promise<void> {
+  await db.query('SELECT buxa_delete_class_v2($1, $2)', [actor.orgId, classId]);
+  await recordAudit(db, { actor, action: 'class.delete', entity: 'class', entityId: classId, data: { name } });
 }

@@ -11,11 +11,15 @@ import type { Clock } from './services/clock';
 import { createPgRepositories, type Repositories } from './repositories';
 import { createAttendanceService } from './services/attendance/createAttendanceService';
 import { createClassService, type ClassService } from './classes/ClassService';
+import { createSeatHoldService, type SeatHoldService } from './holds/SeatHoldService';
+import { createCalendarService, type CalendarService } from './calendar/CalendarService';
+import { createPublicSessionService, type PublicSessionService } from './publicSessions/PublicSessionService';
 import { createCredentialService } from './services/credentials/createCredentialService';
 import { createImportService, type ImportService } from './classes/import/ImportService';
 import { createMembershipService } from './services/memberships/createMembershipService';
 import { createOrgService, type OrgService } from './services/orgs';
 import { createPeopleService } from './services/people/createPeopleService';
+import { createRegistrationService, type RegistrationService } from './registration/RegistrationService';
 import { systemClock } from './services/clock';
 import { type AttendanceService } from './services/attendance/AttendanceService';
 import { type CredentialService } from './services/credentials/CredentialService';
@@ -47,6 +51,11 @@ export interface Services {
   attendance: AttendanceService;
   classes: ClassService;
   imports: ImportService;
+  registration: RegistrationService;
+  /** Seat holds for registration. The form calls placeHold; the cleanup calls releaseExpiredHolds. */
+  seatHolds: SeatHoldService;
+  calendar: CalendarService;
+  publicSessions: PublicSessionService;
 }
 
 export interface RuntimeOptions {
@@ -119,24 +128,29 @@ export function createRuntime(options: RuntimeOptions = {}): Runtime {
 
 /** Services are built from repositories and a clock only, so tests can assemble them without a runtime. */
 export function createServices(repositories: Repositories, clock: Clock): Services {
-  const { orgs, people, memberships, credentials, attendance } = repositories;
+  const { orgs, people, memberships, credentials, attendance, classes } = repositories;
 
   return {
     orgs: createOrgService(orgs),
-    people: createPeopleService({ people, memberships, credentials, attendance, orgs, clock }),
+    people: createPeopleService({ people, memberships, credentials, attendance, classes, orgs, clock }),
     memberships: createMembershipService({ memberships, people, orgs, clock }),
     credentials: createCredentialService({ credentials, people, memberships, attendance, orgs, clock }),
-    attendance: createAttendanceService({ attendance, people, memberships, orgs, clock }),
+    attendance: createAttendanceService({ attendance, classes, people, memberships, orgs, clock }),
     ...createClassServices(repositories),
+    registration: createRegistrationService(repositories.registration),
+    calendar: createCalendarService({ repo: repositories.calendar }),
+    publicSessions: createPublicSessionService({ repo: repositories.publicSessions }),
   };
 }
 
 /** Classes, sessions, enrolments and the bulk import. Both storages come from `repositories` (Postgres in production). */
-function createClassServices(repositories: Repositories): Pick<Services, 'classes' | 'imports'> {
-  const timezoneOf = async (orgId: string): Promise<string> => (await repositories.orgs.get(orgId)).timezone;
+function createClassServices(repositories: Repositories): Pick<Services, 'classes' | 'imports' | 'seatHolds'> {
+  const timezoneOf = async (scope: { userId: string; orgId: string }): Promise<string> =>
+    (await repositories.orgs.get(scope.userId, scope.orgId)).timezone;
   const classes = repositories.classes;
 
   return {
+    seatHolds: createSeatHoldService({ repo: repositories.seatHolds, timezoneOf }),
     classes: createClassService({ repo: classes, timezoneOf }),
     imports: createImportService({ classes, imports: repositories.imports, timezoneOf }),
   };

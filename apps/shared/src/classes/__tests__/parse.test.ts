@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { classForm, cancelForm, enrolForm, numberField, sessionForm } from '../parse';
+import { classForm, sessionForm, cancelForm, enrolForm, numberField } from '../parse';
 import { WHOLE_NUMBER } from '../copy';
 
 function formOf(values: Record<string, string | string[]>): FormData {
@@ -15,12 +15,12 @@ function formOf(values: Record<string, string | string[]>): FormData {
 
 const VALID_CLASS = {
   name: 'Robotics',
-  description: '',
   minAge: '8',
   maxAge: '12',
   capacity: '12',
-  ratioInstructors: '',
-  ratioCampers: '',
+  startsAt: '2027-07-05T09:00',
+  endsAt: '2027-07-05T12:00',
+  location: 'Lab 1',
 };
 
 describe('numberField', () => {
@@ -40,21 +40,24 @@ describe('numberField', () => {
 });
 
 describe('classForm', () => {
-  it('builds the contract input, with no instructor ratio when both ratio fields are blank', () => {
-    const parsed = classForm(formOf(VALID_CLASS));
+  it('builds the contract input: its own name, ages, camp size, time range (camp clock) and location', () => {
+    const parsed = classForm(formOf(VALID_CLASS), 'Australia/Sydney');
     expect(parsed).toMatchObject({
       ok: true,
-      data: { name: 'Robotics', ageRange: { minAge: 8, maxAge: 12 }, capacity: 12, instructorRatio: null },
+      data: {
+        name: 'Robotics',
+        ageRange: { minAge: 8, maxAge: 12 },
+        capacity: 12,
+        startsAt: '2027-07-04T23:00:00.000Z',
+        endsAt: '2027-07-05T02:00:00.000Z',
+        location: 'Lab 1',
+        instructorIds: [],
+      },
     });
   });
 
-  it('keeps an instructor ratio when both numbers are given', () => {
-    const parsed = classForm(formOf({ ...VALID_CLASS, ratioInstructors: '1', ratioCampers: '8' }));
-    expect(parsed).toMatchObject({ ok: true, data: { instructorRatio: { instructors: 1, campers: 8 } } });
-  });
-
-  it('names each required field that is blank, and the ratio that is only half given', () => {
-    const parsed = classForm(formOf({ ...VALID_CLASS, minAge: '', maxAge: '', capacity: '', ratioInstructors: '1' }));
+  it('names each required field that is blank', () => {
+    const parsed = classForm(formOf({ ...VALID_CLASS, minAge: '', maxAge: '', capacity: '' }), 'Australia/Sydney');
     expect(parsed).toMatchObject({
       ok: false,
       state: {
@@ -62,97 +65,103 @@ describe('classForm', () => {
         fieldErrors: {
           minAge: 'Enter the youngest age.',
           maxAge: 'Enter the oldest age.',
-          capacity: 'Enter the default number of places.',
-          ratioCampers: 'Give both numbers of the ratio, or leave both empty.',
+          capacity: 'Enter the camp size.',
         },
       },
     });
   });
 
+  it('shows the camp size limit with the contract message, on the camp size field', () => {
+    for (const capacity of ['2', '31']) {
+      expect(classForm(formOf({ ...VALID_CLASS, capacity }), 'Australia/Sydney')).toMatchObject({
+        ok: false,
+        state: {
+          fieldErrors: { capacity: 'Camp Size must be a whole number from 3 to 30.' },
+        },
+      });
+    }
+  });
+
   it('shows the reversed age range on the oldest-age field, with the contract message', () => {
-    const parsed = classForm(formOf({ ...VALID_CLASS, minAge: '14', maxAge: '6' }));
+    const parsed = classForm(formOf({ ...VALID_CLASS, minAge: '14', maxAge: '6' }), 'Australia/Sydney');
     expect(parsed).toMatchObject({
       ok: false,
       state: { fieldErrors: { maxAge: 'The youngest age cannot be above the oldest.' } },
     });
   });
 
-  it('refuses a missing class name with the contract message', () => {
-    const parsed = classForm(formOf({ ...VALID_CLASS, name: '   ' }));
-    expect(parsed).toMatchObject({ ok: false, state: { fieldErrors: { name: 'Give the class a name.' } } });
-  });
-});
-
-describe('sessionForm', () => {
-  const base = {
-    startsAt: '2027-07-05T09:00',
-    endsAt: '2027-07-05T12:00',
-    location: 'Lab 1',
-    capacity: '',
-    instructorIds: [],
-  };
-
-  it('converts the camp clock to an instant in the camp zone (Sydney is UTC+10 in July)', () => {
-    const parsed = sessionForm(formOf(base), 'Australia/Sydney');
-    expect(parsed).toMatchObject({
-      ok: true,
-      data: { startsAt: '2027-07-04T23:00:00.000Z', endsAt: '2027-07-05T02:00:00.000Z', capacity: undefined },
-    });
-  });
-
-  it('refuses a time with an offset, and a time that does not exist, against the start field', () => {
-    const offset = sessionForm(formOf({ ...base, startsAt: '2027-07-05T09:00+10:00' }), 'Australia/Sydney');
+  it('refuses a time with an offset, and a time that does not exist, against its own field', () => {
+    const offset = classForm(formOf({ ...VALID_CLASS, startsAt: '2027-07-05T09:00+10:00' }), 'Australia/Sydney');
     expect(offset).toMatchObject({
       ok: false,
       state: { fieldErrors: { startsAt: "Leave off the time zone. Times are in the camp's time zone." } },
     });
-    const missing = sessionForm(formOf({ ...base, endsAt: '2027-02-30T10:00' }), 'Australia/Sydney');
+    const missing = classForm(formOf({ ...VALID_CLASS, endsAt: '2027-02-30T10:00' }), 'Australia/Sydney');
     expect(missing).toMatchObject({
       ok: false,
       state: { fieldErrors: { endsAt: 'That date or time does not exist.' } },
     });
   });
 
-  it('refuses a session that ends before it starts, on the end field', () => {
-    const parsed = sessionForm(formOf({ ...base, endsAt: '2027-07-05T08:00' }), 'Australia/Sydney');
-    expect(parsed).toMatchObject({
-      ok: false,
-      state: { fieldErrors: { endsAt: 'The session must end after it starts.' } },
+  it('refuses a missing class name with the contract message', () => {
+    const parsed = classForm(formOf({ ...VALID_CLASS, name: '   ' }), 'Australia/Sydney');
+    expect(parsed).toMatchObject({ ok: false, state: { fieldErrors: { name: 'Give the name.' } } });
+  });
+});
+
+describe('sessionForm', () => {
+  it('builds the session (the parent): name, description and its first and last day', () => {
+    expect(
+      sessionForm(
+        formOf({ name: 'Summer camp', description: 'Two weeks', startsOn: '2027-07-01', endsOn: '2027-07-14' }),
+      ),
+    ).toMatchObject({
+      ok: true,
+      data: { name: 'Summer camp', description: 'Two weeks', startsOn: '2027-07-01', endsOn: '2027-07-14' },
     });
   });
 
-  it('keeps the instructor ids and an explicit capacity', () => {
-    const id = '0a0a0a0a-0a0a-4a0a-8a0a-0a0a0a0a0a0a';
-    const parsed = sessionForm(formOf({ ...base, capacity: '6', instructorIds: [id] }), 'Australia/Sydney');
-    expect(parsed).toMatchObject({ ok: true, data: { capacity: 6, instructorIds: [id] } });
+  it('asks for the first and last day when they are blank', () => {
+    expect(sessionForm(formOf({ name: 'Summer camp', startsOn: '', endsOn: '' }))).toMatchObject({
+      ok: false,
+      state: { fieldErrors: { startsOn: 'Choose the first day.', endsOn: 'Choose the last day.' } },
+    });
+  });
+
+  it('refuses a session that ends before its first day, on the end field', () => {
+    expect(sessionForm(formOf({ name: 'Summer camp', startsOn: '2027-07-10', endsOn: '2027-07-09' }))).toMatchObject({
+      ok: false,
+      state: { fieldErrors: { endsOn: 'The session must end on or after its first day.' } },
+    });
   });
 });
 
 describe('enrolForm', () => {
-  const session = '11111111-1111-4111-8111-111111111111';
+  const klass = '11111111-1111-4111-8111-111111111111';
   const camper = '22222222-2222-4222-8222-222222222222';
 
   it('sends the waitlist choice only for the waitlist button', () => {
-    expect(enrolForm(formOf({ sessionId: session, camperId: camper, intent: 'waitlist' }))).toMatchObject({
+    expect(enrolForm(formOf({ classId: klass, camperId: camper, intent: 'waitlist' }))).toMatchObject({
       ok: true,
-      data: { waitlistIfFull: true },
+      data: { classId: klass, waitlistIfFull: true },
     });
-    expect(enrolForm(formOf({ sessionId: session, camperId: camper, intent: 'enrol' }))).toMatchObject({
+    expect(enrolForm(formOf({ classId: klass, camperId: camper, intent: 'enrol' }))).toMatchObject({
       ok: true,
       data: { waitlistIfFull: false },
     });
   });
 
   it('adds an override only when a reason was typed', () => {
-    const blank = enrolForm(formOf({ sessionId: session, camperId: camper, overrideReason: '  ' }));
+    const blank = enrolForm(formOf({ classId: klass, camperId: camper, overrideReason: '  ' }));
     expect(blank.ok && 'override' in blank.data).toBe(false);
-    expect(enrolForm(formOf({ sessionId: session, camperId: camper, overrideReason: 'Sibling pickup' }))).toMatchObject(
-      { ok: true, data: { override: { reason: 'Sibling pickup' } } },
-    );
+    expect(enrolForm(formOf({ classId: klass, camperId: camper, overrideReason: 'Sibling pickup' }))).toMatchObject({
+      ok: true,
+      data: { override: { reason: 'Sibling pickup' } },
+    });
   });
 
   it('asks for a camper before anything else', () => {
-    expect(enrolForm(formOf({ sessionId: session, camperId: '' }))).toMatchObject({
+    expect(enrolForm(formOf({ classId: klass, camperId: '' }))).toMatchObject({
       ok: false,
       state: { fieldErrors: { camperId: 'Choose a camper.' } },
     });

@@ -7,6 +7,21 @@ import { errorMessage } from './errors';
 /** The .sql files live next to this package. */
 const DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'migrations');
 
+/**
+ * The migration login's URL. It is the only database URL that may change the schema, and the only one that may bypass
+ * row-level security, so there is no fallback to DATABASE_URL (the app's restricted login). Throws when it is not set.
+ */
+export function migrationDatabaseUrl(env: Record<string, string | undefined>): string {
+  const url = env.MIGRATION_DATABASE_URL?.trim();
+  if (!url) {
+    throw new Error(
+      'MIGRATION_DATABASE_URL is not set. Migrations need the migration login (see docs/deploy.md). DATABASE_URL is not used for them.',
+    );
+  }
+
+  return url;
+}
+
 /** Applies any migration files not yet recorded, in filename order, each in its own transaction. */
 export async function migrate(pool: Pool): Promise<string[]> {
   const c = await pool.connect();

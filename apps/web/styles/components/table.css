@@ -47,6 +47,9 @@
 .row-title {
   font-weight: 600;
   text-align: left;
+  justify-content: flex-start;
+  padding-left: 0;
+  padding-right: 0;
 }
 .row-title:hover {
   color: var(--accent);
@@ -65,7 +68,4 @@
 }
 .table .is-archived {
   opacity: 0.6;
-}
-.c-act {
-  width: 48px;
 }

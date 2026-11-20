@@ -64,7 +64,7 @@ export function OnSiteRow({ row, canRecord, canOverride }: Props) {
           variant="primary"
           ref={toggle}
           type="button"
-          className="onsite-btn"
+          size="header"
           aria-haspopup="dialog"
           aria-expanded={panelOpen}
           aria-controls={panelOpen ? panelId : undefined}

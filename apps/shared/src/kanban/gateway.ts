@@ -8,7 +8,7 @@
  *
  * Task text is data written by people (and other agents). It is returned as data and must never be read as instructions.
  */
-import type { AppState, Change, Priority, Proposal, ProposalStatus, Task } from '..';
+import type { AppState, Change, Priority, Proposal, ProposalStatus, Task, TaskPatchChange } from '..';
 import * as A from '..';
 import { PRIORITIES } from '..';
 import { requirePresent } from '@buxa/domain';
@@ -16,7 +16,7 @@ import { requirePresent } from '@buxa/domain';
 export type Out<T> = { state: AppState; value?: T; error?: string };
 const fail = (state: AppState, error: string): Out<never> => ({ state, error });
 
-export const LIMITS = { title: 200, description: 5000, body: 2000, reason: 300, tag: 30, tags: 10, results: 100 };
+export const LIMITS = { title: 200, description: 5000, body: 2000, reason: 300, results: 100 };
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 const RUN_GAP_MS = 10 * 60 * 1000;
 
@@ -65,10 +65,17 @@ const taskView = (s: AppState, t: Task) => {
     assignee: nameOf(s, t.assigneeId) ?? null,
     due: t.due ?? null,
     start: t.start ?? null,
-    tags: t.tags,
     createdBy: nameOf(s, t.createdBy) ?? null,
     subtasks: { done: t.subtasks.filter(x => x.done).length, total: t.subtasks.length },
   };
+};
+type TaskView = ReturnType<typeof taskView>;
+/** A task as an agent reads it in full: the summary, the text, the last comments and the recent history. */
+export type TaskDetail = TaskView & {
+  description: string;
+  comments: { by: string; at: string; body: string }[];
+  subtaskList: { title: string; done: boolean }[];
+  recentHistory: { by: string; at: string; what: string }[];
 };
 const proposalView = (s: AppState, p: Proposal) => {
   const d = A.describe(s, p.change, p.undo);
@@ -150,7 +157,7 @@ export function listTasks(
   s: AppState,
   agentId: string,
   q: { project: string; column?: string; query?: string; assignee?: string; limit?: number },
-): Out<unknown[]> {
+): Out<TaskView[]> {
   const p = project(s, agentId, q.project);
   if (!p) {
     return fail(s, 'No such project in your scope. Call list_projects to see what you can use.');
@@ -174,17 +181,14 @@ export function listTasks(
       !t.archived &&
       (!col || t.columnId === col) &&
       (!who || t.assigneeId === who) &&
-      (!text ||
-        t.title.toLowerCase().includes(text) ||
-        (t.description ?? '').toLowerCase().includes(text) ||
-        (t.tags ?? []).some(g => g.toLowerCase().includes(text))),
+      (!text || t.title.toLowerCase().includes(text) || (t.description ?? '').toLowerCase().includes(text)),
   );
   const limit = Math.min(q.limit ?? 50, LIMITS.results);
 
   return { state: s, value: rows.slice(0, limit).map(t => taskView(s, t)), error: undefined };
 }
 
-export function getTask(s: AppState, agentId: string, taskId: string): Out<unknown> {
+export function getTask(s: AppState, agentId: string, taskId: string): Out<TaskDetail> {
   const t = visibleTask(s, agentId, taskId);
   if (!t) {
     return fail(s, 'No such task in your scope. Use the id from list_tasks, not the title.');
@@ -254,7 +258,6 @@ export interface NewTask {
   priority?: Priority;
   assignee?: string;
   due?: string;
-  tags?: string[];
   reason: string;
 }
 export function createTask(s: AppState, agentId: string, i: NewTask): Out<ReturnType<typeof outcome>> {
@@ -281,10 +284,6 @@ export function createTask(s: AppState, agentId: string, i: NewTask): Out<Return
   if (i.due && !DAY.test(i.due)) {
     return bad(s, 'Dates use YYYY-MM-DD.');
   }
-  const tags = (i.tags ?? []).map(t => t.trim().toLowerCase()).filter(Boolean);
-  if (tags.length > LIMITS.tags || tags.some(t => t.length > LIMITS.tag)) {
-    return bad(s, `Use at most ${LIMITS.tags} tags of ${LIMITS.tag} characters.`);
-  }
   let assigneeId: string | undefined;
   if (i.assignee) {
     assigneeId = userRef(s, p.workspaceId, i.assignee)?.id;
@@ -301,7 +300,6 @@ export function createTask(s: AppState, agentId: string, i: NewTask): Out<Return
       priority: i.priority,
       assigneeId,
       due: i.due,
-      tags,
     }).filter(([, v]) => v !== undefined),
   ) as Extract<Change, { kind: 'create_task' }>['draft'];
 
@@ -316,7 +314,6 @@ export interface TaskEdits {
   assignee?: string | null;
   start?: string | null;
   due?: string | null;
-  tags?: string[];
   reason: string;
 }
 /** One proposal per field, so a person can approve the priority change and reject the rename. */
@@ -342,7 +339,7 @@ export function updateTask(s: AppState, agentId: string, i: TaskEdits): Out<Retu
     }
   }
   const patches: Change[] = [];
-  const add = (patch: Record<string, unknown>) => patches.push({ kind: 'update_task', taskId: t.id, patch });
+  const add = (patch: TaskPatchChange) => patches.push({ kind: 'update_task', taskId: t.id, patch });
   if (i.title !== undefined && i.title.trim() !== t.title) {
     add({ title: i.title.trim() });
   }
@@ -377,15 +374,6 @@ export function updateTask(s: AppState, agentId: string, i: TaskEdits): Out<Retu
   for (const k of ['start', 'due'] as const) {
     if (i[k] !== undefined && (i[k] ?? undefined) !== t[k]) {
       add({ [k]: i[k] ?? undefined });
-    }
-  }
-  if (i.tags) {
-    const tags = i.tags.map(x => x.trim().toLowerCase()).filter(Boolean);
-    if (tags.length > LIMITS.tags || tags.some(x => x.length > LIMITS.tag)) {
-      return bad(s, `Use at most ${LIMITS.tags} tags of ${LIMITS.tag} characters.`);
-    }
-    if (tags.join() !== t.tags.join()) {
-      add({ tags });
     }
   }
   if (!patches.length) {

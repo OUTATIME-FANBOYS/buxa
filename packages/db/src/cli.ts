@@ -1,13 +1,17 @@
 import pg from 'pg';
-import { migrate } from './migrate';
+import { migrate, migrationDatabaseUrl } from './migrate';
 import { poolConfigFor } from './connection';
+import { errorMessage } from './errors';
 
-// Migrations use a direct connection when one is given (a transaction-mode connection pooler cannot hold the advisory lock).
-const url = process.env.MIGRATION_DATABASE_URL ?? process.env.DATABASE_URL;
-if (!url) {
-  console.error('DATABASE_URL (or MIGRATION_DATABASE_URL) is not set (see .env.example)');
+// Migrations run only as the migration login (MIGRATION_DATABASE_URL). DATABASE_URL, the app's restricted login, is never used here.
+let url: string;
+try {
+  url = migrationDatabaseUrl(process.env);
+} catch (error) {
+  console.error(errorMessage(error));
   process.exit(1);
 }
+// A direct connection is preferred (a transaction-mode connection pooler cannot hold the advisory lock).
 const pool = new pg.Pool(poolConfigFor(url));
 migrate(pool)
   .then(applied => {

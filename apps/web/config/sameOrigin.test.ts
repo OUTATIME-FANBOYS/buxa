@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { isSameOriginPost } from './sameOrigin';
 
 const post = (headers: Record<string, string> = {}) =>
-  new Request('https://buxa.example/camp/classes/import/error-report', { method: 'POST', headers });
+  new Request('https://buxa.example/camp/sessions/import/error-report', { method: 'POST', headers });
 
 describe('isSameOriginPost', () => {
   it('accepts a POST whose Origin is this app', () => {

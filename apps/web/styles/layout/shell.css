@@ -36,7 +36,7 @@
 .logo {
   width: 28px;
   height: 28px;
-  border-radius: 8px;
+  border-radius: var(--r-2);
   background: var(--accent);
   color: var(--accent-ink);
   display: grid;
@@ -125,9 +125,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 180px;
-}
-.crumb-sep {
-  color: var(--text-3);
 }
 .search {
   position: relative;
@@ -260,9 +257,9 @@
   right: 0;
   min-width: 16px;
   height: 16px;
-  border-radius: 8px;
-  background: var(--coral);
-  color: var(--on-coral);
+  border-radius: var(--r-2);
+  background: var(--f-crit);
+  color: var(--on-fill);
   font-size: 10px;
   font-weight: 600;
   display: grid;
@@ -341,7 +338,7 @@
   background: none;
   width: auto;
   height: auto;
-  border-radius: 8px;
+  border-radius: var(--r-2);
 }
 .logo-mark .brand-mark {
   display: block;

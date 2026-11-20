@@ -1,6 +1,6 @@
 'use client';
 
-import { PriorityMark, TAG } from '@/components/elements';
+import { PriorityMark } from '@/components/elements';
 import { useMemo, useState } from 'react';
 import type { Project, Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
@@ -8,8 +8,8 @@ import { useTaskDrawer } from '@buxa/middleware/providers/providers';
 import { Avatar } from '@/components/elements';
 import { Empty } from '@/components/components';
 import { Icon } from '@/components/elements';
-import { KIND_TONE } from '@buxa/shared';
-import { Button, Pill } from '@/components/elements';
+import { Button } from '@/components/elements';
+import { StatusPill } from '@/components/components/kanban/StatusPill';
 import { Checkbox } from '@/components/atoms';
 import { DueChip } from '@/components/components/kanban/board';
 import { PRIORITY_RANK, subtaskProgress } from '@buxa/shared';
@@ -32,8 +32,8 @@ export function ListView({
   const { actions, userById, kindOf } = useStore();
   const { openTask } = useTaskDrawer();
   const [sort, setSort] = useState<Sort>(null);
-  const colName = (t: Task) =>
-    projects.find(p => p.id === t.projectId)?.columns.find(c => c.id === t.columnId)?.name ?? '';
+  const colOf = (t: Task) => projects.find(p => p.id === t.projectId)?.columns.find(c => c.id === t.columnId);
+  const colName = (t: Task) => colOf(t)?.name ?? '';
   const rows = useMemo(() => {
     if (!sort) {
       return tasks;
@@ -85,6 +85,7 @@ export function ListView({
         <tbody>
           {rows.map(t => {
             const kind = kindOf(t);
+            const column = colOf(t);
             const proj = projects.find(p => p.id === t.projectId);
             const sp = subtaskProgress(t);
             if (!proj) {
@@ -115,11 +116,6 @@ export function ListView({
                   </Button>
                   <div className="row-sub">
                     {showProject && <span className="muted small">{proj.name}</span>}
-                    {t.tags.slice(0, 3).map(g => (
-                      <span key={g} className={`tag ${TAG}`}>
-                        {g}
-                      </span>
-                    ))}
                     {sp.total > 0 && (
                       <span className="meta buxa:inline-flex buxa:items-center buxa:gap-[3px] buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]">
                         <Icon name="check" size={12} />
@@ -128,9 +124,7 @@ export function ListView({
                     )}
                   </div>
                 </td>
-                <td className="c-status">
-                  <Pill tone={KIND_TONE[kind]}>{colName(t)}</Pill>
-                </td>
+                <td className="c-status">{column && <StatusPill column={column} />}</td>
                 <td className="c-prio">
                   <PriorityMark priority={t.priority} label />
                 </td>

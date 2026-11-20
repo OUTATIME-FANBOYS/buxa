@@ -74,7 +74,7 @@ describe.skipIf(!url)('runtime login without row-level-security bypass (S-06)', 
       { orgId: org.id, role: 'owner', name: `Runtime camp ${tag}`, slug: `runtime-camp-${tag}` },
     ]);
     // Reading the camp is tenant-scoped, so it works through withOrg.
-    expect((await orgs.get(org.id)).slug).toBe(`runtime-camp-${tag}`);
+    expect((await orgs.get(user.id, org.id)).slug).toBe(`runtime-camp-${tag}`);
   });
 
   it('a second camp is hidden from the first one, even though the runtime login created both', async () => {
@@ -94,7 +94,9 @@ describe.skipIf(!url)('runtime login without row-level-security bypass (S-06)', 
       owner.id,
     );
 
-    const seenFromFirst = await withOrg(runtime, first.id, db => db.query<{ id: string }>('SELECT id FROM orgs'));
+    const seenFromFirst = await withOrg(runtime, owner.id, first.id, db =>
+      db.query<{ id: string }>('SELECT id FROM orgs'),
+    );
     expect(seenFromFirst.rows.map(r => r.id)).toEqual([first.id]);
     expect(seenFromFirst.rows.map(r => r.id)).not.toContain(other.id);
   });

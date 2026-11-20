@@ -13,18 +13,16 @@ interface CamperChoice {
 }
 
 /**
- * Enrol one camper in one session. When the session is full only the waitlist button is offered: a full session never takes a
+ * Enrol one camper in one class. When the class is full only the waitlist button is offered: a full class never takes a
  * place. An override reason is shown to admins only (the service checks the permission again).
  */
 export function EnrolForm({
   classId,
-  sessionId,
   campers,
   full,
   canOverride,
 }: {
   classId: string;
-  sessionId: string;
   campers: readonly CamperChoice[];
   full: boolean;
   canOverride: boolean;
@@ -47,10 +45,9 @@ export function EnrolForm({
       ref={formRef}
       action={formAction}
       className="panel stack classes-enrol"
-      aria-label="Enrol a camper in this session"
+      aria-label="Enrol a camper in this class"
     >
       <HiddenField name="classId" value={classId} />
-      <HiddenField name="sessionId" value={sessionId} />
       <Select
         label="Camper *"
         name="camperId"
@@ -71,7 +68,7 @@ export function EnrolForm({
       )}
       <div className="classes-actions">
         {full ? (
-          <p className="muted">This session is full. A camper can join the waitlist instead.</p>
+          <p className="muted">This class is full. A camper can join the waitlist instead.</p>
         ) : (
           <Button
             variant="primary"

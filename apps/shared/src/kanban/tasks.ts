@@ -16,20 +16,11 @@ export const emptyFilter: Filter = {
   assignees: [],
   columns: [],
   due: 'any',
-  tags: [],
   sort: 'manual',
   archived: false,
 };
 export const isFilterActive = (f: Filter) =>
-  !!(
-    f.q ||
-    f.priorities.length ||
-    f.assignees.length ||
-    f.columns.length ||
-    f.due !== 'any' ||
-    f.tags.length ||
-    f.archived
-  );
+  !!(f.q || f.priorities.length || f.assignees.length || f.columns.length || f.due !== 'any' || f.archived);
 
 export type DueTone = 'overdue' | 'soon' | 'normal' | 'done';
 export function dueInfo(due: string | undefined, kind: ColumnKind): { label: string; tone: DueTone } | null {
@@ -71,9 +62,6 @@ export function matchesFilter(t: Task, f: Filter, kind: ColumnKind): boolean {
     return false;
   }
   if (f.columns.length && !f.columns.includes(t.columnId)) {
-    return false;
-  }
-  if (f.tags.length && !f.tags.some(g => t.tags.includes(g))) {
     return false;
   }
   if (f.due !== 'any') {

@@ -12,7 +12,7 @@ export class SlugTakenError extends Error {
 
 /** True for a SlugTakenError from any copy of this module (see isHttpError for why not `instanceof`). */
 export const isSlugTaken = (error: unknown): error is SlugTakenError =>
-  error instanceof Error && (error as { kind?: unknown }).kind === 'slug-taken';
+  error instanceof Error && 'kind' in error && error.kind === 'slug-taken';
 /** Raised when an organisation is not visible to the caller (it does not exist, or row-level security hides it). */
 export class OrgNotFoundError extends Error {
   readonly kind = 'org-not-found';
@@ -24,7 +24,7 @@ export class OrgNotFoundError extends Error {
 
 /** True for an OrgNotFoundError from any copy of this module (see isHttpError for why not `instanceof`). */
 export const isOrgNotFound = (error: unknown): error is OrgNotFoundError =>
-  error instanceof Error && (error as { kind?: unknown }).kind === 'org-not-found';
+  error instanceof Error && 'kind' in error && error.kind === 'org-not-found';
 
 /**
  * Everything the API needs to know about organisations. Callers decide *whether* something may happen
@@ -33,9 +33,9 @@ export const isOrgNotFound = (error: unknown): error is OrgNotFoundError =>
 export interface OrgRepository {
   /** Creates the organisation, makes `ownerId` its owner and records the audit entry, atomically. */
   createWithOwner(input: NewOrgInput, ownerId: string): Promise<CreatedOrg>;
-  get(orgId: string): Promise<Org>;
+  get(userId: string, orgId: string): Promise<Org>;
   rename(actor: Actor, input: OrgPatchInput): Promise<OrgSummary>;
-  listMembers(orgId: string): Promise<Member[]>;
+  listMembers(userId: string, orgId: string): Promise<Member[]>;
   /** Sets the camp's archive time and records the audit entry, atomically. Refuses a camp that is already archived. */
   archive(actor: Actor): Promise<{ archivedAt: string }>;
   /** Clears the archive time and records the audit entry, atomically. Refuses a camp that is not archived. */

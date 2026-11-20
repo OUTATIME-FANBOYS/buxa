@@ -29,6 +29,8 @@ export interface SelectProps {
   isDisabled?: boolean;
   id?: string;
   className?: string;
+  /** Drawn inside the field, at its left and centred on the box (the priority signal). The text is padded to clear it. */
+  leading?: ReactNode;
 }
 
 export function Select({
@@ -46,11 +48,36 @@ export function Select({
   isDisabled,
   id,
   className,
+  leading,
 }: SelectProps) {
   const generated = useId();
   const selectId = id ?? generated;
   const hasPlaceholder = placeholder !== undefined;
   const current = value === undefined ? undefined : (value ?? '');
+
+  const control = (
+    <select
+      id={selectId}
+      name={name}
+      required={isRequired}
+      disabled={isDisabled}
+      aria-invalid={Boolean(error) || undefined}
+      {...(current !== undefined ? { value: current } : { defaultValue: defaultValue ?? '' })}
+      onChange={e => onChange?.(e.target.value === '' ? null : e.target.value)}
+      className={`select-field__input buxa:min-w-0 ${leading ? 'buxa:pl-[32px]!' : ''}`}
+    >
+      {hasPlaceholder ? (
+        <option value="" disabled={isRequired}>
+          {placeholder}
+        </option>
+      ) : null}
+      {options.map(option => (
+        <option key={option.value} value={option.value} disabled={option.isDisabled}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  );
 
   // A field-height select with the app's chevron (set in fieldDefaults), the label above it, and the width of its column.
   return (
@@ -66,27 +93,14 @@ export function Select({
         {label}
         {isRequired ? ' *' : null}
       </label>
-      <select
-        id={selectId}
-        name={name}
-        required={isRequired}
-        disabled={isDisabled}
-        aria-invalid={Boolean(error) || undefined}
-        {...(current !== undefined ? { value: current } : { defaultValue: defaultValue ?? '' })}
-        onChange={e => onChange?.(e.target.value === '' ? null : e.target.value)}
-        className="select-field__input buxa:min-w-0"
-      >
-        {hasPlaceholder ? (
-          <option value="" disabled={isRequired}>
-            {placeholder}
-          </option>
-        ) : null}
-        {options.map(option => (
-          <option key={option.value} value={option.value} disabled={option.isDisabled}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+      {leading ? (
+        <div className="buxa:relative">
+          {leading}
+          {control}
+        </div>
+      ) : (
+        control
+      )}
       {error ? (
         <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
           {error}

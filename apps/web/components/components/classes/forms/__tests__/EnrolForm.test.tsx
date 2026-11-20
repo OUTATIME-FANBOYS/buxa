@@ -6,7 +6,6 @@ vi.mock('@buxa/server/composers/index', () => ({ enrolAction: vi.fn(), cancelEnr
 
 const base = {
   classId: '11111111-1111-4111-8111-111111111111',
-  sessionId: '22222222-2222-4222-8222-222222222222',
   campers: [{ id: '33333333-3333-4333-8333-333333333333', name: 'Ada Lovelace' }],
 };
 
@@ -21,7 +20,7 @@ describe('EnrolForm', () => {
   it('offers only the waitlist when the session is full, and says why', () => {
     const html = renderToStaticMarkup(<EnrolForm {...base} full canOverride={false} />);
     expect(html).not.toContain('Enrol camper');
-    expect(html).toContain('This session is full. A camper can join the waitlist instead.');
+    expect(html).toContain('This class is full. A camper can join the waitlist instead.');
     expect(html).toContain('Add to waitlist');
   });
 

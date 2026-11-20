@@ -36,7 +36,7 @@
   border-collapse: collapse;
   width: 100%;
   min-width: 320px;
-  font-size: 14px;
+  font-size: var(--fs-b);
 }
 .help-table caption {
   caption-side: top;

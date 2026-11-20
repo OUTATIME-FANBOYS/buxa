@@ -1,6 +1,7 @@
 import type { Pool, PoolClient } from 'pg';
 import { isUuid } from '@buxa/domain';
 import { errorMessage } from './errors';
+import { assertRestrictedLogin } from './connection';
 
 /**
  * Runs `work` in one transaction: committed if it returns, rolled back if it throws.
@@ -33,16 +34,32 @@ export async function transaction<T>(pool: Pool, work: (db: PoolClient) => Promi
 }
 
 /**
- * The only way request code touches tenant data: a transaction run as the restricted `buxa_app` role with the
- * organisation fixed, so row-level security decides what is visible. With no org (null) every tenant table reads as empty.
+ * The only way request code touches tenant data: a transaction run as the restricted `buxa_app` role with the signed-in
+ * user and the organisation fixed, so row-level security decides what is visible. The user must be a member of the
+ * organisation (migration 0032, is_member), so a user with no membership sees nothing even when the organisation is right.
+ * With no user or no org (null) every tenant table reads as empty.
  */
-export function withOrg<T>(pool: Pool, orgId: string | null, work: (db: PoolClient) => Promise<T>): Promise<T> {
+export async function withOrg<T>(
+  pool: Pool,
+  userId: string | null,
+  orgId: string | null,
+  work: (db: PoolClient) => Promise<T>,
+): Promise<T> {
+  if (userId !== null && !isUuid(userId)) {
+    throw new Error('Invalid user id');
+  }
   if (orgId !== null && !isUuid(orgId)) {
-    return Promise.reject(new Error('Invalid organisation id'));
+    throw new Error('Invalid organisation id');
+  }
+  // In production, tenant data is served only through a login that row-level security applies to. The check is
+  // memoised per pool, so it costs one query per instance. Tests and local runs skip it.
+  if (process.env.NODE_ENV === 'production') {
+    await assertRestrictedLogin(pool);
   }
 
   return transaction(pool, async db => {
     await db.query('SET LOCAL ROLE buxa_app');
+    await db.query("SELECT set_config('app.user_id', $1, true)", [userId ?? '']);
     await db.query("SELECT set_config('app.org_id', $1, true)", [orgId ?? '']);
 
     return work(db);

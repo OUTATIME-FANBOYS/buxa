@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
-import { migrate } from '../src';
+import { migrate, withOrg } from '../src';
 
 const url = process.env.DATABASE_URL;
 
@@ -43,18 +43,18 @@ describe.skipIf(!url)('viewing an archived camp (0014)', () => {
   });
 
   it('lists the archived camp, with its slug and the role, and not the active camp', async () => {
-    const { rows } = await pool.query<{ orgId: string; role: string; slug: string }>(
-      'SELECT member_org_id AS "orgId", member_role AS role, org_slug AS slug FROM buxa_archived_memberships_of($1)',
-      [member],
+    const { rows } = await withOrg(pool, member, null, db =>
+      db.query<{ orgId: string; role: string; slug: string }>(
+        'SELECT member_org_id AS "orgId", member_role AS role, org_slug AS slug FROM buxa_archived_memberships_of()',
+      ),
     );
 
     expect(rows).toEqual([{ orgId: archivedCamp, role: 'staff', slug: `old-camp-${tag}` }]);
   });
 
   it('the write-side list still leaves the archived camp out', async () => {
-    const { rows } = await pool.query<{ orgId: string }>(
-      'SELECT member_org_id AS "orgId" FROM buxa_memberships_of($1)',
-      [member],
+    const { rows } = await withOrg(pool, member, null, db =>
+      db.query<{ orgId: string }>('SELECT member_org_id AS "orgId" FROM buxa_memberships_of()'),
     );
 
     expect(rows.map(r => r.orgId)).toEqual([activeCamp]);

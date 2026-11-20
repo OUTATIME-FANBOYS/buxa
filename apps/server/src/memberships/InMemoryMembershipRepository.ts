@@ -61,13 +61,13 @@ export class InMemoryMembershipRepository implements MembershipRepository {
     });
   }
 
-  forPerson(orgId: string, personId: string): Promise<MembershipRecord[]> {
+  forPerson(userId: string, orgId: string, personId: string): Promise<MembershipRecord[]> {
     return settle(() => {
       return this.visible(orgId, m => m.personId === personId);
     });
   }
 
-  forPeople(orgId: string, personIds: readonly string[]): Promise<MembershipRecord[]> {
+  forPeople(userId: string, orgId: string, personIds: readonly string[]): Promise<MembershipRecord[]> {
     return settle(() => {
       return this.visible(orgId, m => personIds.includes(m.personId));
     });

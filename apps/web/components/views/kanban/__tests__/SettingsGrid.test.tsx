@@ -66,7 +66,7 @@ const TILES = [
   'Keyboard shortcuts',
   'Archived camps',
 ];
-const OWNER_CAMP = { id: 'o-1', name: 'Camp Birchwood', canDelete: true, archived: false };
+const OWNER_CAMP = { id: 'o-1', name: 'Camp Birchwood', canDelete: true, canManageFeed: false, archived: false };
 
 describe('the settings page', () => {
   let root: Root;

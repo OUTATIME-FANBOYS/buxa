@@ -15,7 +15,7 @@ export interface ImportUpload {
  */
 export interface ImportRepository {
   /** Every session in the camp, across all classes, for the clash and duplicate checks. */
-  listCampSessions(orgId: string): Promise<ExistingSession[]>;
+  listCampSessions(userId: string, orgId: string): Promise<ExistingSession[]>;
 
   /**
    * Writes the whole plan in one transaction: the creates and updates, one `session.create` or `session.update` audit entry per

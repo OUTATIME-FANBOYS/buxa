@@ -18,13 +18,13 @@ npm run build && npm start        # http://localhost:3000, uses apps/web/.env.lo
 
 ## Settings (Vercel → Project → Settings → Environment Variables)
 
-| Variable                                                           | Environments        | Notes                                                                                                                                                                                                  |
-| ------------------------------------------------------------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `DATABASE_URL`                                                     | Production, Preview | Supabase **session pooler** URI for the **runtime login** (see "Database requirements"). Used by the API at runtime. It must not be the migration login.                                               |
-| `MIGRATION_DATABASE_URL`                                           | **Production only** | The **migration login** (the one that may bypass row-level security). Used only by production builds to apply migrations. Keeping it out of Preview means a preview build can never change the schema. |
-| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | all                 | Public values from Supabase. Publishable key only. The browser and the server read the same two.                                                                                                       |
-| `DB_POOL_MAX`                                                      | all (optional)      | Connections per function instance (default 10). Use a small number such as `5`: many instances may run at once.                                                                                        |
-| `LOG_LEVEL`                                                        | all (optional)      | Default `info`.                                                                                                                                                                                        |
+| Variable                                                           | Environments        | Notes                                                                                                                                                                                            |
+| ------------------------------------------------------------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `DATABASE_URL`                                                     | Production, Preview | Supabase **session pooler** URI for the **restricted runtime login** (see "Database logins"). The only database URL the web app reads. Never the migration login.                                |
+| `MIGRATION_DATABASE_URL`                                           | **Production only** | The **migration login** (the one that may bypass row-level security). Read only by the migrate command. The web app never reads it. Target: not set here at all (see "Database logins", step 4). |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | all                 | Public values from Supabase. Publishable key only. The browser and the server read the same two.                                                                                                 |
+| `DB_POOL_MAX`                                                      | all (optional)      | Connections per function instance (default 10). Use a small number such as `5`: many instances may run at once.                                                                                  |
+| `LOG_LEVEL`                                                        | all (optional)      | Default `info`.                                                                                                                                                                                  |
 
 If you connected the Supabase integration, **remove `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_JWT_SECRET`** from the project's variables. This app never uses them, and a secret that is not there cannot leak.
 The integration may also add `NEXT_PUBLIC_SUPABASE_ANON_KEY`; our name is `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, so set that one explicitly.
@@ -33,34 +33,79 @@ Paste secrets only into Vercel's form, never into the repo or a chat.
 ## Database requirements
 
 - Postgres 15 or newer. Row-level security is how tenants are kept apart, so it is not optional.
-- Migrations are the `.sql` files in `packages/db/migrations`, applied in filename order. The current set is `0001` to `0012`. Do not add a migration under a number that is already used.
-  There are two logins. They must be different.
+- Migrations are the `.sql` files in `packages/db/migrations`, applied in filename order. The current set is `0001` to `0022`. Do not add a migration under a number that is already used.
+  There are two logins. They must be different, and the web app must only ever hold the restricted one.
 
-- **Migration login** (`MIGRATION_DATABASE_URL`; locally, `DATABASE_URL`). Applies migrations. It needs `CREATEROLE` and must be able to bypass row-level security (a superuser, or Supabase's `postgres` role). Migration `0004` lets it switch to `buxa_app`. The three privileged functions from migration `0009` run with its rights, so it keeps that ability.
-- **Runtime login** (`DATABASE_URL` in production and preview). Serves every request. It must be a member of `buxa_app` and must **not** have `SUPERUSER`, `BYPASSRLS` or `CREATEROLE`. Every tenant query switches to `buxa_app` (`withOrg`). The three cross-organisation paths (the sign-in user row, the sign-in membership lookup, and organisation creation) are `SECURITY DEFINER` functions that only `buxa_app` may run.
+- **Migration login** (`MIGRATION_DATABASE_URL`). Applies migrations. It needs `CREATEROLE` and must be able to bypass row-level security (a superuser, or Supabase's `postgres` role). Migration `0004` lets it switch to `buxa_app`. The three privileged functions from migration `0009` run with its rights, so it keeps that ability. The migrate command (`npm run db:migrate`, `packages/db/src/cli.ts`) reads this URL and nothing else: with only `DATABASE_URL` set it exits with an error. Locally, set `MIGRATION_DATABASE_URL` to the same superuser as `DATABASE_URL` (the docker compose database).
+- **Runtime login** (`DATABASE_URL`, production and preview). Serves every request. It must be a member of `buxa_app` and must **not** have `SUPERUSER`, `BYPASSRLS` or `CREATEROLE`. Every tenant query switches to `buxa_app` (`withOrg`). The three cross-organisation paths (the sign-in user row, the sign-in membership lookup, and organisation creation) are `SECURITY DEFINER` functions that only `buxa_app` may run.
 
-**Operator step: create the runtime login** (once, as the migration login, in the Supabase SQL editor or `psql`). Choose a long random password and keep it in Vercel's form only:
+The web app never reads `MIGRATION_DATABASE_URL`. If it is the only database URL set, the app refuses to start with a message that says so (`apps/server/src/config.ts`). The migrate command refuses to run without it (`packages/db/src/migrate.ts`, `migrationDatabaseUrl`).
 
-```sql
-CREATE ROLE buxa_runtime LOGIN PASSWORD '<long random password>' NOSUPERUSER NOBYPASSRLS NOCREATEROLE NOCREATEDB;
-GRANT buxa_app TO buxa_runtime;
-```
+### Startup check: the app refuses a privileged login
 
-Then build `DATABASE_URL` from the session pooler with that login. On Supabase the pooler user name is `buxa_runtime.<project-ref>`. Check the attributes before you deploy:
+On the first request, and on every `/ready` call, the app reads the attributes of the login it connects with (`packages/db/src/connection.ts`, `loginPrivilegesOf`): `SUPERUSER`, `BYPASSRLS`, and membership, direct or indirect, of a role that has either. The result is remembered for each pool, so it costs one query per instance.
 
-```sql
-SELECT rolsuper, rolbypassrls, rolcreaterole FROM pg_roles WHERE rolname = 'buxa_runtime';  -- all three must be false
-```
+- **In production**, a privileged login is refused. `/ready` answers `503 {"status":"unrestricted_login","message":"..."}`, and every tenant query fails (`withOrg`). Nothing is served through that login.
+- **In development and tests** the check does not refuse (the local superuser is expected), so local work is not blocked.
+- The check never prints the login name, the password or the URL.
 
-After the change, `/ready` must still answer `{"status":"ready"}`. Until this step is done, `DATABASE_URL` is still the migration login, which bypasses row-level security. The code no longer relies on that bypass, but the defence in depth only exists once the runtime login is separate.
+### Operator steps: move the app to the restricted login
 
-The code path is covered by `apps/server/src/users/__tests__/runtimeLogin.pg.test.ts`, which runs the sign-in and organisation repositories through a login with these attributes.
+Do these **in this order**. Before step 3, the new release refuses to serve tenant data through the current migration login, so **do not deploy this release until step 3 has passed.**
+
+1. **Create the runtime login** (once, as the migration login, in the Supabase SQL editor or `psql`). Choose a long random password, generate it on your machine, and keep it in Vercel's form only:
+
+   ```sql
+   CREATE ROLE buxa_runtime LOGIN PASSWORD '<long random password>' NOSUPERUSER NOBYPASSRLS NOCREATEROLE NOCREATEDB;
+   GRANT buxa_app TO buxa_runtime;
+   ```
+
+2. **Check the attributes and memberships** (all must be false or `buxa_app` only):
+
+   ```sql
+   SELECT rolsuper, rolbypassrls, rolcreaterole FROM pg_roles WHERE rolname = 'buxa_runtime';  -- all three must be false
+   SELECT roleid::regrole FROM pg_auth_members WHERE member = 'buxa_runtime'::regrole;         -- only buxa_app
+   ```
+
+3. **Move `DATABASE_URL` to the runtime login.** Build the URL from the session pooler with that login (on Supabase the user name is `buxa_runtime.<project-ref>`). Set it for Production and Preview, then redeploy. Check the startup check passed:
+
+   ```bash
+   curl -s https://<address>/ready   # expect {"status":"ready"}
+   ```
+
+   Then sign in and open a camp page.
+
+4. **Take `MIGRATION_DATABASE_URL` out of the web environment** (target state). It belongs only to the deploy job's secret store (see "Deploy job and secrets" below). Until that is done, Production still holds the migration URL, which the web app does not read, but which a Vercel function could read.
+
+**If `/ready` answers `503 unrestricted_login`:**
+
+- Do not switch `DATABASE_URL` back to the migration login to get the site up. That is the state this change exists to end.
+- Run the query in step 2 again and read the answer. If `buxa_runtime` has `SUPERUSER` or `BYPASSRLS`, run `ALTER ROLE buxa_runtime NOSUPERUSER NOBYPASSRLS;`. If it is a member of a role other than `buxa_app` that has them, run `REVOKE <that role> FROM buxa_runtime;`. Then redeploy and check `/ready` again.
+- If the site must come back before that is fixed, promote the **previous** deployment (Vercel → Deployments → Promote to Production). The previous release runs without this check, so it works with either login. Record the reason in the PR that fixes it, and treat it as a security incident, because tenant data was served through a privileged login until then.
+- `503 unavailable` (not `unrestricted_login`) means the database itself cannot be reached. The login check is not the cause; look at the connection string and the pooler.
+
+The code path is covered by `apps/server/src/users/__tests__/runtimeLogin.pg.test.ts`, which runs the sign-in and organisation repositories through a login with these attributes. `packages/db/test/login-privileges.pg.test.ts` tests the check itself against real logins, with and without `BYPASSRLS`, and through a membership.
+
+### Deploy job and secrets
+
+- The migration login lives in **one secret**, used only by the job that applies migrations. Today that job is the Vercel production build (`scripts/vercel-build.ts`), so until it moves, the value is also in Vercel's Production variables. The target is a GitHub environment secret (for example `MIGRATION_DATABASE_URL` in a protected `production` environment) read only by a `npm run db:migrate` step in the deploy workflow, with the Vercel production build no longer applying migrations. That change touches `scripts/vercel-build.ts`, `apps/web/vercel.json` and `.github/workflows/ci.yml`, and it is not made yet.
+- Do not copy the migration URL into the web environment, a `.env` file under `apps/web`, a log, a chat or a repository. Preview builds never have it.
+- The migration secret must not be in any environment the web app runs in. If you change how migrations run, check that `vercel env ls` (or the Vercel dashboard) no longer lists it for Production.
 
 - Use Supabase's **Session pooler** connection string (Project Settings → Database → Connection string). Vercel connects over IPv4, and the direct
   connection is IPv6-only on the free plan; session mode also supports the advisory lock migrations use.
 - **URL form:** `postgresql://<user>:<password>@<pooler host>:<port>/<database>` (`postgres://` works too). The app refuses any other scheme. Never paste the URL into the repo, a chat or a log.
 - **TLS:** a database on any host other than `localhost`, `127.0.0.1` or `::1` is always connected with TLS. The server certificate is checked against the Supabase root CA in `packages/db/src/supabaseRootCa.ts`. The same certificate is in `packages/db/certs/supabase-root-2021-ca.crt`, and a test keeps the two equal. Any `sslmode` in the URL is removed, so it cannot weaken that check. Local databases use no TLS.
 - CI runs the database and server tests as a non-superuser to catch anything that only works for a superuser.
+
+### Network rules (operator steps; nothing here is automated)
+
+The rules are: **the database accepts connections only from the deploy job and from the app's own network, and the migration login is used from the deploy job's network only.** Apply them as far as the host allows. Where a host cannot express a rule, rely on the credential and the monitoring in `docs/security.md`, section 7, and write down which rule you could not apply.
+
+1. **Restrict the database to the app's network.** Supabase: Project Settings → Database → Network Restrictions, add the allowed IPv4 ranges. Vercel's functions use shared, changing addresses unless the project has a static outbound IP (Secure Compute on Enterprise). If the app has no fixed range, leave the restriction open to the pooler and say so in the release notes; the credential is then the control.
+2. **Restrict the migration login to the deploy job's range.** Supabase restricts the whole database, not one login, so on Supabase this rule cannot be applied per login. A self-hosted Postgres can do it in `pg_hba.conf` (`hostssl buxa_migrator ... <deploy-runner-cidr>`). A hosted GitHub Actions runner has changing addresses, so the deploy job's range is not fixed either; if you need a fixed range, run the migration step on a self-hosted runner with a fixed address.
+3. **Do not expose the direct (non-pooled) connection** to the internet from the app. The app uses the session pooler (`docs/deploy.md`, "Database requirements").
+4. **Check the rule once a month**: open the Network Restrictions page and the `pg_hba.conf` (if you run your own Postgres) and compare them with this list.
 
 ## How a deploy works
 
@@ -69,6 +114,14 @@ The code path is covered by `apps/server/src/users/__tests__/runtimeLogin.pg.tes
 3. A **production** build applies pending migrations first (each migration is one transaction, so nothing is half-applied), then builds the app. Preview and other builds never touch the schema.
 4. Pull requests get a **preview** deployment at their own address, against the same database but never migrating it: a PR that adds a migration will not see its new tables in the preview until it is merged. Test those locally.
 5. After a deploy, check `<address>/ready` (expect `{"status":"ready"}`), then sign in.
+
+## Migration 0022: sessions and classes
+
+`0022_sessions_parent_classes.sql` gives sessions a date range and classes a time range, and backfills existing rows in the camp's time zone. It is expand only: nothing is dropped, and its drop guard check passes without an approval line.
+
+- **Risk while both releases run.** During a deploy the old release is still serving. Sessions that the new release creates have no default capacity, and the old classes list may fail to render them until the old release is gone. Run this deploy in a quiet window and keep the two releases side by side for as short a time as possible.
+- **Nothing is lost.** The old release keeps working on the migrated schema. Rolling back the application does not undo the migration; the rows that the new release wrote stay in the database.
+- The full data model and the list of what is and is not done are in `docs/plans/sessions-classes.md`.
 
 ## Setting it up (you do these; they need your accounts)
 

@@ -19,12 +19,35 @@ describe('MembersTable', () => {
     const roles = ['owner', 'admin', 'staff', 'viewer'] as const;
     const rows = roles.map((role, i) => ({ id: `m-${i}`, name: `Person ${role}`, email: `${role}@example.com`, role }));
     const html = renderToStaticMarkup(<MembersTable members={rows} showEmail={false} />);
-    expect(html).toMatch(/pill pill-role-owner [^"]*">Owner</);
-    expect(html).toMatch(/pill pill-role-admin [^"]*">Admin</);
-    expect(html).toMatch(/pill pill-role-staff [^"]*">Staff</);
-    expect(html).toMatch(/pill pill-role-viewer [^"]*">Viewer</);
+    expect(html).toMatch(/pill tone-role-owner">Owner</);
+    expect(html).toMatch(/pill tone-role-admin">Admin</);
+    expect(html).toMatch(/pill tone-role-staff">Staff</);
+    expect(html).toMatch(/pill tone-role-viewer">Viewer</);
   });
   it('maps every camp role to a role tone', () => {
-    expect(ROLE_TONE).toEqual({ owner: 'role-owner', admin: 'role-admin', staff: 'role-staff', viewer: 'role-viewer' });
+    expect(ROLE_TONE).toEqual({
+      owner: 'role-owner',
+      admin: 'role-admin',
+      staff: 'role-staff',
+      viewer: 'role-viewer',
+      teacher: 'role-teacher',
+    });
+  });
+  it('shows a check-in switch only for the teachers the reader may change, and no column without them', () => {
+    const rows = [
+      { id: 'm-t', name: 'Ana Ruiz', email: 'ana@example.com', role: 'teacher' },
+      { id: 'm-s', name: 'Sam Lee', email: 'sam@example.com', role: 'staff' },
+    ] as unknown as Member[];
+    const none = renderToStaticMarkup(<MembersTable members={rows} showEmail={false} />);
+    expect(none).not.toContain('Check-in and check-out');
+    expect(none).not.toContain('type="checkbox"');
+
+    const withSwitch = renderToStaticMarkup(
+      <MembersTable members={rows} showEmail={false} teacherOptions={[{ userId: 'm-t', on: true }]} />,
+    );
+    expect(withSwitch).toContain('Check-in and check-out');
+    expect(withSwitch.match(/type="checkbox"/g)).toHaveLength(1);
+    expect(withSwitch).toContain('Check in and out, for');
+    expect(withSwitch).toMatch(/type="checkbox"[^>]*checked/);
   });
 });

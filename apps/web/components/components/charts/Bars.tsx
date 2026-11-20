@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { type ChartTone } from '@/components/elements';
 
 interface BarDatum {
@@ -28,6 +28,10 @@ function useWidth(ref: React.RefObject<HTMLDivElement | null>) {
   return W;
 }
 
+/**
+ * Columns with soft rounded tops, each filled with a gradient from its tone (strong at the top, fading toward the base). Thin dashed
+ * guide lines sit behind them; the value is in the tooltip and the table beside the chart, so the axis numbers are not drawn.
+ */
 export function Bars({
   data,
   height = 176,
@@ -44,9 +48,10 @@ export function Bars({
   const [hover, setHover] = useState<number | null>(null);
   const wrap = useRef<HTMLDivElement>(null);
   const W = useWidth(wrap);
+  const gid = `bars-${useId().replace(/:/g, '')}`;
   const max = Math.max(1, ...data.map(d => d.value));
   const top = Math.max(2, Math.ceil(max / 2) * 2);
-  const padL = 26;
+  const padL = 4;
   const padB = 22;
   const H = height;
   const plotH = H - padB - 8;
@@ -54,35 +59,39 @@ export function Bars({
   const slot = (W - padL) / data.length;
   const bw = Math.max(4, Math.min(22, slot * 0.62));
   const every = Math.ceil(data.length / Math.max(2, Math.floor(W / 80)));
+  const tones = [...new Set(data.map(d => d.tone ?? tone))];
 
   return (
     <div className="chart" ref={wrap} onMouseLeave={() => setHover(null)}>
       <svg width={W} height={H} role="img" aria-label={ariaLabel}>
+        <defs>
+          {tones.map(t => (
+            <linearGradient key={t} id={`${gid}-${t}`} x1="0" y1="0" x2="0" y2="1" className={`chart-tone-${t}`}>
+              <stop className="chart-bar-top" offset="0" />
+              <stop className="chart-bar-bottom" offset="1" />
+            </linearGradient>
+          ))}
+        </defs>
         {[0, top / 2, top].map(t => {
           const y = base - (t / top) * plotH;
 
-          return (
-            <g key={t}>
-              <line x1={padL} x2={W} y1={y} y2={y} stroke="var(--grid)" />
-              <text x={0} y={y + 4} className="axis">
-                {t}
-              </text>
-            </g>
-          );
+          return <line key={t} className="chart-guide" x1={padL} x2={W} y1={y} y2={y} />;
         })}
         {data.map((d, i) => {
           const h = (d.value / top) * plotH;
           const x = padL + i * slot + (slot - bw) / 2;
           const y = base - h;
-          const r = Math.min(4, h / 2, bw / 2);
+          const r = Math.min(8, h / 2, bw / 2);
+          const t = d.tone ?? tone;
 
           return (
             <g key={i} onMouseEnter={() => setHover(i)}>
               <rect x={padL + i * slot} y={0} width={slot} height={H - padB + 6} fill="transparent" />
               {d.value > 0 && (
                 <path
+                  className="chart-bar"
                   d={`M${x},${base} V${y + r} a${r},${r} 0 0 1 ${r},${-r} H${x + bw - r} a${r},${r} 0 0 1 ${r},${r} V${base} Z`}
-                  fill={`var(--f-${d.tone ?? tone})`}
+                  fill={`url(#${gid}-${t})`}
                   opacity={hover === null || hover === i ? 1 : 0.4}
                 />
               )}

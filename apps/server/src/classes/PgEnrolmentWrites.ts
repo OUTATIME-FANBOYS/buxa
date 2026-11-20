@@ -3,9 +3,11 @@ import type { Enrolment } from '@buxa/contracts';
 import { recordAudit } from '../audit/recordAudit';
 import { toIso, type Db } from '../people/pgRows';
 import type { EnrolRequest, EnrolmentRule, GatheredEnrolmentFacts } from './ClassRepository';
-import { CamperNotFoundError, EnrolmentNotFoundError, refusalError, SessionNotFoundError } from './errors';
+import { CamperNotFoundError, ClassNotFoundError, EnrolmentNotFoundError, refusalError } from './errors';
 import { activeFactsFor, requireEnrolment } from './PgClassQueries';
 import { translateCapacityError } from './pgClassErrors';
+import { releaseExpiredHoldsInSession } from '../holds/PgSeatHoldWrites';
+import { lockSession, promoteWaitlist } from './PgSeats';
 
 /*
  * The enrolment write. Runs inside the caller's transaction (withOrg). The order of locks is fixed and must stay the same
@@ -36,10 +38,10 @@ async function lockCamper(db: Db, camperId: string): Promise<LocalDate | null> {
   return rows[0].date_of_birth;
 }
 
-/** Locks the session's row and reads the facts the rule needs (the session and its class). */
-async function lockSession(db: Db, sessionId: string): Promise<LockedSession> {
-  if (!isUuid(sessionId)) {
-    throw new SessionNotFoundError();
+/** Locks the class's row and reads the facts the rule needs. The class's own name and ages are what the rule uses. */
+async function lockClass(db: Db, classId: string): Promise<LockedSession> {
+  if (!isUuid(classId)) {
+    throw new ClassNotFoundError();
   }
   const { rows } = await db.query<{
     id: string;
@@ -50,14 +52,14 @@ async function lockSession(db: Db, sessionId: string): Promise<LockedSession> {
     age_min: number | null;
     age_max: number | null;
   }>(
-    `SELECT s.id, s.capacity, s.starts_at, s.ends_at, c.name AS class_name, c.age_min, c.age_max
-       FROM sessions s JOIN classes c ON c.id = s.class_id
+    `SELECT s.id, s.capacity, s.starts_at, s.ends_at, s.name AS class_name, s.age_min, s.age_max
+       FROM sessions s
       WHERE s.id = $1 FOR UPDATE OF s`,
-    [sessionId],
+    [classId],
   );
   const row = rows[0];
   if (!row) {
-    throw new SessionNotFoundError();
+    throw new ClassNotFoundError();
   }
 
   return {
@@ -73,17 +75,15 @@ async function lockSession(db: Db, sessionId: string): Promise<LockedSession> {
   };
 }
 
-async function countEnrolled(db: Db, sessionId: string): Promise<number> {
-  const { rows } = await db.query<{ taken: number }>(
-    `SELECT count(*)::int AS taken FROM enrolments WHERE session_id = $1 AND status = 'enrolled'`,
-    [sessionId],
-  );
+/** Places taken: enrolled campers plus unexpired holds (migration 0025). The rule must see the holds, or it would promise a seat the trigger refuses. */
+async function countTaken(db: Db, sessionId: string): Promise<number> {
+  const { rows } = await db.query<{ taken: number }>(`SELECT session_seats_taken($1)::int AS taken`, [sessionId]);
 
   return rows[0].taken;
 }
 
 /**
- * Enrols a camper in a session under the locks above. Throws a refusal (nothing is written) or writes the enrolment and its
+ * Enrols a camper in a class under the locks above. Throws a refusal (nothing is written) or writes the enrolment and its
  * audit entries. Returns the enrolment as read back.
  */
 export async function enrolInTransaction(
@@ -93,7 +93,9 @@ export async function enrolInTransaction(
   rule: EnrolmentRule,
 ): Promise<Enrolment> {
   const dateOfBirth = await lockCamper(db, request.camperId);
-  const session = await lockSession(db, request.sessionId);
+  const session = await lockClass(db, request.classId);
+  // Expired holds give their places back first, and the waitlist takes them, so the seat count below is current.
+  await releaseExpiredHoldsInSession(db, session.facts.sessionId, actor);
   const camperActive = await activeFactsFor(db, request.camperId);
 
   // A second enrolment in the same session is never allowed, even as an override: the database keeps one active row per pair.
@@ -104,7 +106,7 @@ export async function enrolInTransaction(
 
   const facts: GatheredEnrolmentFacts = {
     session: session.facts,
-    seatsTaken: await countEnrolled(db, session.facts.sessionId),
+    seatsTaken: await countTaken(db, session.facts.sessionId),
     camperDateOfBirth: dateOfBirth,
     camperActive,
   };
@@ -181,6 +183,23 @@ export async function cancelInTransaction(
   if (!isUuid(enrolmentId)) {
     throw new EnrolmentNotFoundError();
   }
+  const { rows: live } = await db.query<{ session_id: string }>(
+    `SELECT session_id FROM enrolments WHERE id = $1 AND status <> 'cancelled'`,
+    [enrolmentId],
+  );
+  if (live.length === 0) {
+    throw new EnrolmentNotFoundError();
+  }
+  // The session lock comes before the enrolment row (see PgSeats): the status is read again under it, because a waitlisted
+  // row can be promoted by another transaction between the two statements.
+  await lockSession(db, live[0].session_id);
+  const { rows: current } = await db.query<{ status: string }>(
+    `SELECT status FROM enrolments WHERE id = $1 AND status <> 'cancelled' FOR UPDATE`,
+    [enrolmentId],
+  );
+  if (current.length === 0) {
+    throw new EnrolmentNotFoundError();
+  }
   const { rows } = await db.query<{ id: string; session_id: string; person_id: string }>(
     `UPDATE enrolments SET status = 'cancelled', cancelled_at = now()
       WHERE id = $1 AND status <> 'cancelled' RETURNING id, session_id, person_id`,
@@ -197,6 +216,10 @@ export async function cancelInTransaction(
     entityId: row.id,
     data: { sessionId: row.session_id, camperId: row.person_id, note },
   });
+  // Only a place that was really taken goes to the waitlist; a cancelled waitlist entry frees nothing.
+  if (current[0].status === 'enrolled') {
+    await promoteWaitlist(db, row.session_id, actor);
+  }
 
   return requireEnrolment(db, row.id);
 }

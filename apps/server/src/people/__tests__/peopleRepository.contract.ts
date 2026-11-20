@@ -52,12 +52,12 @@ export function peopleRepositoryContract(factory: RepositoryFactory): void {
 
       it('reads back exactly what it created', async () => {
         const created = await fx.repos.people.create(fx.actor, samplePerson());
-        expect(await fx.repos.people.get(fx.actor.orgId, created.id)).toEqual(created);
+        expect(await fx.repos.people.get(fx.actor.userId, fx.actor.orgId, created.id)).toEqual(created);
       });
 
       it('returns null for an unknown or malformed id', async () => {
-        expect(await fx.repos.people.get(fx.actor.orgId, randomUUID())).toBeNull();
-        expect(await fx.repos.people.get(fx.actor.orgId, 'not-a-uuid')).toBeNull();
+        expect(await fx.repos.people.get(fx.actor.userId, fx.actor.orgId, randomUUID())).toBeNull();
+        expect(await fx.repos.people.get(fx.actor.userId, fx.actor.orgId, 'not-a-uuid')).toBeNull();
       });
 
       it('audits person.create', async () => {
@@ -112,7 +112,9 @@ export function peopleRepositoryContract(factory: RepositoryFactory): void {
         await fx.repos.people.create(fx.actor, samplePerson({ givenName: 'Zed', familyName: 'Adams' }));
         await fx.repos.people.create(fx.actor, samplePerson({ givenName: 'Amy', familyName: 'Baker' }));
         await fx.repos.people.create(fx.actor, samplePerson({ givenName: 'Ben', familyName: 'Baker' }));
-        const names = (await fx.repos.people.list(fx.actor.orgId, {})).map(p => `${p.familyName} ${p.givenName}`);
+        const names = (await fx.repos.people.list(fx.actor.userId, fx.actor.orgId, {})).map(
+          p => `${p.familyName} ${p.givenName}`,
+        );
         expect(names).toEqual(['Adams Zed', 'Baker Amy', 'Baker Ben']);
       });
 
@@ -123,19 +125,28 @@ export function peopleRepositoryContract(factory: RepositoryFactory): void {
         );
         await fx.repos.people.create(fx.actor, samplePerson({ roles: ['instructor'], familyName: 'Teacher' }));
         await fx.repos.people.archive(fx.actor, camper.id, '2027-06-01T10:00:00.000Z');
-        expect(await fx.repos.people.list(fx.actor.orgId, { role: 'camper' })).toHaveLength(0);
-        expect(await fx.repos.people.list(fx.actor.orgId, { role: 'camper', includeArchived: true })).toHaveLength(1);
-        expect((await fx.repos.people.list(fx.actor.orgId, {})).map(p => p.familyName)).toEqual(['Teacher']);
-        expect(await fx.repos.people.list(fx.actor.orgId, { includeArchived: true })).toHaveLength(2);
+        expect(await fx.repos.people.list(fx.actor.userId, fx.actor.orgId, { role: 'camper' })).toHaveLength(0);
+        expect(
+          await fx.repos.people.list(fx.actor.userId, fx.actor.orgId, { role: 'camper', includeArchived: true }),
+        ).toHaveLength(1);
+        expect((await fx.repos.people.list(fx.actor.userId, fx.actor.orgId, {})).map(p => p.familyName)).toEqual([
+          'Teacher',
+        ]);
+        expect(await fx.repos.people.list(fx.actor.userId, fx.actor.orgId, { includeArchived: true })).toHaveLength(2);
       });
 
       it('getMany returns the requested people, in list order', async () => {
         const a = await fx.repos.people.create(fx.actor, samplePerson({ familyName: 'Adams' }));
         const b = await fx.repos.people.create(fx.actor, samplePerson({ familyName: 'Baker' }));
         await fx.repos.people.create(fx.actor, samplePerson({ familyName: 'Cole' }));
-        const found = await fx.repos.people.getMany(fx.actor.orgId, [b.id, a.id, randomUUID(), 'nope']);
+        const found = await fx.repos.people.getMany(fx.actor.userId, fx.actor.orgId, [
+          b.id,
+          a.id,
+          randomUUID(),
+          'nope',
+        ]);
         expect(found.map(p => p.id)).toEqual([a.id, b.id]);
-        expect(await fx.repos.people.getMany(fx.actor.orgId, [])).toEqual([]);
+        expect(await fx.repos.people.getMany(fx.actor.userId, fx.actor.orgId, [])).toEqual([]);
       });
 
       it('search is case- and accent-insensitive across given, family and preferred names', async () => {
@@ -144,7 +155,8 @@ export function peopleRepositoryContract(factory: RepositoryFactory): void {
           fx.actor,
           samplePerson({ givenName: 'Ann', familyName: 'Smith', preferredName: 'Zoë' }),
         );
-        const names = async (q: string) => (await fx.repos.people.search(fx.actor.orgId, q, 20)).map(p => p.givenName);
+        const names = async (q: string) =>
+          (await fx.repos.people.search(fx.actor.userId, fx.actor.orgId, q, 20)).map(p => p.givenName);
         expect(await names('jose')).toEqual(['José']);
         expect(await names('GARCIA')).toEqual(['José']);
         expect(await names('  josé   garcía ')).toEqual(['José']);
@@ -160,10 +172,12 @@ export function peopleRepositoryContract(factory: RepositoryFactory): void {
         for (let i = 0; i < MAX_SEARCH_RESULTS + 3; i += 1) {
           await fx.repos.people.create(fx.actor, samplePerson({ givenName: `Kim${i}`, familyName: 'Kim' }));
         }
-        expect(await fx.repos.people.search(fx.actor.orgId, 'hidden', 50)).toEqual([]);
-        expect(await fx.repos.people.search(fx.actor.orgId, 'kim', 5)).toHaveLength(5);
-        expect(await fx.repos.people.search(fx.actor.orgId, 'kim', 1000)).toHaveLength(MAX_SEARCH_RESULTS);
-        expect(await fx.repos.people.search(fx.actor.orgId, 'kim', 0)).toEqual([]);
+        expect(await fx.repos.people.search(fx.actor.userId, fx.actor.orgId, 'hidden', 50)).toEqual([]);
+        expect(await fx.repos.people.search(fx.actor.userId, fx.actor.orgId, 'kim', 5)).toHaveLength(5);
+        expect(await fx.repos.people.search(fx.actor.userId, fx.actor.orgId, 'kim', 1000)).toHaveLength(
+          MAX_SEARCH_RESULTS,
+        );
+        expect(await fx.repos.people.search(fx.actor.userId, fx.actor.orgId, 'kim', 0)).toEqual([]);
       });
     });
 
@@ -192,8 +206,10 @@ export function peopleRepositoryContract(factory: RepositoryFactory): void {
         });
         expect(linked.members.map(m => m.personId).sort()).toEqual([parent.id, child.id].sort());
         expect(linked.members.find(m => m.personId === parent.id)).toMatchObject({ isGuardian: true, canPickup: true });
-        expect(await fx.repos.people.getHousehold(fx.actor.orgId, household.id)).toEqual(linked);
-        expect((await fx.repos.people.householdsOf(fx.actor.orgId, child.id)).map(h => h.id)).toEqual([household.id]);
+        expect(await fx.repos.people.getHousehold(fx.actor.userId, fx.actor.orgId, household.id)).toEqual(linked);
+        expect((await fx.repos.people.householdsOf(fx.actor.userId, fx.actor.orgId, child.id)).map(h => h.id)).toEqual([
+          household.id,
+        ]);
       });
 
       it('create can join a new household in the same step, with the link flags', async () => {
@@ -207,7 +223,7 @@ export function peopleRepositoryContract(factory: RepositoryFactory): void {
             canPickup: false,
           },
         );
-        const households = await fx.repos.people.listHouseholds(fx.actor.orgId);
+        const households = await fx.repos.people.listHouseholds(fx.actor.userId, fx.actor.orgId);
         expect(households).toHaveLength(1);
         expect(households[0]).toMatchObject({
           name: 'The Parents',
@@ -224,16 +240,21 @@ export function peopleRepositoryContract(factory: RepositoryFactory): void {
           canPickup: false,
         });
         expect(
-          (await fx.repos.people.getHousehold(fx.actor.orgId, household.id))?.members.map(m => m.personId),
+          (await fx.repos.people.getHousehold(fx.actor.userId, fx.actor.orgId, household.id))?.members.map(
+            m => m.personId,
+          ),
         ).toEqual([child.id]);
       });
 
       it('listHouseholds orders by name and includes the members', async () => {
         await fx.repos.people.createHousehold(fx.actor, 'Zeta');
         await fx.repos.people.createHousehold(fx.actor, 'Alpha');
-        expect((await fx.repos.people.listHouseholds(fx.actor.orgId)).map(h => h.name)).toEqual(['Alpha', 'Zeta']);
-        expect(await fx.repos.people.listHouseholds(fx.actor.orgId)).toHaveLength(2);
-        expect(await fx.repos.people.listHouseholds(fx.otherActor.orgId)).toEqual([]);
+        expect((await fx.repos.people.listHouseholds(fx.actor.userId, fx.actor.orgId)).map(h => h.name)).toEqual([
+          'Alpha',
+          'Zeta',
+        ]);
+        expect(await fx.repos.people.listHouseholds(fx.actor.userId, fx.actor.orgId)).toHaveLength(2);
+        expect(await fx.repos.people.listHouseholds(fx.otherActor.userId, fx.otherActor.orgId)).toEqual([]);
       });
 
       it('link replaces the existing link for the same person', async () => {
@@ -270,7 +291,7 @@ export function peopleRepositoryContract(factory: RepositoryFactory): void {
         });
         const after = await fx.repos.people.unlink(fx.actor, household.id, person.id);
         expect(after.members).toEqual([]);
-        expect(await fx.repos.people.householdsOf(fx.actor.orgId, person.id)).toEqual([]);
+        expect(await fx.repos.people.householdsOf(fx.actor.userId, fx.actor.orgId, person.id)).toEqual([]);
       });
 
       it('throws the household and person errors for unknown ids', async () => {
@@ -312,12 +333,12 @@ export function peopleRepositoryContract(factory: RepositoryFactory): void {
           canPickup: false,
         });
         const other = fx.otherActor.orgId;
-        expect(await fx.repos.people.get(other, person.id)).toBeNull();
-        expect(await fx.repos.people.getMany(other, [person.id])).toEqual([]);
-        expect(await fx.repos.people.list(other, { includeArchived: true })).toEqual([]);
-        expect(await fx.repos.people.search(other, 'ada', 20)).toEqual([]);
-        expect(await fx.repos.people.getHousehold(other, household.id)).toBeNull();
-        expect(await fx.repos.people.householdsOf(other, person.id)).toEqual([]);
+        expect(await fx.repos.people.get(fx.otherActor.userId, other, person.id)).toBeNull();
+        expect(await fx.repos.people.getMany(fx.otherActor.userId, other, [person.id])).toEqual([]);
+        expect(await fx.repos.people.list(fx.otherActor.userId, other, { includeArchived: true })).toEqual([]);
+        expect(await fx.repos.people.search(fx.otherActor.userId, other, 'ada', 20)).toEqual([]);
+        expect(await fx.repos.people.getHousehold(fx.otherActor.userId, other, household.id)).toBeNull();
+        expect(await fx.repos.people.householdsOf(fx.otherActor.userId, other, person.id)).toEqual([]);
       });
 
       it('another organisation cannot change people or households, nor link across organisations', async () => {
@@ -339,7 +360,7 @@ export function peopleRepositoryContract(factory: RepositoryFactory): void {
           isPersonNotFound,
         );
         await expectRejection(fx.repos.people.unlink(fx.otherActor, household.id, person.id), isHouseholdNotFound);
-        expect((await fx.repos.people.get(fx.actor.orgId, person.id))?.givenName).toBe('Ada');
+        expect((await fx.repos.people.get(fx.actor.userId, fx.actor.orgId, person.id))?.givenName).toBe('Ada');
       });
     });
   });

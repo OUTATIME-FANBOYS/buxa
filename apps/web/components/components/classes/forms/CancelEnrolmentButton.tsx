@@ -23,8 +23,15 @@ export function CancelEnrolmentButton({
     <form action={formAction} className="classes-inline">
       <HiddenField name="classId" value={classId} />
       <HiddenField name="enrolmentId" value={enrolmentId} />
-      <Button variant="danger-soft" type="submit" icon="x" className="classes-target" disabled={pending}>
-        Cancel enrolment<span className="sr-only"> for {camperName}</span>
+      <Button
+        variant="danger-soft"
+        type="submit"
+        icon="x"
+        className="classes-target classes-withdraw"
+        aria-label={`Withdraw ${camperName}`}
+        disabled={pending}
+      >
+        Withdraw
       </Button>
       <ActionMessage state={state} />
     </form>

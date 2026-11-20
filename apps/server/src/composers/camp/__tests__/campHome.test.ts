@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Membership, PersonSummary, Session } from '@buxa/contracts';
+import type { Class, Membership, PersonSummary } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
 import { MAX_LOG_ROWS } from '../../../attendance/AttendanceRepository';
 import { settle } from '@buxa/domain';
@@ -37,8 +37,8 @@ const services = vi.hoisted(() => ({
     >(() => settle(() => [])),
   },
   classes: {
-    listClasses: vi.fn(() => settle(() => ({ ok: true as const, value: [] as { id: string }[] }))),
-    listSessions: vi.fn<(actor: unknown, classId: string) => Promise<{ ok: true; value: Session[] }>>(() =>
+    listSessions: vi.fn(() => settle(() => ({ ok: true as const, value: [] as { id: string }[] }))),
+    listClasses: vi.fn<(actor: unknown, sessionId: string) => Promise<{ ok: true; value: Class[] }>>(() =>
       settle(() => ({ ok: true, value: [] })),
     ),
   },
@@ -74,18 +74,19 @@ const person = (id: string, status: PersonSummary['status']): PersonSummary => (
   onSite: false,
   archived: false,
 });
-const session_ = (id: string, classId: string, startsAt: string, location = 'Range 2'): Session =>
+const session_ = (id: string, sessionId: string, startsAt: string, location = 'Range 2'): Class =>
   ({
     id,
-    classId,
-    className: `Class ${classId}`,
+    sessionId,
+    sessionName: `Session ${sessionId}`,
+    name: `Class ${sessionId}`,
     startsAt,
     endsAt: startsAt,
     location,
     instructorIds: [],
     instructors: [],
     capacity: 10,
-  }) as unknown as Session;
+  }) as unknown as Class;
 
 const as = (role: Role) => {
   const camp: Membership = { orgId: 'o1', role, name: 'Lake Camp', slug: 'lake' };
@@ -168,12 +169,12 @@ describe('loadCampHome', () => {
 
   it('lists the next sessions across classes, soonest first, and drops past ones', async () => {
     as('staff');
-    services.classes.listClasses.mockResolvedValue({ ok: true, value: [{ id: 'k1' }, { id: 'k2' }] });
-    services.classes.listSessions.mockImplementation((_actor, classId) =>
+    services.classes.listSessions.mockResolvedValue({ ok: true, value: [{ id: 'k1' }, { id: 'k2' }] });
+    services.classes.listClasses.mockImplementation((_actor, sessionId) =>
       settle(() => ({
         ok: true as const,
         value:
-          classId === 'k1'
+          sessionId === 'k1'
             ? [session_('s-late', 'k1', '2999-01-03T09:00:00Z'), session_('s-past', 'k1', '2000-01-01T09:00:00Z')]
             : [session_('s-soon', 'k2', '2999-01-02T09:00:00Z', 'Lake')],
       })),

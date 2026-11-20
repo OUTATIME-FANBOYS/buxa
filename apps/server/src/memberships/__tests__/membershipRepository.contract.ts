@@ -62,7 +62,7 @@ export function membershipRepositoryContract(factory: RepositoryFactory): void {
       });
       const summerRow = await fx.repos.memberships.add(fx.actor, summer(personId));
       await fx.repos.memberships.add(fx.actor, summer(other));
-      expect((await fx.repos.memberships.forPerson(fx.actor.orgId, personId)).map(m => m.id)).toEqual([
+      expect((await fx.repos.memberships.forPerson(fx.actor.userId, fx.actor.orgId, personId)).map(m => m.id)).toEqual([
         winter.id,
         summerRow.id,
       ]);
@@ -75,9 +75,9 @@ export function membershipRepositoryContract(factory: RepositoryFactory): void {
       await fx.repos.memberships.add(fx.actor, summer(a));
       await fx.repos.memberships.add(fx.actor, summer(b));
       await fx.repos.memberships.add(fx.actor, summer(c));
-      const found = await fx.repos.memberships.forPeople(fx.actor.orgId, [a, b]);
+      const found = await fx.repos.memberships.forPeople(fx.actor.userId, fx.actor.orgId, [a, b]);
       expect(found.map(m => m.personId).sort()).toEqual([a, b].sort());
-      expect(await fx.repos.memberships.forPeople(fx.actor.orgId, [])).toEqual([]);
+      expect(await fx.repos.memberships.forPeople(fx.actor.userId, fx.actor.orgId, [])).toEqual([]);
     });
 
     it('revoke sets the time and reason; a second revoke keeps the first reason and time', async () => {
@@ -119,8 +119,8 @@ export function membershipRepositoryContract(factory: RepositoryFactory): void {
     it('another organisation cannot read memberships', async () => {
       const personId = await newPerson();
       await fx.repos.memberships.add(fx.actor, summer(personId));
-      expect(await fx.repos.memberships.forPerson(fx.otherActor.orgId, personId)).toEqual([]);
-      expect(await fx.repos.memberships.forPeople(fx.otherActor.orgId, [personId])).toEqual([]);
+      expect(await fx.repos.memberships.forPerson(fx.otherActor.userId, fx.otherActor.orgId, personId)).toEqual([]);
+      expect(await fx.repos.memberships.forPeople(fx.otherActor.userId, fx.otherActor.orgId, [personId])).toEqual([]);
     });
   });
 }

@@ -1,0 +1,21 @@
+/* ---------- Notices ---------- */
+.notice {
+  border-radius: var(--r-3);
+  padding: var(--s3) var(--s4);
+  display: grid;
+  gap: var(--s1);
+  background: var(--tone-soft);
+  color: var(--tone-ink);
+  border: 1px solid var(--tone);
+}
+.notice p {
+  margin: 0;
+}
+.notice-title {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+.notice--compact {
+  font-weight: 500;
+}

@@ -60,6 +60,12 @@ export async function createClassFixture(pool: Pool): Promise<ClassFixture> {
   const orgB = await insertCamp(pool, `classes-b-${tag}`);
   const userA = await insertUser(pool, `owner-a-${tag}@example.test`);
   const userB = await insertUser(pool, `owner-b-${tag}@example.test`);
+  await pool.query(`INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'owner'), ($3, $4, 'owner')`, [
+    orgA,
+    userA,
+    orgB,
+    userB,
+  ]);
 
   return {
     pool,
@@ -71,6 +77,7 @@ export async function createClassFixture(pool: Pool): Promise<ClassFixture> {
     addPerson: (orgId, dob, givenName = 'Camper') =>
       withOrg(
         pool,
+        orgId === orgB ? userB : userA,
         orgId,
         async db =>
           (
@@ -87,59 +94,74 @@ export async function createClassFixture(pool: Pool): Promise<ClassFixture> {
   };
 }
 
-/** A class in the camp: Robotics, ages 8 to 12 by default, with the given default capacity. */
-export function makeClass(
+/** A session (the parent) covering July 2027. */
+export function makeSession(
   repo: PgClassRepository,
   actor: Actor,
-  overrides: {
-    name?: string;
-    capacity?: number;
-    ageRange?: { minAge: number; maxAge: number };
-    instructorRatio?: { instructors: number; campers: number } | null;
-  } = {},
+  overrides: { name?: string; startsOn?: LocalDate; endsOn?: LocalDate } = {},
 ) {
-  return repo.createClass(actor, {
-    name: overrides.name ?? 'Robotics',
-    description: 'Build and program small robots.',
-    ageRange: overrides.ageRange ?? { minAge: 8, maxAge: 12 },
-    capacity: overrides.capacity ?? 5,
-    instructorRatio: overrides.instructorRatio ?? null,
+  return repo.createSession(actor, {
+    name: overrides.name ?? 'Summer camp',
+    description: 'Two weeks in July.',
+    startsOn: overrides.startsOn ?? '2027-07-01',
+    endsOn: overrides.endsOn ?? '2027-07-31',
   });
 }
 
-/** A session on Monday 5 July 2027 between two camp-local hours (Sydney, UTC+10). */
+/**
+ * A class's input on Monday 5 July 2027 between two camp-local hours (Sydney, UTC+10): Robotics, ages 8 to 12, camp size 5 by
+ * default. Pass the overrides a test needs.
+ */
 export function sessionInput(
   fromHour: number,
   toHour: number,
-  extra: { capacity?: number; instructorIds?: string[] } = {},
+  extra: {
+    name?: string;
+    capacity?: number;
+    ageRange?: { minAge: number; maxAge: number };
+    instructorIds?: string[];
+  } = {},
 ) {
   const at = (h: number) => `2027-07-05T${String(h).padStart(2, '0')}:00:00+10:00`;
 
   return {
+    name: extra.name ?? 'Robotics',
+    ageRange: extra.ageRange ?? { minAge: 8, maxAge: 12 },
+    capacity: extra.capacity ?? 5,
     startsAt: at(fromHour),
     endsAt: at(toHour),
     location: 'Lab 1',
     instructorIds: extra.instructorIds ?? [],
-    capacity: extra.capacity ?? 5,
   };
 }
 
+/** A member of the camp, to read as. Found through the test's own pool, which is not row-level security limited. */
+async function memberOfCamp(pool: Pool, orgId: string): Promise<string> {
+  const { rows } = await pool.query<{ user_id: string }>(
+    'SELECT user_id FROM org_members WHERE org_id = $1 ORDER BY created_at LIMIT 1',
+    [orgId],
+  );
+
+  return rows[0].user_id;
+}
+
 /** Reads the audit actions written in one camp, in order. */
-export function auditActions(pool: Pool, orgId: string): Promise<string[]> {
-  return withOrg(pool, orgId, async db =>
+export async function auditActions(pool: Pool, orgId: string): Promise<string[]> {
+  return withOrg(pool, await memberOfCamp(pool, orgId), orgId, async db =>
     (await db.query<{ action: string }>('SELECT action FROM audit_log ORDER BY id')).rows.map(r => r.action),
   );
 }
 
-/** The data of the newest `session.create` entry in the camp. */
-export function sessionAuditData(pool: Pool, orgId: string): Promise<Record<string, unknown> | undefined> {
+/** The data of the newest `class.create` entry in the camp. */
+export async function classAuditData(pool: Pool, orgId: string): Promise<Record<string, unknown> | undefined> {
   return withOrg(
     pool,
+    await memberOfCamp(pool, orgId),
     orgId,
     async db =>
       (
         await db.query<{ data: Record<string, unknown> }>(
-          `SELECT data FROM audit_log WHERE action = 'session.create' ORDER BY id DESC LIMIT 1`,
+          `SELECT data FROM audit_log WHERE action = 'class.create' ORDER BY id DESC LIMIT 1`,
         )
       ).rows[0]?.data,
   );

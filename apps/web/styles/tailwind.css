@@ -9,3 +9,44 @@
  */
 @import 'tailwindcss/theme.css' layer(theme) prefix(buxa);
 @import 'tailwindcss/utilities.css' layer(utilities) prefix(buxa);
+
+@theme {
+  --animate-pop: pop 0.2s var(--ease-out);
+  --animate-pop-out: popOut 0.17s cubic-bezier(0.4, 0, 1, 1) forwards;
+  --animate-fade-out: fadeOut 0.12s linear forwards;
+  --animate-slide-out: slideOut 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+  --animate-fade: fade 0.15s linear both;
+  --animate-slide: slide 0.28s var(--ease-out);
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
+  @keyframes popOut {
+    to {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+  }
+  @keyframes fadeOut {
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes slideOut {
+    to {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes slide {
+    from {
+      transform: translateX(100%);
+    }
+  }
+}

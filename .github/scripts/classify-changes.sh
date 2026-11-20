@@ -15,7 +15,7 @@ while IFS= read -r file; do
     package.json | package-lock.json | */package.json | *tsconfig*.json | vitest.config.ts | eslint.config.mjs | test/*)
       all=true ;;
     .github/*) ci=true ;;
-    # The docs-links test (unit chunk) reads README.md and docs/*.md, so docs changes run the unit chunk only.
+    # The docs-links test (unit chunk) reads README.md and docs/*.md. Docs changes also run the lint chunk for Prettier formatting.
     docs/* | *.md) docs=true ;;
     apps/web/__tests__/integration/*) web_integration=true ;;
     apps/web/*) web=true ;;
@@ -38,7 +38,7 @@ flag() {
 }
 
 run_typecheck=$(flag "$all" "$web" "$web_integration" "$server" "$db_test")
-run_lint=$(flag "$all" "$web" "$web_integration" "$server" "$db_test")
+run_lint=$(flag "$all" "$web" "$web_integration" "$server" "$db_test" "$docs")
 run_unit=$(flag "$all" "$web" "$server" "$docs")
 run_database=$(flag "$all" "$db" "$db_test" "$server" "$web_integration")
 run_build=$(flag "$all" "$web" "$server")

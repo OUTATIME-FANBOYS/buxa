@@ -1,6 +1,6 @@
 import type { CheckInMethod } from '@buxa/contracts';
 import { isUuid } from '@buxa/domain';
-import { nullableIso, toIso, type Db } from '../people/pgRows';
+import { nullableIso, toIso, type Db, type SqlParam } from '../people/pgRows';
 import { NotOnSiteError, type CheckInRecord } from './AttendanceRepository';
 
 interface CheckInRow {
@@ -38,7 +38,7 @@ export const toCheckIn = (row: CheckInRow): CheckInRecord => ({
 export async function queryCheckIns(
   db: Db,
   where: string,
-  params: unknown[],
+  params: SqlParam[],
   order: string,
   limit?: number,
 ): Promise<CheckInRecord[]> {

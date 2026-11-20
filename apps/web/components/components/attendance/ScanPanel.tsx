@@ -28,7 +28,8 @@ export function ScanPanel({ scanRef, disabled, onCode }: Props) {
         variant="primary"
         ref={toggle}
         type="button"
-        className="btn-camera att-btn-lg"
+        size="lg"
+        className="btn-camera"
         aria-expanded={camera}
         aria-controls="camera-scanner"
         onClick={() => (camera ? closeCamera() : setCamera(true))}

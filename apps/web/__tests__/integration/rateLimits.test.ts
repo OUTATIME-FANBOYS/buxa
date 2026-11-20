@@ -64,10 +64,17 @@ describe('POST /v1/orgs is rate limited per person', () => {
 describe('/ready', () => {
   it('answers from a recent check without querying the database again', async () => {
     env = startRuntime({ verifier: idp.verifier, rateLimiter: createMemoryRateLimiter() });
-    const query = vi.spyOn(env.runtime.pool, 'query').mockResolvedValue({ rows: [] } as never);
+    const query = vi
+      .spyOn(env.runtime.pool, 'query')
+      .mockImplementation(async (sql: string) =>
+        sql.includes('rolbypassrls')
+          ? { rows: [{ superuser: false, bypass_rls: false, member_of_privileged_role: false }] }
+          : { rows: [] },
+      );
     expect((await ready(new Request('http://localhost/ready'))).status).toBe(200);
     expect((await ready(new Request('http://localhost/ready'))).status).toBe(200);
-    expect(query).toHaveBeenCalledTimes(1);
+    const pings = query.mock.calls.filter(([sql]) => sql === 'SELECT 1');
+    expect(pings).toHaveLength(1);
   });
 
   it('is limited per client address, with Retry-After, and the refusal is not cached for others', async () => {

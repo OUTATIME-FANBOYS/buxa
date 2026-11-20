@@ -38,7 +38,7 @@
     display: block;
     position: fixed;
     inset: 0;
-    background: rgba(15, 15, 12, 0.4);
+    background: var(--scrim);
     z-index: 65;
   }
   .only-mobile {
@@ -68,9 +68,6 @@
   }
   .crumb-text {
     max-width: 96px;
-  }
-  .crumb-sep {
-    display: none;
   }
   .crumbs .crumb:nth-child(3) {
     display: none;
@@ -122,9 +119,6 @@
   }
   .props {
     grid-template-columns: 1fr;
-  }
-  .span-2 {
-    grid-column: auto;
   }
   .search-local {
     width: 100%;
@@ -208,6 +202,17 @@
     left: 0;
   }
 }
+/* Phone: a stat's line drops below its number, and the chart cards' headers wrap. */
+@media (max-width: 560px) {
+  .stat.has-spark {
+    grid-template-columns: 1fr;
+  }
+  .stat-spark {
+    grid-column: 1;
+    grid-row: auto;
+    margin-top: var(--s2);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -228,7 +233,7 @@
   .scrim.leaving {
     animation: fadeOut 0.12s linear forwards !important;
   }
-  .project-card:hover,
+  .card--project:hover,
   .button:active,
   .chip:active,
   .card:active {

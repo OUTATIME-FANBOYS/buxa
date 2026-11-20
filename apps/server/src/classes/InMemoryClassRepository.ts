@@ -1,37 +1,56 @@
 import { randomUUID } from 'node:crypto';
 import type { Actor, ActiveEnrolmentFacts, AuditAction, LocalDate } from '@buxa/domain';
-import type { Class, Enrolment, EnrolmentStatus, NewClassInput, Session } from '@buxa/contracts';
+import type { Class, Enrolment, EnrolmentStatus, NewSessionInput, Session, SessionPriceInput } from '@buxa/contracts';
+import { priceChangeAudit, samePrice } from './priceAudit';
 import { systemClock, type Clock } from '../services/clock';
 import type { AuditRecord } from '../people/InMemoryDatabase';
+import type { AuditData } from '../audit/types';
 import type {
+  CampClassSpan,
+  ClassRecord,
   ClassRepository,
   EnrolRequest,
   EnrolmentRule,
   GatheredEnrolmentFacts,
-  NewSessionRecord,
+  TeacherAssignment,
 } from './ClassRepository';
 import {
-  ClassNotFoundError,
   CamperNotFoundError,
+  CapacityBelowEnrolledError,
+  ClassHasEnrolmentsError,
+  ClassNotFoundError,
   EnrolmentNotFoundError,
   InstructorNotFoundError,
   SessionNotFoundError,
+  TeacherNotFoundError,
   refusalError,
 } from './errors';
 import { settle } from '@buxa/domain';
 
-interface StoredClass extends Class {
-  orgId: string;
-}
-interface StoredSession extends NewSessionRecord {
+/** A session (the parent): a date range. Dates are null until a class gives it one. */
+interface StoredSession {
   id: string;
   orgId: string;
-  classId: string;
+  name: string;
+  description: string;
+  startsOn: LocalDate | null;
+  endsOn: LocalDate | null;
+  isPublic: boolean;
+  createdAt: string;
+  price: SessionPriceInput | null;
 }
-interface StoredEnrolment {
+
+/** A class: a time range under a session, with its own name, ages, camp size and location. */
+interface StoredClass extends ClassRecord {
   id: string;
   orgId: string;
   sessionId: string;
+}
+
+interface StoredEnrolment {
+  id: string;
+  orgId: string;
+  classId: string;
   camperId: string;
   status: EnrolmentStatus;
   enrolledAt: string;
@@ -48,119 +67,229 @@ interface StoredCamper {
 const yieldToDatabase = (): Promise<void> => new Promise(resolve => setImmediate(resolve));
 
 /**
- * In-memory adapter for classes, sessions and enrolments. Same errors, ordering and audit entries as Postgres.
- * A per-session lock stands in for `SELECT ... FOR UPDATE`: two enrolments into the same session run one after the other.
+ * In-memory adapter for sessions, classes and enrolments. Same errors, ordering and audit entries as Postgres.
+ * A per-class lock stands in for `SELECT ... FOR UPDATE`: two enrolments into the same class run one after the other.
  */
 export class InMemoryClassRepository implements ClassRepository {
   /** Every audit entry, in the order it was written. Tests read this; nothing else does. */
   readonly audit: AuditRecord[] = [];
-  private readonly classes = new Map<string, StoredClass>();
   private readonly sessions = new Map<string, StoredSession>();
+  private readonly classes = new Map<string, StoredClass>();
   private readonly enrolments = new Map<string, StoredEnrolment>();
   private readonly campers = new Map<string, StoredCamper>();
+  /** Camp id to the user ids that hold the teacher role there. */
+  private readonly teacherUsers = new Map<string, Set<string>>();
+  /** Class id to the teacher user ids assigned to it. */
+  private readonly teachersOf = new Map<string, Set<string>>();
   private readonly locks = new Map<string, Promise<void>>();
 
   constructor(private readonly now: Clock = systemClock) {}
 
-  /** Test setup: a person who can be enrolled. */
+  /** Test setup: a person who can be enrolled (or named as an instructor). */
   seedCamper(orgId: string, id: string, name: string, dateOfBirth: LocalDate | null): void {
     this.campers.set(id, { id, orgId, name, dateOfBirth });
   }
 
-  listClasses(orgId: string): Promise<Class[]> {
+  listSessions(userId: string, orgId: string): Promise<Session[]> {
+    return settle(() =>
+      [...this.sessions.values()]
+        .filter(s => s.orgId === orgId)
+        .sort(
+          (a, b) =>
+            (a.startsOn ?? '').localeCompare(b.startsOn ?? '') ||
+            a.createdAt.localeCompare(b.createdAt) ||
+            a.id.localeCompare(b.id),
+        )
+        .map(s => this.toSession(s)),
+    );
+  }
+
+  getSession(userId: string, orgId: string, sessionId: string): Promise<Session | null> {
     return settle(() => {
-      return [...this.classes.values()]
-        .filter(c => c.orgId === orgId)
-        .sort(byCreated)
-        .map(toClass);
+      const found = this.sessionIn(orgId, sessionId);
+
+      return found ? this.toSession(found) : null;
     });
   }
 
-  getClass(orgId: string, classId: string): Promise<Class | null> {
+  createSession(actor: Actor, input: NewSessionInput): Promise<Session> {
     return settle(() => {
-      const found = this.classIn(orgId, classId);
-
-      return found ? toClass(found) : null;
-    });
-  }
-
-  createClass(actor: Actor, input: NewClassInput): Promise<Class> {
-    return settle(() => {
-      const row: StoredClass = {
+      const row: StoredSession = {
         id: randomUUID(),
         orgId: actor.orgId,
         name: input.name,
         description: input.description,
-        ageRange: input.ageRange,
-        capacity: input.capacity,
-        instructorRatio: input.instructorRatio,
+        startsOn: input.startsOn,
+        endsOn: input.endsOn,
+        isPublic: input.isPublic ?? false,
         createdAt: this.now().toISOString(),
+        price: input.price ?? null,
       };
-      this.classes.set(row.id, row);
-      this.record(actor, 'class.create', 'class', row.id, { name: row.name });
+      this.sessions.set(row.id, row);
+      this.record(actor, 'session.create', 'session', row.id, { name: row.name });
+      if (row.price) {
+        this.record(actor, 'session.price_change', 'session', row.id, priceChangeAudit(null, row.price));
+      }
 
-      return toClass(row);
+      return this.toSession(row);
     });
   }
 
-  addSession(actor: Actor, classId: string, input: NewSessionRecord): Promise<Session> {
+  setSessionPrice(actor: Actor, sessionId: string, price: SessionPriceInput | null): Promise<Session> {
     return settle(() => {
-      const cls = this.classIn(actor.orgId, classId);
-      if (!cls) {
-        throw new ClassNotFoundError();
+      const row = this.sessionIn(actor.orgId, sessionId);
+      if (!row) {
+        throw new SessionNotFoundError();
       }
-      // As in Postgres: every instructor must be a person in this camp.
-      if (input.instructorIds.some(id => !this.camperIn(actor.orgId, id))) {
-        throw new InstructorNotFoundError();
+      if (!samePrice(row.price, price)) {
+        this.record(actor, 'session.price_change', 'session', sessionId, priceChangeAudit(row.price, price));
+        row.price = price;
       }
-      const row: StoredSession = { ...input, id: randomUUID(), orgId: actor.orgId, classId };
-      this.sessions.set(row.id, row);
-      this.record(actor, 'session.create', 'session', row.id, {
-        classId,
+
+      return this.toSession(row);
+    });
+  }
+
+  setSessionPublic(actor: Actor, sessionId: string, isPublic: boolean): Promise<Session> {
+    return settle(() => {
+      const row = this.sessionIn(actor.orgId, sessionId);
+      if (!row) {
+        throw new SessionNotFoundError();
+      }
+      row.isPublic = isPublic;
+      this.record(actor, 'session.update', 'session', sessionId, { isPublic });
+
+      return this.toSession(row);
+    });
+  }
+
+  addClasses(actor: Actor, sessionId: string, inputs: ClassRecord[]): Promise<Class[]> {
+    return settle(() => {
+      if (!this.sessionIn(actor.orgId, sessionId)) {
+        throw new SessionNotFoundError();
+      }
+      // Check everything before writing anything, so a failure part-way leaves the camp unchanged (as the transaction does).
+      for (const input of inputs) {
+        this.requireInstructorsInCamp(actor.orgId, input.instructorIds);
+      }
+
+      return inputs.map(input => {
+        const row: StoredClass = { ...input, id: randomUUID(), orgId: actor.orgId, sessionId };
+        this.classes.set(row.id, row);
+        this.record(actor, 'class.create', 'class', row.id, {
+          sessionId,
+          startsAt: row.startsAt,
+          endsAt: row.endsAt,
+          instructorIds: [...new Set(input.instructorIds)],
+        });
+
+        return this.toClass(row);
+      });
+    });
+  }
+
+  listCampClassSpans(userId: string, orgId: string): Promise<CampClassSpan[]> {
+    return settle(() =>
+      [...this.classes.values()]
+        .filter(c => c.orgId === orgId)
+        .map(c => ({ startsAt: c.startsAt, endsAt: c.endsAt, className: c.name }))
+        .sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
+    );
+  }
+
+  listClasses(userId: string, orgId: string, sessionId: string): Promise<Class[]> {
+    return settle(() => {
+      if (!this.sessionIn(orgId, sessionId)) {
+        throw new SessionNotFoundError();
+      }
+
+      return [...this.classes.values()]
+        .filter(c => c.orgId === orgId && c.sessionId === sessionId)
+        .sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.id.localeCompare(b.id))
+        .map(c => this.toClass(c));
+    });
+  }
+
+  getClass(userId: string, orgId: string, classId: string): Promise<Class | null> {
+    return settle(() => {
+      const found = this.classIn(orgId, classId);
+
+      return found ? this.toClass(found) : null;
+    });
+  }
+
+  addClass(actor: Actor, sessionId: string, input: ClassRecord): Promise<Class> {
+    return settle(() => {
+      if (!this.sessionIn(actor.orgId, sessionId)) {
+        throw new SessionNotFoundError();
+      }
+      this.requireInstructorsInCamp(actor.orgId, input.instructorIds);
+      const row: StoredClass = { ...input, id: randomUUID(), orgId: actor.orgId, sessionId };
+      this.classes.set(row.id, row);
+      this.record(actor, 'class.create', 'class', row.id, {
+        sessionId,
         startsAt: row.startsAt,
         endsAt: row.endsAt,
         instructorIds: [...new Set(input.instructorIds)],
       });
 
-      return this.toSession(row, cls);
+      return this.toClass(row);
     });
   }
 
-  listSessions(orgId: string, classId: string): Promise<Session[]> {
+  updateClass(actor: Actor, classId: string, input: ClassRecord): Promise<Class> {
     return settle(() => {
-      const cls = this.classIn(orgId, classId);
-      if (!cls) {
+      const row = this.classIn(actor.orgId, classId);
+      if (!row) {
+        throw new ClassNotFoundError();
+      }
+      this.requireInstructorsInCamp(actor.orgId, input.instructorIds);
+      // As in Postgres: the camp size cannot go below the seats already taken.
+      if (input.capacity < this.countWhere(classId, 'enrolled')) {
+        throw new CapacityBelowEnrolledError();
+      }
+      Object.assign(row, input, { instructorIds: [...new Set(input.instructorIds)] });
+      this.record(actor, 'class.update', 'class', classId, {
+        startsAt: row.startsAt,
+        endsAt: row.endsAt,
+        capacity: row.capacity,
+        instructorIds: row.instructorIds,
+      });
+
+      return this.toClass(row);
+    });
+  }
+
+  deleteClass(actor: Actor, classId: string): Promise<void> {
+    return settle(() => {
+      const row = this.classIn(actor.orgId, classId);
+      if (!row) {
+        throw new ClassNotFoundError();
+      }
+      if ([...this.enrolments.values()].some(e => e.classId === classId)) {
+        throw new ClassHasEnrolmentsError();
+      }
+      this.classes.delete(classId);
+      this.record(actor, 'class.delete', 'class', classId, { name: row.name });
+    });
+  }
+
+  listEnrolments(userId: string, orgId: string, classId: string): Promise<Enrolment[]> {
+    return settle(() => {
+      if (!this.classIn(orgId, classId)) {
         throw new ClassNotFoundError();
       }
 
-      return [...this.sessions.values()]
-        .filter(s => s.orgId === orgId && s.classId === classId)
-        .sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.id.localeCompare(b.id))
-        .map(s => this.toSession(s, cls));
-    });
-  }
-
-  listEnrolments(orgId: string, sessionId: string): Promise<Enrolment[]> {
-    return settle(() => {
-      const session = this.sessionIn(orgId, sessionId);
-      if (!session) {
-        throw new SessionNotFoundError();
-      }
-
       return [...this.enrolments.values()]
-        .filter(e => e.orgId === orgId && e.sessionId === sessionId)
+        .filter(e => e.orgId === orgId && e.classId === classId)
         .sort((a, b) => a.enrolledAt.localeCompare(b.enrolledAt) || a.id.localeCompare(b.id))
         .map(e => this.toEnrolment(e));
     });
   }
 
   async enrol(actor: Actor, request: EnrolRequest, rule: EnrolmentRule): Promise<Enrolment> {
-    return this.exclusive(request.sessionId, async () => {
-      const session = this.sessionIn(actor.orgId, request.sessionId);
-      if (!session) {
-        throw new SessionNotFoundError();
-      }
-      const cls = this.classIn(actor.orgId, session.classId);
+    return this.exclusive(request.classId, async () => {
+      const cls = this.classIn(actor.orgId, request.classId);
       if (!cls) {
         throw new ClassNotFoundError();
       }
@@ -170,14 +299,14 @@ export class InMemoryClassRepository implements ClassRepository {
       }
       const facts: GatheredEnrolmentFacts = {
         session: {
-          sessionId: session.id,
+          sessionId: cls.id,
           className: cls.name,
-          startsAt: session.startsAt,
-          endsAt: session.endsAt,
-          capacity: session.capacity,
+          startsAt: cls.startsAt,
+          endsAt: cls.endsAt,
+          capacity: cls.capacity,
           ageRange: cls.ageRange,
         },
-        seatsTaken: this.countWhere(session.id, 'enrolled'),
+        seatsTaken: this.countWhere(cls.id, 'enrolled'),
         camperDateOfBirth: camper.dateOfBirth,
         camperActive: this.activeFor(actor.orgId, camper.id),
       };
@@ -191,7 +320,7 @@ export class InMemoryClassRepository implements ClassRepository {
       const row: StoredEnrolment = {
         id: randomUUID(),
         orgId: actor.orgId,
-        sessionId: session.id,
+        classId: cls.id,
         camperId: camper.id,
         status: decision.status,
         enrolledAt: this.now().toISOString(),
@@ -199,13 +328,13 @@ export class InMemoryClassRepository implements ClassRepository {
       };
       this.enrolments.set(row.id, row);
       this.record(actor, 'enrolment.create', 'enrolment', row.id, {
-        sessionId: session.id,
+        sessionId: cls.id,
         camperId: camper.id,
         status: decision.status,
       });
       if (decision.overrode) {
         this.record(actor, 'enrolment.override', 'enrolment', row.id, {
-          sessionId: session.id,
+          sessionId: cls.id,
           camperId: camper.id,
           reason: decision.overrode.reason,
           clashSessionId: decision.overrode.clash.sessionId,
@@ -222,7 +351,7 @@ export class InMemoryClassRepository implements ClassRepository {
       throw new EnrolmentNotFoundError();
     }
 
-    return this.exclusive(existing.sessionId, () => {
+    return this.exclusive(existing.classId, () => {
       return settle(() => {
         const row = this.enrolments.get(enrolmentId);
         if (!row || row.orgId !== actor.orgId || row.status === 'cancelled') {
@@ -230,7 +359,7 @@ export class InMemoryClassRepository implements ClassRepository {
         }
         row.status = 'cancelled';
         this.record(actor, 'enrolment.cancel', 'enrolment', row.id, {
-          sessionId: row.sessionId,
+          sessionId: row.classId,
           camperId: row.camperId,
           note,
         });
@@ -238,6 +367,65 @@ export class InMemoryClassRepository implements ClassRepository {
         return this.toEnrolment(row);
       });
     });
+  }
+
+  /** Test seed: a member of the camp with the teacher role (Postgres keeps this in org_members). */
+  seedTeacher(orgId: string, userId: string): void {
+    const set = this.teacherUsers.get(orgId) ?? new Set<string>();
+    set.add(userId);
+    this.teacherUsers.set(orgId, set);
+  }
+
+  teacherAssignments(userId: string, orgId: string, sessionId: string): Promise<TeacherAssignment[]> {
+    const rows: TeacherAssignment[] = [];
+    for (const c of this.classes.values()) {
+      if (c.orgId !== orgId || c.sessionId !== sessionId) {
+        continue;
+      }
+      for (const userId of this.teachersOf.get(c.id) ?? []) {
+        rows.push({ classId: c.id, userId });
+      }
+    }
+
+    return Promise.resolve(rows);
+  }
+
+  assignedClassIds(userId: string, orgId: string, teacherId: string): Promise<string[]> {
+    if (!this.teacherUsers.get(orgId)?.has(teacherId)) {
+      return Promise.resolve([]);
+    }
+    const ids = [...this.classes.values()]
+      .filter(c => c.orgId === orgId && this.teachersOf.get(c.id)?.has(teacherId))
+      .map(c => c.id);
+
+    return Promise.resolve(ids);
+  }
+
+  camperIdsIn(userId: string, orgId: string, classIds: readonly string[]): Promise<string[]> {
+    const wanted = new Set(classIds);
+    const ids = new Set<string>();
+    for (const e of this.enrolments.values()) {
+      if (e.orgId === orgId && wanted.has(e.classId) && e.status === 'enrolled') {
+        ids.add(e.camperId);
+      }
+    }
+
+    return Promise.resolve([...ids]);
+  }
+
+  replaceTeachers(actor: Actor, classId: string, userIds: readonly string[]): Promise<void> {
+    if (!this.classIn(actor.orgId, classId)) {
+      return Promise.reject(new ClassNotFoundError());
+    }
+    const unique = [...new Set(userIds)];
+    const members = this.teacherUsers.get(actor.orgId) ?? new Set<string>();
+    if (unique.some(id => !members.has(id))) {
+      return Promise.reject(new TeacherNotFoundError());
+    }
+    this.teachersOf.set(classId, new Set(unique));
+    this.record(actor, 'class.update', 'class', classId, { teacherIds: unique });
+
+    return Promise.resolve();
   }
 
   private async exclusive<T>(key: string, work: () => Promise<T>): Promise<T> {
@@ -254,20 +442,8 @@ export class InMemoryClassRepository implements ClassRepository {
     return run;
   }
 
-  private record(
-    actor: Actor,
-    action: AuditAction,
-    entity: string,
-    entityId: string,
-    data: Record<string, unknown>,
-  ): void {
+  private record(actor: Actor, action: AuditAction, entity: string, entityId: string, data: AuditData): void {
     this.audit.push({ orgId: actor.orgId, actorId: actor.userId, action, entity, entityId, data });
-  }
-
-  private classIn(orgId: string, id: string): StoredClass | undefined {
-    const c = this.classes.get(id);
-
-    return c && c.orgId === orgId ? c : undefined;
   }
 
   private sessionIn(orgId: string, id: string): StoredSession | undefined {
@@ -276,58 +452,87 @@ export class InMemoryClassRepository implements ClassRepository {
     return s && s.orgId === orgId ? s : undefined;
   }
 
+  private classIn(orgId: string, id: string): StoredClass | undefined {
+    const c = this.classes.get(id);
+
+    return c && c.orgId === orgId ? c : undefined;
+  }
+
   private camperIn(orgId: string, id: string): StoredCamper | undefined {
     const c = this.campers.get(id);
 
     return c && c.orgId === orgId ? c : undefined;
   }
 
-  private countWhere(sessionId: string, status: EnrolmentStatus): number {
-    return [...this.enrolments.values()].filter(e => e.sessionId === sessionId && e.status === status).length;
+  /** As in Postgres: every instructor must be a person in this camp. */
+  private requireInstructorsInCamp(orgId: string, instructorIds: readonly string[]): void {
+    if (instructorIds.some(id => !this.camperIn(orgId, id))) {
+      throw new InstructorNotFoundError();
+    }
   }
 
-  /** The camper's enrolled and waitlisted sessions in the camp. Cancelled ones free their time. */
+  private countWhere(classId: string, status: EnrolmentStatus): number {
+    return [...this.enrolments.values()].filter(e => e.classId === classId && e.status === status).length;
+  }
+
+  /** The camper's enrolled and waitlisted classes in the camp. Cancelled ones free their time. */
   private activeFor(orgId: string, camperId: string): ActiveEnrolmentFacts[] {
     const out: ActiveEnrolmentFacts[] = [];
     for (const e of this.enrolments.values()) {
       if (e.orgId !== orgId || e.camperId !== camperId || e.status === 'cancelled') {
         continue;
       }
-      const s = this.sessions.get(e.sessionId);
-      const c = s ? this.classes.get(s.classId) : undefined;
-      if (s && c) {
-        out.push({ sessionId: s.id, className: c.name, startsAt: s.startsAt, endsAt: s.endsAt });
+      const c = this.classes.get(e.classId);
+      if (c) {
+        out.push({ sessionId: c.id, className: c.name, startsAt: c.startsAt, endsAt: c.endsAt });
       }
     }
 
     return out;
   }
 
-  private toSession(s: StoredSession, cls: StoredClass): Session {
+  private toSession(s: StoredSession): Session {
     return {
       id: s.id,
-      classId: s.classId,
-      className: cls.name,
-      startsAt: s.startsAt,
-      endsAt: s.endsAt,
-      location: s.location,
-      instructorIds: [...s.instructorIds],
-      instructors: s.instructorIds.map(id => ({ id, name: this.campers.get(id)?.name ?? '' })),
-      capacity: s.capacity,
-      seatsTaken: this.countWhere(s.id, 'enrolled'),
-      waitlisted: this.countWhere(s.id, 'waitlisted'),
+      name: s.name,
+      description: s.description,
+      startsOn: s.startsOn,
+      endsOn: s.endsOn,
+      classCount: [...this.classes.values()].filter(c => c.sessionId === s.id).length,
+      isPublic: s.isPublic,
+      createdAt: s.createdAt,
+      price: s.price ? { ...s.price } : null,
+    };
+  }
+
+  private toClass(c: StoredClass): Class {
+    const session = this.sessions.get(c.sessionId);
+
+    return {
+      id: c.id,
+      sessionId: c.sessionId,
+      sessionName: session?.name ?? '',
+      name: c.name,
+      ageRange: { ...c.ageRange },
+      capacity: c.capacity,
+      startsAt: c.startsAt,
+      endsAt: c.endsAt,
+      location: c.location,
+      instructorIds: [...c.instructorIds],
+      instructors: c.instructorIds.map(id => ({ id, name: this.campers.get(id)?.name ?? '' })),
+      seatsTaken: this.countWhere(c.id, 'enrolled'),
+      waitlisted: this.countWhere(c.id, 'waitlisted'),
+      price: session?.price ? { ...session.price } : null,
     };
   }
 
   private toEnrolment(e: StoredEnrolment): Enrolment {
-    const s = this.sessions.get(e.sessionId);
-    const c = s ? this.classes.get(s.classId) : undefined;
+    const c = this.classes.get(e.classId);
     const camper = this.campers.get(e.camperId);
 
     return {
       id: e.id,
-      sessionId: e.sessionId,
-      classId: c?.id ?? '',
+      classId: e.classId,
       className: c?.name ?? '',
       camperId: e.camperId,
       camperName: camper?.name ?? '',
@@ -336,19 +541,4 @@ export class InMemoryClassRepository implements ClassRepository {
       overrideReason: e.overrideReason,
     };
   }
-}
-
-const byCreated = (a: StoredClass, b: StoredClass): number =>
-  a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id);
-
-function toClass(c: StoredClass): Class {
-  return {
-    id: c.id,
-    name: c.name,
-    description: c.description,
-    ageRange: { ...c.ageRange },
-    capacity: c.capacity,
-    instructorRatio: c.instructorRatio && { ...c.instructorRatio },
-    createdAt: c.createdAt,
-  };
 }

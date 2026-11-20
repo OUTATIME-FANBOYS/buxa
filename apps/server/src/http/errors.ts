@@ -16,8 +16,10 @@ export class HttpError extends Error {
 /** True for an HttpError from any copy of this module. Use this, never `instanceof HttpError`. */
 export const isHttpError = (error: unknown): error is HttpError =>
   error instanceof Error &&
-  (error as { kind?: unknown }).kind === 'http-error' &&
-  typeof (error as { statusCode?: unknown }).statusCode === 'number';
+  'kind' in error &&
+  error.kind === 'http-error' &&
+  'statusCode' in error &&
+  typeof error.statusCode === 'number';
 export const unauthorized = (message = 'Sign in required') => new HttpError(401, message);
 export const forbidden = (message: string) => new HttpError(403, message);
 export const notFound = (message: string) => new HttpError(404, message);

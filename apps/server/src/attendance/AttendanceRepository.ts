@@ -45,7 +45,7 @@ export class AlreadyCheckedInError extends Error {
   }
 }
 export const isAlreadyCheckedIn = (e: unknown): e is AlreadyCheckedInError =>
-  e instanceof Error && (e as { kind?: unknown }).kind === 'already-checked-in';
+  e instanceof Error && 'kind' in e && e.kind === 'already-checked-in';
 
 export class NotOnSiteError extends Error {
   readonly kind = 'not-on-site';
@@ -55,20 +55,20 @@ export class NotOnSiteError extends Error {
   }
 }
 export const isNotOnSite = (e: unknown): e is NotOnSiteError =>
-  e instanceof Error && (e as { kind?: unknown }).kind === 'not-on-site';
+  e instanceof Error && 'kind' in e && e.kind === 'not-on-site';
 
 /** Most rows one query returns; a log longer than this is exported in date slices. */
 export const MAX_LOG_ROWS = 5000;
 
 export interface AttendanceRepository {
   /** The person's open visit, or null. */
-  openFor(orgId: string, personId: string): Promise<CheckInRecord | null>;
+  openFor(userId: string, orgId: string, personId: string): Promise<CheckInRecord | null>;
   /** Everyone on site now, oldest arrival first. */
-  onSite(orgId: string): Promise<CheckInRecord[]>;
+  onSite(userId: string, orgId: string): Promise<CheckInRecord[]>;
   /** Audits `attendance.check_in`, and `attendance.override` as well when `overrideReason` is set. Throws AlreadyCheckedInError if a visit is open (the database refuses a second one even under a race), PersonNotFoundError. */
   checkIn(actor: Actor, input: NewCheckIn): Promise<CheckInRecord>;
   /** Closes the open visit. Audits `attendance.check_out` (and `attendance.override`). Throws NotOnSiteError. */
   checkOut(actor: Actor, input: NewCheckOut): Promise<CheckInRecord>;
   /** Newest first, at most MAX_LOG_ROWS. */
-  log(orgId: string, query: AttendanceQuery): Promise<CheckInRecord[]>;
+  log(userId: string, orgId: string, query: AttendanceQuery): Promise<CheckInRecord[]>;
 }

@@ -3,6 +3,10 @@
 Status: **spec for review. Not started**, except the PWA manifest and install hint (see "Staff mobile app" below). Roadmap row: "Comms & extras: reminders, waivers, parent portal, reports."
 Depends on: phases 3 and 4. The parent portal is the largest part and needs the privacy review before real data (see `docs/security.md`).
 
+## Moved from phase 3: price display on registration
+
+A price is stored per session (migration 0024) with an optional early-bird amount and last day, in the camp's time zone. It is shown on the session and class screens already. Still to do: show the price to a family on the registration form, with the early-bird rule applied. Nothing is charged until phase 9.
+
 ## Words we use
 
 - **Reminder**: a message sent to a family or staff member at a set time before a session (for example, 7 days before, what to bring).

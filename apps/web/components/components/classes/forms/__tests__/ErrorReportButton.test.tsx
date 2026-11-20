@@ -11,7 +11,7 @@ describe('ErrorReportButton', () => {
     const html = renderToStaticMarkup(<ErrorReportButton fileName="season.csv" text={'a,"b"\r\n'} refused={3} />);
     expect(html).toContain('Download error report');
     expect(html).toContain('method="post"');
-    expect(html).toContain('action="/camp/classes/import/error-report"');
+    expect(html).toContain('action="/camp/sessions/import/error-report"');
     expect(html).toContain('name="fileName" value="season.csv"');
     expect(html).toContain('name="csv" value="a,&quot;b&quot;');
   });

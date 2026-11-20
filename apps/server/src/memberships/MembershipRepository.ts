@@ -22,7 +22,7 @@ export class MembershipNotFoundError extends Error {
   }
 }
 export const isMembershipNotFound = (e: unknown): e is MembershipNotFoundError =>
-  e instanceof Error && (e as { kind?: unknown }).kind === 'membership-not-found';
+  e instanceof Error && 'kind' in e && e.kind === 'membership-not-found';
 
 /** Storage for memberships (a person's right to attend for a date range). Status is computed by the caller, never stored. */
 export interface MembershipRepository {
@@ -31,7 +31,7 @@ export interface MembershipRepository {
   /** Idempotent: revoking a revoked membership keeps the first reason. Audits `membership.revoke`. Throws MembershipNotFoundError. */
   revoke(actor: Actor, id: string, reason: string, at: string): Promise<MembershipRecord>;
   /** Oldest start first. */
-  forPerson(orgId: string, personId: string): Promise<MembershipRecord[]>;
+  forPerson(userId: string, orgId: string, personId: string): Promise<MembershipRecord[]>;
   /** One query for a whole list screen. */
-  forPeople(orgId: string, personIds: readonly string[]): Promise<MembershipRecord[]>;
+  forPeople(userId: string, orgId: string, personIds: readonly string[]): Promise<MembershipRecord[]>;
 }

@@ -30,7 +30,7 @@ describe.skipIf(!url)('PgOrgRepository timezone', () => {
       { name: 'Tz camp', slug: `tz-${tag}`, timezone: 'Europe/London' },
       ownerId,
     );
-    const org = await repo.get(created.id);
+    const org = await repo.get(ownerId, created.id);
     expect(org.timezone).toBe('Europe/London');
   });
 
@@ -49,9 +49,9 @@ describe.skipIf(!url)('PgOrgRepository timezone', () => {
     );
     const actor = { userId: ownerId, orgId: created.id, role: 'owner' as const };
     await repo.rename(actor, { timezone: 'America/New_York' });
-    expect((await repo.get(created.id)).timezone).toBe('America/New_York');
+    expect((await repo.get(ownerId, created.id)).timezone).toBe('America/New_York');
     await repo.rename(actor, { name: 'Renamed' });
-    const after = await repo.get(created.id);
+    const after = await repo.get(ownerId, created.id);
     expect(after).toMatchObject({ name: 'Renamed', timezone: 'America/New_York' });
   });
 });

@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 import { migrate } from '@buxa/db';
 import { OverlapError, SessionFullError } from '../errors';
-import { createClassFixture, enrolRule, makeClass, sessionInput, type ClassFixture } from './pgClassFixture';
+import { createClassFixture, enrolRule, makeSession, sessionInput, type ClassFixture } from './pgClassFixture';
 
 const url = process.env.DATABASE_URL;
 
@@ -27,14 +27,14 @@ describe.skipIf(!url)('enrolment races on Postgres', () => {
     const fx: ClassFixture = await createClassFixture(pool);
     try {
       for (let trial = 0; trial < TRIALS; trial++) {
-        const cls = await makeClass(fx.repo, fx.actor);
-        const session = await fx.repo.addSession(fx.actor, cls.id, sessionInput(9, 12, { capacity: 1 }));
+        const session = await makeSession(fx.repo, fx.actor);
+        const cls = await fx.repo.addClass(fx.actor, session.id, sessionInput(9, 12, { capacity: 1 }));
         const ada = await fx.addPerson(fx.orgA, '2016-03-01', `Ada${trial}`);
         const ben = await fx.addPerson(fx.orgA, '2016-03-01', `Ben${trial}`);
 
         const results = await settle([
-          fx.repo.enrol(fx.actor, { sessionId: session.id, camperId: ada }, enrolRule()),
-          fx.repo.enrol(fx.actor, { sessionId: session.id, camperId: ben }, enrolRule()),
+          fx.repo.enrol(fx.actor, { classId: cls.id, camperId: ada }, enrolRule()),
+          fx.repo.enrol(fx.actor, { classId: cls.id, camperId: ben }, enrolRule()),
         ]);
 
         const wins = results.filter(r => r.status === 'fulfilled');
@@ -42,26 +42,25 @@ describe.skipIf(!url)('enrolment races on Postgres', () => {
         expect(wins, `trial ${trial}`).toHaveLength(1);
         expect(losses, `trial ${trial}`).toHaveLength(1);
         expect(losses[0], `trial ${trial}`).toBeInstanceOf(SessionFullError);
-        expect((await fx.repo.listSessions(fx.orgA, cls.id))[0].seatsTaken, `trial ${trial}`).toBe(1);
+        expect((await fx.repo.getClass(fx.actor.userId, fx.orgA, cls.id))?.seatsTaken, `trial ${trial}`).toBe(1);
       }
     } finally {
       await fx.close();
     }
   });
 
-  it(`two parallel enrolments for one camper in overlapping sessions give exactly one success (${TRIALS} trials)`, async () => {
+  it(`two parallel enrolments for one camper in overlapping classes give exactly one success (${TRIALS} trials)`, async () => {
     const fx: ClassFixture = await createClassFixture(pool);
     try {
       for (let trial = 0; trial < TRIALS; trial++) {
-        const robotics = await makeClass(fx.repo, fx.actor, { name: 'Robotics' });
-        const painting = await makeClass(fx.repo, fx.actor, { name: 'Painting' });
-        const morning = await fx.repo.addSession(fx.actor, robotics.id, sessionInput(9, 12));
-        const overlapping = await fx.repo.addSession(fx.actor, painting.id, sessionInput(11, 13));
+        const session = await makeSession(fx.repo, fx.actor);
+        const morning = await fx.repo.addClass(fx.actor, session.id, sessionInput(9, 12, { name: 'Robotics' }));
+        const overlapping = await fx.repo.addClass(fx.actor, session.id, sessionInput(11, 13, { name: 'Painting' }));
         const camper = await fx.addPerson(fx.orgA, '2016-03-01', `Cam${trial}`);
 
         const results = await settle([
-          fx.repo.enrol(fx.actor, { sessionId: morning.id, camperId: camper }, enrolRule()),
-          fx.repo.enrol(fx.actor, { sessionId: overlapping.id, camperId: camper }, enrolRule()),
+          fx.repo.enrol(fx.actor, { classId: morning.id, camperId: camper }, enrolRule()),
+          fx.repo.enrol(fx.actor, { classId: overlapping.id, camperId: camper }, enrolRule()),
         ]);
 
         const wins = results.filter(r => r.status === 'fulfilled');

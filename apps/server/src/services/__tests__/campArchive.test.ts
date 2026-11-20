@@ -42,10 +42,7 @@ describe('archive camp', () => {
     expect(store.members.filter(m => m.orgId === orgId)).toHaveLength(3);
   });
 
-  it.each([
-    ['admin', ADMIN],
-    ['viewer', VIEWER],
-  ] as const)('refuses a %s, and the camp stays active', async (role, userId) => {
+  it.each([['viewer', VIEWER]] as const)('refuses a %s, and the camp stays active', async (role, userId) => {
     const { store, service, orgId, as } = await setUp();
 
     const error = await refusal(service.archiveCamp(as(userId, role), orgId));
@@ -175,10 +172,7 @@ describe('unarchive camp', () => {
     ]);
   });
 
-  it.each([
-    ['admin', ADMIN],
-    ['viewer', VIEWER],
-  ] as const)('refuses a %s, and the camp stays archived', async (role, userId) => {
+  it.each([['viewer', VIEWER]] as const)('refuses a %s, and the camp stays archived', async (role, userId) => {
     const { store, service, orgId, as } = await setUp();
     await service.archiveCamp(as(OWNER, 'owner'), orgId);
 

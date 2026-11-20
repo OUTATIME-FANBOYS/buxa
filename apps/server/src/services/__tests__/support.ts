@@ -6,6 +6,7 @@ import { createAttendanceService } from '../attendance/createAttendanceService';
 import { createCredentialService } from '../credentials/createCredentialService';
 import { createMembershipService } from '../memberships/createMembershipService';
 import { createPeopleService } from '../people/createPeopleService';
+import type { InMemoryClassRepository } from '../../classes/InMemoryClassRepository';
 
 /**
  * A camp built on the in-memory adapters, with every real service wired the way `createServices` wires them, and a clock the test
@@ -36,7 +37,7 @@ export async function createCamp(timeZone = 'UTC', start = '2027-07-10T12:00:00Z
   const owner = await store.upsertFromIdentity({ authId: 'owner', email: 'owner@example.org', name: 'Olive Owner' });
   const org = await store.createWithOwner({ name: 'Summer Camp', slug: 'summer-camp', timezone: timeZone }, owner.id);
   const users = new Map<Role, string>([['owner', owner.id]]);
-  for (const role of ['admin', 'staff', 'viewer'] as const) {
+  for (const role of ['admin', 'staff', 'viewer', 'teacher'] as const) {
     const user = await store.upsertFromIdentity({
       authId: `${role}-user`,
       email: `${role}@example.org`,
@@ -44,6 +45,10 @@ export async function createCamp(timeZone = 'UTC', start = '2027-07-10T12:00:00Z
     });
     store.members.push({ orgId: org.id, userId: user.id, role });
     users.set(role, user.id);
+    if (role === 'teacher') {
+      // The in-memory class store keeps the teacher role for the scope check (Postgres reads org_members).
+      (repos.classes as InMemoryClassRepository).seedTeacher(org.id, user.id);
+    }
   }
 
   return {
@@ -55,6 +60,7 @@ export async function createCamp(timeZone = 'UTC', start = '2027-07-10T12:00:00Z
       memberships: repos.memberships,
       credentials: repos.credentials,
       attendance: repos.attendance,
+      classes: repos.classes,
       orgs: repos.orgs,
       clock,
     }),
@@ -74,6 +80,7 @@ export async function createCamp(timeZone = 'UTC', start = '2027-07-10T12:00:00Z
     }),
     attendance: createAttendanceService({
       attendance: repos.attendance,
+      classes: repos.classes,
       people: repos.people,
       memberships: repos.memberships,
       orgs: repos.orgs,

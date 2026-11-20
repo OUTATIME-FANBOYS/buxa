@@ -30,7 +30,7 @@ const toRecord = (v: StoredCheckIn): CheckInRecord => ({
 export class InMemoryAttendanceRepository implements AttendanceRepository {
   constructor(private readonly db: InMemoryDatabase) {}
 
-  openFor(orgId: string, personId: string): Promise<CheckInRecord | null> {
+  openFor(userId: string, orgId: string, personId: string): Promise<CheckInRecord | null> {
     return settle(() => {
       const visit = this.openVisit(orgId, personId);
 
@@ -38,7 +38,7 @@ export class InMemoryAttendanceRepository implements AttendanceRepository {
     });
   }
 
-  onSite(orgId: string): Promise<CheckInRecord[]> {
+  onSite(userId: string, orgId: string): Promise<CheckInRecord[]> {
     return settle(() => {
       return [...this.db.checkIns.values()]
         .filter(v => v.orgId === orgId && v.checkedOutAt === null)
@@ -122,7 +122,7 @@ export class InMemoryAttendanceRepository implements AttendanceRepository {
     });
   }
 
-  log(orgId: string, query: AttendanceQuery): Promise<CheckInRecord[]> {
+  log(userId: string, orgId: string, query: AttendanceQuery): Promise<CheckInRecord[]> {
     return settle(() => {
       const from = instant(query.from);
       const to = instant(query.to);

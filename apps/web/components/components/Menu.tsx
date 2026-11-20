@@ -26,10 +26,10 @@ const isItem = (x: MenuItem | false | null): x is MenuItem => !!x;
 
 // A menu row. Rows are buttons (or links) that carry the shared button styles, so every override they need is forced (!).
 const ROW =
-  'buxa:box-border buxa:flex! buxa:items-center buxa:gap-[var(--s3)] buxa:h-[34px]! buxa:px-[var(--s3)]! buxa:py-0! buxa:rounded-[var(--r-1)]! buxa:whitespace-nowrap buxa:w-full! buxa:no-underline buxa:text-[inherit]! buxa:hover:bg-[var(--hover)]! buxa:focus-visible:bg-[var(--hover)]! buxa:focus-visible:outline-none! buxa:disabled:opacity-[0.4]! buxa:disabled:cursor-default!';
+  'buxa:box-border buxa:flex! buxa:items-center buxa:justify-start! buxa:text-left! buxa:font-normal! buxa:gap-[var(--s3)] buxa:h-[34px]! buxa:pl-[5px]! buxa:pr-[var(--s3)]! buxa:py-0! buxa:rounded-[var(--r-1)]! buxa:whitespace-nowrap buxa:w-full! buxa:no-underline buxa:text-[inherit]! buxa:hover:bg-[var(--hover)]! buxa:focus-visible:bg-[var(--hover)]! buxa:focus-visible:outline-none! buxa:disabled:opacity-[0.4]! buxa:disabled:cursor-default!';
 // A choice in a flyout: a radio-style row, as wide as the flyout and left aligned.
 const CHOICE =
-  'buxa:box-border buxa:flex! buxa:items-center buxa:gap-[var(--s3)] buxa:h-[32px]! buxa:px-[var(--s3)]! buxa:py-0! buxa:border-0! buxa:rounded-[var(--r-1)]! buxa:bg-transparent! buxa:[font:inherit]! buxa:text-[inherit]! buxa:whitespace-nowrap buxa:w-full! buxa:justify-start! buxa:text-left! buxa:cursor-pointer buxa:hover:bg-[var(--hover)]! buxa:focus-visible:bg-[var(--hover)]! buxa:focus-visible:outline-none!';
+  'buxa:box-border buxa:flex! buxa:items-center buxa:font-normal! buxa:gap-[var(--s3)] buxa:h-[32px]! buxa:px-[var(--s3)]! buxa:py-0! buxa:border-0! buxa:rounded-[var(--r-1)]! buxa:bg-transparent! buxa:[font:inherit]! buxa:text-[inherit]! buxa:whitespace-nowrap buxa:w-full! buxa:justify-start! buxa:text-left! buxa:cursor-pointer buxa:hover:bg-[var(--hover)]! buxa:focus-visible:bg-[var(--hover)]! buxa:focus-visible:outline-none!';
 const CHECK = 'buxa:ml-auto buxa:text-[var(--accent)]';
 
 /** A menu item that opens a group of choices beneath it. */
@@ -64,7 +64,7 @@ function SubMenu({ item, onChosen }: { item: MenuItem & { submenu: MenuItem[] };
         className={`menu-sub-trigger ${ROW}`}
         onClick={() => setOpen(o => !o)}
       >
-        {item.icon ? <Icon name={item.icon} size={15} /> : <span style={{ width: 15 }} />}
+        {item.icon && <Icon name={item.icon} size={15} />}
         <span>{item.label}</span>
         <Icon
           name="right"
@@ -120,6 +120,7 @@ export function Menu({
   align = 'end',
   className,
   header,
+  search,
 }: {
   label: string;
   trigger: ReactNode;
@@ -129,10 +130,22 @@ export function Menu({
   className?: string;
   /** A line of text above the items. It is not a menu item and cannot be chosen. */
   header?: string;
+  /**
+   * A search field above the items. The caller filters `items` by `value`; the field stays put while the items scroll. Its
+   * value is cleared when the menu closes.
+   */
+  search?: { label: string; placeholder: string; value: string; onChange: (value: string) => void };
 }) {
   const [open, setOpen] = useState(false);
   const btn = useRef<HTMLElement>(null);
-  const close = useCallback(() => setOpen(false), []);
+  const shut = () => {
+    setOpen(false);
+    search?.onChange('');
+  };
+  const close = useCallback(() => {
+    setOpen(false);
+    search?.onChange('');
+  }, [search]);
   const list = items.filter(isItem);
   const onKey = (e: KeyboardEvent) => {
     const els = Array.from(
@@ -141,19 +154,25 @@ export function Menu({
       ),
     );
     const i = els.findIndex(el => el === document.activeElement);
+    const inField = e.target instanceof HTMLInputElement;
+    if (inField && e.key === 'Enter') {
+      // Enter in the search field moves into the list; a second Enter chooses the item, as usual.
+      e.preventDefault();
+      els[0]?.focus();
+    }
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       els[(i + 1) % els.length]?.focus();
     }
     if (e.key === 'ArrowUp') {
       e.preventDefault();
-      els[(i - 1 + els.length) % els.length]?.focus();
+      els[i < 0 ? els.length - 1 : (i - 1 + els.length) % els.length]?.focus();
     }
-    if (e.key === 'Home') {
+    if (!inField && e.key === 'Home') {
       e.preventDefault();
       els[0]?.focus();
     }
-    if (e.key === 'End') {
+    if (!inField && e.key === 'End') {
       e.preventDefault();
       els[els.length - 1]?.focus();
     }
@@ -169,7 +188,7 @@ export function Menu({
         aria-label={label}
         aria-haspopup="menu"
         aria-expanded={open}
-        onPress={() => setOpen(o => !o)}
+        onPress={() => (open ? shut() : setOpen(true))}
         onKeyDown={e => {
           if (e.key === 'ArrowDown' && !open) {
             e.preventDefault();
@@ -182,12 +201,28 @@ export function Menu({
       {open && (
         <Popover anchor={btn.current} onClose={close} align={align} label={label} className="menu">
           <div
-            className="buxa:grid"
+            className={
+              search ? 'buxa:grid buxa:max-h-[calc(min(70vh,480px)_-_2*var(--s1))] buxa:overflow-y-auto' : 'buxa:grid'
+            }
             role="menu"
             aria-label={label}
             onKeyDown={onKey}
             onClick={e => e.stopPropagation()}
           >
+            {search && (
+              <div className="buxa:sticky buxa:top-0 buxa:z-[1] buxa:bg-[var(--material)] buxa:px-[var(--s1)] buxa:pt-[var(--s1)] buxa:pb-[var(--s2)]">
+                <input
+                  type="search"
+                  aria-label={search.label}
+                  placeholder={search.placeholder}
+                  value={search.value}
+                  autoFocus
+                  autoComplete="off"
+                  onChange={e => search.onChange(e.target.value)}
+                  className="buxa:box-border buxa:w-full buxa:h-[28px] buxa:px-[var(--s3)] buxa:rounded-[var(--r-1)] buxa:border buxa:border-[var(--line)] buxa:bg-transparent buxa:text-[var(--text)] buxa:[font:inherit] buxa:placeholder:text-[var(--muted)] buxa:focus-visible:outline-none buxa:focus-visible:border-[var(--accent)]"
+                />
+              </div>
+            )}
             {header && (
               <p
                 className="menu-head buxa:py-[var(--s2)] buxa:px-[var(--s3)] buxa:font-semibold buxa:text-[var(--text)] buxa:whitespace-nowrap buxa:overflow-hidden buxa:text-ellipsis buxa:max-w-[240px]"
@@ -219,7 +254,7 @@ export function Menu({
               }
               const content = (
                 <>
-                  {it.icon ? <Icon name={it.icon} size={15} /> : <span style={{ width: 15 }} />}
+                  {it.icon && <Icon name={it.icon} size={15} />}
                   <span>{it.label}</span>
                   {it.checked && <Icon name="check" size={14} className={`menu-check ${CHECK}`} />}
                 </>

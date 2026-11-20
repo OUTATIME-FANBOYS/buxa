@@ -46,7 +46,7 @@ export function SubtaskList({ task, ro }: { task: Task; ro: boolean }) {
       </ul>
       {!ro && (
         <form
-          className="inline-form buxa:flex buxa:gap-[var(--s2)]"
+          className="inline-form buxa:flex buxa:items-center buxa:gap-[var(--s2)]"
           onSubmit={e => {
             e.preventDefault();
             const t = sub.trim();

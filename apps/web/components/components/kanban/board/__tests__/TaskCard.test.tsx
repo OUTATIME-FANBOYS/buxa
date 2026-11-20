@@ -22,7 +22,6 @@ const task: Task = {
   title: 'Send welcome email',
   priority: 'high',
   assigneeId: seed.users[0].id,
-  tags: ['family'],
   subtasks: [
     { id: 's1', title: 'a', done: true },
     { id: 's2', title: 'b', done: false },
@@ -48,12 +47,11 @@ describe('TaskCard', () => {
     );
     expect(html).toContain('<h3>Send welcome email</h3>');
   });
-  it('shows the subtask progress and the tag', () => {
+  it('shows the subtask progress', () => {
     const html = renderToStaticMarkup(
       <TaskCard task={task} project={project} readOnly={false} dragging={false} onGrab={() => undefined} />,
     );
     expect(html).toContain('1/2');
-    expect(html).toContain('>family</span>');
   });
   it('marks a dragged card and an archived one', () => {
     const html = renderToStaticMarkup(
