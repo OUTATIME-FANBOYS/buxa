@@ -93,14 +93,14 @@
   backdrop-filter: blur(12px) saturate(160%);
 }
 .button--glass {
-  --button-bg: var(--hue-grey-soft);
-  --button-bg-hover: color-mix(in srgb, var(--hue-grey) 26%, transparent);
-  --button-fg: var(--hue-grey-ink);
+  --button-bg: var(--glass-fill);
+  --button-bg-hover: var(--glass-fill-hover);
+  --button-fg: var(--glass-ink);
 }
 .button--glass-danger {
-  --button-bg: var(--hue-red-soft);
-  --button-bg-hover: color-mix(in srgb, var(--hue-red) 26%, transparent);
-  --button-fg: var(--hue-red-ink);
+  --button-bg: var(--glass-fill-danger);
+  --button-bg-hover: var(--glass-fill-danger-hover);
+  --button-fg: var(--glass-ink-danger);
 }
 
 /* Hover: only where the pointer hovers, so a tap on a phone does not leave a stuck colour. */
