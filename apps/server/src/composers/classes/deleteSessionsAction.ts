@@ -4,12 +4,17 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { isUuid } from '@buxa/domain';
 import { ROUTES } from '@buxa/shared/config/routes';
-import { fieldAll, type DeletedSession, type RefusedSession, type SessionDeletion } from '@buxa/shared';
+import {
+  fieldAll,
+  MAX_SESSION_DELETES,
+  type DeletedSession,
+  type RefusedSession,
+  type SessionDeletion,
+} from '@buxa/shared';
 import { getRuntime } from '../../runtime';
 import { currentActor } from '../people/camp';
 import { expectedFailure, NO_CAMP } from '../people/failures';
 
-export const MAX_SESSION_DELETES = 100;
 const SELECTION_INVALID = `Choose up to ${MAX_SESSION_DELETES} sessions to delete.`;
 const NAME_FALLBACK = 'A session';
 

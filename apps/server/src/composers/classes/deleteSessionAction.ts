@@ -4,13 +4,12 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { isUuid } from '@buxa/domain';
 import { ROUTES } from '@buxa/shared/config/routes';
-import { failure, field, type ActionState } from '@buxa/shared';
+import { DELETED_NAME_LIMIT, failure, field, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../runtime';
 import { currentActor } from '../people/camp';
 import { expectedFailure, NO_CAMP } from '../people/failures';
 
 /** The longest session name carried in the `deleted` query parameter of the sessions list. */
-export const DELETED_NAME_LIMIT = 120;
 
 /**
  * Delete a session that holds no classes, then go to the sessions list with `?deleted=<name>` so the list can show a toast. A session

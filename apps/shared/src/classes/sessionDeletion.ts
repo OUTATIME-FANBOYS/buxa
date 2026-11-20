@@ -55,3 +55,9 @@ export function deletedSessionName(value: unknown): string | null {
 
   return name === '' ? null : name;
 }
+
+/** The most sessions one bulk delete takes. Kept here, not in the server action file, because 'use server' files export only actions. */
+export const MAX_SESSION_DELETES = 100;
+
+/** The longest session name carried in the `deleted` query parameter of the sessions list. */
+export const DELETED_NAME_LIMIT = 120;
