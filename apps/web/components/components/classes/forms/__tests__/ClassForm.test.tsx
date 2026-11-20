@@ -1,7 +1,10 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
+
+// The form shows and converts times in the browser's zone. Tests run in Sydney so the saved instants read as the times below.
+process.env.TZ = 'Australia/Sydney';
 import type { Class } from '@buxa/contracts';
-import { campInputValue, ClassForm } from '@/components/components/classes/forms';
+import { ClassForm } from '@/components/components/classes/forms';
 
 vi.mock('@/actions/classes', () => ({ addClassAction: vi.fn(), updateClassAction: vi.fn() }));
 
@@ -28,7 +31,7 @@ const cls: Class = {
 
 const render = (props: Partial<Parameters<typeof ClassForm>[0]> = {}) =>
   renderToStaticMarkup(
-    <ClassForm sessionId={SESSION} sessionName="Summer camp" timeZone="Australia/Sydney" instructors={[]} {...props} />,
+    <ClassForm sessionId={SESSION} sessionName="Summer camp" instructors={[]} {...props} />,
   );
 
 describe('ClassForm: the fields of a class', () => {
@@ -124,13 +127,6 @@ describe('ClassForm: adding and editing', () => {
     expect(html).not.toContain('Class name *');
     expect(html).toContain('field-required');
     expect(html).toContain('aria-required="true"');
-  });
-});
-
-describe('campInputValue', () => {
-  it('reads an instant as the camp clock, the format the server parses', () => {
-    expect(campInputValue('2027-07-04T23:00:00.000Z', 'Australia/Sydney')).toBe('2027-07-05T09:00');
-    expect(campInputValue('2027-07-05T02:00:00.000Z', 'Australia/Sydney')).toBe('2027-07-05T12:00');
   });
 });
 

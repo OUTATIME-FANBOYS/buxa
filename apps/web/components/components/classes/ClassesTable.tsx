@@ -94,7 +94,6 @@ export function ClassesTable({
                       <EditClassButton
                         cls={cls}
                         sessionName={sessionName}
-                        timeZone={timeZone}
                         instructors={instructors}
                         detailsOnly={!canManage}
                       />

@@ -14,13 +14,11 @@ import { ClassForm, type InstructorChoice } from './ClassForm';
 export function EditClassButton({
   cls,
   sessionName,
-  timeZone,
   instructors,
   detailsOnly = false,
 }: {
   cls: Class;
   sessionName: string;
-  timeZone: string;
   instructors: readonly InstructorChoice[];
   /** A teacher's edit: the form shows the name only. */
   detailsOnly?: boolean;
@@ -62,7 +60,6 @@ export function EditClassButton({
           <ClassForm
             sessionId={cls.sessionId}
             sessionName={sessionName}
-            timeZone={timeZone}
             instructors={instructors}
             cls={cls}
             variant="dialog"

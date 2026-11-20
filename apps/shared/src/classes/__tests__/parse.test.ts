@@ -18,8 +18,8 @@ const VALID_CLASS = {
   minAge: '8',
   maxAge: '12',
   capacity: '12',
-  startsAt: '2027-07-05T09:00',
-  endsAt: '2027-07-05T12:00',
+  startsAt: '2027-07-04T23:00:00.000Z',
+  endsAt: '2027-07-05T02:00:00.000Z',
   location: 'Lab 1',
 };
 
@@ -41,7 +41,7 @@ describe('numberField', () => {
 
 describe('classForm', () => {
   it('builds the contract input: its own name, ages, camp size, time range (camp clock) and location', () => {
-    const parsed = classForm(formOf(VALID_CLASS), 'Australia/Sydney');
+    const parsed = classForm(formOf(VALID_CLASS));
     expect(parsed).toMatchObject({
       ok: true,
       data: {
@@ -57,7 +57,7 @@ describe('classForm', () => {
   });
 
   it('names each required field that is blank', () => {
-    const parsed = classForm(formOf({ ...VALID_CLASS, minAge: '', maxAge: '', capacity: '' }), 'Australia/Sydney');
+    const parsed = classForm(formOf({ ...VALID_CLASS, minAge: '', maxAge: '', capacity: '' }));
     expect(parsed).toMatchObject({
       ok: false,
       state: {
@@ -73,7 +73,7 @@ describe('classForm', () => {
 
   it('shows the camp size limit with the contract message, on the camp size field', () => {
     for (const capacity of ['2', '31']) {
-      expect(classForm(formOf({ ...VALID_CLASS, capacity }), 'Australia/Sydney')).toMatchObject({
+      expect(classForm(formOf({ ...VALID_CLASS, capacity }))).toMatchObject({
         ok: false,
         state: {
           fieldErrors: { capacity: 'Camp Size must be a whole number from 3 to 30.' },
@@ -83,28 +83,29 @@ describe('classForm', () => {
   });
 
   it('shows the reversed age range on the oldest-age field, with the contract message', () => {
-    const parsed = classForm(formOf({ ...VALID_CLASS, minAge: '14', maxAge: '6' }), 'Australia/Sydney');
+    const parsed = classForm(formOf({ ...VALID_CLASS, minAge: '14', maxAge: '6' }));
     expect(parsed).toMatchObject({
       ok: false,
       state: { fieldErrors: { maxAge: 'The youngest age cannot be above the oldest.' } },
     });
   });
 
-  it('refuses a time with an offset, and a time that does not exist, against its own field', () => {
-    const offset = classForm(formOf({ ...VALID_CLASS, startsAt: '2027-07-05T09:00+10:00' }), 'Australia/Sydney');
-    expect(offset).toMatchObject({
+  it('refuses a local time that is not an instant, and a blank time, against its own field', () => {
+    // The browser converts the time it shows; a bare local time reaching the server means it could not be converted.
+    const local = classForm(formOf({ ...VALID_CLASS, startsAt: '2027-07-05T09:00' }));
+    expect(local).toMatchObject({
       ok: false,
-      state: { fieldErrors: { startsAt: "Leave off the time zone. Times are in the camp's time zone." } },
+      state: { fieldErrors: { startsAt: 'That date or time does not exist. Choose another.' } },
     });
-    const missing = classForm(formOf({ ...VALID_CLASS, endsAt: '2027-02-30T10:00' }), 'Australia/Sydney');
-    expect(missing).toMatchObject({
+    const blank = classForm(formOf({ ...VALID_CLASS, endsAt: '' }));
+    expect(blank).toMatchObject({
       ok: false,
-      state: { fieldErrors: { endsAt: 'That date or time does not exist.' } },
+      state: { fieldErrors: { endsAt: 'Enter a date and time.' } },
     });
   });
 
   it('refuses a missing class name with the contract message', () => {
-    const parsed = classForm(formOf({ ...VALID_CLASS, name: '   ' }), 'Australia/Sydney');
+    const parsed = classForm(formOf({ ...VALID_CLASS, name: '   ' }));
     expect(parsed).toMatchObject({ ok: false, state: { fieldErrors: { name: 'Give the name.' } } });
   });
 });

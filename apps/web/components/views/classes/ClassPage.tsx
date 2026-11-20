@@ -100,7 +100,6 @@ export async function ClassPage({
               <NewClassButton
                 sessionId={session.id}
                 sessionName={session.name}
-                timeZone={timeZone}
                 instructors={instructorChoices}
               />
             </>
@@ -140,7 +139,6 @@ export async function ClassPage({
                 <NewClassButton
                   sessionId={session.id}
                   sessionName={session.name}
-                  timeZone={timeZone}
                   instructors={instructorChoices}
                 />
               )

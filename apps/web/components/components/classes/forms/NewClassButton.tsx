@@ -14,12 +14,10 @@ const FORM_ID = 'new-class-form';
 export function NewClassButton({
   sessionId,
   sessionName,
-  timeZone,
   instructors,
 }: {
   sessionId: string;
   sessionName: string;
-  timeZone: string;
   instructors: readonly InstructorChoice[];
 }) {
   const [open, setOpen] = useState(false);
@@ -57,7 +55,6 @@ export function NewClassButton({
           <ClassForm
             sessionId={sessionId}
             sessionName={sessionName}
-            timeZone={timeZone}
             instructors={instructors}
             variant="dialog"
             formId={FORM_ID}

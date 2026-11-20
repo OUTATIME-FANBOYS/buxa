@@ -19,7 +19,6 @@ describe('the New session and New class buttons', () => {
       <NewClassButton
         sessionId="11111111-1111-4111-8111-111111111111"
         sessionName="Summer camp"
-        timeZone="Australia/Sydney"
         instructors={[]}
       />,
     );

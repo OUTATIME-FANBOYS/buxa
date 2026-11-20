@@ -1,10 +1,10 @@
 'use client';
 
-import { useActionState, useEffect, useRef } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/elements';
 import { DateTimeField, NumberField, TextField } from '@/components/atoms';
 import { sessionPath } from '@/config/routes';
-import { fieldError, idle } from '@buxa/shared';
+import { fieldError, idle, instantToLocalInput, localInputToInstant } from '@buxa/shared';
 import { MAX_CAMP_SIZE, MAX_CLASS_AGE, MIN_CAMP_SIZE, MIN_CLASS_AGE } from '@buxa/domain';
 import { addClassAction, updateClassAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
@@ -16,23 +16,25 @@ export interface InstructorChoice {
   name: string;
 }
 
-/**
- * The time of an instant, typed as the camp's clock reads it (YYYY-MM-DDTHH:MM), so the field starts with the saved value.
- * The server reads the field in the camp's zone, so the round trip keeps the same time.
- */
-export function campInputValue(iso: string, timeZone: string): string {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-  }).formatToParts(new Date(iso));
-  const get = (type: string) => parts.find(p => p.type === type)?.value ?? '';
+/** The zone the browser types in, read after mount so the server and the first client render agree. */
+function useBrowserZone(): string | null {
+  const [zone, setZone] = useState<string | null>(null);
+  useEffect(() => {
+    setZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  }, []);
 
-  return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}`;
+  return zone;
+}
+
+/** The times the form posts: each local time it shows becomes the instant it names. A time the clocks skipped is posted as typed,
+ * so the server refuses it with a message rather than saving a different time. */
+function postInstants(data: FormData): void {
+  for (const name of ['startsAt', 'endsAt']) {
+    const local = data.get(name);
+    if (typeof local === 'string' && local !== '') {
+      data.set(name, localInputToInstant(local) ?? local);
+    }
+  }
 }
 
 /**
@@ -45,7 +47,6 @@ export function campInputValue(iso: string, timeZone: string): string {
 export function ClassForm({
   sessionId,
   sessionName,
-  timeZone,
   instructors,
   cls,
   variant = 'page',
@@ -56,7 +57,6 @@ export function ClassForm({
 }: {
   sessionId: string;
   sessionName: string;
-  timeZone: string;
   instructors: readonly InstructorChoice[];
   cls?: Class;
   variant?: 'page' | 'dialog';
@@ -69,6 +69,12 @@ export function ClassForm({
 }) {
   const editing = cls !== undefined;
   const [state, formAction, pending] = useActionState(editing ? updateClassAction : addClassAction, idle);
+  const zone = useBrowserZone();
+  // The form posts the instants: the local times it shows are converted in the browser before the action runs.
+  const submit = (data: FormData) => {
+    postInstants(data);
+    formAction(data);
+  };
   const formRef = useRef<HTMLFormElement>(null);
   const inDialog = variant === 'dialog';
 
@@ -91,7 +97,7 @@ export function ClassForm({
     <form
       id={formId}
       ref={formRef}
-      action={formAction}
+      action={submit}
       noValidate
       className={`${inDialog ? '' : 'panel '}class-form class-form-time`}
       aria-describedby="class-form-help"
@@ -105,8 +111,8 @@ export function ClassForm({
         </p>
       ) : (
         <p id="class-form-help" className="class-helper">
-          Times are in the camp&apos;s time zone ({timeZone}). The class must fall on days inside {sessionName}. Fields
-          marked with an asterisk are required.
+          {zone ? `Times are in your time zone (${zone}).` : 'Times are in your time zone.'} The class must fall on days
+          inside {sessionName}. Fields marked with an asterisk are required.
         </p>
       )}
       <TextField
@@ -157,14 +163,14 @@ export function ClassForm({
               label="Starts"
               isRequired
               name="startsAt"
-              defaultValue={cls ? campInputValue(cls.startsAt, timeZone) : null}
+              defaultValue={cls ? instantToLocalInput(cls.startsAt) : null}
               error={err('startsAt')}
             />
             <DateTimeField
               label="Ends"
               isRequired
               name="endsAt"
-              defaultValue={cls ? campInputValue(cls.endsAt, timeZone) : null}
+              defaultValue={cls ? instantToLocalInput(cls.endsAt) : null}
               error={err('endsAt')}
             />
           </div>

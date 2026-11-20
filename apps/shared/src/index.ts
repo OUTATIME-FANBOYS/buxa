@@ -76,6 +76,7 @@ export * from './tones';
 export { displayName as attendanceDisplayName } from './name';
 export * from './classes/copy';
 export * from './classes/importState';
+export * from './classes/localTime';
 export * from './classes/parse';
 export * from './registration/copy';
 export * from './registration/parse';
