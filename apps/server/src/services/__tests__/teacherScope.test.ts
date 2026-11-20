@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import type { Actor } from '@buxa/domain';
 import { createClassService } from '../../classes/ClassService';
 import type { InMemoryClassRepository } from '../../classes/InMemoryClassRepository';
 import { painting, robotics, JULY_SESSION } from '../../classes/__tests__/fixtures';
 import { createCamp, thrown, type Camp } from './support';
+
+// A teacher checks campers in only with the per-person option an admin turns on (MEMBER_OPTIONS). These tests are about what a
+// teacher may see once it can check in, so the option is on here; without it check-in is refused (teacherScope.test.ts).
+const withCheckIn = (actor: Actor): Actor => ({ ...actor, options: ['teacher.check_in_out'] });
 
 /*
  * The assigned-classes scope, enforced in the services (not only hidden in the UI). Camp: Kim and Lia are in Robotics (assigned
@@ -16,7 +21,7 @@ const PAINTING_TIMES = { startsAt: '2027-07-10T13:00:00Z', endsAt: '2027-07-10T1
 async function build() {
   const camp: Camp = await createCamp('UTC', '2027-07-10T09:00:00Z');
   const admin = camp.actor('admin');
-  const teacher = camp.actor('teacher');
+  const teacher = withCheckIn(camp.actor('teacher'));
   const staff = camp.actor('staff');
   const viewer = camp.actor('viewer');
   const classes = createClassService({ repo: camp.repos.classes, timezoneOf: () => Promise.resolve('UTC') });
@@ -77,6 +82,14 @@ async function build() {
 }
 
 describe('teacher: attendance is limited to its classes', () => {
+  it('without the check-in option a teacher is refused check-in, even in its own class', async () => {
+    const { camp, kim } = await build();
+    const plain = camp.actor('teacher');
+    expect(
+      (await thrown(() => camp.attendance.checkIn(plain, { personId: kim.id, method: 'manual' }))).statusCode,
+    ).toBe(403);
+  });
+
   it('checks in and out its own campers', async () => {
     const { camp, teacher, kim } = await build();
     expect((await camp.attendance.checkIn(teacher, { personId: kim.id, method: 'manual' })).ok).toBe(true);

@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { navGroupsFor } from '../navItems';
 
 describe('teacher sidebar', () => {
-  it('shows only Home, Sessions, Check-in and On site', () => {
+  it('shows only Home, Sessions and On site (check-in is off by default)', () => {
     const groups = navGroupsFor('teacher');
     const labels = groups.flatMap(g => g.items.map(i => i.label));
-    expect(labels).toEqual(['Home', 'Sessions', 'Check-in', 'On site']);
+    expect(labels).toEqual(['Home', 'Sessions', 'On site']);
     expect(groups.map(g => g.label)).toEqual(['', 'Operations']);
   });
 

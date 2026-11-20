@@ -15,11 +15,14 @@ export function EditClassButton({
   sessionName,
   timeZone,
   instructors,
+  detailsOnly = false,
 }: {
   cls: Class;
   sessionName: string;
   timeZone: string;
   instructors: readonly InstructorChoice[];
+  /** A teacher's edit: the form shows the name only. */
+  detailsOnly?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
@@ -46,6 +49,7 @@ export function EditClassButton({
             instructors={instructors}
             cls={cls}
             variant="dialog"
+            detailsOnly={detailsOnly}
             onCancel={close}
             onSaved={close}
           />

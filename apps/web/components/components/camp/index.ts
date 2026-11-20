@@ -3,6 +3,7 @@ export * from './ArchivedBanner';
 export * from './CampSwitcher';
 export * from './MembersTable';
 export * from './NewCampForm';
+export * from './PermissionAreasTable';
 export * from './RenameCampButton';
 export * from './RenameCampDialog';
 export * from './Shell';

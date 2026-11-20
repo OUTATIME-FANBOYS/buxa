@@ -1,4 +1,5 @@
 export * from './permissions';
+export * from './permissionCategories';
 export * from './ids';
 export * from './slug';
 export * from './audit';

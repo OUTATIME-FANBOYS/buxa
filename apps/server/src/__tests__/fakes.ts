@@ -10,7 +10,7 @@ import type {
   OrgSummary,
   User,
 } from '@buxa/contracts';
-import { DEFAULT_CLOCK_FORMAT, type Actor, type Role } from '@buxa/domain';
+import { DEFAULT_CLOCK_FORMAT, MEMBER_OPTIONS, type Actor, type MemberOption, type Role } from '@buxa/domain';
 import type { Identity } from '../auth/identity';
 import { InMemoryAttendanceRepository } from '../attendance/InMemoryAttendanceRepository';
 import { conflict } from '../http/errors';
@@ -135,6 +135,33 @@ export class InMemoryStore implements UserRepository, OrgRepository {
     this.database.record(actor, 'member.rename', 'user', userId, { name });
 
     return { id: user.id, email: user.email, name: user.name };
+  }
+  /** Options that are on, as `${orgId}:${userId}:${option}`. */
+  readonly memberOptions = new Set<string>();
+  async memberOptionsOf(orgId: string, userId: string): Promise<MemberOption[]> {
+    return MEMBER_OPTIONS.filter(o => this.memberOptions.has(`${orgId}:${userId}:${o}`));
+  }
+  async memberOptionsIn(orgId: string): Promise<{ userId: string; option: MemberOption }[]> {
+    return [...this.memberOptions]
+      .filter(k => k.startsWith(`${orgId}:`))
+      .map(k => {
+        const [, userId, option] = k.split(':');
+
+        return { userId, option: option as MemberOption };
+      });
+  }
+  async setMemberOption(actor: Actor, userId: string, option: MemberOption, enabled: boolean): Promise<void> {
+    const role = this.members.find(m => m.orgId === actor.orgId && m.userId === userId)?.role;
+    if (role !== 'teacher') {
+      throw new Error('Teacher not found');
+    }
+    const key = `${actor.orgId}:${userId}:${option}`;
+    if (enabled) {
+      this.memberOptions.add(key);
+    } else {
+      this.memberOptions.delete(key);
+    }
+    this.database.record(actor, 'member.option_set', 'user', userId, { option, enabled });
   }
   async membershipsOf(userId: string): Promise<Membership[]> {
     return this.members

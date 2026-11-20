@@ -16,6 +16,7 @@ export * from './camp/failures';
 export * from './camp/loadCamp';
 export * from './camp/renameCampAction';
 export * from './camp/selectCampAction';
+export * from './members/loadTeacherOptions';
 export * from './people/addMembershipAction';
 export * from './people/archivePersonAction';
 export * from './people/camp';

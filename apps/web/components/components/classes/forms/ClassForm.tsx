@@ -48,6 +48,7 @@ export function ClassForm({
   instructors,
   cls,
   variant = 'page',
+  detailsOnly = false,
   onCancel,
   onSaved,
 }: {
@@ -57,6 +58,8 @@ export function ClassForm({
   instructors: readonly InstructorChoice[];
   cls?: Class;
   variant?: 'page' | 'dialog';
+  /** A teacher's edit: only the name is shown. The server keeps every other field as it is saved. */
+  detailsOnly?: boolean;
   onCancel?: () => void;
   onSaved?: () => void;
 }) {
@@ -85,10 +88,17 @@ export function ClassForm({
     >
       {editing && <input type="hidden" name="classId" value={cls.id} />}
       <input type="hidden" name="sessionId" value={sessionId} />
-      <p id="class-form-help" className="class-helper">
-        Times are in the camp&apos;s time zone ({timeZone}). The class must fall on days inside {sessionName}. Fields
-        marked with an asterisk are required.
-      </p>
+      {detailsOnly ? (
+        <p id="class-form-help" className="class-helper">
+          You can change the name of this class. Its times, ages, camp size, location and instructors are set by the
+          camp.
+        </p>
+      ) : (
+        <p id="class-form-help" className="class-helper">
+          Times are in the camp&apos;s time zone ({timeZone}). The class must fall on days inside {sessionName}. Fields
+          marked with an asterisk are required.
+        </p>
+      )}
       <TextField
         label="Class name *"
         name="name"
@@ -98,58 +108,62 @@ export function ClassForm({
         autoComplete="off"
         autoFocus={!inDialog}
       />
-      {/* The three fields share one row and start on the same line (items-start), so their labels and inputs align. */}
-      <div className="form-row buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-start buxa:[&>.field]:flex-[1_1_120px] buxa:[&>.field]:min-w-0">
-        <NumberField
-          label="Youngest age *"
-          name="minAge"
-          minValue={MIN_CLASS_AGE}
-          maxValue={MAX_CLASS_AGE}
-          defaultValue={cls?.ageRange.minAge}
-          error={err('minAge')}
-        />
-        <NumberField
-          label="Oldest age *"
-          name="maxAge"
-          minValue={MIN_CLASS_AGE}
-          maxValue={MAX_CLASS_AGE}
-          defaultValue={cls?.ageRange.maxAge}
-          error={err('maxAge')}
-        />
-        <NumberField
-          label="Camp Size *"
-          name="capacity"
-          minValue={MIN_CAMP_SIZE}
-          maxValue={MAX_CAMP_SIZE}
-          defaultValue={cls?.capacity}
-          error={err('capacity')}
-        />
-      </div>
-      <div className="form-row buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-end buxa:[&>.field]:flex-[1_1_200px] buxa:[&>.field]:min-w-0">
-        <DateTimeField
-          label="Starts *"
-          name="startsAt"
-          isRequired
-          defaultValue={cls ? campInputValue(cls.startsAt, timeZone) : null}
-          error={err('startsAt')}
-        />
-        <DateTimeField
-          label="Ends *"
-          name="endsAt"
-          isRequired
-          defaultValue={cls ? campInputValue(cls.endsAt, timeZone) : null}
-          error={err('endsAt')}
-        />
-      </div>
-      <TextField
-        label="Location *"
-        name="location"
-        defaultValue={cls?.location ?? ''}
-        error={err('location')}
-        maxLength={200}
-        autoComplete="off"
-      />
-      <InstructorPicker instructors={instructors} defaultIds={cls?.instructorIds ?? []} />
+      {!detailsOnly && (
+        <>
+          {/* The three fields share one row and start on the same line (items-start), so their labels and inputs align. */}
+          <div className="form-row buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-start buxa:[&>.field]:flex-[1_1_120px] buxa:[&>.field]:min-w-0">
+            <NumberField
+              label="Youngest age *"
+              name="minAge"
+              minValue={MIN_CLASS_AGE}
+              maxValue={MAX_CLASS_AGE}
+              defaultValue={cls?.ageRange.minAge}
+              error={err('minAge')}
+            />
+            <NumberField
+              label="Oldest age *"
+              name="maxAge"
+              minValue={MIN_CLASS_AGE}
+              maxValue={MAX_CLASS_AGE}
+              defaultValue={cls?.ageRange.maxAge}
+              error={err('maxAge')}
+            />
+            <NumberField
+              label="Camp Size *"
+              name="capacity"
+              minValue={MIN_CAMP_SIZE}
+              maxValue={MAX_CAMP_SIZE}
+              defaultValue={cls?.capacity}
+              error={err('capacity')}
+            />
+          </div>
+          <div className="form-row buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-end buxa:[&>.field]:flex-[1_1_200px] buxa:[&>.field]:min-w-0">
+            <DateTimeField
+              label="Starts *"
+              name="startsAt"
+              isRequired
+              defaultValue={cls ? campInputValue(cls.startsAt, timeZone) : null}
+              error={err('startsAt')}
+            />
+            <DateTimeField
+              label="Ends *"
+              name="endsAt"
+              isRequired
+              defaultValue={cls ? campInputValue(cls.endsAt, timeZone) : null}
+              error={err('endsAt')}
+            />
+          </div>
+          <TextField
+            label="Location *"
+            name="location"
+            defaultValue={cls?.location ?? ''}
+            error={err('location')}
+            maxLength={200}
+            autoComplete="off"
+          />
+          <InstructorPicker instructors={instructors} defaultIds={cls?.instructorIds ?? []} />
+        </>
+      )}
       <ActionMessage state={state} />
       <div className="classes-actions">
         {inDialog ? (

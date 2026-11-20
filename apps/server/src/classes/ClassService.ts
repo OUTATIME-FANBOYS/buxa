@@ -1,4 +1,12 @@
-import { classWithinSession, expandClassRule, findClash, formatClash, type Actor } from '@buxa/domain';
+import {
+  can,
+  classFieldsOutsideDetails,
+  classWithinSession,
+  expandClassRule,
+  findClash,
+  formatClash,
+  type Actor,
+} from '@buxa/domain';
 import type {
   CancelEnrolmentInput,
   Class,
@@ -13,7 +21,13 @@ import type {
 import { assertAllowed } from '../auth/authorize';
 import type { ClassRecord, ClassRepository, CampClassSpan } from './ClassRepository';
 import { teacherScopeOf, type TeacherScope } from './teacherScope';
-import { ClassNotFoundError, ClassOutsideSessionError, RecurrenceRefusedError, SessionNotFoundError } from './errors';
+import {
+  ClassNotFoundError,
+  ClassOutsideSessionError,
+  RecurrenceRefusedError,
+  SessionNotFoundError,
+  TeacherFieldRefusedError,
+} from './errors';
 import { createEnrolmentMethods } from './EnrolmentService';
 import { attempt, ok, type Outcome } from './outcome';
 
@@ -39,6 +53,10 @@ export interface ClassService {
   listClasses(actor: Actor, sessionId: string): Promise<Outcome<Class[]>>;
   getClass(actor: Actor, classId: string): Promise<Outcome<Class>>;
   addClass(actor: Actor, sessionId: string, input: ClassInput): Promise<Outcome<Class>>;
+  /**
+   * Saves a class. Staff and above (classes:manage) may change every field. A teacher (events:update_details, its own classes
+   * only) may change the name and description; a change to any other field is refused with teacher_field_refused.
+   */
   updateClass(actor: Actor, classId: string, input: ClassInput): Promise<Outcome<Class>>;
   deleteClass(actor: Actor, classId: string): Promise<Outcome<null>>;
   /** Replaces the class's teachers. Staff and admins (classes:manage). Each user must hold the teacher role in this camp. */
@@ -243,13 +261,27 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
     },
 
     async updateClass(actor, classId, input) {
-      assertAllowed(actor, 'classes:manage');
+      const scope = await teacherScopeOf(repo, actor);
+      const detailsOnly = !can(actor, 'classes:manage');
+      if (detailsOnly) {
+        assertAllowed(actor, 'events:update_details', {
+          assignedToClass: scope === null ? undefined : scope.classIds.has(classId),
+        });
+      } else {
+        assertAllowed(actor, 'classes:manage');
+      }
       const timeZone = await timezoneOf(actor.orgId);
 
       return attempt(async () => {
         const existing = await repo.getClass(actor.orgId, classId);
         if (!existing) {
           throw new ClassNotFoundError();
+        }
+        if (detailsOnly) {
+          const locked = classFieldsOutsideDetails(existing, input);
+          if (locked.length > 0) {
+            throw new TeacherFieldRefusedError(locked);
+          }
         }
         await requireWithinSession(repo, actor.orgId, existing.sessionId, input, timeZone);
 

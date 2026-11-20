@@ -23,9 +23,10 @@ describe('archived camps (read-only)', () => {
     }
   });
 
-  it('only the owner may unarchive or delete an archived camp; everyone else is refused by role', () => {
+  it('an admin or owner may unarchive; only the owner may delete an archived camp; everyone else is refused by role', () => {
     expect(can(archived('owner'), 'org:unarchive', { orgId: ORG })).toBe(true);
-    expect(authorize(archived('admin'), 'org:unarchive', { orgId: ORG })).toEqual({
+    expect(can(archived('admin'), 'org:unarchive', { orgId: ORG })).toBe(true);
+    expect(authorize(archived('staff'), 'org:unarchive', { orgId: ORG })).toEqual({
       allow: false,
       reason: 'role_not_allowed',
     });

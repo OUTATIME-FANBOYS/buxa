@@ -1,7 +1,7 @@
 import type { Pool } from 'pg';
 import type { ClockFormat, Membership, User } from '@buxa/contracts';
 import { isUniqueViolation, withOrg } from '@buxa/db';
-import type { Actor } from '@buxa/domain';
+import type { Actor, MemberOption } from '@buxa/domain';
 import { recordAudit } from '../audit/recordAudit';
 import type { Identity } from '../auth/identity';
 import { EmailInUseError, type UserRepository } from './UserRepository';
@@ -91,6 +91,46 @@ export class PgUserRepository implements UserRepository {
       await recordAudit(db, { actor, action: 'member.rename', entity: 'user', entityId: userId, data: { name } });
 
       return rows[0];
+    });
+  }
+
+  memberOptionsOf(orgId: string, userId: string): Promise<MemberOption[]> {
+    return withOrg(this.pool, orgId, async db => {
+      const { rows } = await db.query<{ option_key: MemberOption }>(
+        'SELECT option_key FROM member_options WHERE user_id = $1 AND enabled',
+        [userId],
+      );
+
+      return rows.map(r => r.option_key);
+    });
+  }
+
+  memberOptionsIn(orgId: string): Promise<{ userId: string; option: MemberOption }[]> {
+    return withOrg(this.pool, orgId, async db => {
+      const { rows } = await db.query<{ user_id: string; option_key: MemberOption }>(
+        'SELECT user_id, option_key FROM member_options WHERE enabled',
+      );
+
+      return rows.map(r => ({ userId: r.user_id, option: r.option_key }));
+    });
+  }
+
+  setMemberOption(actor: Actor, userId: string, option: MemberOption, enabled: boolean): Promise<void> {
+    return withOrg(this.pool, actor.orgId, async db => {
+      await db.query('SELECT buxa_set_member_option($1, $2, $3, $4, $5)', [
+        actor.orgId,
+        userId,
+        option,
+        enabled,
+        actor.userId,
+      ]);
+      await recordAudit(db, {
+        actor,
+        action: 'member.option_set',
+        entity: 'user',
+        entityId: userId,
+        data: { option, enabled },
+      });
     });
   }
 
