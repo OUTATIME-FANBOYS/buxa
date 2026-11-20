@@ -58,7 +58,7 @@ describe('InMemoryImportRepository: atomic confirm', () => {
       create(classId, 4, '2027-07-05T09:00:00.000Z', '2027-07-05T11:00:00.000Z'),
     ];
     await expect(repo.applyImport(actor, upload, writes)).rejects.toThrow('Injected failure on write 3');
-    expect(await repo.listCampSessions(ORG)).toEqual([]);
+    expect(await repo.listCampSessions(actor.userId, ORG)).toEqual([]);
     expect(repo.audit).toEqual([]);
   });
 
@@ -89,7 +89,7 @@ describe('InMemoryImportRepository: atomic confirm', () => {
         badUpdate,
       ]),
     ).rejects.toThrow();
-    expect(await repo.listCampSessions(ORG)).toEqual([existing]);
+    expect(await repo.listCampSessions(actor.userId, ORG)).toEqual([existing]);
     expect(repo.audit).toEqual([]);
   });
 
@@ -116,7 +116,7 @@ describe('InMemoryImportRepository: atomic confirm', () => {
     await repo.applyImport(actor, upload, [
       create(classId, 2, '2027-07-05T03:00:00.000Z', '2027-07-05T05:00:00.000Z', 'A'),
     ]);
-    const [session] = await repo.listCampSessions(ORG);
+    const [session] = await repo.listCampSessions(actor.userId, ORG);
     await repo.applyImport(actor, { ...upload, created: 0, updated: 1 }, [
       {
         ...create(classId, 2, '2027-07-05T06:00:00.000Z', '2027-07-05T08:00:00.000Z', 'A'),

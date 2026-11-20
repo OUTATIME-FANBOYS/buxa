@@ -42,14 +42,18 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
   const { attendance, classes, people, memberships, orgs, clock } = deps;
 
   /** Records for the filter's camp-local days, newest first. */
-  async function recordsFor(orgId: string, filter: AttendanceFilter, timeZone: string): Promise<CheckInRecord[]> {
+  async function recordsFor(
+    actor: Pick<Actor, 'userId' | 'orgId'>,
+    filter: AttendanceFilter,
+    timeZone: string,
+  ): Promise<CheckInRecord[]> {
     const query: AttendanceQuery = {
       ...localDaysWindow(filter.from, filter.to, timeZone),
       personId: filter.personId,
       onSiteOnly: filter.onSiteOnly,
     };
 
-    return attendance.log(orgId, query);
+    return attendance.log(actor.userId, actor.orgId, query);
   }
 
   /**
@@ -57,7 +61,7 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
    * people:read_contact (staff and above see it; a teacher does not).
    */
   async function entriesOf(actor: Actor, records: CheckInRecord[]): Promise<AttendanceEntry[]> {
-    const entries = await toEntries(deps, actor.orgId, records);
+    const entries = await toEntries(deps, actor, records);
 
     return can(actor, 'people:read_contact') ? entries : entries.map(e => ({ ...e, collectedByName: null }));
   }
@@ -71,7 +75,7 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       const scope = await teacherScopeOf(classes, actor);
       assertAllowed(actor, 'attendance:record', { assignedToClass: assignedTo(scope, input.personId) });
       const orgId = actor.orgId;
-      const person = await people.get(orgId, input.personId);
+      const person = await people.get(actor.userId, orgId, input.personId);
       if (!person) {
         throw notFound('Person not found');
       }
@@ -79,11 +83,11 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
         return { ok: false, reason: 'archived' };
       }
 
-      const timeZone = await campZone(orgs, orgId);
+      const timeZone = await campZone(orgs, actor);
       const now = clock();
       const [open, ms] = await Promise.all([
-        attendance.openFor(orgId, input.personId),
-        memberships.forPerson(orgId, input.personId),
+        attendance.openFor(actor.userId, orgId, input.personId),
+        memberships.forPerson(actor.userId, orgId, input.personId),
       ]);
       const decision = decideCheckIn({
         status: personAccess(ms, toLocalDate(now, timeZone)).status,
@@ -121,7 +125,7 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
         if (!isAlreadyCheckedIn(error)) {
           throw error;
         }
-        const current = await attendance.openFor(orgId, input.personId);
+        const current = await attendance.openFor(actor.userId, orgId, input.personId);
 
         return { ok: false, reason: 'already_on_site', since: current?.checkedInAt ?? at };
       }
@@ -131,23 +135,23 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       const scope = await teacherScopeOf(classes, actor);
       assertAllowed(actor, 'attendance:record', { assignedToClass: assignedTo(scope, input.personId) });
       const orgId = actor.orgId;
-      const person = await people.get(orgId, input.personId);
+      const person = await people.get(actor.userId, orgId, input.personId);
       if (!person) {
         throw notFound('Person not found');
       }
 
-      const timeZone = await campZone(orgs, orgId);
+      const timeZone = await campZone(orgs, actor);
       const now = clock();
       const minor = isMinor(person, toLocalDate(now, timeZone));
-      const open = await attendance.openFor(orgId, input.personId);
+      const open = await attendance.openFor(actor.userId, orgId, input.personId);
 
       let collectedBy: { personId: string; canPickup: boolean } | null = null;
       if (input.collectedByPersonId !== undefined) {
-        const collector = await people.get(orgId, input.collectedByPersonId);
+        const collector = await people.get(actor.userId, orgId, input.collectedByPersonId);
         if (!collector) {
           throw badRequest('Choose who is collecting from the list.');
         }
-        const authorised = await authorisedCollectors(people, orgId, input.personId);
+        const authorised = await authorisedCollectors(people, actor, input.personId);
         collectedBy = { personId: collector.id, canPickup: authorised.has(collector.id) };
       }
 
@@ -168,7 +172,7 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
         }
         // The guardians a child can be collected by are guardian names: only people:read_contact sees them.
         const guardians = can(actor, 'people:read_contact')
-          ? await pickupOptionsFor(people, orgId, input.personId)
+          ? await pickupOptionsFor(people, actor, input.personId)
           : [];
 
         return { ok: false, reason: decision.reason, canOverride: decision.canOverride, guardians };
@@ -197,19 +201,19 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       const scope = await teacherScopeOf(classes, actor);
       assertAllowed(actor, 'attendance:read', { assignedToClass: scope === null ? undefined : true });
       const orgId = actor.orgId;
-      const records = inScope(scope, await attendance.onSite(orgId));
+      const records = inScope(scope, await attendance.onSite(actor.userId, orgId));
       if (records.length === 0) {
         return [];
       }
 
-      const timeZone = await campZone(orgs, orgId);
+      const timeZone = await campZone(orgs, actor);
       const today = toLocalDate(clock(), timeZone);
       const ids = [...new Set(records.map(r => r.personId))];
       const [persons, groups, entries, onSite] = await Promise.all([
-        people.getMany(orgId, ids),
-        memberships.forPeople(orgId, ids),
+        people.getMany(actor.userId, orgId, ids),
+        memberships.forPeople(actor.userId, orgId, ids),
         entriesOf(actor, records),
-        onSiteByPerson(attendance, orgId),
+        onSiteByPerson(attendance, actor),
       ]);
       const byId = new Map(persons.map(p => [p.id, p] as const));
 
@@ -232,7 +236,7 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
             true,
           ),
           isMinor: minor,
-          pickupOptions: seeContact && minor === true ? await pickupOptionsFor(people, orgId, person.id) : [],
+          pickupOptions: seeContact && minor === true ? await pickupOptionsFor(people, actor, person.id) : [],
         });
       }
 
@@ -242,8 +246,7 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
     async log(actor, filter) {
       const scope = await teacherScopeOf(classes, actor);
       assertAllowed(actor, 'attendance:read', { assignedToClass: scope === null ? undefined : true });
-      const orgId = actor.orgId;
-      const records = inScope(scope, await recordsFor(orgId, filter, await campZone(orgs, orgId)));
+      const records = inScope(scope, await recordsFor(actor, filter, await campZone(orgs, actor)));
 
       return entriesOf(actor, records);
     },
@@ -252,18 +255,17 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       const scope = await teacherScopeOf(classes, actor);
       assertAllowed(actor, 'attendance:read', { assignedToClass: assignedTo(scope, personId) });
       const orgId = actor.orgId;
-      if (!(await people.get(orgId, personId))) {
+      if (!(await people.get(actor.userId, orgId, personId))) {
         throw notFound('Person not found');
       }
-      const records = await attendance.log(orgId, { from: EARLIEST, to: LATEST, personId });
+      const records = await attendance.log(actor.userId, orgId, { from: EARLIEST, to: LATEST, personId });
 
       return entriesOf(actor, records);
     },
 
     async exportCsv(actor, filter) {
       assertAllowed(actor, 'attendance:export');
-      const orgId = actor.orgId;
-      const records = await recordsFor(orgId, filter, await campZone(orgs, orgId));
+      const records = await recordsFor(actor, filter, await campZone(orgs, actor));
       if (records.length >= MAX_LOG_ROWS) {
         throw badRequest('That is too many visits to export at once. Choose a shorter date range.');
       }

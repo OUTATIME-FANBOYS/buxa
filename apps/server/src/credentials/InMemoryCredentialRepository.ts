@@ -57,7 +57,7 @@ export class InMemoryCredentialRepository implements CredentialRepository {
     });
   }
 
-  activeFor(orgId: string, personId: string): Promise<CredentialRecord | null> {
+  activeFor(userId: string, orgId: string, personId: string): Promise<CredentialRecord | null> {
     return settle(() => {
       const credential = this.activeOf(orgId, personId);
 
@@ -65,7 +65,7 @@ export class InMemoryCredentialRepository implements CredentialRepository {
     });
   }
 
-  resolve(orgId: string, tokenHash: Buffer): Promise<string | null> {
+  resolve(userId: string, orgId: string, tokenHash: Buffer): Promise<string | null> {
     return settle(() => {
       const match = [...this.db.credentials.values()].find(
         c => c.orgId === orgId && c.revokedAt === null && c.tokenHash.equals(tokenHash),
@@ -75,7 +75,7 @@ export class InMemoryCredentialRepository implements CredentialRepository {
     });
   }
 
-  withActive(orgId: string, personIds: readonly string[]): Promise<Set<string>> {
+  withActive(userId: string, orgId: string, personIds: readonly string[]): Promise<Set<string>> {
     return settle(() => {
       const active = new Set<string>();
       for (const personId of personIds) {

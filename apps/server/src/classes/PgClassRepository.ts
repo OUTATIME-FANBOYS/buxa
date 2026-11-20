@@ -43,16 +43,16 @@ import { toIso } from '../people/pgRows';
 export class PgClassRepository implements ClassRepository {
   constructor(private readonly pool: Pool) {}
 
-  listSessions(orgId: string): Promise<Session[]> {
-    return withOrg(this.pool, orgId, listSessionRows);
+  listSessions(userId: string, orgId: string): Promise<Session[]> {
+    return withOrg(this.pool, userId, orgId, listSessionRows);
   }
 
-  getSession(orgId: string, sessionId: string): Promise<Session | null> {
-    return withOrg(this.pool, orgId, db => getSession(db, sessionId));
+  getSession(userId: string, orgId: string, sessionId: string): Promise<Session | null> {
+    return withOrg(this.pool, userId, orgId, db => getSession(db, sessionId));
   }
 
   createSession(actor: Actor, input: NewSessionInput): Promise<Session> {
-    return withOrg(this.pool, actor.orgId, async db => {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       const id = await insertSession(db, actor, input);
 
       return requireSession(db, id);
@@ -60,7 +60,7 @@ export class PgClassRepository implements ClassRepository {
   }
 
   setSessionPrice(actor: Actor, sessionId: string, price: SessionPriceInput | null): Promise<Session> {
-    return withOrg(this.pool, actor.orgId, async db => {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       await setSessionPriceRow(db, actor, sessionId, price);
 
       return requireSession(db, sessionId);
@@ -68,7 +68,7 @@ export class PgClassRepository implements ClassRepository {
   }
 
   setSessionPublic(actor: Actor, sessionId: string, isPublic: boolean): Promise<Session> {
-    return withOrg(this.pool, actor.orgId, async db => {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       await setSessionPublicRow(db, actor, sessionId, isPublic);
 
       return requireSession(db, sessionId);
@@ -76,7 +76,7 @@ export class PgClassRepository implements ClassRepository {
   }
 
   addClasses(actor: Actor, sessionId: string, inputs: ClassRecord[]): Promise<Class[]> {
-    return withOrg(this.pool, actor.orgId, async db => {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       await requireSessionExists(db, sessionId);
       const written: Class[] = [];
       for (const input of inputs) {
@@ -87,8 +87,8 @@ export class PgClassRepository implements ClassRepository {
     });
   }
 
-  listCampClassSpans(orgId: string): Promise<CampClassSpan[]> {
-    return withOrg(this.pool, orgId, async db => {
+  listCampClassSpans(userId: string, orgId: string): Promise<CampClassSpan[]> {
+    return withOrg(this.pool, userId, orgId, async db => {
       const { rows } = await db.query<{ starts_at: Date; ends_at: Date; class_name: string }>(
         'SELECT s.starts_at, s.ends_at, s.name AS class_name FROM sessions s ORDER BY s.starts_at',
       );
@@ -97,20 +97,20 @@ export class PgClassRepository implements ClassRepository {
     });
   }
 
-  listClasses(orgId: string, sessionId: string): Promise<Class[]> {
-    return withOrg(this.pool, orgId, async db => {
+  listClasses(userId: string, orgId: string, sessionId: string): Promise<Class[]> {
+    return withOrg(this.pool, userId, orgId, async db => {
       await requireSessionExists(db, sessionId);
 
       return listClassRows(db, sessionId);
     });
   }
 
-  getClass(orgId: string, classId: string): Promise<Class | null> {
-    return withOrg(this.pool, orgId, db => getClass(db, classId));
+  getClass(userId: string, orgId: string, classId: string): Promise<Class | null> {
+    return withOrg(this.pool, userId, orgId, db => getClass(db, classId));
   }
 
   addClass(actor: Actor, sessionId: string, input: ClassRecord): Promise<Class> {
-    return withOrg(this.pool, actor.orgId, async db => {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       await requireSessionExists(db, sessionId);
       const id = await insertClass(db, actor, sessionId, input);
 
@@ -120,7 +120,7 @@ export class PgClassRepository implements ClassRepository {
 
   async updateClass(actor: Actor, classId: string, input: ClassRecord): Promise<Class> {
     try {
-      return await withOrg(this.pool, actor.orgId, async db => {
+      return await withOrg(this.pool, actor.userId, actor.orgId, async db => {
         await requireClassExists(db, classId);
         await updateClassRow(db, actor, classId, input);
 
@@ -133,7 +133,7 @@ export class PgClassRepository implements ClassRepository {
 
   async deleteClass(actor: Actor, classId: string): Promise<void> {
     try {
-      await withOrg(this.pool, actor.orgId, async db => {
+      await withOrg(this.pool, actor.userId, actor.orgId, async db => {
         const existing = await requireClass(db, classId);
         await deleteClassRow(db, actor, classId, existing.name);
       });
@@ -142,8 +142,8 @@ export class PgClassRepository implements ClassRepository {
     }
   }
 
-  listEnrolments(orgId: string, classId: string): Promise<Enrolment[]> {
-    return withOrg(this.pool, orgId, async db => {
+  listEnrolments(userId: string, orgId: string, classId: string): Promise<Enrolment[]> {
+    return withOrg(this.pool, userId, orgId, async db => {
       await requireClassExists(db, classId);
 
       return listEnrolmentRows(db, classId);
@@ -151,16 +151,16 @@ export class PgClassRepository implements ClassRepository {
   }
 
   enrol(actor: Actor, request: EnrolRequest, rule: EnrolmentRule): Promise<Enrolment> {
-    return withOrg(this.pool, actor.orgId, db => enrolInTransaction(db, actor, request, rule));
+    return withOrg(this.pool, actor.userId, actor.orgId, db => enrolInTransaction(db, actor, request, rule));
   }
 
   cancelEnrolment(actor: Actor, enrolmentId: string, note: string | null): Promise<Enrolment> {
-    return withOrg(this.pool, actor.orgId, db => cancelInTransaction(db, actor, enrolmentId, note));
+    return withOrg(this.pool, actor.userId, actor.orgId, db => cancelInTransaction(db, actor, enrolmentId, note));
   }
 
-  assignedClassIds(orgId: string, userId: string): Promise<string[]> {
-    return withOrg(this.pool, orgId, async db => {
-      if (!isUuid(userId)) {
+  assignedClassIds(userId: string, orgId: string, teacherId: string): Promise<string[]> {
+    return withOrg(this.pool, userId, orgId, async db => {
+      if (!isUuid(teacherId)) {
         return [];
       }
       // The join checks the role now, so a person who stopped being a teacher has no classes even before the trigger clears them.
@@ -169,15 +169,15 @@ export class PgClassRepository implements ClassRepository {
            FROM class_teachers ct
            JOIN org_members m ON m.org_id = ct.org_id AND m.user_id = ct.user_id
           WHERE ct.user_id = $1 AND m.role = 'teacher'`,
-        [userId],
+        [teacherId],
       );
 
       return rows.map(r => r.session_id);
     });
   }
 
-  teacherAssignments(orgId: string, sessionId: string): Promise<TeacherAssignment[]> {
-    return withOrg(this.pool, orgId, async db => {
+  teacherAssignments(userId: string, orgId: string, sessionId: string): Promise<TeacherAssignment[]> {
+    return withOrg(this.pool, userId, orgId, async db => {
       if (!isUuid(sessionId)) {
         return [];
       }
@@ -194,13 +194,13 @@ export class PgClassRepository implements ClassRepository {
     });
   }
 
-  camperIdsIn(orgId: string, classIds: readonly string[]): Promise<string[]> {
+  camperIdsIn(userId: string, orgId: string, classIds: readonly string[]): Promise<string[]> {
     const ids = classIds.filter(isUuid);
     if (ids.length === 0) {
       return Promise.resolve([]);
     }
 
-    return withOrg(this.pool, orgId, async db => {
+    return withOrg(this.pool, userId, orgId, async db => {
       const { rows } = await db.query<{ person_id: string }>(
         `SELECT DISTINCT person_id FROM enrolments WHERE session_id = ANY($1::uuid[]) AND status = 'enrolled'`,
         [ids],
@@ -213,7 +213,7 @@ export class PgClassRepository implements ClassRepository {
   async replaceTeachers(actor: Actor, classId: string, userIds: readonly string[]): Promise<void> {
     const unique = [...new Set(userIds)];
     try {
-      await withOrg(this.pool, actor.orgId, async db => {
+      await withOrg(this.pool, actor.userId, actor.orgId, async db => {
         await db.query('SELECT buxa_replace_class_teachers($1, $2, $3)', [actor.orgId, classId, unique]);
         await recordAudit(db, {
           actor,

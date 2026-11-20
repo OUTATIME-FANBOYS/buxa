@@ -21,7 +21,7 @@ describe.skipIf(!url)('PgUserRepository.renameMember audit', () => {
   let otherCampId = '';
 
   const renameRows = (orgId: string) =>
-    withOrg(pool, orgId, async db => {
+    withOrg(pool, ownerId, orgId, async db => {
       const { rows } = await db.query<{
         actor_id: string;
         action: string;

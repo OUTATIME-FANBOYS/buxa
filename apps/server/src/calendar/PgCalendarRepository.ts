@@ -10,7 +10,7 @@ export class PgCalendarRepository implements CalendarRepository {
   constructor(private readonly pool: Pool) {}
 
   findCampByTokenHash(hash: Buffer): Promise<FeedCamp | null> {
-    return withOrg(this.pool, null, async db => {
+    return withOrg(this.pool, null, null, async db => {
       const { rows } = await db.query<{ camp_id: string; camp_name: string; camp_archived: boolean }>(
         'SELECT camp_id, camp_name, camp_archived FROM buxa_camp_for_calendar_token($1)',
         [hash],
@@ -22,7 +22,7 @@ export class PgCalendarRepository implements CalendarRepository {
   }
 
   saveTokenHash(actor: Actor, hash: Buffer): Promise<void> {
-    return withOrg(this.pool, actor.orgId, async db => {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       await db.query(
         `INSERT INTO camp_calendar_tokens (org_id, token_hash) VALUES ($1, $2)
          ON CONFLICT (org_id) DO UPDATE SET token_hash = EXCLUDED.token_hash, created_at = now()`,
@@ -39,20 +39,16 @@ export class PgCalendarRepository implements CalendarRepository {
     });
   }
 
-  listFeedClasses(orgId: string): Promise<FeedClass[]> {
-    return withOrg(this.pool, orgId, async db => {
+  listFeedClasses(tokenHash: Buffer): Promise<FeedClass[]> {
+    return withOrg(this.pool, null, null, async db => {
+      // buxa_calendar_feed_classes (migration 0032) resolves the camp from the token and returns only its sessions.
       const { rows } = await db.query<{
         id: string;
         class_name: string;
         starts_at: Date;
         ends_at: Date;
         location: string;
-      }>(
-        // A class row carries its own name (migration 0022), so the feed needs no join.
-        `SELECT s.id, s.name AS class_name, s.starts_at, s.ends_at, s.location
-           FROM sessions s
-          ORDER BY s.starts_at, s.id`,
-      );
+      }>('SELECT id, class_name, starts_at, ends_at, location FROM buxa_calendar_feed_classes($1)', [tokenHash]);
 
       return rows.map(r => ({
         id: r.id,

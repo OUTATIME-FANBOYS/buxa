@@ -1,4 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { randomBytes } from 'node:crypto';
 import pg from 'pg';
 import { migrate } from '@buxa/db';
 import { createClassFixture, makeSession, sessionInput, type ClassFixture } from '../classes/__tests__/pgClassFixture';
@@ -69,8 +70,12 @@ describe.skipIf(!url)('calendar feed on Postgres', () => {
     const session = await makeSession(fx.repo, fx.actor);
     await fx.repo.addClasses(fx.actor, session.id, [sessionInput(9, 10)]);
 
-    const mine = await repo.listFeedClasses(fx.orgA);
-    const theirs = await repo.listFeedClasses(fx.orgB);
+    const tokenA = randomBytes(32);
+    const tokenB = randomBytes(32);
+    await repo.saveTokenHash(fx.actor, tokenA);
+    await repo.saveTokenHash(fx.otherActor, tokenB);
+    const mine = await repo.listFeedClasses(tokenA);
+    const theirs = await repo.listFeedClasses(tokenB);
 
     expect(mine).toHaveLength(1);
     expect(mine[0]).toMatchObject({ className: 'Robotics', location: 'Lab 1' });

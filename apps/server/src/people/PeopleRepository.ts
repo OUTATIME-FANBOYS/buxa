@@ -94,20 +94,20 @@ export interface PeopleRepository {
   update(actor: Actor, id: string, patch: PersonPatchRecord): Promise<PersonRecord>;
   /** Sets `archivedAt` (idempotent). Audits `person.archive`. Throws PersonNotFoundError. */
   archive(actor: Actor, id: string, at: string): Promise<PersonRecord>;
-  get(orgId: string, id: string): Promise<PersonRecord | null>;
-  getMany(orgId: string, ids: readonly string[]): Promise<PersonRecord[]>;
+  get(userId: string, orgId: string, id: string): Promise<PersonRecord | null>;
+  getMany(userId: string, orgId: string, ids: readonly string[]): Promise<PersonRecord[]>;
   /** Ordered by family name, then given name. Archived people only with `includeArchived`. */
-  list(orgId: string, filter: PersonFilter): Promise<PersonRecord[]>;
+  list(userId: string, orgId: string, filter: PersonFilter): Promise<PersonRecord[]>;
   /** Case- and accent-insensitive (rule 6 in the spec; `matchesName` in @buxa/domain is the reference). Hides archived people. At most `limit`. */
-  search(orgId: string, query: string, limit: number): Promise<PersonRecord[]>;
+  search(userId: string, orgId: string, query: string, limit: number): Promise<PersonRecord[]>;
 
   /** Audits `household.create`. */
   createHousehold(actor: Actor, name: string): Promise<HouseholdRecord>;
-  getHousehold(orgId: string, id: string): Promise<HouseholdRecord | null>;
+  getHousehold(userId: string, orgId: string, id: string): Promise<HouseholdRecord | null>;
   /** Every household in the organisation, ordered by name then id. */
-  listHouseholds(orgId: string): Promise<HouseholdRecord[]>;
+  listHouseholds(userId: string, orgId: string): Promise<HouseholdRecord[]>;
   /** Every household the person belongs to. */
-  householdsOf(orgId: string, personId: string): Promise<HouseholdRecord[]>;
+  householdsOf(userId: string, orgId: string, personId: string): Promise<HouseholdRecord[]>;
   /** Adds or replaces the link. Audits `household.update`. Throws PersonNotFoundError or HouseholdNotFoundError. */
   link(actor: Actor, link: HouseholdLinkRecord): Promise<HouseholdRecord>;
   /** Audits `household.update`. */

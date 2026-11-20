@@ -26,9 +26,9 @@ describe('CredentialService', () => {
     expect(badge.payload).toBe(`bx1.${badge.token}`);
 
     const hash = createHash('sha256').update(badge.token, 'utf8').digest();
-    expect(await camp.repos.credentials.resolve(camp.orgId, hash)).toBe(person.id);
+    expect(await camp.repos.credentials.resolve('user-admin', camp.orgId, hash)).toBe(person.id);
     // The raw token is not what is stored, so it must not resolve as a hash either.
-    expect(await camp.repos.credentials.resolve(camp.orgId, Buffer.from(badge.token, 'utf8'))).toBeNull();
+    expect(await camp.repos.credentials.resolve('user-admin', camp.orgId, Buffer.from(badge.token, 'utf8'))).toBeNull();
 
     // The token never appears in the audit trail.
     expect(JSON.stringify(camp.audit())).not.toContain(badge.token);

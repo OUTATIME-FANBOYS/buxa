@@ -60,7 +60,12 @@ export class InMemoryCalendarRepository implements CalendarRepository {
     });
   }
 
-  listFeedClasses(orgId: string): Promise<FeedClass[]> {
-    return settle(() => this.classesOf(orgId));
+  listFeedClasses(tokenHash: Buffer): Promise<FeedClass[]> {
+    return settle(() => {
+      const key = tokenHash.toString('hex');
+      const camp = [...this.camps.values()].find(c => c.tokenHash === key && !c.archived);
+
+      return camp ? this.classesOf(camp.orgId) : [];
+    });
   }
 }

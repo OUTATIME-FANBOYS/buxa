@@ -20,13 +20,13 @@ export interface SeatHoldService {
    * The cleanup: releases the expired holds of one camp and promotes waitlists. It has no actor (it runs from a job), so it makes
    * no permission check. Safe to run twice. Expired holds stop counting on their own; this only tidies the table.
    */
-  releaseExpiredHolds(orgId: string): Promise<number>;
+  releaseExpiredHolds(userId: string, orgId: string): Promise<number>;
 }
 
 export interface SeatHoldServiceDeps {
   repo: SeatHoldRepository;
   /** The camp's IANA zone, used only to word refusals. */
-  timezoneOf: (orgId: string) => Promise<string>;
+  timezoneOf: (actor: Pick<Actor, 'userId' | 'orgId'>) => Promise<string>;
   now?: () => Date;
 }
 
@@ -46,18 +46,18 @@ export function createSeatHoldService({
             householdId: input.householdId,
             expiresAt: holdExpiresAt(now()),
           }),
-        await timezoneOf(actor.orgId),
+        await timezoneOf(actor),
       );
     },
 
     async releaseHold(actor, holdId) {
       assertAllowed(actor, 'holds:manage');
 
-      return attempt(() => repo.releaseHold(actor, holdId), await timezoneOf(actor.orgId));
+      return attempt(() => repo.releaseHold(actor, holdId), await timezoneOf(actor));
     },
 
-    releaseExpiredHolds(orgId) {
-      return repo.releaseExpiredHolds(orgId);
+    releaseExpiredHolds(userId, orgId) {
+      return repo.releaseExpiredHolds(userId, orgId);
     },
   };
 }

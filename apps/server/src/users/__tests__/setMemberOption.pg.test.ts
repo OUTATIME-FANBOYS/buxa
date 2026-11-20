@@ -20,7 +20,7 @@ describe.skipIf(!url)('PgUserRepository.setMemberOption audit', () => {
   let campId = '';
 
   const rows = (orgId: string) =>
-    withOrg(pool, orgId, async db => {
+    withOrg(pool, adminId, orgId, async db => {
       const { rows: r } = await db.query<{ actor_id: string; entity_id: string; data: unknown }>(
         'SELECT actor_id, entity_id, data FROM audit_log WHERE action = $1 ORDER BY id',
         ['member.option_set'],
@@ -58,7 +58,7 @@ describe.skipIf(!url)('PgUserRepository.setMemberOption audit', () => {
     const audit = (await rows(campId)).filter(r => r.entity_id === teacherId);
     expect(audit).toHaveLength(1);
     expect(audit[0]).toMatchObject({ actor_id: adminId, data: { option: 'teacher.check_in_out', enabled: true } });
-    expect(await users.memberOptionsOf(campId, teacherId)).toEqual(['teacher.check_in_out']);
+    expect(await users.memberOptionsOf(adminId, campId, teacherId)).toEqual(['teacher.check_in_out']);
   });
 
   it('a refused write (not a teacher) writes no audit row and leaves the option off', async () => {
@@ -67,6 +67,6 @@ describe.skipIf(!url)('PgUserRepository.setMemberOption audit', () => {
       /Teacher not found/,
     );
     expect((await rows(campId)).filter(r => r.entity_id === staffId)).toHaveLength(0);
-    expect(await users.memberOptionsOf(campId, staffId)).toEqual([]);
+    expect(await users.memberOptionsOf(adminId, campId, staffId)).toEqual([]);
   });
 });

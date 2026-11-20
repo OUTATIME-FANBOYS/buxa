@@ -25,6 +25,7 @@ const url = process.env.DATABASE_URL;
 async function addHousehold(fx: ClassFixture, orgId: string, name: string): Promise<string> {
   return withOrg(
     fx.pool,
+    orgId === fx.orgB ? fx.otherActor.userId : fx.actor.userId,
     orgId,
     async db =>
       (
@@ -38,7 +39,7 @@ async function addHousehold(fx: ClassFixture, orgId: string, name: string): Prom
 
 /** Moves a hold's expiry into the past, as if its time had passed, without waiting for the clock. */
 async function expireHoldNow(fx: ClassFixture, orgId: string, holdId: string): Promise<void> {
-  await withOrg(fx.pool, orgId, db =>
+  await withOrg(fx.pool, orgId === fx.orgB ? fx.otherActor.userId : fx.actor.userId, orgId, db =>
     db.query(`UPDATE seat_holds SET expires_at = now() - interval '1 minute' WHERE id = $1`, [holdId]),
   );
 }
@@ -47,6 +48,7 @@ async function expireHoldNow(fx: ClassFixture, orgId: string, holdId: string): P
 async function unreleasedHoldCount(fx: ClassFixture, orgId: string, sessionId: string): Promise<number> {
   return withOrg(
     fx.pool,
+    orgId === fx.orgB ? fx.otherActor.userId : fx.actor.userId,
     orgId,
     async db =>
       (
@@ -87,7 +89,7 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
       expiresAt: holdExpiresAt(new Date()),
     });
     expect(hold.releasedAt).toBeNull();
-    expect((await fx.repo.getClass(fx.orgA, cls.id))?.seatsTaken).toBe(1);
+    expect((await fx.repo.getClass(fx.actor.userId, fx.orgA, cls.id))?.seatsTaken).toBe(1);
 
     await expect(
       holds.placeHold(actor, { sessionId: cls.id, householdId: second, expiresAt: holdExpiresAt(new Date()) }),
@@ -128,7 +130,7 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
 
     // The row is still unreleased, but its time has passed: the place is free.
     expect(await unreleasedHoldCount(fx, fx.orgA, cls.id)).toBe(1);
-    expect((await fx.repo.getClass(fx.orgA, cls.id))?.seatsTaken).toBe(0);
+    expect((await fx.repo.getClass(fx.actor.userId, fx.orgA, cls.id))?.seatsTaken).toBe(0);
     const camper = await fx.addPerson(fx.orgA, '2016-03-01', 'Nell');
     const enrolment = await fx.repo.enrol(actor, { classId: cls.id, camperId: camper }, enrolRule());
     expect(enrolment.status).toBe('enrolled');
@@ -157,10 +159,10 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
     const promotedBefore = await countOf('enrolment.promote');
 
     await expireHoldNow(fx, fx.orgA, hold.id);
-    expect(await holds.releaseExpiredHolds(fx.orgA)).toBe(1);
-    expect(await holds.releaseExpiredHolds(fx.orgA)).toBe(0);
+    expect(await holds.releaseExpiredHolds(fx.actor.userId, fx.orgA)).toBe(1);
+    expect(await holds.releaseExpiredHolds(fx.actor.userId, fx.orgA)).toBe(0);
 
-    const after = await fx.repo.getClass(fx.orgA, cls.id);
+    const after = await fx.repo.getClass(fx.actor.userId, fx.orgA, cls.id);
     expect(after?.seatsTaken).toBe(1);
     expect(after?.waitlisted).toBe(0);
     expect((await countOf('hold.expire')) - expiredBefore).toBe(1);
@@ -181,8 +183,8 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
 
     const released = await holds.releaseHold(actor, hold.id);
     expect(released.releaseReason).toBe('cancelled');
-    expect((await fx.repo.getClass(fx.orgA, cls.id))?.seatsTaken).toBe(1);
-    expect((await fx.repo.getClass(fx.orgA, cls.id))?.waitlisted).toBe(0);
+    expect((await fx.repo.getClass(fx.actor.userId, fx.orgA, cls.id))?.seatsTaken).toBe(1);
+    expect((await fx.repo.getClass(fx.actor.userId, fx.orgA, cls.id))?.waitlisted).toBe(0);
     await expect(holds.releaseHold(actor, hold.id)).rejects.toBeInstanceOf(HoldNotFoundError);
   });
 
@@ -201,7 +203,7 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
     const waitB = await fx.repo.enrol(actor, { classId: cls.id, camperId: third }, enrolRule({ waitlistIfFull: true }));
 
     await fx.repo.cancelEnrolment(actor, holder.id, null);
-    const list = await fx.repo.listEnrolments(fx.orgA, cls.id);
+    const list = await fx.repo.listEnrolments(fx.actor.userId, fx.orgA, cls.id);
     expect(list.find(e => e.id === waitA.id)?.status).toBe('enrolled');
     expect(list.find(e => e.id === waitB.id)?.status).toBe('waitlisted');
   });
@@ -219,7 +221,7 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
     );
 
     await fx.repo.cancelEnrolment(actor, waiting.id, null);
-    const after = await fx.repo.getClass(fx.orgA, cls.id);
+    const after = await fx.repo.getClass(fx.actor.userId, fx.orgA, cls.id);
     expect(after?.seatsTaken).toBe(1);
     expect(after?.waitlisted).toBe(0);
   });

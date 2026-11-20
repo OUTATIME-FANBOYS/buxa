@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 import { migrate } from '@buxa/db';
 import { PgClassRepository } from './PgClassRepository';
-import { ClassNotFoundError, TeacherNotFoundError } from './errors';
+import { TeacherNotFoundError } from './errors';
 import { teacherScopeOf } from './teacherScope';
 
 // The assigned-classes scope against real Postgres, as the request role: a teacher in camp A sees only its camp A classes.
@@ -84,27 +84,28 @@ describe.skipIf(!url)('teacher scope on Postgres (row-level security)', () => {
   });
 
   it("a teacher in camp B has no classes in camp A, and camp A's classes are invisible to it", async () => {
-    expect(await repo.assignedClassIds(orgB, teacherA)).toEqual([]);
-    expect(await repo.assignedClassIds(orgA, teacherB)).toEqual([]);
-    expect(await repo.camperIdsIn(orgB, [sessionA])).toEqual([]);
-    expect(await repo.getClass(orgB, sessionA)).toBeNull();
+    expect(await repo.assignedClassIds(teacherA, orgB, teacherA)).toEqual([]);
+    expect(await repo.assignedClassIds(teacherB, orgA, teacherB)).toEqual([]);
+    expect(await repo.camperIdsIn(teacherA, orgB, [sessionA])).toEqual([]);
+    expect(await repo.getClass(teacherA, orgB, sessionA)).toBeNull();
   });
 
   it('refuses to assign a user who is not a teacher in this camp, or a class from another camp', async () => {
     await expect(
       repo.replaceTeachers({ userId: adminA, orgId: orgA, role: 'admin' }, sessionA, [teacherB]),
     ).rejects.toBeInstanceOf(TeacherNotFoundError);
+    // adminA is not a member of camp B, so the database refuses before it looks for the class.
     await expect(
       repo.replaceTeachers({ userId: adminA, orgId: orgB, role: 'admin' }, sessionA, [teacherB]),
-    ).rejects.toBeInstanceOf(ClassNotFoundError);
+    ).rejects.toThrow(/Not allowed to manage classes/);
   });
 
   it('lists the class teachers for the session page, only inside the camp that owns them', async () => {
     await repo.replaceTeachers({ userId: adminA, orgId: orgA, role: 'admin' }, sessionA, [teacherA]);
 
-    const own = await repo.teacherAssignments(orgA, parentA);
+    const own = await repo.teacherAssignments(adminA, orgA, parentA);
     expect(own).toEqual([{ classId: sessionA, userId: teacherA }]);
 
-    expect(await repo.teacherAssignments(orgB, parentA)).toEqual([]);
+    expect(await repo.teacherAssignments(teacherB, orgB, parentA)).toEqual([]);
   });
 });

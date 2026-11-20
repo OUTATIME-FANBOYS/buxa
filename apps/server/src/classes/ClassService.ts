@@ -71,7 +71,7 @@ export interface ClassService {
 export interface ClassServiceDeps {
   repo: ClassRepository;
   /** The camp's IANA zone (orgs.timezone). Used for the camp's local day and for wording refusals. */
-  timezoneOf: (orgId: string) => Promise<string>;
+  timezoneOf: (actor: Pick<Actor, 'userId' | 'orgId'>) => Promise<string>;
 }
 
 /**
@@ -80,12 +80,12 @@ export interface ClassServiceDeps {
  */
 async function requireWithinSession(
   repo: ClassRepository,
-  orgId: string,
+  actor: Actor,
   sessionId: string,
   times: { startsAt: string; endsAt: string },
   timeZone: string,
 ): Promise<void> {
-  const session = await repo.getSession(orgId, sessionId);
+  const session = await repo.getSession(actor.userId, actor.orgId, sessionId);
   if (!session) {
     throw new SessionNotFoundError();
   }
@@ -111,8 +111,8 @@ function toRecord(input: ClassInput): ClassRecord {
 }
 
 /** The sessions that hold at least one of the teacher's classes. */
-async function sessionIdsOf(repo: ClassRepository, orgId: string, scope: TeacherScope): Promise<Set<string>> {
-  const found = await Promise.all([...scope.classIds].map(id => repo.getClass(orgId, id)));
+async function sessionIdsOf(repo: ClassRepository, actor: Actor, scope: TeacherScope): Promise<Set<string>> {
+  const found = await Promise.all([...scope.classIds].map(id => repo.getClass(actor.userId, actor.orgId, id)));
 
   return new Set(found.flatMap(c => (c ? [c.sessionId] : [])));
 }
@@ -123,52 +123,51 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
       // A teacher sees only the sessions that hold one of its classes.
       const scope = await teacherScopeOf(repo, actor);
       assertAllowed(actor, 'events:read', { assignedToClass: scope === null ? undefined : true });
-      const sessions = await repo.listSessions(actor.orgId);
+      const sessions = await repo.listSessions(actor.userId, actor.orgId);
       if (scope === null) {
         return ok(sessions);
       }
-      const mine = await sessionIdsOf(repo, actor.orgId, scope);
+      const mine = await sessionIdsOf(repo, actor, scope);
 
       return ok(sessions.filter(s => mine.has(s.id)));
     },
 
     async getSession(actor, sessionId) {
       const scope = await teacherScopeOf(repo, actor);
-      const assignedToClass =
-        scope === null ? undefined : (await sessionIdsOf(repo, actor.orgId, scope)).has(sessionId);
+      const assignedToClass = scope === null ? undefined : (await sessionIdsOf(repo, actor, scope)).has(sessionId);
       assertAllowed(actor, 'events:read', { assignedToClass });
 
       return attempt(
         async () => {
-          const found = await repo.getSession(actor.orgId, sessionId);
+          const found = await repo.getSession(actor.userId, actor.orgId, sessionId);
           if (!found) {
             throw new SessionNotFoundError();
           }
 
           return found;
         },
-        await timezoneOf(actor.orgId),
+        await timezoneOf(actor),
       );
     },
 
     async createSession(actor, input) {
       assertAllowed(actor, 'classes:manage');
 
-      return attempt(() => repo.createSession(actor, input), await timezoneOf(actor.orgId));
+      return attempt(() => repo.createSession(actor, input), await timezoneOf(actor));
     },
 
     async setSessionPublic(actor, sessionId, isPublic) {
       assertAllowed(actor, 'classes:manage');
 
-      return attempt(() => repo.setSessionPublic(actor, sessionId, isPublic), await timezoneOf(actor.orgId));
+      return attempt(() => repo.setSessionPublic(actor, sessionId, isPublic), await timezoneOf(actor));
     },
 
     async addRecurringClasses(actor, sessionId, input) {
       assertAllowed(actor, 'classes:manage');
-      const timeZone = await timezoneOf(actor.orgId);
+      const timeZone = await timezoneOf(actor);
 
       return attempt(async () => {
-        const session = await repo.getSession(actor.orgId, sessionId);
+        const session = await repo.getSession(actor.userId, actor.orgId, sessionId);
         if (!session) {
           throw new SessionNotFoundError();
         }
@@ -182,7 +181,7 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
             ? { startsOn: session.startsOn, endsOn: session.endsOn }
             : null;
         // Each class is checked against every class in the camp and against the earlier classes of this series, as an import is.
-        const existing: CampClassSpan[] = await repo.listCampClassSpans(actor.orgId);
+        const existing: CampClassSpan[] = await repo.listCampClassSpans(actor.userId, actor.orgId);
         const accepted: CampClassSpan[] = [];
         for (const occurrence of expanded.occurrences) {
           if (days && !classWithinSession(occurrence, days, timeZone)) {
@@ -215,7 +214,7 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
     async setSessionPrice(actor, sessionId, price) {
       assertAllowed(actor, 'classes:manage');
 
-      return attempt(() => repo.setSessionPrice(actor, sessionId, price), await timezoneOf(actor.orgId));
+      return attempt(() => repo.setSessionPrice(actor, sessionId, price), await timezoneOf(actor));
     },
 
     async listClasses(actor, sessionId) {
@@ -224,11 +223,11 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
 
       return attempt(
         async () => {
-          const all = await repo.listClasses(actor.orgId, sessionId);
+          const all = await repo.listClasses(actor.userId, actor.orgId, sessionId);
 
           return scope === null ? all : all.filter(c => scope.classIds.has(c.id));
         },
-        await timezoneOf(actor.orgId),
+        await timezoneOf(actor),
       );
     },
 
@@ -240,23 +239,23 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
 
       return attempt(
         async () => {
-          const found = await repo.getClass(actor.orgId, classId);
+          const found = await repo.getClass(actor.userId, actor.orgId, classId);
           if (!found) {
             throw new ClassNotFoundError();
           }
 
           return found;
         },
-        await timezoneOf(actor.orgId),
+        await timezoneOf(actor),
       );
     },
 
     async addClass(actor, sessionId, input) {
       assertAllowed(actor, 'classes:manage');
-      const timeZone = await timezoneOf(actor.orgId);
+      const timeZone = await timezoneOf(actor);
 
       return attempt(async () => {
-        await requireWithinSession(repo, actor.orgId, sessionId, input, timeZone);
+        await requireWithinSession(repo, actor, sessionId, input, timeZone);
 
         return repo.addClass(actor, sessionId, toRecord(input));
       }, timeZone);
@@ -272,10 +271,10 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
       } else {
         assertAllowed(actor, 'classes:manage');
       }
-      const timeZone = await timezoneOf(actor.orgId);
+      const timeZone = await timezoneOf(actor);
 
       return attempt(async () => {
-        const existing = await repo.getClass(actor.orgId, classId);
+        const existing = await repo.getClass(actor.userId, actor.orgId, classId);
         if (!existing) {
           throw new ClassNotFoundError();
         }
@@ -285,7 +284,7 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
             throw new TeacherFieldRefusedError(locked);
           }
         }
-        await requireWithinSession(repo, actor.orgId, existing.sessionId, input, timeZone);
+        await requireWithinSession(repo, actor, existing.sessionId, input, timeZone);
 
         return repo.updateClass(actor, classId, toRecord(input));
       }, timeZone);
@@ -300,7 +299,7 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
 
           return null;
         },
-        await timezoneOf(actor.orgId),
+        await timezoneOf(actor),
       );
     },
 
@@ -313,14 +312,14 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
 
           return null;
         },
-        await timezoneOf(actor.orgId),
+        await timezoneOf(actor),
       );
     },
 
     async listTeacherAssignments(actor, sessionId) {
       assertAllowed(actor, 'classes:manage');
 
-      return attempt(() => repo.teacherAssignments(actor.orgId, sessionId), await timezoneOf(actor.orgId));
+      return attempt(() => repo.teacherAssignments(actor.userId, actor.orgId, sessionId), await timezoneOf(actor));
     },
 
     async listEnrolments(actor, classId) {
@@ -330,7 +329,7 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
         assignedToClass: scope === null ? undefined : scope.classIds.has(classId),
       });
 
-      return attempt(() => repo.listEnrolments(actor.orgId, classId), await timezoneOf(actor.orgId));
+      return attempt(() => repo.listEnrolments(actor.userId, actor.orgId, classId), await timezoneOf(actor));
     },
 
     ...createEnrolmentMethods({ repo, timezoneOf }),

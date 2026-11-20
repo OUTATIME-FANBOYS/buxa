@@ -16,11 +16,11 @@ export interface CredentialRepository {
   issue(actor: Actor, personId: string, tokenHash: Buffer, at: string): Promise<CredentialRecord>;
   /** Revokes the active badge; returns it, or null if there was none (then nothing is audited). Audits `credential.revoke`. */
   revoke(actor: Actor, personId: string, at: string): Promise<CredentialRecord | null>;
-  activeFor(orgId: string, personId: string): Promise<CredentialRecord | null>;
+  activeFor(userId: string, orgId: string, personId: string): Promise<CredentialRecord | null>;
   /** The person an ACTIVE badge belongs to. Revoked and unknown hashes both give null. */
-  resolve(orgId: string, tokenHash: Buffer): Promise<string | null>;
+  resolve(userId: string, orgId: string, tokenHash: Buffer): Promise<string | null>;
   /** Which of these people hold an active badge. */
-  withActive(orgId: string, personIds: readonly string[]): Promise<Set<string>>;
+  withActive(userId: string, orgId: string, personIds: readonly string[]): Promise<Set<string>>;
 }
 
 /** Raised when a concurrent badge issue for the same person wins the race (the active-badge unique index rejects this one). */

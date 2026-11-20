@@ -83,11 +83,11 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
     };
   }
 
-  listForms(orgId: string): Promise<RegistrationForm[]> {
+  listForms(userId: string, orgId: string): Promise<RegistrationForm[]> {
     return later(() => [...this.forms.values()].filter(f => f.orgId === orgId).map(f => this.view(f)));
   }
 
-  getForm(orgId: string, formId: string): Promise<RegistrationForm | null> {
+  getForm(userId: string, orgId: string, formId: string): Promise<RegistrationForm | null> {
     return later(() => {
       const form = this.forms.get(formId);
 
@@ -95,7 +95,7 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
     });
   }
 
-  getPublishedVersion(orgId: string, formId: string): Promise<PublishedVersion | null> {
+  getPublishedVersion(userId: string, orgId: string, formId: string): Promise<PublishedVersion | null> {
     return later(() => {
       const form = this.forms.get(formId);
       if (!form || form.orgId !== orgId) {
@@ -151,7 +151,7 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
     });
   }
 
-  listSubmissions(orgId: string, formId: string): Promise<RegistrationRow[]> {
+  listSubmissions(userId: string, orgId: string, formId: string): Promise<RegistrationRow[]> {
     return later(() => {
       this.ownForm(orgId, formId);
 

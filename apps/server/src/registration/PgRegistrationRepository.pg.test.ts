@@ -87,11 +87,11 @@ describe.skipIf(!url)('registration in Postgres: camps are isolated', () => {
       custom: { photos: 'yes' },
     });
 
-    expect(await repo.getForm(ids.campB, form.id)).toBeNull();
-    expect(await repo.getPublishedVersion(ids.campB, form.id)).toBeNull();
-    expect((await repo.listForms(ids.campB)).map(f => f.id)).not.toContain(form.id);
-    expect((await repo.listSubmissions(ids.campA, form.id)).length).toBe(1);
-    await expect(repo.listSubmissions(ids.campB, form.id)).rejects.toMatchObject({
+    expect(await repo.getForm(ids.userB, ids.campB, form.id)).toBeNull();
+    expect(await repo.getPublishedVersion(ids.userB, ids.campB, form.id)).toBeNull();
+    expect((await repo.listForms(ids.userB, ids.campB)).map(f => f.id)).not.toContain(form.id);
+    expect((await repo.listSubmissions(ids.userA, ids.campA, form.id)).length).toBe(1);
+    await expect(repo.listSubmissions(ids.userB, ids.campB, form.id)).rejects.toMatchObject({
       kind: 'registration-form-not-found',
     });
   });
@@ -123,11 +123,11 @@ describe.skipIf(!url)('registration in Postgres: camps are isolated', () => {
       custom: { photos: 'yes' },
     });
 
-    const seenByA = await withOrg(pool, ids.campA, db =>
+    const seenByA = await withOrg(pool, ids.userA, ids.campA, db =>
       db.query<{ id: string }>('SELECT id FROM registrations WHERE form_id = $1', [form.id]),
     );
     expect(seenByA.rowCount).toBe(0);
-    const sessionsSeenByA = await withOrg(pool, ids.campA, db =>
+    const sessionsSeenByA = await withOrg(pool, ids.userA, ids.campA, db =>
       db.query<{ registration_id: string }>('SELECT registration_id FROM registration_sessions WHERE session_id = $1', [
         ids.sessionB,
       ]),
@@ -137,7 +137,7 @@ describe.skipIf(!url)('registration in Postgres: camps are isolated', () => {
 
   it('a refused registration writes nothing, and an unpublished form refuses', async () => {
     const form = await service.createForm(actorA, formInput([ids.sessionA]));
-    const before = await repo.listSubmissions(ids.campA, form.id);
+    const before = await repo.listSubmissions(ids.userA, ids.campA, form.id);
     await expect(
       service.submit(actorA, form.id, {
         formId: form.id,
@@ -146,7 +146,7 @@ describe.skipIf(!url)('registration in Postgres: camps are isolated', () => {
         custom: { photos: 'yes' },
       }),
     ).rejects.toBeInstanceOf(RegistrationRefusedError);
-    expect(await repo.listSubmissions(ids.campA, form.id)).toEqual(before);
+    expect(await repo.listSubmissions(ids.userA, ids.campA, form.id)).toEqual(before);
   });
 
   it('a registration is recorded pending, a staff member confirms it once, and both are audited', async () => {
@@ -159,15 +159,15 @@ describe.skipIf(!url)('registration in Postgres: camps are isolated', () => {
       standard,
       custom: { photos: 'yes' },
     });
-    const [pending] = await repo.listSubmissions(ids.campA, form.id);
+    const [pending] = await repo.listSubmissions(ids.userA, ids.campA, form.id);
     expect(pending).toMatchObject({ id, status: 'pending', confirmedAt: null });
 
     await service.confirm(staffA, id);
     await expect(service.confirm(staffA, id)).rejects.toMatchObject({ reason: 'already_confirmed' });
 
-    const [confirmed] = await repo.listSubmissions(ids.campA, form.id);
+    const [confirmed] = await repo.listSubmissions(ids.userA, ids.campA, form.id);
     expect(confirmed.status).toBe('confirmed');
-    const audit = await withOrg(pool, ids.campA, db =>
+    const audit = await withOrg(pool, ids.userA, ids.campA, db =>
       db.query<{ action: string }>('SELECT action FROM audit_log WHERE entity_id = $1', [id]),
     );
     expect(audit.rows.map(r => r.action).sort()).toEqual(['registration.confirm', 'registration.submit']);

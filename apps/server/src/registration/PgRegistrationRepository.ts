@@ -31,20 +31,20 @@ import type {
 export class PgRegistrationRepository implements RegistrationRepository {
   constructor(private readonly pool: Pool) {}
 
-  listForms(orgId: string): Promise<RegistrationForm[]> {
-    return withOrg(this.pool, orgId, listFormRows);
+  listForms(userId: string, orgId: string): Promise<RegistrationForm[]> {
+    return withOrg(this.pool, userId, orgId, listFormRows);
   }
 
-  getForm(orgId: string, formId: string): Promise<RegistrationForm | null> {
-    return withOrg(this.pool, orgId, db => getFormRow(db, formId));
+  getForm(userId: string, orgId: string, formId: string): Promise<RegistrationForm | null> {
+    return withOrg(this.pool, userId, orgId, db => getFormRow(db, formId));
   }
 
-  getPublishedVersion(orgId: string, formId: string): Promise<PublishedVersion | null> {
-    return withOrg(this.pool, orgId, db => publishedVersionRow(db, formId));
+  getPublishedVersion(userId: string, orgId: string, formId: string): Promise<PublishedVersion | null> {
+    return withOrg(this.pool, userId, orgId, db => publishedVersionRow(db, formId));
   }
 
   createForm(actor: Actor, input: RegistrationFormInput): Promise<RegistrationForm> {
-    return withOrg(this.pool, actor.orgId, async db => {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       const id = await insertForm(db, actor, input);
 
       return requireFormRow(db, id);
@@ -52,7 +52,7 @@ export class PgRegistrationRepository implements RegistrationRepository {
   }
 
   updateForm(actor: Actor, formId: string, input: RegistrationFormInput): Promise<RegistrationForm> {
-    return withOrg(this.pool, actor.orgId, async db => {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       await updateFormRow(db, actor, formId, input);
 
       return requireFormRow(db, formId);
@@ -60,22 +60,22 @@ export class PgRegistrationRepository implements RegistrationRepository {
   }
 
   publishForm(actor: Actor, formId: string): Promise<RegistrationForm> {
-    return withOrg(this.pool, actor.orgId, async db => {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       await publishFormRow(db, actor, formId);
 
       return requireFormRow(db, formId);
     });
   }
 
-  listSubmissions(orgId: string, formId: string): Promise<RegistrationRow[]> {
-    return withOrg(this.pool, orgId, db => listSubmissionRows(db, formId));
+  listSubmissions(userId: string, orgId: string, formId: string): Promise<RegistrationRow[]> {
+    return withOrg(this.pool, userId, orgId, db => listSubmissionRows(db, formId));
   }
 
   submit(actor: Actor, registration: NewRegistration, rule: RegistrationRule): Promise<string> {
-    return withOrg(this.pool, actor.orgId, db => insertRegistrationInTx(db, actor, registration, rule));
+    return withOrg(this.pool, actor.userId, actor.orgId, db => insertRegistrationInTx(db, actor, registration, rule));
   }
 
   confirm(actor: Actor, registrationId: string, rule: ConfirmationRule): Promise<void> {
-    return withOrg(this.pool, actor.orgId, db => confirmRegistrationInTx(db, actor, registrationId, rule));
+    return withOrg(this.pool, actor.userId, actor.orgId, db => confirmRegistrationInTx(db, actor, registrationId, rule));
   }
 }

@@ -90,7 +90,7 @@ export class InMemoryClassRepository implements ClassRepository {
     this.campers.set(id, { id, orgId, name, dateOfBirth });
   }
 
-  listSessions(orgId: string): Promise<Session[]> {
+  listSessions(userId: string, orgId: string): Promise<Session[]> {
     return settle(() =>
       [...this.sessions.values()]
         .filter(s => s.orgId === orgId)
@@ -104,7 +104,7 @@ export class InMemoryClassRepository implements ClassRepository {
     );
   }
 
-  getSession(orgId: string, sessionId: string): Promise<Session | null> {
+  getSession(userId: string, orgId: string, sessionId: string): Promise<Session | null> {
     return settle(() => {
       const found = this.sessionIn(orgId, sessionId);
 
@@ -188,7 +188,7 @@ export class InMemoryClassRepository implements ClassRepository {
     });
   }
 
-  listCampClassSpans(orgId: string): Promise<CampClassSpan[]> {
+  listCampClassSpans(userId: string, orgId: string): Promise<CampClassSpan[]> {
     return settle(() =>
       [...this.classes.values()]
         .filter(c => c.orgId === orgId)
@@ -197,7 +197,7 @@ export class InMemoryClassRepository implements ClassRepository {
     );
   }
 
-  listClasses(orgId: string, sessionId: string): Promise<Class[]> {
+  listClasses(userId: string, orgId: string, sessionId: string): Promise<Class[]> {
     return settle(() => {
       if (!this.sessionIn(orgId, sessionId)) {
         throw new SessionNotFoundError();
@@ -210,7 +210,7 @@ export class InMemoryClassRepository implements ClassRepository {
     });
   }
 
-  getClass(orgId: string, classId: string): Promise<Class | null> {
+  getClass(userId: string, orgId: string, classId: string): Promise<Class | null> {
     return settle(() => {
       const found = this.classIn(orgId, classId);
 
@@ -274,7 +274,7 @@ export class InMemoryClassRepository implements ClassRepository {
     });
   }
 
-  listEnrolments(orgId: string, classId: string): Promise<Enrolment[]> {
+  listEnrolments(userId: string, orgId: string, classId: string): Promise<Enrolment[]> {
     return settle(() => {
       if (!this.classIn(orgId, classId)) {
         throw new ClassNotFoundError();
@@ -376,7 +376,7 @@ export class InMemoryClassRepository implements ClassRepository {
     this.teacherUsers.set(orgId, set);
   }
 
-  teacherAssignments(orgId: string, sessionId: string): Promise<TeacherAssignment[]> {
+  teacherAssignments(userId: string, orgId: string, sessionId: string): Promise<TeacherAssignment[]> {
     const rows: TeacherAssignment[] = [];
     for (const c of this.classes.values()) {
       if (c.orgId !== orgId || c.sessionId !== sessionId) {
@@ -390,18 +390,18 @@ export class InMemoryClassRepository implements ClassRepository {
     return Promise.resolve(rows);
   }
 
-  assignedClassIds(orgId: string, userId: string): Promise<string[]> {
-    if (!this.teacherUsers.get(orgId)?.has(userId)) {
+  assignedClassIds(userId: string, orgId: string, teacherId: string): Promise<string[]> {
+    if (!this.teacherUsers.get(orgId)?.has(teacherId)) {
       return Promise.resolve([]);
     }
     const ids = [...this.classes.values()]
-      .filter(c => c.orgId === orgId && this.teachersOf.get(c.id)?.has(userId))
+      .filter(c => c.orgId === orgId && this.teachersOf.get(c.id)?.has(teacherId))
       .map(c => c.id);
 
     return Promise.resolve(ids);
   }
 
-  camperIdsIn(orgId: string, classIds: readonly string[]): Promise<string[]> {
+  camperIdsIn(userId: string, orgId: string, classIds: readonly string[]): Promise<string[]> {
     const wanted = new Set(classIds);
     const ids = new Set<string>();
     for (const e of this.enrolments.values()) {

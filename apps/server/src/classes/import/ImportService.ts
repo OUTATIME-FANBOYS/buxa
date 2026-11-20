@@ -61,16 +61,19 @@ export interface ImportServiceDeps {
   classes: ClassRepository;
   imports: ImportRepository;
   /** The camp's IANA zone (orgs.timezone): the zone the file's times are written in. */
-  timezoneOf: (orgId: string) => Promise<string>;
+  timezoneOf: (actor: Pick<Actor, 'userId' | 'orgId'>) => Promise<string>;
 }
 
 export function createImportService({ classes, imports, timezoneOf }: ImportServiceDeps): ImportService {
   /** The plan for these rows against the camp's current classes and sessions. Reads only. */
-  async function planFor(orgId: string, rows: readonly ImportRow[]): Promise<ImportPlan> {
-    const classRefs: ClassRef[] = (await classes.listSessions(orgId)).map(s => ({ id: s.id, name: s.name }));
-    const sessions = await imports.listCampSessions(orgId);
+  async function planFor(actor: Actor, rows: readonly ImportRow[]): Promise<ImportPlan> {
+    const classRefs: ClassRef[] = (await classes.listSessions(actor.userId, actor.orgId)).map(s => ({
+      id: s.id,
+      name: s.name,
+    }));
+    const sessions = await imports.listCampSessions(actor.userId, actor.orgId);
 
-    return planImport({ rows: [...rows], classes: classRefs, sessions, timeZone: await timezoneOf(orgId) });
+    return planImport({ rows: [...rows], classes: classRefs, sessions, timeZone: await timezoneOf(actor) });
   }
 
   return {
@@ -92,7 +95,7 @@ export function createImportService({ classes, imports, timezoneOf }: ImportServ
       if (!read.ok) {
         throw badRequest(read.message);
       }
-      const plan = await planFor(actor.orgId, read.rows);
+      const plan = await planFor(actor, read.rows);
 
       return { fileName, counts: plan.counts, results: plan.results, input: read.rows };
     },
@@ -103,7 +106,7 @@ export function createImportService({ classes, imports, timezoneOf }: ImportServ
         throw badRequest(`Import at most ${MAX_IMPORT_ROWS} rows at a time.`);
       }
       // The camp's data may have changed since the preview, so the rows are checked again and only the fresh result is written.
-      const fresh = await planFor(actor.orgId, preview.input);
+      const fresh = await planFor(actor, preview.input);
       await imports.applyImport(
         actor,
         {

@@ -9,7 +9,7 @@ describe('runtime wiring: classes', () => {
     const repositories = createInMemoryRepositories();
     const listSessions = vi.spyOn(repositories.classes, 'listSessions');
     const result = await createServices(repositories, systemClock).classes.listSessions(as('staff'));
-    expect(listSessions).toHaveBeenCalledWith(ORG);
+    expect(listSessions).toHaveBeenCalledWith('user-staff', ORG);
     expect(result).toEqual({ ok: true, value: [] });
   });
 });

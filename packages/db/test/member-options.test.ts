@@ -99,7 +99,7 @@ describe.skipIf(!url)('member options (row-level security)', () => {
       teacherB,
       adminA,
     ]);
-    const seenByA = await withOrg(pool, campA, db =>
+    const seenByA = await withOrg(pool, adminA, campA, db =>
       db.query<{ user_id: string }>('SELECT user_id FROM member_options WHERE enabled'),
     );
     expect(seenByA.rows.map(r => r.user_id)).toEqual([teacherA]);

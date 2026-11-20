@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { IMPORT_COLUMNS, type Actor, settle } from '@buxa/domain';
 import { isHttpError } from '../../http/errors';
-import { CAMP_TZ, JULY_SESSION, ORG, as } from '../__tests__/fixtures';
+import { CAMP_TZ, JULY_SESSION, ORG, USER, as } from '../__tests__/fixtures';
 import { InMemoryClassRepository } from '../InMemoryClassRepository';
 import { InMemoryImportRepository } from './InMemoryImportRepository';
 import { importTemplateCsv } from './importCsv';
@@ -71,7 +71,7 @@ describe('import service: permissions (classes:manage)', () => {
     const preview = await previewOf(w, admin, row());
     await expect403(w.service.confirm(viewer, preview));
     await expect403(w.service.errorReport(viewer, preview));
-    expect(await w.imports.listCampSessions(ORG)).toEqual([]);
+    expect(await w.imports.listCampSessions(USER, ORG)).toEqual([]);
   });
 
   it('staff can download, preview and confirm', async () => {
@@ -99,7 +99,7 @@ describe('import service: preview writes nothing', () => {
     expect(preview.results.map(r => r.status)).toEqual(['create', 'refused', 'refused']);
     expect(preview.results[1]?.problems[0]?.message).toContain('row 2');
     expect(preview.results[2]?.problems[0]?.message).toContain('no class called "Chess"');
-    expect(await w.imports.listCampSessions(ORG)).toEqual([]);
+    expect(await w.imports.listCampSessions(USER, ORG)).toEqual([]);
     expect(w.imports.audit).toEqual([]);
   });
 
@@ -147,7 +147,7 @@ describe('import service: confirm', () => {
       counts: { create: 2, update: 0, refused: 0 },
       changedSincePreview: false,
     });
-    expect(await w.imports.listCampSessions(ORG)).toHaveLength(2);
+    expect(await w.imports.listCampSessions(USER, ORG)).toHaveLength(2);
     expect(w.imports.audit.map(a => a.action)).toEqual(['import.upload', 'session.create', 'session.create']);
     expect(w.imports.audit[0]?.data).toMatchObject({
       fileName: 'season.csv',
@@ -165,7 +165,7 @@ describe('import service: confirm', () => {
     await w.service.confirm(admin, await previewOf(w, admin, keyed));
     const again = await w.service.confirm(admin, await previewOf(w, admin, keyed));
     expect(again).toMatchObject({ written: 1, counts: { create: 0, update: 1, refused: 0 } });
-    expect(await w.imports.listCampSessions(ORG)).toHaveLength(1);
+    expect(await w.imports.listCampSessions(USER, ORG)).toHaveLength(1);
   });
 
   it('re-uploading rows without keys refuses them as duplicates and creates nothing', async () => {
@@ -175,7 +175,7 @@ describe('import service: confirm', () => {
     const again = await w.service.confirm(admin, await previewOf(w, admin, row()));
     expect(again).toMatchObject({ written: 0, counts: { create: 0, update: 0, refused: 1 } });
     expect(again.results[0]?.problems[0]?.message).toContain('already in the camp');
-    expect(await w.imports.listCampSessions(ORG)).toHaveLength(1);
+    expect(await w.imports.listCampSessions(USER, ORG)).toHaveLength(1);
   });
 
   it('re-checks against current data: a row ready at preview is refused if a clash appeared since', async () => {
@@ -183,7 +183,7 @@ describe('import service: confirm', () => {
     await withClasses(w);
     const preview = await previewOf(w, admin, row());
     expect(preview.counts.create).toBe(1);
-    const robotics13 = (await w.classes.listSessions(ORG)).find(c => c.name === 'Robotics');
+    const robotics13 = (await w.classes.listSessions(USER, ORG)).find(c => c.name === 'Robotics');
     w.imports.seedSession(ORG, {
       id: '99999999-9999-4999-8999-999999999999',
       classId: robotics13?.id ?? '',
@@ -197,7 +197,7 @@ describe('import service: confirm', () => {
     });
     const result = await w.service.confirm(admin, preview);
     expect(result).toMatchObject({ written: 0, changedSincePreview: true, counts: { refused: 1 } });
-    expect(await w.imports.listCampSessions(ORG)).toHaveLength(1);
+    expect(await w.imports.listCampSessions(USER, ORG)).toHaveLength(1);
   });
 
   it('a failure part-way through saves nothing from the file', async () => {
@@ -211,7 +211,7 @@ describe('import service: confirm', () => {
       row({ starts_at: '2027-07-07T13:00', ends_at: '2027-07-07T15:00' }),
     );
     await expect(w.service.confirm(admin, preview)).rejects.toThrow('Injected failure on write 2');
-    expect(await w.imports.listCampSessions(ORG)).toEqual([]);
+    expect(await w.imports.listCampSessions(USER, ORG)).toEqual([]);
     expect(w.imports.audit).toEqual([]);
   });
 
@@ -227,9 +227,9 @@ describe('import service: confirm', () => {
   it('does not create a class for an unknown class name', async () => {
     const w = world();
     await withClasses(w);
-    const before = (await w.classes.listSessions(ORG)).length;
+    const before = (await w.classes.listSessions(USER, ORG)).length;
     await w.service.confirm(admin, await previewOf(w, admin, row({ class_name: 'Chess' })));
-    expect((await w.classes.listSessions(ORG)).length).toBe(before);
+    expect((await w.classes.listSessions(USER, ORG)).length).toBe(before);
   });
 });
 

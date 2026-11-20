@@ -145,7 +145,8 @@ export function createServices(repositories: Repositories, clock: Clock): Servic
 
 /** Classes, sessions, enrolments and the bulk import. Both storages come from `repositories` (Postgres in production). */
 function createClassServices(repositories: Repositories): Pick<Services, 'classes' | 'imports' | 'seatHolds'> {
-  const timezoneOf = async (orgId: string): Promise<string> => (await repositories.orgs.get(orgId)).timezone;
+  const timezoneOf = async (scope: { userId: string; orgId: string }): Promise<string> =>
+    (await repositories.orgs.get(scope.userId, scope.orgId)).timezone;
   const classes = repositories.classes;
 
   return {

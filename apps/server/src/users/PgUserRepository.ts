@@ -20,7 +20,7 @@ export class PgUserRepository implements UserRepository {
 
   async upsertFromIdentity(identity: Identity): Promise<User> {
     try {
-      const { rows } = await withOrg(this.pool, null, db =>
+      const { rows } = await withOrg(this.pool, null, null, db =>
         db.query<User>(`SELECT ${USER_COLUMNS} FROM buxa_upsert_user($1, $2, $3)`, [
           identity.authId,
           identity.email,
@@ -35,10 +35,9 @@ export class PgUserRepository implements UserRepository {
   }
 
   membershipsOf(userId: string): Promise<Membership[]> {
-    return withOrg(this.pool, null, async db => {
+    return withOrg(this.pool, userId, null, async db => {
       const { rows } = await db.query<Membership>(
-        'SELECT member_org_id AS "orgId", member_role AS role, org_name AS name, org_slug AS slug FROM buxa_memberships_of($1)',
-        [userId],
+        'SELECT member_org_id AS "orgId", member_role AS role, org_name AS name, org_slug AS slug FROM buxa_memberships_of()',
       );
 
       return rows;
@@ -46,12 +45,8 @@ export class PgUserRepository implements UserRepository {
   }
 
   async updateName(userId: string, name: { firstName: string; lastName: string | null }): Promise<User> {
-    const { rows } = await withOrg(this.pool, null, db =>
-      db.query<User>(`SELECT ${USER_COLUMNS} FROM buxa_set_user_name($1, $2, $3)`, [
-        userId,
-        name.firstName,
-        name.lastName,
-      ]),
+    const { rows } = await withOrg(this.pool, userId, null, db =>
+      db.query<User>(`SELECT ${USER_COLUMNS} FROM buxa_set_user_name($1, $2)`, [name.firstName, name.lastName]),
     );
     if (!rows[0]) {
       throw new Error('no user to rename');
@@ -61,8 +56,8 @@ export class PgUserRepository implements UserRepository {
   }
 
   async setClockFormat(userId: string, clockFormat: ClockFormat): Promise<User> {
-    const { rows } = await withOrg(this.pool, null, db =>
-      db.query<User>(`SELECT ${USER_COLUMNS} FROM buxa_set_user_clock_format($1, $2)`, [userId, clockFormat]),
+    const { rows } = await withOrg(this.pool, userId, null, db =>
+      db.query<User>(`SELECT ${USER_COLUMNS} FROM buxa_set_user_clock_format($1)`, [clockFormat]),
     );
     if (!rows[0]) {
       throw new Error('no user to update');
@@ -71,16 +66,16 @@ export class PgUserRepository implements UserRepository {
     return rows[0];
   }
 
-  async roleIn(orgId: string, userId: string): Promise<Membership['role'] | null> {
-    const { rows } = await withOrg(this.pool, orgId, db =>
-      db.query<{ role: Membership['role'] }>('SELECT role FROM org_members WHERE user_id = $1', [userId]),
+  async roleIn(userId: string, orgId: string, memberId: string): Promise<Membership['role'] | null> {
+    const { rows } = await withOrg(this.pool, userId, orgId, db =>
+      db.query<{ role: Membership['role'] }>('SELECT role FROM org_members WHERE user_id = $1', [memberId]),
     );
 
     return rows[0]?.role ?? null;
   }
 
   renameMember(actor: Actor, userId: string, name: string): Promise<Pick<User, 'id' | 'email' | 'name'> | null> {
-    return withOrg(this.pool, actor.orgId, async db => {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       const { rows } = await db.query<Pick<User, 'id' | 'email' | 'name'>>(
         'SELECT user_id AS id, user_email AS email, user_name AS name FROM buxa_rename_member($1, $2, $3)',
         [actor.orgId, userId, name],
@@ -94,19 +89,19 @@ export class PgUserRepository implements UserRepository {
     });
   }
 
-  memberOptionsOf(orgId: string, userId: string): Promise<MemberOption[]> {
-    return withOrg(this.pool, orgId, async db => {
+  memberOptionsOf(viewerId: string, orgId: string, memberId: string): Promise<MemberOption[]> {
+    return withOrg(this.pool, viewerId, orgId, async db => {
       const { rows } = await db.query<{ option_key: MemberOption }>(
         'SELECT option_key FROM member_options WHERE user_id = $1 AND enabled',
-        [userId],
+        [memberId],
       );
 
       return rows.map(r => r.option_key);
     });
   }
 
-  memberOptionsIn(orgId: string): Promise<{ userId: string; option: MemberOption }[]> {
-    return withOrg(this.pool, orgId, async db => {
+  memberOptionsIn(viewerId: string, orgId: string): Promise<{ userId: string; option: MemberOption }[]> {
+    return withOrg(this.pool, viewerId, orgId, async db => {
       const { rows } = await db.query<{ user_id: string; option_key: MemberOption }>(
         'SELECT user_id, option_key FROM member_options WHERE enabled',
       );
@@ -116,7 +111,7 @@ export class PgUserRepository implements UserRepository {
   }
 
   setMemberOption(actor: Actor, userId: string, option: MemberOption, enabled: boolean): Promise<void> {
-    return withOrg(this.pool, actor.orgId, async db => {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       await db.query('SELECT buxa_set_member_option($1, $2, $3, $4, $5)', [
         actor.orgId,
         userId,
@@ -135,10 +130,9 @@ export class PgUserRepository implements UserRepository {
   }
 
   archivedMembershipsOf(userId: string): Promise<Membership[]> {
-    return withOrg(this.pool, null, async db => {
+    return withOrg(this.pool, userId, null, async db => {
       const { rows } = await db.query<Membership>(
-        'SELECT member_org_id AS "orgId", member_role AS role, org_name AS name, org_slug AS slug FROM buxa_archived_memberships_of($1)',
-        [userId],
+        'SELECT member_org_id AS "orgId", member_role AS role, org_name AS name, org_slug AS slug FROM buxa_archived_memberships_of()',
       );
 
       return rows;

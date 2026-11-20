@@ -11,7 +11,7 @@ export async function withMemberOptions(actor: Actor | null): Promise<Actor | nu
   if (!actor || actor.role !== 'teacher') {
     return actor;
   }
-  const options = await getRuntime().repositories.users.memberOptionsOf(actor.orgId, actor.userId);
+  const options = await getRuntime().repositories.users.memberOptionsOf(actor.userId, actor.orgId, actor.userId);
 
   return { ...actor, options };
 }

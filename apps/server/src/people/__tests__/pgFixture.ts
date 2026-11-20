@@ -34,6 +34,12 @@ export async function createPgFixture(pool: Pool): Promise<RepositoryFixture> {
   const orgB = await insertOrg(pool, `contract-b-${tag}`);
   const userA = await insertUser(pool, `staff-a-${tag}@example.test`);
   const userB = await insertUser(pool, `staff-b-${tag}@example.test`);
+  await pool.query(`INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'owner'), ($3, $4, 'owner')`, [
+    orgA,
+    userA,
+    orgB,
+    userB,
+  ]);
   const actor: Actor = { userId: userA, orgId: orgA, role: 'owner' };
   const otherActor: Actor = { userId: userB, orgId: orgB, role: 'owner' };
 
@@ -42,7 +48,7 @@ export async function createPgFixture(pool: Pool): Promise<RepositoryFixture> {
     actor,
     otherActor,
     auditActions: () =>
-      withOrg(pool, orgA, async db => {
+      withOrg(pool, userA, orgA, async db => {
         const { rows } = await db.query<{ action: string }>('SELECT action FROM audit_log ORDER BY id');
 
         return rows.map(r => r.action);

@@ -29,5 +29,5 @@ export interface SeatHoldRepository {
   /** Throws HoldNotFoundError (also when already released). Audits `hold.release`, then promotes the waitlist into the freed place. */
   releaseHold(actor: Actor, holdId: string): Promise<SeatHold>;
   /** Releases every expired hold in one camp and promotes waitlists. Safe to run twice. Returns how many were released. */
-  releaseExpiredHolds(orgId: string): Promise<number>;
+  releaseExpiredHolds(userId: string, orgId: string): Promise<number>;
 }

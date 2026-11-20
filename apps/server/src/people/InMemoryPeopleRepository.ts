@@ -137,7 +137,7 @@ export class InMemoryPeopleRepository implements PeopleRepository {
     });
   }
 
-  get(orgId: string, id: string): Promise<PersonRecord | null> {
+  get(userId: string, orgId: string, id: string): Promise<PersonRecord | null> {
     return settle(() => {
       const person = this.db.inOrg(this.db.people, orgId, id);
 
@@ -145,13 +145,13 @@ export class InMemoryPeopleRepository implements PeopleRepository {
     });
   }
 
-  getMany(orgId: string, ids: readonly string[]): Promise<PersonRecord[]> {
+  getMany(userId: string, orgId: string, ids: readonly string[]): Promise<PersonRecord[]> {
     return settle(() => {
       return this.visible(orgId, p => ids.includes(p.id));
     });
   }
 
-  list(orgId: string, filter: PersonFilter): Promise<PersonRecord[]> {
+  list(userId: string, orgId: string, filter: PersonFilter): Promise<PersonRecord[]> {
     return settle(() => {
       return this.visible(
         orgId,
@@ -162,7 +162,7 @@ export class InMemoryPeopleRepository implements PeopleRepository {
     });
   }
 
-  search(orgId: string, query: string, limit: number): Promise<PersonRecord[]> {
+  search(userId: string, orgId: string, query: string, limit: number): Promise<PersonRecord[]> {
     return settle(() => {
       const max = Math.min(Math.max(0, Math.floor(limit)), MAX_SEARCH_RESULTS);
       if (normalizeForSearch(query) === '' || max === 0) {
@@ -180,19 +180,19 @@ export class InMemoryPeopleRepository implements PeopleRepository {
     });
   }
 
-  getHousehold(orgId: string, id: string): Promise<HouseholdRecord | null> {
+  getHousehold(userId: string, orgId: string, id: string): Promise<HouseholdRecord | null> {
     return settle(() => {
       return this.households.get(orgId, id);
     });
   }
 
-  listHouseholds(orgId: string): Promise<HouseholdRecord[]> {
+  listHouseholds(userId: string, orgId: string): Promise<HouseholdRecord[]> {
     return settle(() => {
       return this.households.list(orgId);
     });
   }
 
-  householdsOf(orgId: string, personId: string): Promise<HouseholdRecord[]> {
+  householdsOf(userId: string, orgId: string, personId: string): Promise<HouseholdRecord[]> {
     return settle(() => {
       return this.households.householdsOf(orgId, personId);
     });
