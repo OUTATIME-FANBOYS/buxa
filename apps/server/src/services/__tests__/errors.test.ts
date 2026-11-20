@@ -37,24 +37,14 @@ describe('translateRepositoryError', () => {
 
 describe('the camp service', () => {
   const repo = (get: OrgRepository['get']): OrgRepository => ({
-    createWithOwner: async () => {
-      throw new Error('unused');
-    },
+    createWithOwner: () => Promise.reject(new Error('unused')),
     get,
-    rename: async () => {
-      throw new Error('unused');
-    },
-    listMembers: async () => [],
-    archive: async () => {
-      throw new Error('unused');
-    },
-    unarchive: async () => {
-      throw new Error('unused');
-    },
-    deleteCamp: async () => {
-      throw new Error('unused');
-    },
-    archivedCampsOf: async () => [],
+    rename: () => Promise.reject(new Error('unused')),
+    listMembers: () => Promise.resolve([]),
+    archive: () => Promise.reject(new Error('unused')),
+    unarchive: () => Promise.reject(new Error('unused')),
+    deleteCamp: () => Promise.reject(new Error('unused')),
+    archivedCampsOf: () => Promise.resolve([]),
   });
   const owner = {
     userId: '00000000-0000-4000-8000-000000000001',
@@ -63,11 +53,7 @@ describe('the camp service', () => {
   };
 
   it('answers 404 for a camp the caller cannot see, instead of an unhandled error', async () => {
-    const service = createOrgService(
-      repo(async () => {
-        throw new OrgNotFoundError();
-      }),
-    );
+    const service = createOrgService(repo(() => Promise.reject(new OrgNotFoundError())));
     let error: unknown;
     try {
       await service.getCamp(owner);
@@ -87,6 +73,6 @@ describe('the camp service', () => {
       timezone: 'UTC',
       clockFormat: '24h' as const,
     };
-    expect(await createOrgService(repo(async () => org)).getCamp(owner)).toEqual(org);
+    expect(await createOrgService(repo(() => Promise.resolve(org))).getCamp(owner)).toEqual(org);
   });
 });
