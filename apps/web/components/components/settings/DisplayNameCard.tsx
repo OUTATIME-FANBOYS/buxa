@@ -94,7 +94,7 @@ export function DisplayNameCard({
             autoComplete="family-name"
           />
         </div>
-        <Button variant="secondary" size="sm" disabled={pending} className={NAME_BUTTON}>
+        <Button variant="glass" disabled={pending} className={NAME_BUTTON}>
           Update
         </Button>
       </form>

@@ -38,8 +38,9 @@ export function campInputValue(iso: string, timeZone: string): string {
 /**
  * A class: its name, ages, camp size, its own time range, location and instructors. It adds a class to a session (`cls` is
  * left out) or edits one (`cls` is the class being edited). The fields, validation and action are the same for both.
- * `variant` says where it renders: on its own page (a panel) or in a dialog (no panel, with Cancel through `onCancel`). When a
- * dialog's edit is saved, `onSaved` runs so the dialog can close.
+ * `variant` says where it renders: on its own page (a panel, with its own Cancel and save buttons) or in a dialog. A dialog's
+ * buttons belong to the dialog's pinned footer, so the form is tied to them by `formId` and reports `pending` through
+ * `onPendingChange`. When a dialog's edit is saved, `onSaved` runs so the dialog can close.
  */
 export function ClassForm({
   sessionId,
@@ -49,8 +50,9 @@ export function ClassForm({
   cls,
   variant = 'page',
   detailsOnly = false,
-  onCancel,
+  formId,
   onSaved,
+  onPendingChange,
 }: {
   sessionId: string;
   sessionName: string;
@@ -60,8 +62,10 @@ export function ClassForm({
   variant?: 'page' | 'dialog';
   /** A teacher's edit: only the name is shown. The server keeps every other field as it is saved. */
   detailsOnly?: boolean;
-  onCancel?: () => void;
+  /** The id the dialog footer's submit button names with its `form` attribute. */
+  formId?: string;
   onSaved?: () => void;
+  onPendingChange?: (pending: boolean) => void;
 }) {
   const editing = cls !== undefined;
   const [state, formAction, pending] = useActionState(editing ? updateClassAction : addClassAction, idle);
@@ -77,12 +81,18 @@ export function ClassForm({
     }
   }, [state, editing, onSaved]);
 
+  useEffect(() => {
+    onPendingChange?.(pending);
+  }, [pending, onPendingChange]);
+
   const err = (name: string) => fieldError(state, name);
 
   return (
     <form
+      id={formId}
       ref={formRef}
       action={formAction}
+      noValidate
       className={`${inDialog ? '' : 'panel '}class-form class-form-time`}
       aria-describedby="class-form-help"
     >
@@ -100,7 +110,8 @@ export function ClassForm({
         </p>
       )}
       <TextField
-        label="Class name *"
+        label="Class name"
+        isRequired
         name="name"
         defaultValue={cls?.name ?? ''}
         error={err('name')}
@@ -110,10 +121,11 @@ export function ClassForm({
       />
       {!detailsOnly && (
         <>
-          {/* The three fields share one row and start on the same line (items-start), so their labels and inputs align. */}
-          <div className="form-row buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-start buxa:[&>.field]:flex-[1_1_120px] buxa:[&>.field]:min-w-0">
+          {/* Three equal columns (33%) on one row; the labels and inputs start on the same line. */}
+          <div className="buxa:grid buxa:grid-cols-3 buxa:gap-[var(--s3)] buxa:items-start">
             <NumberField
-              label="Youngest age *"
+              label="Youngest age"
+              isRequired
               name="minAge"
               minValue={MIN_CLASS_AGE}
               maxValue={MAX_CLASS_AGE}
@@ -121,7 +133,8 @@ export function ClassForm({
               error={err('minAge')}
             />
             <NumberField
-              label="Oldest age *"
+              label="Oldest age"
+              isRequired
               name="maxAge"
               minValue={MIN_CLASS_AGE}
               maxValue={MAX_CLASS_AGE}
@@ -129,7 +142,8 @@ export function ClassForm({
               error={err('maxAge')}
             />
             <NumberField
-              label="Camp Size *"
+              label="Camp Size"
+              isRequired
               name="capacity"
               minValue={MIN_CAMP_SIZE}
               maxValue={MAX_CAMP_SIZE}
@@ -137,24 +151,26 @@ export function ClassForm({
               error={err('capacity')}
             />
           </div>
-          <div className="form-row buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-end buxa:[&>.field]:flex-[1_1_200px] buxa:[&>.field]:min-w-0">
+          {/* Starts and Ends: two equal columns (50%), side by side. */}
+          <div className="buxa:grid buxa:grid-cols-2 buxa:gap-[var(--s3)] buxa:items-end">
             <DateTimeField
-              label="Starts *"
-              name="startsAt"
+              label="Starts"
               isRequired
+              name="startsAt"
               defaultValue={cls ? campInputValue(cls.startsAt, timeZone) : null}
               error={err('startsAt')}
             />
             <DateTimeField
-              label="Ends *"
-              name="endsAt"
+              label="Ends"
               isRequired
+              name="endsAt"
               defaultValue={cls ? campInputValue(cls.endsAt, timeZone) : null}
               error={err('endsAt')}
             />
           </div>
           <TextField
-            label="Location *"
+            label="Location"
+            isRequired
             name="location"
             defaultValue={cls?.location ?? ''}
             error={err('location')}
@@ -165,26 +181,16 @@ export function ClassForm({
         </>
       )}
       <ActionMessage state={state} />
-      <div className="classes-actions">
-        {inDialog ? (
-          <Button type="button" onClick={onCancel}>
-            Cancel
-          </Button>
-        ) : (
+      {!inDialog && (
+        <div className="classes-actions">
           <Button variant="ghost" className="classes-target" href={sessionPath(sessionId)}>
             Cancel
           </Button>
-        )}
-        <Button
-          type="submit"
-          variant="primary"
-          icon={editing ? undefined : 'plus'}
-          className={inDialog ? undefined : 'classes-target'}
-          disabled={pending}
-        >
-          {pending ? 'Saving...' : editing ? 'Save class' : 'Add class'}
-        </Button>
-      </div>
+          <Button type="submit" variant="primary" icon="plus" className="classes-target" disabled={pending}>
+            {pending ? 'Saving...' : editing ? 'Save class' : 'Add class'}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

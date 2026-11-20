@@ -63,7 +63,7 @@ describe('ClassesTable: the classes of one session', () => {
     expect(render(true)).toContain('title="Edit class"');
     expect(render(true)).toContain('aria-label="Delete Robotics"');
     expect(render(true)).toContain('title="Delete class"');
-    expect(render(true)).toContain('classes-delete');
+    expect(render(true)).toContain('button--glass-danger');
     expect(render(false)).not.toContain('aria-label="Edit Robotics"');
     expect(render(false)).not.toContain('aria-label="Delete Robotics"');
   });

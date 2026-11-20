@@ -34,14 +34,14 @@ const render = (props: Partial<Parameters<typeof ClassForm>[0]> = {}) =>
 describe('ClassForm: the fields of a class', () => {
   it('has the name, the three fields in one row (ages and Camp Size), the time range and the location', () => {
     const html = render();
-    expect(html).toContain('Class name *');
-    expect(html).toContain('Youngest age *');
-    expect(html).toContain('Oldest age *');
-    expect(html).toContain('Camp Size *');
+    expect(html).toContain('Class name');
+    expect(html).toContain('Youngest age');
+    expect(html).toContain('Oldest age');
+    expect(html).toContain('Camp Size');
     expect(html).toContain('name="startsAt"');
     expect(html).toContain('type="datetime-local"');
-    expect(html).toContain('Location *');
-    // The three camp fields share one row.
+    expect(html).toContain('Location');
+    // The three camp fields share one row (33% each).
     const row = html.slice(html.indexOf('Youngest age'), html.indexOf('name="startsAt"'));
     expect(row).toContain('Camp Size');
   });
@@ -111,9 +111,19 @@ describe('ClassForm: adding and editing', () => {
     expect(html).toContain('value="2027-07-05T09:00"');
   });
 
-  it('a dialog has a Cancel button, and a page has a Cancel link back to the session', () => {
-    expect(render({ variant: 'dialog', onCancel: () => undefined })).toContain('>Cancel<');
+  it('a dialog leaves its buttons to the dialog footer (tied by form id); a page has a Cancel link back to the session', () => {
+    const dialog = render({ variant: 'dialog', formId: 'edit-form' });
+    expect(dialog).toContain('id="edit-form"');
+    expect(dialog).not.toContain('>Cancel<');
     expect(render()).toContain(`href="/camp/sessions/${SESSION}"`);
+  });
+
+  it('asks each required field once: one asterisk, and aria-required on the input', () => {
+    const html = render();
+    expect(html).not.toContain('* *');
+    expect(html).not.toContain('Class name *');
+    expect(html).toContain('field-required');
+    expect(html).toContain('aria-required="true"');
   });
 });
 
@@ -127,7 +137,7 @@ describe('campInputValue', () => {
 describe('ClassForm: a teacher edits the name only', () => {
   it('with detailsOnly, shows the name and nothing else the camp sets', () => {
     const html = render({ cls, detailsOnly: true });
-    expect(html).toContain('Class name *');
+    expect(html).toContain('Class name');
     expect(html).toContain('name="name"');
     for (const hidden of [
       'name="minAge"',
@@ -140,7 +150,7 @@ describe('ClassForm: a teacher edits the name only', () => {
       expect(html, hidden).not.toContain(hidden);
     }
     expect(html).not.toContain('Youngest age');
-    expect(html).not.toContain('Location *');
+    expect(html).not.toContain('Location');
   });
 
   it('without detailsOnly, the camp manager sees every field', () => {

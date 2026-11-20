@@ -77,7 +77,11 @@ export function TextField({
     <div className={`buxa:grid buxa:min-w-0 buxa:gap-2 ${className ?? ''}`}>
       <label className={hideLabel ? 'sr-only' : 'field-label'} htmlFor={inputId}>
         {label}
-        {isRequired ? ' *' : null}
+        {isRequired ? (
+          <span className="field-required" aria-hidden="true">
+            {' *'}
+          </span>
+        ) : null}
       </label>
       <input
         ref={inputRef}
@@ -92,6 +96,7 @@ export function TextField({
         inputMode={inputMode}
         autoFocus={autoFocus}
         required={isRequired}
+        aria-required={isRequired || undefined}
         disabled={isDisabled}
         spellCheck={spellCheck}
         autoCapitalize={autoCapitalize}

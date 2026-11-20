@@ -17,14 +17,10 @@ type Step = 'ask' | 'type' | null;
 export function DeleteCampButton({
   campId,
   campName,
-  variant = 'danger',
-  size = 'md',
   onDeleted,
 }: {
   campId: string;
   campName: string;
-  variant?: 'danger' | 'danger-soft';
-  size?: 'sm' | 'md';
   onDeleted: () => void;
 }) {
   const { toast } = useUi();
@@ -66,7 +62,7 @@ export function DeleteCampButton({
 
   return (
     <>
-      <Button variant={variant} size={size} icon="trash" disabled={busy} onClick={() => setStep('ask')}>
+      <Button variant="glass-danger" icon="trash" disabled={busy} onClick={() => setStep('ask')}>
         Delete camp
       </Button>
 
@@ -76,10 +72,10 @@ export function DeleteCampButton({
           onClose={close}
           footer={
             <>
-              <Button type="button" onClick={close}>
+              <Button variant="glass" type="button" onClick={close}>
                 Cancel
               </Button>
-              <Button variant="danger" onClick={() => setStep('type')}>
+              <Button variant="glass-danger" onClick={() => setStep('type')}>
                 Continue
               </Button>
             </>
@@ -95,11 +91,11 @@ export function DeleteCampButton({
           onClose={close}
           footer={
             <>
-              <Button type="button" disabled={busy} onClick={close}>
+              <Button variant="glass" type="button" disabled={busy} onClick={close}>
                 Cancel
               </Button>
               <Button
-                variant="danger"
+                variant="glass-danger"
                 icon="trash"
                 disabled={busy || typed !== campName}
                 onClick={() => void run(() => deleteCamp({ orgId: campId, confirmName: typed }))}

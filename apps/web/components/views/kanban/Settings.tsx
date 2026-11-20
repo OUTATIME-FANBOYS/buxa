@@ -97,9 +97,13 @@ export function Settings({
           </label>
           {on && (
             <div className="row">
-              {!readOnly && <Button onClick={() => setAddAgent(true)}>Add an agent</Button>}
+              {!readOnly && (
+                <Button variant="glass" onClick={() => setAddAgent(true)}>
+                  Add an agent
+                </Button>
+              )}
               {hasAgents && (
-                <Button variant="ghost" href={ROUTES.agents}>
+                <Button variant="glass" href={ROUTES.agents}>
                   Open Agents
                 </Button>
               )}
@@ -113,10 +117,14 @@ export function Settings({
             Everything lives in this browser’s storage. Export a copy to back it up or move it to another device.
           </p>
           <div className="row">
-            <Button onClick={exportJson}>Export JSON</Button>
+            <Button variant="glass" onClick={exportJson}>
+              Export JSON
+            </Button>
             {!readOnly && (
               <>
-                <Button onClick={() => file.current?.click()}>Import JSON</Button>
+                <Button variant="glass" onClick={() => file.current?.click()}>
+                  Import JSON
+                </Button>
                 <input
                   ref={file}
                   type="file"

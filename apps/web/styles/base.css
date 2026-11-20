@@ -114,6 +114,22 @@ code {
 .muted {
   color: var(--text-2);
 }
+
+/* A field's validation message: small red text under the input, the same for every form. */
+.field-error {
+  margin: 0;
+  font-size: var(--fs-s);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--crit);
+}
+/* The asterisk after a required field's label. The input also carries aria-required, so the mark is not the only signal. */
+.field-required {
+  color: var(--crit);
+  font-weight: 700;
+}
 .small {
   font-size: var(--fs-s);
 }

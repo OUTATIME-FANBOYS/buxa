@@ -8,7 +8,8 @@ import { ClassForm, type InstructorChoice } from './ClassForm';
 
 /**
  * Opens a class's edit form in a dialog. The button is an icon with an accessible name and a tooltip. The dialog closes when the
- * change is saved, on Cancel, or on Escape.
+ * change is saved, on Cancel, or on Escape. Cancel and Save class sit in the dialog's pinned footer, so they stay in view however
+ * tall the form is.
  */
 export function EditClassButton({
   cls,
@@ -25,13 +26,15 @@ export function EditClassButton({
   detailsOnly?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState(false);
   const close = useCallback(() => setOpen(false), []);
+  const formId = `edit-class-${cls.id}`;
 
   return (
     <>
       <Button
         type="button"
-        variant="ghost"
+        variant="glass"
         size="sm"
         iconOnly
         icon="edit"
@@ -41,7 +44,21 @@ export function EditClassButton({
         onClick={() => setOpen(true)}
       />
       {open && (
-        <Dialog title="Edit class" onClose={close} className="class-dialog">
+        <Dialog
+          title="Edit class"
+          onClose={close}
+          className="class-dialog"
+          footer={
+            <>
+              <Button variant="glass" type="button" disabled={pending} onClick={close}>
+                Cancel
+              </Button>
+              <Button type="submit" form={formId} variant="primary" icon="save" disabled={pending}>
+                {pending ? 'Saving...' : 'Save class'}
+              </Button>
+            </>
+          }
+        >
           <ClassForm
             sessionId={cls.sessionId}
             sessionName={sessionName}
@@ -50,7 +67,8 @@ export function EditClassButton({
             cls={cls}
             variant="dialog"
             detailsOnly={detailsOnly}
-            onCancel={close}
+            formId={formId}
+            onPendingChange={setPending}
             onSaved={close}
           />
         </Dialog>

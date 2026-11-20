@@ -68,7 +68,7 @@ export function InstructorPicker({
                 aria-label={`Remove ${byId.get(id) ?? 'instructor'}`}
               >
                 {byId.get(id) ?? ''}
-                <span aria-hidden="true"> ×</span>
+                <span aria-hidden="true">×</span>
               </button>
             </li>
           ))}

@@ -34,11 +34,10 @@ export function DeleteClassButton({
     <>
       <Button
         type="button"
-        variant="danger-soft"
+        variant="glass-danger"
         size="sm"
         iconOnly
         icon="trash"
-        className="classes-delete"
         aria-label={`Delete ${className}`}
         title="Delete class"
         aria-haspopup="dialog"
@@ -55,10 +54,10 @@ export function DeleteClassButton({
             </p>
             <ActionMessage state={state} />
             <div className="classes-actions">
-              <Button type="button" onClick={close}>
+              <Button variant="glass" type="button" onClick={close}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" disabled={pending}>
+              <Button type="submit" variant="glass-danger" disabled={pending}>
                 {pending ? 'Deleting...' : 'Delete class'}
               </Button>
             </div>

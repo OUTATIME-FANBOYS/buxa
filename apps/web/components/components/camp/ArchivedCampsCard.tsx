@@ -55,22 +55,10 @@ export function ArchivedCampsCard({ camps }: { camps: readonly ArchivedCamp[] })
               <span>{camp.name}</span> <span className="muted">Archived {formatDate(camp.archivedAt)}</span>
               {camp.role === 'owner' && (
                 <div className="row">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    icon="archive-restore"
-                    disabled={busy}
-                    onClick={() => setUnarchiving(camp)}
-                  >
+                  <Button variant="glass" icon="archive-restore" disabled={busy} onClick={() => setUnarchiving(camp)}>
                     Unarchive camp
                   </Button>
-                  <DeleteCampButton
-                    campId={camp.id}
-                    campName={camp.name}
-                    variant="danger-soft"
-                    size="sm"
-                    onDeleted={() => router.refresh()}
-                  />
+                  <DeleteCampButton campId={camp.id} campName={camp.name} onDeleted={() => router.refresh()} />
                 </div>
               )}
             </li>
@@ -84,11 +72,11 @@ export function ArchivedCampsCard({ camps }: { camps: readonly ArchivedCamp[] })
           onClose={close}
           footer={
             <>
-              <Button type="button" disabled={busy} onClick={close}>
+              <Button variant="glass" type="button" disabled={busy} onClick={close}>
                 Cancel
               </Button>
               <Button
-                variant="primary"
+                variant="glass"
                 icon="archive-restore"
                 disabled={busy}
                 onClick={() => void unarchive(unarchiving)}

@@ -81,7 +81,7 @@ export function ClassesTable({
                 <td>
                   <div className="classes-row-actions">
                     <Button
-                      variant="ghost"
+                      variant="glass"
                       size="sm"
                       iconOnly
                       icon="users"

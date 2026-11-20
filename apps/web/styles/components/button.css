@@ -6,7 +6,7 @@
  *
  * Shape: every button is a pill (fully rounded ends).
  * Variants: primary (filled accent), secondary (filled surface, edged), ghost (text only),
- * danger (filled red), danger-soft (tinted red, red text).
+ * danger (filled red), danger-soft (tinted red, red text), glass and glass-danger (liquid glass, as the pills).
  *
  * States: hover (only on a device that hovers), pressed (:active or data-pressed), focus-visible, disabled.
  * Pressed uses the hover fill. Disabled is exempt from contrast (WCAG 1.4.3), so it is only faded.
@@ -80,6 +80,27 @@
   --button-bg: var(--danger-soft);
   --button-bg-hover: color-mix(in srgb, var(--danger-soft) 88%, var(--danger-soft-foreground));
   --button-fg: var(--danger-soft-foreground);
+}
+
+/* Liquid glass: the pill recipe (a translucent tint, a backdrop blur and the top highlight) in the hue of its tone, so it
+ * matches the status and role pills. Same height, radius and padding as every other button. glass is neutral (Archive camp,
+ * Unarchive camp); glass-danger is red (Delete camp). The tints come from the --hue-* tokens in tokens.css. */
+.button--glass,
+.button--glass-danger {
+  --button-edge: transparent;
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  backdrop-filter: blur(12px) saturate(160%);
+}
+.button--glass {
+  --button-bg: var(--hue-grey-soft);
+  --button-bg-hover: color-mix(in srgb, var(--hue-grey) 26%, transparent);
+  --button-fg: var(--hue-grey-ink);
+}
+.button--glass-danger {
+  --button-bg: var(--hue-red-soft);
+  --button-bg-hover: color-mix(in srgb, var(--hue-red) 26%, transparent);
+  --button-fg: var(--hue-red-ink);
 }
 
 /* Hover: only where the pointer hovers, so a tap on a phone does not leave a stuck colour. */

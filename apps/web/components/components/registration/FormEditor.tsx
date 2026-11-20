@@ -12,6 +12,8 @@ import { QuestionBuilder } from './QuestionBuilder';
 /*
  * A registration form's name, season, sessions and own questions. The same screen creates a form and edits its draft: the create
  * mode posts to createFormAction and the edit mode to updateFormAction (with the form id). Saving a draft does not publish it.
+ * In a dialog (`variant="dialog"`) the buttons belong to the dialog's pinned footer, tied by `id`, and `onPendingChange` reports
+ * the pending state to it.
  */
 
 export interface FormEditorInitial {
@@ -24,17 +26,25 @@ export interface FormEditorInitial {
 export function FormEditor({
   mode,
   formId,
+  id,
+  variant = 'page',
   sessions,
   initial,
+  onPendingChange,
 }: {
   mode: 'create' | 'edit';
   formId?: string;
+  /** The form element's id, for a dialog footer's submit button to name with its `form` attribute. */
+  id?: string;
+  variant?: 'page' | 'dialog';
   sessions: readonly { id: string; name: string }[];
   initial?: FormEditorInitial;
+  onPendingChange?: (pending: boolean) => void;
 }) {
   const [state, formAction, pending] = useActionState(mode === 'create' ? createFormAction : updateFormAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
   const chosen = new Set(initial?.sessionIds ?? []);
+  const inDialog = variant === 'dialog';
 
   useEffect(() => {
     if (state.status === 'error' && state.fieldErrors) {
@@ -42,78 +52,99 @@ export function FormEditor({
     }
   }, [state]);
 
+  useEffect(() => {
+    onPendingChange?.(pending);
+  }, [pending, onPendingChange]);
+
   const err = (name: string) => fieldError(state, name);
 
   return (
-    <form ref={formRef} action={formAction} className="class-form registration-editor">
+    <form
+      id={id}
+      ref={formRef}
+      action={formAction}
+      noValidate
+      className={`${inDialog ? '' : 'panel '}class-form registration-editor`}
+    >
       {formId && <input type="hidden" name="formId" value={formId} />}
 
-      <TextField
-        label="Form name *"
-        name="name"
-        defaultValue={initial?.name ?? ''}
-        error={err('name')}
-        maxLength={120}
-        autoComplete="off"
-        isRequired
-      />
-      <TextField
-        label="Season"
-        name="season"
-        defaultValue={initial?.season ?? ''}
-        error={err('season')}
-        maxLength={60}
-        hint="For example Summer 2027. Only for your own reference."
-        autoComplete="off"
-      />
+      <div className="form-section">
+        <TextField
+          label="Form name"
+          isRequired
+          name="name"
+          defaultValue={initial?.name ?? ''}
+          error={err('name')}
+          maxLength={120}
+          autoComplete="off"
+        />
+        <TextField
+          label="Season"
+          name="season"
+          defaultValue={initial?.season ?? ''}
+          error={err('season')}
+          maxLength={60}
+          hint="For example Summer 2027. Only for your own reference."
+          autoComplete="off"
+        />
+      </div>
 
-      <fieldset className="registration-group">
-        <legend className="registration-group__title">Sessions this form covers *</legend>
+      <section className="form-section" aria-labelledby="registration-sessions">
+        <h3 id="registration-sessions" className="form-section__title">
+          Sessions this form covers
+          <span className="field-required" aria-hidden="true">
+            {' *'}
+          </span>
+        </h3>
         {sessions.length === 0 ? (
           <p className="muted">Create a session first. A form covers the sessions its families can choose from.</p>
         ) : (
-          sessions.map(session => (
-            <Checkbox key={session.id} name="sessionIds" value={session.id} defaultSelected={chosen.has(session.id)}>
-              {session.name}
-            </Checkbox>
-          ))
+          <div className="check-group">
+            {sessions.map(session => (
+              <Checkbox key={session.id} name="sessionIds" value={session.id} defaultSelected={chosen.has(session.id)}>
+                {session.name}
+              </Checkbox>
+            ))}
+          </div>
         )}
         {err('sessionIds') && (
-          <span className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
+          <span className="field-error" role="alert">
             {err('sessionIds')}
           </span>
         )}
-      </fieldset>
+      </section>
 
-      <section className="registration-group" aria-labelledby="registration-questions">
-        <h2 id="registration-questions" className="registration-group__title">
+      <section className="form-section" aria-labelledby="registration-questions">
+        <h3 id="registration-questions" className="form-section__title">
           Your questions
-        </h2>
+        </h3>
         <p className="muted">The standard questions about the camper and family are always asked.</p>
         <QuestionBuilder initial={initial?.fields} />
         {err('fields') && (
-          <span className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
+          <span className="field-error" role="alert">
             {err('fields')}
           </span>
         )}
       </section>
 
       <ActionMessage state={state} />
-      <div className="classes-actions">
-        <Button
-          type="submit"
-          variant={mode === 'create' ? 'primary' : 'secondary'}
-          disabled={pending || sessions.length === 0}
-          className="classes-target"
-        >
-          {pending ? 'Saving...' : mode === 'create' ? 'Create form' : 'Save draft'}
-        </Button>
-        {mode === 'create' && (
-          <Button variant="ghost" className="classes-target" href={ROUTES.registration}>
-            Cancel
+      {!inDialog && (
+        <div className="classes-actions">
+          <Button
+            type="submit"
+            variant={mode === 'create' ? 'primary' : 'glass'}
+            disabled={pending || sessions.length === 0}
+            className="classes-target"
+          >
+            {pending ? 'Saving...' : mode === 'create' ? 'Create form' : 'Save draft'}
           </Button>
-        )}
-      </div>
+          {mode === 'create' && (
+            <Button variant="glass" className="classes-target" href={ROUTES.registration}>
+              Cancel
+            </Button>
+          )}
+        </div>
+      )}
     </form>
   );
 }

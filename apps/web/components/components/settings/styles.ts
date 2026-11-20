@@ -15,7 +15,7 @@ export const SETTINGS_CHOICE_CONTROL = 'buxa:flex-[0_0_260px] buxa:max-w-full';
 /** Every card's heading shares one size, so the cards read as one set. */
 export const SETTINGS_TILE_HEADING = 'buxa:text-[16px]! buxa:leading-[1.3]';
 /** A card's description under its heading. */
-export const SETTINGS_TILE_TEXT = 'buxa:mt-[var(--s1)]! buxa:text-[14px] buxa:leading-[1.5]';
+export const SETTINGS_TILE_TEXT = 'buxa:text-[14px] buxa:leading-[1.5]';
 
 /** The theme and clock choices in a settings card: the group fills the card's control and never runs past its border, and
  * the options share the width and wrap their labels. */

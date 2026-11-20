@@ -38,6 +38,7 @@ export function DatePicker({
 }: DatePickerProps) {
   const generated = useId();
   const inputId = id ?? generated;
+  const hintId = `${inputId}-hint`;
   const controlled = value !== undefined ? { value: value ?? '' } : { defaultValue: defaultValue ?? '' };
 
   return (
@@ -47,27 +48,35 @@ export function DatePicker({
         htmlFor={inputId}
       >
         {label}
-        {isRequired ? ' *' : null}
+        {isRequired ? (
+          <span className="field-required" aria-hidden="true">
+            {' *'}
+          </span>
+        ) : null}
       </label>
       <input
         id={inputId}
         name={name}
         type="date"
         required={isRequired}
+        aria-required={isRequired || undefined}
         disabled={isDisabled}
         min={minValue}
         max={maxValue}
         aria-invalid={Boolean(error) || undefined}
+        aria-describedby={error || hint ? hintId : undefined}
         {...controlled}
         onChange={e => onChange?.(e.target.value === '' ? null : e.target.value)}
-        className="select-field__input buxa:min-w-0"
+        className="select-field__input buxa:min-w-0 buxa:aria-[invalid=true]:border-[var(--crit)]"
       />
       {error ? (
-        <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
+        <p id={hintId} className="field-error" role="alert">
           {error}
         </p>
       ) : hint ? (
-        <p className="field-hint buxa:text-[length:var(--fs-s)] buxa:text-[var(--text-3)]">{hint}</p>
+        <p id={hintId} className="field-hint buxa:text-[length:var(--fs-s)] buxa:text-[var(--text-3)]">
+          {hint}
+        </p>
       ) : null}
     </div>
   );

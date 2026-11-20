@@ -58,6 +58,7 @@ export function CalendarLinkCard() {
           <div className="classes-actions">
             <Button
               type="button"
+              variant="glass"
               onClick={() => {
                 void copy();
               }}

@@ -15,6 +15,8 @@ describe('Button', () => {
     ['ghost', 'button--ghost'],
     ['danger', 'button--danger'],
     ['danger-soft', 'button--danger-soft'],
+    ['glass', 'button--glass'],
+    ['glass-danger', 'button--glass-danger'],
   ] as const)('maps the %s variant to its button class', (variant, cls) => {
     expect(renderToStaticMarkup(<Button variant={variant}>Go</Button>)).toContain(cls);
   });

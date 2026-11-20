@@ -153,13 +153,13 @@ export function QuestionBuilder({ initial = [] }: { initial?: CustomField[] }) {
             <Button variant="primary" type="button" onClick={add}>
               Add question
             </Button>
-            <Button variant="ghost" type="button" onClick={reset}>
+            <Button variant="glass" type="button" onClick={reset}>
               Cancel
             </Button>
           </div>
         </div>
       ) : (
-        <Button variant="secondary" type="button" icon="plus" onClick={() => setAdding(true)}>
+        <Button variant="glass" type="button" icon="plus" onClick={() => setAdding(true)}>
           Add a question
         </Button>
       )}

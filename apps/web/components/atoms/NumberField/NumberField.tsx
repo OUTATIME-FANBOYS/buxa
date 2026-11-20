@@ -48,7 +48,11 @@ export function NumberField({
     <div className="buxa:grid buxa:min-w-0 buxa:gap-2">
       <label className="field-label" htmlFor={inputId}>
         {label}
-        {isRequired ? ' *' : null}
+        {isRequired ? (
+          <span className="field-required" aria-hidden="true">
+            {' *'}
+          </span>
+        ) : null}
       </label>
       <input
         id={inputId}
@@ -60,6 +64,7 @@ export function NumberField({
         max={maxValue}
         placeholder={placeholder}
         required={isRequired}
+        aria-required={isRequired || undefined}
         disabled={isDisabled}
         aria-invalid={Boolean(error) || undefined}
         aria-describedby={error || hint ? hintId : undefined}

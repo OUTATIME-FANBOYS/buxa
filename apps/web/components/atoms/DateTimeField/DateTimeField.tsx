@@ -31,6 +31,7 @@ export function DateTimeField({
 }: DateTimeFieldProps) {
   const generated = useId();
   const inputId = id ?? generated;
+  const hintId = `${inputId}-hint`;
 
   return (
     <div className="select-field buxa:grid buxa:gap-[var(--s2)] buxa:min-w-0">
@@ -39,24 +40,32 @@ export function DateTimeField({
         htmlFor={inputId}
       >
         {label}
-        {isRequired ? ' *' : null}
+        {isRequired ? (
+          <span className="field-required" aria-hidden="true">
+            {' *'}
+          </span>
+        ) : null}
       </label>
       <input
         id={inputId}
         name={name}
         type="datetime-local"
         required={isRequired}
+        aria-required={isRequired || undefined}
         autoFocus={autoFocus}
         defaultValue={defaultValue ?? ''}
         aria-invalid={Boolean(error) || undefined}
-        className="select-field__input buxa:min-w-0"
+        aria-describedby={error || hint ? hintId : undefined}
+        className="select-field__input buxa:min-w-0 buxa:aria-[invalid=true]:border-[var(--crit)]"
       />
       {error ? (
-        <p className="field-error buxa:text-[length:var(--fs-b)] buxa:text-[var(--crit)]" role="alert">
+        <p id={hintId} className="field-error" role="alert">
           {error}
         </p>
       ) : hint ? (
-        <p className="field-hint buxa:text-[length:var(--fs-b)] buxa:text-[var(--text-3)]">{hint}</p>
+        <p id={hintId} className="field-hint buxa:text-[length:var(--fs-b)] buxa:text-[var(--text-3)]">
+          {hint}
+        </p>
       ) : null}
     </div>
   );

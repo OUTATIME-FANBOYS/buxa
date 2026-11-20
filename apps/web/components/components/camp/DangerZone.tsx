@@ -59,7 +59,7 @@ export function DangerZone({ campId, campName }: { campId: string; campName: str
         Archive hides this camp and keeps its data. Delete removes the camp and everything in it, for good.
       </p>
       <div className="row">
-        <Button variant="secondary" icon="archive" disabled={busy} onClick={() => setArchiving(true)}>
+        <Button variant="glass" icon="archive" disabled={busy} onClick={() => setArchiving(true)}>
           Archive camp
         </Button>
         <DeleteCampButton
@@ -78,11 +78,11 @@ export function DangerZone({ campId, campName }: { campId: string; campName: str
           onClose={close}
           footer={
             <>
-              <Button type="button" disabled={busy} onClick={close}>
+              <Button variant="glass" type="button" disabled={busy} onClick={close}>
                 Cancel
               </Button>
               <Button
-                variant="primary"
+                variant="glass"
                 icon="archive"
                 disabled={busy}
                 onClick={() => void run(() => archiveCamp({ orgId: campId }), 'Camp archived')}
