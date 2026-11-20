@@ -59,7 +59,7 @@ export function NewSessionForm({
       aria-describedby="session-form-help"
     >
       <p id="session-form-help" className="class-helper">
-        Fields marked with an asterisk are required. A session is a date range; its classes are added after it is saved.
+        Fields marked * are required. Add its classes after you save.
       </p>
       <TextField
         label="Session name"

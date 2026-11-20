@@ -31,7 +31,9 @@ const BODY = 'buxa:[padding:var(--s4)_var(--s5)_var(--s5)] buxa:overflow-y-auto 
 // min-h-0 lets this flex child shrink below its content, so the body (header included, it is sticky) scrolls as one.
 const DRAWER_BODY =
   'buxa:overflow-y-auto buxa:min-h-0 buxa:[padding:0_var(--s5)_var(--s6)] buxa:grid buxa:gap-[var(--s5)] buxa:content-start buxa:flex-1';
-const FOOT = 'buxa:flex buxa:shrink-0 buxa:justify-end buxa:gap-[var(--s2)] buxa:[padding:0_var(--s5)_var(--s5)]';
+// The footer sits 16px below the body's last field, on every dialog, so the buttons never touch the content above them.
+const FOOT =
+  'buxa:flex buxa:shrink-0 buxa:justify-end buxa:gap-[var(--s2)] buxa:[padding:var(--s4)_var(--s5)_var(--s5)]';
 
 interface Swipe {
   id: number;

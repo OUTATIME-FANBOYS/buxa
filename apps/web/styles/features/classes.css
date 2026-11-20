@@ -68,6 +68,23 @@ form.class-form {
 .dialog.class-dialog {
   width: min(640px, 100%);
 }
+/* Form dialogs (new and edit session, class, registration) are compact, so a normal screen shows the whole form without scrolling:
+ * 12px between fields and sections, 8px inside a section, and the price rule sits close to the dates. */
+.class-dialog form.class-form {
+  gap: var(--s3);
+}
+.class-dialog .form-section {
+  gap: var(--s2);
+}
+.class-dialog .form-section + .form-section {
+  padding-top: var(--s3);
+}
+.class-dialog .price-block {
+  gap: var(--s3);
+}
+.class-dialog .price-head {
+  gap: 0;
+}
 .class-form .class-section {
   margin: 0;
   padding: 0;
