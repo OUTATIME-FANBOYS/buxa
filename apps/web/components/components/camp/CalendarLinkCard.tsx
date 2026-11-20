@@ -42,13 +42,19 @@ export function CalendarLinkCard() {
     <section className="panel settings-tile">
       <h2 className="settings-tile-heading">Calendar link</h2>
       <p className="class-helper">
-        Calendar apps subscribe to this link. Anyone with it can read the camp&apos;s sessions and classes. Making a new link stops
-        the old one at once.
+        Calendar apps subscribe to this link. Anyone with it can read the camp&apos;s sessions and classes. Making a new
+        link stops the old one at once.
       </p>
       {link ? (
         <>
           <p className="class-helper">Copy it now. It is not shown again.</p>
-          <input className="calendar-link" readOnly value={link} aria-label="Calendar link" onFocus={e => e.currentTarget.select()} />
+          <input
+            className="calendar-link"
+            readOnly
+            value={link}
+            aria-label="Calendar link"
+            onFocus={e => e.currentTarget.select()}
+          />
           <div className="classes-actions">
             <Button type="button" onClick={copy}>
               Copy link

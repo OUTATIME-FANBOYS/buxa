@@ -39,7 +39,15 @@ export function RecurringSeriesButton({ sessionId }: { sessionId: string }) {
   );
 }
 
-function SeriesForm({ sessionId, onCancel, onSaved }: { sessionId: string; onCancel: () => void; onSaved: () => void }) {
+function SeriesForm({
+  sessionId,
+  onCancel,
+  onSaved,
+}: {
+  sessionId: string;
+  onCancel: () => void;
+  onSaved: () => void;
+}) {
   const [state, formAction, pending] = useActionState(addRecurringClassesAction, idle);
   const [endKind, setEndKind] = useState<'until' | 'count'>('until');
   const formRef = useRef<HTMLFormElement>(null);
