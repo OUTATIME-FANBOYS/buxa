@@ -90,4 +90,12 @@ export interface ClassRepository {
    * TeacherNotFoundError for a user who is not a teacher in this camp.
    */
   replaceTeachers(actor: Actor, classId: string, userIds: readonly string[]): Promise<void>;
+  /** Which teachers each class of a session has, for the session page. Row-level security applies. */
+  teacherAssignments(orgId: string, sessionId: string): Promise<TeacherAssignment[]>;
+}
+
+/** A teacher assigned to one class (the class's id, and the teacher's user id). */
+export interface TeacherAssignment {
+  classId: string;
+  userId: string;
 }

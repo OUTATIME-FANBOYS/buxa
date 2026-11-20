@@ -15,3 +15,4 @@ export * from './PriceFields';
 export * from './RecurringSeriesButton';
 export * from './SessionPublicToggle';
 export * from './SessionPriceButton';
+export * from './TeacherAssignments';

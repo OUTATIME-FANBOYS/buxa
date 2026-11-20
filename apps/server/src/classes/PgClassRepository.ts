@@ -3,7 +3,14 @@ import { withOrg } from '@buxa/db';
 import { isUuid, type Actor } from '@buxa/domain';
 import type { Class, Enrolment, NewSessionInput, Session, SessionPriceInput } from '@buxa/contracts';
 import { recordAudit } from '../audit/recordAudit';
-import type { CampClassSpan, ClassRecord, ClassRepository, EnrolRequest, EnrolmentRule } from './ClassRepository';
+import type {
+  CampClassSpan,
+  ClassRecord,
+  ClassRepository,
+  EnrolRequest,
+  EnrolmentRule,
+  TeacherAssignment,
+} from './ClassRepository';
 import { TeacherNotFoundError } from './errors';
 import { cancelInTransaction, enrolInTransaction } from './PgEnrolmentWrites';
 import {
@@ -166,6 +173,24 @@ export class PgClassRepository implements ClassRepository {
       );
 
       return rows.map(r => r.session_id);
+    });
+  }
+
+  teacherAssignments(orgId: string, sessionId: string): Promise<TeacherAssignment[]> {
+    return withOrg(this.pool, orgId, async db => {
+      if (!isUuid(sessionId)) {
+        return [];
+      }
+      // class_teachers.session_id holds the class's id (the sessions table row), and sessions.class_id the parent session.
+      const { rows } = await db.query<TeacherAssignment>(
+        `SELECT ct.session_id AS "classId", ct.user_id AS "userId"
+           FROM class_teachers ct
+           JOIN sessions s ON s.id = ct.session_id
+          WHERE ct.org_id = $1 AND s.class_id = $2`,
+        [orgId, sessionId],
+      );
+
+      return rows;
     });
   }
 

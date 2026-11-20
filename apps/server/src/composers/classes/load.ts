@@ -3,6 +3,7 @@ import type { Actor, CampRole } from '@buxa/domain';
 import type { Class, Enrolment, Session } from '@buxa/contracts';
 import { getRuntime } from '../../runtime';
 import { isHttpError, notFound } from '../../http/errors';
+import type { TeacherAssignment } from '../../classes/ClassRepository';
 
 /** What a page can show: the data, or the reason it cannot be shown. Anything else goes to the error boundary. */
 export type Loaded<T> = { ok: true; value: T } | { ok: false; reason: 'forbidden' | 'not-found' };
@@ -69,6 +70,18 @@ export async function loadPeopleWithRole(
 export async function loadEnrolments(actor: Actor, classId: string): Promise<Loaded<Enrolment[]>> {
   return guarded(async () => {
     const outcome = await getRuntime().services.classes.listEnrolments(actor, classId);
+    if (!outcome.ok) {
+      throw notFound(outcome.failure.message);
+    }
+
+    return outcome.value;
+  });
+}
+
+/** Which teachers each class of a session has (the session page's teacher list). Needs classes:manage. */
+export async function loadTeacherAssignments(actor: Actor, sessionId: string): Promise<Loaded<TeacherAssignment[]>> {
+  return guarded(async () => {
+    const outcome = await getRuntime().services.classes.listTeacherAssignments(actor, sessionId);
     if (!outcome.ok) {
       throw notFound(outcome.failure.message);
     }

@@ -22,9 +22,10 @@ const services = vi.hoisted(() => ({
     listClasses: vi.fn(),
     getClass: vi.fn(),
     listEnrolments: vi.fn(),
+    listTeacherAssignments: vi.fn(),
   },
   people: { list: vi.fn() },
-  orgs: { getCamp: vi.fn() },
+  orgs: { getCamp: vi.fn(), listMembers: vi.fn() },
 }));
 
 vi.mock('next/navigation', () => ({ notFound, redirect: vi.fn() }));
@@ -40,6 +41,9 @@ vi.mock('@/actions/classes', () => ({
   deleteClassAction: vi.fn(),
   enrolAction: vi.fn(),
   cancelEnrolmentAction: vi.fn(),
+  setSessionPublicAction: vi.fn(),
+  addRecurringClassesAction: vi.fn(),
+  setTeachersAction: vi.fn(),
   importClassesAction: vi.fn(),
 }));
 
@@ -105,6 +109,8 @@ beforeEach(() => {
   });
   asRole('staff');
   services.orgs.getCamp.mockResolvedValue({ timezone: 'Australia/Sydney' });
+  services.classes.listTeacherAssignments.mockResolvedValue({ ok: true, value: [] });
+  services.orgs.listMembers.mockResolvedValue({ members: [] });
   services.classes.listSessions.mockResolvedValue({ ok: true, value: [parent] });
   services.classes.getSession.mockResolvedValue({ ok: true, value: parent });
   services.classes.listClasses.mockResolvedValue({ ok: true, value: [full] });

@@ -12,6 +12,7 @@ import type {
   EnrolRequest,
   EnrolmentRule,
   GatheredEnrolmentFacts,
+  TeacherAssignment,
 } from './ClassRepository';
 import {
   CamperNotFoundError,
@@ -373,6 +374,20 @@ export class InMemoryClassRepository implements ClassRepository {
     const set = this.teacherUsers.get(orgId) ?? new Set<string>();
     set.add(userId);
     this.teacherUsers.set(orgId, set);
+  }
+
+  teacherAssignments(orgId: string, sessionId: string): Promise<TeacherAssignment[]> {
+    const rows: TeacherAssignment[] = [];
+    for (const c of this.classes.values()) {
+      if (c.orgId !== orgId || c.sessionId !== sessionId) {
+        continue;
+      }
+      for (const userId of this.teachersOf.get(c.id) ?? []) {
+        rows.push({ classId: c.id, userId });
+      }
+    }
+
+    return Promise.resolve(rows);
   }
 
   assignedClassIds(orgId: string, userId: string): Promise<string[]> {

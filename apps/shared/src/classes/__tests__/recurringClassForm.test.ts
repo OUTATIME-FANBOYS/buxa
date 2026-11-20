@@ -55,7 +55,7 @@ describe('recurringClassForm', () => {
 
     expect(parsed.ok).toBe(false);
     if (!parsed.ok) {
-      expect(parsed.state.fieldErrors?.weekdays).toBe('Tick at least one day of the week.');
+      expect(parsed.state).toMatchObject({ fieldErrors: { weekdays: 'Tick at least one day of the week.' } });
     }
   });
 });
