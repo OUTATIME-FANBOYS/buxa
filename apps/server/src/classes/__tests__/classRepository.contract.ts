@@ -20,6 +20,10 @@ export type ClassContractFactory = () => Promise<ClassContractFixture>;
 const CLASS_DAY = '2027-07-05';
 const LIVE_HOLD_EXPIRY = '2999-01-01T00:00:00.000Z';
 const EXPIRED_HOLD_EXPIRY = '2000-01-01T00:00:00.000Z';
+/** How long a short hold lives in the test that waits for it to expire. Long enough to enrol first, short enough to keep the test quick. */
+const SHORT_HOLD_MS = 1000;
+
+const pause = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
 const SESSION = {
   name: 'Summer camp',
@@ -146,6 +150,38 @@ export function classRepositoryContract(factory: ClassContractFactory): void {
       await fx.addSeatHold(classId, { expiresAt: EXPIRED_HOLD_EXPIRY, released: false });
       expect(await countsOf(classId)).toEqual({ seatsTaken: 0, waitlisted: 0 });
       expect((await enrol(classId, await fx.addCamper())).status).toBe('enrolled');
+    });
+
+    it('a waitlisted camper takes a place freed by an expired hold when another camper enrols', async () => {
+      const classId = await classOf(2);
+      await enrol(classId, await fx.addCamper());
+      await fx.addSeatHold(classId, { expiresAt: new Date(Date.now() + SHORT_HOLD_MS).toISOString(), released: false });
+      const waiting = await enrol(classId, await fx.addCamper(), true);
+      expect(waiting.status).toBe('waitlisted');
+
+      await pause(SHORT_HOLD_MS + 100);
+      const next = await enrol(classId, await fx.addCamper(), true);
+
+      const statusOf = async (id: string) =>
+        (await fx.repo.listEnrolments(fx.actor.userId, fx.actor.orgId, classId)).find(e => e.id === id)?.status;
+      expect(await statusOf(waiting.id)).toBe('enrolled');
+      expect(await statusOf(next.id)).toBe('waitlisted');
+      expect(await countsOf(classId)).toEqual({ seatsTaken: 2, waitlisted: 1 });
+    });
+
+    it('a refused enrolment does not promote the waitlist or release the expired hold', async () => {
+      const classId = await classOf(2);
+      await enrol(classId, await fx.addCamper());
+      await fx.addSeatHold(classId, { expiresAt: new Date(Date.now() + SHORT_HOLD_MS).toISOString(), released: false });
+      const waiting = await enrol(classId, await fx.addCamper(), true);
+
+      await pause(SHORT_HOLD_MS + 100);
+      await expect(enrol(classId, await fx.addCamper())).rejects.toBeInstanceOf(SessionFullError);
+
+      const statusOf = async (id: string) =>
+        (await fx.repo.listEnrolments(fx.actor.userId, fx.actor.orgId, classId)).find(e => e.id === id)?.status;
+      expect(await statusOf(waiting.id)).toBe('waitlisted');
+      expect(await countsOf(classId)).toEqual({ seatsTaken: 1, waitlisted: 1 });
     });
 
     it('a released seat hold does not count, even before its time', async () => {

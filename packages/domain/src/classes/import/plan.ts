@@ -1,4 +1,5 @@
 import { isClassAge, isValidAgeRange, MAX_CLASS_AGE, MIN_CLASS_AGE, type AgeRange } from '../ageRange';
+import { capacityCovers } from '../capacity';
 import { findClash, isValidSpan } from '../interval';
 import { formatClash } from '../refusals';
 import { parseCampLocal } from './campTime';
@@ -296,7 +297,7 @@ export function planImport({ rows, classes, sessions, timeZone }: PlanInput): Im
         if (earlier) {
           return problem('starts_at', `The same session is on row ${earlier.rowNumber} of this file.`);
         }
-      } else if (target.seatsTaken > capacity) {
+      } else if (!capacityCovers(capacity, target.seatsTaken)) {
         return problem(
           'capacity',
           `${target.seatsTaken} campers are enrolled in this session, so the capacity cannot go below that.`,
