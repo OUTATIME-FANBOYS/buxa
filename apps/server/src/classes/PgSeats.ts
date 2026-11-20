@@ -1,3 +1,4 @@
+import { seatsLeft } from '@buxa/domain';
 import { recordAudit, type AuditActor } from '../audit/recordAudit';
 import type { Db } from '../people/pgRows';
 import { ClassNotFoundError } from './errors';
@@ -26,11 +27,12 @@ export async function lockSession(db: Db, sessionId: string): Promise<number> {
  * Returns how many were promoted. The capacity trigger still checks each row, so this can never overfill a session.
  */
 export async function promoteWaitlist(db: Db, sessionId: string, actor: AuditActor): Promise<number> {
-  const { rows: freeRows } = await db.query<{ free: number }>(
-    `SELECT greatest(s.capacity - session_seats_taken(s.id), 0)::int AS free FROM sessions s WHERE s.id = $1`,
+  const { rows: seatRows } = await db.query<{ capacity: number; taken: number }>(
+    `SELECT s.capacity, session_seats_taken(s.id) AS taken FROM sessions s WHERE s.id = $1`,
     [sessionId],
   );
-  const free = freeRows[0]?.free ?? 0;
+  const seats = seatRows[0];
+  const free = seats ? seatsLeft(seats.capacity, seats.taken) : 0;
   if (free === 0) {
     return 0;
   }
