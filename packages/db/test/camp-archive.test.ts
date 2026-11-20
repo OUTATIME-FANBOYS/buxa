@@ -46,9 +46,9 @@ describe.skipIf(!url)('camp archive and delete (0013)', () => {
   });
 
   it('a non-owner cannot archive the camp, and archived_at stays null', async () => {
-    await expect(
-      withOrg(pool, camp, db => db.query('SELECT buxa_archive_camp($1, $2)', [camp, admin])),
-    ).rejects.toThrow(/Only the camp owner/);
+    await expect(withOrg(pool, admin, camp, db => db.query('SELECT buxa_archive_camp($1)', [camp]))).rejects.toThrow(
+      /Only the camp owner/,
+    );
     const { rows } = await pool.query<{ archived_at: Date | null }>('SELECT archived_at FROM orgs WHERE id = $1', [
       camp,
     ]);
@@ -56,7 +56,7 @@ describe.skipIf(!url)('camp archive and delete (0013)', () => {
   });
 
   it('the owner archives the camp; the archive row is written in the same transaction', async () => {
-    await withOrg(pool, camp, db => db.query('SELECT buxa_archive_camp($1, $2)', [camp, owner]));
+    await withOrg(pool, owner, camp, db => db.query('SELECT buxa_archive_camp($1)', [camp]));
     const { rows } = await pool.query<{ archived_at: Date | null }>('SELECT archived_at FROM orgs WHERE id = $1', [
       camp,
     ]);
@@ -68,21 +68,21 @@ describe.skipIf(!url)('camp archive and delete (0013)', () => {
   });
 
   it('archiving an archived camp is refused', async () => {
-    await expect(
-      withOrg(pool, camp, db => db.query('SELECT buxa_archive_camp($1, $2)', [camp, owner])),
-    ).rejects.toThrow(/already archived/);
+    await expect(withOrg(pool, owner, camp, db => db.query('SELECT buxa_archive_camp($1)', [camp]))).rejects.toThrow(
+      /already archived/,
+    );
   });
 
   it('sign-in memberships leave out the archived camp, and the archived list shows it read-only', async () => {
-    const memberships = await withOrg(pool, null, db =>
-      db.query<{ orgId: string }>('SELECT member_org_id AS "orgId" FROM buxa_memberships_of($1)', [owner]),
+    const memberships = await withOrg(pool, owner, null, db =>
+      db.query<{ orgId: string }>('SELECT member_org_id AS "orgId" FROM buxa_memberships_of()', []),
     ).then(r => r.rows);
     expect(memberships.map(m => m.orgId)).not.toContain(camp);
 
-    const archived = await withOrg(pool, null, db =>
+    const archived = await withOrg(pool, admin, null, db =>
       db.query<{ id: string; name: string; archivedAt: Date; role: string }>(
-        'SELECT camp_id AS id, camp_name AS name, camp_archived_at AS "archivedAt", camp_role AS role FROM buxa_archived_camps_of($1)',
-        [admin],
+        'SELECT camp_id AS id, camp_name AS name, camp_archived_at AS "archivedAt", camp_role AS role FROM buxa_archived_camps_of()',
+        [],
       ),
     ).then(r => r.rows);
     expect(archived).toEqual([expect.objectContaining({ id: camp, name: `Archive ${tag}`, role: 'admin' })]);
@@ -90,14 +90,14 @@ describe.skipIf(!url)('camp archive and delete (0013)', () => {
 
   it('a non-owner cannot delete the camp', async () => {
     await expect(
-      withOrg(pool, camp, db => db.query('SELECT buxa_delete_camp($1, $2, $3)', [camp, admin, `Archive ${tag}`])),
+      withOrg(pool, admin, camp, db => db.query('SELECT buxa_delete_camp($1, $2)', [camp, `Archive ${tag}`])),
     ).rejects.toThrow(/Only the camp owner/);
     expect((await pool.query('SELECT 1 FROM orgs WHERE id = $1', [camp])).rowCount).toBe(1);
   });
 
   it('the owner cannot delete with the wrong name (case matters), and nothing is deleted', async () => {
     await expect(
-      withOrg(pool, camp, db => db.query('SELECT buxa_delete_camp($1, $2, $3)', [camp, owner, `archive ${tag}`])),
+      withOrg(pool, owner, camp, db => db.query('SELECT buxa_delete_camp($1, $2)', [camp, `archive ${tag}`])),
     ).rejects.toThrow(/does not match/);
     expect((await pool.query('SELECT 1 FROM orgs WHERE id = $1', [camp])).rowCount).toBe(1);
   });
@@ -155,7 +155,7 @@ describe.skipIf(!url)('camp archive and delete (0013)', () => {
     expect(before.people).toBe(1);
     expect(before.audit).toBeGreaterThan(0);
 
-    await withOrg(pool, camp, db => db.query('SELECT buxa_delete_camp($1, $2, $3)', [camp, owner, `Archive ${tag}`]));
+    await withOrg(pool, owner, camp, db => db.query('SELECT buxa_delete_camp($1, $2)', [camp, `Archive ${tag}`]));
 
     expect(await countCampRows(pool, camp)).toEqual({
       orgs: 0,

@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 import { migrate, withOrg } from '../src';
+import { memberOf } from './support';
 
 const url = process.env.DATABASE_URL;
 
@@ -11,9 +12,10 @@ describe.skipIf(!url)('session prices: constraints and row-level security', () =
   const tag = randomBytes(6).toString('hex');
   let orgA = '';
   let orgB = '';
+  let ownerB = '';
 
-  const insertPrice = (org: string, values: (string | number | null)[]) =>
-    withOrg(pool, org, db =>
+  const insertPrice = async (org: string, values: (string | number | null)[]) =>
+    withOrg(pool, await memberOf(pool, org), org, db =>
       db.query<{ id: string }>(
         `INSERT INTO classes (org_id, name, price_minor, price_currency, early_bird_minor, early_bird_until)
          VALUES ($1, 'Summer', $2, $3, $4, $5::date) RETURNING id`,
@@ -33,6 +35,7 @@ describe.skipIf(!url)('session prices: constraints and row-level security', () =
         `prices-b-${tag}`,
       ])
     ).rows[0].id;
+    ownerB = await memberOf(pool, orgB);
   });
 
   afterAll(async () => {
@@ -63,7 +66,7 @@ describe.skipIf(!url)('session prices: constraints and row-level security', () =
 
   it("keeps one camp's prices invisible to another camp", async () => {
     const row = await insertPrice(orgA, [12345, 'NZD', null, null]);
-    const seenByB = await withOrg(pool, orgB, db =>
+    const seenByB = await withOrg(pool, ownerB, orgB, db =>
       db.query<{ id: string }>('SELECT id FROM classes WHERE id = $1', [row.rows[0].id]),
     );
     expect(seenByB.rows).toHaveLength(0);

@@ -59,13 +59,13 @@ describe.skipIf(!url)('orgs update columns (0021)', () => {
 
   it('a direct UPDATE of archived_at by the request role is refused, and archived_at stays null', async () => {
     await expect(
-      withOrg(pool, camp, db => db.query('UPDATE orgs SET archived_at = now() WHERE id = $1', [camp])),
+      withOrg(pool, owner, camp, db => db.query('UPDATE orgs SET archived_at = now() WHERE id = $1', [camp])),
     ).rejects.toThrow(/permission denied for table orgs/);
     expect(await archivedAt()).toBeNull();
   });
 
   it('the request role can still rename the camp and change its timezone', async () => {
-    const r = await withOrg(pool, camp, db =>
+    const r = await withOrg(pool, owner, camp, db =>
       db.query<Row>(`UPDATE orgs SET name = $1, timezone = $2 WHERE id = $3 RETURNING name, timezone`, [
         `Renamed ${tag}`,
         'Europe/London',
@@ -76,14 +76,14 @@ describe.skipIf(!url)('orgs update columns (0021)', () => {
   });
 
   it('the owner archives and unarchives through the functions, which still work', async () => {
-    await withOrg(pool, camp, db => db.query('SELECT buxa_archive_camp($1, $2)', [camp, owner]));
+    await withOrg(pool, owner, camp, db => db.query('SELECT buxa_archive_camp($1)', [camp]));
     expect(await archivedAt()).not.toBeNull();
-    await withOrg(pool, camp, db => db.query('SELECT buxa_unarchive_camp($1, $2)', [camp, owner]));
+    await withOrg(pool, owner, camp, db => db.query('SELECT buxa_unarchive_camp($1)', [camp]));
     expect(await archivedAt()).toBeNull();
   });
 
   it('the owner deletes the camp through the function, which still works', async () => {
-    await withOrg(pool, camp, db => db.query('SELECT buxa_delete_camp($1, $2, $3)', [camp, owner, `Renamed ${tag}`]));
+    await withOrg(pool, owner, camp, db => db.query('SELECT buxa_delete_camp($1, $2)', [camp, `Renamed ${tag}`]));
     const { rowCount } = await pool.query('SELECT id FROM orgs WHERE id = $1', [camp]);
     expect(rowCount).toBe(0);
   });

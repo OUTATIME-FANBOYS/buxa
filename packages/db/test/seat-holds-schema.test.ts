@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 import { migrate, withOrg } from '../src';
+import { memberOf } from './support';
 
 const url = process.env.DATABASE_URL;
 
@@ -12,6 +13,8 @@ describe.skipIf(!url)('seat holds: isolation and constraints', () => {
   const tag = randomBytes(6).toString('hex');
   let orgA = '';
   let orgB = '';
+  let ownerA = '';
+  let ownerB = '';
   let sessionA = '';
   let householdA = '';
   let holdA = '';
@@ -29,8 +32,11 @@ describe.skipIf(!url)('seat holds: isolation and constraints', () => {
       ])
     ).rows[0].id;
 
+    ownerA = await memberOf(pool, orgA);
+    ownerB = await memberOf(pool, orgB);
+
     // One class, a session (the class row) and a household in camp A, then one hold on it.
-    await withOrg(pool, orgA, async db => {
+    await withOrg(pool, ownerA, orgA, async db => {
       const classId = (
         await db.query<{ id: string }>(
           `INSERT INTO classes (org_id, name, age_min, age_max, default_capacity) VALUES ($1, 'Holds', 8, 12, 10) RETURNING id`,
@@ -73,12 +79,12 @@ describe.skipIf(!url)('seat holds: isolation and constraints', () => {
   });
 
   it("camp B cannot see camp A's holds", async () => {
-    const seenByB = await withOrg(pool, orgB, async db =>
+    const seenByB = await withOrg(pool, ownerB, orgB, async db =>
       (await db.query<{ id: string }>(`SELECT id FROM seat_holds`)).rows.map(r => r.id),
     );
     expect(seenByB).toEqual([]);
 
-    const seenByA = await withOrg(pool, orgA, async db =>
+    const seenByA = await withOrg(pool, ownerA, orgA, async db =>
       (await db.query<{ id: string }>(`SELECT id FROM seat_holds`)).rows.map(r => r.id),
     );
     expect(seenByA).toEqual([holdA]);
@@ -87,6 +93,7 @@ describe.skipIf(!url)('seat holds: isolation and constraints', () => {
   it("camp B cannot release camp A's hold, and nothing is changed", async () => {
     const changed = await withOrg(
       pool,
+      ownerB,
       orgB,
       async db =>
         (
@@ -105,7 +112,7 @@ describe.skipIf(!url)('seat holds: isolation and constraints', () => {
 
   it('camp B cannot write a hold into camp A', async () => {
     await expect(
-      withOrg(pool, orgB, async db =>
+      withOrg(pool, ownerB, orgB, async db =>
         db.query(
           `INSERT INTO seat_holds (org_id, session_id, household_id, expires_at) VALUES ($1, $2, $3, now() + interval '15 minutes')`,
           [orgA, sessionA, householdA],
@@ -123,7 +130,7 @@ describe.skipIf(!url)('seat holds: isolation and constraints', () => {
 
   it('a released hold must say why: a release time and a reason go together', async () => {
     await expect(
-      withOrg(pool, orgA, async db =>
+      withOrg(pool, ownerA, orgA, async db =>
         db.query(
           `INSERT INTO seat_holds (org_id, session_id, household_id, expires_at, released_at) VALUES ($1, $2, $3, now(), now())`,
           [orgA, sessionA, householdA],

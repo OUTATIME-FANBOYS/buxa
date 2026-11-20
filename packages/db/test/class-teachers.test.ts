@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 import { migrate, withOrg } from '../src';
+import { memberOf } from './support';
 import type { Row } from '../types';
 
 // Phase 3 teacher role: a teacher is a camp member with role 'teacher', assigned to classes. These need a real Postgres.
@@ -13,6 +14,7 @@ describe.skipIf(!url)('teacher role and class assignments (row-level security)',
   let teacherA = '';
   let teacherB = '';
   let adminA = '';
+  let ownerB = '';
   let classA = '';
   let classB = '';
 
@@ -57,6 +59,7 @@ describe.skipIf(!url)('teacher role and class assignments (row-level security)',
       ).rows[0].id;
     };
     classA = await sessionFor(campA, `A ${tag}`);
+    ownerB = await memberOf(pool, campB);
     classB = await sessionFor(campB, `B ${tag}`);
   });
 
@@ -74,10 +77,10 @@ describe.skipIf(!url)('teacher role and class assignments (row-level security)',
   });
 
   it('a teacher in camp A cannot read or write camp B assignments', async () => {
-    await withOrg(pool, campB, db =>
+    await withOrg(pool, ownerB, campB, db =>
       db.query(`SELECT buxa_replace_class_teachers($1, $2, $3)`, [campB, classB, [teacherB]]),
     );
-    await withOrg(pool, campA, async db => {
+    await withOrg(pool, teacherA, campA, async db => {
       expect((await db.query<Row>('SELECT session_id FROM class_teachers')).rows).toEqual([]);
       await expect(
         db.query(`INSERT INTO class_teachers (org_id, session_id, user_id) VALUES ($1, $2, $3)`, [
@@ -87,7 +90,7 @@ describe.skipIf(!url)('teacher role and class assignments (row-level security)',
         ]),
       ).rejects.toThrow();
     });
-    await withOrg(pool, campB, async db => {
+    await withOrg(pool, ownerB, campB, async db => {
       expect((await db.query<Row>('SELECT user_id FROM class_teachers')).rows.map(r => r.user_id)).toEqual([teacherB]);
     });
   });
@@ -95,17 +98,19 @@ describe.skipIf(!url)('teacher role and class assignments (row-level security)',
   it('assigns only members with the teacher role, in the same camp', async () => {
     // Each refused call runs in its own transaction: a failed statement aborts the rest of its transaction.
     await expect(
-      withOrg(pool, campA, db => db.query(`SELECT buxa_replace_class_teachers($1, $2, $3)`, [campA, classA, [adminA]])),
+      withOrg(pool, adminA, campA, db =>
+        db.query(`SELECT buxa_replace_class_teachers($1, $2, $3)`, [campA, classA, [adminA]]),
+      ),
     ).rejects.toThrow('Teacher not found');
     await expect(
-      withOrg(pool, campA, db =>
+      withOrg(pool, adminA, campA, db =>
         db.query(`SELECT buxa_replace_class_teachers($1, $2, $3)`, [campA, classA, [teacherB]]),
       ),
     ).rejects.toThrow('Teacher not found');
-    await withOrg(pool, campA, db =>
+    await withOrg(pool, adminA, campA, db =>
       db.query(`SELECT buxa_replace_class_teachers($1, $2, $3)`, [campA, classA, [teacherA]]),
     );
-    await withOrg(pool, campA, async db => {
+    await withOrg(pool, adminA, campA, async db => {
       expect((await db.query<Row>('SELECT user_id FROM class_teachers')).rows.map(r => r.user_id)).toEqual([teacherA]);
     });
   });

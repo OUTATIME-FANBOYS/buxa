@@ -17,7 +17,7 @@ describe.skipIf(!url)('camp unarchive (0017)', () => {
   const NAME = `Unarchive ${tag}`;
 
   const unarchive = (actor: string) =>
-    withOrg(pool, camp, db => db.query('SELECT buxa_unarchive_camp($1, $2)', [camp, actor]));
+    withOrg(pool, actor, camp, db => db.query('SELECT buxa_unarchive_camp($1)', [camp]));
   const archivedAt = async () =>
     (await pool.query<{ archived_at: Date | null }>('SELECT archived_at FROM orgs WHERE id = $1', [camp])).rows[0]
       .archived_at;
@@ -41,7 +41,7 @@ describe.skipIf(!url)('camp unarchive (0017)', () => {
       admin,
     ]);
     await pool.query(`INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Ada', 'Lovelace')`, [camp]);
-    await withOrg(pool, camp, db => db.query('SELECT buxa_archive_camp($1, $2)', [camp, owner]));
+    await withOrg(pool, owner, camp, db => db.query('SELECT buxa_archive_camp($1)', [camp]));
   });
 
   afterAll(async () => {
@@ -61,7 +61,7 @@ describe.skipIf(!url)('camp unarchive (0017)', () => {
   });
 
   it('the owner unarchives: the camp is active, its people are unchanged, and the audit row is written', async () => {
-    await withOrg(pool, camp, db => db.query('SELECT buxa_archive_camp($1, $2)', [camp, owner]));
+    await withOrg(pool, owner, camp, db => db.query('SELECT buxa_archive_camp($1)', [camp]));
     const auditRows = () =>
       pool.query<Row>(`SELECT action FROM audit_log WHERE org_id = $1 AND action = 'org.unarchive'`, [camp]);
     const before = (await auditRows()).rowCount ?? 0;
@@ -69,17 +69,17 @@ describe.skipIf(!url)('camp unarchive (0017)', () => {
 
     expect(await archivedAt()).toBeNull();
     expect((await pool.query('SELECT 1 FROM people WHERE org_id = $1', [camp])).rowCount).toBe(1);
-    const memberships = await withOrg(pool, null, db =>
-      db.query<{ orgId: string }>('SELECT member_org_id AS "orgId" FROM buxa_memberships_of($1)', [owner]),
+    const memberships = await withOrg(pool, owner, null, db =>
+      db.query<{ orgId: string }>('SELECT member_org_id AS "orgId" FROM buxa_memberships_of()', []),
     );
     expect(memberships.rows.map(m => m.orgId)).toContain(camp);
     expect((await auditRows()).rowCount).toBe(before + 1);
   });
 
   it('the owner deletes an archived camp with its exact name', async () => {
-    await withOrg(pool, camp, db => db.query('SELECT buxa_archive_camp($1, $2)', [camp, owner]));
+    await withOrg(pool, owner, camp, db => db.query('SELECT buxa_archive_camp($1)', [camp]));
 
-    await withOrg(pool, camp, db => db.query('SELECT buxa_delete_camp($1, $2, $3)', [camp, owner, NAME]));
+    await withOrg(pool, owner, camp, db => db.query('SELECT buxa_delete_camp($1, $2)', [camp, NAME]));
 
     expect((await pool.query('SELECT 1 FROM orgs WHERE id = $1', [camp])).rowCount).toBe(0);
   });

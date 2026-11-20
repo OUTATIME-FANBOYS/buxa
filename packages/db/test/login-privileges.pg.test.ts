@@ -93,7 +93,7 @@ describe.skipIf(!admin)('login privileges against real Postgres logins', () => {
   it('in production, the tenant path refuses a privileged login and serves a restricted one', async () => {
     vi.stubEnv('NODE_ENV', 'production');
     try {
-      await expect(withOrg(poolAs('bypass'), null, db => db.query('SELECT 1'))).rejects.toThrow(
+      await expect(withOrg(poolAs('bypass'), null, null, db => db.query('SELECT 1'))).rejects.toThrow(
         UNRESTRICTED_LOGIN_MESSAGE,
       );
     } finally {
