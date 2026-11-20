@@ -14,7 +14,8 @@ describe('translateRepositoryError', () => {
       const translated = translateRepositoryError(pgError(code));
       expect(isHttpError(translated)).toBe(true);
       expect(translated).toMatchObject({ statusCode: 400 });
-      expect((translated as Error).message).not.toMatch(/users_pii|database|constraint/i);
+      const message = translated instanceof Error ? translated.message : '';
+      expect(message).not.toMatch(/users_pii|database|constraint/i);
     },
   );
 
