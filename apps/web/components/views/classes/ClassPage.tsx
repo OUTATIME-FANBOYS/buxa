@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { can, isUuid } from '@buxa/domain';
+import { can, isUuid, seatFor } from '@buxa/domain';
 import { ROUTES, sessionPath } from '@/config/routes';
 import { Empty, PageHeader } from '@/components/components';
 import { campClock } from '@buxa/server/composers/index.server';
@@ -195,7 +195,7 @@ export async function ClassPage({
             <EnrolForm
               classId={selected.id}
               campers={campers.ok ? campers.value.map(c => ({ id: c.id, name: c.name })) : []}
-              full={selected.seatsTaken >= selected.capacity}
+              full={seatFor(selected.capacity, selected.seatsTaken).kind === 'full'}
               canOverride={can(actor, 'attendance:override')}
             />
           )}

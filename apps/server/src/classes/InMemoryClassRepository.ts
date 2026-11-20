@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { Actor, ActiveEnrolmentFacts, AuditAction, LocalDate } from '@buxa/domain';
-import { seatsLeft } from '@buxa/domain';
+import { capacityCovers, seatsLeft } from '@buxa/domain';
 import type { Class, Enrolment, EnrolmentStatus, NewSessionInput, Session, SessionPriceInput } from '@buxa/contracts';
 import { priceChangeAudit, samePrice } from './priceAudit';
 import { systemClock, type Clock } from '../services/clock';
@@ -259,7 +259,7 @@ export class InMemoryClassRepository implements ClassRepository {
       }
       this.requireInstructorsInCamp(actor.orgId, input.instructorIds);
       // As in Postgres: the camp size cannot go below the seats already taken (enrolled campers and live holds).
-      if (input.capacity < this.takenPlaces(classId)) {
+      if (!capacityCovers(input.capacity, this.takenPlaces(classId))) {
         throw new CapacityBelowEnrolledError();
       }
       Object.assign(row, input, { instructorIds: [...new Set(input.instructorIds)] });
