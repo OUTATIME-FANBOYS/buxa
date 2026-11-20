@@ -3,6 +3,18 @@
 Status: **spec for review. No code yet.** Roadmap row: "Seats & rosters: groups, cabins, rooms, assign people, per-session check-in."
 Depends on: phases 2 and 3.
 
+## Moved from phase 3: seat holds and the waitlist
+
+Built on branch `v0.3/feat/seat-holds`: holds reserve a place for a household for 15 minutes (`SEAT_HOLD_MINUTES`); capacity holds under concurrency through the database (migration 0025); a freed place goes to the first waitlisted enrolment, and each promotion is audited.
+
+Not built yet:
+
+- Taking a hold from the registration submission (the service method exists; the form does not call it yet).
+- Turning a hold into an enrolment when the family completes registration.
+- The waitlist UI, and a screen that shows holds.
+- A scheduled job for `releaseExpiredHolds` (expired holds already stop counting without it).
+- Hold length set per camp (fixed at 15 minutes for now).
+
 ## Words we use
 
 - **Group**: a set of campers who share a unit for a session, such as a cabin, a tent, a team or a pod. Each group has a capacity.
