@@ -30,7 +30,7 @@ export default async function WorkLayout({ children }: { children: ReactNode }) 
         topBarStart={<CampSwitcher camps={session.memberships} current={camp} archivedCamps={archivedCamps} />}
         topBarEnd={
           <TaskTopBar
-            account={<AccountMenu user={session.user} />}
+            account={<AccountMenu user={session.user} hasCamp={camp !== null} />}
             items={notifications.rows}
             unread={notifications.unread}
           />

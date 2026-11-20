@@ -31,6 +31,7 @@ describe('AccountMenu', () => {
     act(() =>
       root.render(
         <AccountMenu
+          hasCamp
           user={{
             id: 'u-1',
             name: 'Test User',

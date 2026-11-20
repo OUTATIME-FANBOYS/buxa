@@ -8,25 +8,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { buildSeed } from '@buxa/shared';
 import { SettingsPage } from '@/components/views/kanban';
-
-const saveName = vi.hoisted(() =>
-  vi.fn<
-    (input: {
-      firstName: string;
-      lastName?: string;
-    }) => Promise<{ status: string; message: string; fieldErrors?: object }>
-  >(() => Promise.resolve({ status: 'success', message: 'Profile saved' })),
-);
-const saveTime = vi.hoisted(() =>
-  vi.fn<(input: { clockFormat: string }) => Promise<{ status: string; message: string }>>(() =>
-    Promise.resolve({ status: 'success', message: 'Time format saved' }),
-  ),
-);
-vi.mock('@/actions/account', () => ({ updateProfileAction: saveName, updateTimeFormatAction: saveTime }));
-const appearance = vi.hoisted(() => ({ theme: 'system', choose: vi.fn() }));
-vi.mock('@/components/components/camp/useAppearance', () => ({
-  useAppearance: () => [appearance.theme, appearance.choose],
-}));
+import { ROUTES } from '@/config/routes';
 
 vi.mock('@/actions/camp', () => ({
   archiveCamp: () => Promise.resolve({ ok: true }),
@@ -47,25 +29,8 @@ vi.mock('next/navigation', () => ({
 }));
 
 const seed = buildSeed();
-const USER = {
-  id: 'u-1',
-  email: 'rosa@example.com',
-  name: 'Rosa Delgado',
-  firstName: 'Rosa',
-  lastName: 'Delgado',
-  clockFormat: '12h' as const,
-};
-/** The cards every camp's settings show, in order: the three personal cards first, then the rest. */
-const TILES = [
-  'Display name',
-  'Email',
-  'Time format',
-  'Appearance',
-  'Agents',
-  'Your data',
-  'Keyboard shortcuts',
-  'Archived camps',
-];
+/** The camp cards, in order. The person's own cards (name, email, time format, appearance) are on the profile page. */
+const TILES = ['Agents', 'Your data', 'Keyboard shortcuts', 'Archived camps'];
 const OWNER_CAMP = {
   id: 'o-1',
   name: 'Camp Birchwood',
@@ -75,20 +40,14 @@ const OWNER_CAMP = {
   archived: false,
 };
 
-describe('the settings page', () => {
+describe('the camp settings page', () => {
   let root: Root;
-  let updateProfile: ReturnType<typeof vi.fn>;
-  let setTheme: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    updateProfile = vi.fn();
-    setTheme = vi.fn();
-    appearance.theme = 'system';
-    appearance.choose.mockClear();
     h.store = {
       s: { ...seed, ui: { ...seed.ui, agentsEnabled: false, theme: 'system' } },
       agents: [],
-      actions: { updateProfile, exportData: () => '{}', setTheme, setAgentsEnabled() {} },
+      actions: { exportData: () => '{}', setAgentsEnabled() {} },
       me: { id: 'u-1', name: 'Rosa Delgado', title: 'Coordinator', email: 'rosa@example.com' },
       workspace: null,
       project: null,
@@ -107,22 +66,18 @@ describe('the settings page', () => {
   afterEach(() => {
     act(() => root.unmount());
     document.body.innerHTML = '';
-    saveName.mockReset();
-    saveName.mockResolvedValue({ status: 'success', message: 'Profile saved' });
-    saveTime.mockClear();
   });
 
   const render = (
     extra: {
       camp?: typeof OWNER_CAMP;
       archivedCamps?: { id: string; name: string; archivedAt: string; role: 'viewer' | 'staff' | 'admin' | 'owner' }[];
-      user?: typeof USER;
     } = {},
   ) =>
     act(() =>
       root.render(
         <UiProvider Dialog={ConfirmDialog}>
-          <SettingsPage camp={extra.camp} archivedCamps={extra.archivedCamps} user={extra.user ?? USER} />
+          <SettingsPage camp={extra.camp} archivedCamps={extra.archivedCamps} />
         </UiProvider>,
       ),
     );
@@ -136,14 +91,29 @@ describe('the settings page', () => {
 
     return found;
   };
-  const buttonIn = (card: HTMLElement, label: string) =>
-    Array.from(card.querySelectorAll<HTMLButtonElement>('button')).find(b => b.textContent?.trim() === label);
 
-  it('puts every setting in one grid of cards, with the page title above it', () => {
+  it('puts every camp setting in one grid of cards, with the page title above it', () => {
     render();
     expect(document.querySelector('h1')?.textContent).toBe('Settings');
     expect(titles()).toEqual(TILES);
     expect(document.querySelector('.settings-page .settings-grid')).not.toBeNull();
+  });
+
+  it('links to the profile page from the top of the page', () => {
+    render();
+    const link = Array.from(document.querySelectorAll<HTMLAnchorElement>('a')).find(
+      a => a.textContent?.trim() === 'Your profile',
+    );
+    expect(link?.getAttribute('href')).toBe(ROUTES.account);
+  });
+
+  it('has no profile cards: name, email, time format and appearance live on the profile page', () => {
+    render();
+    expect(titles()).not.toContain('Display name');
+    expect(titles()).not.toContain('Email');
+    expect(titles()).not.toContain('Time format');
+    expect(titles()).not.toContain('Appearance');
+    expect(document.querySelector('#display-name-title')).toBeNull();
   });
 
   it('has no Camp clock card and no second clock control', () => {
@@ -158,86 +128,6 @@ describe('the settings page', () => {
     render();
     expect(titles()).not.toContain('Language');
     expect(titles()).not.toContain('Timezone');
-  });
-
-  it('lays out every card in one column, with time format and appearance as title and dropdown rows', () => {
-    render();
-    expect(tile('Display name').className).toContain('settings-tile');
-    expect(tile('Time format').className).toContain('settings-choice');
-    expect(tile('Appearance').className).toContain('settings-choice');
-    expect(tile('Time format').className).not.toContain('settings-tile--half');
-  });
-
-  it('puts Appearance straight after Time format', () => {
-    render();
-    expect(titles().slice(0, 4)).toEqual(['Display name', 'Email', 'Time format', 'Appearance']);
-  });
-
-  it('has the display name with its first and last name inputs and one Update button, and an email card with a read-only input and no button', () => {
-    render();
-    const name = tile('Display name');
-    expect(name.querySelector('input[autocomplete="given-name"]')).not.toBeNull();
-    expect(name.querySelector('input[autocomplete="family-name"]')).not.toBeNull();
-    expect(buttonIn(name, 'Update')).toBeDefined();
-    const email = tile('Email');
-    const input = email.querySelector<HTMLInputElement>('input');
-    expect(input?.value).toBe('rosa@example.com');
-    expect(input?.disabled || input?.readOnly).toBe(true);
-    expect(email.querySelector('button')).toBeNull();
-  });
-
-  it('has no Update display name button and no dialog', () => {
-    render();
-    expect(document.body.textContent).not.toContain('Update display name');
-    expect(document.querySelector('[role="dialog"]')).toBeNull();
-    expect(buttonIn(tile('Display name'), 'Update')).toBeDefined();
-  });
-
-  it('saves the name from the Update button beside the inputs, then the board', async () => {
-    render();
-    const card = tile('Display name');
-    expect(card.querySelector<HTMLInputElement>('input[autocomplete="given-name"]')?.value).toBe('Rosa');
-    await act(() => {
-      buttonIn(card, 'Update')?.click();
-
-      return Promise.resolve();
-    });
-    expect(saveName).toHaveBeenCalledWith({ firstName: 'Rosa', lastName: 'Delgado' });
-    expect(updateProfile).toHaveBeenCalledWith({ name: 'Rosa Delgado', title: 'Coordinator' });
-  });
-
-  it('does not change the board when the account refuses the first name', async () => {
-    saveName.mockResolvedValueOnce({
-      status: 'error',
-      message: 'Check the highlighted fields.',
-      fieldErrors: { firstName: 'Enter your first name.' },
-    });
-    render();
-    await act(() => {
-      buttonIn(tile('Display name'), 'Update')?.click();
-
-      return Promise.resolve();
-    });
-    expect(updateProfile).not.toHaveBeenCalled();
-    expect(document.body.textContent).toContain('Enter your first name.');
-  });
-
-  it('shows the time format as a choice with the saved clock selected', () => {
-    render();
-    const card = tile('Time format');
-    expect(card.textContent).toContain('12-hour');
-    expect(card.querySelector('[role="radio"][aria-checked="true"]')?.textContent).toContain('12-hour');
-  });
-
-  it('has no Save button in the time format card', () => {
-    render();
-    expect(buttonIn(tile('Time format'), 'Save')).toBeUndefined();
-    expect(buttonIn(tile('Time format'), 'Save time format')).toBeUndefined();
-  });
-
-  it('shows the appearance as a dropdown, with the saved theme', () => {
-    render();
-    expect(tile('Appearance').textContent).toContain('System');
   });
 
   it('keeps the Agents, data and shortcut cards', () => {

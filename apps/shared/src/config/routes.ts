@@ -5,6 +5,8 @@
 export const ROUTES = {
   home: '/',
   signIn: '/sign-in',
+  // The signed-in person's own profile (name, clock format, email, appearance). Needs a session only, not a camp.
+  account: '/account',
   camp: '/camp',
   // Camp operations: need a signed-in session and a camp.
   members: '/camp/members',

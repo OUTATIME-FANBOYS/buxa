@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import type { User } from '@buxa/contracts';
 import type { CampHome } from '@buxa/shared/camp/campHomeTypes';
 import { ROUTES, boardPath } from '@/config/routes';
 import { Empty } from '@/components/components';
@@ -92,12 +91,10 @@ export function ReportsPage() {
 
 export function SettingsPage({
   camp,
-  user,
   archivedCamps,
 }: {
   camp?: SettingsCamp;
-  user?: User;
   archivedCamps?: readonly ArchivedCamp[];
 }) {
-  return <Settings camp={camp} user={user} archivedCamps={archivedCamps} />;
+  return <Settings camp={camp} archivedCamps={archivedCamps} />;
 }

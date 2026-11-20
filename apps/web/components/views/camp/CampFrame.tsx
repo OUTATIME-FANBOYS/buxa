@@ -43,7 +43,7 @@ export function CampFrame({
       topBarEnd={
         <>
           <HeaderTools items={notifications.items} unread={notifications.unread} />
-          <AccountMenu user={user} />
+          <AccountMenu user={user} hasCamp={current !== null} />
         </>
       }
     >
