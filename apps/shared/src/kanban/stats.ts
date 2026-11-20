@@ -1,6 +1,7 @@
 /** Read-side rules: what "done", "overdue" and "progress" mean. One definition, used by every screen. */
-import type { ColumnKind, Task } from './types';
-import { today } from '../dates';
+import type { ColumnKind, Priority, Task } from './types';
+import { addDays, diffDays, fmt, isoDay, today } from '../dates';
+import { PRIORITIES } from './tasks';
 
 export type KindOf = (t: Task) => ColumnKind;
 
@@ -57,4 +58,102 @@ export function healthOf(p: Progress, deadline?: string, on = today()): Health {
   const daysLeft = Math.round((Date.parse(deadline) - Date.parse(on)) / 86400000);
 
   return daysLeft <= 7 && p.pct < 80 ? 'risk' : 'track';
+}
+
+/** One bar of the completion chart: a day, or a week ending on the day `title` names. */
+export interface CompletionPoint {
+  label: string;
+  title: string;
+  value: number;
+}
+
+/** The 90-day range is shown as this many weekly buckets (the last one ends on `on`). */
+export const WEEKS_IN_SERIES = 13;
+
+function dailySeries(done: Task[], days: number, on: string): CompletionPoint[] {
+  return Array.from({ length: days }, (_, i) => {
+    const d = addDays(on, i - days + 1);
+
+    return {
+      label: fmt(d),
+      title: fmt(d, true),
+      value: done.filter(t => t.completedAt && isoDay(t.completedAt) === d).length,
+    };
+  });
+}
+
+function weeklySeries(done: Task[], on: string): CompletionPoint[] {
+  return Array.from({ length: WEEKS_IN_SERIES }, (_, i) => {
+    const end = addDays(on, -(WEEKS_IN_SERIES - 1 - i) * 7);
+    const start = addDays(end, -6);
+
+    return {
+      label: fmt(start),
+      title: `${fmt(start)} – ${fmt(end)}`,
+      value: done.filter(t => {
+        if (!t.completedAt) {
+          return false;
+        }
+        const c = isoDay(t.completedAt);
+
+        return c >= start && c <= end;
+      }).length,
+    };
+  });
+}
+
+/** Completions per day for ranges up to 30 days, per week (oldest first) for longer ranges. */
+export function completionSeries(done: Task[], days: number, on = today()): CompletionPoint[] {
+  return days <= 30 ? dailySeries(done, days, on) : weeklySeries(done, on);
+}
+
+/** Average whole days from creation to completion, over done tasks that have a completion date. Null when none do. */
+export function avgCycleDays(done: Task[]): number | null {
+  const durations = done.flatMap(t =>
+    t.completedAt ? [Math.max(0, diffDays(isoDay(t.completedAt), isoDay(t.createdAt)))] : [],
+  );
+  if (durations.length === 0) {
+    return null;
+  }
+
+  return durations.reduce((a, b) => a + b, 0) / durations.length;
+}
+
+export interface MemberLoad<M extends { userId: string }> {
+  member: M;
+  /** open tasks not yet overdue */
+  on: number;
+  /** open tasks past their due date */
+  late: number;
+}
+
+/** Open tasks per member, split on track and overdue. Busiest first. */
+export function memberLoad<M extends { userId: string }>(
+  open: Task[],
+  members: M[],
+  kindOf: KindOf,
+  on = today(),
+): MemberLoad<M>[] {
+  return members
+    .map(member => ({
+      member,
+      on: open.filter(t => t.assigneeId === member.userId && !isOverdue(t, kindOf, on)).length,
+      late: open.filter(t => t.assigneeId === member.userId && isOverdue(t, kindOf, on)).length,
+    }))
+    .sort((a, b) => b.on + b.late - (a.on + a.late));
+}
+
+/** Members with at least one overdue task. */
+export function overdueByMember<M extends { userId: string }>(load: MemberLoad<M>[]): MemberLoad<M>[] {
+  return load.filter(l => l.late > 0);
+}
+
+/** Open tasks per priority, lowest first (the order of PRIORITIES). */
+export function priorityCounts(open: Task[]): { priority: Priority; count: number }[] {
+  return PRIORITIES.map(priority => ({ priority, count: open.filter(t => t.priority === priority).length }));
+}
+
+/** Open tasks with no assignee. */
+export function unassignedCount(open: Task[]): number {
+  return open.filter(t => !t.assigneeId).length;
 }
