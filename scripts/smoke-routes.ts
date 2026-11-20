@@ -11,6 +11,9 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isAcceptedFailure, noDatabaseDeclared } from './smoke-rules';
 
+/** Longest a single route may take to answer. Local routes answer in milliseconds; this only catches a stalled one. */
+const REQUEST_TIMEOUT_MS = 20_000;
+
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const WEB_DIR = join(ROOT, 'apps', 'web');
 const APP_DIR = join(WEB_DIR, 'app');
@@ -156,9 +159,11 @@ async function main(): Promise<void> {
     for (const target of routes) {
       const targetUrl = `${baseUrl}${target.url}`;
       try {
+        // A route that never answers must fail this check, not stall the job (seen in CI as a multi-hour hang).
         const res = await fetch(targetUrl, {
           method: target.method,
           redirect: 'manual',
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
           headers: target.method === 'POST' ? { 'content-type': 'application/json' } : undefined,
           body: target.method === 'POST' ? JSON.stringify({}) : undefined,
         });
