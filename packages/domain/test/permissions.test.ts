@@ -9,9 +9,9 @@ const as = (role: Role, userId = 'me'): Actor => ({ userId, orgId: ORG, role });
 const MATRIX: Record<Action, string> = {
   'org:read': 'YYYYY',
   'org:update': '..YY.',
-  'org:archive': '...Y.',
+  'org:archive': '..YY.',
   'org:delete': '...Y.',
-  'org:unarchive': '...Y.',
+  'org:unarchive': '..YY.',
   'org:transfer_ownership': '...Y.',
   'members:read': 'YYYY.',
   'members:read_contact': '..YY.',
@@ -21,7 +21,7 @@ const MATRIX: Record<Action, string> = {
   'members:rename': '..YY.',
   'members:leave': 'YYYYY',
   'audit:read': '..YY.',
-  'data:export': '...Y.',
+  'data:export': '..YY.',
   'data:erase': '...Y.',
   'people:read': 'YYYYY',
   'people:read_contact': '.YYY.',
@@ -32,13 +32,13 @@ const MATRIX: Record<Action, string> = {
   'memberships:manage': '..YY.',
   'credentials:manage': '..YY.',
   'attendance:read': '.YYYY',
-  'attendance:record': '.YYYY',
+  'attendance:record': '.YYY.',
   'attendance:override': '..YY.',
   'attendance:export': '..YY.',
   'events:read': 'YYYYY',
-  'events:create': '..YY.',
-  'events:update': '..YY.',
-  'events:delete': '..YY.',
+  'events:create': '.YYY.',
+  'events:update': '.YYYY',
+  'events:delete': '.YYY.',
   'classes:manage': '.YYY.',
   'tasks:read': 'YYYY.',
   'tasks:create': '.YYY.',
@@ -77,7 +77,7 @@ describe('role grants', () => {
 
 describe('teacher: assigned classes only', () => {
   const T = 'teacher' as const;
-  const scoped: Action[] = ['events:read', 'people:read', 'attendance:read', 'attendance:record'];
+  const scoped: Action[] = ['events:read', 'events:update', 'people:read', 'attendance:read'];
 
   it('is refused the scoped actions unless the class is one it is assigned to', () => {
     for (const a of scoped) {
@@ -91,7 +91,12 @@ describe('teacher: assigned classes only', () => {
   });
 
   it('is allowed on its own classes, and the scope does not change any other role', () => {
-    expect(can(as(T), 'attendance:record', { orgId: ORG, assignedToClass: true })).toBe(true);
+    expect(can(as(T), 'attendance:read', { orgId: ORG, assignedToClass: true })).toBe(true);
+    // Check-in is off for a teacher by default; an admin turns it on per person (not part of the role).
+    expect(authorize(as(T), 'attendance:record', { orgId: ORG, assignedToClass: true })).toEqual({
+      allow: false,
+      reason: 'role_not_allowed',
+    });
     expect(can(as('viewer'), 'attendance:read')).toBe(false);
     expect(can(as('staff'), 'attendance:record')).toBe(true);
     expect(can(as('staff'), 'people:read')).toBe(true);
@@ -106,7 +111,6 @@ describe('teacher: assigned classes only', () => {
       'people:delete',
       'classes:manage',
       'events:create',
-      'events:update',
       'events:delete',
       'attendance:override',
       'attendance:export',
@@ -127,7 +131,7 @@ describe('teacher: assigned classes only', () => {
   });
 
   it('is refused in another organisation even when assigned', () => {
-    expect(authorize(as(T), 'attendance:record', { orgId: 'org-2', assignedToClass: true })).toEqual({
+    expect(authorize(as(T), 'attendance:read', { orgId: 'org-2', assignedToClass: true })).toEqual({
       allow: false,
       reason: 'other_org',
     });

@@ -69,6 +69,9 @@ const STAFF: Action[] = [
   'attendance:read',
   'attendance:record',
   'classes:manage',
+  'events:create',
+  'events:update',
+  'events:delete',
   'holds:manage',
   'tasks:create',
   'tasks:update',
@@ -80,6 +83,9 @@ const STAFF: Action[] = [
 const ADMIN: Action[] = [
   ...STAFF,
   'org:update',
+  'org:archive',
+  'org:unarchive',
+  'data:export',
   'members:read_contact',
   'members:invite',
   'members:change_role',
@@ -99,22 +105,14 @@ const ADMIN: Action[] = [
   'tasks:manage_board',
   'registration:manage',
 ];
-const OWNER: Action[] = [
-  ...ADMIN,
-  'org:archive',
-  'org:unarchive',
-  'org:delete',
-  'org:transfer_ownership',
-  'data:export',
-  'data:erase',
-];
+const OWNER: Action[] = [...ADMIN, 'org:delete', 'org:transfer_ownership', 'data:erase'];
 const TEACHER: Action[] = [
   'org:read',
   'members:leave',
   'events:read',
+  'events:update',
   'people:read',
   'attendance:read',
-  'attendance:record',
 ];
 
 /** What each role may attempt. Rules below can still deny an action the role has. */
@@ -133,6 +131,7 @@ export const GRANTS: Record<Role, ReadonlySet<Action>> = {
  */
 const ASSIGNED_CLASSES_ONLY: ReadonlySet<Action> = new Set([
   'events:read',
+  'events:update',
   'people:read',
   'attendance:read',
   'attendance:record',

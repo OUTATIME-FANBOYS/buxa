@@ -32,16 +32,16 @@ describe('permission categories: grouping', () => {
   });
 });
 
-// The spec table in docs/phases/03-registration.md, per category. Roles are cumulative:
-// staff has what viewer has, admin what staff has, owner what admin has (the spec's own rule).
-// members:rename and org:archive / org:unarchive are not in the spec table; they are listed here
-// as the code grants them, and the spec doc records them as mismatches.
+// The agreed default grant per category, written out per role (teacher is not on the viewer-to-owner ladder).
+// Owner and admin have the same grants except the owner-only actions: transfer ownership, delete the camp and erase data.
+// Extra options for teachers (such as check-in and check-out) are off by default and turned on per person by an admin.
 const SPEC: Record<PermissionCategory, Record<Role, Action[]>> = {
   Operations: {
     viewer: [],
     staff: ['attendance:read', 'attendance:record'],
     admin: ['attendance:read', 'attendance:record', 'attendance:override', 'attendance:export'],
     owner: ['attendance:read', 'attendance:record', 'attendance:override', 'attendance:export'],
+    teacher: ['attendance:read'],
   },
   People: {
     viewer: ['people:read'],
@@ -66,15 +66,23 @@ const SPEC: Record<PermissionCategory, Record<Role, Action[]>> = {
       'memberships:manage',
       'credentials:manage',
     ],
+    teacher: ['people:read'],
   },
   'Classes and events': {
     viewer: ['events:read'],
-    staff: ['events:read', 'classes:manage'],
+    staff: ['events:read', 'classes:manage', 'events:create', 'events:update', 'events:delete'],
     admin: ['events:read', 'classes:manage', 'events:create', 'events:update', 'events:delete'],
     owner: ['events:read', 'classes:manage', 'events:create', 'events:update', 'events:delete'],
+    teacher: ['events:read', 'events:update'],
   },
-  Money: { viewer: [], staff: [], admin: [], owner: [] },
-  Registration: { viewer: [], staff: [], admin: [], owner: [] },
+  Money: { viewer: [], staff: [], admin: [], owner: [], teacher: [] },
+  Registration: {
+    viewer: [],
+    staff: ['registration:read', 'registration:submit', 'holds:manage'],
+    admin: ['registration:read', 'registration:submit', 'registration:manage', 'holds:manage'],
+    owner: ['registration:read', 'registration:submit', 'registration:manage', 'holds:manage'],
+    teacher: [],
+  },
   Team: {
     viewer: ['members:read', 'members:leave'],
     staff: ['members:read', 'members:leave'],
@@ -96,6 +104,7 @@ const SPEC: Record<PermissionCategory, Record<Role, Action[]>> = {
       'members:remove',
       'members:rename',
     ],
+    teacher: ['members:leave'],
   },
   Work: {
     viewer: ['tasks:read'],
@@ -118,26 +127,28 @@ const SPEC: Record<PermissionCategory, Record<Role, Action[]>> = {
       'tasks:delete',
       'tasks:manage_board',
     ],
+    teacher: [],
   },
   Admin: {
     viewer: ['org:read'],
     staff: ['org:read'],
-    admin: ['org:read', 'org:update', 'audit:read'],
+    admin: ['org:read', 'org:update', 'audit:read', 'org:archive', 'org:unarchive', 'data:export'],
     owner: [
       'org:read',
       'org:update',
       'audit:read',
-      'org:delete',
-      'org:transfer_ownership',
-      'data:export',
-      'data:erase',
       'org:archive',
       'org:unarchive',
+      'data:export',
+      'org:delete',
+      'org:transfer_ownership',
+      'data:erase',
     ],
+    teacher: ['org:read'],
   },
 };
 
-const ROLE_ORDER: Role[] = ['viewer', 'staff', 'admin', 'owner'];
+const ROLE_ORDER: Role[] = ['viewer', 'staff', 'admin', 'owner', 'teacher'];
 
 describe('permission categories: default role grants match the spec table', () => {
   for (const category of PERMISSION_CATEGORIES) {

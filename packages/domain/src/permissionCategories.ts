@@ -31,7 +31,7 @@ export const CATEGORY_PERMISSIONS = {
   ],
   'Classes and events': ['classes:manage', 'events:read', 'events:create', 'events:update', 'events:delete'],
   Money: [],
-  Registration: [],
+  Registration: ['registration:read', 'registration:submit', 'registration:manage', 'holds:manage'],
   Team: [
     'members:read',
     'members:leave',
