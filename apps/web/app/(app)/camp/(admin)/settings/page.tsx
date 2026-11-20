@@ -21,6 +21,7 @@ export default async function Page() {
         name: org.name,
         canDelete: authorize(actor, 'org:delete').allow,
         canManageFeed: authorize(actor, 'org:update').allow,
+        isTeacher: actor.role === 'teacher',
         archived,
       }}
       archivedCamps={archivedCamps}
