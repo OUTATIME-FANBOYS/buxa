@@ -161,6 +161,7 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0033_teacher_calendar_tokens.sql',
       '0034_session_membership_contract.sql',
       '0035_session_delete_guard.sql',
+      '0036_org_update_admin_owner.sql',
     ]);
   });
 
