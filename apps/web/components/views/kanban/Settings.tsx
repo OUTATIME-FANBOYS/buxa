@@ -17,7 +17,7 @@ import {
   SETTINGS_TILE_HEADING,
   SETTINGS_TILE_TEXT,
 } from '@/components/components/settings';
-import { ArchivedCampsCard, DangerZone } from '@/components/components/camp';
+import { ArchivedCampsCard, CalendarLinkCard, DangerZone } from '@/components/components/camp';
 import type { ArchivedCamp } from '@/actions/camp';
 import { fullNameOf } from '@buxa/shared/names';
 
@@ -26,6 +26,8 @@ export interface SettingsCamp {
   id: string;
   name: string;
   canDelete: boolean;
+  /** The owner and admins (org:update). Staff and teachers do not see the calendar link. */
+  canManageFeed: boolean;
   archived: boolean;
 }
 
@@ -166,6 +168,7 @@ export function Settings({
             </div>
           </dl>
         </section>
+        {camp?.canManageFeed && !camp.archived && <CalendarLinkCard />}
         <ArchivedCampsCard camps={archivedCamps} />
         {camp?.canDelete && !camp.archived && <DangerZone campId={camp.id} campName={camp.name} />}
       </div>

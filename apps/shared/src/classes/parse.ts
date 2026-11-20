@@ -3,11 +3,13 @@ import {
   CancelEnrolmentInputSchema,
   ClassInputSchema,
   EnrolInputSchema,
+  NewRecurringClassInputSchema,
   NewSessionInputSchema,
   SessionPriceSchema,
   type CancelEnrolmentInput,
   type ClassInput,
   type EnrolInput,
+  type NewRecurringClassInput,
   type NewSessionInput,
   type SessionPriceInput,
 } from '@buxa/contracts';
@@ -94,6 +96,47 @@ export function classForm(form: FormData, timeZone: string): PersonParsed<ClassI
         capacity,
         startsAt: starts.ok ? starts.instant : undefined,
         endsAt: ends.ok ? ends.instant : undefined,
+        location: field(form, 'location'),
+        instructorIds: fieldAll(form, 'instructorIds'),
+      }),
+    { ageRange: 'maxAge' },
+  );
+}
+
+/**
+ * A recurring series: the class's own fields, a weekly rule (the weekdays ticked, the first date, the start and end times in the
+ * camp's clock) and when it stops (a date, or a number of classes). The server expands the rule; this only reads the form.
+ */
+export function recurringClassForm(form: FormData): PersonParsed<NewRecurringClassInput> {
+  const problems: FieldErrors = {};
+  const minAge = numberField(form, 'minAge', problems, 'Enter the youngest age.');
+  const maxAge = numberField(form, 'maxAge', problems, 'Enter the oldest age.');
+  const capacity = numberField(form, 'capacity', problems, 'Enter the camp size.');
+  const weekdays = fieldAll(form, 'weekdays')
+    .map(Number)
+    .filter(n => Number.isInteger(n));
+  if (weekdays.length === 0) {
+    problems.weekdays = 'Tick at least one day of the week.';
+  }
+  const endKind = field(form, 'endKind') === 'count' ? 'count' : 'until';
+  // The count is asked for only when the series stops after a number of classes.
+  const count =
+    endKind === 'count' ? numberField(form, 'endCount', problems, 'Enter how many classes the series has.') : undefined;
+
+  return withProblems(
+    problems,
+    () =>
+      parseWith<NewRecurringClassInput>(NewRecurringClassInputSchema, {
+        rule: {
+          weekdays,
+          firstDate: field(form, 'firstDate'),
+          startTime: field(form, 'startTime'),
+          endTime: field(form, 'endTime'),
+          end: endKind === 'count' ? { kind: 'count', count } : { kind: 'until', date: field(form, 'endDate') },
+        },
+        name: field(form, 'name'),
+        ageRange: { minAge, maxAge },
+        capacity,
         location: field(form, 'location'),
         instructorIds: fieldAll(form, 'instructorIds'),
       }),

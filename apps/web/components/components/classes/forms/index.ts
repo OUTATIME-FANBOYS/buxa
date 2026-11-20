@@ -12,4 +12,6 @@ export * from './NewClassButton';
 export * from './NewSessionButton';
 export * from './NewSessionForm';
 export * from './PriceFields';
+export * from './RecurringSeriesButton';
+export * from './SessionPublicToggle';
 export * from './SessionPriceButton';

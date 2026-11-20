@@ -8,7 +8,13 @@ import { currentActor } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_ENROLMENTS, FORBIDDEN_READ } from '@buxa/shared';
 import { loadSessionPage, loadEnrolments, loadPeopleWithRole } from '@buxa/server/composers/index.server';
 import { ClassesTable, EnrolmentTable, instructorNames, PriceFact } from '@/components/components/classes';
-import { EnrolForm, NewClassButton, SessionPriceButton } from '@/components/components/classes/forms';
+import {
+  EnrolForm,
+  NewClassButton,
+  RecurringSeriesButton,
+  SessionPriceButton,
+  SessionPublicToggle,
+} from '@/components/components/classes/forms';
 import { formatCampDateTime } from '@buxa/shared';
 import { Button } from '@/components/elements';
 
@@ -72,12 +78,15 @@ export async function ClassPage({
         subtitle={session.description || 'No description yet.'}
         actions={
           canManage && (
-            <NewClassButton
-              sessionId={session.id}
-              sessionName={session.name}
-              timeZone={timeZone}
-              instructors={instructorChoices}
-            />
+            <>
+              <RecurringSeriesButton sessionId={session.id} />
+              <NewClassButton
+                sessionId={session.id}
+                sessionName={session.name}
+                timeZone={timeZone}
+                instructors={instructorChoices}
+              />
+            </>
           )
         }
       />
@@ -93,6 +102,8 @@ export async function ClassPage({
           action={canManage && <SessionPriceButton sessionId={session.id} price={session.price} />}
         />
       </dl>
+
+      {canManage && <SessionPublicToggle sessionId={session.id} isPublic={session.isPublic} />}
 
       <section aria-labelledby="classes-heading" className="stack">
         <h2 id="classes-heading" className="people-subheading">
