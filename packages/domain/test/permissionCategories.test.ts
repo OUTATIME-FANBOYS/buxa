@@ -92,9 +92,9 @@ const SPEC: Record<PermissionCategory, Record<Role, Action[]>> = {
   Money: { viewer: [], staff: [], admin: [], owner: [], teacher: [] },
   Registration: {
     viewer: [],
-    staff: ['registration:read', 'registration:submit', 'holds:manage'],
-    admin: ['registration:read', 'registration:submit', 'registration:manage', 'holds:manage'],
-    owner: ['registration:read', 'registration:submit', 'registration:manage', 'holds:manage'],
+    staff: ['registration:read', 'registration:submit', 'registration:confirm', 'holds:manage'],
+    admin: ['registration:read', 'registration:submit', 'registration:confirm', 'registration:manage', 'holds:manage'],
+    owner: ['registration:read', 'registration:submit', 'registration:confirm', 'registration:manage', 'holds:manage'],
     teacher: [],
   },
   Team: {
