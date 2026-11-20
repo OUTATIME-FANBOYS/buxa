@@ -12,7 +12,7 @@ Buxa has two sets of sample data, and both are about **Camp Birchwood**, a ficti
 - season-pass memberships and badges (credentials) for campers and guardians, through the app's services, so the audit log records them
 - a handful of check-ins: children and adults on site now, one child collected earlier today, and one closed visit from yesterday
 
-It creates no tasks and no tickets.
+It creates no tasks and no tickets. It also creates no sessions, classes, enrolments, registrations, seat holds or teacher accounts, so the registration and teacher screens are empty until they are used by hand. The owner is created with the camp. The admin, staff and viewer memberships are inserted straight into the membership table, because there is no invite flow yet.
 
 **Browser demo (the staff board)**, stored in the browser only:
 

@@ -33,8 +33,9 @@ Paste secrets only into Vercel's form, never into the repo or a chat.
 ## Database requirements
 
 - Postgres 15 or newer. Row-level security is how tenants are kept apart, so it is not optional.
-- Migrations are the `.sql` files in `packages/db/migrations`, applied in filename order. The current set is `0001` to `0022`. Do not add a migration under a number that is already used.
+- Migrations are the `.sql` files in `packages/db/migrations`, applied in filename order. The current set is `0001` to `0037`. Do not add a migration under a number that is already used.
   There are two logins. They must be different, and the web app must only ever hold the restricted one.
+  The names: `buxa_app` is a `NOLOGIN` role that migration `0001` creates; tenant queries switch to it. `buxa_runtime` is the runtime login the operator creates (see "Operator steps"). The migration login is whatever login `MIGRATION_DATABASE_URL` names. On Supabase it may be the owner role (`postgres`), which `docs/security.md` (section 7.5) describes as a permanent limit.
 
 - **Migration login** (`MIGRATION_DATABASE_URL`). Applies migrations. It needs `CREATEROLE` and must be able to bypass row-level security (a superuser, or Supabase's `postgres` role). Migration `0004` lets it switch to `buxa_app`. The three privileged functions from migration `0009` run with its rights, so it keeps that ability. The migrate command (`npm run db:migrate`, `packages/db/src/cli.ts`) reads this URL and nothing else: with only `DATABASE_URL` set it exits with an error. Locally, set `MIGRATION_DATABASE_URL` to the same superuser as `DATABASE_URL` (the docker compose database).
 - **Runtime login** (`DATABASE_URL`, production and preview). Serves every request. It must be a member of `buxa_app` and must **not** have `SUPERUSER`, `BYPASSRLS` or `CREATEROLE`. Every tenant query switches to `buxa_app` (`withOrg`). The three cross-organisation paths (the sign-in user row, the sign-in membership lookup, and organisation creation) are `SECURITY DEFINER` functions that only `buxa_app` may run.
@@ -114,6 +115,14 @@ The rules are: **the database accepts connections only from the deploy job and f
 3. A **production** build applies pending migrations first (each migration is one transaction, so nothing is half-applied), then builds the app. Preview and other builds never touch the schema.
 4. Pull requests get a **preview** deployment at their own address, against the same database but never migrating it: a PR that adds a migration will not see its new tables in the preview until it is merged. Test those locally.
 5. After a deploy, check `<address>/ready` (expect `{"status":"ready"}`), then sign in.
+
+## Phase 3 migrations (0023 to 0037)
+
+Migrations `0023` to `0037` add registration forms and registrations, session prices, seat holds, the teacher role and its assignments and options, the calendar feeds, public session pages, confirmation, notifications and the session delete guard. Each is one transaction, and a production build applies them in order, as described above.
+
+- **Expand and contract for session membership.** `0032` only adds functions. `0034` drops the older owner-rights overloads, including `buxa_memberships_of(uuid)`, and requires a signed-in member in every row policy. The migration's header says the v0.2.3 release still calls those overloads and is not serving anywhere, so do not run v0.2.3 against a database where `0034` has run. Whether `0034` has run on production is not confirmed in the repository.
+- **Org name and time zone** (`0036`) change the row policy so only an admin or the owner may update the camp row.
+- **Session delete** (`0035`) refuses, in the database, to delete a session that still holds classes.
 
 ## Migration 0022: sessions and classes
 
