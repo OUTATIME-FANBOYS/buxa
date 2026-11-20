@@ -37,14 +37,7 @@ export async function NewPerson({ householdId }: { householdId?: string }) {
 
   return (
     <div className="page narrow">
-      <PageHeader
-        title="Add person"
-        subtitle={
-          household
-            ? `Adding to the ${household.name} household.`
-            : 'A child must join a household that has a parent or guardian in it.'
-        }
-      />
+      <PageHeader title="Add person" subtitle={household ? `Adding to the ${household.name} household.` : undefined} />
       <NewPersonForm household={household ? { id: household.id, name: household.name } : null} households={choices} />
     </div>
   );

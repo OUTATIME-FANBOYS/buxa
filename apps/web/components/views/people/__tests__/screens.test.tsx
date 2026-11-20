@@ -209,7 +209,10 @@ describe('NewPerson', () => {
   });
 
   it('explains the rule for a child up front', async () => {
-    expect(render(await NewPerson({}))).toContain('A child must join a household that has a parent or guardian in it.');
+    // The intro is shown in the Household section only, once a camper or guardian is chosen (see NewPersonForm tests).
+    expect(render(await NewPerson({}))).not.toContain(
+      'A child must join a household that has a parent or guardian in it.',
+    );
   });
 
   it('tells a viewer they cannot add people', async () => {

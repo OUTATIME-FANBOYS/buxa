@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { FormPopUp } from '@/components/components';
-import { ADD_PERSON_INTRO, type HouseholdChoice } from '@buxa/shared';
+import type { HouseholdChoice } from '@buxa/shared';
 import { NewPersonForm } from './NewPersonForm';
 import { Button } from '@/components/elements';
 
@@ -25,7 +25,6 @@ export function AddPersonButton({ households }: { households: readonly Household
       {open && (
         <FormPopUp
           title="Add person"
-          intro={ADD_PERSON_INTRO}
           formId={FORM_ID}
           submitLabel="Add person"
           pendingLabel="Adding…"

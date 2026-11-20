@@ -28,7 +28,8 @@ describe('NewPersonForm: the static frame', () => {
     expect(html).toContain('Family');
     expect(html).toContain('Staff and participants');
     expect(html).toContain('Parent or guardian');
-    expect(html).toContain('Choose everything that applies.');
+    expect(html).toContain('Choose one. Select it again to clear it.');
+    expect(html).not.toContain('Choose everything that applies.');
   });
 
   it('shows no Household section and no Email field before a role is chosen', () => {
@@ -38,9 +39,14 @@ describe('NewPersonForm: the static frame', () => {
     expect(html).not.toContain('name="householdEmail"');
   });
 
-  it('shows the intro line, and on its own page keeps the panel and a Cancel link back to People', () => {
+  it('has no Name heading and no intro line at the top: the intro sits in the Household section only', () => {
     const html = renderToStaticMarkup(<NewPersonForm household={null} households={[]} />);
-    expect(html).toContain(ADD_PERSON_INTRO);
+    expect(html).not.toContain('>Name</legend>');
+    expect(html).not.toContain(ADD_PERSON_INTRO);
+  });
+
+  it('on its own page it keeps the panel and a Cancel link back to People', () => {
+    const html = renderToStaticMarkup(<NewPersonForm household={null} households={[]} />);
     expect(html).toContain('class="panel people-form person-form"');
     expect(html).toContain('href="/camp/people"');
   });

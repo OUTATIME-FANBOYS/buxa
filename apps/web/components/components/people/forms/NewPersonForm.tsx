@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from 'react';
 import { CAMP_ROLES, CAMP_ROLE_LABELS, type CampRole } from '@buxa/domain';
 import { Button } from '@/components/elements';
-import { Checkbox, DatePicker, HiddenField, Select, TextField } from '@/components/atoms';
+import { DatePicker, HiddenField, Select, TextField } from '@/components/atoms';
 import { ROUTES } from '@/config/routes';
 import { fieldError, idle } from '@buxa/shared';
 import { createPersonAction } from '@/actions/people';
@@ -47,7 +47,8 @@ export function NewPersonForm({
   const [state, formAction, pending] = useActionState(createPersonAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
   const inDialog = variant === 'dialog';
-  const [roles, setRoles] = useState<ReadonlySet<CampRole>>(() => new Set());
+  // One role at a time. Selecting a role selects it; selecting it again clears it, so the role is required again.
+  const [role, setRole] = useState<CampRole | null>(null);
 
   // A field error moves focus to the first invalid field, so the person can correct it without searching the page.
   useEffect(() => {
@@ -60,23 +61,11 @@ export function NewPersonForm({
   }, [pending, onPendingChange]);
 
   const err = (name: string) => fieldError(state, name);
-  const chosen = [...roles];
-  const showHousehold = roles.has('camper') || roles.has('guardian');
-  const showRelationship = roles.has('camper');
-  // A person's own email shows once a role is chosen, unless every chosen role is a family role (then it is the household's).
-  const showOwnEmail = chosen.length > 0 && chosen.some(role => !FAMILY_ROLES.has(role));
+  const showHousehold = role === 'camper' || role === 'guardian';
+  const showRelationship = role === 'camper';
+  // A person's own email shows once a role is chosen, unless that role is a family role (then the email goes under Household).
+  const showOwnEmail = role !== null && !FAMILY_ROLES.has(role);
   const showHouseholdEmail = showHousehold;
-  const toggleRole = (role: CampRole, on: boolean) =>
-    setRoles(current => {
-      const next = new Set(current);
-      if (on) {
-        next.add(role);
-      } else {
-        next.delete(role);
-      }
-
-      return next;
-    });
 
   return (
     <form
@@ -85,27 +74,18 @@ export function NewPersonForm({
       action={formAction}
       className={`${inDialog ? '' : 'panel '}people-form person-form`}
     >
-      {!inDialog && (
-        <p id="people-form-help" className="person-helper">
-          {ADD_PERSON_INTRO}
-        </p>
-      )}
-
-      <fieldset className="plain person-section buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
-        <legend className="person-legend">Name</legend>
-        <div className="people-form-grid">
-          <TextField
-            label="First name"
-            isRequired
-            name="givenName"
-            error={err('givenName')}
-            autoComplete="off"
-            maxLength={80}
-            autoFocus={!inDialog}
-          />
-          <TextField label="Last name" name="familyName" error={err('familyName')} autoComplete="off" maxLength={80} />
-        </div>
-      </fieldset>
+      <div className="people-form-grid">
+        <TextField
+          label="First name"
+          isRequired
+          name="givenName"
+          error={err('givenName')}
+          autoComplete="off"
+          maxLength={80}
+          autoFocus={!inDialog}
+        />
+        <TextField label="Last name" name="familyName" error={err('familyName')} autoComplete="off" maxLength={80} />
+      </div>
 
       <div className="people-form-half">
         <DatePicker
@@ -124,22 +104,23 @@ export function NewPersonForm({
             {' *'}
           </span>
         </legend>
-        <p className="person-helper">Choose everything that applies. Someone can be a parent and an instructor.</p>
+        <p className="person-helper">Choose one. Select it again to clear it.</p>
         {ROLE_GROUPS.map(group => (
           <div key={group.heading} className="person-role-group">
             <h3 className="person-role-heading">{group.heading}</h3>
             <div className="people-checks">
-              {group.roles.map(role => (
-                <Checkbox
-                  key={role}
-                  className="people-check"
-                  name="roles"
-                  value={role}
-                  isSelected={roles.has(role)}
-                  onChange={on => toggleRole(role, on)}
-                >
-                  {CAMP_ROLE_LABELS[role]}
-                </Checkbox>
+              {group.roles.map(option => (
+                <label key={option} className="people-check">
+                  <input
+                    type="radio"
+                    name="roles"
+                    value={option}
+                    checked={role === option}
+                    onChange={() => undefined}
+                    onClick={() => setRole(current => (current === option ? null : option))}
+                  />
+                  <span>{CAMP_ROLE_LABELS[option]}</span>
+                </label>
               ))}
             </div>
           </div>
@@ -158,6 +139,7 @@ export function NewPersonForm({
       {showHousehold && (
         <fieldset className="plain person-section buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
           <legend className="person-legend">Household</legend>
+          <p className="person-helper">{ADD_PERSON_INTRO}</p>
           {household ? (
             <>
               <HiddenField name="householdId" value={household.id} />
