@@ -36,7 +36,7 @@ jobs:
       run_build: ${{ steps.classify.outputs.run_build }}
       run_workflow: ${{ steps.classify.outputs.run_workflow }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
       # Pull request: the diff against the base branch. Push: the diff against the previous commit (event.before, or HEAD~1
       # for a new branch). Anything else, or a diff that cannot be computed, runs every chunk.
@@ -78,8 +78,8 @@ jobs:
     if: needs.changes.outputs.run_workflow == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with: { node-version: 22 }
       - name: Every workflow file parses as YAML
         run: |
@@ -107,11 +107,11 @@ jobs:
     if: needs.changes.outputs.run_install == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with: { node-version: 22, cache: npm }
       - id: node-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: node_modules
           key: node-modules-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
@@ -125,7 +125,7 @@ jobs:
     if: always() && needs.install.result == 'success' && needs.changes.outputs.run_typecheck == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-cached-node
       - run: npm run typecheck
 
@@ -135,7 +135,7 @@ jobs:
     if: always() && needs.install.result == 'success' && needs.changes.outputs.run_lint == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-cached-node
       - run: npm run lint
       - name: Prettier check
@@ -150,7 +150,7 @@ jobs:
       && needs.lint.result != 'failure' && needs.lint.result != 'cancelled'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-cached-node
       - run: npm run test:unit
 
@@ -181,7 +181,7 @@ jobs:
       # Migrations use only the migration login (the migrate command refuses DATABASE_URL). Locally this is the same superuser.
       MIGRATION_DATABASE_URL: postgres://buxa:buxa@localhost:5433/buxa
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-cached-node
       - name: Run migrations
         run: npm run db:migrate
@@ -218,7 +218,7 @@ jobs:
     env:
       DATABASE_URL: postgres://buxa:buxa@localhost:5433/buxa
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-cached-node
       - name: Build web app (vercel-build)
         run: npx tsx scripts/vercel-build.ts

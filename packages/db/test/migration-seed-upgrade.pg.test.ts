@@ -36,6 +36,8 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
 
   beforeAll(async () => {
     rootPool = new pg.Pool(poolConfigFor(url!));
+    // An idle connection the server closes (57P01) is reported as a pool error. Without a listener it fails the whole run.
+    rootPool.on('error', () => {});
 
     try {
       await rootPool.query(`CREATE DATABASE "${tempDbName}"`);
@@ -48,6 +50,7 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
 
     const tempUrl = replaceDatabaseName(url!, tempDbName);
     tempPool = new pg.Pool(poolConfigFor(tempUrl));
+    tempPool.on('error', () => {});
 
     // 1. Apply migrations 0001 to 0017
     const client = await tempPool.connect();
