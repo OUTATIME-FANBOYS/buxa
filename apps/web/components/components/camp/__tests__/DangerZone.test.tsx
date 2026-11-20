@@ -18,6 +18,14 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: h.push, refresh: h
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
+function must<T>(value: T | null | undefined, what: string): T {
+  if (value == null) {
+    throw new Error(`Expected ${what} on the page.`);
+  }
+
+  return value;
+}
+
 const NAME = 'Camp Birchwood';
 
 const button = (text: string) =>
@@ -62,8 +70,10 @@ describe('the danger zone', () => {
     act(() => button('Archive camp')?.click());
     expect(dialogText()).toContain('Archiving hides Camp Birchwood from your camp list');
     expect(dialogText()).toContain('kept');
-    await act(async () => {
+    await act(() => {
       dlg('Archive camp')?.click();
+
+      return Promise.resolve();
     });
     expect(h.archiveCamp).toHaveBeenCalledWith({ orgId: 'o-1' });
     expect(h.push).toHaveBeenCalledWith('/camp');
@@ -75,17 +85,19 @@ describe('the danger zone', () => {
     act(() => dlg('Continue')?.click());
     expect(dlg('Delete camp')?.disabled).toBe(true);
 
-    act(() => typeInto(field()!, 'camp birchwood'));
+    act(() => typeInto(must(field(), 'the name field'), 'camp birchwood'));
     expect(dlg('Delete camp')?.disabled).toBe(true);
 
-    act(() => typeInto(field()!, 'Camp Birchwood '));
+    act(() => typeInto(must(field(), 'the name field'), 'Camp Birchwood '));
     expect(dlg('Delete camp')?.disabled).toBe(true);
 
-    act(() => typeInto(field()!, NAME));
+    act(() => typeInto(must(field(), 'the name field'), NAME));
     expect(dlg('Delete camp')?.disabled).toBe(false);
 
-    await act(async () => {
+    await act(() => {
       dlg('Delete camp')?.click();
+
+      return Promise.resolve();
     });
     expect(h.deleteCamp).toHaveBeenCalledWith({ orgId: 'o-1', confirmName: NAME });
   });
@@ -93,8 +105,10 @@ describe('the danger zone', () => {
   it('shows the server message when an action fails, and keeps the dialog open', async () => {
     h.archiveCamp.mockResolvedValue({ ok: false, message: 'Only the owner can archive this camp.' });
     act(() => button('Archive camp')?.click());
-    await act(async () => {
+    await act(() => {
       dlg('Archive camp')?.click();
+
+      return Promise.resolve();
     });
     expect(document.querySelector('[role="alert"]')?.textContent).toBe('Only the owner can archive this camp.');
     expect(h.push).not.toHaveBeenCalled();
@@ -118,6 +132,10 @@ describe('the danger zone', () => {
     });
     expect(dlg('Archiving…')?.disabled).toBe(true);
     expect(dlg('Cancel')?.disabled).toBe(true);
-    await act(async () => finish({ ok: true }));
+    await act(() => {
+      finish({ ok: true });
+
+      return Promise.resolve();
+    });
   });
 });

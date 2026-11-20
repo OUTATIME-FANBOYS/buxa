@@ -412,6 +412,7 @@ export function deleteProject(s: AppState, id: string): AppState {
 }
 export const createWorkspace = (s: AppState, id: string, name: string): AppState => ({
   ...s,
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the demo seed has no signed-in user and the action test relies on that; a guard would throw there
   workspaces: [...s.workspaces, { id, name, members: [{ userId: s.session.userId!, role: 'owner' }] }],
   ui: { ...s.ui, workspaceId: id, projectId: '' },
 });

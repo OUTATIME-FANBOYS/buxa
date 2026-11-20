@@ -56,7 +56,12 @@ export function CalendarLinkCard() {
             onFocus={e => e.currentTarget.select()}
           />
           <div className="classes-actions">
-            <Button type="button" onClick={copy}>
+            <Button
+              type="button"
+              onClick={() => {
+                void copy();
+              }}
+            >
               Copy link
             </Button>
           </div>
@@ -64,7 +69,14 @@ export function CalendarLinkCard() {
       ) : null}
       {message && <p role="status">{message}</p>}
       <div className="classes-actions">
-        <Button type="button" variant="ghost" onClick={makeLink} disabled={busy}>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => {
+            void makeLink();
+          }}
+          disabled={busy}
+        >
           {busy ? 'Making...' : link ? 'Make a new link' : 'Make a calendar link'}
         </Button>
       </div>

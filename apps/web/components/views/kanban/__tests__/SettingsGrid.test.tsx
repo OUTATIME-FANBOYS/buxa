@@ -29,9 +29,9 @@ vi.mock('@/components/components/camp/useAppearance', () => ({
 }));
 
 vi.mock('@/actions/camp', () => ({
-  archiveCamp: async () => ({ ok: true }),
-  deleteCamp: async () => ({ ok: true }),
-  unarchiveCamp: async () => ({ ok: true }),
+  archiveCamp: () => Promise.resolve({ ok: true }),
+  deleteCamp: () => Promise.resolve({ ok: true }),
+  unarchiveCamp: () => Promise.resolve({ ok: true }),
 }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -121,7 +121,14 @@ describe('the settings page', () => {
     );
   const tiles = () => Array.from(document.querySelectorAll<HTMLElement>('.settings-grid > section.panel'));
   const titles = () => tiles().map(tile => tile.querySelector('h2, h3')?.textContent);
-  const tile = (title: string) => tiles().find(t => t.querySelector('h2, h3')?.textContent === title)!;
+  const tile = (title: string) => {
+    const found = tiles().find(t => t.querySelector('h2, h3')?.textContent === title);
+    if (!found) {
+      throw new Error(`No settings tile titled "${title}".`);
+    }
+
+    return found;
+  };
   const buttonIn = (card: HTMLElement, label: string) =>
     Array.from(card.querySelectorAll<HTMLButtonElement>('button')).find(b => b.textContent?.trim() === label);
 
@@ -183,8 +190,10 @@ describe('the settings page', () => {
     render();
     const card = tile('Display name');
     expect(card.querySelector<HTMLInputElement>('input[autocomplete="given-name"]')?.value).toBe('Rosa');
-    await act(async () => {
+    await act(() => {
       buttonIn(card, 'Update')?.click();
+
+      return Promise.resolve();
     });
     expect(saveName).toHaveBeenCalledWith({ firstName: 'Rosa', lastName: 'Delgado' });
     expect(updateProfile).toHaveBeenCalledWith({ name: 'Rosa Delgado', title: 'Coordinator' });
@@ -197,8 +206,10 @@ describe('the settings page', () => {
       fieldErrors: { firstName: 'Enter your first name.' },
     });
     render();
-    await act(async () => {
+    await act(() => {
       buttonIn(tile('Display name'), 'Update')?.click();
+
+      return Promise.resolve();
     });
     expect(updateProfile).not.toHaveBeenCalled();
     expect(document.body.textContent).toContain('Enter your first name.');
