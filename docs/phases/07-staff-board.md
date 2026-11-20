@@ -31,6 +31,23 @@ Depends on: phase 1 (one app, camp shell). Runs alongside phases 2 to 6, not in 
 - Port: the existing kanban tests are ported or replaced, and each removed test is listed in the PR with its replacement.
 - Agent: a proposal cannot change a task until an approval is recorded.
 
+## AI assistant: agents that act for the signed-in person
+
+Decided: this is part of phase 7, after the staff board is in the database.
+
+Admins and staff can ask an AI assistant to do camp work in plain words (create a camp, add or update classes and sessions, assign teachers, move tasks). The assistant connects through the app's MCP server, and each request runs with the signed-in person's permissions.
+
+Rules:
+
+1. **The person's permissions apply.** The assistant acts as the signed-in person. A teacher asking for a new class is refused by the same check as the screen. Nothing is granted to the assistant itself.
+2. **Create, delete and archive need approval.** The assistant drafts the change, shows exactly what it will do, and the person confirms it. Owner-only actions stay with the owner.
+3. **Children's data stays out of the model.** Guardian contact details, medical notes and camper records are never sent to an AI provider, and the assistant has no tool that reads them.
+4. **Everything is audited.** Each action records the person and the assistant as the actor, with the request and the approval.
+5. **Prompt input is untrusted.** Text in a task, a camp name or a form answer can contain instructions. The assistant treats it as data, and an instruction inside data never changes what it is allowed to do.
+6. **A kill switch per camp.** The owner can turn the assistant off for the camp.
+
+Acceptance: an admin can create a camp and a class by conversation, with a confirmation step before anything is saved; a teacher asking to create a class is refused and the refusal is audited; a guardian's contact details never appear in any request to the provider.
+
 ## Not in this phase
 
 Notifications by email, external integrations (Slack, Google Calendar), time tracking.
