@@ -86,7 +86,7 @@ describe('teacher calendar link: making it', () => {
     expect(looksLikeCalendarToken(token)).toBe(true);
     expect(JSON.stringify(repo.audit)).not.toContain(token);
     expect(JSON.stringify(repo.audit)).not.toContain(hashCalendarToken(token).toString('hex'));
-    expect(repo.audit.map(a => a.action)).toEqual(['calendar.token_rotate_self']);
+    expect(repo.audit.map(a => a.action)).toEqual(['calendar.rotate_self']);
     expect(repo.audit[0]).toMatchObject({ actorId: teacher.userId, orgId: CAMP, entityId: teacher.userId });
   });
 

@@ -151,7 +151,7 @@ describe.skipIf(!url)('teacher calendar feed on Postgres', () => {
     await repo.saveMemberTokenHash(teacherA, hash);
 
     const rows = await pool.query<{ action: string; data: string; entity_id: string }>(
-      `SELECT action, data::text AS data, entity_id FROM audit_log WHERE org_id = $1 AND action = 'calendar.token_rotate_self' AND actor_id = $2 ORDER BY at DESC LIMIT 1`,
+      `SELECT action, data::text AS data, entity_id FROM audit_log WHERE org_id = $1 AND action = 'calendar.rotate_self' AND actor_id = $2 ORDER BY at DESC LIMIT 1`,
       [fx.orgA, teacherA.userId],
     );
     expect(rows.rows).toHaveLength(1);

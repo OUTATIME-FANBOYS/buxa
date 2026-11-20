@@ -25,7 +25,7 @@ export interface CalendarRepository {
   listFeedClasses(tokenHash: Buffer): Promise<FeedClass[]>;
   /** The camp of a teacher's own token hash, or null when the hash is unknown or its holder is no longer a teacher. */
   findTeacherByTokenHash(hash: Buffer): Promise<FeedCamp | null>;
-  /** Stores the hash for the actor's own link, replacing any earlier one, and audits `calendar.token_rotate_self` in the same transaction. */
+  /** Stores the hash for the actor's own link, replacing any earlier one, and audits `calendar.rotate_self` in the same transaction. */
   saveMemberTokenHash(actor: Actor, hash: Buffer): Promise<void>;
   /** The classes assigned to the teacher who owns the token hash, in its camp. Nothing for anyone else. */
   listTeacherFeedClasses(tokenHash: Buffer): Promise<FeedClass[]>;

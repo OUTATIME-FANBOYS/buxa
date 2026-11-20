@@ -91,7 +91,7 @@ export class PgCalendarRepository implements CalendarRepository {
       // The audit entry records that the person's link changed, never the token or its hash.
       await recordAudit(db, {
         actor,
-        action: 'calendar.token_rotate_self',
+        action: 'calendar.rotate_self',
         entity: 'member',
         entityId: actor.userId,
         data: {},

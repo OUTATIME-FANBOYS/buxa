@@ -115,7 +115,7 @@ export class InMemoryCalendarRepository implements CalendarRepository {
       this.audit.push({
         orgId: actor.orgId,
         actorId: actor.userId,
-        action: 'calendar.token_rotate_self',
+        action: 'calendar.rotate_self',
         entity: 'member',
         entityId: actor.userId,
         data: {},
