@@ -11,6 +11,18 @@ vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({
 
 const seed = buildSeed();
 
+/** `count` open tasks, all due on the 10th of July 2027 (the test's "today"). */
+function dayTasks(count: number) {
+  return Array.from({ length: count }, (_, i) => ({
+    ...seed.tasks[0],
+    id: `day-task-${i}`,
+    title: `Task ${i + 1}`,
+    due: '2027-07-10',
+  }));
+}
+
+const countChips = (html: string) => html.match(/cal-task cal-prio-/g)?.length ?? 0;
+
 describe('CalendarView', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -39,6 +51,24 @@ describe('CalendarView', () => {
     expect(html).toContain('title="Plan the trip"');
     expect(html).toMatch(/class="button button--ghost button--sm cal-task[ "]/);
     expect(html).toMatch(/<svg[^>]*class="[^"]*text-\[var\(--p-high\)\][^"]*cal-dot"/);
+  });
+  it('edges each chip in its priority, so the border matches the priority icon', () => {
+    const base = { ...seed.tasks[0], priority: 'critical' as const, due: '2027-07-10' };
+    const html = renderToStaticMarkup(<CalendarView tasks={[base]} canCreate={false} />);
+    expect(html).toMatch(/class="[^"]*cal-task cal-prio-critical[ "]/);
+  });
+  it('shows the first three tasks of a day and a "+1 more" control for a fourth', () => {
+    const tasks = dayTasks(4);
+    const html = renderToStaticMarkup(<CalendarView tasks={tasks} canCreate={false} />);
+    expect(countChips(html)).toBe(3);
+    expect(html).toContain('+1 more');
+    expect(html).toContain('button--glass');
+  });
+  it('shows the first three tasks of a day and a "+4 more" control for a seventh', () => {
+    const tasks = dayTasks(7);
+    const html = renderToStaticMarkup(<CalendarView tasks={tasks} canCreate={false} />);
+    expect(countChips(html)).toBe(3);
+    expect(html).toContain('+4 more');
   });
   it('leaves every pill untinted: its body is the surface, and only the priority icon carries colour', () => {
     const base = { ...seed.tasks[0], priority: 'high' as const, due: '2027-07-10' };

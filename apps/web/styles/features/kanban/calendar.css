@@ -107,13 +107,21 @@
   opacity: 0.55;
   text-decoration: line-through;
 }
+/* The "+N more" and "Show less" controls are the glass pill (button.css glass), so they sit at the start of the day. */
 .cal-more {
-  font-size: var(--fs-s);
-  color: var(--text-2);
-  text-align: left;
-  padding: 0 6px;
-  font-weight: 600;
+  justify-self: start;
 }
-.cal-more:hover {
-  color: var(--accent);
+/* Each chip's 1px border is the colour of its priority token, the same one the priority icon takes. Done chips keep it, muted by
+ * the opacity above. */
+.cal-task.cal-prio-critical {
+  --button-edge: var(--p-critical);
+}
+.cal-task.cal-prio-high {
+  --button-edge: var(--p-high);
+}
+.cal-task.cal-prio-medium {
+  --button-edge: var(--p-medium);
+}
+.cal-task.cal-prio-low {
+  --button-edge: var(--p-low);
 }

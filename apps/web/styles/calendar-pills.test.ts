@@ -25,6 +25,16 @@ describe('calendar task pills', () => {
     expect(calendar).not.toContain('prio-bg-');
     expect(calendar).not.toContain('--pc');
   });
+  it('edge each chip in its priority token, the same colour as the priority icon, with no new colour', () => {
+    for (const p of ['critical', 'high', 'medium', 'low']) {
+      expect(calendar).toContain(`.cal-task.cal-prio-${p} { --button-edge: var(--p-${p}); }`);
+    }
+    expect(calendar).not.toMatch(/--button-edge: #/);
+  });
+  it('keep the border on a done chip: it is muted by the opacity, not removed', () => {
+    expect(calendar).toMatch(/\.cal-task\.is-done \{ opacity: 0\.55;/);
+    expect(calendar).not.toMatch(/\.cal-task\.is-done \{[^}]*--button-edge/);
+  });
   it('have no type tint: the body is the surface, and the priority dot is the only colour', () => {
     expect(calendar).not.toContain('cal-type');
     expect(calendar).not.toContain('--cal-bg');

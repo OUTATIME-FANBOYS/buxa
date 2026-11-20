@@ -9,6 +9,8 @@ import { PriorityIcon } from '@/components/atoms/Icon';
 import { fmt, parse, toISO, today } from '@buxa/shared';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+/** How many tasks a day shows before its "+N more" control. */
+const DAY_PREVIEW = 3;
 const monthStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
 
 /** The 42 days (six Mondays-first weeks) that cover the month at `cursor`. */
@@ -50,7 +52,19 @@ export function CalendarView({
   }, [tasks]);
   const t0 = today();
   const month = cursor.getMonth();
-  const [more, setMore] = useState<string | null>(null);
+  // The days the user has expanded with "+N more". Several can be open at once; each one grows in place.
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
+  const toggleDay = (day: string) =>
+    setExpanded(current => {
+      const next = new Set(current);
+      if (next.has(day)) {
+        next.delete(day);
+      } else {
+        next.add(day);
+      }
+
+      return next;
+    });
   const noDate = tasks.filter(t => !t.due && kindOf(t) !== 'done').length;
 
   return (
@@ -83,7 +97,9 @@ export function CalendarView({
         {days.map(day => {
           const list = byDay.get(day) ?? [];
           const d = parse(day);
-          const shown = more === day ? list : list.slice(0, 3);
+          const isOpen = expanded.has(day);
+          const shown = isOpen ? list : list.slice(0, DAY_PREVIEW);
+          const hidden = list.length - DAY_PREVIEW;
 
           return (
             <div
@@ -108,7 +124,7 @@ export function CalendarView({
                   key={t.id}
                   variant="ghost"
                   size="sm"
-                  className={`cal-task ${kindOf(t) === 'done' ? 'is-done' : ''}`}
+                  className={`cal-task cal-prio-${t.priority} ${kindOf(t) === 'done' ? 'is-done' : ''}`}
                   onClick={() => openTask(t.id)}
                   title={t.title}
                 >
@@ -116,9 +132,9 @@ export function CalendarView({
                   <span className="cal-title">{t.title}</span>
                 </Button>
               ))}
-              {list.length > 3 && more !== day && (
-                <Button variant="ghost" size="sm" className="cal-more" onClick={() => setMore(day)}>
-                  +{list.length - 3} more
+              {hidden > 0 && (
+                <Button variant="glass" size="sm" className="cal-more" onClick={() => toggleDay(day)}>
+                  {isOpen ? 'Show less' : `+${hidden} more`}
                 </Button>
               )}
             </div>
