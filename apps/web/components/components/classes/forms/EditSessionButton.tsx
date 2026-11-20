@@ -3,6 +3,7 @@
 import { useActionState, useCallback, useState } from 'react';
 import { FormPopUp } from '@/components/components';
 import { Button } from '@/components/elements';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { deleteSessionAction } from '@/actions/classes';
 import type { Session } from '@buxa/contracts';
 import { idle } from '@buxa/shared';
@@ -23,6 +24,15 @@ export function EditSessionButton({ session }: { session: Session }) {
     setOpen(false);
     setConfirming(false);
   }, []);
+  const { toast } = useUi();
+  // A saved session closes the pop-up and toasts the server's message.
+  const saved = useCallback(
+    (message: string) => {
+      toast(message);
+      close();
+    },
+    [toast, close],
+  );
   const onPendingChange = useCallback((value: boolean) => setPending(value), []);
   const formId = `edit-session-${session.id}`;
   const deleteFormId = `delete-session-${session.id}`;
@@ -67,7 +77,7 @@ export function EditSessionButton({ session }: { session: Session }) {
               Delete &ldquo;{session.name}&rdquo;? This cannot be undone. A session with classes cannot be deleted.
             </p>
           )}
-          <EditSessionForm session={session} formId={formId} onPendingChange={onPendingChange} onSaved={close} />
+          <EditSessionForm session={session} formId={formId} onPendingChange={onPendingChange} onSaved={saved} />
           <form id={deleteFormId} action={deleteFormAction} className="class-form">
             <input type="hidden" name="sessionId" value={session.id} />
           </form>

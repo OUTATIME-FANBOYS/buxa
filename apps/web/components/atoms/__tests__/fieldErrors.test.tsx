@@ -19,7 +19,7 @@ describe('shared fields: required mark and error state', () => {
 
   it('DatePicker shows one asterisk and links its error to the input', () => {
     const html = renderToStaticMarkup(
-      <DatePicker label="Start" isRequired name="startsOn" error="Choose the first day." />,
+      <DatePicker label="Start" isRequired name="startsOn" error="Pick a first day." />,
     );
     expect(html.match(/field-required/g)).toHaveLength(1);
     expect(html).toContain('aria-required="true"');

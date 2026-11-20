@@ -217,10 +217,10 @@ export function sessionForm(form: FormData): PersonParsed<NewSessionInput> {
   const startsOn = field(form, 'startsOn');
   const endsOn = field(form, 'endsOn');
   if (startsOn === '') {
-    problems.startsOn = 'Choose the first day.';
+    problems.startsOn = 'Pick a first day.';
   }
   if (endsOn === '') {
-    problems.endsOn = 'Choose the last day.';
+    problems.endsOn = 'Pick a last day.';
   }
   const price = priceFromForm(form, problems);
 
@@ -246,10 +246,10 @@ export function sessionEditForm(form: FormData): PersonParsed<NewSessionInput> {
   const startsOn = field(form, 'startsOn');
   const endsOn = field(form, 'endsOn');
   if (startsOn === '') {
-    problems.startsOn = 'Choose the first day.';
+    problems.startsOn = 'Pick a first day.';
   }
   if (endsOn === '') {
-    problems.endsOn = 'Choose the last day.';
+    problems.endsOn = 'Pick a last day.';
   }
 
   return withProblems(problems, () =>

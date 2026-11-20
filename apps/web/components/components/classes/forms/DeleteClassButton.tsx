@@ -5,6 +5,7 @@ import { Dialog } from '@/components/components/Dialog';
 import { Button } from '@/components/elements';
 import { deleteClassAction } from '@/actions/classes';
 import { idle } from '@buxa/shared';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { ActionMessage } from './ActionMessage';
 
 /**
@@ -24,11 +25,13 @@ export function DeleteClassButton({
   const close = useCallback(() => setOpen(false), []);
   const [state, formAction, pending] = useActionState(deleteClassAction, idle);
 
+  const { toast } = useUi();
   useEffect(() => {
     if (state.status === 'success') {
+      toast(state.message ?? 'Class deleted.');
       setOpen(false);
     }
-  }, [state]);
+  }, [state, toast]);
 
   return (
     <>

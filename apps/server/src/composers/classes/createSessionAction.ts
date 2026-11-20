@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { ROUTES, sessionPath } from '@buxa/shared/config/routes';
-import { failure, sessionForm, type ActionState } from '@buxa/shared';
+import { failure, field, sessionForm, success, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../runtime';
 import { currentActor } from '../people/camp';
 import { expectedFailure, NO_CAMP } from '../people/failures';
@@ -36,5 +36,9 @@ export async function createSessionAction(_previous: ActionState, form: FormData
   }
 
   revalidatePath(ROUTES.sessions);
+  // Posted from the New session pop-up (dialog=1): the pop-up closes and the list shows a toast, so there is no redirect.
+  if (field(form, 'dialog') === '1') {
+    return success('Session added.');
+  }
   redirect(sessionPath(createdId)); // throws; kept outside the try
 }

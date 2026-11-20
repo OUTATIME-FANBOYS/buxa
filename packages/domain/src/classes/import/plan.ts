@@ -147,7 +147,7 @@ function checkFields(row: ImportRow, classes: ClassRef[], timeZone: string): Che
   }
 
   if (c.location === '') {
-    problems.push(problem('location', 'Give the location.'));
+    problems.push(problem('location', 'Location missing.'));
   } else if (c.location.length > MAX_LOCATION) {
     problems.push(problem('location', `Keep the location under ${MAX_LOCATION} characters.`));
   }

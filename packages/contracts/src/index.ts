@@ -57,7 +57,7 @@ export const MembersSchema = z.object({ members: z.array(MemberSchema) });
 export type Members = z.infer<typeof MembersSchema>;
 
 /** What a client may send. */
-const NameSchema = z.string().trim().min(1, 'Give your camp a name.').max(120);
+const NameSchema = z.string().trim().min(1, 'Enter a camp name.').max(120);
 export const TimeZoneSchema = z
   .string()
   .refine(isTimeZone, 'Choose a valid time zone, for example America/Los_Angeles.');

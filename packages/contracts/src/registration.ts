@@ -12,11 +12,7 @@ export const FieldKeySchema = z
   .string()
   .regex(/^[a-z][a-z0-9_]{1,39}$/, 'Use lowercase letters, numbers and underscores, starting with a letter.');
 
-const LabelSchema = z
-  .string()
-  .trim()
-  .min(1, 'Give the question a label.')
-  .max(120, 'Keep the label to 120 characters.');
+const LabelSchema = z.string().trim().min(1, 'Enter a label.').max(120, 'Keep the label to 120 characters.');
 
 const FieldBaseSchema = z.object({
   key: FieldKeySchema,
@@ -56,7 +52,7 @@ export const STANDARD_FIELDS = [
 /** A form as the camp edits it: name, season, the session set and the custom questions. */
 export const RegistrationFormInputSchema = z
   .object({
-    name: z.string().trim().min(1, 'Give the form a name.').max(120, 'Keep the name to 120 characters.'),
+    name: z.string().trim().min(1, 'Enter a form name.').max(120, 'Keep the name to 120 characters.'),
     season: z
       .string()
       .trim()

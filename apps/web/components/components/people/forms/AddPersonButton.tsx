@@ -5,6 +5,7 @@ import { FormPopUp } from '@/components/components';
 import type { HouseholdChoice } from '@buxa/shared';
 import { NewPersonForm } from './NewPersonForm';
 import { Button } from '@/components/elements';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 
 const FORM_ID = 'new-person-form';
 
@@ -16,6 +17,15 @@ export function AddPersonButton({ households }: { households: readonly Household
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const close = useCallback(() => setOpen(false), []);
+  const { toast } = useUi();
+  // An added person closes the pop-up and toasts the server's message.
+  const saved = useCallback(
+    (message: string) => {
+      toast(message);
+      setOpen(false);
+    },
+    [toast],
+  );
 
   return (
     <>
@@ -39,6 +49,7 @@ export function AddPersonButton({ households }: { households: readonly Household
             household={null}
             households={households}
             onPendingChange={setPending}
+            onSaved={saved}
           />
         </FormPopUp>
       )}

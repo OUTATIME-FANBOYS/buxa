@@ -67,7 +67,7 @@ describe('updatePersonAction', () => {
     const state = await updatePersonAction(idle, formOf({ ...details, givenName: '', roles: [] }));
     expect(state).toMatchObject({
       status: 'error',
-      fieldErrors: { givenName: 'Required.', roles: 'Choose at least one role.' },
+      fieldErrors: { givenName: 'Required.', roles: 'Pick a role.' },
     });
     expect(h.people.update).not.toHaveBeenCalled();
   });

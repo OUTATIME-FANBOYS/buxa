@@ -5,6 +5,7 @@ import { FormPopUp } from '@/components/components';
 import { Button } from '@/components/elements';
 import { fieldError, idle } from '@buxa/shared';
 import type { SessionPrice } from '@buxa/domain';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { setSessionPriceAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
 import { PriceFields } from './PriceFields';
@@ -17,6 +18,15 @@ export function SessionPriceButton({ sessionId, price }: { sessionId: string; pr
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const close = useCallback(() => setOpen(false), []);
+  const { toast } = useUi();
+  // A saved form closes the pop-up and toasts the server's message.
+  const saved = useCallback(
+    (message: string) => {
+      toast(message);
+      setOpen(false);
+    },
+    [toast],
+  );
 
   return (
     <>
@@ -36,7 +46,7 @@ export function SessionPriceButton({ sessionId, price }: { sessionId: string; pr
             sessionId={sessionId}
             price={price}
             formId={FORM_ID}
-            onSaved={close}
+            onSaved={saved}
             onPendingChange={setPending}
           />
         </FormPopUp>
@@ -57,7 +67,7 @@ function SessionPriceForm({
   sessionId: string;
   price: SessionPrice | null;
   formId: string;
-  onSaved: () => void;
+  onSaved: (message: string) => void;
   onPendingChange: (pending: boolean) => void;
 }) {
   const [state, formAction, pending] = useActionState(setSessionPriceAction, idle);
@@ -68,7 +78,7 @@ function SessionPriceForm({
       formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
     }
     if (state.status === 'success') {
-      onSaved();
+      onSaved(state.message ?? 'Saved.');
     }
   }, [state, onSaved]);
   useEffect(() => {

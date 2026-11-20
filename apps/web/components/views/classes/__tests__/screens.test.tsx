@@ -147,13 +147,7 @@ describe('ClassList (the Sessions page)', () => {
     expect(html).toContain('You cannot see sessions');
   });
 
-  it('shows the deleted toast when the list is opened after a delete', async () => {
-    const html = render(await ClassList({ deletedName: 'Art' }));
-    expect(html).toContain('role="status"');
-    expect(html).toContain('Deleted &quot;Art&quot;.');
-  });
-
-  it('shows no toast when nothing was just deleted', async () => {
+  it('shows no deleted notice when nothing was just deleted (the notice itself is tested in DeletedSessionToast)', async () => {
     const html = render(await ClassList());
     expect(html).not.toContain('Deleted &quot;');
   });

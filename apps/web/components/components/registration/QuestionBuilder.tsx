@@ -69,7 +69,7 @@ export function QuestionBuilder({ initial = [] }: { initial?: CustomField[] }) {
 
   const add = () => {
     if (label.trim() === '') {
-      setProblem('Give the question a label.');
+      setProblem('Enter a label.');
 
       return;
     }

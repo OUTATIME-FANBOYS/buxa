@@ -19,10 +19,13 @@ export function NewSessionForm({
   variant = 'page',
   formId,
   onPendingChange,
+  onSaved,
 }: {
   variant?: 'page' | 'dialog';
   formId?: string;
   onPendingChange?: (pending: boolean) => void;
+  /** Runs with the server's message when the session is created (the pop-up closes and toasts it). */
+  onSaved?: (message: string) => void;
 } = {}) {
   const [state, formAction, pending] = useActionState(createSessionAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
@@ -38,6 +41,12 @@ export function NewSessionForm({
   useEffect(() => {
     onPendingChange?.(pending);
   }, [pending, onPendingChange]);
+
+  useEffect(() => {
+    if (state.status === 'success') {
+      onSaved?.(state.message ?? 'Session added.');
+    }
+  }, [state, onSaved]);
 
   // A discount that leaves no price is refused here, with its message on the field, before anything is sent.
   const refuseIfDiscountInvalid = (event: FormEvent<HTMLFormElement>) => {
@@ -82,6 +91,8 @@ export function NewSessionForm({
         Show this session on the public pages
       </Checkbox>
       <PriceFields error={err} onDiscountProblem={setDiscountProblem} />
+      {/* A pop-up's create posts dialog=1, so the action returns a success instead of redirecting to the new session. */}
+      {inDialog && <input type="hidden" name="dialog" value="1" />}
       <ActionMessage state={state} />
       {!inDialog && (
         <div className="classes-actions">

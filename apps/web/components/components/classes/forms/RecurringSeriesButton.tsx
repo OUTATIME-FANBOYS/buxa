@@ -1,5 +1,6 @@
 'use client';
 
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { useActionState, useCallback, useEffect, useRef, useState } from 'react';
 import { FormPopUp } from '@/components/components';
 import { Button, Checkbox, DatePicker, TextField } from '@/components/atoms';
@@ -31,6 +32,15 @@ export function RecurringSeriesButton({ sessionId }: { sessionId: string }) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const close = useCallback(() => setOpen(false), []);
+  const { toast } = useUi();
+  // A saved series closes the pop-up and toasts the server's message.
+  const saved = useCallback(
+    (message: string) => {
+      toast(message);
+      setOpen(false);
+    },
+    [toast],
+  );
 
   return (
     <>
@@ -54,7 +64,7 @@ export function RecurringSeriesButton({ sessionId }: { sessionId: string }) {
           pending={pending}
           onCancel={close}
         >
-          <SeriesForm sessionId={sessionId} onSaved={close} onPendingChange={setPending} />
+          <SeriesForm sessionId={sessionId} onSaved={saved} onPendingChange={setPending} />
         </FormPopUp>
       )}
     </>
@@ -67,7 +77,7 @@ function SeriesForm({
   onPendingChange,
 }: {
   sessionId: string;
-  onSaved: () => void;
+  onSaved: (message: string) => void;
   onPendingChange: (pending: boolean) => void;
 }) {
   const [state, formAction, pending] = useActionState(addRecurringClassesAction, idle);
@@ -79,7 +89,7 @@ function SeriesForm({
       formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
     }
     if (state.status === 'success') {
-      onSaved();
+      onSaved(state.message ?? 'Weekly series added.');
     }
   }, [state, onSaved]);
 

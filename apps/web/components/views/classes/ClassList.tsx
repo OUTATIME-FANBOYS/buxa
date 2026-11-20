@@ -1,11 +1,11 @@
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { ROUTES } from '@/config/routes';
-import { Empty, PageHeader, Toast } from '@/components/components';
+import { Empty, PageHeader } from '@/components/components';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_READ } from '@buxa/shared';
 import { loadSessions } from '@buxa/server/composers/index.server';
-import { SessionsTable } from '@/components/components/classes';
+import { DeletedSessionToast, SessionsTable } from '@/components/components/classes';
 import { NewSessionButton } from '@/components/components/classes/forms';
 import { Button } from '@/components/elements';
 
@@ -50,7 +50,7 @@ export async function ClassList({ deletedName = null }: { deletedName?: string |
       ) : (
         <SessionsTable sessions={loaded.value} canManage={canManage} />
       )}
-      {deletedName && <Toast key={deletedName} message={`Deleted "${deletedName}".`} />}
+      {deletedName && <DeletedSessionToast name={deletedName} />}
     </div>
   );
 }

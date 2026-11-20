@@ -36,7 +36,7 @@ describe('createPersonAction', () => {
     const state = await createPersonAction(idle, formOf({ givenName: '', familyName: '', roles: [] }));
     expect(state).toMatchObject({
       status: 'error',
-      fieldErrors: { givenName: 'Required.', familyName: 'Required.', roles: 'Choose at least one role.' },
+      fieldErrors: { givenName: 'Required.', familyName: 'Required.', roles: 'Pick a role.' },
     });
     expect(h.people.create).not.toHaveBeenCalled();
   });

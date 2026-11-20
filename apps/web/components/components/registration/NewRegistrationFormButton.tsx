@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react';
 import { FormPopUp } from '@/components/components';
 import { Button } from '@/components/elements';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { FormEditor } from './FormEditor';
 
 const FORM_ID = 'new-registration-form';
@@ -15,6 +16,15 @@ export function NewRegistrationFormButton({ sessions }: { sessions: readonly { i
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const close = useCallback(() => setOpen(false), []);
+  const { toast } = useUi();
+  // A saved form closes the pop-up and toasts the server's message.
+  const saved = useCallback(
+    (message: string) => {
+      toast(message);
+      setOpen(false);
+    },
+    [toast],
+  );
 
   return (
     <>
@@ -32,7 +42,14 @@ export function NewRegistrationFormButton({ sessions }: { sessions: readonly { i
           submitDisabled={sessions.length === 0}
           onCancel={close}
         >
-          <FormEditor mode="create" variant="dialog" id={FORM_ID} sessions={sessions} onPendingChange={setPending} />
+          <FormEditor
+            mode="create"
+            variant="dialog"
+            id={FORM_ID}
+            sessions={sessions}
+            onPendingChange={setPending}
+            onSaved={saved}
+          />
         </FormPopUp>
       )}
     </>

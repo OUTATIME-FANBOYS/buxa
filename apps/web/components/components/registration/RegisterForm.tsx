@@ -64,6 +64,7 @@ export function RegisterForm({
   sessions,
   fields,
   onPendingChange,
+  onSaved,
 }: {
   formId: string;
   /** The form element's id, for a dialog footer's submit button to name with its `form` attribute. */
@@ -72,6 +73,8 @@ export function RegisterForm({
   sessions: readonly { id: string; name: string }[];
   fields: readonly CustomField[];
   onPendingChange?: (pending: boolean) => void;
+  /** Runs with the server's message when the registration is recorded (a pop-up closes and toasts it). */
+  onSaved?: (message: string) => void;
 }) {
   const [state, formAction, pending] = useActionState(submitRegistrationAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
@@ -86,6 +89,11 @@ export function RegisterForm({
   useEffect(() => {
     onPendingChange?.(pending);
   }, [pending, onPendingChange]);
+  useEffect(() => {
+    if (state.status === 'success') {
+      onSaved?.(state.message ?? 'Registration recorded.');
+    }
+  }, [state, onSaved]);
 
   const err = (name: string) => fieldError(state, name);
 

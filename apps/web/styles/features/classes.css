@@ -121,7 +121,7 @@ form.class-form {
 .class-form .field-hint,
 .class-form .field-error {
   margin: 0;
-  font-size: var(--fs-s);
+  font-size: 12px;
   line-height: 1.4;
 }
 .class-form .class-helper,
@@ -164,7 +164,7 @@ form.class-form {
 .class-dialog .field-hint,
 .class-dialog .class-helper,
 .class-dialog .field-error {
-  font-size: var(--fs-b);
+  font-size: 12px;
 }
 
 /* The row of actions in the classes table: Enrolments, Edit and Delete wrap on a narrow screen. */
@@ -200,9 +200,9 @@ form.class-form {
   max-height: 7.5rem;
   overflow-y: auto;
   margin: 0;
-  padding: var(--s2);
+  padding: var(--s2) 0 0;
   list-style: none;
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: var(--r-2);
 }
 

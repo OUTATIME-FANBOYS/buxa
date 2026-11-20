@@ -6,7 +6,7 @@ import type { Session } from '@buxa/contracts';
 import { sessionPath } from '@/config/routes';
 import { Checkbox } from '@/components/atoms';
 import { Button } from '@/components/elements';
-import { Toast } from '@/components/components';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { deletedMessage, notDeletedMessage, type SessionDeletionDone } from '@buxa/shared';
 import { DeleteSessionsDialog, EditSessionButton, type SessionRef } from './forms';
 import { SessionSelectionBar } from './SessionSelectionBar';
@@ -22,7 +22,7 @@ export function SessionsTable({ sessions, canManage }: { sessions: readonly Sess
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [targets, setTargets] = useState<readonly SessionRef[] | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ key: number; text: string } | null>(null);
+  const { toast } = useUi();
 
   const chosen = sessions.filter(session => selected.has(session.id));
   const allChosen = sessions.length > 0 && chosen.length === sessions.length;
@@ -41,13 +41,16 @@ export function SessionsTable({ sessions, canManage }: { sessions: readonly Sess
   const toggleAll = () => setSelected(allChosen ? new Set() : new Set(sessions.map(session => session.id)));
   const clear = () => setSelected(new Set());
   const close = useCallback(() => setTargets(null), []);
-  const onDone = useCallback((result: SessionDeletionDone) => {
-    if (result.deleted.length > 0) {
-      setToast({ key: Date.now(), text: deletedMessage(result.deleted.length) });
-    }
-    setNotice(notDeletedMessage(result.refused));
-    setSelected(new Set(result.refused.map(refused => refused.id)));
-  }, []);
+  const onDone = useCallback(
+    (result: SessionDeletionDone) => {
+      if (result.deleted.length > 0) {
+        toast(deletedMessage(result.deleted.length));
+      }
+      setNotice(notDeletedMessage(result.refused));
+      setSelected(new Set(result.refused.map(refused => refused.id)));
+    },
+    [toast],
+  );
 
   return (
     <>
@@ -126,7 +129,6 @@ export function SessionsTable({ sessions, canManage }: { sessions: readonly Sess
         </table>
       </div>
       {targets && <DeleteSessionsDialog sessions={targets} onDone={onDone} onClose={close} />}
-      {toast && <Toast key={toast.key} message={toast.text} />}
     </>
   );
 }

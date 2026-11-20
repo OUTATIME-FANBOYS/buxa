@@ -2,14 +2,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { failure } from '@buxa/shared';
+import { failure, success } from '@buxa/shared';
 import { AddPersonButton } from '@/components/components/people/forms';
 import { requirePresent } from '@buxa/domain';
+import { UiProvider } from '@buxa/middleware/providers/providers';
 
 const createPerson = vi.hoisted(() => vi.fn());
 vi.mock('@buxa/server/composers/people/createPersonAction', () => ({ createPersonAction: createPerson }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+const NoDialog = () => null;
 
 // The dialog's exit runs for 190ms before it unmounts; wait past it.
 const settle = () =>
@@ -47,7 +49,13 @@ describe('AddPersonButton (the People page)', () => {
   };
 
   it('opens the add form in a dialog from the Add person button', async () => {
-    act(() => root.render(<AddPersonButton households={[]} />));
+    act(() =>
+      root.render(
+        <UiProvider Dialog={NoDialog}>
+          <AddPersonButton households={[]} />
+        </UiProvider>,
+      ),
+    );
     expect(dialog()).toBeNull();
     await open();
     expect(dialog()?.getAttribute('aria-label')).toBe('Add person');
@@ -57,7 +65,13 @@ describe('AddPersonButton (the People page)', () => {
   });
 
   it('closes on Escape, returns focus to the button, and leaves no dialog behind', async () => {
-    act(() => root.render(<AddPersonButton households={[]} />));
+    act(() =>
+      root.render(
+        <UiProvider Dialog={NoDialog}>
+          <AddPersonButton households={[]} />
+        </UiProvider>,
+      ),
+    );
     await open();
     await act(() =>
       requirePresent(dialog(), 'dialog()').dispatchEvent(
@@ -70,7 +84,13 @@ describe('AddPersonButton (the People page)', () => {
   });
 
   it('closes from its Cancel button', async () => {
-    act(() => root.render(<AddPersonButton households={[]} />));
+    act(() =>
+      root.render(
+        <UiProvider Dialog={NoDialog}>
+          <AddPersonButton households={[]} />
+        </UiProvider>,
+      ),
+    );
     await open();
     const cancel = requirePresent(
       Array.from(requirePresent(dialog(), 'dialog()').querySelectorAll('button')).find(b => b.textContent === 'Cancel'),
@@ -85,10 +105,16 @@ describe('AddPersonButton (the People page)', () => {
     createPerson.mockResolvedValue(
       failure('Check the highlighted fields.', {
         givenName: 'Enter a first name.',
-        roles: 'Choose at least one role.',
+        roles: 'Pick a role.',
       }),
     );
-    act(() => root.render(<AddPersonButton households={[]} />));
+    act(() =>
+      root.render(
+        <UiProvider Dialog={NoDialog}>
+          <AddPersonButton households={[]} />
+        </UiProvider>,
+      ),
+    );
     await open();
     const form = requirePresent(
       requirePresent(dialog(), 'dialog()').querySelector('form'),
@@ -100,13 +126,19 @@ describe('AddPersonButton (the People page)', () => {
     await flush();
     expect(createPerson).toHaveBeenCalledTimes(1);
     expect(requirePresent(dialog(), 'dialog()').textContent).toContain('Enter a first name.');
-    expect(requirePresent(dialog(), 'dialog()').textContent).toContain('Choose at least one role.');
+    expect(requirePresent(dialog(), 'dialog()').textContent).toContain('Pick a role.');
     expect(document.activeElement).toBe(requirePresent(dialog(), 'dialog()').querySelector('input[name="givenName"]'));
   });
 
   it('submits the fields as typed', async () => {
     createPerson.mockResolvedValue(failure('Check the highlighted fields.', {}));
-    act(() => root.render(<AddPersonButton households={[]} />));
+    act(() =>
+      root.render(
+        <UiProvider Dialog={NoDialog}>
+          <AddPersonButton households={[]} />
+        </UiProvider>,
+      ),
+    );
     await open();
     const given = requirePresent(
       requirePresent(dialog(), 'dialog()').querySelector<HTMLInputElement>('input[name="givenName"]'),
@@ -128,5 +160,25 @@ describe('AddPersonButton (the People page)', () => {
     const data = createPerson.mock.calls[0]?.[1] as FormData;
     expect(data.get('givenName')).toBe('Ada');
     expect(data.get('familyName')).toBe('Lovelace');
+  });
+  it('a successful add closes the pop-up and shows the toast with the server’s message', async () => {
+    createPerson.mockResolvedValue(success('Person added.'));
+    act(() =>
+      root.render(
+        <UiProvider Dialog={NoDialog}>
+          <AddPersonButton households={[]} />
+        </UiProvider>,
+      ),
+    );
+    await open();
+    const given = requirePresent(
+      requirePresent(dialog(), 'dialog()').querySelector<HTMLInputElement>('input[name="givenName"]'),
+      'givenName',
+    );
+    given.value = 'Ada';
+    act(() => requirePresent(requirePresent(dialog(), 'dialog()').querySelector('form'), 'form').requestSubmit());
+    await settle();
+    expect(dialog()).toBeNull();
+    expect(document.querySelector('[role="status"]')?.textContent).toContain('Person added.');
   });
 });

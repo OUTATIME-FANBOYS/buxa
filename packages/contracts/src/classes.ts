@@ -44,7 +44,7 @@ export const CampSizeSchema = z
   .min(MIN_CAMP_SIZE, CAMP_SIZE_MESSAGE)
   .max(MAX_CAMP_SIZE, CAMP_SIZE_MESSAGE);
 
-const NameSchema = z.string().trim().min(1, 'Give the name.').max(120);
+const NameSchema = z.string().trim().min(1, 'Enter a name.').max(120);
 const InstantSchema = z.iso.datetime({ offset: true, message: 'Use a date and time with a time zone offset.' });
 const LocalDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a date like 2027-07-05.');
 
@@ -72,7 +72,7 @@ export type SessionPriceInput = z.infer<typeof SessionPriceSchema>;
 /** A class's instructor as the screens show them: the person's id and name. Names are trimmed and bounded like a person's name. */
 export const ClassInstructorSchema = z.object({
   id: z.string(),
-  name: z.string().trim().min(1, 'An instructor needs a name.').max(120),
+  name: z.string().trim().min(1, 'Enter a name.').max(120),
 });
 export type ClassInstructor = z.infer<typeof ClassInstructorSchema>;
 
@@ -144,7 +144,7 @@ export const NewRecurringClassInputSchema = z.object({
   name: NameSchema,
   ageRange: ClassAgeRangeInputSchema,
   capacity: CampSizeSchema,
-  location: z.string().trim().min(1, 'Give the location.').max(200),
+  location: z.string().trim().min(1, 'Location missing.').max(200),
   instructorIds: z.array(z.string().uuid()).max(MAX_CLASS_INSTRUCTORS).default([]),
 });
 export type NewRecurringClassInput = z.infer<typeof NewRecurringClassInputSchema>;
@@ -176,7 +176,7 @@ export const ClassInputSchema = z
     capacity: CampSizeSchema,
     startsAt: InstantSchema,
     endsAt: InstantSchema,
-    location: z.string().trim().min(1, 'Give the location.').max(200),
+    location: z.string().trim().min(1, 'Location missing.').max(200),
     instructorIds: z.array(z.string().uuid()).max(MAX_CLASS_INSTRUCTORS).default([]),
   })
   .refine(v => isValidSpan({ startsAt: v.startsAt, endsAt: v.endsAt }), {
@@ -204,7 +204,7 @@ export type Enrolment = z.infer<typeof EnrolmentSchema>;
 
 /** An admin's reason for an override. Required whenever an override is sent. */
 export const OverrideInputSchema = z.object({
-  reason: z.string().trim().min(1, 'Give a reason for the override.').max(500),
+  reason: z.string().trim().min(1, 'Enter a reason.').max(500),
 });
 export type OverrideInput = z.infer<typeof OverrideInputSchema>;
 

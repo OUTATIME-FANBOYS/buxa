@@ -47,7 +47,7 @@ describe('renameCampAction and selectCampAction', () => {
     it('reports an invalid name on the name field', async () => {
       signInAs(owner);
       const state = await renameCampAction(idle, formOf({ campId: orgId, name: '   ' }));
-      expect(state).toMatchObject({ status: 'error', fieldErrors: { name: 'Give your camp a name.' } });
+      expect(state).toMatchObject({ status: 'error', fieldErrors: { name: 'Enter a camp name.' } });
       expect(world.store.orgs.get(orgId)?.name).toBe('Sunrise Lake');
     });
 

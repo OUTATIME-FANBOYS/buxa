@@ -42,7 +42,7 @@ function postInstants(data: FormData): void {
  * left out) or edits one (`cls` is the class being edited). The fields, validation and action are the same for both.
  * `variant` says where it renders: on its own page (a panel, with its own Cancel and save buttons) or in a dialog. A dialog's
  * buttons belong to the dialog's pinned footer, so the form is tied to them by `formId` and reports `pending` through
- * `onPendingChange`. When a dialog's edit is saved, `onSaved` runs so the dialog can close.
+ * `onPendingChange`. When the save succeeds, `onSaved` runs with the server's message, so the dialog can close and toast it.
  */
 export function ClassForm({
   sessionId,
@@ -64,7 +64,7 @@ export function ClassForm({
   detailsOnly?: boolean;
   /** The id the dialog footer's submit button names with its `form` attribute. */
   formId?: string;
-  onSaved?: () => void;
+  onSaved?: (message: string) => void;
   onPendingChange?: (pending: boolean) => void;
 }) {
   const editing = cls !== undefined;
@@ -82,10 +82,10 @@ export function ClassForm({
     if (state.status === 'error' && state.fieldErrors) {
       formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
     }
-    if (state.status === 'success' && editing) {
-      onSaved?.();
+    if (state.status === 'success') {
+      onSaved?.(state.message ?? 'Saved.');
     }
-  }, [state, editing, onSaved]);
+  }, [state, onSaved]);
 
   useEffect(() => {
     onPendingChange?.(pending);

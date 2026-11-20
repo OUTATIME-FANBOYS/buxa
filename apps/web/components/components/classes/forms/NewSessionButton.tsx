@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { FormPopUp } from '@/components/components';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { NewSessionForm } from './NewSessionForm';
 import { Button } from '@/components/elements';
 
@@ -16,6 +17,15 @@ export function NewSessionButton() {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const close = useCallback(() => setOpen(false), []);
+  const { toast } = useUi();
+  // A created session closes the pop-up and toasts the server's message.
+  const saved = useCallback(
+    (message: string) => {
+      toast(message);
+      setOpen(false);
+    },
+    [toast],
+  );
 
   return (
     <>
@@ -39,7 +49,7 @@ export function NewSessionButton() {
           pending={pending}
           onCancel={close}
         >
-          <NewSessionForm variant="dialog" formId={FORM_ID} onPendingChange={setPending} />
+          <NewSessionForm variant="dialog" formId={FORM_ID} onPendingChange={setPending} onSaved={saved} />
         </FormPopUp>
       )}
     </>

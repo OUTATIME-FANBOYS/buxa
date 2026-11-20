@@ -1,7 +1,13 @@
 import { renderToStaticMarkup } from 'react-dom/server';
+import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import type { Session } from '@buxa/contracts';
 import { SessionsTable } from '@/components/components/classes';
+import { UiProvider } from '@buxa/middleware/providers/providers';
+
+// The table reads the toast from the UI provider, so every render sits inside one.
+const NoDialog = () => null;
+const render = (node: ReactNode) => renderToStaticMarkup(<UiProvider Dialog={NoDialog}>{node}</UiProvider>);
 
 vi.mock('@/actions/classes', () => ({
   updateSessionAction: vi.fn(),
@@ -24,7 +30,7 @@ const session = (over: Partial<Session> = {}): Session => ({
 
 describe('SessionsTable', () => {
   it('shows the session name, its date range and how many classes it holds', () => {
-    const html = renderToStaticMarkup(<SessionsTable sessions={[session()]} canManage={false} />);
+    const html = render(<SessionsTable sessions={[session()]} canManage={false} />);
     expect(html).toContain('Summer camp');
     expect(html).toContain('2027-07-01 to 2027-07-14');
     expect(html).toContain('>4<');
@@ -33,12 +39,12 @@ describe('SessionsTable', () => {
 
   it('says so when a session has no dates yet', () => {
     expect(
-      renderToStaticMarkup(<SessionsTable sessions={[session({ startsOn: null, endsOn: null })]} canManage={false} />),
+      render(<SessionsTable sessions={[session({ startsOn: null, endsOn: null })]} canManage={false} />),
     ).toContain('Dates not set yet');
   });
 
   it('gives staff an Edit and a Delete icon button per row, and a checkbox per row with a select-all', () => {
-    const html = renderToStaticMarkup(<SessionsTable sessions={[session()]} canManage />);
+    const html = render(<SessionsTable sessions={[session()]} canManage />);
     expect(html).toContain('aria-label="Edit Summer camp"');
     expect(html).toContain('aria-label="Delete Summer camp"');
     expect(html).toContain('Select all sessions');
@@ -47,7 +53,7 @@ describe('SessionsTable', () => {
   });
 
   it('gives a viewer no checkbox, no edit and no delete', () => {
-    const html = renderToStaticMarkup(<SessionsTable sessions={[session()]} canManage={false} />);
+    const html = render(<SessionsTable sessions={[session()]} canManage={false} />);
     expect(html).not.toContain('type="checkbox"');
     expect(html).not.toContain('aria-label="Delete Summer camp"');
     expect(html).not.toContain('aria-label="Edit Summer camp"');

@@ -46,3 +46,10 @@ describe('TextField', () => {
     expect(html).toContain('Camp name');
   });
 });
+
+describe('TextField: error wording', () => {
+  it('shows a short sentence-case error in the small error class', () => {
+    const html = renderToStaticMarkup(<TextField {...base} error="Enter a name." />);
+    expect(html).toMatch(/<p id="[^"]*" class="field-error" role="alert">Enter a name\.<\/p>/);
+  });
+});

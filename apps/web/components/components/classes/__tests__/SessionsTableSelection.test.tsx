@@ -5,6 +5,11 @@ import { createRoot, type Root } from 'react-dom/client';
 import type { Session } from '@buxa/contracts';
 import type { SessionDeletion } from '@buxa/shared';
 import { SessionsTable } from '@/components/components/classes';
+import { UiProvider } from '@buxa/middleware/providers/providers';
+import type { ReactNode } from 'react';
+
+const NoDialog = () => null;
+const withUi = (node: ReactNode) => <UiProvider Dialog={NoDialog}>{node}</UiProvider>;
 
 const h = vi.hoisted(() => ({ deleteSessionAction: vi.fn(), deleteSessionsAction: vi.fn() }));
 vi.mock('@/actions/classes', () => ({
@@ -46,7 +51,7 @@ describe('SessionsTable: selection and bulk delete', () => {
   });
 
   it('select-all ticks every row and the count follows', () => {
-    act(() => root.render(<SessionsTable sessions={SESSIONS} canManage />));
+    act(() => root.render(withUi(<SessionsTable sessions={SESSIONS} canManage />)));
     const selectAll = document.querySelector<HTMLInputElement>('thead input[type="checkbox"]');
     act(() => selectAll?.click());
     expect(checkboxes().every(box => box.checked)).toBe(true);
@@ -56,7 +61,7 @@ describe('SessionsTable: selection and bulk delete', () => {
   });
 
   it('one row checkbox updates the count', () => {
-    act(() => root.render(<SessionsTable sessions={SESSIONS} canManage />));
+    act(() => root.render(withUi(<SessionsTable sessions={SESSIONS} canManage />)));
     act(() => checkboxes()[0]?.click());
     expect(document.body.textContent).toContain('1 selected');
   });
@@ -70,7 +75,7 @@ describe('SessionsTable: selection and bulk delete', () => {
       ],
     };
     h.deleteSessionsAction.mockResolvedValue(result);
-    act(() => root.render(<SessionsTable sessions={SESSIONS} canManage />));
+    act(() => root.render(withUi(<SessionsTable sessions={SESSIONS} canManage />)));
     act(() => document.querySelector<HTMLInputElement>('thead input[type="checkbox"]')?.click());
 
     const bar = buttonWith('Delete selected');

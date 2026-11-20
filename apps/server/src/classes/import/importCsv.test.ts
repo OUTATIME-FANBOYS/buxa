@@ -37,7 +37,7 @@ describe('importErrorReportCsv', () => {
         className: 'Chess',
         problems: [
           { field: 'class_name', message: 'There is no class called "Chess".' },
-          { field: 'location', message: 'Give the location.' },
+          { field: 'location', message: 'Location missing.' },
         ],
       }),
     ]);
@@ -46,7 +46,7 @@ describe('importErrorReportCsv', () => {
         'row,field,message,class_name,starts_at,ends_at,location',
         '3,capacity,"Capacity is a whole number of places, from 1 to 500.",Robotics,2027-07-05T09:00,2027-07-05T12:00,Lab 1',
         '4,class_name,"There is no class called ""Chess"".",Chess,2027-07-05T09:00,2027-07-05T12:00,Lab 1',
-        '4,location,Give the location.,Chess,2027-07-05T09:00,2027-07-05T12:00,Lab 1',
+        '4,location,Location missing.,Chess,2027-07-05T09:00,2027-07-05T12:00,Lab 1',
         '',
       ].join('\r\n'),
     );

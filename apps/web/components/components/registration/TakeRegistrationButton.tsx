@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import type { CustomField } from '@buxa/contracts';
 import { FormPopUp } from '@/components/components';
 import { Button } from '@/components/elements';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { RegisterForm } from './RegisterForm';
 
 const FORM_ID = 'take-registration-form';
@@ -24,6 +25,15 @@ export function TakeRegistrationButton({
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const close = useCallback(() => setOpen(false), []);
+  const { toast } = useUi();
+  // A saved form closes the pop-up and toasts the server's message.
+  const saved = useCallback(
+    (message: string) => {
+      toast(message);
+      setOpen(false);
+    },
+    [toast],
+  );
 
   return (
     <>
@@ -47,6 +57,7 @@ export function TakeRegistrationButton({
             sessions={sessions}
             fields={fields}
             onPendingChange={setPending}
+            onSaved={saved}
           />
         </FormPopUp>
       )}

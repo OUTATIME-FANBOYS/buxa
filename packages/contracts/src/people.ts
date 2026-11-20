@@ -84,7 +84,7 @@ export const NewPersonInputSchema = z.object({
   dateOfBirth: LocalDateSchema.optional(),
   email: OptionalEmailSchema,
   phone: OptionalPhoneSchema,
-  roles: z.array(CampRoleSchema).min(1, 'Choose at least one role.'),
+  roles: z.array(CampRoleSchema).min(1, 'Pick a role.'),
   /** Required when the person is a camper: a household that already has a guardian. */
   householdId: z.string().uuid().optional(),
   /** Or a new household with this name, created in the same transaction (it starts with no guardian, so only a guardian fits). */
@@ -101,7 +101,7 @@ export const PersonPatchInputSchema = z.object({
   dateOfBirth: LocalDateSchema.nullable().optional(),
   email: PatchEmailSchema.nullable().optional(),
   phone: PatchPhoneSchema.nullable().optional(),
-  roles: z.array(CampRoleSchema).min(1, 'Choose at least one role.').optional(),
+  roles: z.array(CampRoleSchema).min(1, 'Pick a role.').optional(),
 });
 export type PersonPatchInput = z.infer<typeof PersonPatchInputSchema>;
 
@@ -113,7 +113,7 @@ export const PersonListQuerySchema = z.object({
 export type PersonListQuery = z.infer<typeof PersonListQuerySchema>;
 
 export const NewHouseholdInputSchema = z.object({
-  name: z.string().trim().min(1, 'Give the household a name.').max(120),
+  name: z.string().trim().min(1, 'Enter a household name.').max(120),
 });
 export type NewHouseholdInput = z.infer<typeof NewHouseholdInputSchema>;
 

@@ -74,7 +74,7 @@ describe('createSessionAction (the date range)', () => {
 
   it('answers a missing day with a field error, and creates nothing', async () => {
     const state = await createSessionAction(idle, formOf({ ...session, endsOn: '' }));
-    expect(state).toMatchObject({ status: 'error', fieldErrors: { endsOn: 'Choose the last day.' } });
+    expect(state).toMatchObject({ status: 'error', fieldErrors: { endsOn: 'Pick a last day.' } });
     expect(h.classes.createSession).not.toHaveBeenCalled();
   });
 

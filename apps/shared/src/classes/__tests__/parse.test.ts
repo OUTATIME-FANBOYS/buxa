@@ -106,7 +106,7 @@ describe('classForm', () => {
 
   it('refuses a missing class name with the contract message', () => {
     const parsed = classForm(formOf({ ...VALID_CLASS, name: '   ' }));
-    expect(parsed).toMatchObject({ ok: false, state: { fieldErrors: { name: 'Give the name.' } } });
+    expect(parsed).toMatchObject({ ok: false, state: { fieldErrors: { name: 'Enter a name.' } } });
   });
 });
 
@@ -152,7 +152,7 @@ describe('sessionForm', () => {
   it('asks for the first and last day when they are blank', () => {
     expect(sessionForm(formOf({ name: 'Summer camp', startsOn: '', endsOn: '' }))).toMatchObject({
       ok: false,
-      state: { fieldErrors: { startsOn: 'Choose the first day.', endsOn: 'Choose the last day.' } },
+      state: { fieldErrors: { startsOn: 'Pick a first day.', endsOn: 'Pick a last day.' } },
     });
   });
 

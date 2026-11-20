@@ -37,12 +37,15 @@ export function NewPersonForm({
   variant = 'page',
   formId = 'new-person-form',
   onPendingChange,
+  onSaved,
 }: {
   household: HouseholdTarget | null;
   households: readonly HouseholdChoice[];
   variant?: 'page' | 'dialog';
   formId?: string;
   onPendingChange?: (pending: boolean) => void;
+  /** Runs with the server's message when the person is added (the pop-up closes and toasts it). */
+  onSaved?: (message: string) => void;
 }) {
   const [state, formAction, pending] = useActionState(createPersonAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
@@ -59,6 +62,11 @@ export function NewPersonForm({
   useEffect(() => {
     onPendingChange?.(pending);
   }, [pending, onPendingChange]);
+  useEffect(() => {
+    if (state.status === 'success') {
+      onSaved?.(state.message ?? 'Person added.');
+    }
+  }, [state, onSaved]);
 
   const err = (name: string) => fieldError(state, name);
   const showHousehold = role === 'camper' || role === 'guardian';
@@ -200,6 +208,8 @@ export function NewPersonForm({
         </fieldset>
       )}
 
+      {/* A pop-up's add posts dialog=1, so the action returns a success instead of redirecting to the new person. */}
+      {inDialog && <input type="hidden" name="dialog" value="1" />}
       <FormMessage state={state} />
       {!inDialog && (
         <div className="person-actions">

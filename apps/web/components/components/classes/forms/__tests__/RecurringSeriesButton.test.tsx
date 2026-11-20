@@ -3,10 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { RecurringSeriesButton } from '../RecurringSeriesButton';
+import { UiProvider } from '@buxa/middleware/providers/providers';
 
 vi.mock('@/actions/classes', () => ({ addRecurringClassesAction: vi.fn() }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+const NoDialog = () => null;
 
 let host: HTMLDivElement;
 let root: Root;
@@ -16,7 +18,11 @@ beforeEach(() => {
   document.body.appendChild(host);
   root = createRoot(host);
   act(() => {
-    root.render(<RecurringSeriesButton sessionId="11111111-1111-4111-8111-111111111111" />);
+    root.render(
+      <UiProvider Dialog={NoDialog}>
+        <RecurringSeriesButton sessionId="11111111-1111-4111-8111-111111111111" />
+      </UiProvider>,
+    );
   });
 });
 

@@ -31,6 +31,7 @@ export function FormEditor({
   sessions,
   initial,
   onPendingChange,
+  onSaved,
 }: {
   mode: 'create' | 'edit';
   formId?: string;
@@ -40,6 +41,8 @@ export function FormEditor({
   sessions: readonly { id: string; name: string }[];
   initial?: FormEditorInitial;
   onPendingChange?: (pending: boolean) => void;
+  /** Runs with the server's message when the form is saved (a pop-up closes and toasts it). */
+  onSaved?: (message: string) => void;
 }) {
   const [state, formAction, pending] = useActionState(mode === 'create' ? createFormAction : updateFormAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
@@ -55,6 +58,11 @@ export function FormEditor({
   useEffect(() => {
     onPendingChange?.(pending);
   }, [pending, onPendingChange]);
+  useEffect(() => {
+    if (state.status === 'success') {
+      onSaved?.(state.message ?? 'Saved.');
+    }
+  }, [state, onSaved]);
 
   const err = (name: string) => fieldError(state, name);
 
@@ -127,6 +135,8 @@ export function FormEditor({
         )}
       </section>
 
+      {/* A pop-up's create posts dialog=1, so the action returns a success instead of redirecting to the new form. */}
+      {inDialog && <input type="hidden" name="dialog" value="1" />}
       <ActionMessage state={state} />
       {!inDialog && (
         <div className="classes-actions">

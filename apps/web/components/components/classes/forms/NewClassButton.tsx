@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react';
 import { FormPopUp } from '@/components/components';
 import { Button } from '@/components/elements';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { ClassForm, type InstructorChoice } from './ClassForm';
 
 const FORM_ID = 'new-class-form';
@@ -23,6 +24,15 @@ export function NewClassButton({
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const close = useCallback(() => setOpen(false), []);
+  const { toast } = useUi();
+  // A saved form closes the pop-up and toasts the server's message.
+  const saved = useCallback(
+    (message: string) => {
+      toast(message);
+      setOpen(false);
+    },
+    [toast],
+  );
 
   return (
     <>
@@ -46,6 +56,7 @@ export function NewClassButton({
             variant="dialog"
             formId={FORM_ID}
             onPendingChange={setPending}
+            onSaved={saved}
           />
         </FormPopUp>
       )}

@@ -11,7 +11,7 @@ import { ActionMessage } from './ActionMessage';
 /**
  * The fields of the Edit session dialog: name, description, first and last day, and the public flag. The price is not here; it has
  * its own Set price dialog. The Save and Cancel buttons belong to the dialog's pinned footer, so the form is tied to them by
- * `formId` and reports `pending` through `onPendingChange`. The dialog closes through `onSaved`.
+ * `formId` and reports `pending` through `onPendingChange`. The dialog closes, and toasts the message, through `onSaved`.
  */
 export function EditSessionForm({
   session,
@@ -22,7 +22,7 @@ export function EditSessionForm({
   session: Session;
   formId: string;
   onPendingChange: (pending: boolean) => void;
-  onSaved: () => void;
+  onSaved: (message: string) => void;
 }) {
   const [state, formAction, pending] = useActionState(updateSessionAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
@@ -32,7 +32,7 @@ export function EditSessionForm({
       formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
     }
     if (state.status === 'success') {
-      onSaved();
+      onSaved(state.message ?? 'Saved.');
     }
   }, [state, onSaved]);
 
