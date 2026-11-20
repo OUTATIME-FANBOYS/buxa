@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decideRegistration } from '../src';
+import { decideConfirmation, decideRegistration } from '../src';
 
 const base = { publishedVersion: 1, formSessionIds: ['s1', 's2'], requestedSessionIds: ['s1'] };
 
@@ -25,5 +25,15 @@ describe('registration rules', () => {
       allow: false,
       reason: 'session_not_in_form',
     });
+  });
+});
+
+describe('registration confirmation rule', () => {
+  it('allows the confirmation of a pending registration', () => {
+    expect(decideConfirmation('pending')).toEqual({ allow: true });
+  });
+
+  it('refuses a second confirmation of a registration that is already confirmed', () => {
+    expect(decideConfirmation('confirmed')).toEqual({ allow: false, reason: 'already_confirmed' });
   });
 });

@@ -9,8 +9,15 @@ import {
   publishedVersionRow,
   requireFormRow,
 } from './PgRegistrationQueries';
-import { insertForm, insertRegistrationInTx, publishFormRow, updateFormRow } from './PgRegistrationWrites';
+import {
+  confirmRegistrationInTx,
+  insertForm,
+  insertRegistrationInTx,
+  publishFormRow,
+  updateFormRow,
+} from './PgRegistrationWrites';
 import type {
+  ConfirmationRule,
   NewRegistration,
   PublishedVersion,
   RegistrationRepository,
@@ -66,5 +73,9 @@ export class PgRegistrationRepository implements RegistrationRepository {
 
   submit(actor: Actor, registration: NewRegistration, rule: RegistrationRule): Promise<string> {
     return withOrg(this.pool, actor.orgId, db => insertRegistrationInTx(db, actor, registration, rule));
+  }
+
+  confirm(actor: Actor, registrationId: string, rule: ConfirmationRule): Promise<void> {
+    return withOrg(this.pool, actor.orgId, db => confirmRegistrationInTx(db, actor, registrationId, rule));
   }
 }

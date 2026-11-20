@@ -64,6 +64,7 @@ const MATRIX: Record<Action, string> = {
   'registration:read': '.YYY.',
   'registration:submit': '.YYY.',
   'registration:manage': '..YY.',
+  'registration:confirm': '.YYY.',
 };
 
 describe('role grants', () => {

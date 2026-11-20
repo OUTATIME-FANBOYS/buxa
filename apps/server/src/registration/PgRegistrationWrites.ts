@@ -1,9 +1,20 @@
 import type { Actor } from '@buxa/domain';
 import type { RegistrationFormInput } from '@buxa/contracts';
+import type { RegistrationStatus } from '@buxa/domain';
 import { recordAudit } from '../audit/recordAudit';
 import type { Db } from '../people/pgRows';
-import { RegistrationFormNotFoundError, RegistrationSessionNotFoundError, RegistrationRefusedError } from './errors';
-import type { NewRegistration, RegistrationFactsInTx, RegistrationRule } from './RegistrationRepository';
+import {
+  RegistrationFormNotFoundError,
+  RegistrationNotFoundError,
+  RegistrationSessionNotFoundError,
+  RegistrationRefusedError,
+} from './errors';
+import type {
+  ConfirmationRule,
+  NewRegistration,
+  RegistrationFactsInTx,
+  RegistrationRule,
+} from './RegistrationRepository';
 
 /*
  * Writes for registration forms and submissions. Each write audits itself in the same transaction (the caller runs it inside withOrg).
@@ -153,4 +164,39 @@ export async function insertRegistrationInTx(
   });
 
   return id;
+}
+
+/**
+ * Locks the registration, checks its status against the rule and, on allow, confirms it. The audit row is written in the same
+ * transaction, so a confirmation without its entry cannot exist.
+ */
+export async function confirmRegistrationInTx(
+  db: Db,
+  actor: Actor,
+  registrationId: string,
+  rule: ConfirmationRule,
+): Promise<void> {
+  const { rows } = await db.query<{ status: RegistrationStatus; form_id: string }>(
+    'SELECT status, form_id FROM registrations WHERE id = $1 FOR UPDATE',
+    [registrationId],
+  );
+  const registration = rows[0];
+  if (!registration) {
+    throw new RegistrationNotFoundError();
+  }
+  const decision = rule(registration.status);
+  if (!decision.allow) {
+    throw new RegistrationRefusedError(decision.reason);
+  }
+  await db.query(
+    `UPDATE registrations SET status = 'confirmed', confirmed_at = now(), confirmed_by = $2 WHERE id = $1`,
+    [registrationId, actor.userId],
+  );
+  await recordAudit(db, {
+    actor,
+    action: 'registration.confirm',
+    entity: 'registration',
+    entityId: registrationId,
+    data: { formId: registration.form_id },
+  });
 }

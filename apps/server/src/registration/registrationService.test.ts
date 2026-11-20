@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 import type { Actor, Role } from '@buxa/domain';
 import { createRegistrationService } from './RegistrationService';
 import { InMemoryRegistrationRepository } from './InMemoryRegistrationRepository';
-import { RegistrationInvalidError, RegistrationRefusedError, RegistrationFormNotFoundError } from './errors';
+import {
+  RegistrationFormNotFoundError,
+  RegistrationInvalidError,
+  RegistrationNotFoundError,
+  RegistrationRefusedError,
+} from './errors';
 
 const CAMP_A = '11111111-1111-4111-8111-111111111111';
 const CAMP_B = '22222222-2222-4222-8222-222222222222';
@@ -170,5 +175,60 @@ describe('registration service: submissions', () => {
     await expect(service.submit(as('staff'), formId, { ...submission(formId), formId: SESSION_B })).resolves.toEqual(
       expect.any(String),
     );
+  });
+});
+
+describe('registration service: confirmation', () => {
+  async function recorded() {
+    const { service } = setup();
+    const admin = as('admin');
+    const form = await service.createForm(admin, formInput);
+    await service.publishForm(admin, form.id);
+    const id = await service.submit(as('staff'), form.id, {
+      formId: form.id,
+      sessionIds: [SESSION_A],
+      standard,
+      custom: { swim: 'Beginner', photos: 'yes' },
+    });
+
+    return { service, formId: form.id, id };
+  }
+
+  it('a recorded registration is pending until a staff member confirms it', async () => {
+    const { service, formId, id } = await recorded();
+    const [before] = await service.listSubmissions(as('staff'), formId);
+    expect(before).toMatchObject({ id, status: 'pending', confirmedAt: null });
+
+    await service.confirm(as('staff'), id);
+    const [after] = await service.listSubmissions(as('staff'), formId);
+    expect(after.status).toBe('confirmed');
+    expect(after.confirmedAt).not.toBeNull();
+  });
+
+  it('staff can confirm', async () => {
+    const { service, id } = await recorded();
+    await expect(service.confirm(as('staff'), id)).resolves.toBeUndefined();
+  });
+
+  it('a viewer cannot confirm, and the registration stays pending', async () => {
+    const { service, formId, id } = await recorded();
+    await expect(service.confirm(as('viewer'), id)).rejects.toMatchObject({ statusCode: 403 });
+    const [row] = await service.listSubmissions(as('staff'), formId);
+    expect(row.status).toBe('pending');
+  });
+
+  it('a second confirmation is refused', async () => {
+    const { service, id } = await recorded();
+    await service.confirm(as('staff'), id);
+    await expect(service.confirm(as('staff'), id)).rejects.toMatchObject({
+      kind: 'registration-refused',
+      reason: 'already_confirmed',
+    });
+  });
+
+  it('a registration in another camp, or an unknown id, is not found', async () => {
+    const { service, id } = await recorded();
+    await expect(service.confirm(as('staff', CAMP_B), id)).rejects.toBeInstanceOf(RegistrationNotFoundError);
+    await expect(service.confirm(as('staff'), 'not-a-uuid')).rejects.toBeInstanceOf(RegistrationNotFoundError);
   });
 });

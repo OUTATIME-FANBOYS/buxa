@@ -146,6 +146,7 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0028_calendar_feed.sql',
       '0029_public_sessions.sql',
       '0030_member_options.sql',
+      '0031_registration_confirmation.sql',
     ]);
   });
 

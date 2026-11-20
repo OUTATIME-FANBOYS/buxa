@@ -58,4 +58,22 @@ describe.skipIf(!url)('registration tables (0023)', () => {
     );
     expect(policy.rows[0]?.qual).toContain('current_org()');
   });
+
+  it('a registration is pending or confirmed, and only the confirmation columns are writable by the request role (0031)', async () => {
+    const cols = await pool.query<{ column_name: string }>(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = 'registrations' AND column_name IN ('status', 'confirmed_at', 'confirmed_by')`,
+    );
+    expect(cols.rowCount).toBe(3);
+    for (const column of ['status', 'confirmed_at', 'confirmed_by']) {
+      const ok = await pool.query<{ ok: boolean }>(
+        `SELECT has_column_privilege('buxa_app', 'registrations', $1, 'UPDATE') AS ok`,
+        [column],
+      );
+      expect(ok.rows[0].ok, `${column} UPDATE`).toBe(true);
+    }
+    const answers = await pool.query<{ ok: boolean }>(
+      `SELECT has_column_privilege('buxa_app', 'registrations', 'answers', 'UPDATE') AS ok`,
+    );
+    expect(answers.rows[0].ok).toBe(false);
+  });
 });

@@ -1,8 +1,14 @@
 import { randomUUID } from 'node:crypto';
-import type { Actor } from '@buxa/domain';
+import type { Actor, RegistrationStatus } from '@buxa/domain';
 import type { CustomField, RegistrationForm, RegistrationFormInput, RegistrationRow } from '@buxa/contracts';
-import { RegistrationFormNotFoundError, RegistrationRefusedError, RegistrationSessionNotFoundError } from './errors';
+import {
+  RegistrationFormNotFoundError,
+  RegistrationNotFoundError,
+  RegistrationRefusedError,
+  RegistrationSessionNotFoundError,
+} from './errors';
 import type {
+  ConfirmationRule,
   NewRegistration,
   PublishedVersion,
   RegistrationRepository,
@@ -28,6 +34,8 @@ interface StoredRegistration {
   sessionIds: string[];
   answers: NewRegistration['answers'];
   createdAt: string;
+  status: RegistrationStatus;
+  confirmedAt: string | null;
 }
 
 /** Runs the work now and settles the promise with its result, or rejects it with what it throws. Same contract as the adapter. */
@@ -153,6 +161,8 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
           id: r.id,
           formVersion: r.version,
           submittedAt: r.createdAt,
+          status: r.status,
+          confirmedAt: r.confirmedAt,
           standard: r.answers.standard,
           custom: r.answers.custom,
           sessions: r.sessionIds.map(sessionId => ({
@@ -183,9 +193,26 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
         sessionIds: registration.sessionIds,
         answers: registration.answers,
         createdAt: new Date().toISOString(),
+        status: 'pending',
+        confirmedAt: null,
       });
 
       return id;
+    });
+  }
+
+  confirm(actor: Actor, registrationId: string, rule: ConfirmationRule): Promise<void> {
+    return later(() => {
+      const registration = this.registrations.get(registrationId);
+      if (!registration || registration.orgId !== actor.orgId) {
+        throw new RegistrationNotFoundError();
+      }
+      const decision = rule(registration.status);
+      if (!decision.allow) {
+        throw new RegistrationRefusedError(decision.reason);
+      }
+      registration.status = 'confirmed';
+      registration.confirmedAt = new Date().toISOString();
     });
   }
 }

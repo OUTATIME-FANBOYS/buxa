@@ -8,9 +8,10 @@ Depends on: phase 2 (sessions and enrolments).
 - **Forms per season.** A staff admin creates a form with a name, a season, the sessions it covers (one or more sessions of the camp) and its own questions. The questions are typed: text, choice (two or more options), date, or yes or no. A form is a draft until it is published.
 - **Publishing freezes a version.** Publish writes the draft as the next numbered version. Later edits to the draft do not change it; each registration stores the version it was answered against.
 - **Standard questions** are asked on every form: the camper (first name, last name, date of birth), the parent or guardian (name, email optional, phone), and an emergency contact (name, phone).
-- **Taking a registration.** Staff with `registration:submit` record a registration for one or more of the form's sessions, on the published version. The server checks the answers against that version with zod (the browser is not trusted) and checks the sessions against the form's session set. Nothing is charged.
+- **Taking a registration.** Staff with `registration:submit` record a registration for one or more of the form's sessions, on the published version. It is recorded as **pending**. The server checks the answers against that version with zod (the browser is not trusted) and checks the sessions against the form's session set. Nothing is charged.
+- **Confirmation.** Staff with `registration:confirm` confirm a pending registration from its form's page (Confirm, on each pending row). Confirming sets it to confirmed, with the time and the user, and writes `registration.confirm` in the same transaction. A registration that is already confirmed is refused, so a second confirmation writes nothing. Viewers cannot confirm. There is no un-confirm in this phase.
 - **Submissions by session.** The form page lists the registrations for each session, with the answers behind a disclosure.
-- **Audit.** `registration_form.create`, `registration_form.update`, `registration_form.publish` and `registration.submit` are written in the same transaction as the change.
+- **Audit.** `registration_form.create`, `registration_form.update`, `registration_form.publish`, `registration.submit` (a recorded, pending registration) and `registration.confirm` are written in the same transaction as the change.
 - **Storage.** Migration `0023_registration_forms.sql`: `registration_forms` (draft), `registration_form_sessions` (the session set), `registration_form_versions` (frozen definitions), `registrations` and `registration_sessions`. Every table has `org_id`, forced row-level security and one policy. The request role has no DELETE; the session set is replaced by `buxa_replace_form_sessions`.
 - **Screens.** `/camp/registration` (the forms), `/camp/registration/new`, `/camp/registration/[formId]` (edit draft, publish, registrations by session) and `/camp/registration/[formId]/register` (take a registration). The sidebar item is under Operations and needs `registration:read`.
 
@@ -19,7 +20,6 @@ Depends on: phase 2 (sessions and enrolments).
 **Not built, and the seam for it:**
 
 - Holds and the waitlist. `registration_sessions.status` is per session place and currently allows only `submitted`. A hold or a waitlist entry adds a status value and its columns there, and a step in `RegistrationService.submit` that takes the place under the session lock. The registration row itself does not change.
-- Confirmation as a separate staff action (decision 3). Today a recorded registration is confirmed on entry.
 - Price display. No price is stored or shown yet.
 
 ## Moved from phase 2: recurring events, public class pages and the iCal feed
