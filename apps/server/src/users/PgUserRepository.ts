@@ -77,7 +77,7 @@ export class PgUserRepository implements UserRepository {
   renameMember(actor: Actor, userId: string, name: string): Promise<Pick<User, 'id' | 'email' | 'name'> | null> {
     return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       const { rows } = await db.query<Pick<User, 'id' | 'email' | 'name'>>(
-        'SELECT user_id AS id, user_email AS email, user_name AS name FROM buxa_rename_member($1, $2, $3)',
+        'SELECT user_id AS id, user_email AS email, user_name AS name FROM buxa_rename_member_v2($1, $2, $3)',
         [actor.orgId, userId, name],
       );
       if (!rows[0]) {
@@ -112,13 +112,7 @@ export class PgUserRepository implements UserRepository {
 
   setMemberOption(actor: Actor, userId: string, option: MemberOption, enabled: boolean): Promise<void> {
     return withOrg(this.pool, actor.userId, actor.orgId, async db => {
-      await db.query('SELECT buxa_set_member_option($1, $2, $3, $4, $5)', [
-        actor.orgId,
-        userId,
-        option,
-        enabled,
-        actor.userId,
-      ]);
+      await db.query('SELECT buxa_set_member_option($1, $2, $3, $4)', [actor.orgId, userId, option, enabled]);
       await recordAudit(db, {
         actor,
         action: 'member.option_set',

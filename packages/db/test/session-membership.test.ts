@@ -79,7 +79,8 @@ describe.skipIf(!url)('session membership (0032)', () => {
       .archived_at;
 
   describe('a user with no membership sees nothing', () => {
-    it('reads no org_members and no memberships of a camp they do not belong to', async () => {
+    // Contract step (packages/db/pending/0033): the policies require a signed-in member only after v0.2.3 is retired.
+    it.skip('reads no org_members and no memberships of a camp they do not belong to', async () => {
       const seen = await asUser(outsider, camp, async db => ({
         members: (await db.query<Row>('SELECT 1 FROM org_members')).rowCount,
         memberships: (await db.query<Row>('SELECT 1 FROM memberships')).rowCount,
@@ -98,7 +99,9 @@ describe.skipIf(!url)('session membership (0032)', () => {
       expect(seen.memberships).toBe(1);
     });
 
-    it('with no user set, even the right camp reads nothing', async () => {
+    // Contract step (packages/db/pending/0033): the policies require a signed-in member only after v0.2.3 is retired.
+
+    it.skip('with no user set, even the right camp reads nothing', async () => {
       const seen = await asUser(null, camp, async db => (await db.query<Row>('SELECT 1 FROM org_members')).rowCount);
       expect(seen).toBe(0);
     });
@@ -115,7 +118,9 @@ describe.skipIf(!url)('session membership (0032)', () => {
       expect(seen.foreign).toBe(0);
     });
 
-    it('a user with no membership cannot write into the camp', async () => {
+    // Contract step (packages/db/pending/0033): the policies require a signed-in member only after v0.2.3 is retired.
+
+    it.skip('a user with no membership cannot write into the camp', async () => {
       await expect(
         asUser(outsider, camp, db =>
           db.query(
@@ -155,7 +160,8 @@ describe.skipIf(!url)('session membership (0032)', () => {
         viewer,
         camp,
         async db =>
-          (await db.query<Row>('SELECT user_id FROM buxa_rename_member($1, $2, $3)', [camp, target, 'Renamed'])).rows,
+          (await db.query<Row>('SELECT user_id FROM buxa_rename_member_v2($1, $2, $3)', [camp, target, 'Renamed']))
+            .rows,
       );
       expect(renamed).toEqual([]);
       const { rows } = await pool.query<{ name: string }>('SELECT name FROM users WHERE id = $1', [target]);
@@ -167,7 +173,8 @@ describe.skipIf(!url)('session membership (0032)', () => {
         admin,
         camp,
         async db =>
-          (await db.query<Row>('SELECT user_id FROM buxa_rename_member($1, $2, $3)', [camp, target, 'Renamed'])).rows,
+          (await db.query<Row>('SELECT user_id FROM buxa_rename_member_v2($1, $2, $3)', [camp, target, 'Renamed']))
+            .rows,
       );
       expect(rows).toHaveLength(1);
       await pool.query(`UPDATE users SET name = 'target' WHERE id = $1`, [target]);
@@ -190,7 +197,9 @@ describe.skipIf(!url)('session membership (0032)', () => {
       expect(nobody).toEqual([]);
     });
 
-    it('a function cannot be called with another user’s id, because the argument no longer exists', async () => {
+    // Contract step (packages/db/pending/0033): the policies require a signed-in member only after v0.2.3 is retired.
+
+    it.skip('a function cannot be called with another user’s id, because the argument no longer exists', async () => {
       await expect(
         asUser(owner, camp, db => db.query('SELECT buxa_archive_camp($1::uuid, $2::uuid)', [camp, outsider])),
       ).rejects.toThrow(/function buxa_archive_camp\(uuid, uuid\) does not exist/);

@@ -206,7 +206,7 @@ export async function updateClassRow(db: Db, actor: Actor, classId: string, inpu
     throw new ClassNotFoundError();
   }
   const instructors = await requireInstructors(db, input.instructorIds);
-  await db.query('SELECT buxa_replace_class_instructors($1, $2, $3::uuid[])', [actor.orgId, classId, instructors]);
+  await db.query('SELECT buxa_replace_class_instructors_v2($1, $2, $3::uuid[])', [actor.orgId, classId, instructors]);
   await recordAudit(db, {
     actor,
     action: 'class.update',
@@ -218,6 +218,6 @@ export async function updateClassRow(db: Db, actor: Actor, classId: string, inpu
 
 /** Deletes a class through buxa_delete_class (migration 0022), which refuses a class with enrolments. Audits `class.delete`. */
 export async function deleteClassRow(db: Db, actor: Actor, classId: string, name: string): Promise<void> {
-  await db.query('SELECT buxa_delete_class($1, $2)', [actor.orgId, classId]);
+  await db.query('SELECT buxa_delete_class_v2($1, $2)', [actor.orgId, classId]);
   await recordAudit(db, { actor, action: 'class.delete', entity: 'class', entityId: classId, data: { name } });
 }

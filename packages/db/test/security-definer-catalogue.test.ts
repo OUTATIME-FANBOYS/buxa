@@ -12,9 +12,33 @@ const url = process.env.DATABASE_URL;
 
 /** Arguments that name another person rather than the caller. The function checks the caller's role, and the target's membership. */
 const TARGET_ARGUMENTS: Record<string, string[]> = {
-  buxa_rename_member: ['p_target_user_id'],
-  buxa_replace_class_teachers: ['p_user_ids'],
+  buxa_rename_member_v2: ['p_target_user_id'],
+  buxa_replace_class_teachers_v2: ['p_user_ids'],
+  buxa_set_member_option: ['p_user_id'],
 };
+
+/**
+ * The v0.2.3 overloads, kept by the expand step (migration 0032) for the release still serving. They take the user as an
+ * argument, which the rule above forbids, so each is listed here with its name and argument count. The contract step
+ * (packages/db/pending/0033_session_membership_contract.sql) drops them; this list must then be emptied, and the stale-entry
+ * check below fails until it is.
+ */
+const LEGACY_UNTIL_CONTRACT = new Set([
+  'buxa_memberships_of/1',
+  'buxa_archived_camps_of/1',
+  'buxa_archived_memberships_of/1',
+  'buxa_create_org/4',
+  'buxa_archive_camp/2',
+  'buxa_unarchive_camp/2',
+  'buxa_delete_camp/3',
+  'buxa_set_user_name/3',
+  'buxa_set_user_clock_format/2',
+  'buxa_rename_member/3',
+  'buxa_delete_class/2',
+  'buxa_replace_class_instructors/3',
+  'buxa_replace_class_teachers/3',
+  'buxa_replace_form_sessions/3',
+]);
 
 /** Functions with no signed-in user by design. Each one returns only what its caller may see without signing in. */
 const NO_SIGNED_IN_USER: Record<string, string> = {
@@ -37,6 +61,7 @@ describe.skipIf(!url)('SECURITY DEFINER catalogue (audit 5.3)', () => {
     name: string;
     args: string[];
     body: string;
+    legacy: boolean;
   }
   let definers: Definer[] = [];
 
@@ -61,6 +86,7 @@ describe.skipIf(!url)('SECURITY DEFINER catalogue (audit 5.3)', () => {
         .map(a => a.trim().split(' ')[0])
         .filter(a => a !== ''),
       body: r.body,
+      legacy: LEGACY_UNTIL_CONTRACT.has(`${r.name}/${r.args.split(',').filter(a => a.trim() !== '').length}`),
     }));
   });
 
@@ -74,7 +100,7 @@ describe.skipIf(!url)('SECURITY DEFINER catalogue (audit 5.3)', () => {
 
   it('no SECURITY DEFINER function takes a user or actor id argument, except the named targets', () => {
     const offenders: string[] = [];
-    for (const d of definers) {
+    for (const d of definers.filter(x => !x.legacy)) {
       for (const arg of d.args) {
         if (!USER_OR_ACTOR_ARGUMENT.test(arg)) continue;
         if (TARGET_ARGUMENTS[d.name]?.includes(arg)) continue;
@@ -86,10 +112,16 @@ describe.skipIf(!url)('SECURITY DEFINER catalogue (audit 5.3)', () => {
 
   it('every SECURITY DEFINER function reads the signed-in user or the caller’s membership, or is listed as having no user', () => {
     const offenders = definers
+      .filter(d => !d.legacy)
       .filter(d => !NO_SIGNED_IN_USER[d.name])
       .filter(d => !/current_user_id\(\)|is_member\(/.test(d.body))
       .map(d => d.name);
     expect(offenders, 'check membership and role in the function, or list it with a reason').toEqual([]);
+  });
+
+  it('the legacy overloads still exist, so the list is not stale', () => {
+    const keys = new Set(definers.filter(d => d.legacy).map(d => d.name));
+    expect(keys.size, 'remove the legacy entries once the contract step has dropped them').toBeGreaterThan(0);
   });
 
   it('the exceptions are still needed: every listed function exists, and every target argument exists', () => {

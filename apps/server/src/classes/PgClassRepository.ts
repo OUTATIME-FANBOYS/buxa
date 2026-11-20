@@ -214,7 +214,7 @@ export class PgClassRepository implements ClassRepository {
     const unique = [...new Set(userIds)];
     try {
       await withOrg(this.pool, actor.userId, actor.orgId, async db => {
-        await db.query('SELECT buxa_replace_class_teachers($1, $2, $3)', [actor.orgId, classId, unique]);
+        await db.query('SELECT buxa_replace_class_teachers_v2($1, $2, $3)', [actor.orgId, classId, unique]);
         await recordAudit(db, {
           actor,
           action: 'class.update',

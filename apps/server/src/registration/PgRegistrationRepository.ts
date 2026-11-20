@@ -76,6 +76,8 @@ export class PgRegistrationRepository implements RegistrationRepository {
   }
 
   confirm(actor: Actor, registrationId: string, rule: ConfirmationRule): Promise<void> {
-    return withOrg(this.pool, actor.userId, actor.orgId, db => confirmRegistrationInTx(db, actor, registrationId, rule));
+    return withOrg(this.pool, actor.userId, actor.orgId, db =>
+      confirmRegistrationInTx(db, actor, registrationId, rule),
+    );
   }
 }

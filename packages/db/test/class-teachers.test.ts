@@ -78,7 +78,7 @@ describe.skipIf(!url)('teacher role and class assignments (row-level security)',
 
   it('a teacher in camp A cannot read or write camp B assignments', async () => {
     await withOrg(pool, ownerB, campB, db =>
-      db.query(`SELECT buxa_replace_class_teachers($1, $2, $3)`, [campB, classB, [teacherB]]),
+      db.query(`SELECT buxa_replace_class_teachers_v2($1, $2, $3)`, [campB, classB, [teacherB]]),
     );
     await withOrg(pool, teacherA, campA, async db => {
       expect((await db.query<Row>('SELECT session_id FROM class_teachers')).rows).toEqual([]);
@@ -99,16 +99,16 @@ describe.skipIf(!url)('teacher role and class assignments (row-level security)',
     // Each refused call runs in its own transaction: a failed statement aborts the rest of its transaction.
     await expect(
       withOrg(pool, adminA, campA, db =>
-        db.query(`SELECT buxa_replace_class_teachers($1, $2, $3)`, [campA, classA, [adminA]]),
+        db.query(`SELECT buxa_replace_class_teachers_v2($1, $2, $3)`, [campA, classA, [adminA]]),
       ),
     ).rejects.toThrow('Teacher not found');
     await expect(
       withOrg(pool, adminA, campA, db =>
-        db.query(`SELECT buxa_replace_class_teachers($1, $2, $3)`, [campA, classA, [teacherB]]),
+        db.query(`SELECT buxa_replace_class_teachers_v2($1, $2, $3)`, [campA, classA, [teacherB]]),
       ),
     ).rejects.toThrow('Teacher not found');
     await withOrg(pool, adminA, campA, db =>
-      db.query(`SELECT buxa_replace_class_teachers($1, $2, $3)`, [campA, classA, [teacherA]]),
+      db.query(`SELECT buxa_replace_class_teachers_v2($1, $2, $3)`, [campA, classA, [teacherA]]),
     );
     await withOrg(pool, adminA, campA, async db => {
       expect((await db.query<Row>('SELECT user_id FROM class_teachers')).rows.map(r => r.user_id)).toEqual([teacherA]);

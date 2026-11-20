@@ -47,7 +47,7 @@ describe.skipIf(!url)('registration tables (0023)', () => {
 
   it('the session set is replaced by a function, not by request-role DELETE', async () => {
     const r = await pool.query<{ ok: boolean }>(
-      `SELECT has_function_privilege('buxa_app', 'buxa_replace_form_sessions(uuid, uuid, uuid[])', 'EXECUTE') AS ok`,
+      `SELECT has_function_privilege('buxa_app', 'buxa_replace_form_sessions_v2(uuid, uuid, uuid[])', 'EXECUTE') AS ok`,
     );
     expect(r.rows[0].ok).toBe(true);
   });
