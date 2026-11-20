@@ -19,7 +19,7 @@ export function SessionPriceButton({ sessionId, price }: { sessionId: string; pr
 
   return (
     <>
-      <Button type="button" variant="ghost" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+      <Button type="button" variant="glass" size="sm" aria-haspopup="dialog" onClick={() => setOpen(true)}>
         {price ? 'Change price' : 'Set price'}
       </Button>
       {open && (

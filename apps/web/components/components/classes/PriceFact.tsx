@@ -34,8 +34,8 @@ export function PriceFact({
   return (
     <>
       <dt>Price</dt>
-      <dd>
-        {priceSummary(price, timeZone)}
+      <dd className="price-fact">
+        <span className="price-fact__value">{priceSummary(price, timeZone)}</span>
         {action ? <span className="price-action">{action}</span> : null}
       </dd>
     </>
