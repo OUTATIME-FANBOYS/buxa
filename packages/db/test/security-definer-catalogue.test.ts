@@ -18,27 +18,11 @@ const TARGET_ARGUMENTS: Record<string, string[]> = {
 };
 
 /**
- * The v0.2.3 overloads, kept by the expand step (migration 0032) for the release still serving. They take the user as an
- * argument, which the rule above forbids, so each is listed here with its name and argument count. The contract step
- * (packages/db/pending/0033_session_membership_contract.sql) drops them; this list must then be emptied, and the stale-entry
- * check below fails until it is.
+ * Legacy overloads kept for a release that was still serving. The v0.2.3 overloads that took a user as an argument were
+ * dropped by the contract step (migration 0034), so the list is empty. Add an entry only with a reason, and remove it once
+ * the overload is gone; the stale-entry check below fails on an entry that no longer exists.
  */
-const LEGACY_UNTIL_CONTRACT = new Set([
-  'buxa_memberships_of/1',
-  'buxa_archived_camps_of/1',
-  'buxa_archived_memberships_of/1',
-  'buxa_create_org/4',
-  'buxa_archive_camp/2',
-  'buxa_unarchive_camp/2',
-  'buxa_delete_camp/3',
-  'buxa_set_user_name/3',
-  'buxa_set_user_clock_format/2',
-  'buxa_rename_member/3',
-  'buxa_delete_class/2',
-  'buxa_replace_class_instructors/3',
-  'buxa_replace_class_teachers/3',
-  'buxa_replace_form_sessions/3',
-]);
+const LEGACY_UNTIL_CONTRACT = new Set<string>([]);
 
 /** Functions with no signed-in user by design. Each one returns only what its caller may see without signing in. */
 const NO_SIGNED_IN_USER: Record<string, string> = {
@@ -119,9 +103,11 @@ describe.skipIf(!url)('SECURITY DEFINER catalogue (audit 5.3)', () => {
     expect(offenders, 'check membership and role in the function, or list it with a reason').toEqual([]);
   });
 
-  it('the legacy overloads still exist, so the list is not stale', () => {
-    const keys = new Set(definers.filter(d => d.legacy).map(d => d.name));
-    expect(keys.size, 'remove the legacy entries once the contract step has dropped them').toBeGreaterThan(0);
+  it('every legacy entry still exists, so the list is not stale', () => {
+    const current = new Set(definers.map(d => `${d.name}/${d.args.length}`));
+    for (const key of LEGACY_UNTIL_CONTRACT) {
+      expect(current.has(key), `${key} is listed as legacy but no longer exists: remove the entry`).toBe(true);
+    }
   });
 
   it('the exceptions are still needed: every listed function exists, and every target argument exists', () => {

@@ -1,10 +1,12 @@
--- Session membership, CONTRACT step. Do NOT place this file in packages/db/migrations until the v0.2.3 release is retired
--- (no instance serving it, see docs/deploy.md). Running it earlier breaks that release: its sign-in, archive and delete calls
--- use the old signatures dropped here, and its reads fail once the policies below require a signed-in member.
+-- Session membership, CONTRACT step (audit items 5.1 and 5.3). The expand step is migration 0032.
 --
--- It drops the old owner-rights overloads and the old _v2-less names, requires a signed-in member in every row policy, and
--- then the audit-5.1 fix is complete. The migration numbering guard expects it at 0033 once moved.
--- drop-approved: v0.3
+-- Applied: production runs the v0.3.1 build, which already calls the new functions (buxa_memberships_of(),
+-- buxa_archive_camp(uuid), buxa_create_org(text, text, text), buxa_set_user_name(text, text), and the _v2 class and form
+-- functions). v0.2.3 is not serving anywhere (see docs/deploy.md), so nothing still calls the overloads dropped below.
+--
+-- It drops the old owner-rights overloads, which took a user or actor id as an argument, and requires a signed-in member
+-- in every row policy. After this, the audit-5.1 fix is complete.
+-- drop-approved: v0.3.1
 
 DROP FUNCTION buxa_memberships_of(uuid);
 DROP FUNCTION buxa_archived_camps_of(uuid);

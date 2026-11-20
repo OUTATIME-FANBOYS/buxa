@@ -1,13 +1,14 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
-import { migrate } from '../src';
+import { migrate, withOrg } from '../src';
 
 const url = process.env.DATABASE_URL;
 
-// The expand step (migration 0032) must keep every function the released v0.2.3 code calls, with the same arguments, so that
-// sign-in, camp archive and delete, rename and class edits keep working while both releases run. This test fails if one is
-// dropped or changed. It goes when the contract step (packages/db/pending/0033) drops them on purpose.
-const RELEASED_CALLS: [name: string, args: string][] = [
+// The contract step (migration 0034) dropped the v0.2.3 overloads, which took a user or actor id as an argument. The
+// released v0.3.1 build calls only the new names, so the old signatures must now be GONE. This test fails if one comes back
+// (for example from a rebased migration), because a function that trusts a caller-supplied user id is the audit 5.1 hole.
+// It also checks that the new sign-in call, which reads the user from the session, still returns a user's camps.
+const RETIRED_SIGNATURES: [name: string, args: string][] = [
   ['buxa_memberships_of', 'p_user_id uuid'],
   ['buxa_archived_camps_of', 'p_user_id uuid'],
   ['buxa_archived_memberships_of', 'p_user_id uuid'],
@@ -24,7 +25,7 @@ const RELEASED_CALLS: [name: string, args: string][] = [
   ['buxa_create_org', 'p_name text, p_slug text, p_timezone text, p_owner_id uuid'],
 ];
 
-describe.skipIf(!url)('expand step keeps the released (v0.2.3) functions', () => {
+describe.skipIf(!url)('contract step retired the v0.2.3 overloads', () => {
   const pool = new pg.Pool({ connectionString: url });
 
   beforeAll(async () => {
@@ -35,7 +36,7 @@ describe.skipIf(!url)('expand step keeps the released (v0.2.3) functions', () =>
     await pool.end();
   });
 
-  it.each(RELEASED_CALLS)('%s(%s) still exists with the released arguments', async (name, args) => {
+  it.each(RETIRED_SIGNATURES)('%s(%s) no longer exists', async (name, args) => {
     const { rows } = await pool.query<{ found: boolean }>(
       `SELECT EXISTS (
          SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
@@ -43,15 +44,15 @@ describe.skipIf(!url)('expand step keeps the released (v0.2.3) functions', () =>
        ) AS found`,
       [name, args],
     );
-    expect(rows[0].found).toBe(true);
+    expect(rows[0].found, `${name}(${args}) must be dropped by the contract step`).toBe(false);
   });
 
-  it('the released sign-in call still returns a user’s camps', async () => {
+  it('the sign-in call, which reads the user from the session, still returns a user’s camps', async () => {
     const user = await pool.query<{ id: string }>(
       `INSERT INTO users (email, name) VALUES ($1, 'Compat') RETURNING id`,
       [`compat-${Math.random().toString(36).slice(2)}@t.test`],
     );
-    const { rows } = await pool.query(`SELECT * FROM buxa_memberships_of($1)`, [user.rows[0].id]);
+    const { rows } = await withOrg(pool, user.rows[0].id, null, db => db.query('SELECT * FROM buxa_memberships_of()'));
     expect(rows).toEqual([]);
   });
 });
