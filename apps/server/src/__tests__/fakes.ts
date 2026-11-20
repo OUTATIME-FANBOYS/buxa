@@ -180,47 +180,55 @@ export class InMemoryStore implements UserRepository, OrgRepository {
 
     return Promise.resolve(rows);
   }
-  async archivedMembershipsOf(userId: string): Promise<Membership[]> {
-    return this.members
-      .filter(m => m.userId === userId && this.orgs.get(m.orgId)!.archivedAt)
-      .map(m => {
-        const o = this.orgs.get(m.orgId)!;
+  archivedMembershipsOf(userId: string): Promise<Membership[]> {
+    const rows = this.members.flatMap(m => {
+      const o = this.orgs.get(m.orgId);
+      if (m.userId !== userId || !o?.archivedAt) {
+        return [];
+      }
 
-        return { orgId: o.id, role: m.role, name: o.name, slug: o.slug };
-      });
+      return [{ orgId: o.id, role: m.role, name: o.name, slug: o.slug }];
+    });
+
+    return Promise.resolve(rows);
   }
-  async archive(actor: { userId: string; orgId: string }): Promise<{ archivedAt: string }> {
+
+  archive(actor: { userId: string; orgId: string }): Promise<{ archivedAt: string }> {
     const o = this.orgs.get(actor.orgId);
     if (!o) {
-      throw new OrgNotFoundError();
+      return Promise.reject(new OrgNotFoundError());
     }
     if (o.archivedAt) {
-      throw new Error('This camp is already archived');
+      return Promise.reject(new Error('This camp is already archived'));
     }
     o.archivedAt = new Date().toISOString();
     this.database.record(actor, 'org.archive', 'org', o.id);
 
-    return { archivedAt: o.archivedAt };
+    return Promise.resolve({ archivedAt: o.archivedAt });
   }
-  async unarchive(actor: { userId: string; orgId: string }): Promise<void> {
+
+  unarchive(actor: { userId: string; orgId: string }): Promise<void> {
     const o = this.orgs.get(actor.orgId);
     if (!o) {
-      throw new OrgNotFoundError();
+      return Promise.reject(new OrgNotFoundError());
     }
     if (!o.archivedAt) {
-      throw conflict('This camp is not archived');
+      return Promise.reject(conflict('This camp is not archived'));
     }
     o.archivedAt = null;
     this.database.record(actor, 'org.unarchive', 'org', o.id);
+
+    return Promise.resolve();
   }
+
   /** Removes the camp and its memberships. The people and attendance tables are not modelled here; the database test covers the full cascade. */
-  async deleteCamp(actor: { userId: string; orgId: string }, confirmName: string): Promise<void> {
+  deleteCamp(actor: { userId: string; orgId: string }, confirmName: string): Promise<void> {
     const o = this.orgs.get(actor.orgId);
     if (!o) {
-      throw new OrgNotFoundError();
+      return Promise.reject(new OrgNotFoundError());
     }
     if (o.name !== confirmName) {
-      throw new Error('The camp name does not match');
+      return Promise.reject(new Error('The camp name does not match'));
     }
     this.orgs.delete(o.id);
     for (let i = this.members.length - 1; i >= 0; i--) {
@@ -228,19 +236,26 @@ export class InMemoryStore implements UserRepository, OrgRepository {
         this.members.splice(i, 1);
       }
     }
-  }
-  async archivedCampsOf(userId: string): Promise<ArchivedCampRecord[]> {
-    return this.members
-      .filter(m => m.userId === userId && this.orgs.get(m.orgId)!.archivedAt)
-      .map(m => {
-        const o = this.orgs.get(m.orgId)!;
 
-        return { id: o.id, name: o.name, archivedAt: o.archivedAt!, role: m.role };
-      });
+    return Promise.resolve();
   }
-  async createWithOwner(input: NewOrgInput, ownerId: string): Promise<CreatedOrg> {
+
+  archivedCampsOf(userId: string): Promise<ArchivedCampRecord[]> {
+    const rows = this.members.flatMap(m => {
+      const o = this.orgs.get(m.orgId);
+      if (m.userId !== userId || !o?.archivedAt) {
+        return [];
+      }
+
+      return [{ id: o.id, name: o.name, archivedAt: o.archivedAt, role: m.role }];
+    });
+
+    return Promise.resolve(rows);
+  }
+
+  createWithOwner(input: NewOrgInput, ownerId: string): Promise<CreatedOrg> {
     if ([...this.orgs.values()].some(o => o.slug === input.slug)) {
-      throw new SlugTakenError();
+      return Promise.reject(new SlugTakenError());
     }
     const org: StoredOrg = {
       id: randomUUID(),
@@ -255,20 +270,22 @@ export class InMemoryStore implements UserRepository, OrgRepository {
     this.members.push({ orgId: org.id, userId: ownerId, role: 'owner' });
     this.database.record({ userId: ownerId, orgId: org.id }, 'org.create', 'org', org.id);
 
-    return { id: org.id, name: org.name, slug: org.slug, role: 'owner' };
+    return Promise.resolve({ id: org.id, name: org.name, slug: org.slug, role: 'owner' });
   }
-  async get(_userId: string, orgId: string): Promise<Org> {
+
+  get(_userId: string, orgId: string): Promise<Org> {
     const o = this.orgs.get(orgId);
     if (!o) {
-      throw new OrgNotFoundError();
+      return Promise.reject(new OrgNotFoundError());
     }
 
-    return { ...o, memberCount: this.members.filter(m => m.orgId === orgId).length };
+    return Promise.resolve({ ...o, memberCount: this.members.filter(m => m.orgId === orgId).length });
   }
-  async rename(actor: { userId: string; orgId: string }, input: OrgPatchInput): Promise<OrgSummary> {
+
+  rename(actor: { userId: string; orgId: string }, input: OrgPatchInput): Promise<OrgSummary> {
     const o = this.orgs.get(actor.orgId);
     if (!o) {
-      throw new OrgNotFoundError();
+      return Promise.reject(new OrgNotFoundError());
     }
     if (input.name !== undefined) {
       o.name = input.name;
@@ -278,17 +295,25 @@ export class InMemoryStore implements UserRepository, OrgRepository {
     }
     this.database.record(actor, 'org.update', 'org', o.id);
 
-    return { id: o.id, name: o.name, slug: o.slug };
+    return Promise.resolve({ id: o.id, name: o.name, slug: o.slug });
   }
-  async listMembers(_userId: string, orgId: string): Promise<Member[]> {
-    return this.members
-      .filter(m => m.orgId === orgId)
-      .map(m => {
-        const u = this.users.get(m.userId)!;
 
-        return { id: u.id, name: u.name, email: u.email, role: m.role };
-      });
+  listMembers(_userId: string, orgId: string): Promise<Member[]> {
+    const rows: Member[] = [];
+    for (const m of this.members) {
+      if (m.orgId !== orgId) {
+        continue;
+      }
+      const u = this.users.get(m.userId);
+      if (!u) {
+        return Promise.reject(new Error(`member ${m.userId} has no user record`));
+      }
+      rows.push({ id: u.id, name: u.name, email: u.email, role: m.role });
+    }
+
+    return Promise.resolve(rows);
   }
+
   asRepositories(): Repositories {
     const db = this.database;
     const classes = new InMemoryClassRepository();
