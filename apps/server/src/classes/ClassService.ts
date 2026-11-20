@@ -7,16 +7,18 @@ import {
   formatClash,
   type Actor,
 } from '@buxa/domain';
-import type {
-  CancelEnrolmentInput,
-  Class,
-  ClassInput,
-  Enrolment,
-  EnrolInput,
-  NewRecurringClassInput,
-  NewSessionInput,
-  Session,
-  SessionPriceInput,
+import {
+  NewSessionInputSchema,
+  type CancelEnrolmentInput,
+  type Class,
+  type ClassInput,
+  type Enrolment,
+  type EnrolInput,
+  type NewRecurringClassInput,
+  type NewSessionInput,
+  type Session,
+  type SessionEditInput,
+  type SessionPriceInput,
 } from '@buxa/contracts';
 import { assertAllowed } from '../auth/authorize';
 import type { ClassRecord, ClassRepository, CampClassSpan, TeacherAssignment } from './ClassRepository';
@@ -41,6 +43,13 @@ export interface ClassService {
   listSessions(actor: Actor): Promise<Outcome<Session[]>>;
   getSession(actor: Actor, sessionId: string): Promise<Outcome<Session>>;
   createSession(actor: Actor, input: NewSessionInput): Promise<Outcome<Session>>;
+  /**
+   * Saves a session's name, description, first and last day and public flag. Needs classes:manage. The session schema checks the
+   * dates (the last day on or after the first), and every class must still fall inside the new dates. The price is not changed here.
+   */
+  updateSession(actor: Actor, sessionId: string, input: SessionEditInput): Promise<Outcome<Session>>;
+  /** Deletes a session that holds no classes. Needs classes:manage. A session with any class is refused. */
+  deleteSession(actor: Actor, sessionId: string): Promise<Outcome<null>>;
   /** Sets or clears a session's price. Needs classes:manage (staff and above); a viewer is refused. */
   setSessionPrice(actor: Actor, sessionId: string, price: SessionPriceInput | null): Promise<Outcome<Session>>;
   /** Shows or hides a session's public page. */
@@ -209,6 +218,43 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
 
         return repo.addClasses(actor, sessionId, records);
       }, timeZone);
+    },
+
+    async updateSession(actor, sessionId, input) {
+      assertAllowed(actor, 'classes:manage');
+      const timeZone = await timezoneOf(actor);
+      // The price is not part of an edit, so it is passed as none; the schema then checks the rest, as a new session does.
+      const checked = NewSessionInputSchema.safeParse({ ...input, price: null });
+      if (!checked.success) {
+        return {
+          ok: false,
+          failure: { reason: 'session_invalid', message: checked.error.issues[0]?.message ?? 'Check the session.' },
+        };
+      }
+      const { startsOn, endsOn } = checked.data;
+
+      return attempt(async () => {
+        for (const cls of await repo.listClasses(actor.userId, actor.orgId, sessionId)) {
+          if (!classWithinSession(cls, { startsOn, endsOn }, timeZone)) {
+            throw new ClassOutsideSessionError(startsOn, endsOn);
+          }
+        }
+
+        return repo.updateSession(actor, sessionId, checked.data);
+      }, timeZone);
+    },
+
+    async deleteSession(actor, sessionId) {
+      assertAllowed(actor, 'classes:manage');
+
+      return attempt(
+        async () => {
+          await repo.deleteSession(actor, sessionId);
+
+          return null;
+        },
+        await timezoneOf(actor),
+      );
     },
 
     async setSessionPrice(actor, sessionId, price) {

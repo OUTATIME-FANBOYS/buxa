@@ -41,6 +41,8 @@ vi.mock('@/actions/classes', () => ({
   addClassAction: vi.fn(),
   updateClassAction: vi.fn(),
   deleteClassAction: vi.fn(),
+  updateSessionAction: vi.fn(),
+  deleteSessionAction: vi.fn(),
   enrolAction: vi.fn(),
   cancelEnrolmentAction: vi.fn(),
   setSessionPublicAction: vi.fn(),

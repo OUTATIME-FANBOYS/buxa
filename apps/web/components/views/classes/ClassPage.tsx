@@ -15,6 +15,7 @@ import {
 } from '@buxa/server/composers/index.server';
 import { ClassesTable, EnrolmentTable, instructorNames, PriceFact } from '@/components/components/classes';
 import {
+  EditSessionButton,
   EnrolForm,
   NewClassButton,
   RecurringSeriesButton,
@@ -96,6 +97,7 @@ export async function ClassPage({
         actions={
           canManage && (
             <>
+              <EditSessionButton session={session} />
               <RecurringSeriesButton sessionId={session.id} />
               <NewClassButton sessionId={session.id} sessionName={session.name} instructors={instructorChoices} />
             </>

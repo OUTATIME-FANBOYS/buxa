@@ -237,6 +237,33 @@ export function sessionForm(form: FormData): PersonParsed<NewSessionInput> {
   );
 }
 
+/**
+ * A session's details as edited (the Edit session dialog): the same fields as a new session, without the price. The session schema
+ * checks them; the price is passed as none, so the schema's price rule does not apply.
+ */
+export function sessionEditForm(form: FormData): PersonParsed<NewSessionInput> {
+  const problems: FieldErrors = {};
+  const startsOn = field(form, 'startsOn');
+  const endsOn = field(form, 'endsOn');
+  if (startsOn === '') {
+    problems.startsOn = 'Choose the first day.';
+  }
+  if (endsOn === '') {
+    problems.endsOn = 'Choose the last day.';
+  }
+
+  return withProblems(problems, () =>
+    parseWith<NewSessionInput>(NewSessionInputSchema, {
+      name: field(form, 'name'),
+      description: field(form, 'description'),
+      startsOn,
+      endsOn,
+      price: null,
+      isPublic: form.get('isPublic') === 'on',
+    }),
+  );
+}
+
 /** Sets or clears a session's price (the session's Price dialog). A blank amount clears it. */
 export function sessionPriceForm(form: FormData): PersonParsed<SessionPriceInput | null> {
   const problems: FieldErrors = {};

@@ -3,6 +3,8 @@ export * from './CancelEnrolmentButton';
 export * from './ClassForm';
 export * from './DeleteClassButton';
 export * from './EditClassButton';
+export * from './EditSessionButton';
+export * from './EditSessionForm';
 export * from './EnrolForm';
 export * from './ErrorReportButton';
 export * from './ImportForm';

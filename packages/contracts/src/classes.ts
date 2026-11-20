@@ -110,6 +110,8 @@ export const NewSessionInputSchema = z
     path: ['endsOn'],
   });
 export type NewSessionInput = z.infer<typeof NewSessionInputSchema>;
+/** A session's details as edited: the same fields as a new session, without the price (the price has its own dialog). */
+export type SessionEditInput = Omit<NewSessionInput, 'price'>;
 
 export const SetSessionPublicInputSchema = z.object({ isPublic: z.boolean() });
 export type SetSessionPublicInput = z.infer<typeof SetSessionPublicInputSchema>;
