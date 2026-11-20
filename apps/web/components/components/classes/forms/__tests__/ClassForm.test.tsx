@@ -30,9 +30,7 @@ const cls: Class = {
 };
 
 const render = (props: Partial<Parameters<typeof ClassForm>[0]> = {}) =>
-  renderToStaticMarkup(
-    <ClassForm sessionId={SESSION} sessionName="Summer camp" instructors={[]} {...props} />,
-  );
+  renderToStaticMarkup(<ClassForm sessionId={SESSION} sessionName="Summer camp" instructors={[]} {...props} />);
 
 describe('ClassForm: the fields of a class', () => {
   it('has the name, the three fields in one row (ages and Camp Size), the time range and the location', () => {

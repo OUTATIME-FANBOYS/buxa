@@ -246,6 +246,32 @@ form.class-form {
   gap: var(--s2);
 }
 
+/* Weekly series: the seven days sit in one row, each box with a gap before its label. */
+.weekday-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s4);
+}
+.weekday-row .check-field {
+  gap: var(--s2);
+}
+/* Stops: a label above one compact row of two options, and the date or count field below it. */
+.stops-row {
+  display: grid;
+  gap: var(--s2);
+  min-width: 0;
+}
+.class-form .stops-choice {
+  display: flex;
+  width: 100%;
+}
+.class-form .stops-choice button {
+  flex: 1 1 0;
+  min-width: 0;
+  height: var(--control-h);
+  justify-content: center;
+}
+
 /* A form section (registration forms and their dialogs): a heading, a rule above every section after the first, then the fields.
  * No fieldset box. */
 .form-section {

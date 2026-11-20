@@ -231,6 +231,8 @@ export function sessionForm(form: FormData): PersonParsed<NewSessionInput> {
       startsOn,
       endsOn,
       price: price ?? null,
+      // A ticked "Show this session on the public pages" box posts `isPublic=on`; left unticked, the session is not public.
+      isPublic: form.get('isPublic') === 'on',
     }),
   );
 }

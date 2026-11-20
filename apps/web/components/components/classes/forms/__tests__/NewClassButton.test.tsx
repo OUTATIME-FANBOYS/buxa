@@ -16,11 +16,7 @@ describe('the New session and New class buttons', () => {
 
   it('the session page button is labelled New class, and is not the old New session label', () => {
     const html = renderToStaticMarkup(
-      <NewClassButton
-        sessionId="11111111-1111-4111-8111-111111111111"
-        sessionName="Summer camp"
-        instructors={[]}
-      />,
+      <NewClassButton sessionId="11111111-1111-4111-8111-111111111111" sessionName="Summer camp" instructors={[]} />,
     );
     expect(html).toContain('New class');
     expect(html).not.toContain('New session');

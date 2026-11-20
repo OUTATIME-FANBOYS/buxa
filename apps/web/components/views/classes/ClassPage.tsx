@@ -97,11 +97,7 @@ export async function ClassPage({
           canManage && (
             <>
               <RecurringSeriesButton sessionId={session.id} />
-              <NewClassButton
-                sessionId={session.id}
-                sessionName={session.name}
-                instructors={instructorChoices}
-              />
+              <NewClassButton sessionId={session.id} sessionName={session.name} instructors={instructorChoices} />
             </>
           )
         }
@@ -136,11 +132,7 @@ export async function ClassPage({
             }
             action={
               canManage && (
-                <NewClassButton
-                  sessionId={session.id}
-                  sessionName={session.name}
-                  instructors={instructorChoices}
-                />
+                <NewClassButton sessionId={session.id} sessionName={session.name} instructors={instructorChoices} />
               )
             }
           />

@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState, type FormEvent } from 'react';
 import { Field, Button } from '@/components/elements';
-import { DatePicker, TextField } from '@/components/atoms';
+import { Checkbox, DatePicker, TextField } from '@/components/atoms';
 import { ROUTES } from '@/config/routes';
 import { fieldError, idle } from '@buxa/shared';
 import { createSessionAction } from '@/actions/classes';
@@ -78,6 +78,9 @@ export function NewSessionForm({
         <DatePicker label="Start" name="startsOn" error={err('startsOn')} isRequired />
         <DatePicker label="End" name="endsOn" error={err('endsOn')} isRequired />
       </div>
+      <Checkbox name="isPublic" value="on">
+        Show this session on the public pages
+      </Checkbox>
       <PriceFields error={err} onDiscountProblem={setDiscountProblem} />
       <ActionMessage state={state} />
       {!inDialog && (

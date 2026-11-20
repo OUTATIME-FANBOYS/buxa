@@ -42,6 +42,13 @@ describe('NewSessionForm: a session is a date range', () => {
     expect(html).not.toContain('<fieldset');
   });
 
+  it('renders a Show on the public pages tick box, unticked by default, that posts isPublic=on when ticked', () => {
+    const html = renderToStaticMarkup(<NewSessionForm variant="dialog" />);
+    expect(html).toContain('Show this session on the public pages');
+    expect(html).toMatch(/<input[^>]*type="checkbox"[^>]*name="isPublic"[^>]*value="on"/);
+    expect(html).not.toMatch(/name="isPublic"[^>]*checked/);
+  });
+
   it('turns off the browser bubbles, so the app shows its own errors', () => {
     expect(renderToStaticMarkup(<NewSessionForm variant="dialog" />)).toContain('<form noValidate=""');
   });

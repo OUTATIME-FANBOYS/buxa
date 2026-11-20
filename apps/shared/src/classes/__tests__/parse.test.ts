@@ -110,6 +110,21 @@ describe('classForm', () => {
   });
 });
 
+describe('sessionForm: the public flag', () => {
+  const SESSION = { name: 'Summer', description: '', startsOn: '2027-07-05', endsOn: '2027-07-12' };
+
+  it('reads a ticked Show on the public pages box as public', () => {
+    expect(sessionForm(formOf({ ...SESSION, isPublic: 'on' }))).toMatchObject({
+      ok: true,
+      data: { isPublic: true },
+    });
+  });
+
+  it('keeps the session private when the box is not ticked, as an unticked box posts nothing', () => {
+    expect(sessionForm(formOf(SESSION))).toMatchObject({ ok: true, data: { isPublic: false } });
+  });
+});
+
 describe('sessionForm', () => {
   it('builds the session (the parent): name, description and its first and last day', () => {
     expect(
