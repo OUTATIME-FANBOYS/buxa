@@ -98,3 +98,8 @@
 .table .is-archived {
   opacity: 0.6;
 }
+
+/* The default roles table on Help: its header row is bold. */
+.permission-areas .permission-areas-head th {
+  font-weight: 700;
+}

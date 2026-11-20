@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { loadMembers, loadTeacherOptions } from '@buxa/server/composers/index.server';
-import { MembersTable, PermissionAreasTable } from '@/components/components/camp';
+import { MembersTable } from '@/components/components/camp';
 import { AddTeacherButton, PageHeader } from '@/components/components';
 import { campContext } from '@buxa/server/composers/index.server';
 
@@ -20,7 +20,6 @@ export async function Members() {
     <div className="page">
       <PageHeader title="Team access" subtitle={subtitle} actions={canInvite ? <AddTeacherButton /> : undefined} />
       <MembersTable members={members} showEmail={can(actor, 'members:read_contact')} teacherOptions={teacherOptions} />
-      <PermissionAreasTable />
     </div>
   );
 }
