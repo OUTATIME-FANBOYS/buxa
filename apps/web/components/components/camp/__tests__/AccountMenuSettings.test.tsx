@@ -9,6 +9,15 @@ import { settle } from '@buxa/domain';
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 vi.mock('@/actions/auth', () => ({ signOut: () => settle(() => undefined) }));
+
+function must<T>(value: T | null | undefined, what: string): T {
+  if (value == null) {
+    throw new Error(`Expected ${what} on the page.`);
+  }
+
+  return value;
+}
+
 const saveTime = vi.hoisted(() => vi.fn(() => Promise.resolve({ status: 'success', message: 'Time format saved' })));
 vi.mock('@/actions/account', () => ({ updateTimeFormatAction: saveTime }));
 
@@ -48,11 +57,14 @@ describe('the account menu', () => {
 
     return Array.from(document.querySelectorAll<HTMLElement>('[role=menu] > [role=menuitem]'));
   };
-  const menu = () => document.querySelector('[role=menu]')!;
+  const menu = () => must(document.querySelector('[role=menu]'), 'the account menu');
   const item = (label: string) =>
-    Array.from(document.querySelectorAll<HTMLElement>('[role=menu] [role=menuitem]')).find(
-      el => el.textContent?.trim() === label,
-    )!;
+    must(
+      Array.from(document.querySelectorAll<HTMLElement>('[role=menu] [role=menuitem]')).find(
+        el => el.textContent?.trim() === label,
+      ),
+      `the "${label}" menu item`,
+    );
   const openSub = (label: string) => {
     act(() => {
       item(label).click();

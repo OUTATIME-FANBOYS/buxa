@@ -46,7 +46,10 @@ export function discoverRoutes(): RouteTarget[] {
   return files.map(file => {
     const rel = relative(APP_DIR, file).replace(/\\/g, '/');
     const parts = rel.split('/');
-    const fileName = parts.pop()!;
+    const fileName = parts.pop();
+    if (!fileName) {
+      throw new Error(`Route file has no name: ${rel}`);
+    }
     const isPage = fileName === 'page.tsx';
 
     // Filter out route groups like (app), (work), (admin), (operations)
@@ -133,7 +136,7 @@ async function main(): Promise<void> {
       },
     });
 
-    child.stderr?.on('data', data => {
+    child.stderr?.on('data', (data: Buffer) => {
       const line = data.toString();
       if (line.includes('Error')) {
         console.error(`[Server stderr] ${line.trim()}`);
@@ -202,8 +205,8 @@ async function main(): Promise<void> {
 
 const isEntry = Boolean(process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url));
 if (isEntry) {
-  main().catch(error => {
-    console.error(error.message || error);
+  main().catch((error: unknown) => {
+    console.error(error instanceof Error && error.message ? error.message : error);
     process.exit(1);
   });
 }

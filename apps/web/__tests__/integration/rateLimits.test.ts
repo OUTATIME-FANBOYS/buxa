@@ -66,10 +66,13 @@ describe('/ready', () => {
     env = startRuntime({ verifier: idp.verifier, rateLimiter: createMemoryRateLimiter() });
     const query = vi
       .spyOn(env.runtime.pool, 'query')
-      .mockImplementation(async (sql: string) =>
-        sql.includes('rolbypassrls')
-          ? { rows: [{ superuser: false, bypass_rls: false, member_of_privileged_role: false }] }
-          : { rows: [] },
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises -- pg Pool.query's last overload types its return as void, so the mock cannot be typed as a Promise
+      .mockImplementation((sql: string) =>
+        Promise.resolve(
+          sql.includes('rolbypassrls')
+            ? { rows: [{ superuser: false, bypass_rls: false, member_of_privileged_role: false }] }
+            : { rows: [] },
+        ),
       );
     expect((await ready(new Request('http://localhost/ready'))).status).toBe(200);
     expect((await ready(new Request('http://localhost/ready'))).status).toBe(200);

@@ -19,6 +19,14 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: h.push, refresh: h
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
+function must<T>(value: T | null | undefined, what: string): T {
+  if (value == null) {
+    throw new Error(`Expected ${what} on the page.`);
+  }
+
+  return value;
+}
+
 const OWNED: ArchivedCamp = { id: 'o-1', name: 'Camp Cedar', archivedAt: '2026-10-02T09:00:00.000Z', role: 'owner' };
 const SHARED: ArchivedCamp = { id: 'o-2', name: 'Camp Birch', archivedAt: '2026-10-03T09:00:00.000Z', role: 'admin' };
 
@@ -85,8 +93,10 @@ describe('the archived camps list', () => {
 
     act(() => button('Unarchive camp')?.click());
     expect(dialogText()).toContain('Camp Cedar becomes an active camp again');
-    await act(async () => {
+    await act(() => {
       dlg('Unarchive camp')?.click();
+
+      return Promise.resolve();
     });
 
     expect(h.unarchiveCamp).toHaveBeenCalledTimes(1);
@@ -100,8 +110,10 @@ describe('the archived camps list', () => {
     render([OWNED]);
 
     act(() => button('Unarchive camp')?.click());
-    await act(async () => {
+    await act(() => {
       dlg('Unarchive camp')?.click();
+
+      return Promise.resolve();
     });
 
     expect(document.querySelector('[role="alert"]')?.textContent).toBe('This camp is not archived');
@@ -115,14 +127,16 @@ describe('the archived camps list', () => {
     expect(dialogText()).toContain('Are you sure you want to delete Camp Cedar?');
     act(() => dlg('Continue')?.click());
 
-    act(() => typeInto(field()!, 'camp cedar'));
+    act(() => typeInto(must(field(), 'the name field'), 'camp cedar'));
     expect(dlg('Delete camp')?.disabled).toBe(true);
 
-    act(() => typeInto(field()!, 'Camp Cedar'));
+    act(() => typeInto(must(field(), 'the name field'), 'Camp Cedar'));
     expect(dlg('Delete camp')?.disabled).toBe(false);
 
-    await act(async () => {
+    await act(() => {
       dlg('Delete camp')?.click();
+
+      return Promise.resolve();
     });
     expect(h.deleteCamp).toHaveBeenCalledWith({ orgId: 'o-1', confirmName: 'Camp Cedar' });
     expect(h.refresh).toHaveBeenCalled();

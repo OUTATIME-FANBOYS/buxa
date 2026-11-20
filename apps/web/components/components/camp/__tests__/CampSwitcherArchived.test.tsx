@@ -5,7 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import type { Membership } from '@buxa/contracts';
 import { CampSwitcher } from '@/components/components/camp';
 
-const h = vi.hoisted(() => ({ select: vi.fn(async () => undefined), push: vi.fn(), refresh: vi.fn() }));
+const h = vi.hoisted(() => ({ select: vi.fn(() => Promise.resolve(undefined)), push: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: h.push, refresh: h.refresh }) }));
 vi.mock('@/actions/camp', () => ({ selectCampAction: h.select }));
 
@@ -65,8 +65,10 @@ describe('CampSwitcher with archived camps', () => {
       i => i.textContent?.trim() === 'Camp Cedar',
     );
     expect(cedar).toBeDefined();
-    await act(async () => {
+    await act(() => {
       cedar?.click();
+
+      return Promise.resolve();
     });
     expect(h.select).toHaveBeenCalledWith('o-9');
   });
