@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { Actor, ActiveEnrolmentFacts, AuditAction, LocalDate } from '@buxa/domain';
+import { seatsLeft } from '@buxa/domain';
 import type { Class, Enrolment, EnrolmentStatus, NewSessionInput, Session, SessionPriceInput } from '@buxa/contracts';
 import { priceChangeAudit, samePrice } from './priceAudit';
 import { systemClock, type Clock } from '../services/clock';
@@ -63,6 +64,13 @@ interface StoredCamper {
   dateOfBirth: LocalDate | null;
 }
 
+/** A seat hold on a class, as Postgres stores it (the household is not needed to count the place). Live while unreleased and not yet expired. */
+interface StoredSeatHold {
+  classId: string;
+  expiresAt: string;
+  released: boolean;
+}
+
 /** Lets a test run the enrolment rule as a database would: a read, then a decision, then a write, with a gap between them. */
 const yieldToDatabase = (): Promise<void> => new Promise(resolve => setImmediate(resolve));
 
@@ -77,6 +85,7 @@ export class InMemoryClassRepository implements ClassRepository {
   private readonly classes = new Map<string, StoredClass>();
   private readonly enrolments = new Map<string, StoredEnrolment>();
   private readonly campers = new Map<string, StoredCamper>();
+  private readonly seatHolds: StoredSeatHold[] = [];
   /** Camp id to the user ids that hold the teacher role there. */
   private readonly teacherUsers = new Map<string, Set<string>>();
   /** Class id to the teacher user ids assigned to it. */
@@ -88,6 +97,11 @@ export class InMemoryClassRepository implements ClassRepository {
   /** Test setup: a person who can be enrolled (or named as an instructor). */
   seedCamper(orgId: string, id: string, name: string, dateOfBirth: LocalDate | null): void {
     this.campers.set(id, { id, orgId, name, dateOfBirth });
+  }
+
+  /** Test setup: a seat hold on a class, as the hold repository would write it. Counts as a place while live. */
+  seedSeatHold(classId: string, hold: { expiresAt: string; released: boolean }): void {
+    this.seatHolds.push({ classId, expiresAt: hold.expiresAt, released: hold.released });
   }
 
   listSessions(userId: string, orgId: string): Promise<Session[]> {
@@ -244,8 +258,8 @@ export class InMemoryClassRepository implements ClassRepository {
         throw new ClassNotFoundError();
       }
       this.requireInstructorsInCamp(actor.orgId, input.instructorIds);
-      // As in Postgres: the camp size cannot go below the seats already taken.
-      if (input.capacity < this.countWhere(classId, 'enrolled')) {
+      // As in Postgres: the camp size cannot go below the seats already taken (enrolled campers and live holds).
+      if (input.capacity < this.takenPlaces(classId)) {
         throw new CapacityBelowEnrolledError();
       }
       Object.assign(row, input, { instructorIds: [...new Set(input.instructorIds)] });
@@ -282,7 +296,7 @@ export class InMemoryClassRepository implements ClassRepository {
 
       return [...this.enrolments.values()]
         .filter(e => e.orgId === orgId && e.classId === classId)
-        .sort((a, b) => a.enrolledAt.localeCompare(b.enrolledAt) || a.id.localeCompare(b.id))
+        .sort((a, b) => a.enrolledAt.localeCompare(b.enrolledAt)) // stable: ties keep the order they were written in
         .map(e => this.toEnrolment(e));
     });
   }
@@ -306,7 +320,7 @@ export class InMemoryClassRepository implements ClassRepository {
           capacity: cls.capacity,
           ageRange: cls.ageRange,
         },
-        seatsTaken: this.countWhere(cls.id, 'enrolled'),
+        seatsTaken: this.takenPlaces(cls.id),
         camperDateOfBirth: camper.dateOfBirth,
         camperActive: this.activeFor(actor.orgId, camper.id),
       };
@@ -357,12 +371,17 @@ export class InMemoryClassRepository implements ClassRepository {
         if (!row || row.orgId !== actor.orgId || row.status === 'cancelled') {
           throw new EnrolmentNotFoundError();
         }
+        // Only a place that was really taken goes to the waitlist; a cancelled waitlist entry frees nothing (as in Postgres).
+        const freedPlace = row.status === 'enrolled';
         row.status = 'cancelled';
         this.record(actor, 'enrolment.cancel', 'enrolment', row.id, {
           sessionId: row.classId,
           camperId: row.camperId,
           note,
         });
+        if (freedPlace) {
+          this.promoteWaitlist(row.classId, actor);
+        }
 
         return this.toEnrolment(row);
       });
@@ -475,6 +494,35 @@ export class InMemoryClassRepository implements ClassRepository {
     return [...this.enrolments.values()].filter(e => e.classId === classId && e.status === status).length;
   }
 
+  /** Places taken: enrolled campers plus live holds (as `session_seats_taken` counts them in Postgres). Waitlisted campers hold none. */
+  private takenPlaces(classId: string): number {
+    const now = this.now().getTime();
+    const holds = this.seatHolds.filter(
+      h => h.classId === classId && !h.released && Date.parse(h.expiresAt) > now,
+    ).length;
+
+    return this.countWhere(classId, 'enrolled') + holds;
+  }
+
+  /**
+   * Moves the first waitlisted campers (in the order they joined) into the places that are free now, as `promoteWaitlist` does in
+   * Postgres. Each promotion is audited under the actor that freed the place.
+   */
+  private promoteWaitlist(classId: string, actor: Actor): void {
+    const cls = this.classes.get(classId);
+    if (!cls) {
+      return;
+    }
+    const free = seatsLeft(cls.capacity, this.takenPlaces(classId));
+    const waiting = [...this.enrolments.values()]
+      .filter(e => e.classId === classId && e.status === 'waitlisted')
+      .slice(0, free);
+    for (const e of waiting) {
+      e.status = 'enrolled';
+      this.record(actor, 'enrolment.promote', 'enrolment', e.id, { sessionId: classId, camperId: e.camperId });
+    }
+  }
+
   /** The camper's enrolled and waitlisted classes in the camp. Cancelled ones free their time. */
   private activeFor(orgId: string, camperId: string): ActiveEnrolmentFacts[] {
     const out: ActiveEnrolmentFacts[] = [];
@@ -520,7 +568,7 @@ export class InMemoryClassRepository implements ClassRepository {
       location: c.location,
       instructorIds: [...c.instructorIds],
       instructors: c.instructorIds.map(id => ({ id, name: this.campers.get(id)?.name ?? '' })),
-      seatsTaken: this.countWhere(c.id, 'enrolled'),
+      seatsTaken: this.takenPlaces(c.id),
       waitlisted: this.countWhere(c.id, 'waitlisted'),
       price: session?.price ? { ...session.price } : null,
     };

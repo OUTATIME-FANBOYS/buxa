@@ -10,16 +10,10 @@ export interface ClassContractFixture {
   readonly actor: Actor;
   /** A camper of the camp under test, aged 11 on the class day. */
   addCamper(): Promise<string>;
-  /**
-   * A seat hold on a class. Live when `released` is false and `expiresAt` is in the future. Adapters that cannot hold seats
-   * reject, and the hold cases then report as known gaps.
-   */
+  /** A seat hold on a class. Live when `released` is false and `expiresAt` is in the future. */
   addSeatHold(classId: string, hold: { expiresAt: string; released: boolean }): Promise<void>;
   close(): Promise<void>;
 }
-
-/** A place where an adapter is known to differ. The case still runs, and it must fail until the gap is closed. */
-export type KnownGap = 'seat-holds' | 'waitlist-promotion';
 
 export type ClassContractFactory = () => Promise<ClassContractFixture>;
 
@@ -51,11 +45,9 @@ function rule(waitlistIfFull: boolean): EnrolmentRule {
 
 /**
  * One contract for every ClassRepository adapter: the seats of a class (enrolled, waitlisted, held), the waitlist order, and the
- * camp size floor. `knownGaps` names the cases an adapter does not yet pass; those run as `it.fails`.
+ * camp size floor.
  */
-export function classRepositoryContract(factory: ClassContractFactory, knownGaps: readonly KnownGap[] = []): void {
-  const caseFor = (gap: KnownGap) => (knownGaps.includes(gap) ? it.fails : it);
-
+export function classRepositoryContract(factory: ClassContractFactory): void {
   describe('ClassRepository contract', () => {
     let fx: ClassContractFixture;
     beforeEach(async () => {
@@ -103,28 +95,25 @@ export function classRepositoryContract(factory: ClassContractFactory, knownGaps
       expect(await countsOf(classId)).toEqual({ seatsTaken: 1, waitlisted: 1 });
     });
 
-    caseFor('waitlist-promotion')(
-      'cancelling promotes the first waitlisted camper, in the order they joined',
-      async () => {
-        const classId = await classOf(1);
-        const placed = await enrol(classId, await fx.addCamper());
-        const first = await enrol(classId, await fx.addCamper(), true);
-        const second = await enrol(classId, await fx.addCamper(), true);
+    it('cancelling promotes the first waitlisted camper, in the order they joined', async () => {
+      const classId = await classOf(1);
+      const placed = await enrol(classId, await fx.addCamper());
+      const first = await enrol(classId, await fx.addCamper(), true);
+      const second = await enrol(classId, await fx.addCamper(), true);
 
-        await fx.repo.cancelEnrolment(fx.actor, placed.id, null);
+      await fx.repo.cancelEnrolment(fx.actor, placed.id, null);
 
-        const statuses = (await fx.repo.listEnrolments(fx.actor.userId, fx.actor.orgId, classId)).map(e => [
-          e.id,
-          e.status,
-        ]);
-        expect(statuses).toEqual([
-          [placed.id, 'cancelled'],
-          [first.id, 'enrolled'],
-          [second.id, 'waitlisted'],
-        ]);
-        expect(await countsOf(classId)).toEqual({ seatsTaken: 1, waitlisted: 1 });
-      },
-    );
+      const statuses = (await fx.repo.listEnrolments(fx.actor.userId, fx.actor.orgId, classId)).map(e => [
+        e.id,
+        e.status,
+      ]);
+      expect(statuses).toEqual([
+        [placed.id, 'cancelled'],
+        [first.id, 'enrolled'],
+        [second.id, 'waitlisted'],
+      ]);
+      expect(await countsOf(classId)).toEqual({ seatsTaken: 1, waitlisted: 1 });
+    });
 
     it('lowering the camp size below the places taken is refused, and the class keeps its size', async () => {
       const classId = await classOf(3);
@@ -145,21 +134,21 @@ export function classRepositoryContract(factory: ClassContractFactory, knownGaps
       expect(updated.capacity).toBe(2);
     });
 
-    caseFor('seat-holds')('a live seat hold counts as a place taken', async () => {
+    it('a live seat hold counts as a place taken', async () => {
       const classId = await classOf(1);
       await fx.addSeatHold(classId, { expiresAt: LIVE_HOLD_EXPIRY, released: false });
       expect(await countsOf(classId)).toEqual({ seatsTaken: 1, waitlisted: 0 });
       await expect(enrol(classId, await fx.addCamper())).rejects.toBeInstanceOf(SessionFullError);
     });
 
-    caseFor('seat-holds')('an expired seat hold does not count', async () => {
+    it('an expired seat hold does not count', async () => {
       const classId = await classOf(1);
       await fx.addSeatHold(classId, { expiresAt: EXPIRED_HOLD_EXPIRY, released: false });
       expect(await countsOf(classId)).toEqual({ seatsTaken: 0, waitlisted: 0 });
       expect((await enrol(classId, await fx.addCamper())).status).toBe('enrolled');
     });
 
-    caseFor('seat-holds')('a released seat hold does not count, even before its time', async () => {
+    it('a released seat hold does not count, even before its time', async () => {
       const classId = await classOf(1);
       await fx.addSeatHold(classId, { expiresAt: LIVE_HOLD_EXPIRY, released: true });
       expect(await countsOf(classId)).toEqual({ seatsTaken: 0, waitlisted: 0 });

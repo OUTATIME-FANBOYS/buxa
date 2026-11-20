@@ -1,10 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { describe } from 'vitest';
-import type { Actor } from '@buxa/domain';
+import { settle, type Actor } from '@buxa/domain';
 import { InMemoryClassRepository } from '../InMemoryClassRepository';
-import { classRepositoryContract, type ClassContractFixture, type KnownGap } from './classRepository.contract';
-
-const KNOWN_GAPS: KnownGap[] = ['seat-holds', 'waitlist-promotion'];
+import { classRepositoryContract, type ClassContractFixture } from './classRepository.contract';
 
 /** A fresh in-memory camp per test. Campers are aged 11 on the class day (born 1 March 2016). */
 function createMemoryClassFixture(): Promise<ClassContractFixture> {
@@ -20,11 +18,11 @@ function createMemoryClassFixture(): Promise<ClassContractFixture> {
 
       return Promise.resolve(id);
     },
-    addSeatHold: () => Promise.reject(new Error('The in-memory class repository does not count seat holds yet')),
+    addSeatHold: (classId, hold) => settle(() => repo.seedSeatHold(classId, hold)),
     close: () => Promise.resolve(),
   });
 }
 
 describe('ClassRepository in memory', () => {
-  classRepositoryContract(createMemoryClassFixture, KNOWN_GAPS);
+  classRepositoryContract(createMemoryClassFixture);
 });
