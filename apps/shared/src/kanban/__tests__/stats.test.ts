@@ -63,6 +63,15 @@ describe('completionSeries', () => {
     expect(series.at(-1)?.title).toBe(`${fmt('2026-11-14')} – ${fmt(ON)}`);
     expect(series.at(0)?.title).toBe(`${fmt('2026-08-22')} – ${fmt('2026-08-28')}`);
   });
+
+  it('documents the 90-day unit: weekly buckets that together cover 91 days, from 90 days before the given day', () => {
+    const edge = [
+      task('first', { columnId: 'done', completedAt: at('2026-08-22') }), // 90 days back: counted
+      task('before', { columnId: 'done', completedAt: at('2026-08-21') }), // 91 days back: not counted
+    ];
+    expect(sum(completionSeries(edge, 90, ON))).toBe(1);
+    expect(sum(completionSeries(done, 90, ON))).toBe(3);
+  });
 });
 
 describe('avgCycleDays', () => {
