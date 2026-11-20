@@ -79,13 +79,13 @@ export class InMemoryStore implements UserRepository, OrgRepository {
     return this.database.audit;
   }
 
-  async upsertFromIdentity(identity: Identity): Promise<User> {
+  upsertFromIdentity(identity: Identity): Promise<User> {
     const existing = [...this.users.values()].find(u => u.authId === identity.authId);
     if (existing) {
-      return publicUser(existing);
+      return Promise.resolve(publicUser(existing));
     }
     if ([...this.users.values()].some(u => u.email === identity.email)) {
-      throw new EmailInUseError();
+      return Promise.reject(new EmailInUseError());
     }
     const user = {
       ...splitName(identity.name),
@@ -97,12 +97,12 @@ export class InMemoryStore implements UserRepository, OrgRepository {
     };
     this.users.set(user.id, user);
 
-    return publicUser(user);
+    return Promise.resolve(publicUser(user));
   }
-  async updateName(userId: string, name: { firstName: string; lastName: string | null }): Promise<User> {
+  updateName(userId: string, name: { firstName: string; lastName: string | null }): Promise<User> {
     const user = this.users.get(userId);
     if (!user) {
-      throw new Error('no user to rename');
+      return Promise.reject(new Error('no user to rename'));
     }
     Object.assign(user, {
       firstName: name.firstName,
@@ -110,50 +110,52 @@ export class InMemoryStore implements UserRepository, OrgRepository {
       name: [name.firstName, name.lastName].filter(Boolean).join(' '),
     });
 
-    return publicUser(user);
+    return Promise.resolve(publicUser(user));
   }
-  async setClockFormat(userId: string, clockFormat: ClockFormat): Promise<User> {
+  setClockFormat(userId: string, clockFormat: ClockFormat): Promise<User> {
     const user = this.users.get(userId);
     if (!user) {
-      throw new Error('no user to update');
+      return Promise.reject(new Error('no user to update'));
     }
     user.clockFormat = clockFormat;
 
-    return publicUser(user);
+    return Promise.resolve(publicUser(user));
   }
-  async roleIn(_signedIn: string, orgId: string, userId: string): Promise<Membership['role'] | null> {
-    return this.members.find(m => m.orgId === orgId && m.userId === userId)?.role ?? null;
+  roleIn(_signedIn: string, orgId: string, userId: string): Promise<Membership['role'] | null> {
+    return Promise.resolve(this.members.find(m => m.orgId === orgId && m.userId === userId)?.role ?? null);
   }
-  async renameMember(actor: Actor, userId: string, name: string): Promise<Pick<User, 'id' | 'email' | 'name'> | null> {
+  renameMember(actor: Actor, userId: string, name: string): Promise<Pick<User, 'id' | 'email' | 'name'> | null> {
     const user = this.users.get(userId);
     const inCamp = this.members.some(m => m.orgId === actor.orgId && m.userId === userId);
     if (!user || !inCamp) {
-      return null;
+      return Promise.resolve(null);
     }
     Object.assign(user, splitName(name));
     user.name = name;
     this.database.record(actor, 'member.rename', 'user', userId, { name });
 
-    return { id: user.id, email: user.email, name: user.name };
+    return Promise.resolve({ id: user.id, email: user.email, name: user.name });
   }
   /** Options that are on, as `${orgId}:${userId}:${option}`. */
   readonly memberOptions = new Set<string>();
-  async memberOptionsOf(_viewerId: string, orgId: string, userId: string): Promise<MemberOption[]> {
-    return MEMBER_OPTIONS.filter(o => this.memberOptions.has(`${orgId}:${userId}:${o}`));
+  memberOptionsOf(_viewerId: string, orgId: string, userId: string): Promise<MemberOption[]> {
+    return Promise.resolve(MEMBER_OPTIONS.filter(o => this.memberOptions.has(`${orgId}:${userId}:${o}`)));
   }
-  async memberOptionsIn(_viewerId: string, orgId: string): Promise<{ userId: string; option: MemberOption }[]> {
-    return [...this.memberOptions]
-      .filter(k => k.startsWith(`${orgId}:`))
-      .map(k => {
-        const [, userId, option] = k.split(':');
+  memberOptionsIn(_viewerId: string, orgId: string): Promise<{ userId: string; option: MemberOption }[]> {
+    return Promise.resolve(
+      [...this.memberOptions]
+        .filter(k => k.startsWith(`${orgId}:`))
+        .map(k => {
+          const [, userId, option] = k.split(':');
 
-        return { userId, option: option as MemberOption };
-      });
+          return { userId, option: option as MemberOption };
+        }),
+    );
   }
-  async setMemberOption(actor: Actor, userId: string, option: MemberOption, enabled: boolean): Promise<void> {
+  setMemberOption(actor: Actor, userId: string, option: MemberOption, enabled: boolean): Promise<void> {
     const role = this.members.find(m => m.orgId === actor.orgId && m.userId === userId)?.role;
     if (role !== 'teacher') {
-      throw new Error('Teacher not found');
+      return Promise.reject(new Error('Teacher not found'));
     }
     const key = `${actor.orgId}:${userId}:${option}`;
     if (enabled) {
@@ -162,15 +164,21 @@ export class InMemoryStore implements UserRepository, OrgRepository {
       this.memberOptions.delete(key);
     }
     this.database.record(actor, 'member.option_set', 'user', userId, { option, enabled });
-  }
-  async membershipsOf(userId: string): Promise<Membership[]> {
-    return this.members
-      .filter(m => m.userId === userId && !this.orgs.get(m.orgId)!.archivedAt)
-      .map(m => {
-        const o = this.orgs.get(m.orgId)!;
 
-        return { orgId: o.id, role: m.role, name: o.name, slug: o.slug };
-      });
+    return Promise.resolve();
+  }
+
+  membershipsOf(userId: string): Promise<Membership[]> {
+    const rows = this.members.flatMap(m => {
+      const o = this.orgs.get(m.orgId);
+      if (m.userId !== userId || !o || o.archivedAt) {
+        return [];
+      }
+
+      return [{ orgId: o.id, role: m.role, name: o.name, slug: o.slug }];
+    });
+
+    return Promise.resolve(rows);
   }
   async archivedMembershipsOf(userId: string): Promise<Membership[]> {
     return this.members
