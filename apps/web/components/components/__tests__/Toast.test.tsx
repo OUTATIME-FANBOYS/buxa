@@ -25,9 +25,10 @@ describe('Toast', () => {
     expect(document.querySelector('[role="dialog"]')).toBeNull();
   });
 
-  it('closes on its close button', () => {
-    act(() => root.render(<Toast message="Deleted 1 session." />));
-    const close = document.querySelector<HTMLButtonElement>('button[aria-label="Close message"]');
+  it('has a labelled close button that removes the toast when clicked', () => {
+    act(() => root.render(<Toast message="Profile saved" />));
+    const close = document.querySelector<HTMLButtonElement>('button[aria-label="Dismiss notification"]');
+    expect(close).not.toBeNull();
     act(() => close?.click());
     expect(document.querySelector('[role="status"]')).toBeNull();
   });
