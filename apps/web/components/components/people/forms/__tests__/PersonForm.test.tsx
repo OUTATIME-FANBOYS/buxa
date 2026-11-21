@@ -32,10 +32,11 @@ describe('PersonForm (create): the static frame', () => {
     expect(html).not.toContain('Choose one.');
   });
 
-  it('shows no Household section and no Email field before a role is chosen', () => {
+  it('shows no Household section before a family role is chosen, and one Email field', () => {
     const html = renderToStaticMarkup(<PersonForm mode="create" household={null} households={[]} />);
     expect(html).not.toContain('>Household</legend>');
-    expect(html).not.toContain('name="email"');
+    expect(html.match(/name="email"/g)).toHaveLength(1);
+    expect(html).toContain('>Email</label>');
     expect(html).not.toContain('name="householdEmail"');
   });
 

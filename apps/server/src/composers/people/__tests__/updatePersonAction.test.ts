@@ -93,6 +93,14 @@ describe('updatePersonAction', () => {
     expect(h.revalidatePath).toHaveBeenCalledWith(personPath(IDS.person));
   });
 
+  it('rejects a role set that is not allowed with a field error on roles, and saves nothing', async () => {
+    const state = await updatePersonAction(idle, formOf({ ...details, roles: ['camper', 'instructor'] }));
+    expect(state.status).toBe('error');
+    const fieldErrors = state.status === 'error' ? state.fieldErrors : undefined;
+    expect(fieldErrors?.roles).toMatch(/can't go together/);
+    expect(h.people.update).not.toHaveBeenCalled();
+  });
+
   it('reports the contract messages for missing names and no role, and saves nothing', async () => {
     const state = await updatePersonAction(idle, formOf({ ...details, givenName: '', roles: [] }));
     expect(state).toMatchObject({

@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from 'react';
 import type { Person } from '@buxa/contracts';
 import { isPlausibleEmail } from '@buxa/contracts';
-import type { CampRole } from '@buxa/domain';
+import { isAllowedRoleSet, type CampRole } from '@buxa/domain';
 import { Button } from '@/components/elements';
 import { DatePicker, HiddenField, TextField } from '@/components/atoms';
 import { ROUTES, personPath } from '@/config/routes';
@@ -104,10 +104,12 @@ export function PersonForm(props: PersonFormProps) {
   const err = (name: string) => fieldError(state, name);
   const selectedRoles = [...roles];
   const hasFamilyRole = selectedRoles.some(isFamilyRole);
-  const hasStaffRole = selectedRoles.some(role => !isFamilyRole(role));
-  // The personal Email sits under the staff roles; a family role takes the Household email instead.
-  const showEmail = hasStaffRole;
   const showHousehold = hasFamilyRole;
+  // One email for the person. A family role names it Household email; the label is the only difference.
+  const emailLabel = hasFamilyRole ? 'Household email' : 'Email';
+  // Editing a saved set that is not allowed (legacy data) blocks the save until the roles are changed to an allowed set.
+  const roleSetInvalid = selectedRoles.length > 0 && !isAllowedRoleSet(selectedRoles);
+  const blockSave = isEdit && roleSetInvalid;
   // The invite is for a teacher only. It is enabled once the email beside it is a valid address.
   const inviteAvailable = roles.has(INVITE_ROLE);
   const inviteEnabled = isPlausibleEmail(email.trim());
@@ -123,6 +125,12 @@ export function PersonForm(props: PersonFormProps) {
       ref={formRef}
       id={formId}
       action={formAction}
+      // A pop-up's footer submits by formId, so the block is enforced here as well as on the in-page button.
+      onSubmit={event => {
+        if (blockSave) {
+          event.preventDefault();
+        }
+      }}
       className={`${inDialog ? '' : 'panel '}people-form person-form`}
     >
       {person && <HiddenField name="id" value={person.id} />}
@@ -182,35 +190,38 @@ export function PersonForm(props: PersonFormProps) {
         />
       </div>
 
-      <PersonRoles selected={roles} onToggle={toggleRole} error={err('roles')} />
+      <PersonRoles
+        selected={roles}
+        onToggle={toggleRole}
+        error={err('roles')}
+        notice={blockSave ? "This person's roles don't match the rules. Change them to save." : undefined}
+      />
 
-      {showEmail && (
-        <div className="buxa:flex buxa:flex-wrap buxa:items-end buxa:gap-2">
-          <div className="buxa:min-w-[14rem] buxa:flex-1">
-            <TextField
-              label="Email"
-              type="email"
-              name="email"
-              value={email}
-              onChange={setEmail}
-              error={err('email')}
-              autoComplete="off"
-              maxLength={254}
-            />
-          </div>
-          {inviteAvailable ? (
-            <PersonInvite
-              key={savedTeacher ? 'sent' : 'send'}
-              label={inviteLabel}
-              readDetails={() => personInviteDetails(formRef.current)}
-              autoSend={savedTeacher}
-              disabled={!inviteEnabled}
-            />
-          ) : (
-            <ComingSoonInvite label={inviteLabel} />
-          )}
+      <div className="buxa:flex buxa:flex-wrap buxa:items-end buxa:gap-2">
+        <div className="buxa:min-w-[14rem] buxa:flex-1">
+          <TextField
+            label={emailLabel}
+            type="email"
+            name="email"
+            value={email}
+            onChange={setEmail}
+            error={err('email')}
+            autoComplete="off"
+            maxLength={254}
+          />
         </div>
-      )}
+        {inviteAvailable ? (
+          <PersonInvite
+            key={savedTeacher ? 'sent' : 'send'}
+            label={inviteLabel}
+            readDetails={() => personInviteDetails(formRef.current)}
+            autoSend={savedTeacher}
+            disabled={!inviteEnabled}
+          />
+        ) : (
+          <ComingSoonInvite label={inviteLabel} />
+        )}
+      </div>
 
       {showHousehold && (
         <PersonHouseholdFields
@@ -229,7 +240,7 @@ export function PersonForm(props: PersonFormProps) {
         <div className="person-actions">
           <Button href={person ? personPath(person.id) : ROUTES.people}>Cancel</Button>
           {isEdit ? (
-            <Button variant="primary" icon="save" disabled={pending}>
+            <Button variant="primary" icon="save" disabled={pending || blockSave}>
               {pending ? 'Saving…' : 'Save changes'}
             </Button>
           ) : (

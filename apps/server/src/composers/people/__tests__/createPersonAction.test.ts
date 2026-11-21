@@ -41,6 +41,23 @@ describe('createPersonAction', () => {
     expect(h.people.create).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ['Camper and Instructor', ['camper', 'instructor']],
+    ['Admin staff and Instructor', ['admin_staff', 'instructor']],
+    ['Parent or guardian and Admin staff', ['guardian', 'admin_staff']],
+    ['Parent or guardian, Instructor and Organizer', ['guardian', 'instructor', 'organizer']],
+    ['Instructor and Organizer (two staff roles)', ['instructor', 'organizer']],
+  ])(
+    'rejects a role set that is not allowed (%s) with a field error on roles, and adds nothing',
+    async (_name, roles) => {
+      const state = await createPersonAction(idle, formOf({ ...adult, roles }));
+      expect(state.status).toBe('error');
+      const fieldErrors = state.status === 'error' ? state.fieldErrors : undefined;
+      expect(fieldErrors?.roles).toMatch(/can't go together/);
+      expect(h.people.create).not.toHaveBeenCalled();
+    },
+  );
+
   it('refuses a child with no household, and says what to do instead', async () => {
     const state = await createPersonAction(idle, formOf(camper));
     expect(state).toMatchObject({ status: 'error', fieldErrors: { householdId: CAMPER_NEEDS_HOUSEHOLD } });

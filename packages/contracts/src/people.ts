@@ -1,9 +1,13 @@
 /** People, households, memberships and badges: what the camp's screens and services exchange. */
 import { z } from 'zod';
-import { CAMP_ROLES, PEOPLE_PAGE_SIZE_MAX, isLocalDate, type PageSpan } from '@buxa/domain';
+import { CAMP_ROLES, PEOPLE_PAGE_SIZE_MAX, isAllowedRoleSet, isLocalDate, type PageSpan } from '@buxa/domain';
 import { OptionalEmailSchema, OptionalPhoneSchema, PatchEmailSchema, PatchPhoneSchema } from './contact';
 
 export const CampRoleSchema = z.enum(CAMP_ROLES);
+/** The roles a person holds together must be one of the allowed sets (see isAllowedRoleSet in @buxa/domain). */
+const RoleSetMessage = "Those roles can't go together. Pick one of the allowed combinations.";
+const AllowedRoleSet = (roles: z.ZodArray<typeof CampRoleSchema>) =>
+  roles.refine(isAllowedRoleSet, { message: RoleSetMessage });
 export const LocalDateSchema = z.string().refine(isLocalDate, 'Use a real date (YYYY-MM-DD).');
 export const AccessStatusSchema = z.enum(['valid', 'not_started', 'expired', 'revoked', 'none']);
 
@@ -84,7 +88,7 @@ export const NewPersonInputSchema = z.object({
   dateOfBirth: LocalDateSchema.optional(),
   email: OptionalEmailSchema,
   phone: OptionalPhoneSchema,
-  roles: z.array(CampRoleSchema).min(1, 'Pick a role.'),
+  roles: AllowedRoleSet(z.array(CampRoleSchema).min(1, 'Pick a role.')),
   /** Required when the person is a camper: a household that already has a guardian. */
   householdId: z.string().uuid().optional(),
   /** Or a new household with this name, created in the same transaction (it starts with no guardian, so only a guardian fits). */
@@ -101,7 +105,7 @@ export const PersonPatchInputSchema = z.object({
   dateOfBirth: LocalDateSchema.nullable().optional(),
   email: PatchEmailSchema.nullable().optional(),
   phone: PatchPhoneSchema.nullable().optional(),
-  roles: z.array(CampRoleSchema).min(1, 'Pick a role.').optional(),
+  roles: AllowedRoleSet(z.array(CampRoleSchema).min(1, 'Pick a role.')).optional(),
 });
 export type PersonPatchInput = z.infer<typeof PersonPatchInputSchema>;
 

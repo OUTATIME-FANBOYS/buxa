@@ -55,18 +55,20 @@ describe('PersonForm (edit): the Edit person pop-up and page', () => {
     expect(html.match(/name="roles"/g)).toHaveLength(CAMP_ROLES.length);
   });
 
-  it('shows Household email and no Email for a family role', () => {
+  it('shows one Household email field for a family role, with the Household section', () => {
     const html = inUi(
       <PersonForm mode="edit" households={[]} person={{ ...person, roles: ['camper'] }} variant="dialog" />,
     );
     expect(html).toContain('>Household</legend>');
-    expect(html).toContain('name="householdEmail"');
-    expect(html).not.toContain('name="email"');
+    expect(html).toContain('>Household email</label>');
+    expect(html.match(/name="email"/g)).toHaveLength(1);
+    expect(html).not.toContain('name="householdEmail"');
   });
 
-  it('shows Email and no Household for a staff or participant role', () => {
+  it('shows one Email field and no Household for a staff or participant role', () => {
     const html = inUi(<PersonForm mode="edit" households={[]} person={person} variant="dialog" />);
-    expect(html).toContain('name="email"');
+    expect(html.match(/name="email"/g)).toHaveLength(1);
+    expect(html).toContain('>Email</label>');
     expect(html).not.toContain('>Household</legend>');
   });
 
@@ -84,13 +86,15 @@ describe('PersonForm (edit): the Edit person pop-up and page', () => {
 
   it('Resend invite waits for a valid email: disabled when the email is empty, enabled when it is valid', () => {
     const teacher = { ...person, roles: ['instructor' as const] };
+    const inviteButton = (html: string) =>
+      /<button[^>]*>(?:(?!<\/button>)[\s\S])*?Resend invite<\/button>/.exec(html)?.[0] ?? '';
     const empty = inUi(
       <PersonForm mode="edit" households={[]} person={{ ...teacher, email: null }} variant="dialog" />,
     );
-    expect(empty).toMatch(/disabled=""[^>]*>(?:<svg[\s\S]*?<\/svg>)?Resend invite<\/button>/);
+    expect(inviteButton(empty)).toContain('disabled=""');
     const valid = inUi(<PersonForm mode="edit" households={[]} person={teacher} variant="dialog" />);
-    expect(valid).not.toContain('disabled=""');
-    expect(valid).toContain('Resend invite');
+    expect(inviteButton(valid)).not.toContain('disabled=""');
+    expect(inviteButton(valid)).toContain('Resend invite');
   });
 
   it('on its own page it keeps the panel, Save changes and Cancel back to the person', () => {

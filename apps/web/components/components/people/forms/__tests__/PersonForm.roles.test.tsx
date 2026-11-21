@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { CAMP_ROLES, settle, type CampRole } from '@buxa/domain';
-import { ADD_PERSON_INTRO, idle, type HouseholdChoice } from '@buxa/shared';
+import { idle, type HouseholdChoice } from '@buxa/shared';
 import { PersonForm, type EditablePerson } from '@/components/components/people/forms';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { Dialog as ConfirmDialog } from '@/components/components';
@@ -63,20 +63,20 @@ describe('PersonForm: roles are checkboxes in both modes', () => {
     expect(host.textContent).not.toContain('Choose one.');
   });
 
-  it('adding: several roles can be chosen at once, and a checked role clears when clicked again', () => {
+  it('adding: a family role and one allowed extra can be chosen, and a checked role clears when clicked again', () => {
     renderAdd();
     click('camper');
-    click('instructor');
-    expect(h.checkedRoles()).toEqual(['camper', 'instructor']);
+    click('participant');
+    expect(h.checkedRoles()).toEqual(['camper', 'participant']);
     click('camper');
-    expect(h.checkedRoles()).toEqual(['instructor']);
+    expect(h.checkedRoles()).toEqual(['participant']);
   });
 
   it('editing: every role the person has is checked, and another can be added', () => {
-    renderEdit({ ...PERSON, roles: ['guardian', 'instructor'] });
+    renderEdit({ ...PERSON, roles: ['guardian'] });
+    expect(h.checkedRoles()).toEqual(['guardian']);
+    click('instructor');
     expect(h.checkedRoles()).toEqual(['guardian', 'instructor']);
-    click('organizer');
-    expect(h.checkedRoles()).toEqual(['guardian', 'instructor', 'organizer']);
   });
 
   it('the Family and Staff and participants groups are kept in both modes', () => {
@@ -87,7 +87,7 @@ describe('PersonForm: roles are checkboxes in both modes', () => {
   });
 });
 
-describe('PersonForm: which email fields show depends on the roles', () => {
+describe('PersonForm: one email field, and the roles that cannot be combined', () => {
   let root: Root;
   let host: HTMLDivElement;
   beforeEach(() => {
@@ -117,76 +117,106 @@ describe('PersonForm: which email fields show depends on the roles', () => {
     });
   const h = formHelpers(() => host);
   const click = (value: CampRole) => act(() => h.role(value)?.click());
+  const emailFields = () => host.querySelectorAll<HTMLInputElement>('input[name="email"]');
+  const disabledRoles = () =>
+    Array.from(host.querySelectorAll<HTMLInputElement>('input[name="roles"]'))
+      .filter(input => input.disabled)
+      .map(input => input.value);
+  const inviteButton = () =>
+    Array.from(host.querySelectorAll('button')).find(button => button.textContent?.includes('invite'));
 
-  it('nothing selected: neither Email nor Household', () => {
+  it('nothing selected: one Email field, no Household', () => {
     renderAdd();
-    expect(h.input('email')).toBeNull();
+    expect(emailFields()).toHaveLength(1);
+    expect(h.label('Email')).toBeDefined();
     expect(h.input('householdEmail')).toBeNull();
     expect(h.legend('Household')).toBeUndefined();
   });
 
-  it('a family role only (Camper): Household email, Household, and no Email', () => {
+  it('a family role: one field labelled Household email, with the Household section', () => {
     renderAdd();
     click('camper');
-    expect(h.legend('Household')).toBeDefined();
-    expect(host.textContent).toContain(ADD_PERSON_INTRO);
-    expect(h.select('householdId')).not.toBeNull();
-    expect(h.input('newHouseholdName')).not.toBeNull();
-    expect(h.input('householdEmail')).not.toBeNull();
+    expect(emailFields()).toHaveLength(1);
     expect(h.label('Household email')).toBeDefined();
-    expect(h.input('email')).toBeNull();
-    expect(host.textContent).not.toContain('Kept with the household.');
+    expect(h.legend('Household')).toBeDefined();
+    expect(h.input('householdEmail')).toBeNull();
   });
 
-  it('a parent or guardian: Household email and no Email, and no relationship', () => {
-    renderAdd();
-    click('guardian');
-    expect(h.input('householdEmail')).not.toBeNull();
-    expect(h.input('email')).toBeNull();
-    expect(h.input('relationship')).toBeNull();
-  });
-
-  it('a staff or participant role only: Email and no Household', () => {
+  it('a staff or participant role: one field labelled Email, and no Household', () => {
     renderAdd();
     click('participant');
-    expect(h.input('email')).not.toBeNull();
+    expect(emailFields()).toHaveLength(1);
     expect(h.label('Email')).toBeDefined();
+    expect(h.label('Household email')).toBeUndefined();
     expect(h.legend('Household')).toBeUndefined();
-    expect(h.input('householdEmail')).toBeNull();
   });
 
-  it('a family role and a staff role: Household email and Email, each with its own label', () => {
+  it('a family role and a staff role: still one field, labelled Household email', () => {
     renderAdd();
     click('guardian');
     click('instructor');
-    expect(h.input('householdEmail')).not.toBeNull();
-    expect(h.input('email')).not.toBeNull();
+    expect(emailFields()).toHaveLength(1);
     expect(h.label('Household email')).toBeDefined();
+  });
+
+  it('the label switches back to Email when the family role is unticked', () => {
+    renderAdd();
+    click('camper');
+    click('camper');
+    expect(h.label('Household email')).toBeUndefined();
     expect(h.label('Email')).toBeDefined();
   });
 
-  it('a family role is dropped: the Household email goes and the Email comes back for a staff role', () => {
+  it('the Household email label still stores the same person email field', () => {
+    renderEdit({ ...PERSON, roles: ['camper'], email: 'kid@example.com' });
+    expect(emailFields()).toHaveLength(1);
+    expect(emailFields()[0]?.value).toBe('kid@example.com');
+  });
+
+  it('the invite button is disabled with an empty email for an instructor', () => {
     renderAdd();
-    click('camper');
     click('instructor');
-    click('camper');
-    expect(h.input('householdEmail')).toBeNull();
-    expect(h.input('email')).not.toBeNull();
+    expect(inviteButton()?.disabled).toBe(true);
   });
 
-  it('editing a camper: Household email, no Email', () => {
-    renderEdit({ ...PERSON, roles: ['camper'] });
-    expect(h.input('householdEmail')).not.toBeNull();
-    expect(h.input('email')).toBeNull();
-    expect(h.legend('Household')).toBeDefined();
+  it('for another role the invite button shows the coming-soon note and is disabled', () => {
+    renderAdd();
+    click('organizer');
+    expect(inviteButton()?.disabled).toBe(true);
+    expect(host.textContent).toContain('Invites for this role are coming soon.');
   });
 
-  it('editing a participant: Email, no Household; a role change shows the Household', () => {
-    renderEdit({ ...PERSON, roles: ['participant'] });
-    expect(h.input('email')).not.toBeNull();
-    expect(h.legend('Household')).toBeUndefined();
+  it('after one staff role is ticked, the other staff roles are disabled, with the reason shown', () => {
+    renderAdd();
+    click('instructor');
+    // Guardian + Instructor is an allowed set, so Parent or guardian stays open.
+    expect(disabledRoles().sort()).toEqual(['admin_staff', 'camper', 'organizer', 'participant']);
+    expect(host.textContent).toContain("Some roles can't be combined.");
+    expect(h.role('instructor')?.disabled).toBe(false);
+  });
+
+  it('Parent or guardian + Instructor: Organizer, Camper and Admin staff are disabled (no three-role set)', () => {
+    renderAdd();
     click('guardian');
-    expect(h.legend('Household')).toBeDefined();
-    expect(h.input('householdEmail')).not.toBeNull();
+    click('instructor');
+    expect(h.role('organizer')?.disabled).toBe(true);
+    expect(h.role('camper')?.disabled).toBe(true);
+    expect(h.role('admin_staff')?.disabled).toBe(true);
+  });
+
+  it('a saved set that is not allowed (legacy) shows the notice and blocks the save until it is fixed', () => {
+    renderEdit({ ...PERSON, roles: ['instructor', 'organizer'] });
+    expect(host.textContent).toContain("This person's roles don't match the rules. Change them to save.");
+    const form = host.querySelector('form');
+    const submit = new Event('submit', { cancelable: true, bubbles: true });
+    act(() => {
+      form?.dispatchEvent(submit);
+    });
+    expect(submit.defaultPrevented).toBe(true);
+    // Nothing is disabled while the set is not allowed, so the person can untick one to fix it.
+    expect(disabledRoles()).toEqual([]);
+    click('organizer');
+    expect(host.textContent).not.toContain("This person's roles don't match the rules.");
+    expect(h.checkedRoles()).toEqual(['instructor']);
   });
 });

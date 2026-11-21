@@ -1,6 +1,5 @@
 import { HiddenField, Select, TextField } from '@/components/atoms';
 import { ADD_PERSON_INTRO, householdChoiceLabel, type HouseholdChoice } from '@buxa/shared';
-import { ComingSoonInvite } from './PersonInvite';
 
 /** A household the person is joining that the form already knows (from a guardian's page). */
 export interface HouseholdTarget {
@@ -71,20 +70,6 @@ export function PersonHouseholdFields({
           maxLength={40}
         />
       )}
-      {/* The household record carries no email yet, so Edit has nothing to pre-fill here. */}
-      <div className="buxa:flex buxa:flex-wrap buxa:items-end buxa:gap-2">
-        <div className="buxa:min-w-[14rem] buxa:flex-1">
-          <TextField
-            label="Household email"
-            type="email"
-            name="householdEmail"
-            error={err('householdEmail')}
-            autoComplete="off"
-            maxLength={254}
-          />
-        </div>
-        <ComingSoonInvite label="Send invite" />
-      </div>
       {household && err('householdId') && (
         <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
           {err('householdId')}
