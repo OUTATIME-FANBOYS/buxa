@@ -185,17 +185,17 @@ describe('the camp settings page', () => {
     expect(document.querySelector('.danger-zone')).toBeNull();
   });
 
-  it('renames the camp from settings, through the camp name card', async () => {
+  it('renames the camp inline from the camp name card: the current name in a field, an Update button, no dialog', async () => {
     render({ camp: OWNER_CAMP });
-    act(() => tile('Camp name').querySelector<HTMLButtonElement>('button')?.click());
-    const dialog = document.querySelector('[role="dialog"]');
-    expect(dialog?.getAttribute('aria-label')).toBe('Rename camp');
-    const input = dialog?.querySelector<HTMLInputElement>('input[name="name"]');
-    expect(input?.value).toBe('Camp Birchwood');
-    act(() => typeInto(must(input, 'the camp name field'), 'Camp Cedar'));
+    const card = tile('Camp name');
+    const input = must(card.querySelector<HTMLInputElement>('input[name="name"]'), 'the camp name field');
+    expect(input.value).toBe('Camp Birchwood');
+    expect(card.querySelector('button')?.textContent).toBe('Update');
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
 
+    act(() => typeInto(input, 'Camp Cedar'));
     act(() => {
-      document.querySelector<HTMLFormElement>('form#rename-camp')?.requestSubmit();
+      must(card.querySelector<HTMLFormElement>('form'), 'the camp name form').requestSubmit();
     });
     await act(() => Promise.resolve());
     expect(camp.rename).toHaveBeenCalledTimes(1);

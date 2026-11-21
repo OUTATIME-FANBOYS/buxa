@@ -6,8 +6,6 @@ export * from './ManageAccessTable';
 export * from './MembersTable';
 export * from './NewCampForm';
 export * from './PermissionAreasTable';
-export * from './RenameCampButton';
-export * from './RenameCampDialog';
 export * from './Shell';
 export * from './ShellFrame';
 export * from './Sidebar';

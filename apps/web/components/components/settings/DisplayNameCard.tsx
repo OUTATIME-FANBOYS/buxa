@@ -5,17 +5,7 @@ import { TextField } from '@/components/atoms';
 import { Button } from '@/components/elements';
 import { updateProfileAction } from '@/actions/account';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
-import { SETTINGS_TILE_HEADING } from './styles';
-
-// The name inputs share a row with the Update button. The inputs take the free width; on a phone (under 600px) they stack
-// first name, last name, then the button under them on the same left edge.
-const NAME_FORM =
-  'buxa:flex buxa:items-end buxa:gap-[var(--s3)] buxa:min-w-0 buxa:max-[599px]:flex-col buxa:max-[599px]:items-stretch';
-const NAME_FIELDS =
-  'buxa:flex-[1_1_0] buxa:min-w-0 buxa:grid buxa:grid-cols-[repeat(2,minmax(0,1fr))] buxa:gap-[var(--s3)] buxa:max-[599px]:grid-cols-[minmax(0,1fr)]';
-const NAME_FIELD = 'buxa:flex buxa:flex-col buxa:gap-[var(--s2)] buxa:min-w-0';
-// The Update button is as tall as the inputs, so it sits level with them on their bottom edge.
-const NAME_BUTTON = 'buxa:flex-none buxa:h-[var(--control-h)]! buxa:whitespace-nowrap buxa:max-[599px]:self-start';
+import { NAME_BUTTON, NAME_FIELD, NAME_FIELDS, NAME_FORM, SETTINGS_TILE_HEADING } from './styles';
 
 /** The name the person saved, as the server returns it. */
 export interface SavedName {

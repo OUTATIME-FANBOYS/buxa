@@ -60,7 +60,7 @@ export function ArchivedCampsCard({ camps }: { camps: readonly ArchivedCamp[] })
               </span>
               {camp.role === 'owner' && (
                 <div className="buxa:flex buxa:flex-wrap buxa:gap-[var(--s2)]">
-                  <Button variant="glass" icon="archive-restore" disabled={busy} onClick={() => setUnarchiving(camp)}>
+                  <Button variant="glass" disabled={busy} onClick={() => setUnarchiving(camp)}>
                     Unarchive camp
                   </Button>
                   <DeleteCampButton campId={camp.id} campName={camp.name} onDeleted={() => router.refresh()} />

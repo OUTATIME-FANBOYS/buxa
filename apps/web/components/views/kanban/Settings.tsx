@@ -7,8 +7,13 @@ import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { ROUTES } from '@/config/routes';
 import { AgentDialog } from '@/components/components/kanban/dialogs';
 import { ResetDemoButton } from '@/components/components/kanban';
-import { SETTINGS_GRID, SETTINGS_TILE_HEADING, SETTINGS_TILE_TEXT } from '@/components/components/settings';
-import { ArchivedCampsCard, CalendarLinkCard, DangerZone, RenameCampButton } from '@/components/components/camp';
+import {
+  CampNameCard,
+  SETTINGS_GRID,
+  SETTINGS_TILE_HEADING,
+  SETTINGS_TILE_TEXT,
+} from '@/components/components/settings';
+import { ArchivedCampsCard, CalendarLinkCard, DangerZone } from '@/components/components/camp';
 import type { ArchivedCamp } from '@/actions/camp';
 
 /**
@@ -70,15 +75,7 @@ export function Settings({
         </Button>
       </header>
       <div className={`settings-grid ${SETTINGS_GRID}`}>
-        {camp?.canRename && !camp.archived && (
-          <section className="panel settings-tile">
-            <h2 className={SETTINGS_TILE_HEADING}>Camp name</h2>
-            <p className={`muted ${SETTINGS_TILE_TEXT}`}>{camp.name}</p>
-            <div className="row">
-              <RenameCampButton campId={camp.id} currentName={camp.name} />
-            </div>
-          </section>
-        )}
+        {camp?.canRename && !camp.archived && <CampNameCard campId={camp.id} currentName={camp.name} />}
         <section className="panel settings-tile">
           <h2 className={SETTINGS_TILE_HEADING}>Agents</h2>
           <p className={`muted ${SETTINGS_TILE_TEXT}`}>
