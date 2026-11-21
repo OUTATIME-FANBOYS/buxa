@@ -164,6 +164,8 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0036_org_update_admin_owner.sql',
       '0037_notifications.sql',
       '0038_member_invites.sql',
+      '0039_member_role_change.sql',
+      '0040_delete_person.sql',
     ]);
   });
 
