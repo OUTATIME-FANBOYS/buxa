@@ -4,13 +4,16 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dialog } from '@/components/components';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
-import { unarchiveCamp, type ArchivedCamp, type CampActionResult } from '@/actions/camp';
+import { selectCampAction, unarchiveCamp, type ArchivedCamp, type CampActionResult } from '@/actions/camp';
 import { Button } from '@/components/elements';
+import { ROUTES } from '@/config/routes';
 import { DeleteCampButton } from './DeleteCampButton';
+import { readRecent, writeRecent } from './CampSwitcher';
 
 /**
- * The person's archived camps. Anyone in one can see its name and archive date. The owner of an archived camp also sees
- * Unarchive (asks once) and Delete camp (the same two-step confirmation as the danger zone). After either, the lists refresh.
+ * The person's archived camps, as a table in the same style as the sessions table: the camp name, the date it was archived,
+ * and the owner's actions on the right. The name opens the camp, the same as choosing it in the camp switcher. Unarchive asks
+ * once; Delete camp uses the two-step confirmation the danger zone uses. With no archived camps the card does not render.
  */
 export function ArchivedCampsCard({ camps }: { camps: readonly ArchivedCamp[] }) {
   const router = useRouter();
@@ -25,6 +28,13 @@ export function ArchivedCampsCard({ camps }: { camps: readonly ArchivedCamp[] })
     }
     setUnarchiving(null);
     setError(null);
+  };
+
+  const open = async (camp: ArchivedCamp) => {
+    writeRecent(camp.id, readRecent());
+    await selectCampAction(camp.id);
+    router.push(ROUTES.camp);
+    router.refresh();
   };
 
   const unarchive = async (camp: ArchivedCamp) => {
@@ -42,34 +52,49 @@ export function ArchivedCampsCard({ camps }: { camps: readonly ArchivedCamp[] })
     router.refresh();
   };
 
+  if (camps.length === 0) {
+    return null;
+  }
+
   return (
     <section className="panel" id="archived-camps">
       <h2>Archived camps</h2>
-      {camps.length === 0 ? (
-        <p className="muted">No archived camps.</p>
-      ) : (
-        // One row per camp: name and date on the left, the owner's buttons on the right of the same line.
-        <ul className="archived-list buxa:grid buxa:gap-[var(--s2)]">
-          {camps.map(camp => (
-            <li
-              key={camp.id}
-              className="buxa:flex buxa:flex-wrap buxa:items-center buxa:justify-between buxa:gap-[var(--s2)]"
-            >
-              <span>
-                <span>{camp.name}</span> <span className="muted">Archived {formatDate(camp.archivedAt)}</span>
-              </span>
-              {camp.role === 'owner' && (
-                <div className="buxa:flex buxa:flex-wrap buxa:gap-[var(--s2)]">
-                  <Button variant="glass" disabled={busy} onClick={() => setUnarchiving(camp)}>
-                    Unarchive camp
-                  </Button>
-                  <DeleteCampButton campId={camp.id} campName={camp.name} onDeleted={() => router.refresh()} />
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+      <div className="table-wrap">
+        <table className="table">
+          <caption className="sr-only">Archived camps</caption>
+          <thead>
+            <tr>
+              <th scope="col">Camp</th>
+              <th scope="col">Archived</th>
+              <th scope="col">
+                <span className="sr-only">Actions</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {camps.map(camp => (
+              <tr key={camp.id}>
+                <td>
+                  <button type="button" className="row-title classes-target" onClick={() => void open(camp)}>
+                    {camp.name}
+                  </button>
+                </td>
+                <td>{formatDate(camp.archivedAt)}</td>
+                <td>
+                  {camp.role === 'owner' && (
+                    <div className="classes-row-actions">
+                      <Button variant="glass" disabled={busy} onClick={() => setUnarchiving(camp)}>
+                        Unarchive camp
+                      </Button>
+                      <DeleteCampButton campId={camp.id} campName={camp.name} onDeleted={() => router.refresh()} />
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {unarchiving && (
         <Dialog
@@ -80,12 +105,7 @@ export function ArchivedCampsCard({ camps }: { camps: readonly ArchivedCamp[] })
               <Button variant="glass" type="button" disabled={busy} onClick={close}>
                 Cancel
               </Button>
-              <Button
-                variant="glass"
-                icon="archive-restore"
-                disabled={busy}
-                onClick={() => void unarchive(unarchiving)}
-              >
+              <Button variant="glass" disabled={busy} onClick={() => void unarchive(unarchiving)}>
                 {busy ? 'Unarchiving…' : 'Unarchive camp'}
               </Button>
             </>

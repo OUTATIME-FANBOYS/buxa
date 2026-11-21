@@ -14,7 +14,7 @@ const RECENT_KEY = 'buxa.recentCamps';
 const RECENT_LIMIT = 8;
 
 /** The camp ids last opened, most recent first. A single id from the older key is read as a list of one. */
-function readRecent(): string[] {
+export function readRecent(): string[] {
   try {
     const raw = localStorage.getItem(RECENT_KEY);
     if (!raw) return [];
@@ -28,7 +28,7 @@ function readRecent(): string[] {
   }
 }
 
-function writeRecent(orgId: string, previous: readonly string[]) {
+export function writeRecent(orgId: string, previous: readonly string[]) {
   try {
     const next = [orgId, ...previous.filter(id => id !== orgId)].slice(0, RECENT_LIMIT);
     localStorage.setItem(RECENT_KEY, JSON.stringify(next));

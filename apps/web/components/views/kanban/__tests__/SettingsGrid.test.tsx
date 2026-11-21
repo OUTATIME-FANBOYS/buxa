@@ -37,7 +37,7 @@ vi.mock('next/navigation', () => ({
 
 const seed = buildSeed();
 /** The camp cards, in order. The person's own cards (name, email, time format, appearance) are on the profile page. */
-const TILES = ['Agents', 'Your data', 'Keyboard shortcuts', 'Archived camps'];
+const TILES = ['Agents', 'Your data', 'Keyboard shortcuts'];
 const OWNER_CAMP = {
   id: 'o-1',
   name: 'Camp Birchwood',
@@ -210,9 +210,10 @@ describe('the camp settings page', () => {
     });
     const card = document.querySelector('#archived-camps');
     expect(card?.querySelector('h2')?.textContent).toBe('Archived camps');
-    expect(card?.querySelector('.archived-list')?.textContent).toContain('Camp Cedar');
-    expect(card?.querySelector('.archived-list')?.textContent).toContain('Archived Oct 2, 2026');
-    expect(card?.querySelectorAll('button').length).toBe(0);
+    expect(card?.querySelector('tbody')?.textContent).toContain('Camp Cedar');
+    expect(card?.querySelector('tbody')?.textContent).toContain('Oct 2, 2026');
+    expect(card?.querySelector('tbody .row-title')?.textContent).toBe('Camp Cedar');
+    expect(card?.querySelectorAll('button').length).toBe(1);
   });
 
   it('gives an owner of an archived camp Unarchive and Delete camp, and no one else those buttons', () => {
@@ -222,8 +223,11 @@ describe('the camp settings page', () => {
         { id: 'o-8', name: 'Camp Birch', archivedAt: '2026-10-03T09:00:00.000Z', role: 'staff' },
       ],
     });
-    const rows = Array.from(document.querySelectorAll('#archived-camps .archived-list li'));
-    const labels = (row: Element) => Array.from(row.querySelectorAll('button')).map(b => b.textContent?.trim());
+    const rows = Array.from(document.querySelectorAll('#archived-camps tbody tr'));
+    const labels = (row: Element) =>
+      Array.from(row.querySelectorAll('button'))
+        .map(b => b.textContent?.trim())
+        .filter(text => text !== 'Camp Cedar' && text !== 'Camp Birch');
 
     expect(labels(rows[0])).toEqual(['Unarchive camp', 'Delete camp']);
     expect(labels(rows[1])).toEqual([]);
