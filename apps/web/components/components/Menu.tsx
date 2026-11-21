@@ -20,6 +20,16 @@ export interface MenuItem {
   disabled?: boolean;
   checked?: boolean;
   submenu?: MenuItem[];
+  /** Small icon buttons on the right of the row. Each one acts on its own and never chooses the row. */
+  actions?: MenuAction[];
+}
+
+/** A round icon button beside a row. `danger` uses the destructive glass style. */
+export interface MenuAction {
+  label: string;
+  icon: string;
+  onSelect: () => void;
+  danger?: boolean;
 }
 
 const isItem = (x: MenuItem | false | null): x is MenuItem => !!x;
@@ -121,6 +131,7 @@ export function Menu({
   className,
   header,
   search,
+  footer = [],
 }: {
   label: string;
   trigger: ReactNode;
@@ -131,10 +142,12 @@ export function Menu({
   /** A line of text above the items. It is not a menu item and cannot be chosen. */
   header?: string;
   /**
-   * A search field above the items. The caller filters `items` by `value`; the field stays put while the items scroll. Its
-   * value is cleared when the menu closes.
+   * A search field above the items. The caller filters `items` by `value`. With a search, `items` scroll inside a capped
+   * height while the search field and `footer` stay put. Its value is cleared when the menu closes.
    */
   search?: { label: string; placeholder: string; value: string; onChange: (value: string) => void };
+  /** Rows that stay fixed under the scrolling `items`, such as "New camp…". Only shown beside the scrolling list (`search`). */
+  footer?: (MenuItem | false | null)[];
 }) {
   const [open, setOpen] = useState(false);
   const btn = useRef<HTMLElement>(null);
@@ -147,6 +160,7 @@ export function Menu({
     search?.onChange('');
   }, [search]);
   const list = items.filter(isItem);
+  const fixed = footer.filter(isItem);
   const onKey = (e: KeyboardEvent) => {
     const els = Array.from(
       e.currentTarget.querySelectorAll<HTMLElement>(
@@ -178,6 +192,92 @@ export function Menu({
     }
   };
 
+  // One row: a divider, a nested group, a link, or a button, with optional icon buttons on its right.
+  const renderRow = (it: MenuItem, i: number) => {
+    if (it.divider) {
+      return <hr key={i} className="buxa:[margin:var(--s1)_0] buxa:border-0 buxa:border-t buxa:border-[var(--line)]" />;
+    }
+    if (it.submenu) {
+      return (
+        <SubMenu
+          key={i}
+          item={{ ...it, submenu: it.submenu }}
+          onChosen={() => {
+            close();
+            btn.current?.focus();
+          }}
+        />
+      );
+    }
+    const content = (
+      <>
+        {it.icon && <Icon name={it.icon} size={15} />}
+        <span>{it.label}</span>
+        {it.checked && <Icon name="check" size={14} className={`menu-check ${CHECK}`} />}
+      </>
+    );
+    if (it.href) {
+      return (
+        <Link
+          key={i}
+          role="menuitem"
+          href={it.href}
+          className={`${it.danger ? 'danger' : ''} ${ROW}`}
+          onClick={() => {
+            close();
+            it.onSelect?.();
+          }}
+        >
+          {content}
+        </Link>
+      );
+    }
+    const choose = (
+      <Button
+        key={it.actions?.length ? undefined : i}
+        variant="ghost"
+        role="menuitem"
+        type="button"
+        disabled={it.disabled}
+        className={`${it.danger ? 'danger buxa:text-[var(--crit)]!' : ''} ${ROW}${it.actions?.length ? ' buxa:flex-1 buxa:min-w-0' : ''}`}
+        onClick={() => {
+          close();
+          btn.current?.focus();
+          it.onSelect?.();
+        }}
+      >
+        {content}
+      </Button>
+    );
+    if (!it.actions?.length) {
+      return choose;
+    }
+
+    // The row name chooses the item; each icon button acts on the row and leaves the choice alone.
+    return (
+      <div key={i} className="buxa:flex buxa:items-center buxa:gap-[var(--s1)]">
+        {choose}
+        {it.actions.map(action => (
+          <Button
+            key={action.label}
+            type="button"
+            size="sm"
+            iconOnly
+            variant={action.danger ? 'glass-danger' : 'glass'}
+            icon={action.icon}
+            aria-label={action.label}
+            title={action.label}
+            onPress={e => {
+              e.stopPropagation();
+              close();
+              action.onSelect();
+            }}
+          />
+        ))}
+      </div>
+    );
+  };
+
   return (
     <>
       {/* onPress stops the press from reaching a card or row the menu sits in, as the old stopPropagation did. */}
@@ -201,16 +301,14 @@ export function Menu({
       {open && (
         <Popover anchor={btn.current} onClose={close} align={align} label={label} className="menu">
           <div
-            className={
-              search ? 'buxa:grid buxa:max-h-[calc(min(70vh,480px)_-_2*var(--s1))] buxa:overflow-y-auto' : 'buxa:grid'
-            }
+            className="buxa:grid"
             role="menu"
             aria-label={label}
             onKeyDown={onKey}
             onClick={e => e.stopPropagation()}
           >
             {search && (
-              <div className="buxa:sticky buxa:top-0 buxa:z-[1] buxa:bg-[var(--material)] buxa:px-[var(--s1)] buxa:pt-[var(--s1)] buxa:pb-[var(--s2)]">
+              <div className="buxa:px-[var(--s1)] buxa:pt-[var(--s1)] buxa:pb-[var(--s2)]">
                 <input
                   type="search"
                   aria-label={search.label}
@@ -231,69 +329,12 @@ export function Menu({
                 {header}
               </p>
             )}
-            {list.map((it, i) => {
-              if (it.divider) {
-                return (
-                  <hr
-                    key={i}
-                    className="buxa:[margin:var(--s1)_0] buxa:border-0 buxa:border-t buxa:border-[var(--line)]"
-                  />
-                );
-              }
-              if (it.submenu) {
-                return (
-                  <SubMenu
-                    key={i}
-                    item={{ ...it, submenu: it.submenu }}
-                    onChosen={() => {
-                      close();
-                      btn.current?.focus();
-                    }}
-                  />
-                );
-              }
-              const content = (
-                <>
-                  {it.icon && <Icon name={it.icon} size={15} />}
-                  <span>{it.label}</span>
-                  {it.checked && <Icon name="check" size={14} className={`menu-check ${CHECK}`} />}
-                </>
-              );
-              if (it.href) {
-                return (
-                  <Link
-                    key={i}
-                    role="menuitem"
-                    href={it.href}
-                    className={`${it.danger ? 'danger' : ''} ${ROW}`}
-                    onClick={() => {
-                      close();
-                      it.onSelect?.();
-                    }}
-                  >
-                    {content}
-                  </Link>
-                );
-              }
-
-              return (
-                <Button
-                  key={i}
-                  variant="ghost"
-                  role="menuitem"
-                  type="button"
-                  disabled={it.disabled}
-                  className={`${it.danger ? 'danger buxa:text-[var(--crit)]!' : ''} ${ROW}`}
-                  onClick={() => {
-                    close();
-                    btn.current?.focus();
-                    it.onSelect?.();
-                  }}
-                >
-                  {content}
-                </Button>
-              );
-            })}
+            {search ? (
+              <div className="buxa:grid buxa:max-h-[min(50vh,360px)] buxa:overflow-y-auto">{list.map(renderRow)}</div>
+            ) : (
+              list.map(renderRow)
+            )}
+            {fixed.map((it, i) => renderRow(it, list.length + i))}
           </div>
         </Popover>
       )}

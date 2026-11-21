@@ -48,13 +48,18 @@ export function ArchivedCampsCard({ camps }: { camps: readonly ArchivedCamp[] })
       {camps.length === 0 ? (
         <p className="muted">No archived camps.</p>
       ) : (
-        // A plain read-only list, name and date on one line.
+        // One row per camp: name and date on the left, the owner's buttons on the right of the same line.
         <ul className="archived-list buxa:grid buxa:gap-[var(--s2)]">
           {camps.map(camp => (
-            <li key={camp.id}>
-              <span>{camp.name}</span> <span className="muted">Archived {formatDate(camp.archivedAt)}</span>
+            <li
+              key={camp.id}
+              className="buxa:flex buxa:flex-wrap buxa:items-center buxa:justify-between buxa:gap-[var(--s2)]"
+            >
+              <span>
+                <span>{camp.name}</span> <span className="muted">Archived {formatDate(camp.archivedAt)}</span>
+              </span>
               {camp.role === 'owner' && (
-                <div className="row">
+                <div className="buxa:flex buxa:flex-wrap buxa:gap-[var(--s2)]">
                   <Button variant="glass" icon="archive-restore" disabled={busy} onClick={() => setUnarchiving(camp)}>
                     Unarchive camp
                   </Button>

@@ -55,6 +55,16 @@ describe('CampSwitcher with archived camps', () => {
     expect(row?.className).toContain('pl-[5px]!');
   });
 
+  it('scrolls the camps between a fixed search field and a fixed "New camp…" row', () => {
+    act(() => root.render(<CampSwitcher camps={[live]} current={live} archivedCamps={[]} />));
+    open();
+    const scroller = document.querySelector('[role="menu"] [class*="overflow-y-auto"]');
+    expect(scroller?.className).toContain('max-h-');
+    expect(scroller?.contains(item('Camp Birchwood') ?? null)).toBe(true);
+    expect(scroller?.contains(item('New camp…') ?? null)).toBe(false);
+    expect(scroller?.contains(document.querySelector('input[type="search"]'))).toBe(false);
+  });
+
   it('"Show archived" opens the archived list, which selects a camp the same way as a live camp', async () => {
     act(() => root.render(<CampSwitcher camps={[live]} current={live} archivedCamps={[CEDAR]} />));
     open();

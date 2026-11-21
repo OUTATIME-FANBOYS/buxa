@@ -81,6 +81,18 @@ describe('the archived camps list', () => {
     expect(rows[1].textContent).toContain('Camp Birch');
   });
 
+  it('keeps each archived camp on one row: name and date first, the buttons after them on the right', () => {
+    render([OWNED]);
+    const row = document.querySelector<HTMLElement>('.archived-list li');
+
+    expect(row?.className).toContain('buxa:flex');
+    expect(row?.firstElementChild?.textContent).toContain('Camp Cedar');
+    expect(row?.firstElementChild?.textContent).toContain('Archived');
+    expect(row?.lastElementChild?.querySelectorAll('button')).toHaveLength(2);
+    expect(row?.lastElementChild?.textContent).toContain('Unarchive camp');
+    expect(row?.lastElementChild?.textContent).toContain('Delete camp');
+  });
+
   it('gives the Unarchive and Delete buttons their icons', () => {
     render([OWNED]);
 
