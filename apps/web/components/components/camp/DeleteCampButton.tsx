@@ -24,7 +24,7 @@ export function DeleteCampButton({
 
   return (
     <>
-      <Button variant="glass-danger" icon="trash" onClick={() => setOpen(true)}>
+      <Button variant="glass-danger" onClick={() => setOpen(true)}>
         Delete camp
       </Button>
       {open && (
@@ -117,7 +117,6 @@ export function DeleteCampDialog({
           </Button>
           <Button
             variant="glass-danger"
-            icon="trash"
             disabled={busy || typed !== campName}
             onClick={() => void run(() => deleteCamp({ orgId: campId, confirmName: typed }))}
           >

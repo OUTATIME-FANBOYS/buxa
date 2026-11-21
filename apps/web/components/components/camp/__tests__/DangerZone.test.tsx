@@ -46,6 +46,14 @@ const dialogText = () => document.querySelector('[role="dialog"]')?.textContent 
 
 describe('the danger zone', () => {
   let root: Root;
+  const renderZone = (roles: { canArchive: boolean; canDelete: boolean }) =>
+    act(() =>
+      root.render(
+        <UiProvider Dialog={ConfirmDialog}>
+          <DangerZone campId="o-1" campName={NAME} {...roles} />
+        </UiProvider>,
+      ),
+    );
 
   beforeEach(() => {
     h.archiveCamp.mockReset().mockResolvedValue({ ok: true });
@@ -53,17 +61,32 @@ describe('the danger zone', () => {
     h.push.mockReset();
     h.refresh.mockReset();
     root = createRoot(document.body.appendChild(document.createElement('div')));
-    act(() =>
-      root.render(
-        <UiProvider Dialog={ConfirmDialog}>
-          <DangerZone campId="o-1" campName={NAME} />
-        </UiProvider>,
-      ),
-    );
+    renderZone({ canArchive: true, canDelete: true });
   });
   afterEach(() => {
     act(() => root.unmount());
     document.body.innerHTML = '';
+  });
+
+  it('shows Archive camp and Delete camp to the owner', () => {
+    expect(button('Archive camp')).toBeDefined();
+    expect(button('Delete camp')).toBeDefined();
+  });
+
+  it('shows only Archive camp to an admin, who may archive but not delete', () => {
+    act(() => root.unmount());
+    root = createRoot(document.body.appendChild(document.createElement('div')));
+    renderZone({ canArchive: true, canDelete: false });
+    expect(button('Archive camp')).toBeDefined();
+    expect(button('Delete camp')).toBeUndefined();
+    expect(document.querySelector('.danger-zone')).not.toBeNull();
+  });
+
+  it('shows no buttons to a role that can neither archive nor delete', () => {
+    act(() => root.unmount());
+    root = createRoot(document.body.appendChild(document.createElement('div')));
+    renderZone({ canArchive: false, canDelete: false });
+    expect(document.querySelectorAll('.danger-zone button').length).toBe(0);
   });
 
   it('archives the camp after one confirm, calling archiveCamp with the camp id', async () => {
@@ -114,9 +137,9 @@ describe('the danger zone', () => {
     expect(h.push).not.toHaveBeenCalled();
   });
 
-  it('gives Archive camp and Delete camp their icons', () => {
-    expect(button('Archive camp')?.querySelector('svg[class*="lucide-archive"]')).not.toBeNull();
-    expect(button('Delete camp')?.querySelector('svg[class*="lucide-trash"]')).not.toBeNull();
+  it('gives Archive camp and Delete camp text only, with no icon', () => {
+    expect(button('Archive camp')?.querySelector('svg')).toBeNull();
+    expect(button('Delete camp')?.querySelector('svg')).toBeNull();
   });
 
   it('disables the buttons while the request runs', async () => {

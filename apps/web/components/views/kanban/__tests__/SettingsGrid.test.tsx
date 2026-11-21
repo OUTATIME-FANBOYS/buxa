@@ -10,10 +10,17 @@ import { buildSeed } from '@buxa/shared';
 import { SettingsPage } from '@/components/views/kanban';
 import { ROUTES } from '@/config/routes';
 
+const camp = vi.hoisted(() => ({
+  rename: vi.fn<(previous: unknown, form: FormData) => Promise<{ status: string }>>(() =>
+    Promise.resolve({ status: 'success' }),
+  ),
+}));
+
 vi.mock('@/actions/camp', () => ({
   archiveCamp: () => Promise.resolve({ ok: true }),
   deleteCamp: () => Promise.resolve({ ok: true }),
   unarchiveCamp: () => Promise.resolve({ ok: true }),
+  renameCampAction: camp.rename,
 }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -34,10 +41,30 @@ const TILES = ['Agents', 'Your data', 'Keyboard shortcuts', 'Archived camps'];
 const OWNER_CAMP = {
   id: 'o-1',
   name: 'Camp Birchwood',
+  canRename: true,
+  canArchive: true,
   canDelete: true,
   canManageFeed: false,
   isTeacher: false,
   archived: false,
+};
+/** An admin: may rename and archive (org:update, org:archive), but not delete (org:delete is the owner's). */
+const ADMIN_CAMP = { ...OWNER_CAMP, canDelete: false };
+/** Staff and teachers: no rename, archive or delete, so no camp name card and no danger zone. */
+const STAFF_CAMP = { ...OWNER_CAMP, canRename: false, canArchive: false, canDelete: false };
+
+function must<T>(value: T | null | undefined, what: string): T {
+  if (value == null) {
+    throw new Error(`Expected ${what} on the page.`);
+  }
+
+  return value;
+}
+/** Types into a field through the native setter, so React sees the change. */
+const typeInto = (input: HTMLInputElement, value: string) => {
+  const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  descriptor?.set?.call(input, value);
+  input.dispatchEvent(new Event('input', { bubbles: true }));
 };
 
 describe('the camp settings page', () => {
@@ -137,19 +164,44 @@ describe('the camp settings page', () => {
     expect(tile('Keyboard shortcuts').textContent).toContain('Create a task');
   });
 
-  it('shows the danger zone at the bottom of the grid to the owner only', () => {
+  it('shows the camp name card first, and the danger zone at the bottom, to the owner', () => {
     render({ camp: OWNER_CAMP });
-    expect(titles()).toEqual([...TILES, 'Danger zone']);
+    expect(titles()).toEqual(['Camp name', ...TILES, 'Danger zone']);
     expect(tiles().at(-1)?.querySelector('h2')?.textContent).toBe('Danger zone');
-    expect(Array.from(document.querySelectorAll('button')).map(b => b.textContent)).toEqual(
-      expect.arrayContaining(['Archive camp', 'Delete camp']),
-    );
+    const labels = Array.from(document.querySelectorAll('.danger-zone button')).map(b => b.textContent);
+    expect(labels).toEqual(['Archive camp', 'Delete camp']);
   });
 
-  it('hides the danger zone from a camp admin who is not the owner', () => {
-    render({ camp: { ...OWNER_CAMP, canDelete: false } });
+  it('gives an admin Archive camp in the danger zone, but no Delete camp', () => {
+    render({ camp: ADMIN_CAMP });
+    expect(titles()).toEqual(['Camp name', ...TILES, 'Danger zone']);
+    const labels = Array.from(document.querySelectorAll('.danger-zone button')).map(b => b.textContent);
+    expect(labels).toEqual(['Archive camp']);
+  });
+
+  it('hides the camp name card and the danger zone from a role that cannot rename, archive or delete', () => {
+    render({ camp: STAFF_CAMP });
     expect(titles()).toEqual(TILES);
     expect(document.querySelector('.danger-zone')).toBeNull();
+  });
+
+  it('renames the camp from settings, through the camp name card', async () => {
+    render({ camp: OWNER_CAMP });
+    act(() => tile('Camp name').querySelector<HTMLButtonElement>('button')?.click());
+    const dialog = document.querySelector('[role="dialog"]');
+    expect(dialog?.getAttribute('aria-label')).toBe('Rename camp');
+    const input = dialog?.querySelector<HTMLInputElement>('input[name="name"]');
+    expect(input?.value).toBe('Camp Birchwood');
+    act(() => typeInto(must(input, 'the camp name field'), 'Camp Cedar'));
+
+    act(() => {
+      document.querySelector<HTMLFormElement>('form#rename-camp')?.requestSubmit();
+    });
+    await act(() => Promise.resolve());
+    expect(camp.rename).toHaveBeenCalledTimes(1);
+    const form = camp.rename.mock.calls[0]?.[1];
+    expect(form?.get('name')).toBe('Camp Cedar');
+    expect(form?.get('campId')).toBe('o-1');
   });
 
   it('lists archived camps read-only, with the name and the archived date', () => {

@@ -8,13 +8,18 @@ import { ROUTES } from '@/config/routes';
 import { AgentDialog } from '@/components/components/kanban/dialogs';
 import { ResetDemoButton } from '@/components/components/kanban';
 import { SETTINGS_GRID, SETTINGS_TILE_HEADING, SETTINGS_TILE_TEXT } from '@/components/components/settings';
-import { ArchivedCampsCard, CalendarLinkCard, DangerZone } from '@/components/components/camp';
+import { ArchivedCampsCard, CalendarLinkCard, DangerZone, RenameCampButton } from '@/components/components/camp';
 import type { ArchivedCamp } from '@/actions/camp';
 
-/** The camp the settings are for. `canDelete` is the owner's right (org:delete); an archived camp shows no danger zone. */
+/**
+ * The camp the settings are for. `canRename` (org:update) and `canArchive` (org:archive) are the owner and admins; `canDelete`
+ * (org:delete) is the owner only. An archived camp shows no camp name card and no danger zone.
+ */
 export interface SettingsCamp {
   id: string;
   name: string;
+  canRename: boolean;
+  canArchive: boolean;
   canDelete: boolean;
   /** The owner and admins (org:update). Staff and teachers do not see the camp calendar link. */
   canManageFeed: boolean;
@@ -65,6 +70,15 @@ export function Settings({
         </Button>
       </header>
       <div className={`settings-grid ${SETTINGS_GRID}`}>
+        {camp?.canRename && !camp.archived && (
+          <section className="panel settings-tile">
+            <h2 className={SETTINGS_TILE_HEADING}>Camp name</h2>
+            <p className={`muted ${SETTINGS_TILE_TEXT}`}>{camp.name}</p>
+            <div className="row">
+              <RenameCampButton campId={camp.id} currentName={camp.name} />
+            </div>
+          </section>
+        )}
         <section className="panel settings-tile">
           <h2 className={SETTINGS_TILE_HEADING}>Agents</h2>
           <p className={`muted ${SETTINGS_TILE_TEXT}`}>
@@ -159,7 +173,9 @@ export function Settings({
         {camp?.canManageFeed && !camp.archived && <CalendarLinkCard />}
         {camp?.isTeacher && !camp.archived && <CalendarLinkCard own />}
         <ArchivedCampsCard camps={archivedCamps} />
-        {camp?.canDelete && !camp.archived && <DangerZone campId={camp.id} campName={camp.name} />}
+        {(camp?.canArchive || camp?.canDelete) && !camp.archived && (
+          <DangerZone campId={camp.id} campName={camp.name} canArchive={camp.canArchive} canDelete={camp.canDelete} />
+        )}
       </div>
     </div>
   );

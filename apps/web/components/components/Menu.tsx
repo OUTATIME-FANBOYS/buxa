@@ -20,16 +20,6 @@ export interface MenuItem {
   disabled?: boolean;
   checked?: boolean;
   submenu?: MenuItem[];
-  /** Small icon buttons on the right of the row. Each one acts on its own and never chooses the row. */
-  actions?: MenuAction[];
-}
-
-/** A round icon button beside a row. `danger` uses the destructive glass style. */
-export interface MenuAction {
-  label: string;
-  icon: string;
-  onSelect: () => void;
-  danger?: boolean;
 }
 
 const isItem = (x: MenuItem | false | null): x is MenuItem => !!x;
@@ -232,14 +222,15 @@ export function Menu({
         </Link>
       );
     }
-    const choose = (
+
+    return (
       <Button
-        key={it.actions?.length ? undefined : i}
+        key={i}
         variant="ghost"
         role="menuitem"
         type="button"
         disabled={it.disabled}
-        className={`${it.danger ? 'danger buxa:text-[var(--crit)]!' : ''} ${ROW}${it.actions?.length ? ' buxa:flex-1 buxa:min-w-0' : ''}`}
+        className={`${it.danger ? 'danger buxa:text-[var(--crit)]!' : ''} ${ROW}`}
         onClick={() => {
           close();
           btn.current?.focus();
@@ -248,33 +239,6 @@ export function Menu({
       >
         {content}
       </Button>
-    );
-    if (!it.actions?.length) {
-      return choose;
-    }
-
-    // The row name chooses the item; each icon button acts on the row and leaves the choice alone.
-    return (
-      <div key={i} className="buxa:flex buxa:items-center buxa:gap-[var(--s1)]">
-        {choose}
-        {it.actions.map(action => (
-          <Button
-            key={action.label}
-            type="button"
-            size="sm"
-            iconOnly
-            variant={action.danger ? 'glass-danger' : 'glass'}
-            icon={action.icon}
-            aria-label={action.label}
-            title={action.label}
-            onPress={e => {
-              e.stopPropagation();
-              close();
-              action.onSelect();
-            }}
-          />
-        ))}
-      </div>
     );
   };
 

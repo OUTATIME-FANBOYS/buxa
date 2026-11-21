@@ -10,11 +10,22 @@ import { ROUTES } from '@/config/routes';
 import { DeleteCampButton } from './DeleteCampButton';
 
 /**
- * The owner's danger zone in Settings: archive the camp (keeps its data), or delete it (removes everything).
- * Delete asks twice: "Are you sure?", then the person types the camp name exactly, with matching capitals (DeleteCampButton).
- * Every button is disabled while a request runs, and a failure shows the server's message in the open dialog.
+ * The danger zone in Settings: archive the camp (keeps its data, org:archive: admin and owner), or delete it (removes
+ * everything, org:delete: owner only). A button shows only when the person's role may use it. Delete asks twice: "Are you
+ * sure?", then the person types the camp name exactly, with matching capitals (DeleteCampButton). Every button is disabled
+ * while a request runs, and a failure shows the server's message in the open dialog. The buttons carry text only.
  */
-export function DangerZone({ campId, campName }: { campId: string; campName: string }) {
+export function DangerZone({
+  campId,
+  campName,
+  canArchive,
+  canDelete,
+}: {
+  campId: string;
+  campName: string;
+  canArchive: boolean;
+  canDelete: boolean;
+}) {
   const router = useRouter();
   const { toast } = useUi();
   const [archiving, setArchiving] = useState(false);
@@ -56,23 +67,28 @@ export function DangerZone({ campId, campName }: { campId: string; campName: str
     <section className="panel danger-zone buxa:border-[var(--danger)]!" aria-labelledby="danger-zone-title">
       <h2 id="danger-zone-title">Danger zone</h2>
       <p className="muted">
-        Archive hides this camp and keeps its data. Delete removes the camp and everything in it, for good.
+        {canArchive && 'Archive hides this camp and keeps its data.'}
+        {canDelete && ' Delete removes the camp and everything in it, for good.'}
       </p>
       <div className="row">
-        <Button variant="glass" icon="archive" disabled={busy} onClick={() => setArchiving(true)}>
-          Archive camp
-        </Button>
-        <DeleteCampButton
-          campId={campId}
-          campName={campName}
-          onDeleted={() => {
-            router.push(ROUTES.camp);
-            router.refresh();
-          }}
-        />
+        {canArchive && (
+          <Button variant="glass" disabled={busy} onClick={() => setArchiving(true)}>
+            Archive camp
+          </Button>
+        )}
+        {canDelete && (
+          <DeleteCampButton
+            campId={campId}
+            campName={campName}
+            onDeleted={() => {
+              router.push(ROUTES.camp);
+              router.refresh();
+            }}
+          />
+        )}
       </div>
 
-      {archiving && (
+      {canArchive && archiving && (
         <Dialog
           title="Archive camp?"
           onClose={close}
@@ -83,7 +99,6 @@ export function DangerZone({ campId, campName }: { campId: string; campName: str
               </Button>
               <Button
                 variant="glass"
-                icon="archive"
                 disabled={busy}
                 onClick={() => void run(() => archiveCamp({ orgId: campId }), 'Camp archived')}
               >

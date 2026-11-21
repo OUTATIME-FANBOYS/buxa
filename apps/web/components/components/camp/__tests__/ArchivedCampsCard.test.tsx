@@ -93,11 +93,11 @@ describe('the archived camps list', () => {
     expect(row?.lastElementChild?.textContent).toContain('Delete camp');
   });
 
-  it('gives the Unarchive and Delete buttons their icons', () => {
+  it('gives Unarchive its icon, and Delete camp text only, like the danger zone', () => {
     render([OWNED]);
 
     expect(button('Unarchive camp')?.querySelector('svg[class*="lucide-archive-restore"]')).not.toBeNull();
-    expect(button('Delete camp')?.querySelector('svg[class*="lucide-trash"]')).not.toBeNull();
+    expect(button('Delete camp')?.querySelector('svg')).toBeNull();
   });
 
   it('unarchives after one confirm, calling unarchiveCamp with the camp id, then refreshes', async () => {
