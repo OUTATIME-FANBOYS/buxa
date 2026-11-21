@@ -48,7 +48,8 @@ interface PersonFormCommon {
  * household, otherwise the form offers the camp's households or a new one. `edit` changes a person's details, pre-filled from
  * `person`, including the person's household. The update does not move anyone between households yet, so the household fields
  * show the person's current household but do not change it on save.
- * Roles are checkboxes in both modes: a person can hold several. The Household section shows for a family role in both modes.
+ * Roles are one radio in both modes. Editing pre-selects the person's first role; any others are not kept on save (see the report
+ * in the commit). The Household section shows for a family role in both modes.
  */
 export type PersonFormProps = PersonFormCommon &
   ({ mode: 'create'; household: HouseholdTarget | null } | { mode: 'edit'; person: EditablePerson });
@@ -62,19 +63,10 @@ export function PersonForm(props: PersonFormProps) {
   const [state, formAction, pending] = useActionState(isEdit ? updatePersonAction : createPersonAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
   const inDialog = variant === 'dialog';
-  // The roles the form holds. Editing starts from the person's roles; adding starts with none, so a role is required.
-  const [roles, setRoles] = useState<ReadonlySet<CampRole>>(() => new Set(person?.roles ?? []));
-  const toggleRole = (option: CampRole) =>
-    setRoles(current => {
-      const next = new Set(current);
-      if (next.has(option)) {
-        next.delete(option);
-      } else {
-        next.add(option);
-      }
-
-      return next;
-    });
+  // The one role the form holds. Editing pre-selects the person's first role; adding starts with none, so a role is required.
+  // Selecting the chosen role again clears it.
+  const [role, setRole] = useState<CampRole | null>(() => person?.roles[0] ?? null);
+  const toggleRole = (option: CampRole) => setRole(current => (current === option ? null : option));
 
   // A field error moves focus to the first invalid field, so the person can correct it without searching the page.
   useEffect(() => {
@@ -89,7 +81,7 @@ export function PersonForm(props: PersonFormProps) {
   const [savedTeacher, setSavedTeacher] = useState(false);
   useEffect(() => {
     if (state.status === 'success') {
-      const teacher = !isEdit && roles.has(INVITE_ROLE);
+      const teacher = !isEdit && role === INVITE_ROLE;
       setSavedTeacher(teacher);
       onSaved?.(state.message ?? (isEdit ? 'Changes saved.' : 'Person added.'), teacher);
     }
@@ -98,12 +90,11 @@ export function PersonForm(props: PersonFormProps) {
   }, [state, onSaved]);
 
   const err = (name: string) => fieldError(state, name);
-  const selectedRoles = [...roles];
   // Editing shows the person's own email always; adding shows it once a role that is not a family role is chosen.
-  const showOwnEmail = isEdit || selectedRoles.some(role => !isFamilyRole(role));
-  const showHousehold = selectedRoles.some(isFamilyRole);
-  // Only an instructor gets the invite. Editing asks about the person's saved roles; adding asks about the roles just chosen.
-  const inviteAvailable = isEdit ? (person?.roles.includes(INVITE_ROLE) ?? false) : roles.has(INVITE_ROLE);
+  const showOwnEmail = isEdit || (role !== null && !isFamilyRole(role));
+  const showHousehold = role !== null && isFamilyRole(role);
+  // Only an instructor gets the invite. Editing asks about the person's saved roles; adding asks about the role just chosen.
+  const inviteAvailable = isEdit ? (person?.roles.includes(INVITE_ROLE) ?? false) : role === INVITE_ROLE;
   const inviteLabel = isEdit ? 'Resend invite' : 'Send invite';
 
   // The camp's households, plus the person's own household when the list does not carry it, so Edit shows what they belong to.
@@ -175,7 +166,7 @@ export function PersonForm(props: PersonFormProps) {
         />
       </div>
 
-      <PersonRoles selected={roles} onToggle={toggleRole} error={err('roles')} />
+      <PersonRoles selected={role} onToggle={toggleRole} error={err('roles')} />
 
       {showOwnEmail && (
         <div className="buxa:flex buxa:flex-wrap buxa:items-end buxa:gap-2">
@@ -208,7 +199,7 @@ export function PersonForm(props: PersonFormProps) {
           household={household}
           choices={choices}
           defaultHouseholdId={defaultHouseholdId}
-          showRelationship={!isEdit && roles.has('camper')}
+          showRelationship={!isEdit && role === 'camper'}
           err={err}
         />
       )}

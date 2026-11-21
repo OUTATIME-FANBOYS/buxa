@@ -28,8 +28,8 @@ describe('PersonForm (create): the static frame', () => {
     expect(html).toContain('Family');
     expect(html).toContain('Staff and participants');
     expect(html).toContain('Parent or guardian');
-    expect(html).toContain('Choose everything that applies.');
-    expect(html).not.toContain('Choose one.');
+    expect(html).toContain('Choose one. Select it again to clear it.');
+    expect(html).not.toContain('Choose everything that applies.');
   });
 
   it('shows no Household section and no Email field before a role is chosen', () => {

@@ -18,7 +18,7 @@ vi.mock('@buxa/server/composers/people/updatePersonAction', () => ({
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-describe('PersonForm: roles are checkboxes in both modes', () => {
+describe('PersonForm: roles are single-choice radios in both modes', () => {
   let root: Root;
   let host: HTMLDivElement;
   beforeEach(() => {
@@ -38,11 +38,11 @@ describe('PersonForm: roles are checkboxes in both modes', () => {
         </UiProvider>,
       );
     });
-  const renderEdit = (person: EditablePerson, households: HouseholdChoice[] = []) =>
+  const renderEdit = (person: EditablePerson) =>
     act(() => {
       root.render(
         <UiProvider Dialog={ConfirmDialog}>
-          <PersonForm mode="edit" person={person} households={households} variant="dialog" formId="f" />
+          <PersonForm mode="edit" person={person} households={[]} variant="dialog" formId="f" />
         </UiProvider>,
       );
     });
@@ -50,33 +50,39 @@ describe('PersonForm: roles are checkboxes in both modes', () => {
   const click = (value: CampRole) => act(() => h.role(value)?.click());
 
   it.each([
-    ['add', renderAdd],
-    ['edit', (): void => renderEdit(PERSON)],
-  ])('%s: offers every role as a checkbox, never a radio, under the Roles heading', (_mode, render) => {
+    ['add', () => renderAdd()],
+    ['edit', () => renderEdit(PERSON)],
+  ])('%s: offers every role as a radio, never a checkbox, under the Roles heading', (_mode, render) => {
     render();
     const inputs = Array.from(host.querySelectorAll<HTMLInputElement>('input[name="roles"]'));
     // The roles render in two groups (Family first), so compare as sets of values.
     expect(inputs.map(input => input.value).sort()).toEqual([...CAMP_ROLES].sort());
-    expect(inputs.every(input => input.type === 'checkbox')).toBe(true);
+    expect(inputs.every(input => input.type === 'radio')).toBe(true);
     expect(h.legend('Roles *')).toBeDefined();
-    expect(host.textContent).toContain('Choose everything that applies.');
-    expect(host.textContent).not.toContain('Choose one.');
+    expect(host.textContent).toContain('Choose one. Select it again to clear it.');
+    expect(host.textContent).not.toContain('Choose everything that applies.');
   });
 
-  it('adding: several roles can be chosen at once, and a chosen role clears when clicked again', () => {
+  it('adding: choosing another role replaces the first, and choosing the chosen role again clears it', () => {
     renderAdd();
     click('camper');
+    expect(h.checkedRoles()).toEqual(['camper']);
     click('instructor');
-    expect(h.checkedRoles()).toEqual(['camper', 'instructor']);
-    click('camper');
     expect(h.checkedRoles()).toEqual(['instructor']);
+    click('instructor');
+    expect(h.checkedRoles()).toEqual([]);
   });
 
-  it('editing: a person keeps the roles they have and can take on another', () => {
-    renderEdit({ ...PERSON, roles: ['instructor', 'participant'] });
-    expect(h.checkedRoles()).toEqual(['participant', 'instructor']);
-    click('organizer');
-    expect(h.checkedRoles()).toEqual(['participant', 'instructor', 'organizer']);
+  it('editing: the person’s role is pre-selected, and clearing it leaves none chosen', () => {
+    renderEdit({ ...PERSON, roles: ['instructor'] });
+    expect(h.checkedRoles()).toEqual(['instructor']);
+    click('instructor');
+    expect(h.checkedRoles()).toEqual([]);
+  });
+
+  it('editing: a person with several roles pre-selects the first one only', () => {
+    renderEdit({ ...PERSON, roles: ['participant', 'instructor'] });
+    expect(h.checkedRoles()).toEqual(['participant']);
   });
 
   it('the Family and Staff and participants groups are kept in both modes', () => {

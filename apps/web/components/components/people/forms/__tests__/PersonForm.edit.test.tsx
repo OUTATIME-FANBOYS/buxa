@@ -47,10 +47,10 @@ describe('PersonForm (edit): the Edit person pop-up and page', () => {
     expect(html).toContain('name="id" value="p-1"');
   });
 
-  it('ticks every role the person has, and only those', () => {
+  it('pre-selects the first of the person’s roles, and offers every role', () => {
     const multi: EditablePerson = { ...person, roles: [CAMP_ROLES[0], CAMP_ROLES[3]] };
     const html = inUi(<PersonForm mode="edit" households={[]} person={multi} variant="dialog" />);
-    expect(checkedRoles(html)).toEqual([CAMP_ROLES[0], CAMP_ROLES[3]]);
+    expect(checkedRoles(html)).toEqual([CAMP_ROLES[0]]);
     expect(html.match(/name="roles"/g)).toHaveLength(CAMP_ROLES.length);
   });
 
@@ -107,12 +107,12 @@ describe('PersonForm: one component for both modes', () => {
     expect(edit).toContain('name="email"');
   });
 
-  it('uses checkboxes for roles in both modes, so a person can hold several', () => {
+  it('uses single-choice radios for roles in both modes', () => {
     const add = inUi(<PersonForm mode="create" household={null} households={[]} variant="dialog" />);
     const edit = inUi(<PersonForm mode="edit" households={[]} person={person} variant="dialog" />);
     for (const html of [add, edit]) {
-      expect(html).toContain('type="checkbox"');
-      expect(html).not.toContain('type="radio"');
+      expect(html).toContain('type="radio"');
+      expect(html).not.toContain('type="checkbox"');
     }
   });
 });
