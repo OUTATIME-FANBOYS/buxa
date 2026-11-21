@@ -4,7 +4,7 @@ import { PeopleSearch } from '@/components/components/people';
 
 describe('PeopleSearch', () => {
   it('is a bookmarkable GET search with the current name and role kept in the fields', () => {
-    const html = renderToStaticMarkup(<PeopleSearch params={{ q: 'Lee', role: 'camper' }} />);
+    const html = renderToStaticMarkup(<PeopleSearch params={{ q: 'Lee', role: 'camper', page: 1 }} />);
     expect(html).toContain('role="search"');
     expect(html).toContain('action="/camp/people"');
     expect(html).toContain('action="/camp/people"');

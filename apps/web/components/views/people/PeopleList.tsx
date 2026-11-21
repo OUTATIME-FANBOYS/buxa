@@ -1,22 +1,19 @@
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { Empty } from '@/components/components';
-import { loadHouseholdList, loadPeopleOrForbidden } from '@buxa/server/composers/index.server';
+import { loadHouseholdList, loadPeoplePageOrForbidden } from '@buxa/server/composers/index.server';
 import { currentActor } from '@buxa/server/composers/index.server';
-import { readListParams, toHouseholdChoices, type ListParams } from '@buxa/shared';
+import { readListParams, toHouseholdChoices } from '@buxa/shared';
+import { PeoplePagination } from '@/components/components/people';
 import { PeopleSearch } from '@/components/components/people';
 import { PeopleTable } from '@/components/components/people';
 import { AddPersonButton } from '@/components/components/people/forms';
-import type { PersonSummary } from '@buxa/contracts';
 import type { Actor } from '@buxa/domain';
+import type { ListParams } from '@buxa/shared';
 
 const countLine = (n: number) => (n === 1 ? '1 person' : `${n} people`);
 
-async function listFor(actor: Actor, params: ListParams): Promise<PersonSummary[] | 'forbidden'> {
-  return loadPeopleOrForbidden(actor, params);
-}
-
-/** The people list with search and role filter. Viewers see names, roles and status; only staff and above see the add button. */
+/** The people list with search, role filter and pages. Viewers see names, roles and status; only staff and above see the add button. */
 export async function PeopleList({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
   const actor = await currentActor();
   // A teacher has no People list: the sidebar hides it, and the address does not open it either.
@@ -25,7 +22,7 @@ export async function PeopleList({ searchParams }: { searchParams: Record<string
   }
   const params = readListParams(searchParams);
   const canAdd = can(actor, 'people:create');
-  const people = await listFor(actor, params);
+  const result = await listFor(actor, params);
   const filtered = params.q !== '' || params.role !== '';
   // The add dialog's household picker. Only staff who can add people load the list.
   const households = canAdd ? toHouseholdChoices(await loadHouseholdList(actor)) : [];
@@ -44,7 +41,7 @@ export async function PeopleList({ searchParams }: { searchParams: Record<string
         )}
       </header>
       <PeopleSearch params={params} />
-      {people === 'forbidden' ? (
+      {result === 'forbidden' ? (
         <Empty
           icon="alert"
           title="You cannot see the people list"
@@ -52,7 +49,7 @@ export async function PeopleList({ searchParams }: { searchParams: Record<string
         />
       ) : (
         <div aria-live="polite" className="stack">
-          {people.length === 0 ? (
+          {result.total === 0 ? (
             filtered ? (
               <Empty icon="search" title="No one matches that search" body="Check the spelling, or try another role." />
             ) : (
@@ -69,12 +66,20 @@ export async function PeopleList({ searchParams }: { searchParams: Record<string
             )
           ) : (
             <>
-              <p className="muted">{countLine(people.length)}</p>
+              <p className="muted">{countLine(result.total)}</p>
               <PeopleTable
-                people={people}
+                people={result.people}
                 staffView={can(actor, 'people:read_contact')}
                 canEdit={can(actor, 'people:update')}
                 canDelete={can(actor, 'data:erase')}
+              />
+              <PeoplePagination
+                params={params}
+                page={result.page}
+                pageCount={result.pageCount}
+                from={result.from}
+                to={result.to}
+                total={result.total}
               />
             </>
           )}
@@ -82,4 +87,8 @@ export async function PeopleList({ searchParams }: { searchParams: Record<string
       )}
     </div>
   );
+}
+
+async function listFor(actor: Actor, params: ListParams) {
+  return loadPeoplePageOrForbidden(actor, params);
 }

@@ -1,6 +1,6 @@
 /** People, households, memberships and badges: what the camp's screens and services exchange. */
 import { z } from 'zod';
-import { CAMP_ROLES, isLocalDate } from '@buxa/domain';
+import { CAMP_ROLES, PEOPLE_PAGE_SIZE_MAX, isLocalDate, type PageSpan } from '@buxa/domain';
 import { OptionalEmailSchema, OptionalPhoneSchema, PatchEmailSchema, PatchPhoneSchema } from './contact';
 
 export const CampRoleSchema = z.enum(CAMP_ROLES);
@@ -111,6 +111,19 @@ export const PersonListQuerySchema = z.object({
   includeArchived: z.boolean().optional(),
 });
 export type PersonListQuery = z.infer<typeof PersonListQuerySchema>;
+
+/** One page of the people list: the same search and role, plus the page number (from 1) and the rows per page. */
+export const PersonPageQuerySchema = PersonListQuerySchema.omit({ includeArchived: true }).extend({
+  page: z.number().int().min(1).optional(),
+  pageSize: z.number().int().min(1).max(PEOPLE_PAGE_SIZE_MAX).optional(),
+});
+export type PersonPageQuery = z.infer<typeof PersonPageQuerySchema>;
+
+/** A page of people, with the total that matches the same search and role (counted before paging). */
+export interface PersonPage extends Omit<PageSpan, 'offset' | 'limit'> {
+  people: PersonSummary[];
+  total: number;
+}
 
 export const NewHouseholdInputSchema = z.object({
   name: z.string().trim().min(1, 'Enter a household name.').max(120),

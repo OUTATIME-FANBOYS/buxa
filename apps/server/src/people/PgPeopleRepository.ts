@@ -11,6 +11,7 @@ import type {
   PeopleRepository,
   PersonFilter,
   PersonHouseholdLink,
+  PersonPageFilter,
   PersonPatchRecord,
   PersonRecord,
 } from './PeopleRepository';
@@ -23,7 +24,15 @@ import {
   requireHousehold,
   upsertMember,
 } from './PgHouseholds';
-import { getPeople, getPerson, listPeople, requirePerson, searchPeople } from './PgPersonQueries';
+import {
+  countPeople,
+  getPeople,
+  getPerson,
+  listPeople,
+  listPeoplePage,
+  requirePerson,
+  searchPeople,
+} from './PgPersonQueries';
 import { insertPerson, updatePerson } from './PgPersonWrites';
 
 /** Postgres adapter. Each call runs in withOrg (row-level security) and writes its audit entry in the same transaction. */
@@ -110,6 +119,19 @@ export class PgPeopleRepository implements PeopleRepository {
 
   search(userId: string, orgId: string, query: string, limit: number): Promise<PersonRecord[]> {
     return withOrg(this.pool, userId, orgId, db => searchPeople(db, query, limit));
+  }
+
+  countPeople(userId: string, orgId: string, filter: PersonPageFilter): Promise<number> {
+    return withOrg(this.pool, userId, orgId, db => countPeople(db, filter));
+  }
+
+  listPeoplePage(
+    userId: string,
+    orgId: string,
+    filter: PersonPageFilter,
+    window: { offset: number; limit: number },
+  ): Promise<PersonRecord[]> {
+    return withOrg(this.pool, userId, orgId, db => listPeoplePage(db, filter, window));
   }
 
   createHousehold(actor: Actor, name: string): Promise<HouseholdRecord> {

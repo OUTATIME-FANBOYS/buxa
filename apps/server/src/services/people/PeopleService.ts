@@ -5,6 +5,8 @@ import type {
   NewPersonInput,
   Person,
   PersonListQuery,
+  PersonPage,
+  PersonPageQuery,
   PersonPatchInput,
   PersonSummary,
 } from '@buxa/contracts';
@@ -27,6 +29,11 @@ import type { Clock } from '../clock';
 export interface PeopleService {
   /** Ordered list; with `query`, a name search capped at MAX_SEARCH_RESULTS. Needs people:read. */
   list(actor: Actor, query?: PersonListQuery): Promise<PersonSummary[]>;
+  /**
+   * One page of the people list, with the same visibility as `list`. The search and role apply before the count and the page, and
+   * the total is the number of matches across all pages. Page size defaults to 25 and is capped at 100. Needs people:read.
+   */
+  listPage(actor: Actor, query?: PersonPageQuery): Promise<PersonPage>;
   /** Needs people:read. 404 if the id is not in this camp. Archived people still resolve by id. */
   get(actor: Actor, id: string): Promise<Person>;
   /** Needs people:create. */

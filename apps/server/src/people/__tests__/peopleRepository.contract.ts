@@ -135,6 +135,38 @@ export function peopleRepositoryContract(factory: RepositoryFactory): void {
         expect(await fx.repos.people.list(fx.actor.userId, fx.actor.orgId, { includeArchived: true })).toHaveLength(2);
       });
 
+      it('the page count respects the role filter and the search, and pages follow the list order', async () => {
+        const { orgId, userId } = fx.actor;
+        for (const familyName of ['Adams', 'Baker', 'Clark']) {
+          await fx.repos.people.create(fx.actor, samplePerson({ givenName: 'Kim', familyName, roles: ['camper'] }));
+        }
+        await fx.repos.people.create(
+          fx.actor,
+          samplePerson({ givenName: 'Kim', familyName: 'Dune', roles: ['guardian'] }),
+        );
+        await fx.repos.people.create(
+          fx.actor,
+          samplePerson({ givenName: 'Lee', familyName: 'Ford', roles: ['camper'] }),
+        );
+
+        const campers = { term: '', role: 'camper' as const };
+        expect(await fx.repos.people.countPeople(userId, orgId, campers)).toBe(4);
+        expect(await fx.repos.people.countPeople(userId, orgId, { term: '' })).toBe(5);
+        expect(await fx.repos.people.countPeople(userId, orgId, { term: 'kim', role: 'camper' })).toBe(3);
+
+        const second = await fx.repos.people.listPeoplePage(userId, orgId, campers, { offset: 2, limit: 2 });
+        expect(second.map(p => p.familyName)).toEqual(['Clark', 'Ford']);
+        expect(
+          await fx.repos.people.listPeoplePage(
+            userId,
+            orgId,
+            { term: 'kim', role: 'camper' },
+            { offset: 0, limit: 25 },
+          ),
+        ).toHaveLength(3);
+        expect(await fx.repos.people.listPeoplePage(userId, orgId, campers, { offset: 4, limit: 25 })).toEqual([]);
+      });
+
       it('getMany returns the requested people, in list order', async () => {
         const a = await fx.repos.people.create(fx.actor, samplePerson({ familyName: 'Adams' }));
         const b = await fx.repos.people.create(fx.actor, samplePerson({ familyName: 'Baker' }));
