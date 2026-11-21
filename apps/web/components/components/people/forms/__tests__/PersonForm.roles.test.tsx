@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { NewPersonForm } from '@/components/components/people/forms';
+import { PersonForm } from '@/components/components/people/forms';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { Dialog as ConfirmDialog } from '@/components/components';
 import { settle } from '@buxa/domain';
@@ -20,7 +20,7 @@ const LEE: HouseholdChoice = {
   hasGuardian: true,
 };
 
-describe('NewPersonForm: one role at a time, and which sections show for it', () => {
+describe('PersonForm (create): one role at a time, and which sections show for it', () => {
   let root: Root;
   let host: HTMLDivElement;
   beforeEach(() => {
@@ -36,7 +36,13 @@ describe('NewPersonForm: one role at a time, and which sections show for it', ()
     act(() => {
       root.render(
         <UiProvider Dialog={ConfirmDialog}>
-          <NewPersonForm household={household} households={households} variant="dialog" formId="new-person-form" />
+          <PersonForm
+            mode="create"
+            household={household}
+            households={households}
+            variant="dialog"
+            formId="new-person-form"
+          />
         </UiProvider>,
       );
     });

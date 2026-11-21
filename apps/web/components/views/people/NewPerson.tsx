@@ -4,7 +4,7 @@ import { ROUTES } from '@/config/routes';
 import { Empty } from '@/components/components';
 import { loadHouseholdList } from '@buxa/server/composers/index.server';
 import { PageHeader } from '@/components/components';
-import { NewPersonForm } from '@/components/components/people/forms';
+import { PersonForm } from '@/components/components/people/forms';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { loadHousehold } from '@buxa/server/composers/index.server';
 import { toHouseholdChoices } from '@buxa/shared';
@@ -38,7 +38,11 @@ export async function NewPerson({ householdId }: { householdId?: string }) {
   return (
     <div className="page narrow">
       <PageHeader title="Add person" subtitle={household ? `Adding to the ${household.name} household.` : undefined} />
-      <NewPersonForm household={household ? { id: household.id, name: household.name } : null} households={choices} />
+      <PersonForm
+        mode="create"
+        household={household ? { id: household.id, name: household.name } : null}
+        households={choices}
+      />
     </div>
   );
 }

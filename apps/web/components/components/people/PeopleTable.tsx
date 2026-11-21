@@ -3,11 +3,12 @@
 import Link from 'next/link';
 import { useCallback, useState } from 'react';
 import type { PersonSummary } from '@buxa/contracts';
-import { personEditPath, personPath } from '@/config/routes';
+import { personPath } from '@/config/routes';
 import { Button } from '@/components/elements';
 import { Checkbox } from '@/components/atoms';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import type { PeopleDeletion } from '@/actions/people';
+import { EditPersonButton } from '@/components/components/people/forms';
 import { AccessPill } from './AccessPill';
 import { DeletePeopleDialog, type PersonRef } from './DeletePeopleDialog';
 import { OnSitePill } from './OnSitePill';
@@ -20,7 +21,7 @@ const toRef = (person: PersonSummary): PersonRef => ({
 
 /**
  * The membership and on-site columns are for staff; viewers see names and roles only. `canDelete` (the owner) adds a checkbox per
- * row, a select-all, a bulk Delete and a per-row Delete. Everyone who can edit gets an Edit link to the person's edit page.
+ * row, a select-all, a bulk Delete and a per-row Delete. Everyone who can edit gets an Edit button that opens the Edit person pop-up.
  * After a delete, a toast says how many went; anyone refused stays selected.
  */
 export function PeopleTable({
@@ -135,11 +136,7 @@ export function PeopleTable({
                 {(canEdit || canDelete) && (
                   <td>
                     <div className="buxa:flex buxa:flex-wrap buxa:justify-center buxa:gap-2">
-                      {canEdit && (
-                        <Button href={personEditPath(person.id)} variant="glass" size="sm">
-                          Edit
-                        </Button>
-                      )}
+                      {canEdit && <EditPersonButton personId={person.id} />}
                       {canDelete && (
                         <Button
                           type="button"

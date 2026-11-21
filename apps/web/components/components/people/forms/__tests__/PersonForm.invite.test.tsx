@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { NewPersonForm } from '@/components/components/people/forms';
+import { PersonForm } from '@/components/components/people/forms';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { Dialog as ConfirmDialog } from '@/components/components';
 import { settle } from '@buxa/domain';
@@ -13,7 +13,7 @@ vi.mock('@buxa/server/composers/people/createPersonAction', () => ({
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-describe('NewPersonForm: the invite button by role', () => {
+describe('PersonForm (create): the invite button by role', () => {
   let root: Root;
   let host: HTMLDivElement;
   beforeEach(() => {
@@ -22,7 +22,7 @@ describe('NewPersonForm: the invite button by role', () => {
     act(() => {
       root.render(
         <UiProvider Dialog={ConfirmDialog}>
-          <NewPersonForm household={null} households={[]} variant="dialog" formId="new-person-form" />
+          <PersonForm mode="create" household={null} households={[]} variant="dialog" formId="new-person-form" />
         </UiProvider>,
       );
     });

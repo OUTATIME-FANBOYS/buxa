@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { personPath } from '@buxa/shared/config/routes';
+import { ROUTES, personPath } from '@buxa/shared/config/routes';
 import { idle } from '@buxa/shared';
 import { conflict, forbidden, badRequest, notFound } from '../../../http/errors';
 import { updatePersonAction } from '../updatePersonAction';
@@ -61,6 +61,14 @@ describe('updatePersonAction', () => {
       IDS.person,
       expect.objectContaining({ dateOfBirth: '2016-05-02', roles: ['camper'] }),
     );
+  });
+
+  it('posted from the Edit person pop-up (dialog=1) it returns a success and refreshes the list, with no redirect', async () => {
+    const state = await updatePersonAction(idle, formOf({ ...details, dialog: '1' }));
+    expect(state).toEqual({ status: 'success', message: 'Changes saved.' });
+    expect(h.redirect).not.toHaveBeenCalled();
+    expect(h.revalidatePath).toHaveBeenCalledWith(ROUTES.people);
+    expect(h.revalidatePath).toHaveBeenCalledWith(personPath(IDS.person));
   });
 
   it('reports the contract messages for missing names and no role, and saves nothing', async () => {

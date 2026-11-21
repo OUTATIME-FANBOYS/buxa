@@ -3,7 +3,7 @@ import { can } from '@buxa/domain';
 import { personPath } from '@/config/routes';
 import { Empty } from '@/components/components';
 import { PageHeader } from '@/components/components';
-import { EditPersonForm } from '@/components/components/people/forms';
+import { PersonForm } from '@/components/components/people/forms';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { displayName } from '@buxa/shared';
 import { loadPerson } from '@buxa/server/composers/index.server';
@@ -40,7 +40,7 @@ export async function EditPerson({ id }: { id: string }) {
         title="Edit person"
         subtitle={`${displayName(person)}. Changes are saved to the camp record and shown to everyone who can see this person.`}
       />
-      <EditPersonForm person={person} />
+      <PersonForm mode="edit" person={person} />
     </div>
   );
 }

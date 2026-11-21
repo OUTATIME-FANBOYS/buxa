@@ -6,6 +6,7 @@ import { revokeBadgeAction as revokeBadgeActionImpl } from '@buxa/server/compose
 import { updatePersonAction as updatePersonActionImpl } from '@buxa/server/composers/people/updatePersonAction';
 import { linkHouseholdAction as linkHouseholdActionImpl } from '@buxa/server/composers/people/linkHouseholdAction';
 import { createPersonAction as createPersonActionImpl } from '@buxa/server/composers/people/createPersonAction';
+import { loadPersonAction as loadPersonActionImpl } from '@buxa/server/composers/people/loadPersonAction';
 import { revokeMembershipAction as revokeMembershipActionImpl } from '@buxa/server/composers/people/revokeMembershipAction';
 import { unlinkHouseholdAction as unlinkHouseholdActionImpl } from '@buxa/server/composers/people/unlinkHouseholdAction';
 import { deletePeopleAction as deletePeopleActionImpl } from '@buxa/server/composers/people/deletePeopleAction';
@@ -39,6 +40,10 @@ export async function linkHouseholdAction(...args: Parameters<typeof linkHouseho
 
 export async function createPersonAction(...args: Parameters<typeof createPersonActionImpl>) {
   return createPersonActionImpl(...args);
+}
+
+export async function loadPersonAction(...args: Parameters<typeof loadPersonActionImpl>) {
+  return loadPersonActionImpl(...args);
 }
 
 export async function revokeMembershipAction(...args: Parameters<typeof revokeMembershipActionImpl>) {

@@ -137,11 +137,11 @@ form.person-form {
 .dialog.person-dialog {
   width: min(640px, 100%);
 }
-/* The add pop-up reads as one centred column: the section titles, helper lines and role headings sit centred. */
-.dialog.person-dialog .person-legend,
-.dialog.person-dialog .person-helper,
-.dialog.person-dialog .person-role-heading {
-  text-align: center;
+/* The person form reads left to right: section titles, helper lines and role headings are left aligned. Only the footer is centred. */
+.person-form .person-legend,
+.person-form .person-helper,
+.person-form .person-role-heading {
+  text-align: left;
 }
 .person-form .person-section {
   margin: 0;
@@ -182,12 +182,28 @@ form.person-form {
   gap: var(--s4);
 }
 .person-form .people-checks {
+  justify-content: flex-start;
   gap: var(--s2) var(--s5);
 }
+/* One role option: its control and its label share one centre line. The control is a fixed size, so the label centres on it. */
 .person-form .people-check {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--s2);
   font-size: var(--fs-b);
   font-weight: 400;
-  gap: var(--s2);
+  line-height: 1.4;
+  text-align: left;
+}
+.person-form .people-check > input {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+.person-form .people-check > span {
+  display: block;
 }
 .person-form .button {
   font-size: var(--fs-b);
