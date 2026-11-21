@@ -29,9 +29,12 @@
   outline: none;
 }
 .search-local:focus-within {
-  outline: 2px solid var(--accent);
-  outline-offset: -1px;
-  border-color: var(--accent);
+  outline: none;
+  border-color: var(--focus);
+}
+.search-local:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 .chip {
   display: inline-flex;

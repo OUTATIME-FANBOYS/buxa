@@ -20,10 +20,14 @@ describe('the field error text', () => {
 });
 
 describe('the field frame', () => {
-  it('shows a focus ring as the outline only: focus does not also change the border colour', () => {
-    const focus = defaults.match(/focus-visible\]:\[outline:2px_solid[^\s]*(\s+[^\s]*)?/)?.[0] ?? '';
-    expect(focus).toContain('outline');
-    expect(focus).not.toMatch(/border-\[var\(--accent\)\]/);
+  it('changes the border to the focus colour on focus, with no outline; the keyboard ring sits outside the field', () => {
+    const focus =
+      base.match(/:is\(input, select, textarea\):focus:not\(\[aria-invalid='true'\]\) \{([^}]*)\}/)?.[1] ?? '';
+    expect(focus).toMatch(/border-color:\s*var\(--focus\)/);
+    expect(base).toMatch(/:is\(input, select, textarea\):focus \{\s*outline:\s*none/);
+    expect(base).toMatch(
+      /:is\(input, select, textarea\):focus-visible \{\s*outline:\s*2px solid var\(--focus\);\s*outline-offset:\s*2px/,
+    );
   });
 
   it('an invalid field shows the red border, and drops the focus ring, so it never shows two frames', () => {

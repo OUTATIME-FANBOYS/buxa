@@ -83,6 +83,22 @@ code {
   outline-offset: 2px;
   border-radius: var(--r-1);
 }
+/* Form fields: a click or tap shows no outline; the border takes the focus colour instead. Keyboard focus adds one ring outside
+ * the field (outline-offset is positive, so it never covers the border). An invalid field keeps its error border and no ring. */
+:is(input, select, textarea):focus {
+  outline: none;
+}
+:is(input, select, textarea):focus:not([aria-invalid='true']) {
+  border-color: var(--focus);
+}
+:is(input, select, textarea):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+/* An error is the red border alone: no ring while the field is invalid. */
+:is(input, select, textarea)[aria-invalid='true']:focus-visible {
+  outline: none;
+}
 ::selection {
   background: var(--accent-soft);
 }

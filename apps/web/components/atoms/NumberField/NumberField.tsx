@@ -73,7 +73,7 @@ export function NumberField({
           setOwn(next);
           onChange?.(next);
         }}
-        className="buxa:box-border buxa:h-[var(--control-h)] buxa:w-full buxa:min-w-0 buxa:rounded-[var(--r-1)] buxa:border buxa:border-[var(--line)] buxa:bg-[var(--surface)] buxa:px-3 buxa:font-[inherit] buxa:text-[var(--text)] buxa:outline-none buxa:focus-visible:outline-2 buxa:focus-visible:outline-[var(--focus)] buxa:aria-[invalid=true]:border-[var(--crit)] buxa:disabled:opacity-60 buxa:disabled:cursor-not-allowed buxa:[appearance:textfield] buxa:[&::-webkit-inner-spin-button]:appearance-none buxa:[&::-webkit-outer-spin-button]:appearance-none"
+        className="buxa:box-border buxa:h-[var(--control-h)] buxa:w-full buxa:min-w-0 buxa:rounded-[var(--r-1)] buxa:border buxa:border-[var(--line)] buxa:bg-[var(--surface)] buxa:px-3 buxa:font-[inherit] buxa:text-[var(--text)] buxa:outline-none buxa:aria-[invalid=true]:border-[var(--crit)] buxa:disabled:opacity-60 buxa:disabled:cursor-not-allowed buxa:[appearance:textfield] buxa:[&::-webkit-inner-spin-button]:appearance-none buxa:[&::-webkit-outer-spin-button]:appearance-none"
       />
       {error ? (
         <p id={hintId} className="field-error" role="alert">

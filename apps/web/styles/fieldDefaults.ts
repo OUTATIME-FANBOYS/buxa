@@ -5,6 +5,7 @@
  *
  * Utilities live in a Tailwind layer, and the app's unlayered CSS (base.css: input, select and textarea reset to
  * `color: inherit`) beats a layered utility. So a rule that must win over that reset is forced (!).
+ * The focus state (border colour, keyboard ring) is not here: it is in base.css, where it wins over these utilities.
  */
 export const FIELD_DEFAULTS = [
   // Inputs and selects: the field box, its height, and the border that the hover and focus states change.
@@ -12,8 +13,6 @@ export const FIELD_DEFAULTS = [
   // Textareas: the same box, padded and sized for lines of text, and resizable down the page only.
   'buxa:[&_textarea]:w-full buxa:[&_textarea]:bg-[var(--surface)] buxa:[&_textarea]:border buxa:[&_textarea]:border-[var(--control)] buxa:[&_textarea]:rounded-[var(--r-1)] buxa:[&_textarea]:px-[var(--s3)] buxa:[&_textarea]:py-[var(--s2)] buxa:[&_textarea]:h-auto buxa:[&_textarea]:resize-y buxa:[&_textarea]:leading-[1.5] buxa:[&_textarea]:[transition:border-color_0.15s]',
   'buxa:[&_:is(input,select,textarea):hover]:border-[var(--text-2)]',
-  // One ring on focus: the outline. The border keeps its colour, so a focused field never shows two frames.
-  'buxa:[&_:is(input,select,textarea):focus-visible]:[outline:2px_solid_var(--accent)] buxa:[&_:is(input,select,textarea):focus-visible]:[outline-offset:-1px]',
   // Checkboxes and radio buttons: the native control at 16px, in the accent colour.
   'buxa:[&_input[type=checkbox]]:w-[16px] buxa:[&_input[type=checkbox]]:h-[16px] buxa:[&_input[type=checkbox]]:[accent-color:var(--accent)] buxa:[&_input[type=checkbox]]:p-0 buxa:[&_input[type=checkbox]]:flex-none',
   'buxa:[&_input[type=radio]]:w-[16px] buxa:[&_input[type=radio]]:h-[16px] buxa:[&_input[type=radio]]:[accent-color:var(--accent)] buxa:[&_input[type=radio]]:p-0 buxa:[&_input[type=radio]]:flex-none',

@@ -155,8 +155,14 @@
   border-radius: var(--r-1);
   color: var(--text-3);
 }
+/* The box has no border, so its focus border is an inset line in the focus colour. Keyboard focus adds one ring outside the box. */
 .search .search-field__box:focus-within {
-  outline: 2px solid var(--accent);
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--focus);
+}
+.search .search-field__box:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 .search .search-field__icon {
   position: absolute;
