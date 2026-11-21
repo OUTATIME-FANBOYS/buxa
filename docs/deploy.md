@@ -33,7 +33,7 @@ Paste secrets only into Vercel's form, never into the repo or a chat.
 ## Database requirements
 
 - Postgres 15 or newer. Row-level security is how tenants are kept apart, so it is not optional.
-- Migrations are the `.sql` files in `packages/db/migrations`, applied in filename order. The current set is `0001` to `0037`. Do not add a migration under a number that is already used.
+- Migrations are the `.sql` files in `packages/db/migrations`, applied in filename order. The current set is `0001` to `0040`. Do not add a migration under a number that is already used.
   There are two logins. They must be different, and the web app must only ever hold the restricted one.
   The names: `buxa_app` is a `NOLOGIN` role that migration `0001` creates; tenant queries switch to it. `buxa_runtime` is the runtime login the operator creates (see "Operator steps"). The migration login is whatever login `MIGRATION_DATABASE_URL` names. On Supabase it may be the owner role (`postgres`), which `docs/security.md` (section 7.5) describes as a permanent limit.
 
@@ -116,13 +116,16 @@ The rules are: **the database accepts connections only from the deploy job and f
 4. Pull requests get a **preview** deployment at their own address, against the same database but never migrating it: a PR that adds a migration will not see its new tables in the preview until it is merged. Test those locally.
 5. After a deploy, check `<address>/ready` (expect `{"status":"ready"}`), then sign in.
 
-## Phase 3 migrations (0023 to 0037)
+## Phase 3 migrations (0023 to 0040)
 
-Migrations `0023` to `0037` add registration forms and registrations, session prices, seat holds, the teacher role and its assignments and options, the calendar feeds, public session pages, confirmation, notifications and the session delete guard. Each is one transaction, and a production build applies them in order, as described above.
+Migrations `0023` to `0040` add registration forms and registrations, session prices, seat holds, the teacher role and its assignments and options, the calendar feeds, public session pages, confirmation, notifications, the session delete guard, teacher invites, owner role changes and owner person delete. Each is one transaction, and a production build applies them in order, as described above.
 
 - **Expand and contract for session membership.** `0032` only adds functions. `0034` drops the older owner-rights overloads, including `buxa_memberships_of(uuid)`, and requires a signed-in member in every row policy. The migration's header says the v0.2.3 release still calls those overloads and is not serving anywhere, so do not run v0.2.3 against a database where `0034` has run. Whether `0034` has run on production is not confirmed in the repository.
 - **Org name and time zone** (`0036`) change the row policy so only an admin or the owner may update the camp row.
 - **Session delete** (`0035`) refuses, in the database, to delete a session that still holds classes.
+- **Teacher invites** (`0038`) add `member_invites`, which stores only a SHA-256 hash of each token, and `users.phone`. The request role has no DELETE on invites. Three definer functions handle accepting an invite and the profile, and take the signed-in user from `current_user_id()`.
+- **Role change** (`0039`) adds `buxa_change_member_role`, the one write path for a member's role. It refuses a change to one's own role, keeps at least one owner, and lets only the owner make or remove an owner. It writes `member.role_change`.
+- **Person delete** (`0040`) adds `buxa_delete_person`, owner only. It removes the person (linked rows cascade), removes pending teacher invites sent to that email, and writes `person.delete` without the person's details.
 
 ## Migration 0022: sessions and classes
 

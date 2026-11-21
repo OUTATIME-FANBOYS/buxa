@@ -52,25 +52,28 @@ There are no browser-only accounts and no shared demo password. Sample accounts 
 
 Each person has one role per camp: **viewer**, **staff**, **admin**, **owner** or **teacher** (the `ROLES` list). Viewer, staff, admin and owner form a ladder: a higher role has everything the lower ones have. A teacher sits outside the ladder: it holds a few grants, and they apply only inside the classes it is assigned to. The matrix is `packages/domain/src/permissions.ts`. Services check it on every read and write, and the screens only hide controls.
 
-| Area                                              | Viewer                          | Staff                              | Admin                                                        | Owner                                                                                          |
-| ------------------------------------------------- | ------------------------------- | ---------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| Check-in and on site (`attendance:*`)             | none                            | read, record                       | also override and export                                     | as admin                                                                                       |
-| People (`people:*`, memberships, badges)          | read people, no contact details | also read contacts, create, update | also delete, authorise pickup, manage memberships and badges | as admin                                                                                       |
-| Classes and events (`classes:manage`, `events:*`) | read events                     | manage classes                     | also create, update and delete events                        | as admin                                                                                       |
-| Staff board (`tasks:*`)                           | read                            | create, edit, move and comment     | also delete tasks and manage boards                          | as admin                                                                                       |
-| Team (`members:*`)                                | read members, leave             | as viewer                          | also read contacts, invite, change roles, remove             | as admin                                                                                       |
-| Camp (`org:*`, `audit:read`, `data:*`)            | read the camp                   | as viewer                          | also rename the camp and read the audit log                  | also delete the camp (owner), archive and unarchive it. Transfer, export and erase are planned |
+| Area                                              | Viewer                          | Staff                              | Admin                                                         | Owner                                                                                          |
+| ------------------------------------------------- | ------------------------------- | ---------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Check-in and on site (`attendance:*`)             | none                            | read, record                       | also override and export                                      | as admin                                                                                       |
+| People (`people:*`, memberships, badges)          | read people, no contact details | also read contacts, create, update | also archive, authorise pickup, manage memberships and badges | as admin, and delete a person (owner only)                                                     |
+| Classes and events (`classes:manage`, `events:*`) | read events                     | manage classes                     | also create, update and delete events                         | as admin                                                                                       |
+| Staff board (`tasks:*`)                           | read                            | create, edit, move and comment     | also delete tasks and manage boards                           | as admin                                                                                       |
+| Team (`members:*`)                                | read members, leave             | as viewer, and invite teachers     | also read contacts, invite teachers, change roles             | as admin, and make or remove an owner                                                          |
+| Camp (`org:*`, `audit:read`, `data:*`)            | read the camp                   | as viewer                          | also rename the camp and read the audit log                   | also delete the camp (owner), archive and unarchive it. Transfer, export and erase are planned |
 
 The teacher's grants are not in this table. A teacher can read its assigned classes and the people in them, and rename its own classes. It records check-in and check-out only when an admin turns on that option for it (`member_options`, migration `0030`). A teacher has no People, Team access, Work or Admin screens.
 
 The full category table, with what is built and what is planned, is in `docs/phases/03-registration.md`.
 
-**Built:** the teacher role (migrations `0026` and `0027`, the class assignments and the per-person options), and archiving, unarchiving and deleting a camp from the owner's danger zone in Settings.
+**Built:** the teacher role (migrations `0026` and `0027`, the class assignments and the per-person options), teacher invites by email (migration `0038`), changing a member's role on Manage access (migration `0039`, owner-only changes to owners), deleting a person (owner only, migration `0040`), and renaming, archiving, unarchiving and deleting a camp in Settings. Rename and archive are for admins and the owner; delete is for the owner only, from the Danger zone.
+
+A teacher invite is sent from Add person with the Instructor role. The invited person opens the link, signs in with the same email, and joins with the teacher role. Invites for the other roles show "Invites for this role are coming soon." Sign-up confirmation is not working end to end yet, so that sign-in step is blocked for a new account (see "Known limits").
 
 **Planned, not built:**
 
 - **Transfer ownership, the audit-log screen, and exporting or erasing a camp's data** (`org:transfer_ownership`, `audit:read`, `data:export`, `data:erase`). Erase is owner-only and no code for it exists yet. Phase 0 requires that deleting an organisation still works while audit rows stay append-only.
-- **Invitations.** Team invites, role changes and removal are not built (the Team page says "Inviting people is not available yet"). Teacher invites by email are not built either. Migration `0037` is notifications, not invitations.
+- **Invitations for other roles, and removing a member.** Only teacher invites exist. `members:remove` has no screen or service yet.
+- **Membership expiry for camp access.** Manage access changes roles only; a time limit on a person's access to the camp is not built. (The valid, expired and not-yet-started status of a person's season membership is built; see `docs/phases/01-members-checkin.md`.)
 
 ## Code map
 
@@ -86,6 +89,18 @@ The full category table, with what is built and what is planned, is in `docs/pha
 - Email verification relies on Supabase's "Confirm email" setting, not on a claim in the token (`user_metadata` is user-editable, so `email_verified` there proves nothing). In production, if that setting is off, the API answers 503 on every route and the app shows a maintenance page instead of its pages and forms (checked on first use, not at process start). Revisit when invitations link people by email.
 - `org_members` is read-only for request handling (migration `0006`); the only write path is organisation creation, through the `buxa_create_org` function. Member-management routes must add narrow write policies, not widen the read one.
 - Multi-factor authentication for staff accounts that see children's data is not enforced yet.
+- **Sign-up email confirmation does not work end to end yet.** The sign-up call (`apps/server/src/composers/auth/signUp.ts`) sets no `emailRedirectTo`, and the app has no `/auth` route that exchanges the emailed link. The link therefore does not finish in this app. Fix the code and the dashboard together (see the next section).
+
+## Sign-up confirmation: the gap and the fix
+
+Code still to write: an `apps/web/app/auth/confirm/route.ts` that reads `token_hash` and `type` from the URL and calls `verifyOtp`, and a `signUp` call that passes `options.emailRedirectTo` pointing at that route. Then, in the Supabase dashboard (you do these; they need your project):
+
+1. **Authentication, URL Configuration, Site URL:** the address of the deployed app (for local work, the local dev address).
+2. **Authentication, URL Configuration, Redirect URLs:** add `<app address>/auth/confirm`, with the same host as the Site URL.
+3. **Authentication, Email Templates, Confirm signup:** make the link carry the token hash, not the default link:
+   `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup`
+
+Keep "Confirm email" on (see the limit above). Do not put the project URL or any key in the repo while you do this.
 
 ## In the browser: cookie sessions
 
