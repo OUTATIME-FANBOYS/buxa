@@ -1,5 +1,5 @@
 import type { Actor, EnrolmentDecision, EnrolmentFacts } from '@buxa/domain';
-import type { Class, Enrolment, NewSessionInput, Session, SessionPriceInput } from '@buxa/contracts';
+import type { Class, Enrolment, NewSessionInput, Session, SessionEditInput, SessionPriceInput } from '@buxa/contracts';
 
 export type { Class, Session, Enrolment } from '@buxa/contracts';
 
@@ -45,6 +45,13 @@ export interface ClassRepository {
   getSession(userId: string, orgId: string, sessionId: string): Promise<Session | null>;
   /** Audits `session.create`, and `session.price_change` when the session is created with a price. */
   createSession(actor: Actor, input: NewSessionInput): Promise<Session>;
+  /**
+   * Saves a session's name, description, dates and public flag (not its price). Audits `session.update` with the old and new values,
+   * and writes nothing when no value changed. Throws SessionNotFoundError.
+   */
+  updateSession(actor: Actor, sessionId: string, input: SessionEditInput): Promise<Session>;
+  /** Audits `session.delete`. Throws SessionNotFoundError, or SessionHasClassesError when the session holds any class. */
+  deleteSession(actor: Actor, sessionId: string): Promise<void>;
   /** Sets or clears a session's price. Audits `session.price_change` with the old and new price. Throws SessionNotFoundError. */
   setSessionPrice(actor: Actor, sessionId: string, price: SessionPriceInput | null): Promise<Session>;
   /** Audits `session.update`. Throws SessionNotFoundError. */

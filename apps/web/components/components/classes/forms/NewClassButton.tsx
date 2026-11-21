@@ -1,51 +1,64 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { Dialog } from '@/components/components/Dialog';
+import { FormPopUp } from '@/components/components';
 import { Button } from '@/components/elements';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { ClassForm, type InstructorChoice } from './ClassForm';
+
+const FORM_ID = 'new-class-form';
 
 /**
  * The session page's New class button. It opens the add form in a dialog, so the session's classes stay in view; the dialog closes
- * on Escape, the close button or Cancel, and focus returns to this button.
+ * on Escape, the close button or Cancel, and focus returns to this button. Cancel and Add class sit in the pinned footer.
  */
 export function NewClassButton({
   sessionId,
   sessionName,
-  timeZone,
   instructors,
 }: {
   sessionId: string;
   sessionName: string;
-  timeZone: string;
   instructors: readonly InstructorChoice[];
 }) {
   const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState(false);
   const close = useCallback(() => setOpen(false), []);
+  const { toast } = useUi();
+  // A saved form closes the pop-up and toasts the server's message.
+  const saved = useCallback(
+    (message: string) => {
+      toast(message);
+      setOpen(false);
+    },
+    [toast],
+  );
 
   return (
     <>
-      <Button
-        variant="primary"
-        type="button"
-        icon="plus"
-        className="classes-target"
-        aria-haspopup="dialog"
-        onClick={() => setOpen(true)}
-      >
+      <Button variant="glass" size="sm" type="button" icon="plus" aria-haspopup="dialog" onClick={() => setOpen(true)}>
         New class
       </Button>
       {open && (
-        <Dialog title="New class" onClose={close} className="class-dialog">
+        <FormPopUp
+          title="New class"
+          formId={FORM_ID}
+          submitLabel="Add class"
+          pendingLabel="Saving..."
+          submitIcon="plus"
+          pending={pending}
+          onCancel={close}
+        >
           <ClassForm
             sessionId={sessionId}
             sessionName={sessionName}
-            timeZone={timeZone}
             instructors={instructors}
             variant="dialog"
-            onCancel={close}
+            formId={FORM_ID}
+            onPendingChange={setPending}
+            onSaved={saved}
           />
-        </Dialog>
+        </FormPopUp>
       )}
     </>
   );

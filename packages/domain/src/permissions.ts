@@ -83,6 +83,8 @@ const STAFF: Action[] = [
   'registration:read',
   'registration:submit',
   'registration:confirm',
+  // Staff may invite teachers (the invite is for the teacher role only, enforced in the service and the database).
+  'members:invite',
 ];
 const ADMIN: Action[] = [
   ...STAFF,

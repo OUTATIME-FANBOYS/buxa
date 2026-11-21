@@ -14,7 +14,7 @@ describe('abilitiesFor (read from the same grants the server uses)', () => {
   });
   it('admin can rename and manage access but not delete', () => {
     expect(allowed('admin')).toEqual(
-      expect.arrayContaining(['Rename the camp', 'Manage who has access', 'Read the audit log']),
+      expect.arrayContaining(['Rename the camp', 'Invite people to the camp', 'Read the audit log']),
     );
     expect(allowed('admin')).not.toContain('Delete the camp');
   });

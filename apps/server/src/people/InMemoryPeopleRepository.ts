@@ -7,6 +7,7 @@ import {
   type PeopleRepository,
   type PersonFilter,
   type PersonHouseholdLink,
+  type PersonPageFilter,
   type PersonPatchRecord,
   type PersonRecord,
 } from './PeopleRepository';
@@ -125,6 +126,23 @@ export class InMemoryPeopleRepository implements PeopleRepository {
     });
   }
 
+  erase(actor: Actor, id: string): Promise<void> {
+    return settle(() => {
+      this.require(actor.orgId, id);
+      for (const [key, row] of this.db.memberships) {
+        if (row.orgId === actor.orgId && row.personId === id) this.db.memberships.delete(key);
+      }
+      for (const [key, row] of this.db.credentials) {
+        if (row.orgId === actor.orgId && row.personId === id) this.db.credentials.delete(key);
+      }
+      for (const [key, row] of this.db.checkIns) {
+        if (row.orgId === actor.orgId && row.personId === id) this.db.checkIns.delete(key);
+      }
+      this.db.people.delete(id);
+      this.db.record(actor, 'person.delete', 'person', id);
+    });
+  }
+
   archive(actor: Actor, id: string, at: string): Promise<PersonRecord> {
     return settle(() => {
       const person = this.require(actor.orgId, id);
@@ -174,6 +192,19 @@ export class InMemoryPeopleRepository implements PeopleRepository {
     });
   }
 
+  countPeople(userId: string, orgId: string, filter: PersonPageFilter): Promise<number> {
+    return settle(() => this.pageMatches(orgId, filter).length);
+  }
+
+  listPeoplePage(
+    userId: string,
+    orgId: string,
+    filter: PersonPageFilter,
+    window: { offset: number; limit: number },
+  ): Promise<PersonRecord[]> {
+    return settle(() => this.pageMatches(orgId, filter).slice(window.offset, window.offset + window.limit));
+  }
+
   createHousehold(actor: Actor, name: string): Promise<HouseholdRecord> {
     return settle(() => {
       return this.households.create(actor, name);
@@ -217,6 +248,20 @@ export class InMemoryPeopleRepository implements PeopleRepository {
     }
 
     return person;
+  }
+
+  /** Every person the page filter keeps, in list order. The Postgres WHERE clause in PgPersonQueries mirrors this. */
+  private pageMatches(orgId: string, filter: PersonPageFilter): PersonRecord[] {
+    const hasTerm = normalizeForSearch(filter.term) !== '';
+
+    return this.visible(
+      orgId,
+      p =>
+        (filter.includeArchived === true || p.archivedAt === null) &&
+        (filter.role === undefined || p.roles.includes(filter.role)) &&
+        (filter.ids === undefined || filter.ids.includes(p.id)) &&
+        (!hasTerm || matchesName(p, filter.term)),
+    );
   }
 
   private visible(orgId: string, keep: (p: StoredPerson) => boolean): PersonRecord[] {

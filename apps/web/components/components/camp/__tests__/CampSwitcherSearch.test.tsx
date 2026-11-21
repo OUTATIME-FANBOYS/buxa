@@ -5,7 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import type { Membership } from '@buxa/contracts';
 import { CampSwitcher } from '@/components/components/camp';
 
-const h = vi.hoisted(() => ({ select: vi.fn(async () => undefined), push: vi.fn(), refresh: vi.fn() }));
+const h = vi.hoisted(() => ({ select: vi.fn(() => Promise.resolve(undefined)), push: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: h.push, refresh: h.refresh }) }));
 vi.mock('@/actions/camp', () => ({ selectCampAction: h.select }));
 
@@ -56,8 +56,8 @@ describe('CampSwitcher search and recent camp', () => {
   const type = (text: string) =>
     act(() => {
       const input = search();
-      const setValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
-      setValue?.call(input, text);
+      const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+      descriptor?.set?.call(input, text);
       input?.dispatchEvent(new Event('input', { bubbles: true }));
     });
   const camps_ = () =>
@@ -93,7 +93,7 @@ describe('CampSwitcher search and recent camp', () => {
     expect(camps_()).toHaveLength(3);
   });
 
-  it('lists the camp last opened first, and the rest by name', async () => {
+  it('lists the camp last opened first, and the rest by name', () => {
     store.setItem(RECENT_KEY, 'o-cedar');
     act(() => root.render(<CampSwitcher camps={camps} current={BIRCH} />));
     open();
@@ -115,8 +115,10 @@ describe('CampSwitcher search and recent camp', () => {
     const cedar = Array.from(document.querySelectorAll<HTMLElement>('[role="menuitem"]')).find(
       i => i.textContent?.trim() === 'Camp Cedar',
     );
-    await act(async () => {
+    await act(() => {
       cedar?.click();
+
+      return Promise.resolve();
     });
     expect(h.select).toHaveBeenCalledWith('o-cedar');
     expect(store.getItem(RECENT_KEY)).toBe(JSON.stringify(['o-cedar']));
@@ -137,8 +139,10 @@ describe('CampSwitcher search and recent camp', () => {
     const alder = Array.from(document.querySelectorAll<HTMLElement>('[role="menuitem"]')).find(
       i => i.textContent?.trim() === 'Camp Alder',
     );
-    await act(async () => {
+    await act(() => {
       alder?.click();
+
+      return Promise.resolve();
     });
     expect(h.select).toHaveBeenCalledWith('o-alder');
   });

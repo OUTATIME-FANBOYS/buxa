@@ -7,9 +7,11 @@ import { addClassAction as addClassActionImpl } from '@buxa/server/composers/cla
 import { updateClassAction as updateClassActionImpl } from '@buxa/server/composers/classes/updateClassAction';
 import { deleteClassAction as deleteClassActionImpl } from '@buxa/server/composers/classes/deleteClassAction';
 import { setSessionPriceAction as setSessionPriceActionImpl } from '@buxa/server/composers/classes/setSessionPriceAction';
-import { setSessionPublicAction as setSessionPublicActionImpl } from '@buxa/server/composers/classes/setSessionPublicAction';
 import { addRecurringClassesAction as addRecurringClassesActionImpl } from '@buxa/server/composers/classes/addRecurringClassesAction';
 import { setTeachersAction as setTeachersActionImpl } from '@buxa/server/composers/classes/setTeachersAction';
+import { updateSessionAction as updateSessionActionImpl } from '@buxa/server/composers/classes/updateSessionAction';
+import { deleteSessionAction as deleteSessionActionImpl } from '@buxa/server/composers/classes/deleteSessionAction';
+import { deleteSessionsAction as deleteSessionsActionImpl } from '@buxa/server/composers/classes/deleteSessionsAction';
 
 // Server action wrappers for the classes screens. Client components import this module, never @buxa/server. Next.js allows only
 // async functions to be exported from a 'use server' file, so each action is wrapped rather than re-exported.
@@ -46,14 +48,22 @@ export async function setSessionPriceAction(...args: Parameters<typeof setSessio
   return setSessionPriceActionImpl(...args);
 }
 
-export async function setSessionPublicAction(...args: Parameters<typeof setSessionPublicActionImpl>) {
-  return setSessionPublicActionImpl(...args);
-}
-
 export async function addRecurringClassesAction(...args: Parameters<typeof addRecurringClassesActionImpl>) {
   return addRecurringClassesActionImpl(...args);
 }
 
 export async function setTeachersAction(...args: Parameters<typeof setTeachersActionImpl>) {
   return setTeachersActionImpl(...args);
+}
+
+export async function updateSessionAction(...args: Parameters<typeof updateSessionActionImpl>) {
+  return updateSessionActionImpl(...args);
+}
+
+export async function deleteSessionAction(...args: Parameters<typeof deleteSessionActionImpl>) {
+  return deleteSessionActionImpl(...args);
+}
+
+export async function deleteSessionsAction(...args: Parameters<typeof deleteSessionsActionImpl>) {
+  return deleteSessionsActionImpl(...args);
 }

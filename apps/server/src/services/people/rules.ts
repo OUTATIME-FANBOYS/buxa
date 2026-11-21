@@ -1,6 +1,6 @@
 import type { CampRole } from '@buxa/domain';
 
-export const CHOOSE_ROLE = 'Choose at least one role.';
+export const CHOOSE_ROLE = 'Pick a role.';
 export const CAMPER_NEEDS_GUARDIAN = 'A camper needs a household that has a parent or guardian.';
 export const RELATIONSHIP_NEEDED = 'Say how they are related.';
 export const PICKUP_NEEDS_GUARDIAN = 'Only a guardian can be authorised to collect a child.';

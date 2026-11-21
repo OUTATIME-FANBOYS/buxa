@@ -5,7 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import type { Membership } from '@buxa/contracts';
 import { CampSwitcher } from '@/components/components/camp';
 
-const h = vi.hoisted(() => ({ select: vi.fn(async () => undefined), push: vi.fn(), refresh: vi.fn() }));
+const h = vi.hoisted(() => ({ select: vi.fn(() => Promise.resolve(undefined)), push: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: h.push, refresh: h.refresh }) }));
 vi.mock('@/actions/camp', () => ({ selectCampAction: h.select }));
 
@@ -55,6 +55,16 @@ describe('CampSwitcher with archived camps', () => {
     expect(row?.className).toContain('pl-[5px]!');
   });
 
+  it('scrolls the camps between a fixed search field and a fixed "New camp…" row', () => {
+    act(() => root.render(<CampSwitcher camps={[live]} current={live} archivedCamps={[]} />));
+    open();
+    const scroller = document.querySelector('[role="menu"] [class*="overflow-y-auto"]');
+    expect(scroller?.className).toContain('max-h-');
+    expect(scroller?.contains(item('Camp Birchwood') ?? null)).toBe(true);
+    expect(scroller?.contains(item('New camp…') ?? null)).toBe(false);
+    expect(scroller?.contains(document.querySelector('input[type="search"]'))).toBe(false);
+  });
+
   it('"Show archived" opens the archived list, which selects a camp the same way as a live camp', async () => {
     act(() => root.render(<CampSwitcher camps={[live]} current={live} archivedCamps={[CEDAR]} />));
     open();
@@ -65,8 +75,10 @@ describe('CampSwitcher with archived camps', () => {
       i => i.textContent?.trim() === 'Camp Cedar',
     );
     expect(cedar).toBeDefined();
-    await act(async () => {
+    await act(() => {
       cedar?.click();
+
+      return Promise.resolve();
     });
     expect(h.select).toHaveBeenCalledWith('o-9');
   });

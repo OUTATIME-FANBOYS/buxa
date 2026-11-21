@@ -21,7 +21,7 @@ describe('AccountMenu', () => {
       email: 'rosa@example.com',
       clockFormat: null,
     };
-    const html = renderToStaticMarkup(<AccountMenu user={user} />);
+    const html = renderToStaticMarkup(<AccountMenu user={user} hasCamp />);
     expect(html).toContain('aria-label="Account"');
     expect(html).toMatch(/class="[^"]*\bavatar-btn\b[^"]*"/);
     expect(html).toMatch(/<form[^>]*hidden=""/);

@@ -14,6 +14,6 @@ describe('ResetDemoButton', () => {
           <ResetDemoButton />
         </UiProvider>,
       ),
-    ).toMatch(/<button[^>]*class="[^"]*button--danger-soft[^"]*"[^>]*>Reset demo data<\/button>/);
+    ).toMatch(/<button[^>]*class="[^"]*button--glass-danger[^"]*"[^>]*>Reset demo data<\/button>/);
   });
 });

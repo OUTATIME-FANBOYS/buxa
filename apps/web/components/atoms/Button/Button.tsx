@@ -14,6 +14,8 @@ import { Icon } from '../Icon';
  *   ghost        text only: navigation-like actions, Clear
  *   danger       filled with the destructive red: confirm a delete or a revoke
  *   danger-soft  tinted red with red text: Revoke, Disconnect, Reset demo data
+ *   glass        liquid glass, neutral: the pills' recipe (translucent tint, backdrop blur). Archive camp, Unarchive camp
+ *   glass-danger liquid glass, red-tinted: a destructive action such as Delete camp
  *
  * `icon` puts a lucide icon (by name, see icons.tsx) before the label. `iconOnly` makes a round button of just the
  * icon; it needs an aria-label, because the icon alone has no name. Use it where a label would repeat the context
@@ -27,7 +29,7 @@ import { Icon } from '../Icon';
  * `type` defaults to "submit", as a native button does, so a button inside a form keeps submitting it.
  */
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'danger-soft';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'danger-soft' | 'glass' | 'glass-danger';
 export type ButtonSize = 'sm' | 'md' | 'lg' | 'header';
 
 /** Icon size inside a button: the label's cap height, smaller on the dense size. */

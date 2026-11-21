@@ -14,7 +14,7 @@ const RECENT_KEY = 'buxa.recentCamps';
 const RECENT_LIMIT = 8;
 
 /** The camp ids last opened, most recent first. A single id from the older key is read as a list of one. */
-function readRecent(): string[] {
+export function readRecent(): string[] {
   try {
     const raw = localStorage.getItem(RECENT_KEY);
     if (!raw) return [];
@@ -28,7 +28,7 @@ function readRecent(): string[] {
   }
 }
 
-function writeRecent(orgId: string, previous: readonly string[]) {
+export function writeRecent(orgId: string, previous: readonly string[]) {
   try {
     const next = [orgId, ...previous.filter(id => id !== orgId)].slice(0, RECENT_LIMIT);
     localStorage.setItem(RECENT_KEY, JSON.stringify(next));
@@ -40,9 +40,10 @@ function writeRecent(orgId: string, previous: readonly string[]) {
 const byName = (a: Membership, b: Membership) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
 
 /**
- * The camp name in the top bar; opens a menu to switch camp or start another.
- * The menu has a search field, the recent camp first and the rest by name. Archived camps sit behind one "Show archived"
- * item at the bottom. Choosing one opens it read-only.
+ * The camp name in the top bar; opens a list to switch camp or start another. The list has a search field at the top and the
+ * "New camp…" item fixed at the bottom; the camps scroll between them. Each row shows the check on the current camp, and
+ * choosing it switches camp. Rename, archive and delete are not here: they live in Settings. Archived camps sit behind one
+ * "Show archived" item at the bottom, and open read-only.
  */
 export function CampSwitcher({
   camps,
@@ -104,6 +105,8 @@ export function CampSwitcher({
           },
         })),
         ...(needle && shown.length === 0 ? [{ label: 'No matching camps', disabled: true, onSelect() {} }] : []),
+      ]}
+      footer={[
         ...(camps.length ? [{ label: '', divider: true, onSelect() {} }] : []),
         { label: 'New camp…', icon: 'plus', onSelect: () => router.push(ROUTES.newCamp) },
         ...(archivedCamps.length

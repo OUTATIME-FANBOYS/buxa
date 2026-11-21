@@ -69,7 +69,7 @@ export function ListView({
 
   return (
     <div className="table-wrap">
-      <table className="table">
+      <table className={showProject ? 'table task-table' : 'table'}>
         <thead>
           <tr>
             <th className="c-check">
@@ -111,7 +111,7 @@ export function ListView({
                   </Checkbox>
                 </td>
                 <td>
-                  <Button variant="ghost" className="row-title" onClick={() => openTask(t.id)}>
+                  <Button variant="ghost" size="sm" className="row-title" onClick={() => openTask(t.id)}>
                     {t.title}
                   </Button>
                   <div className="row-sub">

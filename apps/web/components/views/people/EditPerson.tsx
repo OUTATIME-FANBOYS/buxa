@@ -3,10 +3,11 @@ import { can } from '@buxa/domain';
 import { personPath } from '@/config/routes';
 import { Empty } from '@/components/components';
 import { PageHeader } from '@/components/components';
-import { EditPersonForm } from '@/components/components/people/forms';
+import { PersonForm } from '@/components/components/people/forms';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { displayName } from '@buxa/shared';
-import { loadPerson } from '@buxa/server/composers/index.server';
+import { loadHouseholdList, loadPerson } from '@buxa/server/composers/index.server';
+import { toHouseholdChoices } from '@buxa/shared';
 import { Button } from '@/components/elements';
 
 /** Change one person's details. Only people:update may; everyone else is told so, without a form to fill in. */
@@ -34,13 +35,15 @@ export async function EditPerson({ id }: { id: string }) {
     );
   }
 
+  const households = toHouseholdChoices(await loadHouseholdList(actor));
+
   return (
     <div className="page narrow">
       <PageHeader
-        title={`Edit ${displayName(person)}`}
-        subtitle="Changes are saved to the camp record and shown to everyone who can see this person."
+        title="Edit person"
+        subtitle={`${displayName(person)}. Changes are saved to the camp record and shown to everyone who can see this person.`}
       />
-      <EditPersonForm person={person} />
+      <PersonForm mode="edit" person={person} households={households} />
     </div>
   );
 }

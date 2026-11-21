@@ -2,6 +2,7 @@ export * from './Agents';
 export * from './BoardPage';
 export * from './Dashboard';
 export * from './MyTasks';
+export * from './Profile';
 export * from './Projects';
 export * from './Reports';
 export * from './RoutePages';

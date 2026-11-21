@@ -3,7 +3,6 @@ import { can } from '@buxa/domain';
 import { sessionPath } from '@/config/routes';
 import { Empty, PageHeader } from '@/components/components';
 import { currentActor } from '@buxa/server/composers/index.server';
-import { campZone } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_MANAGE } from '@buxa/shared';
 import { loadSessionPage, loadPeopleWithRole } from '@buxa/server/composers/index.server';
 import { ClassForm } from '@/components/components/classes/forms';
@@ -37,7 +36,6 @@ export async function NewClass({ sessionId }: { sessionId: string }) {
     notFound();
   }
   const { session } = loaded.value;
-  const timeZone = await campZone(actor);
   const instructors = await loadPeopleWithRole(actor, 'instructor');
 
   return (
@@ -46,7 +44,6 @@ export async function NewClass({ sessionId }: { sessionId: string }) {
       <ClassForm
         sessionId={session.id}
         sessionName={session.name}
-        timeZone={timeZone}
         instructors={instructors.ok ? instructors.value.map(i => ({ id: i.id, name: i.name })) : []}
       />
     </div>

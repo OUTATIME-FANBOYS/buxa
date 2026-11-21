@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { personPath } from '@buxa/shared/config/routes';
+import { ROUTES, personPath } from '@buxa/shared/config/routes';
 import { idle } from '@buxa/shared';
 import { conflict, forbidden, badRequest, notFound } from '../../../http/errors';
 import { updatePersonAction } from '../updatePersonAction';
@@ -53,6 +53,28 @@ describe('updatePersonAction', () => {
     });
   });
 
+  it('saves every role the form posts, so two roles survive an edit that changes nothing', async () => {
+    const withoutEmail = Object.fromEntries(Object.entries(details).filter(([key]) => key !== 'email'));
+    await expect(
+      updatePersonAction(idle, formOf({ ...withoutEmail, roles: ['guardian', 'instructor'] })),
+    ).rejects.toThrow(`NEXT_REDIRECT ${personPath(IDS.person)}`);
+    expect(h.people.update).toHaveBeenCalledWith(
+      h.actor,
+      IDS.person,
+      expect.objectContaining({ roles: ['guardian', 'instructor'] }),
+    );
+  });
+
+  it('leaves the email alone when the form does not show an Email field (a family role)', async () => {
+    const withoutEmail = Object.fromEntries(Object.entries(details).filter(([key]) => key !== 'email'));
+    await expect(updatePersonAction(idle, formOf({ ...withoutEmail, roles: 'guardian' }))).rejects.toThrow(
+      `NEXT_REDIRECT ${personPath(IDS.person)}`,
+    );
+    const patch = h.people.update.mock.calls[0]?.[2] as Record<string, unknown>;
+    // Undefined means "unchanged": the service only writes the fields that are set.
+    expect(patch.email).toBeUndefined();
+  });
+
   it('refreshes the person page and opens it after saving', async () => {
     await expect(updatePersonAction(idle, formOf(details))).rejects.toThrow(`NEXT_REDIRECT ${personPath(IDS.person)}`);
     expect(h.revalidatePath).toHaveBeenCalledWith(personPath(IDS.person));
@@ -63,11 +85,27 @@ describe('updatePersonAction', () => {
     );
   });
 
+  it('posted from the Edit person pop-up (dialog=1) it returns a success and refreshes the list, with no redirect', async () => {
+    const state = await updatePersonAction(idle, formOf({ ...details, dialog: '1' }));
+    expect(state).toEqual({ status: 'success', message: 'Changes saved.' });
+    expect(h.redirect).not.toHaveBeenCalled();
+    expect(h.revalidatePath).toHaveBeenCalledWith(ROUTES.people);
+    expect(h.revalidatePath).toHaveBeenCalledWith(personPath(IDS.person));
+  });
+
+  it('rejects a role set that is not allowed with a field error on roles, and saves nothing', async () => {
+    const state = await updatePersonAction(idle, formOf({ ...details, roles: ['camper', 'instructor'] }));
+    expect(state.status).toBe('error');
+    const fieldErrors = state.status === 'error' ? state.fieldErrors : undefined;
+    expect(fieldErrors?.roles).toMatch(/can't go together/);
+    expect(h.people.update).not.toHaveBeenCalled();
+  });
+
   it('reports the contract messages for missing names and no role, and saves nothing', async () => {
     const state = await updatePersonAction(idle, formOf({ ...details, givenName: '', roles: [] }));
     expect(state).toMatchObject({
       status: 'error',
-      fieldErrors: { givenName: 'Required.', roles: 'Choose at least one role.' },
+      fieldErrors: { givenName: 'Required.', roles: 'Pick a role.' },
     });
     expect(h.people.update).not.toHaveBeenCalled();
   });

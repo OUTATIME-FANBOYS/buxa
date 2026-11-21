@@ -11,6 +11,18 @@ vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({
 
 const seed = buildSeed();
 
+/** `count` open tasks, all due on the 10th of July 2027 (the test's "today"). */
+function dayTasks(count: number) {
+  return Array.from({ length: count }, (_, i) => ({
+    ...seed.tasks[0],
+    id: `day-task-${i}`,
+    title: `Task ${i + 1}`,
+    due: '2027-07-10',
+  }));
+}
+
+const countChips = (html: string) => html.match(/cal-task cal-prio-/g)?.length ?? 0;
+
 describe('CalendarView', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -21,7 +33,7 @@ describe('CalendarView', () => {
 
   it('shows the month of the cursor and a six-week grid of days with Monday first', () => {
     const html = renderToStaticMarkup(<CalendarView tasks={[]} canCreate={false} />);
-    expect(html).toContain('<h2>July 2027</h2>');
+    expect(html).toContain('<h2 class="sr-only">July 2027</h2>');
     expect(html.match(/role="gridcell"/g)).toHaveLength(42);
     expect(html.indexOf('>Mon<')).toBeLessThan(html.indexOf('>Sun<'));
     expect(html).toContain('aria-label="Previous month"');
@@ -39,6 +51,27 @@ describe('CalendarView', () => {
     expect(html).toContain('title="Plan the trip"');
     expect(html).toMatch(/class="button button--ghost button--sm cal-task[ "]/);
     expect(html).toMatch(/<svg[^>]*class="[^"]*text-\[var\(--p-high\)\][^"]*cal-dot"/);
+  });
+  it('edges each chip in its priority, so the border matches the priority icon', () => {
+    const base = { ...seed.tasks[0], priority: 'critical' as const, due: '2027-07-10' };
+    const html = renderToStaticMarkup(<CalendarView tasks={[base]} canCreate={false} />);
+    expect(html).toMatch(/class="[^"]*cal-task cal-prio-critical[ "]/);
+  });
+  it('shows every task of a day with five or fewer, and no control', () => {
+    const html = renderToStaticMarkup(<CalendarView tasks={dayTasks(5)} canCreate={false} />);
+    expect(countChips(html)).toBe(5);
+    expect(html).not.toContain('cal-more');
+  });
+  it('shows the first five tasks of a day and a "+1" control for a sixth', () => {
+    const html = renderToStaticMarkup(<CalendarView tasks={dayTasks(6)} canCreate={false} />);
+    expect(countChips(html)).toBe(5);
+    expect(html).toMatch(/class="button button--glass button--sm cal-more"[^>]*>\+1</);
+    expect(html).toContain('aria-label="1 more tasks"');
+  });
+  it('shows the first five tasks of a day and a "+2" control for a seventh', () => {
+    const html = renderToStaticMarkup(<CalendarView tasks={dayTasks(7)} canCreate={false} />);
+    expect(countChips(html)).toBe(5);
+    expect(html).toMatch(/cal-more"[^>]*>\+2</);
   });
   it('leaves every pill untinted: its body is the surface, and only the priority icon carries colour', () => {
     const base = { ...seed.tasks[0], priority: 'high' as const, due: '2027-07-10' };

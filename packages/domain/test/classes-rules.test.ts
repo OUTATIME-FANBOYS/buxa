@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkAge, isValidAgeRange, seatFor, seatsLeft } from '../src';
+import { capacityCovers, checkAge, isValidAgeRange, seatFor, seatsLeft } from '../src';
 
 describe('age range (inclusive)', () => {
   const range = { minAge: 8, maxAge: 12 };
@@ -48,5 +48,10 @@ describe('capacity (hard limit)', () => {
     expect(seatsLeft(10, 4)).toBe(6);
     expect(seatsLeft(10, 10)).toBe(0);
     expect(seatsLeft(10, 12)).toBe(0);
+  });
+  it('a camp size covers the places taken when it is not below them', () => {
+    expect(capacityCovers(10, 10)).toBe(true);
+    expect(capacityCovers(10, 9)).toBe(true);
+    expect(capacityCovers(9, 10)).toBe(false);
   });
 });

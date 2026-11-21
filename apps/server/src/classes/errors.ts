@@ -61,6 +61,17 @@ export class ClassHasEnrolmentsError extends Error {
   }
 }
 
+export const SESSION_HAS_CLASSES_MESSAGE = 'This session has classes. Delete them first.';
+
+/** A session (the parent) that still holds classes cannot be deleted. Migration 0035 refuses it at the database too. */
+export class SessionHasClassesError extends Error {
+  readonly kind = 'session-has-classes';
+  constructor() {
+    super(SESSION_HAS_CLASSES_MESSAGE);
+    this.name = 'SessionHasClassesError';
+  }
+}
+
 export class EnrolmentNotFoundError extends Error {
   readonly kind = 'enrolment-not-found';
   constructor() {
@@ -192,6 +203,7 @@ export type ClassErrorKind =
   | 'class-outside-session'
   | 'capacity-below-enrolled'
   | 'class-has-enrolments'
+  | 'session-has-classes'
   | 'enrolment-not-found'
   | 'camper-not-found'
   | 'instructor-not-found'

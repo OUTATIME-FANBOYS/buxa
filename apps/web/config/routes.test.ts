@@ -8,9 +8,16 @@ describe('ROUTES', () => {
   });
 
   it('puts every work page and camp operations page under /camp', () => {
-    for (const path of Object.values(ROUTES).filter(p => p !== ROUTES.home && p !== ROUTES.signIn)) {
+    for (const path of Object.values(ROUTES).filter(
+      p => p !== ROUTES.home && p !== ROUTES.signIn && p !== ROUTES.account,
+    )) {
       expect(isCampPath(path)).toBe(true);
     }
+  });
+
+  it('keeps the profile outside the camp area, so it opens without a camp', () => {
+    expect(ROUTES.account).toBe('/account');
+    expect(isCampPath(ROUTES.account)).toBe(false);
   });
 
   it('gives the task pages their /camp addresses', () => {

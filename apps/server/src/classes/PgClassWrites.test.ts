@@ -61,10 +61,10 @@ describe('insertSession (the date range)', () => {
       endsOn: '2027-07-31',
     });
     expect(id).toBe(sessionId);
-    expect(seen).toHaveLength(2);
     expect(seen[0].sql).toMatch(/^INSERT INTO classes/);
-    expect(seen[1].sql).toMatch(/^INSERT INTO audit_log/);
-    expect(seen[1].params).toEqual([
+    const audit = seen.filter(s => s.sql.startsWith('INSERT INTO audit_log'));
+    expect(audit).toHaveLength(1);
+    expect(audit[0]?.params).toEqual([
       actor.orgId,
       actor.userId,
       'session.create',
@@ -88,8 +88,8 @@ describe('insertClass (the time range)', () => {
     const { client, seen } = fakeDb(sql => (sql.includes('INSERT INTO sessions') ? [{ id: classId }] : undefined));
     await insertClass(client, actor, sessionId, classInput);
     expect(seen.some(s => s.sql.includes('session_instructors'))).toBe(false);
-    expect(seen.at(-1)?.sql).toMatch(/audit_log/);
-    expect(seen.at(-1)?.params).toContain('class.create');
+    const audit = seen.find(s => s.sql.includes('audit_log'));
+    expect(audit?.params).toContain('class.create');
   });
 });
 
@@ -110,7 +110,7 @@ describe('updateClassRow', () => {
     });
     await updateClassRow(client, actor, classId, { ...classInput, instructorIds: [personA] });
     expect(seen.some(s => s.sql.includes('buxa_replace_class_instructors'))).toBe(true);
-    expect(seen.at(-1)?.params).toContain('class.update');
+    expect(seen.find(s => s.sql.includes('audit_log'))?.params).toContain('class.update');
   });
 });
 

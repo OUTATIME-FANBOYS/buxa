@@ -1,4 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server';
+import { UiProvider } from '@buxa/middleware/providers/providers';
 import { describe, expect, it, vi } from 'vitest';
 import type { Class } from '@buxa/contracts';
 import { ClassesTable } from '@/components/components/classes';
@@ -25,19 +26,22 @@ const cls = (over: Partial<Class> = {}): Class => ({
   ...over,
 });
 
+const NoDialog = () => null;
 const render = (canManage: boolean, selectedId: string | null = null) =>
   renderToStaticMarkup(
-    <ClassesTable
-      sessionId={SESSION}
-      sessionName="Summer camp"
-      classes={[cls()]}
-      timeZone="Australia/Sydney"
-      clockFormat="24h"
-      selectedId={selectedId}
-      canManage={canManage}
-      canEdit={canManage}
-      instructors={[]}
-    />,
+    <UiProvider Dialog={NoDialog}>
+      <ClassesTable
+        sessionId={SESSION}
+        sessionName="Summer camp"
+        classes={[cls()]}
+        timeZone="Australia/Sydney"
+        clockFormat="24h"
+        selectedId={selectedId}
+        canManage={canManage}
+        canEdit={canManage}
+        instructors={[]}
+      />
+    </UiProvider>,
   );
 
 describe('ClassesTable: the classes of one session', () => {
@@ -63,7 +67,7 @@ describe('ClassesTable: the classes of one session', () => {
     expect(render(true)).toContain('title="Edit class"');
     expect(render(true)).toContain('aria-label="Delete Robotics"');
     expect(render(true)).toContain('title="Delete class"');
-    expect(render(true)).toContain('classes-delete');
+    expect(render(true)).toContain('button--glass-danger');
     expect(render(false)).not.toContain('aria-label="Edit Robotics"');
     expect(render(false)).not.toContain('aria-label="Delete Robotics"');
   });

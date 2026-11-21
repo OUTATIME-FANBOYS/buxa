@@ -38,8 +38,9 @@ describe('session price form', () => {
   it('refuses extra decimal places with a message, rather than rounding', () => {
     const parsed = sessionPriceForm(form({ priceAmount: '12.345' }));
     expect(parsed.ok).toBe(false);
+    const priceError: unknown = expect.stringMatching(/fewer decimal places/);
     expect(parsed.ok ? null : parsed.state).toMatchObject({
-      fieldErrors: { priceAmount: expect.stringMatching(/fewer decimal places/) },
+      fieldErrors: { priceAmount: priceError },
     });
   });
 

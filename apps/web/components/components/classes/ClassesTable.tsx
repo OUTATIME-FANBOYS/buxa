@@ -81,7 +81,7 @@ export function ClassesTable({
                 <td>
                   <div className="classes-row-actions">
                     <Button
-                      variant="ghost"
+                      variant="glass"
                       size="sm"
                       iconOnly
                       icon="users"
@@ -94,7 +94,6 @@ export function ClassesTable({
                       <EditClassButton
                         cls={cls}
                         sessionName={sessionName}
-                        timeZone={timeZone}
                         instructors={instructors}
                         detailsOnly={!canManage}
                       />

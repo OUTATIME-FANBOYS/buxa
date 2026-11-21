@@ -7,6 +7,7 @@ export * from './HouseholdPanel';
 export * from './MembershipRow';
 export * from './MembershipsPanel';
 export * from './OnSitePill';
+export * from './PeoplePagination';
 export * from './PeopleSearch';
 export * from './PeopleTable';
 export * from './PersonHeader';

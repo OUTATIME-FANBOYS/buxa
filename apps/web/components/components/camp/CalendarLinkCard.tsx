@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/elements';
-import { rotateCalendarTokenAction } from '@/actions/camp';
+import { rotateCalendarTokenAction, rotateOwnCalendarTokenAction } from '@/actions/camp';
 
 /**
- * The camp's calendar link. The raw token exists only in this response: the server keeps a hash. The link is shown once, with a copy
- * button, and making a new one stops the old one working at once. Only people with org:update see this card.
+ * A calendar link. The raw token exists only in this response: the server keeps a hash. The link is shown once, with a copy
+ * button, and making a new one stops the old one working at once. The camp link (org:update) covers every session; a teacher's
+ * own link (`own`) covers only the classes that teacher is assigned to.
  */
-export function CalendarLinkCard() {
+export function CalendarLinkCard({ own = false }: { own?: boolean }) {
   const [link, setLink] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -16,7 +17,7 @@ export function CalendarLinkCard() {
   async function makeLink() {
     setBusy(true);
     setMessage(null);
-    const result = await rotateCalendarTokenAction();
+    const result = own ? await rotateOwnCalendarTokenAction() : await rotateCalendarTokenAction();
     setBusy(false);
     if (!result.ok) {
       setMessage(result.message);
@@ -40,10 +41,11 @@ export function CalendarLinkCard() {
 
   return (
     <section className="panel settings-tile">
-      <h2 className="settings-tile-heading">Calendar link</h2>
+      <h2 className="settings-tile-heading">{own ? 'Your calendar link' : 'Calendar link'}</h2>
       <p className="class-helper">
-        Calendar apps subscribe to this link. Anyone with it can read the camp&apos;s sessions and classes. Making a new
-        link stops the old one at once.
+        {own
+          ? 'Calendar apps subscribe to this link. Anyone with it can read the classes you are assigned to. Making a new link stops the old one at once.'
+          : 'Calendar apps subscribe to this link. Anyone with it can read the camp’s sessions and classes. Making a new link stops the old one at once.'}
       </p>
       {link ? (
         <>
@@ -56,7 +58,13 @@ export function CalendarLinkCard() {
             onFocus={e => e.currentTarget.select()}
           />
           <div className="classes-actions">
-            <Button type="button" onClick={copy}>
+            <Button
+              type="button"
+              variant="glass"
+              onClick={() => {
+                void copy();
+              }}
+            >
               Copy link
             </Button>
           </div>
@@ -64,7 +72,14 @@ export function CalendarLinkCard() {
       ) : null}
       {message && <p role="status">{message}</p>}
       <div className="classes-actions">
-        <Button type="button" variant="ghost" onClick={makeLink} disabled={busy}>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => {
+            void makeLink();
+          }}
+          disabled={busy}
+        >
           {busy ? 'Making...' : link ? 'Make a new link' : 'Make a calendar link'}
         </Button>
       </div>

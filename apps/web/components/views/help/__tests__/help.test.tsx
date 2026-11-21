@@ -30,7 +30,8 @@ describe('HelpPage', () => {
       const cur = Number(levels[i]?.slice(1));
       expect(cur).toBeLessThanOrEqual(prev + 1);
     }
-    const sectionTitles = HELP_SECTIONS.map(s => s.title);
+    // The help sections, then the default roles table (its heading is an h2 at the end).
+    const sectionTitles = [...HELP_SECTIONS.map(s => s.title), 'What each role can do'];
     const h2s = headingTexts(html).filter((_, i) => levels[i] === 'h2');
     expect(h2s).toEqual(sectionTitles);
   });

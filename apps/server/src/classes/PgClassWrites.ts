@@ -1,11 +1,12 @@
 import { isUuid, type Actor } from '@buxa/domain';
-import type { NewSessionInput, SessionPriceInput } from '@buxa/contracts';
+import type { NewSessionInput, SessionEditInput, SessionPriceInput } from '@buxa/contracts';
 import { recordAudit } from '../audit/recordAudit';
 import { type Db } from '../people/pgRows';
 import type { ClassRecord } from './ClassRepository';
 import { ClassNotFoundError, InstructorNotFoundError, SessionNotFoundError } from './errors';
 import { toPrice, type PriceRow } from './PgClassQueries';
 import { priceChangeAudit, samePrice } from './priceAudit';
+import { sameSessionDetails, sessionEditAudit, type SessionDetails } from './sessionEditAudit';
 
 /*
  * Writes for sessions (the parent rows) and classes (the time-range rows). Each write audits itself in the same transaction.
@@ -50,6 +51,71 @@ export async function insertSession(db: Db, actor: Actor, input: NewSessionInput
   }
 
   return id;
+}
+
+/**
+ * Saves a session's details (not its price). Locks the row first, so the audit entry records the values that were really replaced.
+ * Nothing is written when no value changed. Throws SessionNotFoundError when the session is not in the camp.
+ */
+export async function updateSessionRow(
+  db: Db,
+  actor: Actor,
+  sessionId: string,
+  input: SessionEditInput,
+): Promise<void> {
+  const { rows } = await db.query<{
+    name: string;
+    description: string | null;
+    starts_on: string | null;
+    ends_on: string | null;
+    is_public: boolean;
+  }>(
+    `SELECT name, description, to_char(starts_on, 'YYYY-MM-DD') AS starts_on, to_char(ends_on, 'YYYY-MM-DD') AS ends_on, is_public
+       FROM classes WHERE id = $1 AND org_id = $2 FOR UPDATE`,
+    [sessionId, actor.orgId],
+  );
+  if (rows.length === 0) {
+    throw new SessionNotFoundError();
+  }
+  const before: SessionDetails = {
+    name: rows[0].name,
+    description: rows[0].description ?? '',
+    startsOn: rows[0].starts_on,
+    endsOn: rows[0].ends_on,
+    isPublic: rows[0].is_public,
+  };
+  const after: SessionDetails = {
+    name: input.name,
+    description: input.description,
+    startsOn: input.startsOn,
+    endsOn: input.endsOn,
+    isPublic: input.isPublic ?? false,
+  };
+  if (sameSessionDetails(before, after)) {
+    return;
+  }
+  await db.query(
+    `UPDATE classes
+        SET name = $3, description = $4, starts_on = $5::date, ends_on = $6::date, is_public = $7
+      WHERE id = $1 AND org_id = $2`,
+    [sessionId, actor.orgId, after.name, after.description, after.startsOn, after.endsOn, after.isPublic],
+  );
+  await recordAudit(db, {
+    actor,
+    action: 'session.update',
+    entity: 'session',
+    entityId: sessionId,
+    data: sessionEditAudit(before, after),
+  });
+}
+
+/**
+ * Deletes a session through buxa_delete_session_v2 (migration 0035). The database refuses a session that holds classes; the app
+ * checks classes:manage with authorize() before it calls this. Audits `session.delete`.
+ */
+export async function deleteSessionRow(db: Db, actor: Actor, sessionId: string, name: string): Promise<void> {
+  await db.query('SELECT buxa_delete_session_v2($1, $2)', [actor.orgId, sessionId]);
+  await recordAudit(db, { actor, action: 'session.delete', entity: 'session', entityId: sessionId, data: { name } });
 }
 
 /** Sets whether a session has a public page, and audits it. Throws SessionNotFoundError when the session is not in the camp. */

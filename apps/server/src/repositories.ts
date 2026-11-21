@@ -22,6 +22,8 @@ import { type PeopleRepository } from './people/PeopleRepository';
 import { PgRegistrationRepository } from './registration/PgRegistrationRepository';
 import type { RegistrationRepository } from './registration/RegistrationRepository';
 import { PgUserRepository } from './users/PgUserRepository';
+import type { MemberInviteRepository } from './invites/MemberInviteRepository';
+import { PgMemberInviteRepository } from './invites/PgMemberInviteRepository';
 import type { UserRepository } from './users/UserRepository';
 
 /** Everything the services read and write. Swap an implementation here to change where data lives. */
@@ -44,6 +46,8 @@ export interface Repositories {
   calendar: CalendarRepository;
   /** The public session pages: read without sign-in. */
   publicSessions: PublicSessionRepository;
+  /** Teacher invites: created, resent, listed, and accepted with the link. The Postgres adapter in production. */
+  memberInvites: MemberInviteRepository;
 }
 
 export const createPgRepositories = (pool: Pool): Repositories => ({
@@ -59,4 +63,5 @@ export const createPgRepositories = (pool: Pool): Repositories => ({
   seatHolds: new PgSeatHoldRepository(pool),
   calendar: new PgCalendarRepository(pool),
   publicSessions: new PgPublicSessionRepository(pool),
+  memberInvites: new PgMemberInviteRepository(pool),
 });

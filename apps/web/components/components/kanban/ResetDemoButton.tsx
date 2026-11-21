@@ -24,7 +24,7 @@ export function ResetDemoButton() {
   };
 
   return (
-    <Button variant="danger-soft" onClick={() => void reset()}>
+    <Button variant="glass-danger" onClick={() => void reset()}>
       Reset demo data
     </Button>
   );

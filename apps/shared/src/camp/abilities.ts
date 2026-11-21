@@ -25,7 +25,7 @@ const ABILITIES: readonly { action: Action; label: string }[] = [
   { action: 'attendance:record', label: 'Record attendance' },
   { action: 'tasks:create', label: 'Create and move staff tasks' },
   { action: 'org:update', label: 'Rename the camp' },
-  { action: 'members:invite', label: 'Manage who has access' },
+  { action: 'members:invite', label: 'Invite people to the camp' },
   { action: 'audit:read', label: 'Read the audit log' },
   { action: 'org:delete', label: 'Delete the camp' },
 ];

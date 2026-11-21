@@ -12,56 +12,32 @@ import { HBars } from '@/components/components/charts';
 import { Legend } from '@/components/elements';
 import { Ring } from '@/components/elements';
 import { StatCard as Stat } from '@/components/components/kanban/home';
-import { addDays, diffDays, fmt, isoDay, today } from '@buxa/shared';
-import { PRIORITIES, PRIORITY_LABEL } from '@buxa/shared';
+import { PRIORITY_LABEL } from '@buxa/shared';
 import { Avatar } from '@/components/elements';
 import { Pill } from '@/components/elements';
-import { HEALTH_LABEL, HEALTH_TONE, healthOf, isOverdue, progressOf, summarize } from '@buxa/shared';
+import {
+  HEALTH_LABEL,
+  HEALTH_TONE,
+  avgCycleDays,
+  completionSeries,
+  healthOf,
+  memberLoad,
+  overdueByMember,
+  priorityCounts,
+  progressOf,
+  summarize,
+  unassignedCount,
+} from '@buxa/shared';
 import { AgentSummary } from '@/components/components/kanban';
-import { requirePresent } from '@buxa/domain';
 
 export function Reports() {
   const { wsTasks, projects, kindOf, members, workspace } = useStore();
   const [range, setRange] = useState<'14' | '30' | '90'>('30');
   const { live, done, open, overdue, progress } = summarize(wsTasks, kindOf);
   const rate = progress.pct;
-  const durations = done
-    .filter(t => t.completedAt)
-    .map(t => Math.max(0, diffDays(isoDay(requirePresent(t.completedAt, 't.completedAt')), isoDay(t.createdAt))));
-  const avg = durations.length ? durations.reduce((a, b) => a + b, 0) / durations.length : 0;
+  const avg = avgCycleDays(done);
 
-  const series = useMemo(() => {
-    const n = Number(range);
-    if (n <= 30) {
-      return Array.from({ length: n }, (_, i) => {
-        const d = addDays(today(), i - n + 1);
-
-        return {
-          label: fmt(d),
-          title: fmt(d, true),
-          value: done.filter(t => t.completedAt && isoDay(t.completedAt) === d).length,
-        };
-      });
-    }
-
-    return Array.from({ length: 13 }, (_, i) => {
-      const end = addDays(today(), -(12 - i) * 7);
-      const start = addDays(end, -6);
-
-      return {
-        label: fmt(start),
-        title: `${fmt(start)} – ${fmt(end)}`,
-        value: done.filter(t => {
-          if (!t.completedAt) {
-            return false;
-          }
-          const c = isoDay(t.completedAt);
-
-          return c >= start && c <= end;
-        }).length,
-      };
-    });
-  }, [range, done]);
+  const series = useMemo(() => completionSeries(done, Number(range)), [range, done]);
   const total = series.reduce((a, b) => a + b.value, 0);
 
   if (!workspace || live.length === 0) {
@@ -77,21 +53,15 @@ export function Reports() {
     );
   }
 
-  const prioRows = PRIORITIES.slice()
+  const prioRows = priorityCounts(open)
     .reverse()
-    .map(p => ({
-      label: PRIORITY_LABEL[p],
-      segments: [{ value: open.filter(t => t.priority === p).length, className: `seg-${p}`, name: 'open' }],
+    .map(({ priority, count }) => ({
+      label: PRIORITY_LABEL[priority],
+      segments: [{ value: count, className: `seg-${priority}`, name: 'open' }],
     }));
-  const load = members
-    .map(m => ({
-      m,
-      on: open.filter(t => t.assigneeId === m.userId && !isOverdue(t, kindOf)).length,
-      late: open.filter(t => t.assigneeId === m.userId && isOverdue(t, kindOf)).length,
-    }))
-    .sort((a, b) => b.on + b.late - (a.on + a.late));
-  const unassigned = open.filter(t => !t.assigneeId).length;
-  const lateBy = load.filter(l => l.late > 0);
+  const load = memberLoad(open, members, kindOf);
+  const unassigned = unassignedCount(open);
+  const lateBy = overdueByMember(load);
 
   return (
     <div className="page">
@@ -134,7 +104,7 @@ export function Reports() {
         />
         <Stat
           label="Avg. time to complete"
-          value={durations.length ? `${avg.toFixed(1)}d` : '—'}
+          value={avg === null ? '—' : `${avg.toFixed(1)}d`}
           note="from creation to done"
           icon="clock"
         />
@@ -208,8 +178,8 @@ export function Reports() {
             rows={load.map(l => ({
               label: (
                 <span className="who">
-                  <Avatar user={l.m.user} size={20} />
-                  {l.m.user.name.split(' ')[0]}
+                  <Avatar user={l.member.user} size={20} />
+                  {l.member.user.name.split(' ')[0]}
                 </span>
               ),
               segments: [
@@ -249,7 +219,7 @@ export function Reports() {
             <HBars
               ariaLabel="Overdue tasks per team member"
               rows={lateBy.map(l => ({
-                label: l.m.user.name.split(' ')[0],
+                label: l.member.user.name.split(' ')[0],
                 segments: [{ value: l.late, className: 'seg-crit', name: 'overdue' }],
               }))}
             />

@@ -52,3 +52,21 @@
   background: var(--surface-2);
   font-weight: 600;
 }
+
+/* Settings: one rhythm. Cards sit 16px apart; inside a card the title, the text and the controls sit 12px apart, and every
+ * card has the same padding. Titles and text share one size each (the settings-tile type scale). */
+.settings-page .settings-grid {
+  gap: var(--s4);
+}
+.settings-page .panel {
+  gap: var(--s3);
+  padding: var(--s5);
+}
+.settings-page .panel > h2 {
+  font-size: 16px;
+  line-height: 1.3;
+}
+.settings-page .panel > p {
+  font-size: 14px;
+  line-height: 1.5;
+}

@@ -62,6 +62,11 @@
   white-space: nowrap;
   width: 100%;
 }
+/* A child item (Boards and Calendar under Projects): indented past its parent's icon, and a little smaller. */
+.sidebar nav .nav-child a {
+  padding-left: calc(var(--s3) + 18px);
+  font-weight: 500;
+}
 .sidebar nav a:hover {
   background: var(--hover);
   color: var(--text);
@@ -145,13 +150,18 @@
   position: relative;
   display: flex;
   align-items: center;
+  box-sizing: border-box;
   height: 34px;
+  border: 1px solid transparent;
   background: var(--surface-3);
   border-radius: var(--r-1);
   color: var(--text-3);
 }
+/* The box takes a transparent 1px border so its focus state is a border colour change, with no ring or shadow. */
 .search .search-field__box:focus-within {
-  outline: 2px solid var(--accent);
+  outline: none;
+  box-shadow: none;
+  border-color: var(--focus);
 }
 .search .search-field__icon {
   position: absolute;
@@ -165,7 +175,7 @@
   height: 16px;
 }
 .search .search-field__input {
-  height: 34px;
+  height: 100%;
   padding: 0 32px 0 34px;
   background: transparent;
 }

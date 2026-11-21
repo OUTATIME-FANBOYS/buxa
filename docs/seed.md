@@ -12,7 +12,21 @@ Buxa has two sets of sample data, and both are about **Camp Birchwood**, a ficti
 - season-pass memberships and badges (credentials) for campers and guardians, through the app's services, so the audit log records them
 - a handful of check-ins: children and adults on site now, one child collected earlier today, and one closed visit from yesterday
 
-It creates no tasks and no tickets.
+- two sessions (the app's Session, a date range): `Summer 2027` (5 July to 30 August 2027, public) and `Art Session` (18 to 26 November 2026, not public)
+- three classes across them, each with its own name, ages (10 to 16), camp size, location and UTC times:
+  - `Swim Stars` in Summer 2027, camp size 2, with two campers enrolled and a third waitlisted
+  - `Trail Explorers` in Summer 2027, camp size 6, with three campers enrolled
+  - `Watercolour Basics` in the Art Session, camp size 8, with two campers enrolled and the teacher assigned
+- one teacher: `Tess Harrow`, `teacher.demo@example.test`, with the teacher role and assigned to `Watercolour Basics`. The account cannot sign in
+
+It creates no tasks and no tickets. It creates no registrations, seat holds, or form answers. The owner is created with the camp. The admin, staff and viewer memberships are inserted straight into the membership table, because there is no invite flow yet. The teacher's membership is inserted the same way.
+
+**The developer account** is made an owner of Camp Birchwood, so the camp shows in your own list. The account is chosen in this order:
+
+1. `SEED_OWNER_EMAIL`, if it is set. Put it in `apps/web/.env.local`, which is not committed. The account with that email must have signed in once, or the seed stops and says so.
+2. Otherwise, the one account in the database whose email is not fictional (not `example.com` or `example.test`). If there are no such accounts, or more than one, nothing is chosen and the seed says so. The seed does not guess between them.
+
+The seed prints which email it used and where it came from. It never prints a password, and there are none to print.
 
 **Browser demo (the staff board)**, stored in the browser only:
 
@@ -32,9 +46,11 @@ There are no browser-only accounts and no shared demo password. Sample accounts 
 Point `DATABASE_URL` at the local database (see `docker-compose.yml`), then:
 
 ```sh
-npm run seed:mock     # idempotent: does nothing if the camp already has people
-npm run seed:reset    # deletes the camp's rows and seeds them again
+npm run seed:mock     # idempotent: leaves the roster alone if the camp already has people
+npm run seed:reset    # deletes the camp's people and seeds them again
 ```
+
+The sessions, classes, teacher, enrolments and developer owner are found by stable names (a session's name, a class's name inside its session, the teacher's email) and created only if missing. Running the seed twice creates nothing the second time, and the report shows the same totals. `SEED_OWNER_EMAIL` is read on every run, so you can add it later and run the seed again to make that account an owner.
 
 `seed:reset` first prints what it will delete (people, households, memberships, badges and check-ins for the camp), then asks you to type `RESET`. The camp row, its members and the audit log are kept. In a run without a terminal, the reset is refused unless you add `--yes`:
 
