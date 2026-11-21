@@ -1,12 +1,10 @@
 'use client';
 
-import { useRef, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { useGlobalShortcuts } from '@buxa/middleware/hooks/hooks';
-import { Button } from '@/components/elements';
-import { ROUTES } from '@/config/routes';
-import { GlobalSearch } from './GlobalSearch';
-import { Notifications } from './Notifications';
+import type { NotificationItem } from '@buxa/shared';
+import { HeaderTools } from '@/components/components/camp';
+import { useWorkspaceBellRows } from './Notifications';
 
 /** The save state in words, or null when everything is saved: the header says nothing then. */
 function useSaveLabel(): string | null {
@@ -25,25 +23,30 @@ function useSaveLabel(): string | null {
 }
 
 /**
- * The task pieces of the top bar, left to right: search (⌘K or /), a note only while something is unsaved or syncing,
- * Help, notifications, and the account. `account` is the signed-in person's menu.
+ * The workspace's top bar, left to right: a note only while something is unsaved or syncing, then the shared header tools (Help and
+ * the notifications bell), then the account. `items` and `unread` are the person's notifications from the server.
  */
-export function TaskTopBar({ account }: { account: ReactNode }) {
-  const { saveStatus, sync, project } = useStore();
-  const searchRef = useRef<HTMLInputElement>(null);
-  useGlobalShortcuts(searchRef, !!project);
+export function TaskTopBar({
+  account,
+  items,
+  unread,
+}: {
+  account: ReactNode;
+  items: readonly NotificationItem[];
+  unread: number;
+}) {
+  const { saveStatus, sync } = useStore();
   const label = useSaveLabel();
+  const { attention, recent, markAllLocal } = useWorkspaceBellRows();
 
   return (
     <>
-      <GlobalSearch inputRef={searchRef} />
       {label && (
         <span className={`save-state save-${sync === 'offline' ? 'error' : saveStatus}`} role="status">
           {label}
         </span>
       )}
-      <Button iconOnly variant="secondary" icon="help" href={ROUTES.help} aria-label="Help" className="header-icon" />
-      <Notifications />
+      <HeaderTools items={items} unread={unread} attention={attention} recent={recent} onMarkAllLocal={markAllLocal} />
       {account}
     </>
   );

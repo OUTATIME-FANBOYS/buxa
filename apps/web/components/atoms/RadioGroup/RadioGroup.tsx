@@ -51,7 +51,11 @@ export function RadioGroup({
     >
       <legend className="field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)] buxa:p-0 buxa:mb-[var(--s2)]">
         {label}
-        {isRequired ? ' *' : null}
+        {isRequired ? (
+          <span className="field-required" aria-hidden="true">
+            {' *'}
+          </span>
+        ) : null}
       </legend>
       {options.map(option => (
         <label

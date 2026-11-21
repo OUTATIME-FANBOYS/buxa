@@ -24,12 +24,16 @@ const DRAWER =
   'buxa:w-[min(580px,100vw)] buxa:h-full buxa:bg-[var(--surface)] buxa:shadow-[var(--shadow)] buxa:flex buxa:flex-col buxa:will-change-[translate]';
 const DRAWER_IN = 'buxa:[animation:slide_0.28s_var(--ease-out)]';
 const DRAWER_OUT = 'buxa:[animation:slideOut_0.2s_cubic-bezier(0.4,0,1,1)_forwards]';
-const HEAD = 'buxa:flex buxa:justify-between buxa:items-center buxa:[padding:var(--s4)_var(--s5)_0]';
-const BODY = 'buxa:[padding:var(--s4)_var(--s5)_var(--s5)] buxa:overflow-auto';
+// The header and footer never shrink. Only the body takes the room left over and scrolls, so the footer (Cancel, the submit
+// button) stays pinned at the bottom of the dialog however tall the content is.
+const HEAD = 'buxa:flex buxa:shrink-0 buxa:justify-between buxa:items-center buxa:[padding:var(--s4)_var(--s5)_0]';
+const BODY = 'buxa:[padding:var(--s4)_var(--s5)_var(--s5)] buxa:overflow-y-auto buxa:min-h-0 buxa:flex-1';
 // min-h-0 lets this flex child shrink below its content, so the body (header included, it is sticky) scrolls as one.
 const DRAWER_BODY =
   'buxa:overflow-y-auto buxa:min-h-0 buxa:[padding:0_var(--s5)_var(--s6)] buxa:grid buxa:gap-[var(--s5)] buxa:content-start buxa:flex-1';
-const FOOT = 'buxa:flex buxa:justify-end buxa:gap-[var(--s2)] buxa:[padding:0_var(--s5)_var(--s5)]';
+// The footer sits 16px below the body's last field, on every dialog, so the buttons never touch the content above them.
+const FOOT =
+  'buxa:flex buxa:shrink-0 buxa:justify-end buxa:gap-[var(--s2)] buxa:[padding:var(--s4)_var(--s5)_var(--s5)]';
 
 interface Swipe {
   id: number;

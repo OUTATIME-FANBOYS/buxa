@@ -60,6 +60,7 @@ export function CalendarLinkCard({ own = false }: { own?: boolean }) {
           <div className="classes-actions">
             <Button
               type="button"
+              variant="glass"
               onClick={() => {
                 void copy();
               }}

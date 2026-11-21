@@ -41,6 +41,7 @@ describe('the camp service', () => {
     get,
     rename: () => Promise.reject(new Error('unused')),
     listMembers: () => Promise.resolve([]),
+    changeMemberRole: () => Promise.reject(new Error('unused')),
     archive: () => Promise.reject(new Error('unused')),
     unarchive: () => Promise.reject(new Error('unused')),
     deleteCamp: () => Promise.reject(new Error('unused')),

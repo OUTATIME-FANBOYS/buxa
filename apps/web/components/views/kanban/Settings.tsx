@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import type { User } from '@buxa/contracts';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { Button } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
@@ -9,22 +8,23 @@ import { ROUTES } from '@/config/routes';
 import { AgentDialog } from '@/components/components/kanban/dialogs';
 import { ResetDemoButton } from '@/components/components/kanban';
 import {
-  AppearanceCard,
-  DisplayNameCard,
-  EmailCard,
-  TimeFormatCard,
+  CampNameCard,
   SETTINGS_GRID,
   SETTINGS_TILE_HEADING,
   SETTINGS_TILE_TEXT,
 } from '@/components/components/settings';
 import { ArchivedCampsCard, CalendarLinkCard, DangerZone } from '@/components/components/camp';
 import type { ArchivedCamp } from '@/actions/camp';
-import { fullNameOf } from '@buxa/shared/names';
 
-/** The camp the settings are for. `canDelete` is the owner's right (org:delete); an archived camp shows no danger zone. */
+/**
+ * The camp the settings are for. `canRename` (org:update) and `canArchive` (org:archive) are the owner and admins; `canDelete`
+ * (org:delete) is the owner only. An archived camp shows no camp name card and no danger zone.
+ */
 export interface SettingsCamp {
   id: string;
   name: string;
+  canRename: boolean;
+  canArchive: boolean;
   canDelete: boolean;
   /** The owner and admins (org:update). Staff and teachers do not see the camp calendar link. */
   canManageFeed: boolean;
@@ -34,35 +34,24 @@ export interface SettingsCamp {
 }
 
 /**
- * Settings is one grid of cards. The first three are the person's own: Name and email (full width), then Time format and
- * Appearance side by side. They are followed by the Agents, data and shortcut cards, then archived camps and the danger zone.
- * On a phone every card stacks.
+ * Camp settings: one grid of cards for the camp this person is working in. The person's own settings (name, email, time
+ * format, appearance) are on the Profile page, which a link at the top points to. Then the Agents, data and shortcut cards,
+ * the camp calendar link, archived camps and the danger zone. On a phone every card stacks.
  */
 export function Settings({
   camp,
-  user,
   archivedCamps = [],
 }: {
   camp?: SettingsCamp;
-  user?: User;
   archivedCamps?: readonly ArchivedCamp[];
 }) {
-  const { s, actions, me, readOnly } = useStore();
+  const { s, actions, readOnly } = useStore();
   const { toast } = useUi();
   const file = useRef<HTMLInputElement>(null);
   const [addAgent, setAddAgent] = useState(false);
   const on = s.ui.agentsEnabled;
   const hasAgents = s.agents.length > 0;
-  const firstName = user?.firstName ?? me?.name.split(' ')[0] ?? '';
-  const lastName = user?.lastName ?? null;
-  const email = user?.email ?? me?.email ?? '';
 
-  // The name is saved to the signed-in account first: the greeting, the account menu and the team list read it from there.
-  // Only then does the board's own copy change, so it never shows a name the account does not have.
-  const savedName = (saved: { firstName: string; lastName: string | null }) => {
-    actions.updateProfile({ name: fullNameOf(saved.firstName, saved.lastName), title: me?.title });
-    toast('Profile saved');
-  };
   const exportJson = () => {
     const url = URL.createObjectURL(new Blob([actions.exportData()], { type: 'application/json' }));
     const a = document.createElement('a');
@@ -81,12 +70,12 @@ export function Settings({
         <div className="page-title">
           <h1>Settings</h1>
         </div>
+        <Button variant="glass" href={ROUTES.account}>
+          Your profile
+        </Button>
       </header>
       <div className={`settings-grid ${SETTINGS_GRID}`}>
-        <DisplayNameCard firstName={firstName} lastName={lastName} onSaved={savedName} />
-        <EmailCard email={email} />
-        <TimeFormatCard clockFormat={user?.clockFormat ?? undefined} />
-        <AppearanceCard />
+        {camp?.canRename && !camp.archived && <CampNameCard campId={camp.id} currentName={camp.name} />}
         <section className="panel settings-tile">
           <h2 className={SETTINGS_TILE_HEADING}>Agents</h2>
           <p className={`muted ${SETTINGS_TILE_TEXT}`}>
@@ -99,9 +88,13 @@ export function Settings({
           </label>
           {on && (
             <div className="row">
-              {!readOnly && <Button onClick={() => setAddAgent(true)}>Add an agent</Button>}
+              {!readOnly && (
+                <Button variant="glass" onClick={() => setAddAgent(true)}>
+                  Add an agent
+                </Button>
+              )}
               {hasAgents && (
-                <Button variant="ghost" href={ROUTES.agents}>
+                <Button variant="glass" href={ROUTES.agents}>
                   Open Agents
                 </Button>
               )}
@@ -115,10 +108,14 @@ export function Settings({
             Everything lives in this browser’s storage. Export a copy to back it up or move it to another device.
           </p>
           <div className="row">
-            <Button onClick={exportJson}>Export JSON</Button>
+            <Button variant="glass" onClick={exportJson}>
+              Export JSON
+            </Button>
             {!readOnly && (
               <>
-                <Button onClick={() => file.current?.click()}>Import JSON</Button>
+                <Button variant="glass" onClick={() => file.current?.click()}>
+                  Import JSON
+                </Button>
                 <input
                   ref={file}
                   type="file"
@@ -173,7 +170,9 @@ export function Settings({
         {camp?.canManageFeed && !camp.archived && <CalendarLinkCard />}
         {camp?.isTeacher && !camp.archived && <CalendarLinkCard own />}
         <ArchivedCampsCard camps={archivedCamps} />
-        {camp?.canDelete && !camp.archived && <DangerZone campId={camp.id} campName={camp.name} />}
+        {(camp?.canArchive || camp?.canDelete) && !camp.archived && (
+          <DangerZone campId={camp.id} campName={camp.name} canArchive={camp.canArchive} canDelete={camp.canDelete} />
+        )}
       </div>
     </div>
   );

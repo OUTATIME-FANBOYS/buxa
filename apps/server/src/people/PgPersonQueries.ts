@@ -1,5 +1,5 @@
 import { isUuid, MAX_SEARCH_RESULTS, normalizeForSearch, type CampRole } from '@buxa/domain';
-import { PersonNotFoundError, type PersonFilter, type PersonRecord } from './PeopleRepository';
+import { PersonNotFoundError, type PersonFilter, type PersonPageFilter, type PersonRecord } from './PeopleRepository';
 import { type Db, type SqlParam, nullableIso, toIso } from './pgRows';
 
 interface PersonRow {
@@ -107,4 +107,44 @@ export function searchPeople(db: Db, query: string, limit: number): Promise<Pers
     [words],
     max,
   );
+}
+
+/**
+ * The WHERE clause of the people list, shared by the count and the page so they always agree. An empty word list leaves the
+ * name condition open; a missing id list leaves the people condition open.
+ */
+function pageWhere(filter: PersonPageFilter): { where: string; params: SqlParam[] } {
+  const words = normalizeForSearch(filter.term).split(' ').filter(Boolean);
+  const ids = filter.ids === undefined ? null : filter.ids.filter(isUuid);
+  const where = `WHERE ($1::text IS NULL OR EXISTS (SELECT 1 FROM person_roles x WHERE x.person_id = p.id AND x.role = $1::text))
+       AND ($2::boolean OR p.archived_at IS NULL)
+       AND ($3::uuid[] IS NULL OR p.id = ANY($3::uuid[]))
+       AND NOT EXISTS (
+         SELECT 1 FROM unnest($4::text[]) AS w(word)
+          WHERE strpos(unaccent(lower(concat_ws(' ', p.given_name, p.family_name, p.preferred_name))), w.word) = 0)`;
+
+  return { where, params: [filter.role ?? null, filter.includeArchived === true, ids, words] };
+}
+
+export async function countPeople(db: Db, filter: PersonPageFilter): Promise<number> {
+  const { where, params } = pageWhere(filter);
+  const { rows } = await db.query<{ total: number }>(`SELECT count(*)::int AS total FROM people p ${where}`, params);
+
+  return rows[0]?.total ?? 0;
+}
+
+/** One page of the people list, in list order. The limit and offset are the last two parameters. */
+export async function listPeoplePage(
+  db: Db,
+  filter: PersonPageFilter,
+  window: { offset: number; limit: number },
+): Promise<PersonRecord[]> {
+  const { where, params } = pageWhere(filter);
+  const n = params.length;
+  const { rows } = await db.query<PersonRow>(
+    `${SELECT_PEOPLE} ${where} ${ORDER_PEOPLE} LIMIT $${n + 1} OFFSET $${n + 2}`,
+    [...params, window.limit, window.offset],
+  );
+
+  return rows.map(toRecord);
 }

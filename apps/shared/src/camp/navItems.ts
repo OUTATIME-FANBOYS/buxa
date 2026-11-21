@@ -15,6 +15,8 @@ export interface NavItem {
   requires?: Action;
   /** Roles that never see this item, whatever else they are granted (a teacher's sidebar is its own short list). */
   hiddenFor?: readonly Role[];
+  /** The item is a child of the item at this address: the sidebar shows it indented, just below its parent. */
+  under?: RoutePath;
 }
 
 export interface NavGroup {
@@ -45,11 +47,10 @@ export const CAMP_NAV_GROUPS: readonly NavGroup[] = [
       { href: ROUTES.registration, label: 'Registration', icon: 'list', requires: 'registration:read' },
       { href: ROUTES.checkIn, label: 'Check-in', icon: 'check', requires: 'attendance:record' },
       { href: ROUTES.onSite, label: 'On site', icon: 'clock', requires: 'attendance:read' },
-      { href: ROUTES.people, label: 'People', icon: 'users', requires: 'people:read', hiddenFor: TEACHER_HIDDEN },
       {
         href: ROUTES.attendance,
         label: 'Attendance',
-        icon: 'list',
+        icon: 'clipboard-check',
         requires: 'attendance:read',
         hiddenFor: TEACHER_HIDDEN,
       },
@@ -61,15 +62,18 @@ export const CAMP_NAV_GROUPS: readonly NavGroup[] = [
     items: [
       { href: ROUTES.tasks, label: 'My tasks', icon: 'tasks' },
       { href: ROUTES.projects, label: 'Projects', icon: 'folder' },
-      { href: ROUTES.boards, label: 'Boards', icon: 'kanban' },
-      { href: ROUTES.calendar, label: 'Calendar', icon: 'calendar' },
+      { href: ROUTES.boards, label: 'Boards', icon: 'kanban', under: ROUTES.projects },
+      { href: ROUTES.calendar, label: 'Calendar', icon: 'calendar', under: ROUTES.projects },
       { href: ROUTES.agents, label: 'Agents', icon: 'agent' },
     ],
   },
   {
     label: 'Admin',
     hiddenFor: TEACHER_HIDDEN,
-    items: [{ href: ROUTES.members, label: 'Team access', icon: 'user', requires: 'members:read' }],
+    items: [
+      { href: ROUTES.people, label: 'People', icon: 'users', requires: 'people:read', hiddenFor: TEACHER_HIDDEN },
+      { href: ROUTES.members, label: 'Team access', icon: 'user', requires: 'members:read' },
+    ],
   },
 ];
 

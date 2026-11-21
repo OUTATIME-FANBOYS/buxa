@@ -1,4 +1,4 @@
-import { DEFAULT_CURRENCY, parseCampLocal, parseMoney } from '@buxa/domain';
+import { DEFAULT_CURRENCY, parseMoney } from '@buxa/domain';
 import {
   CancelEnrolmentInputSchema,
   ClassInputSchema,
@@ -71,20 +71,38 @@ function withProblems<T>(
   return { ok: false, state: failure(CHECK_FIELDS, fieldErrors) };
 }
 
-/** A class: its name, ages, camp size, its own time range (typed in the camp's clock), location and instructors. */
-export function classForm(form: FormData, timeZone: string): PersonParsed<ClassInput> {
+/** An instant as the browser posts it: an ISO date-time with a Z or an offset (the form converts the local time first). */
+const POSTED_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/;
+
+/** A class time field: blank is refused; text that is not an instant is refused as a time that does not exist in the form's zone. */
+function instantField(form: FormData, name: string, problems: FieldErrors): string | undefined {
+  const raw = field(form, name).trim();
+  if (raw === '') {
+    problems[name] = 'Enter a date and time.';
+
+    return undefined;
+  }
+  if (!POSTED_INSTANT.test(raw)) {
+    problems[name] = 'That date or time does not exist. Choose another.';
+
+    return undefined;
+  }
+
+  return raw;
+}
+
+/**
+ * A class: its name, ages, camp size, its own time range and location and instructors. The times arrive as instants: the browser
+ * converts the local time it shows, so a class is stored at the moment the person meant. Whether a class falls on days inside its
+ * session is checked on the server, in the camp's zone.
+ */
+export function classForm(form: FormData): PersonParsed<ClassInput> {
   const problems: FieldErrors = {};
   const minAge = numberField(form, 'minAge', problems, 'Enter the youngest age.');
   const maxAge = numberField(form, 'maxAge', problems, 'Enter the oldest age.');
   const capacity = numberField(form, 'capacity', problems, 'Enter the camp size.');
-  const starts = parseCampLocal(field(form, 'startsAt'), timeZone);
-  const ends = parseCampLocal(field(form, 'endsAt'), timeZone);
-  if (!starts.ok) {
-    problems.startsAt = starts.message;
-  }
-  if (!ends.ok) {
-    problems.endsAt = ends.message;
-  }
+  const startsAt = instantField(form, 'startsAt', problems);
+  const endsAt = instantField(form, 'endsAt', problems);
 
   // The contract reports the age-range refinement under `ageRange`; the form shows it on the oldest-age field.
   return withProblems(
@@ -94,8 +112,8 @@ export function classForm(form: FormData, timeZone: string): PersonParsed<ClassI
         name: field(form, 'name'),
         ageRange: { minAge, maxAge },
         capacity,
-        startsAt: starts.ok ? starts.instant : undefined,
-        endsAt: ends.ok ? ends.instant : undefined,
+        startsAt,
+        endsAt,
         location: field(form, 'location'),
         instructorIds: fieldAll(form, 'instructorIds'),
       }),
@@ -199,10 +217,10 @@ export function sessionForm(form: FormData): PersonParsed<NewSessionInput> {
   const startsOn = field(form, 'startsOn');
   const endsOn = field(form, 'endsOn');
   if (startsOn === '') {
-    problems.startsOn = 'Choose the first day.';
+    problems.startsOn = 'Pick a first day.';
   }
   if (endsOn === '') {
-    problems.endsOn = 'Choose the last day.';
+    problems.endsOn = 'Pick a last day.';
   }
   const price = priceFromForm(form, problems);
 
@@ -213,6 +231,35 @@ export function sessionForm(form: FormData): PersonParsed<NewSessionInput> {
       startsOn,
       endsOn,
       price: price ?? null,
+      // A ticked "Show this session on the public pages" box posts `isPublic=on`; left unticked, the session is not public.
+      isPublic: form.get('isPublic') === 'on',
+    }),
+  );
+}
+
+/**
+ * A session's details as edited (the Edit session dialog): the same fields as a new session, without the price. The session schema
+ * checks them; the price is passed as none, so the schema's price rule does not apply.
+ */
+export function sessionEditForm(form: FormData): PersonParsed<NewSessionInput> {
+  const problems: FieldErrors = {};
+  const startsOn = field(form, 'startsOn');
+  const endsOn = field(form, 'endsOn');
+  if (startsOn === '') {
+    problems.startsOn = 'Pick a first day.';
+  }
+  if (endsOn === '') {
+    problems.endsOn = 'Pick a last day.';
+  }
+
+  return withProblems(problems, () =>
+    parseWith<NewSessionInput>(NewSessionInputSchema, {
+      name: field(form, 'name'),
+      description: field(form, 'description'),
+      startsOn,
+      endsOn,
+      price: null,
+      isPublic: form.get('isPublic') === 'on',
     }),
   );
 }

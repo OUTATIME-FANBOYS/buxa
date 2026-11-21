@@ -23,6 +23,22 @@
 .classes-facts {
   margin: 0;
 }
+/* The price row: the value, then its Change or Set price button. The value's text is centred on a 30px line, the button's height,
+ * so the button sits on the first line of the price, whatever the label's height. */
+.price-fact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--s2) var(--s3);
+}
+.price-fact__value {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+}
+.price-action {
+  display: inline-flex;
+}
 .classes-columns {
   display: inline-block;
   max-width: 100%;
@@ -68,6 +84,23 @@ form.class-form {
 .dialog.class-dialog {
   width: min(640px, 100%);
 }
+/* Form dialogs (new and edit session, class, registration) are compact, so a normal screen shows the whole form without scrolling:
+ * 12px between fields and sections, 8px inside a section, and the price rule sits close to the dates. */
+.class-dialog form.class-form {
+  gap: var(--s3);
+}
+.class-dialog .form-section {
+  gap: var(--s2);
+}
+.class-dialog .form-section + .form-section {
+  padding-top: var(--s3);
+}
+.class-dialog .price-block {
+  gap: var(--s3);
+}
+.class-dialog .price-head {
+  gap: 0;
+}
 .class-form .class-section {
   margin: 0;
   padding: 0;
@@ -88,7 +121,7 @@ form.class-form {
 .class-form .field-hint,
 .class-form .field-error {
   margin: 0;
-  font-size: var(--fs-s);
+  font-size: 12px;
   line-height: 1.4;
 }
 .class-form .class-helper,
@@ -131,7 +164,7 @@ form.class-form {
 .class-dialog .field-hint,
 .class-dialog .class-helper,
 .class-dialog .field-error {
-  font-size: var(--fs-b);
+  font-size: 12px;
 }
 
 /* The row of actions in the classes table: Enrolments, Edit and Delete wrap on a narrow screen. */
@@ -142,6 +175,23 @@ form.class-form {
   gap: var(--s2);
 }
 
+/* The selection bar above the sessions table: the count, then Clear and Delete selected. */
+.session-selection {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s2) var(--s3);
+  margin-bottom: var(--s3);
+  border-radius: var(--r-2);
+  background: var(--surface-2);
+}
+.session-selection__count {
+  margin: 0;
+  font-weight: 600;
+}
+
 /* Instructors: the chosen ones as tags in a box of fixed height that scrolls, so the dialog does not grow with each one. */
 .instructor-tags {
   display: flex;
@@ -150,44 +200,147 @@ form.class-form {
   max-height: 7.5rem;
   overflow-y: auto;
   margin: 0;
-  padding: var(--s2);
+  padding: var(--s2) 0 0;
   list-style: none;
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: var(--r-2);
 }
 
 .instructor-tag {
   display: inline-flex;
   align-items: center;
+  gap: var(--s2);
   min-height: 32px;
   padding: 0 var(--s3);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--accent);
   border-radius: 999px;
   background: var(--surface);
-  color: var(--text-2);
+  color: var(--accent);
   font: inherit;
   font-size: var(--fs-b);
   cursor: pointer;
 }
 
-/* Delete a class: the trash button is faded red at rest, and clearer red on hover and keyboard focus. */
-.classes-delete {
-  opacity: 0.55;
-}
-.classes-delete:hover:not(:disabled),
-.classes-delete:focus-visible {
-  opacity: 1;
-}
-
-/* The round row buttons read as buttons at rest: a visible border from the existing border token. Delete takes the red of its fill. */
-.classes-row-actions .button--icon-only {
-  border: 1px solid var(--border);
-}
-.classes-row-actions .classes-delete.button--icon-only {
-  border-color: var(--crit);
-}
-
 /* Withdraw an enrolment: a red button with a visible border in the same red as its fill (the danger token). */
 .classes-withdraw {
   border: 1px solid var(--crit);
+}
+
+/* The price block of a session form: a rule, a title and its helper, then the price and discount rows. No fieldset box. */
+.price-block {
+  display: grid;
+  gap: var(--s4);
+  align-content: start;
+  min-width: 0;
+}
+.price-rule {
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+.price-head {
+  display: grid;
+  gap: var(--s1);
+}
+.price-title {
+  font-size: var(--fs-b);
+  font-weight: 700;
+  color: var(--text);
+}
+/* The discount's two options share the half-width column and the field height, so they line up with the value field. */
+.class-form .price-discount {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+}
+.class-form .price-discount button {
+  flex: 1 1 0;
+  min-width: 0;
+  height: var(--control-h);
+  justify-content: center;
+}
+
+/* Checkbox groups (Sessions this form covers, Sessions): a label row, then the boxes, each with a gap before its label. */
+.check-group {
+  display: grid;
+  gap: var(--s2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.check-group .check-group-label {
+  font-size: var(--fs-b);
+  font-weight: 600;
+  color: var(--text);
+}
+.check-group .check-field {
+  min-height: 32px;
+  gap: var(--s2);
+}
+
+/* Weekly series: the seven days sit in one row, each box with a gap before its label. */
+.weekday-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s4);
+}
+.weekday-row .check-field {
+  gap: var(--s2);
+}
+/* Stops: a label above one compact row of two options, and the date or count field below it. */
+.stops-row {
+  display: grid;
+  gap: var(--s2);
+  min-width: 0;
+}
+.class-form .stops-choice {
+  display: flex;
+  width: 100%;
+}
+.class-form .stops-choice button {
+  flex: 1 1 0;
+  min-width: 0;
+  height: var(--control-h);
+  justify-content: center;
+}
+
+/* A form section (registration forms and their dialogs): a heading, a rule above every section after the first, then the fields.
+ * No fieldset box. */
+.form-section {
+  display: grid;
+  gap: var(--s3);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  align-content: start;
+}
+.form-section + .form-section {
+  padding-top: var(--s4);
+  border-top: 1px solid var(--line);
+}
+.form-section__title {
+  font-size: var(--fs-b);
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Registration pages share the settings rhythm: 16px between blocks, 12px inside a block. */
+.registration-section {
+  display: grid;
+  gap: var(--s4);
+  min-width: 0;
+}
+.registration-section > h2 {
+  font-size: 16px;
+  line-height: 1.3;
+}
+.registration-section > p {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.class-form.registration-editor,
+.class-form.registration-register {
+  gap: var(--s4);
 }

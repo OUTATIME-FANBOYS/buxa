@@ -95,3 +95,47 @@ export function parseMoney(input: string, currency: string): MoneyParse {
 
   return { ok: true, minor };
 }
+
+export type DiscountKind = 'percent' | 'amount';
+
+export type EarlyBirdResult =
+  { ok: true; minor: number } | { ok: false; reason: 'format' | 'precision' | 'range' | 'not-positive' };
+
+/** A percentage with at most two decimal places, from 0.01 to 99.99. */
+const PERCENT_TEXT = /^(\d{1,2})(?:\.(\d{1,2}))?$/;
+
+/**
+ * The early-bird amount a discount leaves, in minor units. The form asks for a discount as a percentage or as an amount off; the
+ * contract stores only the early-bird price, so the discount is turned into that price here.
+ *  - percent: regular * (1 - value / 100), rounded half up to the nearest minor unit (integer arithmetic, hundredths of a percent).
+ *  - amount: regular - value, with the value read by parseMoney.
+ * A discount that leaves a price of zero or less is refused as `not-positive`; it is never clamped to zero.
+ */
+export function earlyBirdFromDiscount(
+  regularMinor: number,
+  currency: string,
+  discount: { kind: DiscountKind; value: string },
+): EarlyBirdResult {
+  const text = discount.value.trim();
+  if (discount.kind === 'percent') {
+    const match = PERCENT_TEXT.exec(text);
+    if (!match) {
+      return { ok: false, reason: 'format' };
+    }
+    const whole = Number(match[1]);
+    const hundredths = whole * 100 + Number((match[2] ?? '').padEnd(2, '0'));
+    if (hundredths <= 0 || hundredths >= 10_000) {
+      return { ok: false, reason: 'not-positive' };
+    }
+    const minor = Math.round((regularMinor * (10_000 - hundredths)) / 10_000);
+
+    return minor > 0 ? { ok: true, minor } : { ok: false, reason: 'not-positive' };
+  }
+  const off = parseMoney(text, currency);
+  if (!off.ok) {
+    return off;
+  }
+  const minor = regularMinor - off.minor;
+
+  return minor > 0 ? { ok: true, minor } : { ok: false, reason: 'not-positive' };
+}

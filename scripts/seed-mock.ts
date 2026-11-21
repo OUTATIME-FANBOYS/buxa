@@ -7,12 +7,14 @@
  *   --owner-email=<e>     make an existing account (one that has signed in once) the camp owner
  *   --admin-email=<e>     likewise for the admin, --staff-email= for staff, --viewer-email= for the viewer
  *
- * Without the email flags the seed creates fictional accounts (example.com), which cannot sign in. Refuses any database that
- * is not on localhost. Never prints DATABASE_URL.
+ * Without the email flags the seed creates fictional accounts (example.com), which cannot sign in. The developer's account
+ * becomes an owner of the camp: SEED_OWNER_EMAIL (in apps/web/.env.local) names it, or else the one real account is used.
+ * Refuses any database that is not on localhost. Never prints DATABASE_URL.
  */
 import pg from 'pg';
 import { assertLocalDatabase } from './seed-mock/guard';
 import type { SeedOptions } from './seed-mock/run';
+import type { ClassSeedResult } from './seed-mock/classes';
 
 const FLAGS: Record<string, keyof Omit<SeedOptions, 'reset'>> = {
   '--owner-email': 'owner',
@@ -55,6 +57,7 @@ async function main(): Promise<void> {
   const { planReset } = await import('./seed-mock/reset');
   const { describeReset } = await import('./seed-mock/resetText');
   const { confirmReset } = await import('./seed-mock/confirm');
+  options.developerEmail = process.env.SEED_OWNER_EMAIL || undefined;
   const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 2 });
   try {
     if (options.reset) {
@@ -72,16 +75,31 @@ async function main(): Promise<void> {
     const result = await seedMock(pool, options);
     if (result.status === 'already-seeded') {
       console.log('Camp Birchwood is already seeded. Run `npm run seed:reset` to clear and rebuild it.');
-
-      return;
+    } else {
+      const c = result.counts;
+      console.log(
+        `Camp Birchwood seeded: ${c.people} people, ${c.households} households, ${c.memberships} memberships, ${c.badges} badges, ${c.checkIns} check-ins.`,
+      );
     }
-    const c = result.counts;
-    console.log(
-      `Camp Birchwood seeded: ${c.people} people, ${c.households} households, ${c.memberships} memberships, ${c.badges} badges, ${c.checkIns} check-ins.`,
-    );
+    console.log(describeClasses(result.classes));
   } finally {
     await pool.end();
   }
+}
+
+/** The class seed's report: what the run created, and what the seeded rows now total. */
+export function describeClasses(r: ClassSeedResult): string {
+  const t = r.totals;
+  const owner =
+    r.ownerEmail === null
+      ? 'Developer owner: none chosen (set SEED_OWNER_EMAIL).'
+      : `Developer owner: ${r.ownerEmail} (from ${r.ownerSource}).`;
+
+  return [
+    `Classes: ${t.sessions} sessions, ${t.classes} classes, ${t.teachers} teacher, ${t.teacherAssignments} teacher assignment, ${t.enrolled} enrolled, ${t.waitlisted} waitlisted.`,
+    owner,
+    `Created this run: ${r.created}.`,
+  ].join('\n');
 }
 
 // Only run when executed directly, so the argument parser can be tested.

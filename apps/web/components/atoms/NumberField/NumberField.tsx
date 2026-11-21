@@ -48,7 +48,11 @@ export function NumberField({
     <div className="buxa:grid buxa:min-w-0 buxa:gap-2">
       <label className="field-label" htmlFor={inputId}>
         {label}
-        {isRequired ? ' *' : null}
+        {isRequired ? (
+          <span className="field-required" aria-hidden="true">
+            {' *'}
+          </span>
+        ) : null}
       </label>
       <input
         id={inputId}
@@ -60,6 +64,7 @@ export function NumberField({
         max={maxValue}
         placeholder={placeholder}
         required={isRequired}
+        aria-required={isRequired || undefined}
         disabled={isDisabled}
         aria-invalid={Boolean(error) || undefined}
         aria-describedby={error || hint ? hintId : undefined}
@@ -68,7 +73,7 @@ export function NumberField({
           setOwn(next);
           onChange?.(next);
         }}
-        className="buxa:box-border buxa:h-[var(--control-h)] buxa:w-full buxa:min-w-0 buxa:rounded-[var(--r-1)] buxa:border buxa:border-[var(--line)] buxa:bg-[var(--surface)] buxa:px-3 buxa:font-[inherit] buxa:text-[var(--text)] buxa:outline-none buxa:focus-visible:outline-2 buxa:focus-visible:outline-[var(--focus)] buxa:aria-[invalid=true]:border-[var(--crit)] buxa:disabled:opacity-60 buxa:disabled:cursor-not-allowed buxa:[appearance:textfield] buxa:[&::-webkit-inner-spin-button]:appearance-none buxa:[&::-webkit-outer-spin-button]:appearance-none"
+        className="buxa:box-border buxa:h-[var(--control-h)] buxa:w-full buxa:min-w-0 buxa:rounded-[var(--r-1)] buxa:border buxa:border-[var(--line)] buxa:bg-[var(--surface)] buxa:px-3 buxa:font-[inherit] buxa:text-[var(--text)] buxa:outline-none buxa:aria-[invalid=true]:border-[var(--crit)] buxa:disabled:opacity-60 buxa:disabled:cursor-not-allowed buxa:[appearance:textfield] buxa:[&::-webkit-inner-spin-button]:appearance-none buxa:[&::-webkit-outer-spin-button]:appearance-none"
       />
       {error ? (
         <p id={hintId} className="field-error" role="alert">

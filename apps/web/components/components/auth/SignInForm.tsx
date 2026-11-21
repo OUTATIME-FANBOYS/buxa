@@ -5,7 +5,7 @@ import { BrandMark, Button } from '@/components/elements';
 import { AuthForm, type AuthMode } from './AuthForm';
 
 /** The sign-in card: switches between signing in and creating an account. The page around it is rendered on the server. */
-export function SignInForm() {
+export function SignInForm({ next, email = '' }: { next: string; email?: string }) {
   const [mode, setMode] = useState<AuthMode>('in');
   const isSignIn = mode === 'in';
 
@@ -21,7 +21,7 @@ export function SignInForm() {
       <div className="auth-card">
         <h1>{isSignIn ? 'Welcome back' : 'Create your account'}</h1>
         <p className="muted">{isSignIn ? 'Sign in to manage your camp.' : 'Then set up your first camp.'}</p>
-        <AuthForm key={mode} mode={mode} />
+        <AuthForm key={mode} mode={mode} next={next} email={email} />
         <p className="auth-switch muted">
           {isSignIn ? 'New here?' : 'Already have an account?'}{' '}
           <Button variant="ghost" size="sm" className="link" onClick={() => setMode(isSignIn ? 'up' : 'in')}>

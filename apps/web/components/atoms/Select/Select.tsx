@@ -91,7 +91,11 @@ export function Select({
         htmlFor={selectId}
       >
         {label}
-        {isRequired ? ' *' : null}
+        {isRequired ? (
+          <span className="field-required" aria-hidden="true">
+            {' *'}
+          </span>
+        ) : null}
       </label>
       {leading ? (
         <div className="buxa:relative">

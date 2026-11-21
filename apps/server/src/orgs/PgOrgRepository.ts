@@ -93,6 +93,17 @@ export class PgOrgRepository implements OrgRepository {
     });
   }
 
+  /** buxa_change_member_role (migration 0039) checks the actor's role, the last owner and the archive, and writes the audit row. */
+  async changeMemberRole(actor: Actor, userId: string, role: Role): Promise<void> {
+    try {
+      await withOrg(this.pool, actor.userId, actor.orgId, db =>
+        db.query('SELECT buxa_change_member_role($1, $2, $3, $4)', [actor.orgId, actor.userId, userId, role]),
+      );
+    } catch (error) {
+      throw mapCampFunctionError(error);
+    }
+  }
+
   /** buxa_archive_camp (migration 0013) checks the owner role, refuses an archived camp and writes the audit row in one statement. */
   async archive(actor: Actor): Promise<{ archivedAt: string }> {
     try {

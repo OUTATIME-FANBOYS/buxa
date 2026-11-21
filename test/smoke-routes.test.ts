@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { discoverRoutes } from '../scripts/smoke-routes';
 
 describe('smoke-routes route discovery', () => {
-  it('discovers all 32 pages and 10 API routes (42 total)', () => {
+  it('discovers all 36 pages and 10 API routes (46 total)', () => {
     const routes = discoverRoutes();
     const pages = routes.filter(r => r.type === 'PAGE');
     const apis = routes.filter(r => r.type === 'API');
 
-    expect(pages).toHaveLength(32);
+    expect(pages).toHaveLength(36);
     expect(apis).toHaveLength(10);
-    expect(routes).toHaveLength(42);
+    expect(routes).toHaveLength(46);
   });
 
   it('generates valid URLs for dynamic route parameters', () => {

@@ -14,10 +14,19 @@ describe('the sidebar groups', () => {
   it('lists the items of each group in order', () => {
     expect(CAMP_NAV_GROUPS.map(group => group.items.map(item => item.label))).toEqual([
       ['Home'],
-      ['Sessions', 'Registration', 'Check-in', 'On site', 'People', 'Attendance'],
+      ['Sessions', 'Registration', 'Check-in', 'On site', 'Attendance'],
       ['My tasks', 'Projects', 'Boards', 'Calendar', 'Agents'],
-      ['Team access'],
+      ['People', 'Team access'],
     ]);
+  });
+
+  it('nests Boards and Calendar under Projects, and gives Attendance its own icon', () => {
+    const byLabel = (label: string) => CAMP_NAV.find(item => item.label === label);
+    expect(byLabel('Boards')?.under).toBe(ROUTES.projects);
+    expect(byLabel('Calendar')?.under).toBe(ROUTES.projects);
+    expect(byLabel('Projects')?.under).toBeUndefined();
+    expect(byLabel('Attendance')?.icon).toBe('clipboard-check');
+    expect(byLabel('Registration')?.icon).toBe('list');
   });
 
   it('does not list Settings, Help or Reports in the sidebar: they live in the profile menu', () => {

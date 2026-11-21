@@ -5,6 +5,7 @@ import { Dialog } from '@/components/components/Dialog';
 import { Button } from '@/components/elements';
 import { deleteClassAction } from '@/actions/classes';
 import { idle } from '@buxa/shared';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { ActionMessage } from './ActionMessage';
 
 /**
@@ -24,21 +25,22 @@ export function DeleteClassButton({
   const close = useCallback(() => setOpen(false), []);
   const [state, formAction, pending] = useActionState(deleteClassAction, idle);
 
+  const { toast } = useUi();
   useEffect(() => {
     if (state.status === 'success') {
+      toast(state.message ?? 'Class deleted.');
       setOpen(false);
     }
-  }, [state]);
+  }, [state, toast]);
 
   return (
     <>
       <Button
         type="button"
-        variant="danger-soft"
+        variant="glass-danger"
         size="sm"
         iconOnly
         icon="trash"
-        className="classes-delete"
         aria-label={`Delete ${className}`}
         title="Delete class"
         aria-haspopup="dialog"
@@ -55,10 +57,10 @@ export function DeleteClassButton({
             </p>
             <ActionMessage state={state} />
             <div className="classes-actions">
-              <Button type="button" onClick={close}>
+              <Button variant="glass" type="button" onClick={close}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" disabled={pending}>
+              <Button type="submit" variant="glass-danger" disabled={pending}>
                 {pending ? 'Deleting...' : 'Delete class'}
               </Button>
             </div>

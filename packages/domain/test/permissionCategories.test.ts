@@ -99,7 +99,7 @@ const SPEC: Record<PermissionCategory, Record<Role, Action[]>> = {
   },
   Team: {
     viewer: ['members:read', 'members:leave'],
-    staff: ['members:read', 'members:leave'],
+    staff: ['members:read', 'members:leave', 'members:invite'],
     admin: [
       'members:read',
       'members:leave',

@@ -129,8 +129,16 @@
   --status-purple-ink: #581c87;
   --status-green: #047857;
   --status-green-ink: #064e3b;
-  /* The glass sheen: a soft highlight along the top edge of a liquid-glass pill. */
-  --glass-highlight: rgba(255, 255, 255, 0.9);
+  /* The glass sheen: a soft highlight along the top edge of a liquid-glass pill. In light mode it is faint, so it reads as
+   * light on the glass, not as a white outline. */
+  --glass-highlight: rgba(255, 255, 255, 0.35);
+  /* Liquid-glass buttons, light mode: more transparent fills than the dark mode's, and darker ink, so the icons and text read. */
+  --glass-fill: color-mix(in srgb, var(--hue-grey) 8%, transparent);
+  --glass-fill-hover: color-mix(in srgb, var(--hue-grey) 14%, transparent);
+  --glass-fill-danger: color-mix(in srgb, var(--hue-red) 8%, transparent);
+  --glass-fill-danger-hover: color-mix(in srgb, var(--hue-red) 14%, transparent);
+  --glass-ink: #111827;
+  --glass-ink-danger: #7f1d1d;
   --track: #c9d1d8;
   --grid: #d8dee4;
   --shadow-1: 0 1px 2px rgba(39, 41, 50, 0.06);
@@ -266,6 +274,13 @@
   --hue-grey-ink: #e5e7eb;
   --hue-grey-soft: color-mix(in srgb, var(--hue-grey) 16%, transparent);
   --glass-highlight: rgba(255, 255, 255, 0.22);
+  /* Liquid-glass buttons, dark mode: the values the glass has always had. */
+  --glass-fill: var(--hue-grey-soft);
+  --glass-fill-hover: color-mix(in srgb, var(--hue-grey) 26%, transparent);
+  --glass-fill-danger: var(--hue-red-soft);
+  --glass-fill-danger-hover: color-mix(in srgb, var(--hue-red) 26%, transparent);
+  --glass-ink: var(--hue-grey-ink);
+  --glass-ink-danger: var(--hue-red-ink);
   /* Dark variants of the calendar type tints: deep, low-chroma, with the dark text colour on top. */
   --track: #3a3e4b;
   --grid: #31343f;

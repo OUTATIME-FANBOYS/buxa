@@ -1,11 +1,15 @@
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { FORBIDDEN_REGISTRATION } from '@buxa/shared';
-import { currentActor, loadFormPage } from '@buxa/server/composers/index.server';
-import { registrationRegisterPath } from '@/config/routes';
+import { currentActor, loadFormPage, loadRegisterPage } from '@buxa/server/composers/index.server';
 import { Empty, PageHeader } from '@/components/components';
-import { FormEditor, PublishButton, SubmissionsBySession } from '@/components/components/registration';
-import { Button, Pill } from '@/components/elements';
+import {
+  FormEditor,
+  PublishButton,
+  SubmissionsBySession,
+  TakeRegistrationButton,
+} from '@/components/components/registration';
+import { Pill } from '@/components/elements';
 
 /**
  * One registration form: its draft (for managers), its publish step, and its registrations grouped by session. Staff who may
@@ -33,12 +37,17 @@ export async function RegistrationFormView({ formId }: { formId: string }) {
   const { form, submissions } = loaded.value;
   const published = form.publishedVersion !== null;
 
-  const actions =
-    canSubmit && published ? (
-      <Button variant="secondary" icon="plus" href={registrationRegisterPath(form.id)}>
-        Take a registration
-      </Button>
+  // A family's answers are asked from the published version only, so the dialog takes that version's questions.
+  const register = canSubmit && published ? await loadRegisterPage(actor, form.id) : null;
+  const takeRegistration =
+    register?.ok && register.value.published ? (
+      <TakeRegistrationButton
+        formId={form.id}
+        sessions={register.value.form.sessions}
+        fields={register.value.published.fields}
+      />
     ) : undefined;
+  const actions = takeRegistration;
 
   return (
     <div className="page">

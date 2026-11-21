@@ -3,10 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { ActionMessage } from '@/components/components/classes/forms';
 
 describe('ActionMessage', () => {
-  it('announces a success politely (role status)', () => {
-    expect(
-      renderToStaticMarkup(<ActionMessage state={{ status: 'success', message: 'Ada is enrolled.' }} />),
-    ).toContain('role="status"');
+  it('shows no success text inline: the pop-up closes and toasts it', () => {
+    expect(renderToStaticMarkup(<ActionMessage state={{ status: 'success', message: 'Ada is enrolled.' }} />)).toBe('');
   });
 
   it('announces a form-level error as an alert', () => {

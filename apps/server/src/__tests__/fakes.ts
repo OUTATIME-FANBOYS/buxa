@@ -19,6 +19,7 @@ import type { SeatHoldRepository } from '../holds/SeatHoldRepository';
 import { InMemoryImportRepository } from '../classes/import/InMemoryImportRepository';
 import { InMemoryRegistrationRepository } from '../registration/InMemoryRegistrationRepository';
 import { InMemoryCalendarRepository } from '../calendar/InMemoryCalendarRepository';
+import { InMemoryMemberInviteRepository } from '../invites/InMemoryMemberInviteRepository';
 import { InMemoryCredentialRepository } from '../credentials/InMemoryCredentialRepository';
 import { InMemoryMembershipRepository } from '../memberships/InMemoryMembershipRepository';
 import { OrgNotFoundError, SlugTakenError, type ArchivedCampRecord, type OrgRepository } from '../orgs/OrgRepository';
@@ -298,6 +299,18 @@ export class InMemoryStore implements UserRepository, OrgRepository {
     return Promise.resolve({ id: o.id, name: o.name, slug: o.slug });
   }
 
+  changeMemberRole(actor: Actor, userId: string, role: Role): Promise<void> {
+    const member = this.members.find(m => m.orgId === actor.orgId && m.userId === userId);
+    if (!member) {
+      return Promise.reject(new OrgNotFoundError());
+    }
+    const from = member.role;
+    member.role = role;
+    this.database.record(actor, 'member.role_change', 'member', userId, { from, to: role });
+
+    return Promise.resolve();
+  }
+
   listMembers(_userId: string, orgId: string): Promise<Member[]> {
     const rows: Member[] = [];
     for (const m of this.members) {
@@ -330,6 +343,7 @@ export class InMemoryStore implements UserRepository, OrgRepository {
       registration: new InMemoryRegistrationRepository({}),
       seatHolds: unavailableSeatHolds,
       calendar: new InMemoryCalendarRepository(),
+      memberInvites: new InMemoryMemberInviteRepository(new Map()),
       // These tests create no public pages, so the public read finds nothing.
       publicSessions: {
         findPublicSession: () => Promise.resolve(null),

@@ -41,9 +41,10 @@ vi.mock('@/actions/classes', () => ({
   addClassAction: vi.fn(),
   updateClassAction: vi.fn(),
   deleteClassAction: vi.fn(),
+  updateSessionAction: vi.fn(),
+  deleteSessionAction: vi.fn(),
   enrolAction: vi.fn(),
   cancelEnrolmentAction: vi.fn(),
-  setSessionPublicAction: vi.fn(),
   addRecurringClassesAction: vi.fn(),
   setTeachersAction: vi.fn(),
   importClassesAction: vi.fn(),
@@ -144,6 +145,11 @@ describe('ClassList (the Sessions page)', () => {
     services.classes.listSessions.mockRejectedValue(forbidden('nope'));
     const html = render(await ClassList());
     expect(html).toContain('You cannot see sessions');
+  });
+
+  it('shows no deleted notice when nothing was just deleted (the notice itself is tested in DeletedSessionToast)', async () => {
+    const html = render(await ClassList());
+    expect(html).not.toContain('Deleted &quot;');
   });
 });
 

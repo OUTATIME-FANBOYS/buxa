@@ -136,13 +136,13 @@ describe('CampFrame', () => {
       'Registration',
       'Check-in',
       'On site',
-      'People',
       'Attendance',
       'My tasks',
       'Projects',
       'Boards',
       'Calendar',
       'Agents',
+      'People',
       'Team access',
     ]);
     expect(Children.toArray(frame.props.children)[0]).toBe('THE-PAGE');

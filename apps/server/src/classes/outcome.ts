@@ -1,5 +1,5 @@
 import { describeRefusal, type Refusal } from '@buxa/domain';
-import { ClassOutsideSessionError, isClassError, isEnrolmentRefusal } from './errors';
+import { ClassOutsideSessionError, isClassError, isEnrolmentRefusal, SESSION_HAS_CLASSES_MESSAGE } from './errors';
 
 const isOutsideSession = (e: unknown): e is ClassOutsideSessionError => isClassError(e, 'class-outside-session');
 
@@ -14,6 +14,8 @@ export type FailureReason =
   | 'class_clash'
   | 'capacity_below_enrolled'
   | 'class_has_enrolments'
+  | 'session_has_classes'
+  | 'session_invalid'
   | 'enrolment_not_found'
   | 'camper_not_found'
   | 'instructor_not_found'
@@ -110,6 +112,9 @@ export async function attempt<T>(work: () => Promise<T>, timeZone: string): Prom
           message: 'This class has enrolments, so it cannot be deleted. Cancel them first.',
         },
       };
+    }
+    if (isClassError(e, 'session-has-classes')) {
+      return { ok: false, failure: { reason: 'session_has_classes', message: SESSION_HAS_CLASSES_MESSAGE } };
     }
     if (isClassError(e, 'hold-exists')) {
       return {
