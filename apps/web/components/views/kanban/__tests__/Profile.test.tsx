@@ -91,7 +91,7 @@ describe('the profile page', () => {
     act(() =>
       root.render(
         <UiProvider Dialog={ConfirmDialog}>
-          <Profile user={user} />
+          <Profile user={user} campName={null} badges={[]} />
         </UiProvider>,
       ),
     );

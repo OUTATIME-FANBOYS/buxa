@@ -15,6 +15,7 @@ import { createSeatHoldService, type SeatHoldService } from './holds/SeatHoldSer
 import { createCalendarService, type CalendarService } from './calendar/CalendarService';
 import { createPublicSessionService, type PublicSessionService } from './publicSessions/PublicSessionService';
 import { createCredentialService } from './services/credentials/createCredentialService';
+import { badgeCipher } from './credentials/badgeCipher';
 import { createImportService, type ImportService } from './classes/import/ImportService';
 import { createMembershipService } from './services/memberships/createMembershipService';
 import { createOrgService, type OrgService } from './services/orgs';
@@ -138,7 +139,15 @@ export function createServices(repositories: Repositories, clock: Clock): Servic
     orgs: createOrgService(orgs),
     people: createPeopleService({ people, memberships, credentials, attendance, classes, orgs, clock }),
     memberships: createMembershipService({ memberships, people, orgs, clock }),
-    credentials: createCredentialService({ credentials, people, memberships, attendance, orgs, clock }),
+    credentials: createCredentialService({
+      credentials,
+      people,
+      memberships,
+      attendance,
+      orgs,
+      clock,
+      cipher: badgeCipher,
+    }),
     attendance: createAttendanceService({ attendance, classes, people, memberships, orgs, clock }),
     ...createClassServices(repositories),
     registration: createRegistrationService(repositories.registration),

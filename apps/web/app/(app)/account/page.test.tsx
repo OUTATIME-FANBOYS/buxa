@@ -6,6 +6,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { buildSeed } from '@buxa/shared';
 import { settle } from '@buxa/domain';
+import type { ProfileBadgeRow } from '@buxa/shared';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -26,6 +27,14 @@ const session = vi.hoisted(() => ({
 const requireSession = vi.hoisted(() => vi.fn(() => settle(() => session.current)));
 const getCurrentCamp = vi.hoisted(() => vi.fn(() => settle(() => null)));
 vi.mock('@buxa/server/session/index', () => ({ requireSession, getCurrentCamp }));
+
+// The badge section's data: the server lists names and flags only, never a code. A guardian's list includes each child.
+const badgeData = vi.hoisted(() => ({
+  current: { campName: null as string | null, badges: [] as ProfileBadgeRow[] },
+}));
+vi.mock('@buxa/server/composers/people/loadProfileBadges', () => ({
+  loadProfileBadges: () => settle(() => badgeData.current),
+}));
 
 const h = vi.hoisted(() => ({ store: {} }));
 vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }));
@@ -88,6 +97,24 @@ describe('the account page, for a signed-in person with no camp', () => {
     await AccountPage();
     expect(requireSession).toHaveBeenCalled();
     expect(getCurrentCamp).not.toHaveBeenCalled();
+  });
+
+  it('shows a guardian the badge of each child, with a Show button, and no badge section when there is no camp', async () => {
+    badgeData.current = {
+      campName: 'Camp Birchwood',
+      badges: [{ personId: 'child-1', name: 'Cal Lee', roleLabel: 'Participant', hasActiveBadge: true, self: false }],
+    };
+    const element = await AccountPage();
+    act(() => root.render(<UiProvider Dialog={ConfirmDialog}>{element}</UiProvider>));
+
+    const section = document.querySelector('.profile-badges');
+    expect(section?.textContent).toContain('Cal Lee');
+    expect(Array.from(section?.querySelectorAll('button') ?? []).map(b => b.textContent)).toContain('Show badge');
+
+    badgeData.current = { campName: null, badges: [] };
+    const bare = await AccountPage();
+    act(() => root.render(<UiProvider Dialog={ConfirmDialog}>{bare}</UiProvider>));
+    expect(document.querySelector('.profile-badges')).toBeNull();
   });
 
   it('has no camp settings on it', async () => {

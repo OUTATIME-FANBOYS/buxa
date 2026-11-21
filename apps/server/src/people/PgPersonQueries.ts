@@ -54,6 +54,11 @@ export async function getPerson(db: Db, id: string): Promise<PersonRecord | null
   return found[0] ?? null;
 }
 
+/** The people with this email, case-insensitive, archived people left out. */
+export function peopleByEmail(db: Db, email: string): Promise<PersonRecord[]> {
+  return queryPeople(db, 'WHERE lower(p.email) = lower($1) AND p.archived_at IS NULL', [email]);
+}
+
 export async function requirePerson(db: Db, id: string): Promise<PersonRecord> {
   const person = await getPerson(db, id);
   if (!person) {
