@@ -15,6 +15,7 @@ const TARGET_ARGUMENTS: Record<string, string[]> = {
   buxa_rename_member_v2: ['p_target_user_id'],
   buxa_replace_class_teachers_v2: ['p_user_ids'],
   buxa_set_member_option: ['p_user_id'],
+  buxa_change_member_role: ['p_user_id'],
 };
 
 /**

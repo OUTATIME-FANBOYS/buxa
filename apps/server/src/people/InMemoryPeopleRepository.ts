@@ -125,6 +125,23 @@ export class InMemoryPeopleRepository implements PeopleRepository {
     });
   }
 
+  erase(actor: Actor, id: string): Promise<void> {
+    return settle(() => {
+      this.require(actor.orgId, id);
+      for (const [key, row] of this.db.memberships) {
+        if (row.orgId === actor.orgId && row.personId === id) this.db.memberships.delete(key);
+      }
+      for (const [key, row] of this.db.credentials) {
+        if (row.orgId === actor.orgId && row.personId === id) this.db.credentials.delete(key);
+      }
+      for (const [key, row] of this.db.checkIns) {
+        if (row.orgId === actor.orgId && row.personId === id) this.db.checkIns.delete(key);
+      }
+      this.db.people.delete(id);
+      this.db.record(actor, 'person.delete', 'person', id);
+    });
+  }
+
   archive(actor: Actor, id: string, at: string): Promise<PersonRecord> {
     return settle(() => {
       const person = this.require(actor.orgId, id);

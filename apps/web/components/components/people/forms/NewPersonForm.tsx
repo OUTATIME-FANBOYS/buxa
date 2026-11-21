@@ -10,6 +10,13 @@ import { createPersonAction } from '@/actions/people';
 import { ADD_PERSON_INTRO } from '@buxa/shared';
 import { householdChoiceLabel, type HouseholdChoice } from '@buxa/shared';
 import { FormMessage } from './FormMessage';
+import { ComingSoonInvite, PersonInvite, personInviteDetails } from './PersonInvite';
+
+/**
+ * An instructor is a teacher at the camp, and the only role an invite can grant (the invite is for the teacher role). The invite
+ * button and the sign-in hand-off are offered for this role only.
+ */
+const INVITE_ROLE: CampRole = 'instructor';
 
 interface HouseholdTarget {
   id: string;
@@ -44,8 +51,11 @@ export function NewPersonForm({
   variant?: 'page' | 'dialog';
   formId?: string;
   onPendingChange?: (pending: boolean) => void;
-  /** Runs with the server's message when the person is added (the pop-up closes and toasts it). */
-  onSaved?: (message: string) => void;
+  /**
+   * Runs with the server's message when the person is added. `stay` is true for an instructor: the pop-up stays open and shows the
+   * teacher invite link. Otherwise the pop-up closes and toasts the message.
+   */
+  onSaved?: (message: string, stay: boolean) => void;
 }) {
   const [state, formAction, pending] = useActionState(createPersonAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
@@ -62,10 +72,16 @@ export function NewPersonForm({
   useEffect(() => {
     onPendingChange?.(pending);
   }, [pending, onPendingChange]);
+  // Saved as an instructor (a teacher): the pop-up stays open and sends the teacher invite, so its link is shown once.
+  const [savedTeacher, setSavedTeacher] = useState(false);
   useEffect(() => {
     if (state.status === 'success') {
-      onSaved?.(state.message ?? 'Person added.');
+      const teacher = role === INVITE_ROLE;
+      setSavedTeacher(teacher);
+      onSaved?.(state.message ?? 'Person added.', teacher);
     }
+    // Only a new success matters; the role is read at the moment it is saved.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, onSaved]);
 
   const err = (name: string) => fieldError(state, name);
@@ -141,7 +157,27 @@ export function NewPersonForm({
       </fieldset>
 
       {showOwnEmail && (
-        <TextField label="Email" type="email" name="email" error={err('email')} autoComplete="off" maxLength={254} />
+        <div className="buxa:flex buxa:flex-wrap buxa:items-end buxa:gap-2">
+          <div className="buxa:min-w-[14rem] buxa:flex-1">
+            <TextField
+              label="Email"
+              type="email"
+              name="email"
+              error={err('email')}
+              autoComplete="off"
+              maxLength={254}
+            />
+          </div>
+          {role === INVITE_ROLE && (
+            <PersonInvite
+              key={savedTeacher ? 'sent' : 'send'}
+              label="Send invite"
+              readDetails={() => personInviteDetails(formRef.current)}
+              autoSend={savedTeacher}
+            />
+          )}
+          {role !== null && role !== INVITE_ROLE && <ComingSoonInvite label="Send invite" />}
+        </div>
       )}
 
       {showHousehold && (
@@ -190,15 +226,20 @@ export function NewPersonForm({
             />
           )}
           {showHouseholdEmail && (
-            <TextField
-              label="Email"
-              type="email"
-              name="householdEmail"
-              error={err('householdEmail')}
-              hint="Kept with the household."
-              autoComplete="off"
-              maxLength={254}
-            />
+            <div className="buxa:flex buxa:flex-wrap buxa:items-end buxa:gap-2">
+              <div className="buxa:min-w-[14rem] buxa:flex-1">
+                <TextField
+                  label="Email"
+                  type="email"
+                  name="householdEmail"
+                  error={err('householdEmail')}
+                  hint="Kept with the household."
+                  autoComplete="off"
+                  maxLength={254}
+                />
+              </div>
+              <ComingSoonInvite label="Send invite" />
+            </div>
           )}
           {household && err('householdId') && (
             <p className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">

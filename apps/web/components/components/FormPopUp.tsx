@@ -21,6 +21,8 @@ export interface FormPopUpProps {
   /** An action on the footer's left, away from Cancel and submit (for example a delete). */
   leading?: ReactNode;
   className?: string;
+  /** Centres the footer's buttons (Cancel and the submit) under the form, rather than pushing them to the right. */
+  centred?: boolean;
   children: ReactNode;
 }
 
@@ -41,24 +43,38 @@ export function FormPopUp({
   onCancel,
   leading,
   className = 'class-dialog',
+  centred = false,
   children,
 }: FormPopUpProps) {
+  const buttons = (
+    <>
+      <Button variant="glass" type="button" disabled={pending} onClick={onCancel}>
+        Cancel
+      </Button>
+      <Button type="submit" form={formId} variant="primary" icon={submitIcon} disabled={pending || submitDisabled}>
+        {pending && pendingLabel ? pendingLabel : submitLabel}
+      </Button>
+    </>
+  );
+
   return (
     <Dialog
       title={title}
       onClose={onCancel}
       className={className}
       footer={
-        <>
-          {leading}
-          <span className="buxa:flex-1" />
-          <Button variant="glass" type="button" disabled={pending} onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit" form={formId} variant="primary" icon={submitIcon} disabled={pending || submitDisabled}>
-            {pending && pendingLabel ? pendingLabel : submitLabel}
-          </Button>
-        </>
+        centred ? (
+          <div className="buxa:flex buxa:w-full buxa:flex-wrap buxa:items-center buxa:justify-center buxa:gap-2">
+            {leading}
+            {buttons}
+          </div>
+        ) : (
+          <>
+            {leading}
+            <span className="buxa:flex-1" />
+            {buttons}
+          </>
+        )
       }
     >
       {intro ? <p className="muted">{intro}</p> : null}

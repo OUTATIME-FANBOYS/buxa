@@ -137,6 +137,12 @@ form.person-form {
 .dialog.person-dialog {
   width: min(640px, 100%);
 }
+/* The add pop-up reads as one centred column: the section titles, helper lines and role headings sit centred. */
+.dialog.person-dialog .person-legend,
+.dialog.person-dialog .person-helper,
+.dialog.person-dialog .person-role-heading {
+  text-align: center;
+}
 .person-form .person-section {
   margin: 0;
   padding: 0;

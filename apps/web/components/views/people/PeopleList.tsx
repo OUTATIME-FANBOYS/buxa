@@ -70,7 +70,12 @@ export async function PeopleList({ searchParams }: { searchParams: Record<string
           ) : (
             <>
               <p className="muted">{countLine(people.length)}</p>
-              <PeopleTable people={people} staffView={can(actor, 'people:read_contact')} />
+              <PeopleTable
+                people={people}
+                staffView={can(actor, 'people:read_contact')}
+                canEdit={can(actor, 'people:update')}
+                canDelete={can(actor, 'data:erase')}
+              />
             </>
           )}
         </div>

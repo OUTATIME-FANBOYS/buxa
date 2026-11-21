@@ -37,8 +37,8 @@ export async function EditPerson({ id }: { id: string }) {
   return (
     <div className="page narrow">
       <PageHeader
-        title={`Edit ${displayName(person)}`}
-        subtitle="Changes are saved to the camp record and shown to everyone who can see this person."
+        title="Edit person"
+        subtitle={`${displayName(person)}. Changes are saved to the camp record and shown to everyone who can see this person.`}
       />
       <EditPersonForm person={person} />
     </div>

@@ -10,6 +10,8 @@ export const ROUTES = {
   camp: '/camp',
   // Camp operations: need a signed-in session and a camp.
   members: '/camp/members',
+  // Manage access: change each member's role. Needs members:change_role (admins and the owner).
+  membersManage: '/camp/members/manage',
   newCamp: '/camp/new',
   people: '/camp/people',
   newPerson: '/camp/people/new',

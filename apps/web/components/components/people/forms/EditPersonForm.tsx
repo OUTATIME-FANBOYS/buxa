@@ -9,6 +9,10 @@ import { Checkbox, DatePicker, HiddenField, TextField } from '@/components/atoms
 import { fieldError, idle } from '@buxa/shared';
 import { updatePersonAction } from '@/actions/people';
 import { FormMessage } from './FormMessage';
+import { ComingSoonInvite, PersonInvite, personInviteDetails } from './PersonInvite';
+
+/** The role an invite grants (a teacher). Only a person with this role gets the invite button. */
+const INVITE_ROLE = 'instructor';
 
 /** The fields a person's details can change, as the form posts them. Contact fields and date of birth are only given to staff. */
 export type EditablePerson = Pick<
@@ -113,15 +117,24 @@ export function EditPersonForm({ person }: { person: EditablePerson }) {
             error={err('dateOfBirth')}
             hint="Only used to tell whether someone is under 18. Leave blank to clear it."
           />
-          <TextField
-            label="Email"
-            type="email"
-            name="email"
-            defaultValue={person.email ?? ''}
-            error={err('email')}
-            autoComplete="off"
-            maxLength={254}
-          />
+          <div className="buxa:flex buxa:flex-wrap buxa:items-end buxa:gap-2">
+            <div className="buxa:min-w-[14rem] buxa:flex-1">
+              <TextField
+                label="Email"
+                type="email"
+                name="email"
+                defaultValue={person.email ?? ''}
+                error={err('email')}
+                autoComplete="off"
+                maxLength={254}
+              />
+            </div>
+            {person.roles.includes(INVITE_ROLE) ? (
+              <PersonInvite label="Resend invite" readDetails={() => personInviteDetails(formRef.current)} />
+            ) : (
+              <ComingSoonInvite label="Resend invite" />
+            )}
+          </div>
           <TextField
             label="Phone"
             type="tel"

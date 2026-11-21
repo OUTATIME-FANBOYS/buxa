@@ -94,6 +94,8 @@ export interface PeopleRepository {
   update(actor: Actor, id: string, patch: PersonPatchRecord): Promise<PersonRecord>;
   /** Sets `archivedAt` (idempotent). Audits `person.archive`. Throws PersonNotFoundError. */
   archive(actor: Actor, id: string, at: string): Promise<PersonRecord>;
+  /** Deletes the person; the linked rows (memberships, enrolments, check-ins, badges, household links) go with it. Owner only. Audits `person.delete`. Throws PersonNotFoundError. */
+  erase(actor: Actor, id: string): Promise<void>;
   get(userId: string, orgId: string, id: string): Promise<PersonRecord | null>;
   getMany(userId: string, orgId: string, ids: readonly string[]): Promise<PersonRecord[]>;
   /** Ordered by family name, then given name. Archived people only with `includeArchived`. */

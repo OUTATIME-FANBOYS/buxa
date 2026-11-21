@@ -138,3 +138,10 @@ export * from './attendance';
 export * from './classes';
 export * from './registration';
 export * from './invites';
+
+/** A role change from Team access (Manage access). The role is one of the camp's permission roles. */
+export const ChangeMemberRoleInputSchema = z.object({
+  userId: z.string().uuid('Choose a person.'),
+  role: z.enum(ROLES, { message: 'Choose a role.' }),
+});
+export type ChangeMemberRoleInput = z.infer<typeof ChangeMemberRoleInputSchema>;

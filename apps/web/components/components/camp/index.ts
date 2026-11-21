@@ -2,6 +2,7 @@ export * from './AccountMenu';
 export * from './HeaderTools';
 export * from './ArchivedBanner';
 export * from './CampSwitcher';
+export * from './ManageAccessTable';
 export * from './MembersTable';
 export * from './NewCampForm';
 export * from './PermissionAreasTable';

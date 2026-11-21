@@ -16,13 +16,19 @@ const FORM_ID = 'new-person-form';
 export function AddPersonButton({ households }: { households: readonly HouseholdChoice[] }) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
+  // A teacher stays in the pop-up after saving, to show the invite link; the form then cannot be saved a second time.
+  const [stayed, setStayed] = useState(false);
   const close = useCallback(() => setOpen(false), []);
   const { toast } = useUi();
-  // An added person closes the pop-up and toasts the server's message.
+  // An added person closes the pop-up and toasts the server's message. A teacher keeps it open for the invite link.
   const saved = useCallback(
-    (message: string) => {
+    (message: string, stay: boolean) => {
       toast(message);
-      setOpen(false);
+      if (stay) {
+        setStayed(true);
+      } else {
+        setOpen(false);
+      }
     },
     [toast],
   );
@@ -40,8 +46,10 @@ export function AddPersonButton({ households }: { households: readonly Household
           pendingLabel="Adding…"
           submitIcon="plus"
           pending={pending}
+          submitDisabled={stayed}
           onCancel={close}
           className="person-dialog"
+          centred
         >
           <NewPersonForm
             variant="dialog"

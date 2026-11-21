@@ -35,6 +35,8 @@ export interface PeopleService {
   update(actor: Actor, id: string, patch: PersonPatchInput): Promise<Person>;
   /** Needs people:delete. Archives; also revokes the active badge. Checked-in people cannot be archived (409). */
   archive(actor: Actor, id: string): Promise<void>;
+  /** Owner only (data:erase). Deletes the person and their linked rows in one transaction. 404 for an unknown id, 403 for anyone but the owner. */
+  erase(actor: Actor, id: string): Promise<void>;
   /** Needs people:create. */
   createHousehold(actor: Actor, input: NewHouseholdInput): Promise<Household>;
   /** Needs people:update. */

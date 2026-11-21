@@ -299,6 +299,18 @@ export class InMemoryStore implements UserRepository, OrgRepository {
     return Promise.resolve({ id: o.id, name: o.name, slug: o.slug });
   }
 
+  changeMemberRole(actor: Actor, userId: string, role: Role): Promise<void> {
+    const member = this.members.find(m => m.orgId === actor.orgId && m.userId === userId);
+    if (!member) {
+      return Promise.reject(new OrgNotFoundError());
+    }
+    const from = member.role;
+    member.role = role;
+    this.database.record(actor, 'member.role_change', 'member', userId, { from, to: role });
+
+    return Promise.resolve();
+  }
+
   listMembers(_userId: string, orgId: string): Promise<Member[]> {
     const rows: Member[] = [];
     for (const m of this.members) {

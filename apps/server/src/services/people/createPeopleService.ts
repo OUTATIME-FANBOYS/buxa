@@ -249,6 +249,14 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       return personView(actor, record, await todayFor(actor));
     },
 
+    async erase(actor, id) {
+      assertAllowed(actor, 'data:erase');
+      if (!(await people.get(actor.userId, actor.orgId, id))) {
+        throw notFound('Person not found');
+      }
+      await guard(() => people.erase(actor, id));
+    },
+
     async archive(actor, id) {
       assertAllowed(actor, 'people:delete');
       const orgId = actor.orgId;

@@ -7,11 +7,14 @@ import { signIn, signUp } from '@/actions/auth';
 
 export type AuthMode = 'in' | 'up';
 
-/** The fields and button for one mode. Remounted when the mode changes, so a message from one mode never shows in the other. */
-export function AuthForm({ mode, next }: { mode: AuthMode; next: string }) {
+/**
+ * The fields and button for one mode. Remounted when the mode changes, so a message from one mode never shows in the other.
+ * `email` pre-fills the address (a teacher invite sends the person here with their email).
+ */
+export function AuthForm({ mode, next, email = '' }: { mode: AuthMode; next: string; email?: string }) {
   const isSignIn = mode === 'in';
   const [state, action, pending] = useActionState<ActionState, FormData>(isSignIn ? signIn : signUp, idle);
-  const [values, setValues] = useState({ name: '', email: '', password: '' });
+  const [values, setValues] = useState({ name: '', email, password: '' });
   const bind = (field: keyof typeof values) => ({
     name: field,
     value: values[field],

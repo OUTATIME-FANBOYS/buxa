@@ -3,6 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { NewPersonForm } from '@/components/components/people/forms';
+import { UiProvider } from '@buxa/middleware/providers/UiProvider';
+import { Dialog as ConfirmDialog } from '@/components/components';
 import { settle } from '@buxa/domain';
 import { ADD_PERSON_INTRO, type HouseholdChoice } from '@buxa/shared';
 
@@ -33,7 +35,9 @@ describe('NewPersonForm: one role at a time, and which sections show for it', ()
   const render = (household: { id: string; name: string } | null = null, households: HouseholdChoice[] = []) =>
     act(() => {
       root.render(
-        <NewPersonForm household={household} households={households} variant="dialog" formId="new-person-form" />,
+        <UiProvider Dialog={ConfirmDialog}>
+          <NewPersonForm household={household} households={households} variant="dialog" formId="new-person-form" />
+        </UiProvider>,
       );
     });
   const radio = (value: string) => host.querySelector<HTMLInputElement>(`input[name="roles"][value="${value}"]`);
