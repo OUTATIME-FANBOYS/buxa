@@ -24,3 +24,22 @@ export async function rotateCalendarTokenAction(): Promise<RotateCalendarTokenRe
     return { ok: false, message: 'Could not make a new calendar link. Try again.' };
   }
 }
+
+/**
+ * Make a new personal calendar link for the signed-in teacher. It shows only the classes that teacher is assigned to. The old link
+ * stops working at once, and the token is shown once. The service refuses anyone who is not a teacher.
+ */
+export async function rotateOwnCalendarTokenAction(): Promise<RotateCalendarTokenResult> {
+  const actor = await currentActor();
+  if (!actor) {
+    return { ok: false, message: 'Choose a camp first.' };
+  }
+
+  try {
+    const token = await getRuntime().services.calendar.rotateOwnToken(actor);
+
+    return { ok: true, token };
+  } catch {
+    return { ok: false, message: 'Could not make a new calendar link. Try again.' };
+  }
+}

@@ -6,21 +6,35 @@ import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { Dialog as ConfirmDialog } from '@/components/components';
 import { ArchivedCampsCard } from '@/components/components/camp';
 import type { ArchivedCamp } from '@/actions/camp';
+import { ROUTES } from '@/config/routes';
 
 const h = vi.hoisted(() => ({
   unarchiveCamp: vi.fn(),
   deleteCamp: vi.fn(),
+  selectCampAction: vi.fn(),
   push: vi.fn(),
   refresh: vi.fn(),
 }));
 
-vi.mock('@/actions/camp', () => ({ unarchiveCamp: h.unarchiveCamp, deleteCamp: h.deleteCamp }));
+vi.mock('@/actions/camp', () => ({
+  unarchiveCamp: h.unarchiveCamp,
+  deleteCamp: h.deleteCamp,
+  selectCampAction: h.selectCampAction,
+}));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: h.push, refresh: h.refresh }) }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
+function must<T>(value: T | null | undefined, what: string): T {
+  if (value == null) {
+    throw new Error(`Expected ${what} on the page.`);
+  }
+
+  return value;
+}
+
 const OWNED: ArchivedCamp = { id: 'o-1', name: 'Camp Cedar', archivedAt: '2026-10-02T09:00:00.000Z', role: 'owner' };
-const SHARED: ArchivedCamp = { id: 'o-2', name: 'Camp Birch', archivedAt: '2026-10-03T09:00:00.000Z', role: 'admin' };
+const ADMIN: ArchivedCamp = { id: 'o-2', name: 'Camp Birch', archivedAt: '2026-10-03T09:00:00.000Z', role: 'admin' };
 
 const button = (text: string) =>
   Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find(b => b.textContent?.trim() === text);
@@ -37,8 +51,9 @@ const typeInto = (input: HTMLInputElement, value: string) => {
   input.dispatchEvent(new Event('input', { bubbles: true }));
 };
 const dialogText = () => document.querySelector('[role="dialog"]')?.textContent ?? '';
+const rows = () => Array.from(document.querySelectorAll<HTMLTableRowElement>('#archived-camps tbody tr'));
 
-describe('the archived camps list', () => {
+describe('the archived camps table', () => {
   let root: Root;
 
   const render = (camps: readonly ArchivedCamp[]) =>
@@ -53,6 +68,7 @@ describe('the archived camps list', () => {
   beforeEach(() => {
     h.unarchiveCamp.mockReset().mockResolvedValue({ ok: true });
     h.deleteCamp.mockReset().mockResolvedValue({ ok: true });
+    h.selectCampAction.mockReset().mockResolvedValue({ ok: true });
     h.push.mockReset();
     h.refresh.mockReset();
     root = createRoot(document.body.appendChild(document.createElement('div')));
@@ -62,22 +78,62 @@ describe('the archived camps list', () => {
     document.body.innerHTML = '';
   });
 
-  it('shows Unarchive and Delete camp to the owner only', () => {
-    render([OWNED, SHARED]);
-    const rows = Array.from(document.querySelectorAll('.archived-list li'));
-
-    expect(rows[0].textContent).toContain('Unarchive camp');
-    expect(rows[0].textContent).toContain('Delete camp');
-    expect(rows[1].textContent).not.toContain('Unarchive camp');
-    expect(rows[1].textContent).not.toContain('Delete camp');
-    expect(rows[1].textContent).toContain('Camp Birch');
-  });
-
-  it('gives the Unarchive and Delete buttons their icons', () => {
+  it('renders the title above a table with Camp, Archived and Actions columns', () => {
     render([OWNED]);
 
-    expect(button('Unarchive camp')?.querySelector('svg[class*="lucide-archive-restore"]')).not.toBeNull();
-    expect(button('Delete camp')?.querySelector('svg[class*="lucide-trash"]')).not.toBeNull();
+    expect(document.querySelector('#archived-camps h2')?.textContent).toBe('Archived camps');
+    const headers = Array.from(document.querySelectorAll('#archived-camps thead th')).map(th => th.textContent?.trim());
+    expect(headers).toEqual(['Camp', 'Archived', 'Actions']);
+    expect(document.querySelector('#archived-camps .table-wrap table.table')).not.toBeNull();
+  });
+
+  it('renders the camp name as a link button and the archived date in each row', () => {
+    render([ADMIN]);
+    const [row] = rows();
+    const name = row.querySelector('button');
+
+    expect(name?.textContent).toBe('Camp Birch');
+    expect(name?.className).toContain('row-title');
+    expect(row.cells[1].textContent).toBe('Oct 3, 2026');
+  });
+
+  it('opens the camp when its name is clicked, as the camp switcher does', async () => {
+    render([OWNED]);
+
+    await act(() => {
+      rows()[0].querySelector<HTMLButtonElement>('button')?.click();
+
+      return Promise.resolve();
+    });
+
+    expect(h.selectCampAction).toHaveBeenCalledWith('o-1');
+    expect(h.push).toHaveBeenCalledWith(ROUTES.camp);
+    expect(h.refresh).toHaveBeenCalled();
+  });
+
+  it('shows Unarchive and Delete camp to the owner only', () => {
+    render([OWNED, ADMIN]);
+
+    expect(rows()[0].cells[2].textContent).toContain('Unarchive camp');
+    expect(rows()[0].cells[2].textContent).toContain('Delete camp');
+    expect(rows()[1].cells[2].textContent).not.toContain('Unarchive camp');
+    expect(rows()[1].cells[2].textContent).not.toContain('Delete camp');
+    expect(button('Delete camp')).toBeDefined();
+  });
+
+  it('hides Delete camp for an admin, while the name still opens the camp', () => {
+    render([ADMIN]);
+
+    expect(rows()[0].querySelectorAll('button')).toHaveLength(1);
+    expect(button('Delete camp')).toBeUndefined();
+    expect(button('Camp Birch')).toBeDefined();
+  });
+
+  it('gives Unarchive camp and Delete camp no icon', () => {
+    render([OWNED]);
+
+    expect(button('Unarchive camp')?.querySelector('svg')).toBeNull();
+    expect(button('Delete camp')?.querySelector('svg')).toBeNull();
   });
 
   it('unarchives after one confirm, calling unarchiveCamp with the camp id, then refreshes', async () => {
@@ -85,8 +141,10 @@ describe('the archived camps list', () => {
 
     act(() => button('Unarchive camp')?.click());
     expect(dialogText()).toContain('Camp Cedar becomes an active camp again');
-    await act(async () => {
+    await act(() => {
       dlg('Unarchive camp')?.click();
+
+      return Promise.resolve();
     });
 
     expect(h.unarchiveCamp).toHaveBeenCalledTimes(1);
@@ -100,8 +158,10 @@ describe('the archived camps list', () => {
     render([OWNED]);
 
     act(() => button('Unarchive camp')?.click());
-    await act(async () => {
+    await act(() => {
       dlg('Unarchive camp')?.click();
+
+      return Promise.resolve();
     });
 
     expect(document.querySelector('[role="alert"]')?.textContent).toBe('This camp is not archived');
@@ -115,23 +175,26 @@ describe('the archived camps list', () => {
     expect(dialogText()).toContain('Are you sure you want to delete Camp Cedar?');
     act(() => dlg('Continue')?.click());
 
-    act(() => typeInto(field()!, 'camp cedar'));
+    act(() => typeInto(must(field(), 'the name field'), 'camp cedar'));
     expect(dlg('Delete camp')?.disabled).toBe(true);
 
-    act(() => typeInto(field()!, 'Camp Cedar'));
+    act(() => typeInto(must(field(), 'the name field'), 'Camp Cedar'));
     expect(dlg('Delete camp')?.disabled).toBe(false);
 
-    await act(async () => {
+    await act(() => {
       dlg('Delete camp')?.click();
+
+      return Promise.resolve();
     });
     expect(h.deleteCamp).toHaveBeenCalledWith({ orgId: 'o-1', confirmName: 'Camp Cedar' });
     expect(h.refresh).toHaveBeenCalled();
     expect(h.push).not.toHaveBeenCalled();
   });
 
-  it('says so when no camp is archived', () => {
+  it('renders nothing when no camp is archived', () => {
     render([]);
 
-    expect(document.querySelector('#archived-camps')?.textContent).toContain('No archived camps.');
+    expect(document.querySelector('#archived-camps')).toBeNull();
+    expect(document.body.textContent).not.toContain('Archived camps');
   });
 });

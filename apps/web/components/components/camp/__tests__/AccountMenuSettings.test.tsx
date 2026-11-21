@@ -9,6 +9,15 @@ import { settle } from '@buxa/domain';
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 vi.mock('@/actions/auth', () => ({ signOut: () => settle(() => undefined) }));
+
+function must<T>(value: T | null | undefined, what: string): T {
+  if (value == null) {
+    throw new Error(`Expected ${what} on the page.`);
+  }
+
+  return value;
+}
+
 const saveTime = vi.hoisted(() => vi.fn(() => Promise.resolve({ status: 'success', message: 'Time format saved' })));
 vi.mock('@/actions/account', () => ({ updateTimeFormatAction: saveTime }));
 
@@ -40,19 +49,22 @@ describe('the account menu', () => {
     document.body.innerHTML = '';
   });
 
-  const openMenu = (u = user) => {
-    act(() => root.render(<AccountMenu user={u} />));
+  const openMenu = (u = user, hasCamp = true) => {
+    act(() => root.render(<AccountMenu user={u} hasCamp={hasCamp} />));
     act(() => {
       document.querySelector<HTMLButtonElement>('button[aria-label="Account"]')?.click();
     });
 
     return Array.from(document.querySelectorAll<HTMLElement>('[role=menu] > [role=menuitem]'));
   };
-  const menu = () => document.querySelector('[role=menu]')!;
+  const menu = () => must(document.querySelector('[role=menu]'), 'the account menu');
   const item = (label: string) =>
-    Array.from(document.querySelectorAll<HTMLElement>('[role=menu] [role=menuitem]')).find(
-      el => el.textContent?.trim() === label,
-    )!;
+    must(
+      Array.from(document.querySelectorAll<HTMLElement>('[role=menu] [role=menuitem]')).find(
+        el => el.textContent?.trim() === label,
+      ),
+      `the "${label}" menu item`,
+    );
   const openSub = (label: string) => {
     act(() => {
       item(label).click();
@@ -99,12 +111,23 @@ describe('the account menu', () => {
     expect(menu().textContent).not.toContain('Light mode');
   });
 
-  it('links Profile to the Profile section of Settings, and the others to their pages', () => {
+  it('links Profile to the account page, and the others to their pages', () => {
     openMenu();
     expect(item('Profile').tagName).toBe('A');
-    expect(item('Profile').getAttribute('href')).toBe(`${ROUTES.settings}#profile`);
+    expect(item('Profile').getAttribute('href')).toBe(ROUTES.account);
     expect(item('Settings').getAttribute('href')).toBe(ROUTES.settings);
     expect(item('Reports').getAttribute('href')).toBe(ROUTES.reports);
+  });
+
+  it('shows Profile with no camp, and hides the camp-only Settings item', () => {
+    openMenu(user, false);
+    expect(item('Profile').getAttribute('href')).toBe(ROUTES.account);
+    expect(item('Reports').getAttribute('href')).toBe(ROUTES.reports);
+    expect(
+      Array.from(document.querySelectorAll<HTMLElement>('[role=menu] [role=menuitem]')).map(el =>
+        el.textContent?.trim(),
+      ),
+    ).not.toContain('Settings');
   });
 
   it('opens Appearance as a submenu of Light, Dark and System, with a check on the current one', () => {

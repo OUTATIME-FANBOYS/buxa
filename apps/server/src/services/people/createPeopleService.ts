@@ -3,10 +3,11 @@ import type {
   NewPersonInput,
   Person,
   PersonListQuery,
+  PersonPage,
   PersonPatchInput,
   PersonSummary,
 } from '@buxa/contracts';
-import { can, isMinor, MAX_SEARCH_RESULTS, type Actor, type LocalDate } from '@buxa/domain';
+import { can, isMinor, MAX_SEARCH_RESULTS, pageSpan, type Actor, type LocalDate } from '@buxa/domain';
 import { assertAllowed } from '../../auth/authorize';
 import { assignedTo, teacherScopeOf } from '../../classes/teacherScope';
 import { badRequest, conflict, notFound } from '../../http/errors';
@@ -16,6 +17,7 @@ import { campToday } from '../shared/campDay';
 import { guard } from '../shared/errors';
 import { campZone, toHouseholds, toPersonMembership, toSummary, onSiteByPerson } from '../shared/views';
 import type { PeopleService, PeopleServiceDeps } from './PeopleService';
+import { personPageFilter } from './personPageFilter';
 import {
   CAMPER_NEEDS_GUARDIAN,
   CHOOSE_ROLE,
@@ -83,6 +85,23 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
 
   const todayFor = async (actor: Pick<Actor, 'userId' | 'orgId'>): Promise<LocalDate> =>
     campToday(clock, await campZone(orgs, actor));
+
+  /** The list rows for these people: memberships, on-site state and access status, as far as the actor may see them. */
+  async function summarise(actor: Actor, records: readonly PersonRecord[]): Promise<PersonSummary[]> {
+    const [ms, onSite, today] = await Promise.all([
+      memberships.forPeople(
+        actor.userId,
+        actor.orgId,
+        records.map(p => p.id),
+      ),
+      onSiteByPerson(attendance, actor),
+      todayFor(actor),
+    ]);
+    const groups = byPerson(ms);
+    const custody = seesCustody(actor);
+
+    return records.map(p => toSummary(p, groups.get(p.id) ?? [], onSite.has(p.id), today, custody));
+  }
 
   /**
    * The full record as this actor may see it. Contact details and the minor flag are withheld from anyone without people:read_contact.
@@ -178,19 +197,28 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
               p => role === undefined || p.roles.includes(role),
             );
       const records = scope === null ? found : found.filter(p => scope.camperIds.has(p.id));
-      const [ms, onSite, today] = await Promise.all([
-        memberships.forPeople(
-          actor.userId,
-          orgId,
-          records.map(p => p.id),
-        ),
-        onSiteByPerson(attendance, actor),
-        todayFor(actor),
-      ]);
-      const groups = byPerson(ms);
-      const custody = seesCustody(actor);
 
-      return records.map(p => toSummary(p, groups.get(p.id) ?? [], onSite.has(p.id), today, custody));
+      return summarise(actor, records);
+    },
+
+    async listPage(actor, query = {}): Promise<PersonPage> {
+      const scope = await teacherScopeOf(classes, actor);
+      assertAllowed(actor, 'people:read', { assignedToClass: scope === null ? undefined : true });
+      const filter = personPageFilter(query, scope);
+      // The count and the page read the same filter, so the total counts every match, not only the rows on this page.
+      const total = await people.countPeople(actor.userId, actor.orgId, filter);
+      const span = pageSpan(total, query.page ?? 1, query.pageSize);
+      const records = total === 0 ? [] : await people.listPeoplePage(actor.userId, actor.orgId, filter, span);
+
+      return {
+        people: await summarise(actor, records),
+        total,
+        page: span.page,
+        pageSize: span.pageSize,
+        pageCount: span.pageCount,
+        from: span.from,
+        to: span.to,
+      };
     },
 
     async get(actor, id) {
@@ -247,6 +275,14 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       const record = await guard(() => people.update(actor, id, toPatchRecord(patch)));
 
       return personView(actor, record, await todayFor(actor));
+    },
+
+    async erase(actor, id) {
+      assertAllowed(actor, 'data:erase');
+      if (!(await people.get(actor.userId, actor.orgId, id))) {
+        throw notFound('Person not found');
+      }
+      await guard(() => people.erase(actor, id));
     },
 
     async archive(actor, id) {

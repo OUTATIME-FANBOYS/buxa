@@ -1,17 +1,20 @@
 'use client';
 
 import { useActionState, useState } from 'react';
-import { Button, TextField } from '@/components/atoms';
+import { Button, HiddenField, TextField } from '@/components/atoms';
 import { fieldError, idle, type ActionState } from '@buxa/shared';
 import { signIn, signUp } from '@/actions/auth';
 
 export type AuthMode = 'in' | 'up';
 
-/** The fields and button for one mode. Remounted when the mode changes, so a message from one mode never shows in the other. */
-export function AuthForm({ mode }: { mode: AuthMode }) {
+/**
+ * The fields and button for one mode. Remounted when the mode changes, so a message from one mode never shows in the other.
+ * `email` pre-fills the address (a teacher invite sends the person here with their email).
+ */
+export function AuthForm({ mode, next, email = '' }: { mode: AuthMode; next: string; email?: string }) {
   const isSignIn = mode === 'in';
   const [state, action, pending] = useActionState<ActionState, FormData>(isSignIn ? signIn : signUp, idle);
-  const [values, setValues] = useState({ name: '', email: '', password: '' });
+  const [values, setValues] = useState({ name: '', email, password: '' });
   const bind = (field: keyof typeof values) => ({
     name: field,
     value: values[field],
@@ -20,6 +23,8 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
   return (
     <form action={action} noValidate>
+      {/* Where to go after signing in: an invite link, or the camp home. The server checks it again. */}
+      <HiddenField name="next" value={next} />
       {!isSignIn && (
         <TextField label="Name" error={fieldError(state, 'name')} autoComplete="name" autoFocus {...bind('name')} />
       )}

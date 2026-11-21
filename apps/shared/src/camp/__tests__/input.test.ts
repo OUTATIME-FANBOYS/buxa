@@ -14,7 +14,7 @@ describe('text', () => {
 });
 
 describe('parseInput', () => {
-  const schema = z.object({ name: z.string().min(1, 'Name is required.') });
+  const schema = z.object({ name: z.string().min(1, 'Enter a name.') });
   it('returns the parsed data on success', () => {
     expect(parseInput(schema, { name: 'Lake' })).toEqual({ ok: true, data: { name: 'Lake' } });
   });
@@ -25,7 +25,7 @@ describe('parseInput', () => {
       expect(result.state).toMatchObject({
         status: 'error',
         message: 'Check the highlighted fields.',
-        fieldErrors: { name: 'Name is required.' },
+        fieldErrors: { name: 'Enter a name.' },
       });
     }
   });

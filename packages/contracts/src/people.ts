@@ -1,9 +1,13 @@
 /** People, households, memberships and badges: what the camp's screens and services exchange. */
 import { z } from 'zod';
-import { CAMP_ROLES, isLocalDate } from '@buxa/domain';
+import { CAMP_ROLES, PEOPLE_PAGE_SIZE_MAX, isAllowedRoleSet, isLocalDate, type PageSpan } from '@buxa/domain';
 import { OptionalEmailSchema, OptionalPhoneSchema, PatchEmailSchema, PatchPhoneSchema } from './contact';
 
 export const CampRoleSchema = z.enum(CAMP_ROLES);
+/** The roles a person holds together must be one of the allowed sets (see isAllowedRoleSet in @buxa/domain). */
+const RoleSetMessage = "Those roles can't go together. Pick one of the allowed combinations.";
+const AllowedRoleSet = (roles: z.ZodArray<typeof CampRoleSchema>) =>
+  roles.refine(isAllowedRoleSet, { message: RoleSetMessage });
 export const LocalDateSchema = z.string().refine(isLocalDate, 'Use a real date (YYYY-MM-DD).');
 export const AccessStatusSchema = z.enum(['valid', 'not_started', 'expired', 'revoked', 'none']);
 
@@ -84,7 +88,7 @@ export const NewPersonInputSchema = z.object({
   dateOfBirth: LocalDateSchema.optional(),
   email: OptionalEmailSchema,
   phone: OptionalPhoneSchema,
-  roles: z.array(CampRoleSchema).min(1, 'Choose at least one role.'),
+  roles: AllowedRoleSet(z.array(CampRoleSchema).min(1, 'Pick a role.')),
   /** Required when the person is a camper: a household that already has a guardian. */
   householdId: z.string().uuid().optional(),
   /** Or a new household with this name, created in the same transaction (it starts with no guardian, so only a guardian fits). */
@@ -101,7 +105,7 @@ export const PersonPatchInputSchema = z.object({
   dateOfBirth: LocalDateSchema.nullable().optional(),
   email: PatchEmailSchema.nullable().optional(),
   phone: PatchPhoneSchema.nullable().optional(),
-  roles: z.array(CampRoleSchema).min(1, 'Choose at least one role.').optional(),
+  roles: AllowedRoleSet(z.array(CampRoleSchema).min(1, 'Pick a role.')).optional(),
 });
 export type PersonPatchInput = z.infer<typeof PersonPatchInputSchema>;
 
@@ -112,8 +116,21 @@ export const PersonListQuerySchema = z.object({
 });
 export type PersonListQuery = z.infer<typeof PersonListQuerySchema>;
 
+/** One page of the people list: the same search and role, plus the page number (from 1) and the rows per page. */
+export const PersonPageQuerySchema = PersonListQuerySchema.omit({ includeArchived: true }).extend({
+  page: z.number().int().min(1).optional(),
+  pageSize: z.number().int().min(1).max(PEOPLE_PAGE_SIZE_MAX).optional(),
+});
+export type PersonPageQuery = z.infer<typeof PersonPageQuerySchema>;
+
+/** A page of people, with the total that matches the same search and role (counted before paging). */
+export interface PersonPage extends Omit<PageSpan, 'offset' | 'limit'> {
+  people: PersonSummary[];
+  total: number;
+}
+
 export const NewHouseholdInputSchema = z.object({
-  name: z.string().trim().min(1, 'Give the household a name.').max(120),
+  name: z.string().trim().min(1, 'Enter a household name.').max(120),
 });
 export type NewHouseholdInput = z.infer<typeof NewHouseholdInputSchema>;
 

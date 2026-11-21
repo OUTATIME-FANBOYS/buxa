@@ -52,6 +52,17 @@ export interface PersonFilter {
 }
 
 /**
+ * The people list's filter, applied before the count and before the page. `term` is matched as `search` matches it (every word
+ * in the joined names); an empty term matches everyone. `ids`, when present, keeps only those people (a teacher's campers).
+ */
+export interface PersonPageFilter {
+  term: string;
+  role?: CampRole;
+  includeArchived?: boolean;
+  ids?: readonly string[];
+}
+
+/**
  * Joins a new person to a household in the same transaction as the person insert. Either an existing household (`householdId`)
  * or a new one named `newHouseholdName`, which is created in that transaction too, so a refused person leaves no empty household.
  */
@@ -94,12 +105,23 @@ export interface PeopleRepository {
   update(actor: Actor, id: string, patch: PersonPatchRecord): Promise<PersonRecord>;
   /** Sets `archivedAt` (idempotent). Audits `person.archive`. Throws PersonNotFoundError. */
   archive(actor: Actor, id: string, at: string): Promise<PersonRecord>;
+  /** Deletes the person; the linked rows (memberships, enrolments, check-ins, badges, household links) go with it. Owner only. Audits `person.delete`. Throws PersonNotFoundError. */
+  erase(actor: Actor, id: string): Promise<void>;
   get(userId: string, orgId: string, id: string): Promise<PersonRecord | null>;
   getMany(userId: string, orgId: string, ids: readonly string[]): Promise<PersonRecord[]>;
   /** Ordered by family name, then given name. Archived people only with `includeArchived`. */
   list(userId: string, orgId: string, filter: PersonFilter): Promise<PersonRecord[]>;
   /** Case- and accent-insensitive (rule 6 in the spec; `matchesName` in @buxa/domain is the reference). Hides archived people. At most `limit`. */
   search(userId: string, orgId: string, query: string, limit: number): Promise<PersonRecord[]>;
+  /** How many people match the filter, across every page. */
+  countPeople(userId: string, orgId: string, filter: PersonPageFilter): Promise<number>;
+  /** One page of the matches, in list order (the same order as `list`). The caller has already clamped `offset` and `limit`. */
+  listPeoplePage(
+    userId: string,
+    orgId: string,
+    filter: PersonPageFilter,
+    window: { offset: number; limit: number },
+  ): Promise<PersonRecord[]>;
 
   /** Audits `household.create`. */
   createHousehold(actor: Actor, name: string): Promise<HouseholdRecord>;

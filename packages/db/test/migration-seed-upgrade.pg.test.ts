@@ -27,6 +27,13 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
   let tempPool: pg.Pool | null = null;
   let canCreateDb = true;
 
+  const requireUrl = (): string => {
+    if (!url) {
+      throw new Error('DATABASE_URL is not set for the upgrade test.');
+    }
+
+    return url;
+  };
   const replaceDatabaseName = (connUrl: string, newDb: string): string => {
     const parsed = new URL(connUrl);
     parsed.pathname = `/${newDb}`;
@@ -35,7 +42,7 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
   };
 
   beforeAll(async () => {
-    rootPool = new pg.Pool(poolConfigFor(url!));
+    rootPool = new pg.Pool(poolConfigFor(requireUrl()));
     // An idle connection the server closes (57P01) is reported as a pool error. Without a listener it fails the whole run.
     rootPool.on('error', () => {});
 
@@ -48,7 +55,7 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       return;
     }
 
-    const tempUrl = replaceDatabaseName(url!, tempDbName);
+    const tempUrl = replaceDatabaseName(requireUrl(), tempDbName);
     tempPool = new pg.Pool(poolConfigFor(tempUrl));
     tempPool.on('error', () => {});
 
@@ -151,6 +158,14 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0030_member_options.sql',
       '0031_registration_confirmation.sql',
       '0032_session_membership.sql',
+      '0033_teacher_calendar_tokens.sql',
+      '0034_session_membership_contract.sql',
+      '0035_session_delete_guard.sql',
+      '0036_org_update_admin_owner.sql',
+      '0037_notifications.sql',
+      '0038_member_invites.sql',
+      '0039_member_role_change.sql',
+      '0040_delete_person.sql',
     ]);
   });
 
@@ -189,23 +204,31 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
     expect(rows).toHaveLength(5);
 
     const userMap = new Map(rows.map(r => [r.email.split('@')[0].split('-')[0], r]));
+    const pick = (key: string) => {
+      const row = userMap.get(key);
+      if (!row) {
+        throw new Error(`No upgraded user for ${key}.`);
+      }
 
-    const alice = userMap.get('alice')!;
+      return row;
+    };
+
+    const alice = pick('alice');
     expect(alice.first_name).toBe('Alice');
     expect(alice.last_name).toBeNull();
     expect(alice.name).toBe('Alice');
 
-    const bob = userMap.get('bob')!;
+    const bob = pick('bob');
     expect(bob.first_name).toBe('Bob');
     expect(bob.last_name).toBe('Smith');
     expect(bob.name).toBe('Bob Smith');
 
-    const mary = userMap.get('mary')!;
+    const mary = pick('mary');
     expect(mary.first_name).toBe('Mary');
     expect(mary.last_name).toBe('Jane Watson');
     expect(mary.name).toBe('Mary Jane Watson');
 
-    const charlie = userMap.get('charlie')!;
+    const charlie = pick('charlie');
     expect(charlie.first_name).toBe('Charlie');
     expect(charlie.last_name).toBe('Brown');
 

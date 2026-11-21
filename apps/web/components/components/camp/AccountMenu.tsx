@@ -19,9 +19,10 @@ const APPEARANCE: { value: ThemePref; label: string }[] = [
 
 /**
  * The avatar menu, headed by the person's first name: Profile, Appearance and Time format (both submenus, as in Cloudflare),
- * Settings, Reports, then Sign out. Signing out is a Server Action submitted through a form.
+ * Settings, Reports, then Sign out. Settings is the camp's page, so it shows only when a camp is selected (`hasCamp`).
+ * Signing out is a Server Action submitted through a form.
  */
-export function AccountMenu({ user }: { user: User }) {
+export function AccountMenu({ user, hasCamp }: { user: User; hasCamp: boolean }) {
   const [theme, setTheme] = useAppearance();
   const form = useRef<HTMLFormElement>(null);
   // The browser's clock is read after mount, because the server cannot know it.
@@ -40,7 +41,7 @@ export function AccountMenu({ user }: { user: User }) {
         header={user.firstName}
         items={[
           { label: '', divider: true, onSelect() {} },
-          { label: 'Profile', icon: 'user', href: `${ROUTES.settings}#profile` },
+          { label: 'Profile', icon: 'user', href: ROUTES.account },
           {
             label: 'Appearance',
             icon: 'sun',
@@ -66,7 +67,7 @@ export function AccountMenu({ user }: { user: User }) {
               },
             ],
           },
-          { label: 'Settings', icon: 'settings', href: ROUTES.settings },
+          ...(hasCamp ? [{ label: 'Settings', icon: 'settings', href: ROUTES.settings }] : []),
           { label: 'Reports', icon: 'chart', href: ROUTES.reports },
           { label: '', divider: true, onSelect() {} },
           { label: 'Sign out', icon: 'logout', onSelect: () => form.current?.requestSubmit() },

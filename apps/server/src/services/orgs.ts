@@ -1,8 +1,16 @@
 import type { ArchivedCampRecord } from '../orgs/OrgRepository';
-import type { CreatedOrg, Members, NewOrgInput, Org, OrgPatchInput, OrgSummary } from '@buxa/contracts';
+import type {
+  ChangeMemberRoleInput,
+  CreatedOrg,
+  Members,
+  NewOrgInput,
+  Org,
+  OrgPatchInput,
+  OrgSummary,
+} from '@buxa/contracts';
 import { can, type Actor } from '@buxa/domain';
 import { assertAllowed } from '../auth/authorize';
-import { badRequest, conflict } from '../http/errors';
+import { badRequest, conflict, notFound } from '../http/errors';
 import { isSlugTaken, type OrgRepository } from '../orgs/OrgRepository';
 import { guard } from './shared/errors';
 
@@ -15,6 +23,8 @@ export interface OrgService {
   getCamp(actor: Actor): Promise<Org>;
   renameCamp(actor: Actor, input: OrgPatchInput): Promise<OrgSummary>;
   listMembers(actor: Actor): Promise<Members>;
+  /** Needs members:change_role. Sets one member's permission role; the rules (self, owner, last owner) are checked here and in the database. */
+  changeMemberRole(actor: Actor, input: ChangeMemberRoleInput): Promise<void>;
   /** Owner only. Hides the camp and keeps all its data. */
   archiveCamp(actor: Actor, orgId: string): Promise<{ archivedAt: string }>;
   /** Owner only. Makes an archived camp active again; its data is unchanged. Refuses a camp that is not archived. */
@@ -52,6 +62,19 @@ export function createOrgService(orgs: OrgRepository): OrgService {
       const seeEmail = can(actor, 'members:read_contact');
 
       return { members: members.map(m => ({ ...m, email: seeEmail ? m.email : null })) };
+    },
+    async changeMemberRole(actor, input) {
+      const members = await guard(() => orgs.listMembers(actor.userId, actor.orgId));
+      const target = members.find(m => m.id === input.userId);
+      if (!target) {
+        throw notFound('Person not found');
+      }
+      assertAllowed(actor, 'members:change_role', {
+        orgId: actor.orgId,
+        target: { userId: target.id, role: target.role },
+        newRole: input.role,
+      });
+      await guard(() => orgs.changeMemberRole(actor, input.userId, input.role));
     },
     async archiveCamp(actor, orgId) {
       assertAllowed(actor, 'org:archive', { orgId });

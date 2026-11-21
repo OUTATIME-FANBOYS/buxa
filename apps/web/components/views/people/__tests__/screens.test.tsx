@@ -15,7 +15,7 @@ const notFound = vi.hoisted(() =>
 );
 const session = vi.hoisted(() => ({ camp: null as Membership | null }));
 const services = vi.hoisted(() => ({
-  people: { list: vi.fn(), get: vi.fn(), getHousehold: vi.fn(), listHouseholds: vi.fn() },
+  people: { list: vi.fn(), listPage: vi.fn(), get: vi.fn(), getHousehold: vi.fn(), listHouseholds: vi.fn() },
   attendance: { history: vi.fn() },
   orgs: { getCamp: vi.fn() },
 }));
@@ -41,6 +41,17 @@ const ID = {
   household: '11111111-1111-4111-8111-111111111111',
   membership: '33333333-3333-4333-8333-333333333333',
 };
+
+/** A one-page result for the people list: every row on the single page, so the page and its range follow from the rows. */
+const pageOf = (people: PersonSummary[]) => ({
+  people,
+  total: people.length,
+  page: 1,
+  pageSize: 25,
+  pageCount: 1,
+  from: people.length === 0 ? 0 : 1,
+  to: people.length,
+});
 
 const as = (role: Role) => {
   session.camp = { orgId: 'o1', role, name: 'Sunrise', slug: 'sunrise' };
@@ -112,10 +123,12 @@ beforeEach(() => {
   notFound.mockImplementation(() => {
     throw new Error('NEXT_NOT_FOUND');
   });
-  services.people.list.mockResolvedValue([
-    summary(),
-    summary({ id: ID.anna, givenName: 'Anna', roles: ['guardian'], status: 'none', onSite: false }),
-  ]);
+  services.people.listPage.mockResolvedValue(
+    pageOf([
+      summary(),
+      summary({ id: ID.anna, givenName: 'Anna', roles: ['guardian'], status: 'none', onSite: false }),
+    ]),
+  );
   services.people.get.mockResolvedValue(person());
   services.people.getHousehold.mockResolvedValue(household);
   services.people.listHouseholds.mockResolvedValue([household]);
@@ -152,35 +165,53 @@ describe('PeopleList', () => {
 
   it('passes the search and role from the address to the service, and keeps them in the form', async () => {
     const html = render(await PeopleList({ searchParams: { q: ' Ben ', role: 'camper' } }));
-    expect(services.people.list).toHaveBeenCalledWith(
+    expect(services.people.listPage).toHaveBeenCalledWith(
       { userId: 'u1', orgId: 'o1', role: 'staff' },
-      { query: 'Ben', role: 'camper' },
+      { query: 'Ben', role: 'camper', page: 1 },
     );
     expect(html).toContain('value="Ben"');
   });
 
   it('ignores an unknown role instead of sending it', async () => {
     await PeopleList({ searchParams: { role: 'wizard' } });
-    expect(services.people.list.mock.calls[0]?.[1]).toEqual({});
+    expect(services.people.listPage.mock.calls[0]?.[1]).toEqual({ page: 1 });
+  });
+
+  it('shows the page from the address and a pagination bar with the total', async () => {
+    services.people.listPage.mockResolvedValueOnce({
+      people: [summary()],
+      total: 143,
+      page: 2,
+      pageSize: 25,
+      pageCount: 6,
+      from: 26,
+      to: 50,
+    });
+    const html = render(await PeopleList({ searchParams: { page: '2', q: 'Ben' } }));
+    expect(services.people.listPage).toHaveBeenCalledWith(expect.anything(), { query: 'Ben', page: 2 });
+    expect(html).toContain('143 people');
+    expect(html).toContain('Showing 26 to 50 of 143 people');
+    expect(html).toContain('Page 2 of 6');
+    expect(html).toContain('href="/camp/people?page=3&amp;q=Ben"');
   });
 
   it('says so when nothing is on the list yet', async () => {
-    services.people.list.mockResolvedValueOnce([]);
+    services.people.listPage.mockResolvedValueOnce(pageOf([]));
     expect(render(await PeopleList({ searchParams: {} }))).toContain('No people yet');
   });
 
   it('says so when a search matches nobody', async () => {
-    services.people.list.mockResolvedValueOnce([]);
+    services.people.listPage.mockResolvedValueOnce(pageOf([]));
     expect(render(await PeopleList({ searchParams: { q: 'zzz' } }))).toContain('No one matches that search');
   });
 
   it('answers a role that may not see people with a friendly state', async () => {
-    services.people.list.mockRejectedValueOnce(forbidden('no'));
+    services.people.listPage.mockRejectedValueOnce(forbidden('no'));
     expect(render(await PeopleList({ searchParams: {} }))).toContain('You cannot see the people list');
   });
 
   it('lets other failures reach the error boundary', async () => {
-    services.people.list.mockRejectedValueOnce(new Error('db down'));
+    services.people.listPage.mockRejectedValueOnce(new Error('db down'));
     await expect(PeopleList({ searchParams: {} })).rejects.toThrow('db down');
   });
 
@@ -197,19 +228,22 @@ describe('NewPerson', () => {
     const html = render(await NewPerson({}));
     expect(html).toContain('<legend');
     expect(html).toContain('Parent or guardian');
-    expect(html).toContain('New household name');
+    expect(html).toContain('Last name');
+    expect(html).not.toContain('Preferred name');
     expect(html).toContain('Add person');
   });
 
   it('says the person joins the household when it comes from a guardian page', async () => {
     const html = render(await NewPerson({ householdId: ID.household }));
     expect(html).toContain('Adding to the Lee family household');
-    expect(html).toContain('How they are related');
     expect(html).not.toContain('New household name');
   });
 
   it('explains the rule for a child up front', async () => {
-    expect(render(await NewPerson({}))).toContain('A child needs a household with a parent or guardian');
+    // The intro is shown in the Household section only, once a camper or guardian is chosen (see NewPersonForm tests).
+    expect(render(await NewPerson({}))).not.toContain(
+      'A child must join a household that has a parent or guardian in it.',
+    );
   });
 
   it('tells a viewer they cannot add people', async () => {
@@ -223,12 +257,9 @@ describe('NewPerson', () => {
 describe('NewPerson household picker', () => {
   const stone: Household = { id: '66666666-6666-4666-8666-666666666666', name: 'Stone family', members: [] };
 
-  it('offers the existing households, and says which ones have no guardian yet', async () => {
+  it('loads the camp’s households for the picker (the picker itself shows once a family role is chosen)', async () => {
     services.people.listHouseholds.mockResolvedValueOnce([household, stone]);
-    const html = render(await NewPerson({}));
-    expect(html).toContain(`<option value="${ID.household}">Lee family</option>`);
-    expect(html).toContain(`<option value="${stone.id}">Stone family (no parent or guardian yet)</option>`);
-    expect(html).toContain('Not an existing household');
+    render(await NewPerson({}));
     expect(services.people.listHouseholds).toHaveBeenCalledWith({ userId: 'u1', orgId: 'o1', role: 'staff' });
   });
 
@@ -238,11 +269,10 @@ describe('NewPerson household picker', () => {
     expect(services.people.listHouseholds).not.toHaveBeenCalled();
   });
 
-  it('still offers a new household when the camp has none yet', async () => {
+  it('shows no picker when the camp has no households yet', async () => {
     services.people.listHouseholds.mockResolvedValueOnce([]);
     const html = render(await NewPerson({}));
     expect(html).not.toContain('Existing household');
-    expect(html).toContain('New household name');
   });
 });
 
@@ -403,13 +433,15 @@ describe('PersonScreen', () => {
 
 describe('EditPerson', () => {
   it('pre-fills the form with the person and the roles they have', async () => {
-    services.people.get.mockResolvedValueOnce(person({ dateOfBirth: '2016-05-02', email: 'ben@example.test' }));
+    services.people.get.mockResolvedValueOnce(
+      person({ dateOfBirth: '2016-05-02', email: 'ben@example.test', roles: ['participant'] }),
+    );
     const html = render(await EditPerson({ id: ID.ben }));
     expect(html).toContain('value="Ben"');
     expect(html).toContain('value="2016-05-02"');
     expect(html).toContain('value="ben@example.test"');
     // React's attribute order is not part of the contract, so match the checked box in either order.
-    expect(html).toMatch(/<input[^>]*checked=""[^>]*value="camper"|<input[^>]*value="camper"[^>]*checked=""/);
+    expect(html).toMatch(/<input[^>]*checked=""[^>]*value="participant"|<input[^>]*value="participant"[^>]*checked=""/);
     expect(html).not.toMatch(/<input[^>]*checked=""[^>]*value="guardian"|<input[^>]*value="guardian"[^>]*checked=""/);
     expect(html).toContain('Save changes');
   });

@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { NewPersonInputSchema, NewHouseholdInputSchema } from '@buxa/contracts';
 import { ROUTES, personPath } from '@buxa/shared/config/routes';
-import { failure, type ActionState } from '@buxa/shared';
+import { failure, success, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../runtime';
 import { currentActor } from './camp';
 import {
@@ -74,5 +74,9 @@ export async function createPersonAction(_previous: ActionState, form: FormData)
   }
 
   revalidatePath(ROUTES.people);
+  // Posted from the Add person pop-up (dialog=1): the pop-up closes and a toast says so, with no redirect.
+  if (field(form, 'dialog') === '1') {
+    return success('Person added.');
+  }
   redirect(personPath(person.id)); // throws; kept outside the try
 }

@@ -1,17 +1,10 @@
 import { PageHeader } from '@/components/components';
-import { RenameCampButton } from '@/components/components/camp';
 import type { CampHome } from '@buxa/shared/camp/campHomeTypes';
 import { greetingFor } from '@buxa/shared';
 
-/** The one header for Home: the greeting, the camp as context, and Rename for the roles allowed to rename (checked on the server). */
+/** The one header for Home: the greeting and the camp as context. Renaming the camp is in Settings. */
 export function HomeHeader({ firstName, camp }: { firstName: string; camp: CampHome | null }) {
   const greeting = `${greetingFor(new Date().getHours())}, ${firstName}`;
 
-  return (
-    <PageHeader
-      title={greeting}
-      subtitle={camp ? camp.name : 'Your tasks, kept in this browser'}
-      actions={camp?.canRename ? <RenameCampButton campId={camp.campId} currentName={camp.name} /> : undefined}
-    />
-  );
+  return <PageHeader title={greeting} subtitle={camp ? camp.name : 'Your tasks, kept in this browser'} />;
 }

@@ -1,7 +1,7 @@
 import type { Pool } from 'pg';
 import { withOrg } from '@buxa/db';
 import { isUuid, type Actor } from '@buxa/domain';
-import type { Class, Enrolment, NewSessionInput, Session, SessionPriceInput } from '@buxa/contracts';
+import type { Class, Enrolment, NewSessionInput, Session, SessionEditInput, SessionPriceInput } from '@buxa/contracts';
 import { recordAudit } from '../audit/recordAudit';
 import type {
   CampClassSpan,
@@ -26,13 +26,15 @@ import {
 } from './PgClassQueries';
 import {
   deleteClassRow,
+  deleteSessionRow,
   insertClass,
   insertSession,
   setSessionPriceRow,
   setSessionPublicRow,
   updateClassRow,
+  updateSessionRow,
 } from './PgClassWrites';
-import { translateClassWriteError } from './pgClassErrors';
+import { translateClassWriteError, translateSessionDeleteError } from './pgClassErrors';
 import { toIso } from '../people/pgRows';
 
 /**
@@ -57,6 +59,25 @@ export class PgClassRepository implements ClassRepository {
 
       return requireSession(db, id);
     });
+  }
+
+  updateSession(actor: Actor, sessionId: string, input: SessionEditInput): Promise<Session> {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
+      await updateSessionRow(db, actor, sessionId, input);
+
+      return requireSession(db, sessionId);
+    });
+  }
+
+  async deleteSession(actor: Actor, sessionId: string): Promise<void> {
+    try {
+      await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        const existing = await requireSession(db, sessionId);
+        await deleteSessionRow(db, actor, sessionId, existing.name);
+      });
+    } catch (error) {
+      throw translateSessionDeleteError(error);
+    }
   }
 
   setSessionPrice(actor: Actor, sessionId: string, price: SessionPriceInput | null): Promise<Session> {

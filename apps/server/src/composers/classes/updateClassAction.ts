@@ -8,7 +8,6 @@ import { classForm, failure, field, success, type ActionState } from '@buxa/shar
 import { getRuntime } from '../../runtime';
 import { currentActor } from '../people/camp';
 import { expectedFailure, NO_CAMP } from '../people/failures';
-import { campZone } from '../attendance/campActor';
 
 /**
  * Edit a class's own fields: name, ages, camp size, time range, location and instructors. The service checks classes:manage and
@@ -31,7 +30,7 @@ export async function updateClassAction(_previous: ActionState, form: FormData):
     const classes = getRuntime().services.classes;
     let input;
     if (can(actor, 'classes:manage')) {
-      const parsed = classForm(form, await campZone(actor));
+      const parsed = classForm(form);
       if (!parsed.ok) {
         return parsed.state;
       }

@@ -1,7 +1,8 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { ROUTES } from '@buxa/shared/config/routes';
+import { safeNext } from '@buxa/shared/invites/invitePath';
+import { text } from '@buxa/shared';
 import { failure, success, type ActionState } from '@buxa/shared';
 import { isServiceRefused } from '../../availability';
 import { requestSessionClient } from '../../session/nextClient';
@@ -34,7 +35,7 @@ export async function signUp(_previous: ActionState, formData: FormData): Promis
     return failure(describeSignUpError(error.message));
   }
   if (data.session) {
-    redirect(ROUTES.camp);
+    redirect(safeNext(text(formData, 'next')));
   }
 
   return success(CONFIRM_EMAIL_MESSAGE);

@@ -8,7 +8,8 @@ vi.mock('@buxa/middleware/providers/store', () => ({ useStore: () => h.store }))
 vi.mock('@buxa/middleware/providers/TaskDrawerContext', () => ({
   useTaskDrawer: () => ({ openTask: () => undefined }),
 }));
-vi.mock('@buxa/middleware/hooks/useGlobalShortcuts', () => ({ useGlobalShortcuts: () => undefined }));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: () => undefined, refresh: () => undefined }) }));
+vi.mock('@/actions/notifications', () => ({ markNotificationsRead: () => Promise.resolve() }));
 
 const seed = buildSeed();
 
@@ -24,7 +25,7 @@ function saveLabel(saveStatus: string, sync: string): string {
     me: null,
     actions: {},
   };
-  const html = renderToStaticMarkup(<TaskTopBar account={<span>me</span>} />);
+  const html = renderToStaticMarkup(<TaskTopBar account={<span>me</span>} items={[]} unread={0} />);
 
   return html.match(/class="save-state[^"]*" role="status">([^<]*)</)?.[1] ?? '';
 }
@@ -43,18 +44,17 @@ describe('TaskTopBar', () => {
   it('shows no save note when everything is saved, so the header never says Saved', () => {
     expect(saveLabel('saved', 'synced')).toBe('');
     expect(saveLabel('saved', 'local')).toBe('');
-    const html = renderToStaticMarkup(<TaskTopBar account={<span>account-menu</span>} />);
+    const html = renderToStaticMarkup(<TaskTopBar account={<span>account-menu</span>} items={[]} unread={0} />);
     expect(html).not.toContain('Saved');
     expect(html).not.toContain('save-state');
   });
-  it('places search, Help, notifications and the account menu in that order', () => {
+  it('places Help, notifications and the account menu in that order, with no search control', () => {
     saveLabel('saved', 'synced');
-    const html = renderToStaticMarkup(<TaskTopBar account={<span>account-menu</span>} />);
+    const html = renderToStaticMarkup(<TaskTopBar account={<span>account-menu</span>} items={[]} unread={0} />);
     const at = (s: string) => html.indexOf(s);
-    expect(html).toContain('aria-label="Search all tasks"');
     expect(html).toContain('aria-label="Help"');
     expect(html).toContain('aria-label="Notifications"');
-    expect(at('aria-label="Search all tasks"')).toBeLessThan(at('aria-label="Help"'));
+    expect(html).not.toContain('Search all tasks');
     expect(at('aria-label="Help"')).toBeLessThan(at('aria-label="Notifications"'));
     expect(at('aria-label="Notifications"')).toBeLessThan(at('account-menu'));
   });

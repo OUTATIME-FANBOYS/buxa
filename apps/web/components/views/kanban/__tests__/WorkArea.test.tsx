@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 // The views export reaches the profile action, whose server module graph is not needed to render the client shell.
-vi.mock('@/actions/account', () => ({ updateProfileAction: async () => ({ status: 'idle' }) }));
+vi.mock('@/actions/account', () => ({ updateProfileAction: () => Promise.resolve({ status: 'idle' }) }));
 
 // next/dynamic resolves on the client only; the test checks the area is client-only and wraps the providers.
 vi.mock('next/dynamic', () => ({

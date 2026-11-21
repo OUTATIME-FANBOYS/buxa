@@ -1,10 +1,11 @@
 'use client';
 
 import { useActionState, useCallback, useEffect, useRef, useState } from 'react';
-import { Dialog } from '@/components/components/Dialog';
+import { FormPopUp } from '@/components/components';
 import { Button } from '@/components/elements';
 import { fieldError, idle } from '@buxa/shared';
 import type { SessionPrice } from '@buxa/domain';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { setSessionPriceAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
 import { PriceFields } from './PriceFields';
@@ -15,32 +16,59 @@ import { PriceFields } from './PriceFields';
  */
 export function SessionPriceButton({ sessionId, price }: { sessionId: string; price: SessionPrice | null }) {
   const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState(false);
   const close = useCallback(() => setOpen(false), []);
+  const { toast } = useUi();
+  // A saved form closes the pop-up and toasts the server's message.
+  const saved = useCallback(
+    (message: string) => {
+      toast(message);
+      setOpen(false);
+    },
+    [toast],
+  );
 
   return (
     <>
-      <Button type="button" variant="ghost" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+      <Button type="button" variant="glass" size="sm" aria-haspopup="dialog" onClick={() => setOpen(true)}>
         {price ? 'Change price' : 'Set price'}
       </Button>
       {open && (
-        <Dialog title="Session price" onClose={close} className="class-dialog">
-          <SessionPriceForm sessionId={sessionId} price={price} onCancel={close} onSaved={close} />
-        </Dialog>
+        <FormPopUp
+          title="Session price"
+          formId={FORM_ID}
+          submitLabel="Save price"
+          pendingLabel="Saving..."
+          pending={pending}
+          onCancel={close}
+        >
+          <SessionPriceForm
+            sessionId={sessionId}
+            price={price}
+            formId={FORM_ID}
+            onSaved={saved}
+            onPendingChange={setPending}
+          />
+        </FormPopUp>
       )}
     </>
   );
 }
 
+const FORM_ID = 'session-price-form';
+
 function SessionPriceForm({
   sessionId,
   price,
-  onCancel,
+  formId,
   onSaved,
+  onPendingChange,
 }: {
   sessionId: string;
   price: SessionPrice | null;
-  onCancel: () => void;
-  onSaved: () => void;
+  formId: string;
+  onSaved: (message: string) => void;
+  onPendingChange: (pending: boolean) => void;
 }) {
   const [state, formAction, pending] = useActionState(setSessionPriceAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
@@ -50,28 +78,23 @@ function SessionPriceForm({
       formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
     }
     if (state.status === 'success') {
-      onSaved();
+      onSaved(state.message ?? 'Saved.');
     }
   }, [state, onSaved]);
+  useEffect(() => {
+    onPendingChange(pending);
+  }, [pending, onPendingChange]);
 
   const err = (name: string) => fieldError(state, name);
 
   return (
-    <form ref={formRef} action={formAction} className="class-form session-form">
+    <form ref={formRef} id={formId} action={formAction} className="class-form session-form">
       <input type="hidden" name="sessionId" value={sessionId} />
       <p className="class-helper">
         Leave the price blank to show no price. Each class in the session shows this price.
       </p>
       <PriceFields price={price} error={err} />
       <ActionMessage state={state} />
-      <div className="classes-actions">
-        <Button type="button" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" variant="primary" disabled={pending}>
-          {pending ? 'Saving...' : 'Save price'}
-        </Button>
-      </div>
     </form>
   );
 }

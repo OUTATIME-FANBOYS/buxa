@@ -15,7 +15,21 @@ export const SETTINGS_CHOICE_CONTROL = 'buxa:flex-[0_0_260px] buxa:max-w-full';
 /** Every card's heading shares one size, so the cards read as one set. */
 export const SETTINGS_TILE_HEADING = 'buxa:text-[16px]! buxa:leading-[1.3]';
 /** A card's description under its heading. */
-export const SETTINGS_TILE_TEXT = 'buxa:mt-[var(--s1)]! buxa:text-[14px] buxa:leading-[1.5]';
+export const SETTINGS_TILE_TEXT = 'buxa:text-[14px] buxa:leading-[1.5]';
+
+/** The name forms (display name, camp name): the inputs share a row with the Update button, which sits level with their bottom edge. */
+export const NAME_FORM =
+  'buxa:flex buxa:items-end buxa:gap-[var(--s3)] buxa:min-w-0 buxa:max-[599px]:flex-col buxa:max-[599px]:items-stretch';
+/** The two name inputs of the display name card. The inputs take the free width; on a phone (under 600px) they stack. */
+export const NAME_FIELDS =
+  'buxa:flex-[1_1_0] buxa:min-w-0 buxa:grid buxa:grid-cols-[repeat(2,minmax(0,1fr))] buxa:gap-[var(--s3)] buxa:max-[599px]:grid-cols-[minmax(0,1fr)]';
+/** One name input. */
+export const NAME_FIELD = 'buxa:flex buxa:flex-col buxa:gap-[var(--s2)] buxa:min-w-0';
+/** The single input of the camp name card, which takes the free width. */
+export const NAME_SINGLE_FIELD = 'buxa:flex-[1_1_0] buxa:min-w-0';
+/** The Update button, as tall as the inputs. */
+export const NAME_BUTTON =
+  'buxa:flex-none buxa:h-[var(--control-h)]! buxa:whitespace-nowrap buxa:max-[599px]:self-start';
 
 /** The theme and clock choices in a settings card: the group fills the card's control and never runs past its border, and
  * the options share the width and wrap their labels. */

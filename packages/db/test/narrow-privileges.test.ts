@@ -41,7 +41,7 @@ describe.skipIf(!url)('narrow privileges (S-06)', () => {
     const r = await pool.query<{ proname: string; prosecdef: boolean; proconfig: string[] | null }>(
       `SELECT proname, prosecdef, proconfig FROM pg_proc WHERE proname IN ('buxa_upsert_user', 'buxa_memberships_of', 'buxa_create_org') ORDER BY proname`,
     );
-    // The expand step adds overloads of buxa_memberships_of and buxa_create_org, so the rows are checked by name, not counted.
+    // Checked by name, not counted: a function may have more than one row in pg_proc if an overload is added later.
     expect(new Set(r.rows.map(x => x.proname))).toEqual(
       new Set(['buxa_upsert_user', 'buxa_memberships_of', 'buxa_create_org']),
     );

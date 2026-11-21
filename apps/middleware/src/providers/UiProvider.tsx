@@ -10,6 +10,7 @@ import {
   type ComponentType,
   type ReactNode,
 } from 'react';
+import { ACTION_TOAST_MS, TOAST_MS, ToastView, type ToastAction } from './ToastView';
 
 /** The props the confirm prompt needs from a dialog. The web app passes its Dialog component in, so this package never imports the web app. */
 export interface ConfirmDialogProps {
@@ -19,10 +20,6 @@ export interface ConfirmDialogProps {
   children: ReactNode;
 }
 
-interface ToastAction {
-  label: string;
-  run: () => void;
-}
 interface Toast {
   id: number;
   text: string;
@@ -59,11 +56,12 @@ export function UiProvider({ children, Dialog }: { children: ReactNode; Dialog: 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const seq = useRef(0);
 
+  // One toast component for the whole app: the provider keeps the queue, and each toast closes itself after its time.
   const toast = useCallback<UiCtx['toast']>((text, opts) => {
     const id = ++seq.current;
     setToasts(t => [...t.slice(-2), { id, text, ...opts }]);
-    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), opts?.action ? 7000 : 4000);
   }, []);
+  const dismiss = useCallback((id: number) => setToasts(t => t.filter(x => x.id !== id)), []);
   // Concurrent confirms queue up: every promise settles, one dialog at a time.
   const confirm = useCallback(
     (o: ConfirmOpts) => new Promise<boolean>(resolve => setQueue(q => [...q, { ...o, resolve }])),
@@ -79,26 +77,17 @@ export function UiProvider({ children, Dialog }: { children: ReactNode; Dialog: 
   return (
     <Ctx.Provider value={value}>
       {children}
-      <div className="toasts" role="status" aria-live="polite">
-        {toasts.map(t => {
-          const action = t.action;
-
-          return (
-            <div key={t.id} className={`toast ${t.tone === 'error' ? 'toast-error' : ''}`}>
-              <span>{t.text}</span>
-              {action && (
-                <button
-                  onClick={() => {
-                    action.run();
-                    setToasts(x => x.filter(y => y.id !== t.id));
-                  }}
-                >
-                  {action.label}
-                </button>
-              )}
-            </div>
-          );
-        })}
+      <div className="toasts" aria-live="polite">
+        {toasts.map(t => (
+          <ToastView
+            key={t.id}
+            message={t.text}
+            tone={t.tone}
+            action={t.action}
+            durationMs={t.action ? ACTION_TOAST_MS : TOAST_MS}
+            onClose={() => dismiss(t.id)}
+          />
+        ))}
       </div>
       {conf && (
         <Dialog

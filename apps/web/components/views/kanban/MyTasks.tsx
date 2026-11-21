@@ -2,9 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { useTaskDrawer } from '@buxa/middleware/providers/providers';
 import { Empty } from '@/components/components';
-import { Segmented, Button } from '@/components/elements';
+import { Segmented } from '@/components/elements';
 import { ListView } from '@/components/components/kanban/board-views';
 import { SearchField } from '@/components/atoms';
 import { diffDays, today } from '@buxa/shared';
@@ -12,7 +11,6 @@ import type { Task } from '@buxa/shared';
 
 export function MyTasks() {
   const { s, me, wsTasks, kindOf, projects, readOnly } = useStore();
-  const { openTask } = useTaskDrawer();
   const [q, setQ] = useState('');
   const [show, setShow] = useState<'open' | 'done' | 'all'>('open');
   const mine = useMemo(
@@ -46,11 +44,6 @@ export function MyTasks() {
           </p>
         </div>
         <div className="page-actions">
-          {!readOnly && projects.length > 0 && (
-            <Button variant="primary" size="header" icon="plus" onClick={() => openTask('new')}>
-              New task
-            </Button>
-          )}
           <SearchField
             className="search-local"
             value={q}

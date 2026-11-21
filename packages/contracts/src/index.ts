@@ -57,7 +57,7 @@ export const MembersSchema = z.object({ members: z.array(MemberSchema) });
 export type Members = z.infer<typeof MembersSchema>;
 
 /** What a client may send. */
-const NameSchema = z.string().trim().min(1, 'Give your camp a name.').max(120);
+const NameSchema = z.string().trim().min(1, 'Enter a camp name.').max(120);
 export const TimeZoneSchema = z
   .string()
   .refine(isTimeZone, 'Choose a valid time zone, for example America/Los_Angeles.');
@@ -133,7 +133,16 @@ export const ErrorBodySchema = z.object({
   error: z.object({ code: z.string(), message: z.string(), requestId: z.string().optional() }),
 });
 
+export * from './contact';
 export * from './people';
 export * from './attendance';
 export * from './classes';
 export * from './registration';
+export * from './invites';
+
+/** A role change from Team access (Manage access). The role is one of the camp's permission roles. */
+export const ChangeMemberRoleInputSchema = z.object({
+  userId: z.string().uuid('Choose a person.'),
+  role: z.enum(ROLES, { message: 'Choose a role.' }),
+});
+export type ChangeMemberRoleInput = z.infer<typeof ChangeMemberRoleInputSchema>;

@@ -36,6 +36,8 @@ export interface OrgRepository {
   get(userId: string, orgId: string): Promise<Org>;
   rename(actor: Actor, input: OrgPatchInput): Promise<OrgSummary>;
   listMembers(userId: string, orgId: string): Promise<Member[]>;
+  /** Sets a member's role and records the audit entry, atomically. The caller has checked members:change_role. */
+  changeMemberRole(actor: Actor, userId: string, role: Role): Promise<void>;
   /** Sets the camp's archive time and records the audit entry, atomically. Refuses a camp that is already archived. */
   archive(actor: Actor): Promise<{ archivedAt: string }>;
   /** Clears the archive time and records the audit entry, atomically. Refuses a camp that is not archived. */

@@ -5,3 +5,5 @@ export * from './minor';
 export * from './attendance';
 export * from './search';
 export * from './credential';
+export * from './paging';
+export * from './roleCombinations';

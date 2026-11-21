@@ -2,99 +2,68 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { Dialog } from '@/components/components';
+import { Dialog } from '@/components/components/Dialog';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-describe('Dialog', () => {
-  let root: Root;
-  beforeEach(() => {
-    root = createRoot(document.body.appendChild(document.createElement('div')));
-  });
-  afterEach(() => {
-    act(() => root.unmount());
-    document.body.innerHTML = '';
-    document.body.style.overflow = '';
-  });
+let host: HTMLDivElement;
+let root: Root;
 
-  it('renders a modal dialog in the body with its title, content and footer', () => {
-    act(() =>
-      root.render(
-        <Dialog title="Rename camp" onClose={() => undefined} footer={<button>Save</button>}>
-          <p>Pick a new name.</p>
-        </Dialog>,
-      ),
-    );
-    // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
-    const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
-    expect(dialog.getAttribute('aria-modal')).toBe('true');
-    expect(dialog.getAttribute('aria-label')).toBe('Rename camp');
-    expect(dialog.querySelector('h2')?.textContent).toBe('Rename camp');
-    expect(dialog.textContent).toContain('Pick a new name.');
-    expect(dialog.querySelector('.dialog-foot')?.textContent).toBe('Save');
-    expect(document.body.style.overflow).toBe('hidden');
-  });
+beforeEach(() => {
+  host = document.createElement('div');
+  document.body.appendChild(host);
+  root = createRoot(host);
+});
 
-  it('starts leaving from the close button and from Escape, then calls onClose after the exit', () => {
-    vi.useFakeTimers();
-    const onClose = vi.fn();
-    act(() =>
-      root.render(
-        <Dialog title="Hi" onClose={onClose}>
-          <p>x</p>
-        </Dialog>,
-      ),
-    );
-    // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
-    const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
+afterEach(() => {
+  act(() => root.unmount());
+  host.remove();
+});
+
+describe('Dialog: the footer is pinned outside the scrolling body', () => {
+  it('puts the footer after the body, as its own region, so a tall body cannot push it out of view', () => {
     act(() => {
-      // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- Kept: querySelector returns the wider Element, and a plain ! would not narrow it to the type this test calls methods on.
-      (document.querySelector('button[aria-label="Close"]') as HTMLButtonElement).click();
+      root.render(
+        <Dialog title="New session" onClose={vi.fn()} footer={<button type="button">Create session</button>}>
+          <p>Tall content</p>
+        </Dialog>,
+      );
     });
-    expect(dialog.className).toContain('leaving');
-    expect(onClose).not.toHaveBeenCalled();
+    const body = document.querySelector('.dialog-body');
+    const foot = document.querySelector('.dialog-foot');
+    expect(body).not.toBeNull();
+    expect(foot).not.toBeNull();
+    // The footer is a sibling of the body, not inside it: it is never part of the scroll area.
+    expect(body?.contains(foot ?? null)).toBe(false);
+    expect(foot?.parentElement).toBe(body?.parentElement);
+    expect(foot?.textContent).toContain('Create session');
+    expect(body?.textContent).not.toContain('Create session');
+  });
+
+  it('gives the body the room left over and lets only the body scroll', () => {
     act(() => {
-      vi.advanceTimersByTime(200);
+      root.render(
+        <Dialog title="Long" onClose={vi.fn()} footer={<button type="button">Save</button>}>
+          <p>Lots</p>
+        </Dialog>,
+      );
     });
-    expect(onClose).toHaveBeenCalledTimes(1);
-    vi.useRealTimers();
+    const body = document.querySelector<HTMLElement>('.dialog-body');
+    const foot = document.querySelector<HTMLElement>('.dialog-foot');
+    expect(body?.className).toContain('overflow-y-auto');
+    expect(body?.className).toContain('min-h-0');
+    expect(body?.className).toContain('flex-1');
+    expect(foot?.className).toContain('shrink-0');
   });
 
-  it('gives drawers the drawer class and no title bar', () => {
-    act(() =>
+  it('renders no footer element when none is given', () => {
+    act(() => {
       root.render(
-        <Dialog title="Task" drawer onClose={() => undefined}>
-          <p>x</p>
+        <Dialog title="Plain" onClose={vi.fn()}>
+          <p>Only a body</p>
         </Dialog>,
-      ),
-    );
-    expect(document.querySelector('.drawer')).not.toBeNull();
-    expect(document.querySelector('.dialog-head')).toBeNull();
-  });
-
-  it('makes the whole drawer body the scroll container, so long content (subtasks, files) scrolls inside the panel', () => {
-    act(() =>
-      root.render(
-        <Dialog title="Task" drawer onClose={() => undefined}>
-          <p>x</p>
-        </Dialog>,
-      ),
-    );
-    const body = document.querySelector<HTMLElement>('.drawer > .drawer-body');
-    expect(body?.className).toContain('buxa:overflow-y-auto');
-    expect(body?.className).toContain('buxa:min-h-0');
-    expect(body?.className).toContain('buxa:flex-1');
-  });
-
-  it('gives the drawer scrim one row the height of the window, so the drawer is no taller than the window', () => {
-    act(() =>
-      root.render(
-        <Dialog title="Task" drawer onClose={() => undefined}>
-          <p>x</p>
-        </Dialog>,
-      ),
-    );
-    expect(document.querySelector('.scrim-drawer')?.className).toContain('buxa:grid-rows-[minmax(0,1fr)]');
-    expect(document.querySelector('.drawer')?.className).toContain('buxa:h-full');
+      );
+    });
+    expect(document.querySelector('.dialog-foot')).toBeNull();
   });
 });

@@ -1,4 +1,11 @@
-import { CapacityBelowEnrolledError, ClassHasEnrolmentsError, ClassNotFoundError, SessionFullError } from './errors';
+import {
+  CapacityBelowEnrolledError,
+  ClassHasEnrolmentsError,
+  ClassNotFoundError,
+  SessionFullError,
+  SessionHasClassesError,
+  SessionNotFoundError,
+} from './errors';
 
 /*
  * Driver errors never leave the adapter. The capacity trigger in migration 0008 raises a named check violation when a
@@ -39,6 +46,18 @@ export function translateClassWriteError(error: unknown): unknown {
   }
 
   return error;
+}
+
+/** Turns the errors of a session delete into domain errors: a session that holds classes (migration 0035), or one not in the camp. */
+export function translateSessionDeleteError(error: unknown): unknown {
+  if (isPgError(error, FOREIGN_KEY_VIOLATION, 'classes_has_classes')) {
+    return new SessionHasClassesError();
+  }
+  if (isPgError(error, 'P0002', null)) {
+    return new SessionNotFoundError();
+  }
+
+  return translateClassWriteError(error);
 }
 
 /** Turns the capacity trigger's error into a SessionFullError for `capacity`. Any other error is returned unchanged. */

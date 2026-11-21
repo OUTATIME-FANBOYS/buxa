@@ -1,9 +1,9 @@
 import 'server-only';
 import type { Actor } from '@buxa/domain';
 import { getRuntime } from '../../runtime';
-import type { PersonSummary } from '@buxa/contracts';
+import type { PersonPage } from '@buxa/contracts';
 import { isHttpError } from '../../http/errors';
-import { toListQuery, type ListParams } from '@buxa/shared';
+import { toPageQuery, type ListParams } from '@buxa/shared';
 
 /** The households a staff member can link someone into. */
 export const loadHouseholdList = (actor: Actor) => getRuntime().services.people.listHouseholds(actor);
@@ -11,14 +11,14 @@ export const loadHouseholdList = (actor: Actor) => getRuntime().services.people.
 /** People matching a name search, for linking into a household (the service caps the matches). */
 export const loadPersonMatches = (actor: Actor, query: string) => getRuntime().services.people.list(actor, { query });
 
-/** The people list for the search and role filter in the URL. */
-export const loadPeople = (actor: Actor, params: ListParams) =>
-  getRuntime().services.people.list(actor, toListQuery(params));
+/** One page of the people list for the search, role and page in the URL. */
+export const loadPeoplePage = (actor: Actor, params: ListParams) =>
+  getRuntime().services.people.listPage(actor, toPageQuery(params));
 
-/** The people list, or 'forbidden' when the role may not list people (403). Other failures are thrown for the error boundary. */
-export async function loadPeopleOrForbidden(actor: Actor, params: ListParams): Promise<PersonSummary[] | 'forbidden'> {
+/** One page of the people list, or 'forbidden' when the role may not list people (403). Other failures are thrown for the error boundary. */
+export async function loadPeoplePageOrForbidden(actor: Actor, params: ListParams): Promise<PersonPage | 'forbidden'> {
   try {
-    return await loadPeople(actor, params);
+    return await loadPeoplePage(actor, params);
   } catch (error) {
     if (isHttpError(error) && error.statusCode === 403) {
       return 'forbidden';

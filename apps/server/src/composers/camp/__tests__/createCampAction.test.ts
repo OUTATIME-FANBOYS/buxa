@@ -49,7 +49,7 @@ describe('createCampAction', () => {
     const state = await createCampAction(idle, formOf({ name: '   ', slug: 'No Good!' }));
     expect(state).toMatchObject({
       status: 'error',
-      fieldErrors: { name: 'Give your camp a name.', slug: 'Use 3–50 lowercase letters, numbers or dashes.' },
+      fieldErrors: { name: 'Enter a camp name.', slug: 'Use 3–50 lowercase letters, numbers or dashes.' },
     });
     expect(world.store.orgs.size).toBe(0);
     expect(mocks.redirect).not.toHaveBeenCalled();

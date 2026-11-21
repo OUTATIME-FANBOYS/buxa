@@ -1,7 +1,9 @@
 import type { Pool } from 'pg';
-import { withOrg } from '@buxa/db';
+import { errorMessage, withOrg } from '@buxa/db';
 import { isUuid, type Actor } from '@buxa/domain';
 import { recordAudit } from '../audit/recordAudit';
+import { PersonNotFoundError } from './PeopleRepository';
+import { forbidden } from '../http/errors';
 import type {
   HouseholdLinkRecord,
   HouseholdRecord,
@@ -9,6 +11,7 @@ import type {
   PeopleRepository,
   PersonFilter,
   PersonHouseholdLink,
+  PersonPageFilter,
   PersonPatchRecord,
   PersonRecord,
 } from './PeopleRepository';
@@ -21,7 +24,15 @@ import {
   requireHousehold,
   upsertMember,
 } from './PgHouseholds';
-import { getPeople, getPerson, listPeople, requirePerson, searchPeople } from './PgPersonQueries';
+import {
+  countPeople,
+  getPeople,
+  getPerson,
+  listPeople,
+  listPeoplePage,
+  requirePerson,
+  searchPeople,
+} from './PgPersonQueries';
 import { insertPerson, updatePerson } from './PgPersonWrites';
 
 /** Postgres adapter. Each call runs in withOrg (row-level security) and writes its audit entry in the same transaction. */
@@ -83,6 +94,17 @@ export class PgPeopleRepository implements PeopleRepository {
     });
   }
 
+  /** buxa_delete_person (migration 0040) checks the owner, removes the person and their pending invites, and audits, in one statement. */
+  async erase(actor: Actor, id: string): Promise<void> {
+    try {
+      await withOrg(this.pool, actor.userId, actor.orgId, db =>
+        db.query('SELECT buxa_delete_person($1, $2)', [actor.orgId, id]),
+      );
+    } catch (error) {
+      throw mapEraseError(error);
+    }
+  }
+
   get(userId: string, orgId: string, id: string): Promise<PersonRecord | null> {
     return withOrg(this.pool, userId, orgId, db => getPerson(db, id));
   }
@@ -97,6 +119,19 @@ export class PgPeopleRepository implements PeopleRepository {
 
   search(userId: string, orgId: string, query: string, limit: number): Promise<PersonRecord[]> {
     return withOrg(this.pool, userId, orgId, db => searchPeople(db, query, limit));
+  }
+
+  countPeople(userId: string, orgId: string, filter: PersonPageFilter): Promise<number> {
+    return withOrg(this.pool, userId, orgId, db => countPeople(db, filter));
+  }
+
+  listPeoplePage(
+    userId: string,
+    orgId: string,
+    filter: PersonPageFilter,
+    window: { offset: number; limit: number },
+  ): Promise<PersonRecord[]> {
+    return withOrg(this.pool, userId, orgId, db => listPeoplePage(db, filter, window));
   }
 
   createHousehold(actor: Actor, name: string): Promise<HouseholdRecord> {
@@ -154,4 +189,17 @@ export class PgPeopleRepository implements PeopleRepository {
       return requireHousehold(db, householdId);
     });
   }
+}
+
+/** A database refusal becomes the error the service and the app already understand: 403 for the owner rule, 404 for no person. */
+function mapEraseError(error: unknown): unknown {
+  const code = typeof error === 'object' && error !== null && 'code' in error ? error.code : undefined;
+  if (code === '42501') {
+    return forbidden(errorMessage(error));
+  }
+  if (code === 'P0002') {
+    return new PersonNotFoundError();
+  }
+
+  return error;
 }

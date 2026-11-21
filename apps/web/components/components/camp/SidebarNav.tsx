@@ -22,7 +22,7 @@ export function SidebarNav({ groups }: { groups: readonly NavGroup[] }) {
               const active = isActive(pathname ?? '', item);
 
               return (
-                <li key={item.href}>
+                <li key={item.href} className={item.under ? 'nav-child' : undefined}>
                   <Link
                     href={item.href}
                     className={`${active ? 'active' : ''} buxa:active:[transform:scale(0.98)] buxa:active:duration-[0.08s]`}

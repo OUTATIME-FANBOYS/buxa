@@ -18,6 +18,14 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: h.push, refresh: h
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
+function must<T>(value: T | null | undefined, what: string): T {
+  if (value == null) {
+    throw new Error(`Expected ${what} on the page.`);
+  }
+
+  return value;
+}
+
 const NAME = 'Camp Birchwood';
 
 const button = (text: string) =>
@@ -38,6 +46,14 @@ const dialogText = () => document.querySelector('[role="dialog"]')?.textContent 
 
 describe('the danger zone', () => {
   let root: Root;
+  const renderZone = (roles: { canArchive: boolean; canDelete: boolean }) =>
+    act(() =>
+      root.render(
+        <UiProvider Dialog={ConfirmDialog}>
+          <DangerZone campId="o-1" campName={NAME} {...roles} />
+        </UiProvider>,
+      ),
+    );
 
   beforeEach(() => {
     h.archiveCamp.mockReset().mockResolvedValue({ ok: true });
@@ -45,25 +61,42 @@ describe('the danger zone', () => {
     h.push.mockReset();
     h.refresh.mockReset();
     root = createRoot(document.body.appendChild(document.createElement('div')));
-    act(() =>
-      root.render(
-        <UiProvider Dialog={ConfirmDialog}>
-          <DangerZone campId="o-1" campName={NAME} />
-        </UiProvider>,
-      ),
-    );
+    renderZone({ canArchive: true, canDelete: true });
   });
   afterEach(() => {
     act(() => root.unmount());
     document.body.innerHTML = '';
   });
 
+  it('shows Archive camp and Delete camp to the owner', () => {
+    expect(button('Archive camp')).toBeDefined();
+    expect(button('Delete camp')).toBeDefined();
+  });
+
+  it('shows only Archive camp to an admin, who may archive but not delete', () => {
+    act(() => root.unmount());
+    root = createRoot(document.body.appendChild(document.createElement('div')));
+    renderZone({ canArchive: true, canDelete: false });
+    expect(button('Archive camp')).toBeDefined();
+    expect(button('Delete camp')).toBeUndefined();
+    expect(document.querySelector('.danger-zone')).not.toBeNull();
+  });
+
+  it('shows no buttons to a role that can neither archive nor delete', () => {
+    act(() => root.unmount());
+    root = createRoot(document.body.appendChild(document.createElement('div')));
+    renderZone({ canArchive: false, canDelete: false });
+    expect(document.querySelectorAll('.danger-zone button').length).toBe(0);
+  });
+
   it('archives the camp after one confirm, calling archiveCamp with the camp id', async () => {
     act(() => button('Archive camp')?.click());
     expect(dialogText()).toContain('Archiving hides Camp Birchwood from your camp list');
     expect(dialogText()).toContain('kept');
-    await act(async () => {
+    await act(() => {
       dlg('Archive camp')?.click();
+
+      return Promise.resolve();
     });
     expect(h.archiveCamp).toHaveBeenCalledWith({ orgId: 'o-1' });
     expect(h.push).toHaveBeenCalledWith('/camp');
@@ -75,17 +108,19 @@ describe('the danger zone', () => {
     act(() => dlg('Continue')?.click());
     expect(dlg('Delete camp')?.disabled).toBe(true);
 
-    act(() => typeInto(field()!, 'camp birchwood'));
+    act(() => typeInto(must(field(), 'the name field'), 'camp birchwood'));
     expect(dlg('Delete camp')?.disabled).toBe(true);
 
-    act(() => typeInto(field()!, 'Camp Birchwood '));
+    act(() => typeInto(must(field(), 'the name field'), 'Camp Birchwood '));
     expect(dlg('Delete camp')?.disabled).toBe(true);
 
-    act(() => typeInto(field()!, NAME));
+    act(() => typeInto(must(field(), 'the name field'), NAME));
     expect(dlg('Delete camp')?.disabled).toBe(false);
 
-    await act(async () => {
+    await act(() => {
       dlg('Delete camp')?.click();
+
+      return Promise.resolve();
     });
     expect(h.deleteCamp).toHaveBeenCalledWith({ orgId: 'o-1', confirmName: NAME });
   });
@@ -93,16 +128,18 @@ describe('the danger zone', () => {
   it('shows the server message when an action fails, and keeps the dialog open', async () => {
     h.archiveCamp.mockResolvedValue({ ok: false, message: 'Only the owner can archive this camp.' });
     act(() => button('Archive camp')?.click());
-    await act(async () => {
+    await act(() => {
       dlg('Archive camp')?.click();
+
+      return Promise.resolve();
     });
     expect(document.querySelector('[role="alert"]')?.textContent).toBe('Only the owner can archive this camp.');
     expect(h.push).not.toHaveBeenCalled();
   });
 
-  it('gives Archive camp and Delete camp their icons', () => {
-    expect(button('Archive camp')?.querySelector('svg[class*="lucide-archive"]')).not.toBeNull();
-    expect(button('Delete camp')?.querySelector('svg[class*="lucide-trash"]')).not.toBeNull();
+  it('gives Archive camp and Delete camp text only, with no icon', () => {
+    expect(button('Archive camp')?.querySelector('svg')).toBeNull();
+    expect(button('Delete camp')?.querySelector('svg')).toBeNull();
   });
 
   it('disables the buttons while the request runs', async () => {
@@ -118,6 +155,10 @@ describe('the danger zone', () => {
     });
     expect(dlg('Archiving…')?.disabled).toBe(true);
     expect(dlg('Cancel')?.disabled).toBe(true);
-    await act(async () => finish({ ok: true }));
+    await act(() => {
+      finish({ ok: true });
+
+      return Promise.resolve();
+    });
   });
 });

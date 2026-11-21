@@ -1,14 +1,13 @@
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { FORBIDDEN_REGISTRATION } from '@buxa/shared';
-import { currentActor, loadForms } from '@buxa/server/composers/index.server';
-import { ROUTES } from '@/config/routes';
+import { currentActor, loadForms, loadSessions } from '@buxa/server/composers/index.server';
 import { Empty, PageHeader } from '@/components/components';
-import { FormsTable } from '@/components/components/registration';
-import { Button } from '@/components/elements';
+import { FormsTable, NewRegistrationFormButton } from '@/components/components/registration';
 
 /**
- * The camp's registration forms. Anyone who may read them sees the list; only staff with registration:manage see the New form button.
+ * The camp's registration forms. Anyone who may read them sees the list; only staff with registration:manage see the New form button,
+ * which opens the create form in a dialog.
  */
 export async function RegistrationList() {
   const actor = await currentActor();
@@ -17,12 +16,12 @@ export async function RegistrationList() {
   }
   const canManage = can(actor, 'registration:manage');
   const loaded = await loadForms(actor);
+  const sessions = canManage ? await loadSessions(actor) : null;
 
-  const actions = canManage ? (
-    <Button variant="primary" icon="plus" href={ROUTES.newRegistrationForm}>
-      New form
-    </Button>
-  ) : undefined;
+  const actions =
+    canManage && sessions?.ok ? (
+      <NewRegistrationFormButton sessions={sessions.value.map(s => ({ id: s.id, name: s.name }))} />
+    ) : undefined;
 
   return (
     <div className="page">

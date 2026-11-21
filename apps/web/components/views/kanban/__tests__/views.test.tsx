@@ -88,19 +88,13 @@ describe('kanban views', () => {
     h.store = store();
   });
 
-  it('Settings lists the display name, email, time format, appearance, agents, data and shortcuts cards, with no Camp clock', () => {
+  it('Settings lists the agents, data and shortcuts cards and links to the profile, with no Camp clock', () => {
     const html = page(<Settings />);
-    for (const heading of [
-      'Display name',
-      'Email',
-      'Time format',
-      'Appearance',
-      'Agents',
-      'Your data',
-      'Keyboard shortcuts',
-    ]) {
+    for (const heading of ['Agents', 'Your data', 'Keyboard shortcuts']) {
       expect(html).toContain(heading);
     }
+    expect(html).not.toContain('Display name');
+    expect(html).toContain('href="/account"');
     expect(html).not.toContain('Camp clock');
     expect(html).toContain('>Export JSON</button>');
   });

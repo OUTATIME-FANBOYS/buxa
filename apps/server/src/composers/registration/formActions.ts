@@ -34,6 +34,10 @@ export async function createFormAction(_previous: ActionState, form: FormData): 
   }
 
   revalidatePath(ROUTES.registration);
+  // Posted from the New registration form pop-up (dialog=1): the pop-up closes and a toast says so, with no redirect.
+  if (field(form, 'dialog') === '1') {
+    return success('Registration form created.');
+  }
   redirect(registrationFormPath(id));
 }
 

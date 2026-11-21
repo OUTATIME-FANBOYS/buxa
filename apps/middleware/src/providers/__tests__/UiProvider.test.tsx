@@ -46,12 +46,17 @@ describe('UiProvider', () => {
 
   it('shows a toast with its text in the status region', () => {
     act(() => requirePresent(api, 'api').toast('Saved'));
-    expect(document.querySelector('.toasts')?.getAttribute('role')).toBe('status');
-    expect(document.querySelector('.toast')?.textContent).toBe('Saved');
+    expect(document.querySelector('.toasts')).not.toBeNull();
+    expect(document.querySelector('[role="status"]')?.textContent).toContain('Saved');
+  });
+  it('removes a toast when it closes itself', () => {
+    act(() => requirePresent(api, 'api').toast('Saved'));
+    act(() => document.querySelector<HTMLButtonElement>('.toast button')?.click());
+    expect(document.querySelector('.toast')).toBeNull();
   });
   it('marks error toasts', () => {
     act(() => requirePresent(api, 'api').toast('Could not save', { tone: 'error' }));
-    expect(document.querySelector('.toast-error')?.textContent).toBe('Could not save');
+    expect(document.querySelector('.toast-error')?.textContent).toContain('Could not save');
   });
   it('asks for confirmation and resolves true when confirmed', async () => {
     let answer: boolean | undefined;

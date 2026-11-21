@@ -48,8 +48,17 @@ describe('PriorityIcon', () => {
   });
   it('gives each priority its own mark: an arrow, a triangle, a dash, and a down arrow for low', () => {
     expect(draw('critical')).toMatch(/<path d="M12 16\.5V7\.75/);
-    expect(draw('high')).toMatch(/<path d="M12 7\.25 16\.75 16\.25H7\.25Z"/);
+    expect(draw('high')).toMatch(/<path d="M12 6\.25 16\.75 15\.25H7\.25Z"/);
     expect(draw('medium')).toMatch(/<path d="M7\.5 12h9"/);
     expect(draw('low')).toMatch(/<path d="M12 7\.25v9\.5/);
+  });
+  it('centres the high triangle optically: its centroid, not its box, sits on the circle centre', () => {
+    // The high triangle is "M apexX apexY  rightX baseY H leftX Z". A triangle's visual weight is at its centroid, the mean of its
+    // three vertices' y values (the two base corners share baseY). That centroid must sit on the circle centre, y 12.
+    const match = draw('high').match(/<path d="M(-?[\d.]+) (-?[\d.]+) (-?[\d.]+) (-?[\d.]+)H/);
+    expect(match).not.toBeNull();
+    const [apexY, baseY] = [Number(match?.[2]), Number(match?.[4])];
+    const centroidY = (apexY + 2 * baseY) / 3;
+    expect(Math.abs(centroidY - 12)).toBeLessThanOrEqual(0.25);
   });
 });

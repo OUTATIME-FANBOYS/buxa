@@ -16,6 +16,7 @@ import {
   CircleCheck,
   CircleHelp,
   Clock,
+  ClipboardCheck,
   Copy,
   Download,
   Ellipsis,
@@ -98,6 +99,7 @@ export const ICONS: Record<string, LucideIcon> = {
   timeline: GanttChart,
   trash: Trash2,
   copy: Copy,
+  'clipboard-check': ClipboardCheck,
   archive: Archive,
   'archive-restore': ArchiveRestore,
   save: Save,
@@ -243,7 +245,9 @@ export function PriorityIcon({
               className="buxa:stroke-[var(--surface)]"
             />
           )}
-          {priority === 'high' && <path d="M12 7.25 16.75 16.25H7.25Z" className="buxa:fill-[var(--surface)]" />}
+          {/* The triangle's visual weight sits at its centroid (a third of the way up from the base), so it is raised 1 unit
+           * from the box position to put that centroid on the circle's centre (y 12). */}
+          {priority === 'high' && <path d="M12 6.25 16.75 15.25H7.25Z" className="buxa:fill-[var(--surface)]" />}
           {priority === 'medium' && (
             <path
               d="M7.5 12h9"

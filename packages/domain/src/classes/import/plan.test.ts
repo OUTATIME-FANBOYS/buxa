@@ -97,7 +97,7 @@ describe('planImport: field checks (each row gets its own result)', () => {
     ],
     ['an end before the start', { ends_at: '2027-07-05T12:00' }, 'ends_at', 'The session must end after it starts.'],
     ['an end equal to the start', { ends_at: '2027-07-05T13:00' }, 'ends_at', 'The session must end after it starts.'],
-    ['a missing location', { location: '' }, 'location', 'Give the location.'],
+    ['a missing location', { location: '' }, 'location', 'Location missing.'],
     ['a non-number age', { age_min: 'eight' }, 'age_min', 'Enter the youngest age as a whole number.'],
     [
       'an age range upside down',
