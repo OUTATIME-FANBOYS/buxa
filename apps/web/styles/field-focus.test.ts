@@ -20,8 +20,13 @@ function ruleFor(css: string, selector: string): string {
 describe('form field focus', () => {
   const field = ':is(input, select, textarea):focus';
 
-  it('draws no outline when a field is focused by pointer or keyboard', () => {
-    expect(ruleFor(base, field)).toMatch(/outline:\s*none/);
+  it('draws no outline or box-shadow on a field, for pointer or keyboard focus', () => {
+    for (const selector of [':is(input, select, textarea):focus', ':is(input, select, textarea):focus-visible']) {
+      const rule = ruleFor(base, selector);
+      expect(rule).toMatch(/outline:\s*none/);
+      expect(rule).toMatch(/box-shadow:\s*none/);
+    }
+    expect(base).not.toMatch(/:is\(input, select, textarea\):focus-visible \{\s*outline:\s*2px/);
   });
 
   it('changes the field border to the focus colour, and keeps an invalid field on its error border', () => {
@@ -29,26 +34,20 @@ describe('form field focus', () => {
     expect(rule).toMatch(/border-color:\s*var\(--focus\)/);
   });
 
-  it('draws one keyboard ring outside the field, never on the border', () => {
-    const rule = ruleFor(base, ':is(input, select, textarea):focus-visible');
-    expect(rule).toMatch(/outline:\s*2px solid var\(--focus\)/);
-    expect(rule).toMatch(/outline-offset:\s*2px/);
-    expect(rule).not.toMatch(/outline-offset:\s*-/);
-  });
-
-  it('leaves no outline or focus border in the shared Tailwind field defaults', () => {
-    expect(FIELD_DEFAULTS).not.toMatch(/outline:2px|outline-offset/);
+  it('leaves no outline, ring or shadow in the shared Tailwind field defaults', () => {
+    expect(FIELD_DEFAULTS).not.toMatch(/outline:2px|outline-offset|box-shadow/);
     expect(FIELD_DEFAULTS).not.toMatch(/focus-visible\]:border/);
   });
 
-  it('draws no ring on an invalid field, so an error is the red border alone', () => {
-    expect(ruleFor(base, ":is(input, select, textarea)[aria-invalid='true']:focus-visible")).toMatch(/outline:\s*none/);
-  });
-
-  it('gives the search boxes an inset focus border and a single keyboard ring outside', () => {
-    expect(ruleFor(shell, '.search .search-field__box:focus-within')).toMatch(/outline:\s*none/);
-    expect(ruleFor(filters, '.search-local:focus-within')).toMatch(/outline:\s*none/);
-    expect(ruleFor(filters, '.search-local:has(input:focus-visible)')).toMatch(/outline-offset:\s*2px/);
-    expect(ruleFor(shell, '.search .search-field__box:has(input:focus-visible)')).toMatch(/outline-offset:\s*2px/);
+  it('gives the search boxes a border-colour focus with no ring or shadow', () => {
+    for (const [css, selector] of [
+      [shell, '.search .search-field__box:focus-within'],
+      [filters, '.search-local:focus-within'],
+    ] as const) {
+      const rule = ruleFor(css, selector);
+      expect(rule).toMatch(/outline:\s*none/);
+      expect(rule).toMatch(/box-shadow:\s*none/);
+      expect(rule).toMatch(/border-color:\s*var\(--focus\)/);
+    }
   });
 });

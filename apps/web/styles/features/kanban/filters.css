@@ -30,11 +30,8 @@
 }
 .search-local:focus-within {
   outline: none;
+  box-shadow: none;
   border-color: var(--focus);
-}
-.search-local:has(input:focus-visible) {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
 }
 .chip {
   display: inline-flex;
