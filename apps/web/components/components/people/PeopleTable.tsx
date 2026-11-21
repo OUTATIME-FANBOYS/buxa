@@ -8,6 +8,7 @@ import { Button } from '@/components/elements';
 import { Checkbox } from '@/components/atoms';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import type { PeopleDeletion } from '@/actions/people';
+import type { HouseholdChoice } from '@buxa/shared';
 import { EditPersonButton } from '@/components/components/people/forms';
 import { AccessPill } from './AccessPill';
 import { DeletePeopleDialog, type PersonRef } from './DeletePeopleDialog';
@@ -29,11 +30,14 @@ export function PeopleTable({
   staffView,
   canEdit = false,
   canDelete = false,
+  households = [],
 }: {
   people: readonly PersonSummary[];
   staffView: boolean;
   canEdit?: boolean;
   canDelete?: boolean;
+  /** The camp's households, passed to each row's Edit pop-up. */
+  households?: readonly HouseholdChoice[];
 }) {
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [targets, setTargets] = useState<readonly PersonRef[] | null>(null);
@@ -136,7 +140,7 @@ export function PeopleTable({
                 {(canEdit || canDelete) && (
                   <td>
                     <div className="buxa:flex buxa:flex-wrap buxa:justify-center buxa:gap-2">
-                      {canEdit && <EditPersonButton personId={person.id} />}
+                      {canEdit && <EditPersonButton personId={person.id} households={households} />}
                       {canDelete && (
                         <Button
                           type="button"

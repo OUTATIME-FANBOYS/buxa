@@ -21,8 +21,6 @@ export interface FormPopUpProps {
   /** An action on the footer's left, away from Cancel and submit (for example a delete). */
   leading?: ReactNode;
   className?: string;
-  /** Centres the footer's buttons (Cancel and the submit) under the form, rather than pushing them to the right. */
-  centred?: boolean;
   children: ReactNode;
 }
 
@@ -43,7 +41,6 @@ export function FormPopUp({
   onCancel,
   leading,
   className = 'class-dialog',
-  centred = false,
   children,
 }: FormPopUpProps) {
   const buttons = (
@@ -63,18 +60,11 @@ export function FormPopUp({
       onClose={onCancel}
       className={className}
       footer={
-        centred ? (
-          <div className="buxa:flex buxa:w-full buxa:flex-wrap buxa:items-center buxa:justify-center buxa:gap-2">
-            {leading}
-            {buttons}
-          </div>
-        ) : (
-          <>
-            {leading}
-            <span className="buxa:flex-1" />
-            {buttons}
-          </>
-        )
+        <>
+          {leading}
+          <span className="buxa:flex-1" />
+          {buttons}
+        </>
       }
     >
       {intro ? <p className="muted">{intro}</p> : null}

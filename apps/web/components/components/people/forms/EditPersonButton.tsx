@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import type { Person } from '@buxa/contracts';
+import type { HouseholdChoice } from '@buxa/shared';
 import { FormPopUp } from '@/components/components';
 import { Button } from '@/components/elements';
 import { loadPersonAction } from '@/actions/people';
@@ -15,7 +16,14 @@ type Loaded = { status: 'idle' } | { status: 'loading' } | { status: 'ready'; pe
  * The row's Edit button on the People list. It opens the same Edit person pop-up as the form's page-level route would show, but in the
  * list, so the list stays in view. The person is loaded when it opens. Cancel, Escape or the close button dismiss it without saving.
  */
-export function EditPersonButton({ personId }: { personId: string }) {
+export function EditPersonButton({
+  personId,
+  households = [],
+}: {
+  personId: string;
+  /** The camp's households, for the Household section's select. */
+  households?: readonly HouseholdChoice[];
+}) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [loaded, setLoaded] = useState<Loaded>({ status: 'idle' });
@@ -74,7 +82,6 @@ export function EditPersonButton({ personId }: { personId: string }) {
           submitDisabled={loaded.status !== 'ready'}
           onCancel={close}
           className="person-dialog"
-          centred
         >
           {loaded.status === 'ready' && (
             <PersonForm
@@ -82,6 +89,7 @@ export function EditPersonButton({ personId }: { personId: string }) {
               variant="dialog"
               formId={formId}
               person={loaded.person}
+              households={households}
               onPendingChange={setPending}
               onSaved={saved}
             />

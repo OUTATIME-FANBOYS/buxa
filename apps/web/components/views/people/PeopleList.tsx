@@ -22,10 +22,11 @@ export async function PeopleList({ searchParams }: { searchParams: Record<string
   }
   const params = readListParams(searchParams);
   const canAdd = can(actor, 'people:create');
+  const canEdit = can(actor, 'people:update');
   const result = await listFor(actor, params);
   const filtered = params.q !== '' || params.role !== '';
-  // The add dialog's household picker. Only staff who can add people load the list.
-  const households = canAdd ? toHouseholdChoices(await loadHouseholdList(actor)) : [];
+  // The household pickers in the Add and Edit pop-ups. Only staff who can add or edit people load the list.
+  const households = canAdd || canEdit ? toHouseholdChoices(await loadHouseholdList(actor)) : [];
 
   return (
     <div className="page">
@@ -70,7 +71,8 @@ export async function PeopleList({ searchParams }: { searchParams: Record<string
               <PeopleTable
                 people={result.people}
                 staffView={can(actor, 'people:read_contact')}
-                canEdit={can(actor, 'people:update')}
+                canEdit={canEdit}
+                households={households}
                 canDelete={can(actor, 'data:erase')}
               />
               <PeoplePagination

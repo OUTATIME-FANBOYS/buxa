@@ -49,7 +49,6 @@ export function AddPersonButton({ households }: { households: readonly Household
           submitDisabled={stayed}
           onCancel={close}
           className="person-dialog"
-          centred
         >
           <PersonForm
             mode="create"

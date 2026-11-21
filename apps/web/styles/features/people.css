@@ -137,7 +137,7 @@ form.person-form {
 .dialog.person-dialog {
   width: min(640px, 100%);
 }
-/* The person form reads left to right: section titles, helper lines and role headings are left aligned. Only the footer is centred. */
+/* The person form reads left to right: section titles, helper lines and role headings are left aligned, and its footer sits on the right. */
 .person-form .person-legend,
 .person-form .person-helper,
 .person-form .person-role-heading {

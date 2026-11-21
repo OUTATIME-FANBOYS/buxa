@@ -25,6 +25,7 @@ const person: EditablePerson = {
   dateOfBirth: '2016-05-02',
   email: 'ada@example.com',
   phone: '0400 000 000',
+  households: [],
 };
 
 /** The checked role inputs, in either attribute order (React does not promise an order). */
@@ -36,7 +37,7 @@ const checkedRoles = (html: string) =>
 
 describe('PersonForm (edit): the Edit person pop-up and page', () => {
   it('pre-fills every field from the person', () => {
-    const html = inUi(<PersonForm mode="edit" person={person} variant="dialog" />);
+    const html = inUi(<PersonForm mode="edit" households={[]} person={person} variant="dialog" />);
     expect(html).toContain('name="givenName" value="Ada"');
     expect(html).toContain('name="familyName" value="Lee"');
     expect(html).toContain('name="preferredName" value="Annie"');
@@ -48,36 +49,44 @@ describe('PersonForm (edit): the Edit person pop-up and page', () => {
 
   it('ticks every role the person has, and only those', () => {
     const multi: EditablePerson = { ...person, roles: [CAMP_ROLES[0], CAMP_ROLES[3]] };
-    const html = inUi(<PersonForm mode="edit" person={multi} variant="dialog" />);
+    const html = inUi(<PersonForm mode="edit" households={[]} person={multi} variant="dialog" />);
     expect(checkedRoles(html)).toEqual([CAMP_ROLES[0], CAMP_ROLES[3]]);
     expect(html.match(/name="roles"/g)).toHaveLength(CAMP_ROLES.length);
   });
 
-  it('shows no household section, since an update does not move a person between households', () => {
-    const html = inUi(<PersonForm mode="edit" person={{ ...person, roles: ['camper'] }} variant="dialog" />);
-    expect(html).not.toContain('Household');
-    expect(html).not.toContain('name="householdId"');
+  it('shows the Household section for a family role, and none for other roles', () => {
+    const family = inUi(
+      <PersonForm mode="edit" households={[]} person={{ ...person, roles: ['camper'] }} variant="dialog" />,
+    );
+    expect(family).toContain('>Household</legend>');
+    expect(family).toContain('name="householdEmail"');
+    const other = inUi(
+      <PersonForm mode="edit" households={[]} person={{ ...person, roles: ['participant'] }} variant="dialog" />,
+    );
+    expect(other).not.toContain('>Household</legend>');
   });
 
   it('offers Resend invite beside Email for an instructor, and the coming-soon note for another role', () => {
-    const teacher = inUi(<PersonForm mode="edit" person={{ ...person, roles: ['instructor'] }} variant="dialog" />);
+    const teacher = inUi(
+      <PersonForm mode="edit" households={[]} person={{ ...person, roles: ['instructor'] }} variant="dialog" />,
+    );
     expect(teacher).toContain('Resend invite');
     expect(teacher).not.toContain('Invites for this role are coming soon.');
 
-    const other = inUi(<PersonForm mode="edit" person={person} variant="dialog" />);
+    const other = inUi(<PersonForm mode="edit" households={[]} person={person} variant="dialog" />);
     expect(other).toContain('Invites for this role are coming soon.');
     expect(other).toContain('Resend invite');
   });
 
   it('on its own page it keeps the panel, Save changes and Cancel back to the person', () => {
-    const html = inUi(<PersonForm mode="edit" person={person} />);
+    const html = inUi(<PersonForm mode="edit" households={[]} person={person} />);
     expect(html).toContain('panel people-form person-form');
     expect(html).toContain('>Save changes</button>');
     expect(html).toContain('href="/camp/people/p-1"');
   });
 
   it('in the pop-up it has no footer of its own and posts dialog=1 so a save does not redirect', () => {
-    const html = inUi(<PersonForm mode="edit" person={person} variant="dialog" formId="f" />);
+    const html = inUi(<PersonForm mode="edit" households={[]} person={person} variant="dialog" formId="f" />);
     expect(html).not.toContain('Save changes');
     expect(html).toContain('name="dialog" value="1"');
     expect(html).toContain('id="f"');
@@ -87,7 +96,7 @@ describe('PersonForm (edit): the Edit person pop-up and page', () => {
 describe('PersonForm: one component for both modes', () => {
   it('renders the same form element, with the same fields, for add and edit', () => {
     const add = inUi(<PersonForm mode="create" household={null} households={[]} variant="dialog" formId="f" />);
-    const edit = inUi(<PersonForm mode="edit" person={person} variant="dialog" formId="f" />);
+    const edit = inUi(<PersonForm mode="edit" households={[]} person={person} variant="dialog" formId="f" />);
     for (const html of [add, edit]) {
       expect(html).toContain('class="people-form person-form"');
       expect(html).toContain('name="givenName"');
@@ -98,12 +107,12 @@ describe('PersonForm: one component for both modes', () => {
     expect(edit).toContain('name="email"');
   });
 
-  it('differs only in its mode: one role at a time when adding, any number when editing', () => {
+  it('uses checkboxes for roles in both modes, so a person can hold several', () => {
     const add = inUi(<PersonForm mode="create" household={null} households={[]} variant="dialog" />);
-    const edit = inUi(<PersonForm mode="edit" person={person} variant="dialog" />);
-    expect(add).toContain('type="radio"');
-    expect(add).not.toContain('type="checkbox"');
-    expect(edit).toContain('type="checkbox"');
-    expect(edit).not.toContain('type="radio"');
+    const edit = inUi(<PersonForm mode="edit" households={[]} person={person} variant="dialog" />);
+    for (const html of [add, edit]) {
+      expect(html).toContain('type="checkbox"');
+      expect(html).not.toContain('type="radio"');
+    }
   });
 });
