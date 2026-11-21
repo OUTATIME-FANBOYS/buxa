@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { CAMP_ROLES, settle } from '@buxa/domain';
+import { idle } from '@buxa/shared';
 import { PersonForm, type EditablePerson } from '@/components/components/people/forms';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { Dialog as ConfirmDialog } from '@/components/components';
@@ -10,10 +11,10 @@ import { Dialog as ConfirmDialog } from '@/components/components';
 const inUi = (form: ReactElement) => renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}>{form}</UiProvider>);
 
 vi.mock('@buxa/server/composers/people/updatePersonAction', () => ({
-  updatePersonAction: () => settle(() => ({ status: 'idle' })),
+  updatePersonAction: () => settle(() => idle),
 }));
 vi.mock('@buxa/server/composers/people/createPersonAction', () => ({
-  createPersonAction: () => settle(() => ({ status: 'idle' })),
+  createPersonAction: () => settle(() => idle),
 }));
 
 const person: EditablePerson = {
@@ -21,7 +22,7 @@ const person: EditablePerson = {
   givenName: 'Ada',
   familyName: 'Lee',
   preferredName: 'Annie',
-  roles: [CAMP_ROLES[0]],
+  roles: ['participant'],
   dateOfBirth: '2016-05-02',
   email: 'ada@example.com',
   phone: '0400 000 000',
@@ -47,23 +48,26 @@ describe('PersonForm (edit): the Edit person pop-up and page', () => {
     expect(html).toContain('name="id" value="p-1"');
   });
 
-  it('pre-selects the first of the person’s roles, and offers every role', () => {
-    const multi: EditablePerson = { ...person, roles: [CAMP_ROLES[0], CAMP_ROLES[3]] };
+  it('ticks every role the person has, and only those', () => {
+    const multi: EditablePerson = { ...person, roles: ['guardian', 'instructor'] };
     const html = inUi(<PersonForm mode="edit" households={[]} person={multi} variant="dialog" />);
-    expect(checkedRoles(html)).toEqual([CAMP_ROLES[0]]);
+    expect(checkedRoles(html)).toEqual(['guardian', 'instructor']);
     expect(html.match(/name="roles"/g)).toHaveLength(CAMP_ROLES.length);
   });
 
-  it('shows the Household section for a family role, and none for other roles', () => {
-    const family = inUi(
+  it('shows Household email and no Email for a family role', () => {
+    const html = inUi(
       <PersonForm mode="edit" households={[]} person={{ ...person, roles: ['camper'] }} variant="dialog" />,
     );
-    expect(family).toContain('>Household</legend>');
-    expect(family).toContain('name="householdEmail"');
-    const other = inUi(
-      <PersonForm mode="edit" households={[]} person={{ ...person, roles: ['participant'] }} variant="dialog" />,
-    );
-    expect(other).not.toContain('>Household</legend>');
+    expect(html).toContain('>Household</legend>');
+    expect(html).toContain('name="householdEmail"');
+    expect(html).not.toContain('name="email"');
+  });
+
+  it('shows Email and no Household for a staff or participant role', () => {
+    const html = inUi(<PersonForm mode="edit" households={[]} person={person} variant="dialog" />);
+    expect(html).toContain('name="email"');
+    expect(html).not.toContain('>Household</legend>');
   });
 
   it('offers Resend invite beside Email for an instructor, and the coming-soon note for another role', () => {
@@ -76,6 +80,17 @@ describe('PersonForm (edit): the Edit person pop-up and page', () => {
     const other = inUi(<PersonForm mode="edit" households={[]} person={person} variant="dialog" />);
     expect(other).toContain('Invites for this role are coming soon.');
     expect(other).toContain('Resend invite');
+  });
+
+  it('Resend invite waits for a valid email: disabled when the email is empty, enabled when it is valid', () => {
+    const teacher = { ...person, roles: ['instructor' as const] };
+    const empty = inUi(
+      <PersonForm mode="edit" households={[]} person={{ ...teacher, email: null }} variant="dialog" />,
+    );
+    expect(empty).toMatch(/disabled=""[^>]*>(?:<svg[\s\S]*?<\/svg>)?Resend invite<\/button>/);
+    const valid = inUi(<PersonForm mode="edit" households={[]} person={teacher} variant="dialog" />);
+    expect(valid).not.toContain('disabled=""');
+    expect(valid).toContain('Resend invite');
   });
 
   it('on its own page it keeps the panel, Save changes and Cancel back to the person', () => {
@@ -104,15 +119,14 @@ describe('PersonForm: one component for both modes', () => {
       expect(html).toContain('name="dateOfBirth"');
       expect(html).toContain('name="phone"');
     }
-    expect(edit).toContain('name="email"');
   });
 
-  it('uses single-choice radios for roles in both modes', () => {
+  it('uses checkboxes for roles in both modes, so a person can hold several', () => {
     const add = inUi(<PersonForm mode="create" household={null} households={[]} variant="dialog" />);
     const edit = inUi(<PersonForm mode="edit" households={[]} person={person} variant="dialog" />);
     for (const html of [add, edit]) {
-      expect(html).toContain('type="radio"');
-      expect(html).not.toContain('type="checkbox"');
+      expect(html).toContain('type="checkbox"');
+      expect(html).not.toContain('type="radio"');
     }
   });
 });

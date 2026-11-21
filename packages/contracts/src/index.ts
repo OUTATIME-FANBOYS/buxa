@@ -133,6 +133,7 @@ export const ErrorBodySchema = z.object({
   error: z.object({ code: z.string(), message: z.string(), requestId: z.string().optional() }),
 });
 
+export * from './contact';
 export * from './people';
 export * from './attendance';
 export * from './classes';

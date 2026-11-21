@@ -433,13 +433,15 @@ describe('PersonScreen', () => {
 
 describe('EditPerson', () => {
   it('pre-fills the form with the person and the roles they have', async () => {
-    services.people.get.mockResolvedValueOnce(person({ dateOfBirth: '2016-05-02', email: 'ben@example.test' }));
+    services.people.get.mockResolvedValueOnce(
+      person({ dateOfBirth: '2016-05-02', email: 'ben@example.test', roles: ['participant'] }),
+    );
     const html = render(await EditPerson({ id: ID.ben }));
     expect(html).toContain('value="Ben"');
     expect(html).toContain('value="2016-05-02"');
     expect(html).toContain('value="ben@example.test"');
     // React's attribute order is not part of the contract, so match the checked box in either order.
-    expect(html).toMatch(/<input[^>]*checked=""[^>]*value="camper"|<input[^>]*value="camper"[^>]*checked=""/);
+    expect(html).toMatch(/<input[^>]*checked=""[^>]*value="participant"|<input[^>]*value="participant"[^>]*checked=""/);
     expect(html).not.toMatch(/<input[^>]*checked=""[^>]*value="guardian"|<input[^>]*value="guardian"[^>]*checked=""/);
     expect(html).toContain('Save changes');
   });

@@ -32,7 +32,8 @@ export async function updatePersonAction(_previous: ActionState, form: FormData)
     familyName: field(form, 'familyName'),
     preferredName: field(form, 'preferredName'),
     dateOfBirth: dateOfBirth === '' ? null : dateOfBirth,
-    email: field(form, 'email'),
+    // The email field is shown only for some roles, so it is posted only when it is on the form. Absent means unchanged.
+    email: form.has('email') ? field(form, 'email') : undefined,
     phone: field(form, 'phone'),
     roles: fieldAll(form, 'roles'),
   });

@@ -36,11 +36,14 @@ export function PersonInvite({
   label,
   readDetails,
   autoSend = false,
+  disabled = false,
 }: {
   label: 'Send invite' | 'Resend invite';
   readDetails: () => PersonInviteDetails;
   /** Sends once as it mounts (the teacher invite after a person is saved), so the link appears without another click. */
   autoSend?: boolean;
+  /** Off until the person's email is a valid address. */
+  disabled?: boolean;
 }) {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -86,7 +89,7 @@ export function PersonInvite({
 
   return (
     <div className="buxa:contents">
-      <Button type="button" variant="secondary" icon="send" disabled={pending} onClick={() => void send()}>
+      <Button type="button" variant="secondary" icon="send" disabled={pending || disabled} onClick={() => void send()}>
         {pending ? 'Sending…' : label}
       </Button>
       {message && (

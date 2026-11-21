@@ -53,6 +53,28 @@ describe('updatePersonAction', () => {
     });
   });
 
+  it('saves every role the form posts, so two roles survive an edit that changes nothing', async () => {
+    const withoutEmail = Object.fromEntries(Object.entries(details).filter(([key]) => key !== 'email'));
+    await expect(
+      updatePersonAction(idle, formOf({ ...withoutEmail, roles: ['guardian', 'instructor'] })),
+    ).rejects.toThrow(`NEXT_REDIRECT ${personPath(IDS.person)}`);
+    expect(h.people.update).toHaveBeenCalledWith(
+      h.actor,
+      IDS.person,
+      expect.objectContaining({ roles: ['guardian', 'instructor'] }),
+    );
+  });
+
+  it('leaves the email alone when the form does not show an Email field (a family role)', async () => {
+    const withoutEmail = Object.fromEntries(Object.entries(details).filter(([key]) => key !== 'email'));
+    await expect(updatePersonAction(idle, formOf({ ...withoutEmail, roles: 'guardian' }))).rejects.toThrow(
+      `NEXT_REDIRECT ${personPath(IDS.person)}`,
+    );
+    const patch = h.people.update.mock.calls[0]?.[2] as Record<string, unknown>;
+    // Undefined means "unchanged": the service only writes the fields that are set.
+    expect(patch.email).toBeUndefined();
+  });
+
   it('refreshes the person page and opens it after saving', async () => {
     await expect(updatePersonAction(idle, formOf(details))).rejects.toThrow(`NEXT_REDIRECT ${personPath(IDS.person)}`);
     expect(h.revalidatePath).toHaveBeenCalledWith(personPath(IDS.person));

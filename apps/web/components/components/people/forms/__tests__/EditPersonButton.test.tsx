@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import type { Person, PersonSummary } from '@buxa/contracts';
-import { CAMP_ROLES, requirePresent, settle } from '@buxa/domain';
+import { requirePresent, settle } from '@buxa/domain';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { Dialog as ConfirmDialog } from '@/components/components';
 import { PeopleTable } from '@/components/components/people';
@@ -22,7 +22,7 @@ const ROW = {
   givenName: 'Ana',
   familyName: 'Lee',
   preferredName: null,
-  roles: [CAMP_ROLES[0]],
+  roles: ['participant'],
   status: null,
   onSite: null,
   archived: false,

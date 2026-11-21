@@ -36,10 +36,22 @@ describe('PersonForm (create): the invite button by role', () => {
     act(() => host.querySelector<HTMLInputElement>(`input[name="roles"][value="${value}"]`)?.click());
   const sendButton = () => Array.from(host.querySelectorAll('button')).find(b => b.textContent === 'Send invite');
 
-  it('an instructor gets an enabled Send invite beside the Email field', () => {
+  const type = (name: string, value: string) =>
+    act(() => {
+      const input = host.querySelector<HTMLInputElement>(`input[name="${name}"]`);
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, value);
+      input?.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+  it('an instructor gets a Send invite beside the Email field, disabled until the email is valid', () => {
     click('instructor');
 
     expect(sendButton()).toBeDefined();
+    // Empty email: the invite waits.
+    expect(sendButton()?.disabled).toBe(true);
+    type('email', 'not-an-email');
+    expect(sendButton()?.disabled).toBe(true);
+    type('email', 'teacher@example.com');
     expect(sendButton()?.disabled).toBe(false);
     expect(host.textContent).not.toContain('Invites for this role are coming soon.');
   });

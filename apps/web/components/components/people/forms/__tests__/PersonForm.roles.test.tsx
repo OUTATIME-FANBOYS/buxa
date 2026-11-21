@@ -18,7 +18,7 @@ vi.mock('@buxa/server/composers/people/updatePersonAction', () => ({
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-describe('PersonForm: roles are single-choice radios in both modes', () => {
+describe('PersonForm: roles are checkboxes in both modes', () => {
   let root: Root;
   let host: HTMLDivElement;
   beforeEach(() => {
@@ -52,37 +52,31 @@ describe('PersonForm: roles are single-choice radios in both modes', () => {
   it.each([
     ['add', () => renderAdd()],
     ['edit', () => renderEdit(PERSON)],
-  ])('%s: offers every role as a radio, never a checkbox, under the Roles heading', (_mode, render) => {
+  ])('%s: offers every role as a checkbox, never a radio, under the Roles heading', (_mode, render) => {
     render();
     const inputs = Array.from(host.querySelectorAll<HTMLInputElement>('input[name="roles"]'));
     // The roles render in two groups (Family first), so compare as sets of values.
     expect(inputs.map(input => input.value).sort()).toEqual([...CAMP_ROLES].sort());
-    expect(inputs.every(input => input.type === 'radio')).toBe(true);
+    expect(inputs.every(input => input.type === 'checkbox')).toBe(true);
     expect(h.legend('Roles *')).toBeDefined();
-    expect(host.textContent).toContain('Choose one. Select it again to clear it.');
-    expect(host.textContent).not.toContain('Choose everything that applies.');
+    expect(host.textContent).toContain('Choose everything that applies.');
+    expect(host.textContent).not.toContain('Choose one.');
   });
 
-  it('adding: choosing another role replaces the first, and choosing the chosen role again clears it', () => {
+  it('adding: several roles can be chosen at once, and a checked role clears when clicked again', () => {
     renderAdd();
     click('camper');
-    expect(h.checkedRoles()).toEqual(['camper']);
     click('instructor');
+    expect(h.checkedRoles()).toEqual(['camper', 'instructor']);
+    click('camper');
     expect(h.checkedRoles()).toEqual(['instructor']);
-    click('instructor');
-    expect(h.checkedRoles()).toEqual([]);
   });
 
-  it('editing: the person’s role is pre-selected, and clearing it leaves none chosen', () => {
-    renderEdit({ ...PERSON, roles: ['instructor'] });
-    expect(h.checkedRoles()).toEqual(['instructor']);
-    click('instructor');
-    expect(h.checkedRoles()).toEqual([]);
-  });
-
-  it('editing: a person with several roles pre-selects the first one only', () => {
-    renderEdit({ ...PERSON, roles: ['participant', 'instructor'] });
-    expect(h.checkedRoles()).toEqual(['participant']);
+  it('editing: every role the person has is checked, and another can be added', () => {
+    renderEdit({ ...PERSON, roles: ['guardian', 'instructor'] });
+    expect(h.checkedRoles()).toEqual(['guardian', 'instructor']);
+    click('organizer');
+    expect(h.checkedRoles()).toEqual(['guardian', 'instructor', 'organizer']);
   });
 
   it('the Family and Staff and participants groups are kept in both modes', () => {
@@ -93,7 +87,7 @@ describe('PersonForm: roles are single-choice radios in both modes', () => {
   });
 });
 
-describe('PersonForm: the Household section shows for a family role in both modes', () => {
+describe('PersonForm: which email fields show depends on the roles', () => {
   let root: Root;
   let host: HTMLDivElement;
   beforeEach(() => {
@@ -124,50 +118,75 @@ describe('PersonForm: the Household section shows for a family role in both mode
   const h = formHelpers(() => host);
   const click = (value: CampRole) => act(() => h.role(value)?.click());
 
-  it('adding: no Household section until a family role is chosen', () => {
+  it('nothing selected: neither Email nor Household', () => {
     renderAdd();
-    expect(h.legend('Household')).toBeUndefined();
-    click('instructor');
+    expect(h.input('email')).toBeNull();
+    expect(h.input('householdEmail')).toBeNull();
     expect(h.legend('Household')).toBeUndefined();
   });
 
-  it('adding a camper: Household with the existing and new household fields, the relationship and Household email', () => {
+  it('a family role only (Camper): Household email, Household, and no Email', () => {
     renderAdd();
     click('camper');
     expect(h.legend('Household')).toBeDefined();
     expect(host.textContent).toContain(ADD_PERSON_INTRO);
     expect(h.select('householdId')).not.toBeNull();
     expect(h.input('newHouseholdName')).not.toBeNull();
-    expect(h.input('relationship')).not.toBeNull();
     expect(h.input('householdEmail')).not.toBeNull();
     expect(h.label('Household email')).toBeDefined();
+    expect(h.input('email')).toBeNull();
     expect(host.textContent).not.toContain('Kept with the household.');
   });
 
-  it('adding a parent or guardian: the Household section and Household email, without the relationship', () => {
+  it('a parent or guardian: Household email and no Email, and no relationship', () => {
     renderAdd();
+    click('guardian');
+    expect(h.input('householdEmail')).not.toBeNull();
+    expect(h.input('email')).toBeNull();
+    expect(h.input('relationship')).toBeNull();
+  });
+
+  it('a staff or participant role only: Email and no Household', () => {
+    renderAdd();
+    click('participant');
+    expect(h.input('email')).not.toBeNull();
+    expect(h.label('Email')).toBeDefined();
+    expect(h.legend('Household')).toBeUndefined();
+    expect(h.input('householdEmail')).toBeNull();
+  });
+
+  it('a family role and a staff role: Household email and Email, each with its own label', () => {
+    renderAdd();
+    click('guardian');
+    click('instructor');
+    expect(h.input('householdEmail')).not.toBeNull();
+    expect(h.input('email')).not.toBeNull();
+    expect(h.label('Household email')).toBeDefined();
+    expect(h.label('Email')).toBeDefined();
+  });
+
+  it('a family role is dropped: the Household email goes and the Email comes back for a staff role', () => {
+    renderAdd();
+    click('camper');
+    click('instructor');
+    click('camper');
+    expect(h.input('householdEmail')).toBeNull();
+    expect(h.input('email')).not.toBeNull();
+  });
+
+  it('editing a camper: Household email, no Email', () => {
+    renderEdit({ ...PERSON, roles: ['camper'] });
+    expect(h.input('householdEmail')).not.toBeNull();
+    expect(h.input('email')).toBeNull();
+    expect(h.legend('Household')).toBeDefined();
+  });
+
+  it('editing a participant: Email, no Household; a role change shows the Household', () => {
+    renderEdit({ ...PERSON, roles: ['participant'] });
+    expect(h.input('email')).not.toBeNull();
+    expect(h.legend('Household')).toBeUndefined();
     click('guardian');
     expect(h.legend('Household')).toBeDefined();
     expect(h.input('householdEmail')).not.toBeNull();
-    expect(h.input('relationship')).toBeNull();
-    expect(h.label('Household email')).toBeDefined();
-  });
-
-  it('editing: the Household section shows for a family role the person already has', () => {
-    renderEdit({ ...PERSON, roles: ['guardian'] });
-    expect(h.legend('Household')).toBeDefined();
-    expect(h.select('householdId')).not.toBeNull();
-    expect(h.input('newHouseholdName')).not.toBeNull();
-    expect(h.input('householdEmail')).not.toBeNull();
-    expect(h.label('Household email')).toBeDefined();
-  });
-
-  it('editing: a role change shows and hides the section', () => {
-    renderEdit({ ...PERSON, roles: ['instructor'] });
-    expect(h.legend('Household')).toBeUndefined();
-    click('camper');
-    expect(h.legend('Household')).toBeDefined();
-    click('camper');
-    expect(h.legend('Household')).toBeUndefined();
   });
 });
