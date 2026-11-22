@@ -30,6 +30,7 @@ import {
   getPerson,
   listPeople,
   listPeoplePage,
+  peopleByEmail,
   requirePerson,
   searchPeople,
 } from './PgPersonQueries';
@@ -107,6 +108,10 @@ export class PgPeopleRepository implements PeopleRepository {
 
   get(userId: string, orgId: string, id: string): Promise<PersonRecord | null> {
     return withOrg(this.pool, userId, orgId, db => getPerson(db, id));
+  }
+
+  byEmail(userId: string, orgId: string, email: string): Promise<PersonRecord[]> {
+    return withOrg(this.pool, userId, orgId, db => peopleByEmail(db, email));
   }
 
   getMany(userId: string, orgId: string, ids: readonly string[]): Promise<PersonRecord[]> {

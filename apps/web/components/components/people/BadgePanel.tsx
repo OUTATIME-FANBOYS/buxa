@@ -1,4 +1,5 @@
 import { Pill } from '@/components/elements';
+import { BadgeReveal } from '@/components/components/badge';
 import { BadgeActions } from '@/components/components/people/forms';
 
 export interface BadgePanelProps {
@@ -11,7 +12,10 @@ export interface BadgePanelProps {
   canManage: boolean;
 }
 
-/** The badge (QR code) for the door. Whether one is active is shown in words; the code itself is only ever displayed at issue. */
+/**
+ * The badge (QR code) for the door. Whether one is active is shown in words. Admins and owners can show it on demand (and reprint it
+ * for a damaged card), and reissue it for a lost one. The code leaves the server only when Show or Reprint is pressed.
+ */
 export function BadgePanel({
   personId,
   personName,
@@ -32,13 +36,24 @@ export function BadgePanel({
       {archived ? (
         <p className="muted">Archived people cannot have a badge.</p>
       ) : canManage ? (
-        <BadgeActions
-          personId={personId}
-          hasActiveBadge={hasActiveBadge}
-          personName={personName}
-          roleLabel={roleLabel}
-          campName={campName}
-        />
+        <div className="stack">
+          {hasActiveBadge && (
+            <BadgeReveal
+              personId={personId}
+              personName={personName}
+              roleLabel={roleLabel}
+              campName={campName}
+              canReprint
+            />
+          )}
+          <BadgeActions
+            personId={personId}
+            hasActiveBadge={hasActiveBadge}
+            personName={personName}
+            roleLabel={roleLabel}
+            campName={campName}
+          />
+        </div>
       ) : (
         <p className="muted">Only admins can issue or revoke badges.</p>
       )}

@@ -101,16 +101,48 @@ export function credentialRepositoryContract(factory: RepositoryFactory): void {
       expect(await fx.repos.credentials.resolve(fx.actor.userId, fx.actor.orgId, tokenHash('mine'))).toBe(personId);
     });
 
-    it('audits credential.issue (with what it replaced) and credential.revoke', async () => {
+    it('audits credential.issue for a first badge, badge.reissue when it replaces one, and credential.revoke', async () => {
       const personId = await newPerson();
       await fx.repos.credentials.issue(fx.actor, personId, tokenHash('1'), '2027-06-01T09:00:00.000Z');
       await fx.repos.credentials.issue(fx.actor, personId, tokenHash('2'), '2027-06-02T09:00:00.000Z');
       await fx.repos.credentials.revoke(fx.actor, personId, '2027-06-03T09:00:00.000Z');
-      expect((await fx.auditActions()).filter(a => a.startsWith('credential.'))).toEqual([
+      expect((await fx.auditActions()).filter(a => a.startsWith('credential.') || a.startsWith('badge.'))).toEqual([
         'credential.issue',
-        'credential.issue',
+        'badge.reissue',
         'credential.revoke',
       ]);
+    });
+
+    it('keeps the sealed copy of the active badge, reveals it and audits the action', async () => {
+      const personId = await newPerson();
+      const sealed = { ciphertext: Buffer.alloc(22, 5), iv: Buffer.alloc(12, 6), authTag: Buffer.alloc(16, 7) };
+      const badge = await fx.repos.credentials.issue(
+        fx.actor,
+        personId,
+        tokenHash('sealed'),
+        '2027-06-01T09:00:00.000Z',
+        sealed,
+      );
+      const revealed = await fx.repos.credentials.reveal(fx.actor, personId, 'badge.view');
+      expect(revealed).toEqual({ credentialId: badge.id, sealed });
+      await fx.repos.credentials.reveal(fx.actor, personId, 'badge.reprint');
+      expect((await fx.auditActions()).filter(a => a.startsWith('badge.'))).toEqual(['badge.view', 'badge.reprint']);
+    });
+
+    it('reveals a badge issued without a sealed copy as sealed null, and nothing for a person with no active badge', async () => {
+      const personId = await newPerson();
+      await fx.repos.credentials.issue(fx.actor, personId, tokenHash('plain'), '2027-06-01T09:00:00.000Z');
+      expect(await fx.repos.credentials.reveal(fx.actor, personId, 'badge.view')).toMatchObject({ sealed: null });
+      await fx.repos.credentials.revoke(fx.actor, personId, '2027-06-02T09:00:00.000Z');
+      expect(await fx.repos.credentials.reveal(fx.actor, personId, 'badge.view')).toBeNull();
+    });
+
+    it('a revoked badge keeps no sealed copy after it is replaced or revoked', async () => {
+      const personId = await newPerson();
+      const sealed = { ciphertext: Buffer.alloc(22, 1), iv: Buffer.alloc(12, 2), authTag: Buffer.alloc(16, 3) };
+      await fx.repos.credentials.issue(fx.actor, personId, tokenHash('old-sealed'), '2027-06-01T09:00:00.000Z', sealed);
+      await fx.repos.credentials.issue(fx.actor, personId, tokenHash('new-plain'), '2027-06-02T09:00:00.000Z');
+      expect(await fx.repos.credentials.reveal(fx.actor, personId, 'badge.view')).toMatchObject({ sealed: null });
     });
   });
 }

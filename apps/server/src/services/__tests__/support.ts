@@ -4,6 +4,10 @@ import { InMemoryStore } from '../../__tests__/fakes';
 import type { Repositories } from '../../repositories';
 import { createAttendanceService } from '../attendance/createAttendanceService';
 import { createCredentialService } from '../credentials/createCredentialService';
+import { createBadgeCipher, parseBadgeKey } from '../../credentials/badgeCipher';
+
+/** A fixed test key (32 bytes, base64). Never a real key. */
+export const TEST_BADGE_KEY = Buffer.alloc(32, 3).toString('base64');
 import { createMembershipService } from '../memberships/createMembershipService';
 import { createPeopleService } from '../people/createPeopleService';
 import type { InMemoryClassRepository } from '../../classes/InMemoryClassRepository';
@@ -77,6 +81,7 @@ export async function createCamp(timeZone = 'UTC', start = '2027-07-10T12:00:00Z
       attendance: repos.attendance,
       orgs: repos.orgs,
       clock,
+      cipher: createBadgeCipher(() => parseBadgeKey(TEST_BADGE_KEY)),
     }),
     attendance: createAttendanceService({
       attendance: repos.attendance,
