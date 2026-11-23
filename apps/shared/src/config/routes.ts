@@ -21,6 +21,8 @@ export const ROUTES = {
   // Sessions: date ranges that hold classes, and their enrolments. Reading needs events:read; creating, enrolling and importing need classes:manage.
   // The old /camp/classes addresses redirect here (apps/web/next.config.ts).
   sessions: '/camp/sessions',
+  // A teacher's own classes, grouped by session. Read only; teachers only (anyone else gets not found).
+  myClasses: '/camp/my-classes',
   newSession: '/camp/sessions/new',
   sessionImport: '/camp/sessions/import',
   sessionImportTemplate: '/camp/sessions/import/template',

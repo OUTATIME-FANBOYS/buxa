@@ -34,7 +34,6 @@ const ada: PersonSummary = {
   id: PERSON,
   givenName: 'Ada',
   familyName: 'Lovelace',
-  preferredName: null,
   roles: ['camper'],
   status: 'valid',
   onSite: false,

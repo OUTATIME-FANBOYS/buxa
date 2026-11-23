@@ -144,6 +144,7 @@ describe('CampFrame', () => {
       'Agents',
       'People',
       'Team access',
+      'Reports',
     ]);
     expect(Children.toArray(frame.props.children)[0]).toBe('THE-PAGE');
   });

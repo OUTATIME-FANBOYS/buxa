@@ -6,7 +6,6 @@ import { PersonHeader } from '@/components/components/people';
 const person = {
   givenName: 'Ada',
   familyName: 'Lee',
-  preferredName: null,
   roles: [],
   status: 'valid',
   onSite: false,
@@ -33,6 +32,40 @@ describe('PersonHeader', () => {
     expect(html).toContain('<p class="muted people-email">ada@example.test</p>');
     expect(html.indexOf('<h1>')).toBeLessThan(html.indexOf('ada@example.test'));
     expect(renderToStaticMarkup(<PersonHeader person={person} />)).not.toContain('people-email');
+  });
+
+  it('shows date of birth and phone on one muted line under the email, when the server sends them', () => {
+    const html = renderToStaticMarkup(
+      <PersonHeader
+        person={{ ...person, email: 'ada@example.test', dateOfBirth: '2010-03-12', phone: '+1 555 0100' }}
+      />,
+    );
+    expect(html).toContain('<p class="muted people-contact">Born 12 Mar 2010 · +1 555 0100</p>');
+    expect(html.indexOf('ada@example.test')).toBeLessThan(html.indexOf('Born 12 Mar 2010'));
+  });
+
+  it('leaves out whichever contact value is empty, and no line when both are', () => {
+    const onlyPhone = renderToStaticMarkup(
+      <PersonHeader person={{ ...person, dateOfBirth: null, phone: '+1 555 0100' }} />,
+    );
+    expect(onlyPhone).toContain('<p class="muted people-contact">+1 555 0100</p>');
+    expect(onlyPhone).not.toContain('Born');
+
+    const onlyBorn = renderToStaticMarkup(
+      <PersonHeader person={{ ...person, dateOfBirth: '2010-03-12', phone: '  ' }} />,
+    );
+    expect(onlyBorn).toContain('<p class="muted people-contact">Born 12 Mar 2010</p>');
+
+    const neither = renderToStaticMarkup(<PersonHeader person={{ ...person, dateOfBirth: null, phone: null }} />);
+    expect(neither).not.toContain('people-contact');
+  });
+
+  it('shows neither when the server withholds them (a role without contact access)', () => {
+    const html = renderToStaticMarkup(
+      <PersonHeader person={{ ...person, dateOfBirth: null, email: null, phone: null }} />,
+    );
+    expect(html).not.toContain('people-contact');
+    expect(html).not.toContain('Born');
   });
 
   it('places the actions on the right of the name block', () => {

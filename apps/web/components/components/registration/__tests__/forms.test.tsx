@@ -10,13 +10,25 @@ vi.mock('@/actions/registration', () => ({
 }));
 
 const SESSIONS = [
-  { id: 's-1', name: 'Art' },
-  { id: 's-2', name: 'Robotics' },
+  { id: 's-1', name: 'Art', classes: [] },
+  { id: 's-2', name: 'Robotics', classes: [] },
 ];
+
+const CAMPERS = [{ id: 'c-1', name: 'Ada Lovelace' }];
 
 describe('RegisterForm: sections, one asterisk, no fieldsets', () => {
   it('draws each group as a heading and a section, never a fieldset box', () => {
-    const html = renderToStaticMarkup(<RegisterForm formId="f-1" sessions={SESSIONS} fields={[]} variant="dialog" />);
+    const html = renderToStaticMarkup(
+      <RegisterForm
+        formId="f-1"
+        sessions={SESSIONS}
+        campers={CAMPERS}
+        timeZone="UTC"
+        clockFormat="24h"
+        fields={[]}
+        variant="dialog"
+      />,
+    );
     expect(html).not.toContain('<fieldset');
     expect(html).not.toContain('<legend');
     expect(html).toContain('Parent or guardian');
@@ -24,7 +36,17 @@ describe('RegisterForm: sections, one asterisk, no fieldsets', () => {
   });
 
   it('asks each required question once: one asterisk, never a double one', () => {
-    const html = renderToStaticMarkup(<RegisterForm formId="f-1" sessions={SESSIONS} fields={[]} variant="dialog" />);
+    const html = renderToStaticMarkup(
+      <RegisterForm
+        formId="f-1"
+        sessions={SESSIONS}
+        campers={CAMPERS}
+        timeZone="UTC"
+        clockFormat="24h"
+        fields={[]}
+        variant="dialog"
+      />,
+    );
     expect(html).not.toContain('* *');
     expect(html).not.toContain('First name *');
     expect(html).not.toContain('Name *');
@@ -35,22 +57,67 @@ describe('RegisterForm: sections, one asterisk, no fieldsets', () => {
   });
 
   it('turns off the browser bubbles, so the app shows its own errors', () => {
-    const html = renderToStaticMarkup(<RegisterForm formId="f-1" sessions={SESSIONS} fields={[]} variant="dialog" />);
+    const html = renderToStaticMarkup(
+      <RegisterForm
+        formId="f-1"
+        sessions={SESSIONS}
+        campers={CAMPERS}
+        timeZone="UTC"
+        clockFormat="24h"
+        fields={[]}
+        variant="dialog"
+      />,
+    );
     expect(html).toContain('<form noValidate=""');
   });
 
   it('leaves the buttons to the dialog footer in a dialog, tied by id', () => {
     const html = renderToStaticMarkup(
-      <RegisterForm formId="f-1" id="take-form" sessions={SESSIONS} fields={[]} variant="dialog" />,
+      <RegisterForm
+        formId="f-1"
+        id="take-form"
+        sessions={SESSIONS}
+        campers={CAMPERS}
+        timeZone="UTC"
+        clockFormat="24h"
+        fields={[]}
+        variant="dialog"
+      />,
     );
     expect(html).toContain('id="take-form"');
     expect(html).not.toContain('Record registration');
   });
 
-  it('gives each session checkbox a gap before its label, in a check group', () => {
-    const html = renderToStaticMarkup(<RegisterForm formId="f-1" sessions={SESSIONS} fields={[]} variant="dialog" />);
+  it('lists the children to choose from People, as checkboxes, before any class', () => {
+    const html = renderToStaticMarkup(
+      <RegisterForm
+        formId="f-1"
+        sessions={SESSIONS}
+        campers={CAMPERS}
+        timeZone="UTC"
+        clockFormat="24h"
+        fields={[]}
+        variant="dialog"
+      />,
+    );
     expect(html).toContain('check-group');
-    expect(html).toContain('>Art<');
+    expect(html).toContain('>Ada Lovelace<');
+    expect(html).not.toContain('name="selections"');
+  });
+
+  it('says what to do when no child is in People yet', () => {
+    const html = renderToStaticMarkup(
+      <RegisterForm
+        formId="f-1"
+        sessions={SESSIONS}
+        campers={[]}
+        timeZone="UTC"
+        clockFormat="24h"
+        fields={[]}
+        variant="dialog"
+      />,
+    );
+    expect(html).toContain('No children are in People yet');
   });
 });
 

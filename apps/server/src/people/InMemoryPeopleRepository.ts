@@ -29,7 +29,6 @@ const toRecord = (p: StoredPerson): PersonRecord => ({
   id: p.id,
   givenName: p.givenName,
   familyName: p.familyName,
-  preferredName: p.preferredName,
   dateOfBirth: p.dateOfBirth,
   email: p.email,
   phone: p.phone,
@@ -48,10 +47,6 @@ function applyPatch(person: StoredPerson, patch: PersonPatchRecord): string[] {
   if (patch.familyName !== undefined) {
     person.familyName = patch.familyName;
     changed.push('familyName');
-  }
-  if (patch.preferredName !== undefined) {
-    person.preferredName = patch.preferredName;
-    changed.push('preferredName');
   }
   if (patch.dateOfBirth !== undefined) {
     person.dateOfBirth = patch.dateOfBirth;
@@ -88,7 +83,6 @@ export class InMemoryPeopleRepository implements PeopleRepository {
         orgId: actor.orgId,
         givenName: input.givenName,
         familyName: input.familyName,
-        preferredName: input.preferredName,
         dateOfBirth: input.dateOfBirth,
         email: input.email,
         phone: input.phone,

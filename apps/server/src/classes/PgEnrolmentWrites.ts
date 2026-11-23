@@ -17,13 +17,13 @@ import { lockSession, promoteWaitlist } from './PgSeats';
  * by this transaction is not waited for, so nothing deadlocks.
  */
 
-interface LockedSession {
+export interface LockedSession {
   facts: GatheredEnrolmentFacts['session'];
   capacity: number;
 }
 
 /** Locks the camper's row. Row-level security makes a camper of another camp look missing. */
-async function lockCamper(db: Db, camperId: string): Promise<LocalDate | null> {
+export async function lockCamper(db: Db, camperId: string): Promise<LocalDate | null> {
   if (!isUuid(camperId)) {
     throw new CamperNotFoundError();
   }
@@ -39,7 +39,7 @@ async function lockCamper(db: Db, camperId: string): Promise<LocalDate | null> {
 }
 
 /** Locks the class's row and reads the facts the rule needs. The class's own name and ages are what the rule uses. */
-async function lockClass(db: Db, classId: string): Promise<LockedSession> {
+export async function lockClass(db: Db, classId: string): Promise<LockedSession> {
   if (!isUuid(classId)) {
     throw new ClassNotFoundError();
   }
@@ -76,7 +76,7 @@ async function lockClass(db: Db, classId: string): Promise<LockedSession> {
 }
 
 /** Places taken: enrolled campers plus unexpired holds (migration 0025). The rule must see the holds, or it would promise a seat the trigger refuses. */
-async function countTaken(db: Db, sessionId: string): Promise<number> {
+export async function countTaken(db: Db, sessionId: string): Promise<number> {
   const { rows } = await db.query<{ taken: number }>(`SELECT session_seats_taken($1)::int AS taken`, [sessionId]);
 
   return rows[0].taken;
@@ -120,7 +120,7 @@ export async function enrolInTransaction(
   return requireEnrolment(db, id);
 }
 
-async function insertEnrolment(
+export async function insertEnrolment(
   db: Db,
   actor: Actor,
   request: EnrolRequest,

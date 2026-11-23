@@ -34,7 +34,7 @@ Paste secrets only into Vercel's form, never into the repo or a chat.
 ## Database requirements
 
 - Postgres 15 or newer. Row-level security is how tenants are kept apart, so it is not optional.
-- Migrations are the `.sql` files in `packages/db/migrations`, applied in filename order. The current set is `0001` to `0042`. Do not add a migration under a number that is already used.
+- Migrations are the `.sql` files in `packages/db/migrations`, applied in filename order. The current set is `0001` to `0045`. Do not add a migration under a number that is already used.
   There are two logins. They must be different, and the web app must only ever hold the restricted one.
   The names: `buxa_app` is a `NOLOGIN` role that migration `0001` creates; tenant queries switch to it. `buxa_runtime` is the runtime login the operator creates (see "Operator steps"). The migration login is whatever login `MIGRATION_DATABASE_URL` names. On Supabase it may be the owner role (`postgres`), which `docs/security.md` (section 7.5) describes as a permanent limit.
 
@@ -120,6 +120,23 @@ The rules are: **the database accepts connections only from the deploy job and f
 ## Badge encryption key (migration 0041)
 
 Migration `0041` adds an encrypted copy of each active badge's token (`credentials.token_ciphertext`, `token_iv`, `token_auth_tag`). The key that seals them is `BADGE_ENCRYPTION_KEY`, read only by the server when a badge is issued or shown (`apps/server/src/credentials/badgeCipher.ts`). Set it in Production and in Preview, and mark it Sensitive in Vercel's form, before the first badge is issued there. Badges issued before `0041` have no copy: the camp reissues them to show them. Do not put the value in a repository, a log or a chat.
+
+## Preferred name removal (migration 0044)
+
+Migration `0044` clears every stored preferred name and drops `people.preferred_name` (release `v0.3.2`, the `drop-approved` label). A person is shown by first name and family name only. Releases before `v0.3.2` still select the column, so do not run `0043` against a database that a build older than `v0.3.2` is serving.
+
+## Scheduled job: expired seat holds (migration 0045)
+
+`GET /api/cron/release-expired-holds` releases the expired seat holds in every camp and promotes the waitlists. Expired holds already stop counting on their own, so the job only tidies the table. It is safe to run twice.
+
+- **Secret:** `CRON_SECRET`, a random value of 16 characters or more (for example `openssl rand -base64 32`). Set it in Production and Preview, marked **Sensitive**. Vercel Cron sends it as `Authorization: Bearer <CRON_SECRET>`. With no secret set the route answers 503 and does nothing; a wrong or missing header gets 401.
+- **Schedule:** add this to `apps/web/vercel.json` (or set it in the project's Cron Jobs settings). A five-minute schedule needs a plan that allows it; on a plan that allows only daily runs use `0 3 * * *`.
+
+```json
+"crons": [{ "path": "/api/cron/release-expired-holds", "schedule": "*/5 * * * *" }]
+```
+
+The job runs as one member of each camp that has expired holds, because row-level security shows a camp's rows only to its members. Its audit entries carry no user (the system). The camp list comes from `buxa_orgs_with_expired_holds()`, a definer function that returns only ids.
 
 ## Phase 3 migrations (0023 to 0040)
 

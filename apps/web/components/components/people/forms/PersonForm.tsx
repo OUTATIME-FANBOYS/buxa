@@ -27,7 +27,7 @@ const INVITE_ROLE: CampRole = 'instructor';
  */
 export type EditablePerson = Pick<
   Person,
-  'id' | 'givenName' | 'familyName' | 'preferredName' | 'roles' | 'dateOfBirth' | 'email' | 'phone' | 'households'
+  'id' | 'givenName' | 'familyName' | 'roles' | 'dateOfBirth' | 'email' | 'phone' | 'households'
 >;
 
 interface PersonFormCommon {
@@ -47,8 +47,7 @@ interface PersonFormCommon {
 /**
  * The one person form, in two modes. `create` adds a person: with `household` (from the guardian's page) the person joins that
  * household, otherwise the form offers the camp's households or a new one. `edit` changes a person's details, pre-filled from
- * `person`, including the person's household. The update does not move anyone between households yet, so the household fields
- * show the person's current household but do not change it on save.
+ * `person`, including the person's household: the household select starts on it, and saving moves, creates or leaves it.
  * Roles are checkboxes in both modes, and every checked role is saved. Which email fields show depends on the roles: a family role
  * shows Household email (and no Email); a staff or participant role shows Email; both show both.
  */
@@ -119,6 +118,8 @@ export function PersonForm(props: PersonFormProps) {
   const currentHouseholds = person ? toHouseholdChoices(person.households) : [];
   const choices = [...households, ...currentHouseholds.filter(c => !households.some(h => h.id === c.id))];
   const defaultHouseholdId = currentHouseholds[0]?.id ?? '';
+  const defaultRelationship =
+    person?.households[0]?.members.find(m => m.personId === person.id)?.relationship ?? undefined;
 
   return (
     <form
@@ -154,17 +155,6 @@ export function PersonForm(props: PersonFormProps) {
           autoComplete="off"
           maxLength={80}
         />
-        {person && (
-          <TextField
-            label="Preferred name"
-            name="preferredName"
-            defaultValue={person.preferredName ?? undefined}
-            error={err('preferredName')}
-            hint="The name people use, if it is not the first name."
-            autoComplete="off"
-            maxLength={80}
-          />
-        )}
       </div>
 
       <div className="people-form-half">
@@ -228,7 +218,9 @@ export function PersonForm(props: PersonFormProps) {
           household={household}
           choices={choices}
           defaultHouseholdId={defaultHouseholdId}
-          showRelationship={!isEdit && roles.has('camper')}
+          // Editing always shows it: a move to another household needs one, and it is pre-filled with the current one.
+          showRelationship={isEdit || roles.has('camper')}
+          defaultRelationship={defaultRelationship}
           err={err}
         />
       )}

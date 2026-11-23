@@ -36,14 +36,12 @@ export function peopleRepositoryContract(factory: RepositoryFactory): void {
           fx.actor,
           samplePerson({
             roles: ['guardian', 'camper'],
-            preferredName: 'Ada',
             email: 'ada@example.test',
             phone: '+44 20 0000 0000',
           }),
         );
         expect(created.roles).toEqual(['camper', 'guardian']);
         expect(created).toMatchObject({
-          preferredName: 'Ada',
           email: 'ada@example.test',
           phone: '+44 20 0000 0000',
           dateOfBirth: null,
@@ -181,18 +179,14 @@ export function peopleRepositoryContract(factory: RepositoryFactory): void {
         expect(await fx.repos.people.getMany(fx.actor.userId, fx.actor.orgId, [])).toEqual([]);
       });
 
-      it('search is case- and accent-insensitive across given, family and preferred names', async () => {
+      it('search is case- and accent-insensitive across given and family names', async () => {
         await fx.repos.people.create(fx.actor, samplePerson({ givenName: 'José', familyName: 'García' }));
-        await fx.repos.people.create(
-          fx.actor,
-          samplePerson({ givenName: 'Ann', familyName: 'Smith', preferredName: 'Zoë' }),
-        );
+        await fx.repos.people.create(fx.actor, samplePerson({ givenName: 'Ann', familyName: 'Smith' }));
         const names = async (q: string) =>
           (await fx.repos.people.search(fx.actor.userId, fx.actor.orgId, q, 20)).map(p => p.givenName);
         expect(await names('jose')).toEqual(['José']);
         expect(await names('GARCIA')).toEqual(['José']);
         expect(await names('  josé   garcía ')).toEqual(['José']);
-        expect(await names('zoe')).toEqual(['Ann']);
         expect(await names('ann smith')).toEqual(['Ann']);
         expect(await names('ann garcia')).toEqual([]);
         expect(await names('   ')).toEqual([]);

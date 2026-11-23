@@ -1,9 +1,36 @@
 import type { Member } from '@buxa/contracts';
 import { Avatar } from '@/components/elements';
 import { Pill } from '@/components/elements';
-import { ROLE_LABEL, ROLE_TONE } from '@buxa/shared';
+import { ROLE_LABEL, ROLE_TONE, expiryDay, expiryState, fmt } from '@buxa/shared';
 import { firstNameOf } from '@buxa/shared/names';
 import { CheckInToggle } from './CheckInToggle';
+
+/**
+ * Team access that has ended shows "Expired"; access ending within 14 days shows its date. A later end, or none, shows nothing.
+ * The server already refuses an expired member; this pill only tells the reader why.
+ */
+function AccessEnds({ expiresAt, now }: { expiresAt: string | null; now: Date }) {
+  if (!expiresAt) {
+    return null;
+  }
+  const state = expiryState(expiresAt, now);
+  if (state === 'expired') {
+    return (
+      <Pill tone="crit" dot={false}>
+        Expired
+      </Pill>
+    );
+  }
+  if (state === 'soon') {
+    return (
+      <Pill tone="warn" dot={false}>
+        {`Expires ${fmt(expiryDay(expiresAt), true)}`}
+      </Pill>
+    );
+  }
+
+  return null;
+}
 
 /**
  * Email is shown only where the reader may see it (admins and above); everyone else sees names and roles.
@@ -21,6 +48,7 @@ export function MembersTable({
 }) {
   const withCheckIn = teacherOptions !== undefined && teacherOptions.length > 0;
   const checkIn = new Map((teacherOptions ?? []).map(t => [t.userId, t.on]));
+  const now = new Date();
 
   return (
     <div className="table-wrap">
@@ -46,6 +74,7 @@ export function MembersTable({
                 <Pill tone={ROLE_TONE[m.role]} dot={false}>
                   {ROLE_LABEL[m.role]}
                 </Pill>
+                <AccessEnds expiresAt={m.expiresAt} now={now} />
               </td>
               {withCheckIn && (
                 <td>

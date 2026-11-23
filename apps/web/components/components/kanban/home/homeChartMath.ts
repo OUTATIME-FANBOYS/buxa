@@ -1,4 +1,4 @@
-import type { DayCount, MembershipStatusCounts } from '@buxa/shared/camp/campHomeTypes';
+import type { DayCount } from '@buxa/shared/camp/campHomeTypes';
 
 /** The ranges the check-in chart offers, in days, ending today. */
 export const CHECK_IN_RANGES = [7, 14, 30] as const;
@@ -26,44 +26,4 @@ export function chartTotals(days: readonly DayCount[]): { total: number; busiest
   }
 
   return { total, busiest: busiest && busiest.count > 0 ? busiest : null };
-}
-
-/** Which bars get an axis label: every bar for up to 14 days, then every third, always the last. */
-export const showAxisLabel = (index: number, count: number): boolean =>
-  index === count - 1 || index % (count > 14 ? 3 : 1) === 0;
-
-export interface DonutSegment {
-  key: keyof MembershipStatusCounts;
-  label: string;
-  count: number;
-  percent: number;
-  dash: number;
-  offset: number;
-}
-
-/** The donut's segments in a fixed order, skipping empty ones. `length` is the ring's circumference; dash and offset are in the same units. */
-export function donutSegments(counts: MembershipStatusCounts, length: number): DonutSegment[] {
-  const order: { key: keyof MembershipStatusCounts; label: string }[] = [
-    { key: 'valid', label: 'Valid' },
-    { key: 'notStarted', label: 'Not started' },
-    { key: 'expired', label: 'Expired' },
-    { key: 'none', label: 'None (includes revoked)' },
-  ];
-  const total = order.reduce((sum, o) => sum + counts[o.key], 0);
-  if (total === 0) {
-    return [];
-  }
-  let cumulative = 0;
-  const segments: DonutSegment[] = [];
-  for (const { key, label } of order) {
-    const count = counts[key];
-    if (count === 0) {
-      continue;
-    }
-    const dash = (count / total) * length;
-    segments.push({ key, label, count, percent: Math.round((count / total) * 100), dash, offset: -cumulative });
-    cumulative += dash;
-  }
-
-  return segments;
 }

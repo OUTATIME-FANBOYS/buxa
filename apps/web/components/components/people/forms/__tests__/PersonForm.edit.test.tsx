@@ -21,7 +21,6 @@ const person: EditablePerson = {
   id: 'p-1',
   givenName: 'Ada',
   familyName: 'Lee',
-  preferredName: 'Annie',
   roles: ['participant'],
   dateOfBirth: '2016-05-02',
   email: 'ada@example.com',
@@ -41,7 +40,7 @@ describe('PersonForm (edit): the Edit person pop-up and page', () => {
     const html = inUi(<PersonForm mode="edit" households={[]} person={person} variant="dialog" />);
     expect(html).toContain('name="givenName" value="Ada"');
     expect(html).toContain('name="familyName" value="Lee"');
-    expect(html).toContain('name="preferredName" value="Annie"');
+    expect(html).not.toContain('name="preferredName"');
     expect(html).toContain('value="2016-05-02"');
     expect(html).toContain('name="phone" value="0400 000 000"');
     expect(html).toContain('name="email" value="ada@example.com"');

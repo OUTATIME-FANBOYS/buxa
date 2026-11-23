@@ -31,11 +31,12 @@ export function registrationFormForm(form: FormData): PersonParsed<RegistrationF
 }
 
 /**
- * The values a family's registration posts, as the service expects them. Standard answers are named `standard.<key>`, custom
- * answers `custom.<key>`. Nothing here is trusted: the server validates the whole object against the published version.
+ * The values a family's registration posts, as the service expects them. Each selection is posted as `camperId|classId` (one
+ * child and one class). Standard answers are named `standard.<key>`, custom answers `custom.<key>`. Nothing here is trusted: the
+ * server validates the whole object against the published version and the classes against the form's sessions.
  */
 export function registrationSubmissionFromForm(form: FormData): {
-  sessionIds: string[];
+  selections: { camperId: string; classId: string }[];
   standard: Record<string, string>;
   custom: Record<string, string>;
 } {
@@ -46,6 +47,11 @@ export function registrationSubmissionFromForm(form: FormData): {
       custom[name.slice('custom.'.length)] = value;
     }
   }
+  const selections = fieldAll(form, 'selections').map(raw => {
+    const [camperId = '', classId = ''] = raw.split('|');
 
-  return { sessionIds: fieldAll(form, 'sessionIds'), standard, custom };
+    return { camperId, classId };
+  });
+
+  return { selections, standard, custom };
 }

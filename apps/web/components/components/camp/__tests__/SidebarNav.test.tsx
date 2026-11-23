@@ -21,6 +21,12 @@ describe('SidebarNav', () => {
     expect(html).toContain('<h2 class="nav-group-label">People</h2>');
     expect(html.match(/<h2/g)).toHaveLength(1);
   });
+  it('links Reports to its page inside the Admin group', () => {
+    const admin = [{ label: 'Admin', items: [{ href: '/camp/reports', label: 'Reports', icon: 'chart' }] }] as never;
+    const html = renderToStaticMarkup(<SidebarNav groups={admin} />);
+    expect(html).toContain('href="/camp/reports"');
+    expect(html).toContain('<h2 class="nav-group-label">Admin</h2>');
+  });
   it('marks the link for the current page as the current page', () => {
     const html = renderToStaticMarkup(<SidebarNav groups={groups} />);
     expect(html).toContain('aria-current="page"');

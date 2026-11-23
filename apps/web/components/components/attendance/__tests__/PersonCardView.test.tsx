@@ -4,7 +4,7 @@ import type { PersonCard } from '@buxa/shared';
 import { PersonCardView } from '@/components/components/attendance';
 
 const card = {
-  person: { id: 'p-1', givenName: 'Ada', familyName: 'Lee', preferredName: null, status: 'valid', roles: [] },
+  person: { id: 'p-1', givenName: 'Ada', familyName: 'Lee', status: 'valid', roles: [] },
   onSiteSince: '2027-07-03T09:00:00.000Z',
 } as unknown as PersonCard;
 

@@ -7,13 +7,20 @@ import { campClock } from '@buxa/server/composers/index.server';
 import { currentActor } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_ENROLMENTS, FORBIDDEN_READ } from '@buxa/shared';
 import {
+  loadActiveHolds,
   loadSessionPage,
   loadEnrolments,
   loadPeopleWithRole,
   loadTeacherAssignments,
   loadMembers,
 } from '@buxa/server/composers/index.server';
-import { ClassesTable, EnrolmentTable, instructorNames, PriceFact } from '@/components/components/classes';
+import {
+  ClassesTable,
+  ClassHoldsAndWaitlist,
+  EnrolmentTable,
+  instructorNames,
+  PriceFact,
+} from '@/components/components/classes';
 import {
   EditSessionButton,
   EnrolForm,
@@ -79,6 +86,9 @@ export async function ClassPage({
   }));
 
   const enrolments = selected ? await loadEnrolments(actor, selected.id) : null;
+  // Holds and the waitlist are seat work: staff with holds:manage see them (a viewer does not).
+  const holds = selected && can(actor, 'holds:manage') ? await loadActiveHolds(actor, selected.id) : null;
+  const waitlist = enrolments?.ok && canManage ? enrolments.value.filter(e => e.status === 'waitlisted') : [];
   const campers = selected && canManage ? await loadPeopleWithRole(actor, 'camper') : null;
   const dates = session.startsOn && session.endsOn ? `${session.startsOn} to ${session.endsOn}` : 'Dates not set yet';
 
@@ -186,6 +196,17 @@ export async function ClassPage({
               campers={campers.ok ? campers.value.map(c => ({ id: c.id, name: c.name })) : []}
               full={seatFor(selected.capacity, selected.seatsTaken).kind === 'full'}
               canOverride={can(actor, 'attendance:override')}
+            />
+          )}
+          {holds?.ok && (
+            <ClassHoldsAndWaitlist
+              sessionId={session.id}
+              classId={selected.id}
+              holds={holds.value.map(h => ({ id: h.id, householdName: h.householdName, expiresAt: h.expiresAt }))}
+              waitlist={waitlist.map(w => ({ id: w.id, camperName: w.camperName, enrolledAt: w.enrolledAt }))}
+              freePlaces={Math.max(0, selected.capacity - selected.seatsTaken)}
+              timeZone={timeZone}
+              clockFormat={clockFormat}
             />
           )}
           {!enrolments ? null : enrolments.ok ? (

@@ -12,7 +12,12 @@ import { assertAllowed } from '../../auth/authorize';
 import { assignedTo, teacherScopeOf } from '../../classes/teacherScope';
 import { badRequest, conflict, notFound } from '../../http/errors';
 import type { MembershipRecord } from '../../memberships/MembershipRepository';
-import type { PersonHouseholdLink, PersonPatchRecord, PersonRecord } from '../../people/PeopleRepository';
+import type {
+  HouseholdRecord,
+  PersonHouseholdLink,
+  PersonPatchRecord,
+  PersonRecord,
+} from '../../people/PeopleRepository';
 import { campToday } from '../shared/campDay';
 import { guard } from '../shared/errors';
 import { campZone, toHouseholds, toPersonMembership, toSummary, onSiteByPerson } from '../shared/views';
@@ -26,7 +31,7 @@ import {
   RELATIONSHIP_NEEDED,
 } from './rules';
 
-/** Blank text means "no value" for the optional contact fields and the preferred name. */
+/** Blank text means "no value" for the optional contact fields. */
 const blankToNull = (value: string | null): string | null => (value === null || value.trim() === '' ? null : value);
 
 function toPatchRecord(patch: PersonPatchInput): PersonPatchRecord {
@@ -36,9 +41,6 @@ function toPatchRecord(patch: PersonPatchInput): PersonPatchRecord {
   }
   if (patch.familyName !== undefined) {
     out.familyName = patch.familyName;
-  }
-  if (patch.preferredName !== undefined) {
-    out.preferredName = blankToNull(patch.preferredName);
   }
   if (patch.dateOfBirth !== undefined) {
     out.dateOfBirth = patch.dateOfBirth;
@@ -85,6 +87,24 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
 
   const todayFor = async (actor: Pick<Actor, 'userId' | 'orgId'>): Promise<LocalDate> =>
     campToday(clock, await campZone(orgs, actor));
+
+  /** Puts a person back in the household they were in before an edit (or out of any, when there was none). Used only to undo. */
+  async function restoreHousehold(actor: Actor, personId: string, before: HouseholdRecord | undefined): Promise<void> {
+    const now = (await people.householdsOf(actor.userId, actor.orgId, personId))[0];
+    if (now && now.id !== before?.id) {
+      await people.unlink(actor, now.id, personId);
+    }
+    const member = before?.members.find(m => m.personId === personId);
+    if (before && member) {
+      await people.link(actor, {
+        householdId: before.id,
+        personId,
+        relationship: member.relationship,
+        isGuardian: member.isGuardian,
+        canPickup: member.canPickup,
+      });
+    }
+  }
 
   /** The list rows for these people: memberships, on-site state and access status, as far as the actor may see them. */
   async function summarise(actor: Actor, records: readonly PersonRecord[]): Promise<PersonSummary[]> {
@@ -183,7 +203,34 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
     return undefined;
   }
 
-  return {
+  /**
+   * Refuses (409) to take a guardian out of a household when that leaves campers in it with no guardian. Read-only, so callers can
+   * run it before they write.
+   */
+  async function assertCanLeave(
+    actor: Pick<Actor, 'userId' | 'orgId'>,
+    household: HouseholdRecord,
+    personId: string,
+  ): Promise<void> {
+    const removed = household.members.find(m => m.personId === personId);
+    if (!removed?.isGuardian) {
+      return;
+    }
+    const others = household.members.filter(m => m.personId !== personId);
+    if (others.some(m => m.isGuardian)) {
+      return;
+    }
+    const companions = await people.getMany(
+      actor.userId,
+      actor.orgId,
+      others.map(m => m.personId),
+    );
+    if (companions.some(p => p.roles.includes('camper'))) {
+      throw conflict('A camper needs a parent or guardian in this household. Link another guardian first.');
+    }
+  }
+
+  const service: PeopleService = {
     async list(actor, query?: PersonListQuery): Promise<PersonSummary[]> {
       const scope = await teacherScopeOf(classes, actor);
       assertAllowed(actor, 'people:read', { assignedToClass: scope === null ? undefined : true });
@@ -247,7 +294,6 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
           {
             givenName: input.givenName,
             familyName: input.familyName,
-            preferredName: blankToNull(input.preferredName ?? null),
             dateOfBirth: input.dateOfBirth ?? null,
             email: blankToNull(input.email ?? null),
             phone: blankToNull(input.phone ?? null),
@@ -275,6 +321,22 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       const record = await guard(() => people.update(actor, id, toPatchRecord(patch)));
 
       return personView(actor, record, await todayFor(actor));
+    },
+
+    async updateWithHousehold(actor, id, patch, household) {
+      if (household === undefined) {
+        return service.update(actor, id, patch);
+      }
+      // The household moves first, so a refused household change (a camper's guardian rule, 400 or 409) saves nothing.
+      const before = (await people.householdsOf(actor.userId, actor.orgId, id))[0];
+      await service.setHousehold(actor, id, household, patch.roles);
+      try {
+        return await service.update(actor, id, patch);
+      } catch (error) {
+        // The details were refused after the household moved: put the household back, then report the original refusal.
+        await restoreHousehold(actor, id, before);
+        throw error;
+      }
     },
 
     async erase(actor, id) {
@@ -342,24 +404,99 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       if (!household) {
         throw notFound('Household not found');
       }
-      const removed = household.members.find(m => m.personId === personId);
-      if (removed?.isGuardian) {
-        const others = household.members.filter(m => m.personId !== personId);
-        const stillGuarded = others.some(m => m.isGuardian);
-        if (!stillGuarded) {
-          const companions = await people.getMany(
-            actor.userId,
-            orgId,
-            others.map(m => m.personId),
-          );
-          if (companions.some(p => p.roles.includes('camper'))) {
-            throw conflict('A camper needs a parent or guardian in this household. Link another guardian first.');
-          }
-        }
-      }
+      await assertCanLeave(actor, household, personId);
       const record = await guard(() => people.unlink(actor, householdId, personId));
 
       return (await toHouseholds(people, actor, [record], seesCustody(actor)))[0];
+    },
+
+    async setHousehold(actor, personId, input, roles) {
+      assertAllowed(actor, 'people:update');
+      const orgId = actor.orgId;
+      const record = await people.get(actor.userId, orgId, personId);
+      if (!record) {
+        throw notFound('Person not found');
+      }
+      const finalRoles = roles ?? record.roles;
+      const camper = finalRoles.includes('camper');
+      const newName = input.newHouseholdName?.trim() ?? '';
+      if (input.householdId !== undefined && newName !== '') {
+        throw badRequest('Choose an existing household or name a new one, not both.');
+      }
+      const current: HouseholdRecord | undefined = (await people.householdsOf(actor.userId, orgId, personId))[0];
+
+      if (input.householdId === undefined && newName === '') {
+        // Neither an existing household nor a name: the person leaves the household they are in.
+        if (!current) {
+          return;
+        }
+        if (camper) {
+          throw badRequest(CAMPER_NEEDS_GUARDIAN);
+        }
+        await assertCanLeave(actor, current, personId);
+        await guard(() => people.unlink(actor, current.id, personId));
+
+        return;
+      }
+
+      if (current && input.householdId === current.id) {
+        // Still in the same household: only the relationship can change, and only if one is given.
+        const member = current.members.find(m => m.personId === personId);
+        const relationship = input.relationship?.trim() ?? '';
+        if (relationship === '' || relationship === member?.relationship) {
+          return;
+        }
+        if (member?.canPickup) {
+          assertAllowed(actor, 'people:authorise_pickup');
+        }
+        await guard(() =>
+          people.link(actor, {
+            householdId: current.id,
+            personId,
+            relationship,
+            isGuardian: member?.isGuardian ?? isGuardianRole(finalRoles),
+            canPickup: member?.canPickup ?? false,
+          }),
+        );
+
+        return;
+      }
+
+      // Joining a household: an existing one, or a new one with this name. Everything is checked before anything is written.
+      const relationship = requireRelationship(input.relationship);
+      let existingId: string | undefined;
+      if (input.householdId !== undefined) {
+        const target = await people.getHousehold(actor.userId, orgId, input.householdId);
+        if (!target) {
+          throw badRequest('That household does not exist.');
+        }
+        if (camper && !target.members.some(m => m.personId !== personId && m.isGuardian)) {
+          throw badRequest(CAMPER_NEEDS_GUARDIAN);
+        }
+        existingId = target.id;
+      } else {
+        assertAllowed(actor, 'people:create');
+        if (camper) {
+          throw badRequest(CAMPER_NEEDS_GUARDIAN);
+        }
+      }
+      if (current) {
+        await assertCanLeave(actor, current, personId);
+      }
+      const householdId = existingId ?? (await guard(() => people.createHousehold(actor, newName))).id;
+      // A move does not carry pick-up authority over: the person is linked afresh, and pick-up needs its own grant.
+      await guard(() =>
+        people.link(actor, {
+          householdId,
+          personId,
+          relationship,
+          isGuardian: isGuardianRole(finalRoles),
+          canPickup: false,
+        }),
+      );
+      if (current) {
+        await guard(() => people.unlink(actor, current.id, personId));
+      }
     },
 
     async getHousehold(actor, id) {
@@ -383,4 +520,6 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       return toHouseholds(people, actor, await people.listHouseholds(actor.userId, actor.orgId), seesCustody(actor));
     },
   };
+
+  return service;
 }

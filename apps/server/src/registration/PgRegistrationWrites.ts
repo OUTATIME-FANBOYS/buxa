@@ -1,8 +1,9 @@
-import type { Actor } from '@buxa/domain';
+import { decideSelections, type Actor } from '@buxa/domain';
 import type { RegistrationFormInput } from '@buxa/contracts';
 import type { RegistrationStatus } from '@buxa/domain';
 import { recordAudit } from '../audit/recordAudit';
 import type { Db } from '../people/pgRows';
+import { settleClassesInTx, takeClassPlaceInTx } from './PgRegistrationPlaces';
 import {
   RegistrationFormNotFoundError,
   RegistrationNotFoundError,
@@ -144,6 +145,11 @@ export async function insertRegistrationInTx(
     throw new RegistrationRefusedError(decision.reason);
   }
 
+  // The clash rule between one child's classes is checked again here, under the same transaction as the places it guards.
+  const selections = decideSelections(registration.selections);
+  if (!selections.allow) {
+    throw new RegistrationRefusedError(selections.reason);
+  }
   const inserted = await db.query<{ id: string }>(
     `INSERT INTO registrations (org_id, form_id, form_version, answers, submitted_by)
      VALUES ($1, $2, $3, $4::jsonb, $5) RETURNING id`,
@@ -155,12 +161,19 @@ export async function insertRegistrationInTx(
      SELECT $1, $2, unnest($3::uuid[])`,
     [actor.orgId, id, registration.sessionIds],
   );
+  for (const selection of registration.selections) {
+    await takeClassPlaceInTx(db, actor, id, selection);
+  }
   await recordAudit(db, {
     actor,
     action: 'registration.submit',
     entity: 'registration',
     entityId: id,
-    data: { formId: registration.formId, sessions: registration.sessionIds.length },
+    data: {
+      formId: registration.formId,
+      sessions: registration.sessionIds.length,
+      places: registration.selections.length,
+    },
   });
 
   return id;
@@ -192,6 +205,7 @@ export async function confirmRegistrationInTx(
     `UPDATE registrations SET status = 'confirmed', confirmed_at = now(), confirmed_by = $2 WHERE id = $1`,
     [registrationId, actor.userId],
   );
+  await settleClassesInTx(db, actor, registrationId);
   await recordAudit(db, {
     actor,
     action: 'registration.confirm',
@@ -202,12 +216,15 @@ export async function confirmRegistrationInTx(
 }
 
 /**
- * The people a registration names as campers. A camper matches when the name and birth date in the camper answers equal an active
- * person's, and that person holds the camper role. Runs inside the confirmation transaction.
+ * The people a registration names as campers: the children chosen for its classes, and any active camper whose name and birth date
+ * match the camper answers (registrations recorded before classes were chosen have no places). Runs inside the confirmation
+ * transaction, so the badges it leads to commit with the confirmation.
  */
 export async function camperIdsInTx(db: Db, registrationId: string): Promise<string[]> {
   const { rows } = await db.query<{ id: string }>(
-    `SELECT DISTINCT p.id
+    `SELECT rc.person_id AS id FROM registration_classes rc WHERE rc.registration_id = $1
+     UNION
+     SELECT DISTINCT p.id
        FROM registrations r
        JOIN people p ON p.org_id = r.org_id
         AND lower(btrim(p.given_name)) = lower(btrim(r.answers #>> '{standard,camperFirstName}'))

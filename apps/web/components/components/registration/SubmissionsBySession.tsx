@@ -1,14 +1,53 @@
-import type { CustomField, RegistrationRow } from '@buxa/contracts';
+import type { CustomField, RegistrationClass, RegistrationRow } from '@buxa/contracts';
 import { STANDARD_FIELDS } from '@buxa/contracts';
 import { fmt, isoDay } from '@buxa/shared';
 import { Pill } from '@/components/elements';
 import { ConfirmRegistration } from './ConfirmRegistration';
+import { RecordPayment } from './RecordPayment';
 
 /*
  * The registrations for each session of a form, one table per session. A row's answers sit behind a disclosure, so the table stays
- * to the things staff look up: who, the guardian's phone, when, its status, and which form version they answered.
- * A pending registration has one action, Confirm (decision 3). A confirmed one has no action.
+ * to the things staff look up: who, the guardian's phone, when, its status, its places and which form version they answered.
+ * A pending registration has one action, Confirm (decision 3). A confirmed one has no action. Each child's place in a class shows
+ * its status (held, waitlisted, enrolled, expired, cancelled) and its payment, which staff record by hand.
  */
+
+const PLACE_STATUS: Record<RegistrationClass['status'], { label: string; tone: 'ok' | 'warn' | 'neutral' | 'crit' }> = {
+  held: { label: 'Held', tone: 'warn' },
+  waitlisted: { label: 'Waitlisted', tone: 'neutral' },
+  enrolled: { label: 'Enrolled', tone: 'ok' },
+  expired: { label: 'Hold expired', tone: 'crit' },
+  cancelled: { label: 'Cancelled', tone: 'neutral' },
+};
+
+function PlaceList({ formId, places }: { formId: string; places: readonly RegistrationClass[] }) {
+  if (places.length === 0) {
+    return <span className="muted">No places chosen.</span>;
+  }
+
+  return (
+    <ul className="registration-places">
+      {places.map(place => {
+        const status = PLACE_STATUS[place.status];
+        const paid = place.paymentStatus === 'paid';
+
+        return (
+          <li key={place.id}>
+            <span>
+              {place.camperName}, {place.className}
+            </span>{' '}
+            <Pill tone={status.tone}>{status.label}</Pill>{' '}
+            <Pill tone={paid ? 'ok' : 'neutral'}>{paid ? 'Paid' : 'Unpaid'}</Pill>
+            {paid && place.paymentNote ? <span className="muted"> {place.paymentNote}</span> : null}
+            {place.status === 'cancelled' ? null : (
+              <RecordPayment formId={formId} registrationClassId={place.id} paid={paid} />
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
 
 const STANDARD_LABEL = Object.fromEntries(STANDARD_FIELDS.map(f => [f.key, f.label]));
 
@@ -48,6 +87,7 @@ export function SubmissionsBySession({
     <div className="registration-sessions">
       {sessions.map(session => {
         const rows = submissions.filter(row => row.sessions.some(s => s.sessionId === session.id));
+        const placesOf = (row: RegistrationRow) => row.classes.filter(c => c.sessionId === session.id);
 
         return (
           <section key={session.id} className="registration-session" aria-labelledby={`session-${session.id}`}>
@@ -66,6 +106,7 @@ export function SubmissionsBySession({
                       <th scope="col">Guardian phone</th>
                       <th scope="col">Submitted</th>
                       <th scope="col">Status</th>
+                      <th scope="col">Places</th>
                       <th scope="col">Answers</th>
                     </tr>
                   </thead>
@@ -86,6 +127,9 @@ export function SubmissionsBySession({
                               <ConfirmRegistration formId={formId} registrationId={row.id} />
                             </>
                           )}
+                        </td>
+                        <td>
+                          <PlaceList formId={formId} places={placesOf(row)} />
                         </td>
                         <td>
                           <details>

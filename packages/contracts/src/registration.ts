@@ -101,6 +101,15 @@ const IsoDate = z
 const blankAsMissing = (value: unknown): unknown =>
   value === null || (typeof value === 'string' && value.trim() === '') ? undefined : value;
 
+/** One child and one class of the family's request. The session is taken from the class, so the family picks no session. */
+export const ClassSelectionSchema = z.object({
+  camperId: z.string().uuid(),
+  classId: z.string().uuid(),
+});
+export type ClassSelectionInput = z.infer<typeof ClassSelectionSchema>;
+
+export const MAX_CLASS_SELECTIONS = 200;
+
 const YesNo = z.union([z.boolean(), z.enum(['yes', 'no'])]).transform(v => (typeof v === 'boolean' ? v : v === 'yes'));
 
 /** The schema for one custom answer, built from its definition. Optional answers that are blank are left out. */
@@ -154,7 +163,10 @@ export function buildSubmissionSchema(fields: readonly CustomField[]) {
 
   return z.object({
     formId: z.string().uuid(),
-    sessionIds: z.array(z.string().uuid()).min(1, 'Choose at least one session.').max(200),
+    selections: z
+      .array(ClassSelectionSchema)
+      .min(1, 'Choose at least one class.')
+      .max(MAX_CLASS_SELECTIONS, 'Choose fewer classes.'),
     standard: z.object(standardShape),
     custom: z.object(customShape),
   });
@@ -168,6 +180,25 @@ export const RegistrationSessionSchema = z.object({
   status: z.enum(['submitted']),
 });
 
+/**
+ * One child's place in one class of a registration, as staff see it. `status` is read from the hold or the enrolment behind it:
+ * held (a seat hold, not yet confirmed), waitlisted, enrolled, expired (the hold ran out before confirmation) or cancelled.
+ */
+export const REGISTRATION_CLASS_STATUSES = ['held', 'waitlisted', 'enrolled', 'expired', 'cancelled'] as const;
+export const RegistrationClassSchema = z.object({
+  id: z.string(),
+  classId: z.string(),
+  className: z.string(),
+  sessionId: z.string(),
+  sessionName: z.string(),
+  camperId: z.string(),
+  camperName: z.string(),
+  status: z.enum(REGISTRATION_CLASS_STATUSES),
+  paymentStatus: z.enum(['unpaid', 'paid']),
+  paymentNote: z.string().nullable(),
+});
+export type RegistrationClass = z.infer<typeof RegistrationClassSchema>;
+
 export const RegistrationRowSchema = z.object({
   id: z.string(),
   formVersion: z.number().int(),
@@ -178,6 +209,7 @@ export const RegistrationRowSchema = z.object({
   standard: z.record(z.string(), z.string().optional()),
   custom: z.record(z.string(), z.union([z.string(), z.boolean()]).optional()),
   sessions: z.array(RegistrationSessionSchema),
+  classes: z.array(RegistrationClassSchema),
 });
 export type RegistrationRow = z.infer<typeof RegistrationRowSchema>;
 
@@ -193,3 +225,28 @@ export const RegistrationFormSchema = z.object({
   updatedAt: z.string(),
 });
 export type RegistrationForm = z.infer<typeof RegistrationFormSchema>;
+
+/**
+ * A staff member's record of how a class place was paid. Payment is by hand for now (no online payment yet). A place marked paid
+ * needs a note saying how (for example the date and the method), so the record says something on its own.
+ */
+export const RecordPaymentInputSchema = z
+  .object({
+    paid: z.boolean(),
+    note: z
+      .string()
+      .trim()
+      .max(500, 'Keep the note to 500 characters.')
+      .default('')
+      .transform(v => v || null),
+  })
+  .superRefine((input, ctx) => {
+    if (input.paid && input.note === null) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['note'],
+        message: 'Add a note saying how it was paid, such as the date and the method.',
+      });
+    }
+  });
+export type RecordPaymentInput = z.infer<typeof RecordPaymentInputSchema>;

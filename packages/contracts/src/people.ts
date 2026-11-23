@@ -28,7 +28,6 @@ export const PersonSummarySchema = z.object({
   id: z.string(),
   givenName: z.string(),
   familyName: z.string(),
-  preferredName: z.string().nullable(),
   roles: z.array(CampRoleSchema),
   status: AccessStatusSchema.nullable(),
   /** Checked in and not yet checked out. Null for viewers. */
@@ -86,7 +85,6 @@ export type Person = z.infer<typeof PersonSchema>;
 export const NewPersonInputSchema = z.object({
   givenName: Name,
   familyName: Name,
-  preferredName: Optional(80),
   dateOfBirth: LocalDateSchema.optional(),
   email: OptionalEmailSchema,
   phone: OptionalPhoneSchema,
@@ -103,13 +101,23 @@ export type NewPersonInput = z.infer<typeof NewPersonInputSchema>;
 export const PersonPatchInputSchema = z.object({
   givenName: Name.optional(),
   familyName: Name.optional(),
-  preferredName: z.string().trim().max(80).nullable().optional(),
   dateOfBirth: LocalDateSchema.nullable().optional(),
   email: PatchEmailSchema.nullable().optional(),
   phone: PatchPhoneSchema.nullable().optional(),
   roles: AllowedRoleSet(z.array(CampRoleSchema).min(1, 'Pick a role.')).optional(),
 });
 export type PersonPatchInput = z.infer<typeof PersonPatchInputSchema>;
+
+/**
+ * The household part of an edit. `householdId` joins an existing household, `newHouseholdName` creates one and links the person
+ * to it. Neither leaves the household the person is in. `relationship` is needed whenever the person joins a household.
+ */
+export const PersonHouseholdInputSchema = z.object({
+  householdId: z.string().uuid().optional(),
+  newHouseholdName: Optional(120),
+  relationship: Optional(40),
+});
+export type PersonHouseholdInput = z.infer<typeof PersonHouseholdInputSchema>;
 
 export const PersonListQuerySchema = z.object({
   query: z.string().trim().max(80).optional(),

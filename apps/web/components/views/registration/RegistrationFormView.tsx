@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { FORBIDDEN_REGISTRATION } from '@buxa/shared';
-import { currentActor, loadFormPage, loadRegisterPage } from '@buxa/server/composers/index.server';
+import { campClock, currentActor, loadFormPage, loadRegisterPage } from '@buxa/server/composers/index.server';
 import { Empty, PageHeader } from '@/components/components';
 import {
   FormEditor,
@@ -39,11 +39,15 @@ export async function RegistrationFormView({ formId }: { formId: string }) {
 
   // A family's answers are asked from the published version only, so the dialog takes that version's questions.
   const register = canSubmit && published ? await loadRegisterPage(actor, form.id) : null;
+  const clock = register?.ok && register.value.published ? await campClock(actor) : null;
   const takeRegistration =
-    register?.ok && register.value.published ? (
+    register?.ok && register.value.published && clock ? (
       <TakeRegistrationButton
         formId={form.id}
-        sessions={register.value.form.sessions}
+        sessions={register.value.sessions}
+        campers={register.value.campers}
+        timeZone={clock.timeZone}
+        clockFormat={clock.clockFormat}
         fields={register.value.published.fields}
       />
     ) : undefined;

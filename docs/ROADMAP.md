@@ -58,3 +58,21 @@ Auto-scheduling, SSO, native apps, non-US payments. Agent approvals inside the c
 ## Future: on-the-spot registration with payment (phase 9)
 
 A camp can register someone at the desk, on the day, and take payment there. It builds on the membership link to sessions (migration 0042), so the registration creates a membership for the chosen session, and the payment step is added in phase 9 with Stripe. Not started; recorded so the membership and payment work stays aligned.
+
+## Phase 8: camp subdomains and custom domains
+
+Each camp gets its own address, such as `camp-birchwood.buxa.app`, through a wildcard domain on Vercel. The camp's existing unique slug is the subdomain; reserved names (`www`, `app`, `api`, `admin`) are blocked. Sign-in and invite links use the camp's address, and the Supabase Site URL and redirect list cover the wildcard.
+
+Custom domains (for example `register.birchwood.org`) are a plan feature, verified and attached automatically. Decide before building: whether one sign-in works across camps, and whether every camp gets a subdomain or only paid plans.
+
+## Phase 6: parent portal (decided)
+
+A parent or guardian gets a login through a family invite, linked to their person record. Their household is the only data they can see.
+
+- **Their own profile:** name, phone, email and address. Billing details come with phase 9.
+- **Their children:** the parent acts like an admin for each child. They can view and update the child's details, including medical and emergency details.
+- **Badges:** they see each child's badge with the same show and reissue rules as staff.
+- **Session memberships:** they see what has been bought and what is still to come. Staff record purchases until online payment exists.
+- **Invoices and receipts:** phase 9, with payments.
+
+A family role gets its own access rules and row-level security, so one family cannot see another.
