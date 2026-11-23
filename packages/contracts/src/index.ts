@@ -51,6 +51,8 @@ export const MemberSchema = z.object({
   name: z.string(),
   email: z.string().nullable(),
   role: RoleSchema,
+  /** When the team access ends (an ISO instant), or null for no expiry. */
+  expiresAt: z.string().nullable(),
 });
 export type Member = z.infer<typeof MemberSchema>;
 export const MembersSchema = z.object({ members: z.array(MemberSchema) });
@@ -146,3 +148,20 @@ export const ChangeMemberRoleInputSchema = z.object({
   role: z.enum(ROLES, { message: 'Choose a role.' }),
 });
 export type ChangeMemberRoleInput = z.infer<typeof ChangeMemberRoleInputSchema>;
+
+/** A YYYY-MM-DD day that really exists (2026-02-30 is refused). Access ends at the start of that day, in UTC. */
+const ExpiresOnSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Choose a valid date.')
+  .refine(day => {
+    const parsed = new Date(`${day}T00:00:00.000Z`);
+
+    return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === day;
+  }, 'Choose a valid date.');
+
+/** Team access expiry from Manage access: set a day, or clear it (no expiry). */
+export const SetMemberExpiryInputSchema = z.discriminatedUnion('intent', [
+  z.object({ userId: z.string().uuid('Choose a person.'), intent: z.literal('set'), expiresOn: ExpiresOnSchema }),
+  z.object({ userId: z.string().uuid('Choose a person.'), intent: z.literal('clear') }),
+]);
+export type SetMemberExpiryInput = z.infer<typeof SetMemberExpiryInputSchema>;
