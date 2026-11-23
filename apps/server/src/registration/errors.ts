@@ -31,11 +31,26 @@ export class RegistrationSessionNotFoundError extends Error {
   }
 }
 
-/** A registration the domain rule refused (unpublished form, no session, a session outside the form). Nothing is written. */
+/** A class place named by a payment is not in this camp. */
+export class RegistrationClassNotFoundError extends Error {
+  readonly kind = 'registration-class-not-found';
+  constructor() {
+    super('That place in the registration does not exist in this camp.');
+    this.name = 'RegistrationClassNotFoundError';
+  }
+}
+
+/**
+ * A registration the domain rule refused (unpublished form, no class, a class outside the form, two clashing classes). Nothing is
+ * written. `message` overrides the standard copy, for a refusal that names people or classes (a clash, a full age range).
+ */
 export class RegistrationRefusedError extends Error {
   readonly kind = 'registration-refused';
-  constructor(readonly reason: RegistrationRefusal) {
-    super(REFUSAL_MESSAGES[reason]);
+  constructor(
+    readonly reason: RegistrationRefusal,
+    message?: string,
+  ) {
+    super(message ?? REFUSAL_MESSAGES[reason]);
     this.name = 'RegistrationRefusedError';
   }
 }
@@ -46,6 +61,13 @@ export const REFUSAL_MESSAGES: Record<RegistrationRefusal, string> = {
   session_not_in_form: 'One of the sessions is not part of this form.',
   not_pending: 'Only a pending registration can be confirmed.',
   already_confirmed: 'This registration is already confirmed.',
+  no_classes: 'Choose at least one class.',
+  duplicate_selection: 'That child is already chosen for this class.',
+  classes_overlap: 'Those classes overlap for this child. Choose one of them.',
+  class_not_in_form: 'One of the classes is not part of this form.',
+  camper_no_household: 'That child is not in a household yet. Add them to a household in People first.',
+  class_refused: 'One of the places cannot be taken.',
+  payment_note_required: 'Add a note saying how it was paid, such as the date and the method.',
 };
 
 /** The submitted answers do not match the form version. `fieldErrors` is keyed by field name (for example `standard.guardianPhone`). */
@@ -62,7 +84,8 @@ export type RegistrationErrorKind =
   | 'registration-session-not-found'
   | 'registration-not-found'
   | 'registration-refused'
-  | 'registration-invalid';
+  | 'registration-invalid'
+  | 'registration-class-not-found';
 
 export const isRegistrationError = (e: unknown, kind: RegistrationErrorKind): boolean =>
   e instanceof Error && 'kind' in e && e.kind === kind;

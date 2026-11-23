@@ -1,6 +1,7 @@
 import 'server-only';
 import type { Actor, CampRole } from '@buxa/domain';
 import type { Class, Enrolment, Session } from '@buxa/contracts';
+import type { ActiveHold } from '../../holds/SeatHoldRepository';
 import { getRuntime } from '../../runtime';
 import { isHttpError, notFound } from '../../http/errors';
 import type { TeacherAssignment } from '../../classes/ClassRepository';
@@ -107,4 +108,9 @@ export async function loadMyClasses(actor: Actor): Promise<Loaded<AssignedSessio
 
     return outcome.value;
   });
+}
+
+/** The holds that hold a place in a class right now, oldest first. Needs holds:manage. */
+export async function loadActiveHolds(actor: Actor, classId: string): Promise<Loaded<ActiveHold[]>> {
+  return guarded(async () => getRuntime().services.seatHolds.listActiveHolds(actor, classId));
 }

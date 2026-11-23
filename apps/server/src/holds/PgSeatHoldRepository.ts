@@ -1,8 +1,14 @@
 import type { Pool } from 'pg';
 import { withOrg } from '@buxa/db';
 import type { Actor } from '@buxa/domain';
-import type { PlaceHoldRequest, SeatHold, SeatHoldRepository } from './SeatHoldRepository';
-import { placeHoldInTransaction, releaseExpiredHolds, releaseHoldInTransaction } from './PgSeatHoldWrites';
+import type { ActiveHold, PlaceHoldRequest, SeatHold, SeatHoldRepository } from './SeatHoldRepository';
+import {
+  listActiveHoldRows,
+  placeHoldInTransaction,
+  promoteWaitlistInTransaction,
+  releaseExpiredHolds,
+  releaseHoldInTransaction,
+} from './PgSeatHoldWrites';
 
 /**
  * Postgres adapter for seat holds. Every call runs in withOrg (row-level security); the writes take the session lock and write
@@ -21,6 +27,14 @@ export class PgSeatHoldRepository implements SeatHoldRepository {
 
   releaseExpiredHolds(userId: string | null, orgId: string): Promise<number> {
     return withOrg(this.pool, userId, orgId, db => releaseExpiredHolds(db, { userId: null, orgId }));
+  }
+
+  listActiveHolds(userId: string, orgId: string, sessionId: string): Promise<ActiveHold[]> {
+    return withOrg(this.pool, userId, orgId, db => listActiveHoldRows(db, sessionId));
+  }
+
+  promoteWaitlist(actor: Actor, sessionId: string): Promise<number> {
+    return withOrg(this.pool, actor.userId, actor.orgId, db => promoteWaitlistInTransaction(db, actor, sessionId));
   }
 
   /** A SECURITY DEFINER function (migration 0043) lists the camps and one member of each, so the job can see their holds. */

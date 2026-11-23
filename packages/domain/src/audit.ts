@@ -46,6 +46,7 @@ export const AUDIT_ACTIONS = [
   'registration_form.publish',
   'registration.submit',
   'registration.confirm',
+  'registration.payment',
   'enrolment.promote',
   'hold.create',
   'hold.release',

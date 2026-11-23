@@ -3,6 +3,8 @@ import { RegistrationFormInputSchema, buildSubmissionSchema, type CustomField } 
 
 const SESSION = '3f2b8c1e-5a4d-4b6e-9f70-1a2b3c4d5e6f';
 const FORM = '9a8b7c6d-1e2f-4a3b-8c4d-5e6f7a8b9c0d';
+const CAMPER = '7d6c5b4a-3210-4f9e-8d7c-6b5a49382716';
+const CLASS = '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f';
 
 const fields: CustomField[] = [
   { kind: 'text', key: 'allergies', label: 'Allergies', required: false },
@@ -72,7 +74,7 @@ describe('registration form input', () => {
 
 describe('submission schema built from a form version', () => {
   const schema = buildSubmissionSchema(fields);
-  const submission = { formId: FORM, sessionIds: [SESSION], standard, custom: answers };
+  const submission = { formId: FORM, selections: [{ camperId: CAMPER, classId: CLASS }], standard, custom: answers };
 
   it('accepts a complete submission', () => {
     expect(schema.safeParse(submission).success).toBe(true);
@@ -110,8 +112,9 @@ describe('submission schema built from a form version', () => {
     expect(schema.parse({ ...submission, custom: { ...answers, photos: true } }).custom.photos).toBe(true);
   });
 
-  it('needs at least one session and a form id', () => {
-    expect(schema.safeParse({ ...submission, sessionIds: [] }).success).toBe(false);
+  it('needs at least one class selection and a form id', () => {
+    expect(schema.safeParse({ ...submission, selections: [] }).success).toBe(false);
+    expect(schema.safeParse({ ...submission, selections: [{ camperId: 'x', classId: CLASS }] }).success).toBe(false);
     expect(schema.safeParse({ ...submission, formId: 'not-a-uuid' }).success).toBe(false);
   });
 });

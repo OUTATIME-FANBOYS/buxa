@@ -7,6 +7,7 @@ import { InMemoryRegistrationRepository } from '../InMemoryRegistrationRepositor
 import { createRegistrationService, type RegistrationService } from '../RegistrationService';
 
 const SESSION = 'aaaaaaaa-0000-4000-8000-000000000001';
+const CLASS = 'cccccccc-0000-4000-8000-000000000001';
 const NOW = new Date('2027-07-10T12:00:00Z');
 
 /** The registration service over the camp's in-memory store, with the badge step wired the way the runtime wires it. */
@@ -15,6 +16,17 @@ function registrationsFor(camp: Camp): RegistrationService {
     { [camp.orgId]: [SESSION] },
     (orgId, answers) => camperIdsFor(camp.store.database, orgId, answers),
     camp.repos.credentials,
+    {
+      [camp.orgId]: [
+        {
+          classId: CLASS,
+          sessionId: SESSION,
+          className: 'Archery',
+          startsAt: '2027-07-10T10:00:00.000Z',
+          endsAt: '2027-07-10T11:00:00.000Z',
+        },
+      ],
+    },
   );
 
   return createRegistrationService(repo, credentials =>
@@ -56,15 +68,15 @@ async function pendingRegistration(camp: Camp, service: RegistrationService) {
     fields: [],
   });
   await service.publishForm(admin, form.id);
-  const id = await service.submit(camp.actor('staff'), form.id, submissionFor(form.id));
+  const id = await service.submit(camp.actor('staff'), form.id, submissionFor(form.id, camper.id));
 
   return { id, formId: form.id, camperId: camper.id };
 }
 
-function submissionFor(formId: string) {
+function submissionFor(formId: string, camperId: string) {
   return {
     formId,
-    sessionIds: [SESSION],
+    selections: [{ camperId, classId: CLASS }],
     standard: {
       camperFirstName: 'Ada',
       camperLastName: 'Lovelace',
@@ -102,7 +114,11 @@ describe('confirming a registration issues badges for its campers', () => {
     const first = await pendingRegistration(camp, service);
     await service.confirm(camp.actor('admin'), first.id);
 
-    const secondId = await service.submit(camp.actor('staff'), first.formId, submissionFor(first.formId));
+    const secondId = await service.submit(
+      camp.actor('staff'),
+      first.formId,
+      submissionFor(first.formId, first.camperId),
+    );
     const outcome = await service.confirm(camp.actor('admin'), secondId);
 
     expect(outcome).toEqual({ badgesIssued: 0, badgeNote: null });

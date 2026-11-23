@@ -19,6 +19,15 @@ export interface PlaceHoldRequest {
   expiresAt: Date;
 }
 
+/** A hold that holds a place right now, with the household's name for the class page. */
+export interface ActiveHold {
+  id: string;
+  householdId: string;
+  householdName: string;
+  createdAt: string;
+  expiresAt: string;
+}
+
 /**
  * Storage for seat holds. Callers decide whether a hold may be taken (permissions in @buxa/domain); implementations take the seat
  * under the session lock, write the hold and its audit entry in one transaction. Every method is scoped to one camp.
@@ -33,4 +42,11 @@ export interface SeatHoldRepository {
   releaseExpiredHolds(userId: string | null, orgId: string): Promise<number>;
   /** The camps that have expired holds not yet released, each with a member to run the cleanup as (migration 0043). */
   campsWithExpiredHolds(): Promise<{ orgId: string; userId: string }[]>;
+  /** The holds that hold a place in a class right now (unreleased and not yet expired), oldest first. Throws ClassNotFoundError. */
+  listActiveHolds(userId: string, orgId: string, sessionId: string): Promise<ActiveHold[]>;
+  /**
+   * Moves the first waitlisted enrolments into the places that are free (the existing enrolment.promote path). Audits each promotion.
+   * Returns how many moved. Throws ClassNotFoundError.
+   */
+  promoteWaitlist(actor: Actor, sessionId: string): Promise<number>;
 }
