@@ -34,7 +34,7 @@ Paste secrets only into Vercel's form, never into the repo or a chat.
 ## Database requirements
 
 - Postgres 15 or newer. Row-level security is how tenants are kept apart, so it is not optional.
-- Migrations are the `.sql` files in `packages/db/migrations`, applied in filename order. The current set is `0001` to `0041`. Do not add a migration under a number that is already used.
+- Migrations are the `.sql` files in `packages/db/migrations`, applied in filename order. The current set is `0001` to `0042`. Do not add a migration under a number that is already used.
   There are two logins. They must be different, and the web app must only ever hold the restricted one.
   The names: `buxa_app` is a `NOLOGIN` role that migration `0001` creates; tenant queries switch to it. `buxa_runtime` is the runtime login the operator creates (see "Operator steps"). The migration login is whatever login `MIGRATION_DATABASE_URL` names. On Supabase it may be the owner role (`postgres`), which `docs/security.md` (section 7.5) describes as a permanent limit.
 

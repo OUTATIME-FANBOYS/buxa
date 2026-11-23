@@ -17,6 +17,7 @@ const session = vi.hoisted(() => ({ camp: null as Membership | null }));
 const services = vi.hoisted(() => ({
   people: { list: vi.fn(), listPage: vi.fn(), get: vi.fn(), getHousehold: vi.fn(), listHouseholds: vi.fn() },
   attendance: { history: vi.fn() },
+  classes: { listSessions: vi.fn() },
   orgs: { getCamp: vi.fn() },
 }));
 
@@ -107,6 +108,7 @@ const person = (over: Partial<Person> = {}): Person => ({
     {
       id: ID.membership,
       personId: ID.ben,
+      sessionId: null,
       plan: 'Summer 2027',
       startsOn: '2027-07-01',
       endsOn: '2027-08-20',
@@ -135,6 +137,7 @@ beforeEach(() => {
   services.people.getHousehold.mockResolvedValue(household);
   services.people.listHouseholds.mockResolvedValue([household]);
   services.attendance.history.mockResolvedValue([]);
+  services.classes.listSessions.mockResolvedValue({ ok: true, value: [] });
   services.orgs.getCamp.mockResolvedValue({
     id: 'o1',
     name: 'Sunrise',
@@ -320,12 +323,12 @@ describe('PersonScreen', () => {
   it('gives staff the household and membership controls, and admins the badge and archive controls too', async () => {
     const staff = render(await PersonScreen({ id: ID.ben }));
     expect(staff).toContain('Link someone to a household');
-    expect(staff).not.toContain('Add a membership');
+    expect(staff).not.toContain('Add membership');
     expect(staff).not.toContain('Archive person');
 
     as('admin');
     const admin = render(await PersonScreen({ id: ID.ben }));
-    expect(admin).toContain('Add a membership');
+    expect(admin).toContain('>Add membership</button>');
     expect(admin).toContain('Revoke');
     expect(admin).toContain('>Reissue</button>');
     expect(admin).toContain('Archive person');
@@ -335,7 +338,7 @@ describe('PersonScreen', () => {
     as('viewer');
     const html = render(await PersonScreen({ id: ID.ben }));
     expect(html).not.toContain('Link someone to a household');
-    expect(html).not.toContain('Add a membership');
+    expect(html).not.toContain('Add membership');
     expect(html).not.toContain('Issue badge');
     expect(html).not.toContain('Archive person');
     expect(html).not.toContain('Remove ');
@@ -472,6 +475,7 @@ describe('PersonScreen', () => {
           {
             id: ID.membership,
             personId: ID.ben,
+            sessionId: null,
             plan: 'Summer 2027',
             startsOn: '2027-07-01',
             endsOn: '2027-08-20',

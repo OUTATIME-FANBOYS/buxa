@@ -7,7 +7,7 @@ import { campZone, toPersonMembership } from '../shared/views';
 import type { MembershipService, MembershipServiceDeps } from './MembershipService';
 
 export function createMembershipService(deps: MembershipServiceDeps): MembershipService {
-  const { memberships, people, orgs, clock } = deps;
+  const { memberships, people, orgs, clock, classes } = deps;
 
   const todayFor = async (actor: Pick<Actor, 'userId' | 'orgId'>) => campToday(clock, await campZone(orgs, actor));
 
@@ -20,9 +20,14 @@ export function createMembershipService(deps: MembershipServiceDeps): Membership
       if (!(await people.get(actor.userId, actor.orgId, input.personId))) {
         throw notFound('Person not found');
       }
+      const sessionId = input.sessionId ?? null;
+      if (sessionId !== null && !(await classes.getSession(actor.userId, actor.orgId, sessionId))) {
+        throw notFound('Session not found');
+      }
       const record = await guard(() =>
         memberships.add(actor, {
           personId: input.personId,
+          sessionId,
           plan: input.plan,
           startsOn: input.startsOn,
           endsOn: input.endsOn,

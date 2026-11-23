@@ -17,8 +17,8 @@ export class PgMembershipRepository implements MembershipRepository {
         throw new PersonNotFoundError();
       }
       const { rows } = await db.query<{ id: string }>(
-        'INSERT INTO memberships (org_id, person_id, plan, starts_on, ends_on) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-        [actor.orgId, input.personId, input.plan, input.startsOn, input.endsOn],
+        'INSERT INTO memberships (org_id, person_id, session_id, plan, starts_on, ends_on) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
+        [actor.orgId, input.personId, input.sessionId ?? null, input.plan, input.startsOn, input.endsOn],
       );
       const id = rows[0].id;
       await recordAudit(db, {
@@ -26,7 +26,7 @@ export class PgMembershipRepository implements MembershipRepository {
         action: 'membership.create',
         entity: 'membership',
         entityId: id,
-        data: { personId: input.personId },
+        data: { personId: input.personId, sessionId: input.sessionId ?? null },
       });
 
       return requireMembership(db, id);

@@ -46,6 +46,7 @@ export interface StoredMembership {
   id: string;
   orgId: string;
   personId: string;
+  sessionId: string | null;
   plan: string;
   startsOn: LocalDate;
   endsOn: LocalDate;

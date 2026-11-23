@@ -6,6 +6,7 @@ import { MembershipNotFoundError, type MembershipRecord } from './MembershipRepo
 interface MembershipRow {
   id: string;
   person_id: string;
+  session_id: string | null;
   plan: string;
   starts_on: string;
   ends_on: string;
@@ -15,13 +16,14 @@ interface MembershipRow {
 
 /** Dates are formatted in SQL, so they arrive as YYYY-MM-DD strings. */
 const SELECT_MEMBERSHIPS = `
-  SELECT id, person_id, plan, to_char(starts_on, 'YYYY-MM-DD') AS starts_on, to_char(ends_on, 'YYYY-MM-DD') AS ends_on,
+  SELECT id, person_id, session_id, plan, to_char(starts_on, 'YYYY-MM-DD') AS starts_on, to_char(ends_on, 'YYYY-MM-DD') AS ends_on,
          revoked_at, revoked_reason
     FROM memberships`;
 
 const toRecord = (row: MembershipRow): MembershipRecord => ({
   id: row.id,
   personId: row.person_id,
+  sessionId: row.session_id,
   plan: row.plan,
   startsOn: row.starts_on,
   endsOn: row.ends_on,

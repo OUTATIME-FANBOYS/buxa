@@ -34,6 +34,16 @@ describe('MembershipRow', () => {
     expect(html).toContain('Valid');
     expect(html).not.toContain('Revoke');
   });
+  it('puts the status pill and the Revoke button directly in the row, after the text block', () => {
+    const html = renderToStaticMarkup(
+      <MembershipRow membership={membership} personId="p-1" canManage timeZone="Europe/London" clockFormat="24h" />,
+    );
+    const start = html.indexOf('<div class="people-member-row">');
+    const row = html.slice(start, html.indexOf('</li>', start));
+    expect(row.indexOf('people-member-main')).toBeLessThan(row.indexOf('pill'));
+    expect(row.indexOf('pill')).toBeLessThan(row.indexOf('>Revoke<'));
+    expect(row).not.toContain('class="row"');
+  });
   it('offers revoke behind a disclosure to managers, and says when a membership was revoked', () => {
     expect(
       renderToStaticMarkup(

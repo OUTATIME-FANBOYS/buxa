@@ -138,7 +138,7 @@ export function createServices(repositories: Repositories, clock: Clock): Servic
   return {
     orgs: createOrgService(orgs),
     people: createPeopleService({ people, memberships, credentials, attendance, classes, orgs, clock }),
-    memberships: createMembershipService({ memberships, people, orgs, clock }),
+    memberships: createMembershipService({ memberships, people, classes, orgs, clock }),
     credentials: createCredentialService({
       credentials,
       people,

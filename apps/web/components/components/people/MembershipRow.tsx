@@ -18,7 +18,7 @@ interface MembershipRowProps {
 }
 
 /**
- * One membership: its plan, its dates and its status in words. Dates are camp days; the revoke time is an instant shown in the camp's
+ * One membership: its name (the session's, or a custom name), its dates and its status in words. Dates are camp days; the revoke time is an instant shown in the camp's
  * zone (`timeZone`), like every other time on the people screens. Revoking is behind a disclosure, and asks for a reason.
  */
 export function MembershipRow({ membership, personId, canManage, timeZone, clockFormat }: MembershipRowProps) {
@@ -42,20 +42,19 @@ export function MembershipRow({ membership, personId, canManage, timeZone, clock
             </span>
           )}
         </div>
-        <div className="row">
-          <AccessPill status={membership.status} />
-          {revocable && (
-            <button
-              type="button"
-              className={buttonClassName({ variant: 'danger-soft' })}
-              aria-expanded={revoking}
-              aria-controls={formId}
-              onClick={() => setRevoking(open => !open)}
-            >
-              {revoking ? 'Cancel' : 'Revoke'}
-            </button>
-          )}
-        </div>
+        {/* The pill and the Revoke button are direct children of the row, so the three share one centre line and one gap. */}
+        <AccessPill status={membership.status} />
+        {revocable && (
+          <button
+            type="button"
+            className={buttonClassName({ variant: 'danger-soft' })}
+            aria-expanded={revoking}
+            aria-controls={formId}
+            onClick={() => setRevoking(open => !open)}
+          >
+            {revoking ? 'Cancel' : 'Revoke'}
+          </button>
+        )}
       </div>
       {revocable && revoking && (
         <div id={formId} className="people-member-revoke">
