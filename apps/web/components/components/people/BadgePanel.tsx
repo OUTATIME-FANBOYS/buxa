@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useReducer, useTransition } from 'react';
-import { BadgeCard } from '@/components/components/badge';
+import { BadgeView } from '@/components/components/badge';
 import { BadgeActions } from '@/components/components/people/forms';
-import { Button, PrintButton, Pill } from '@/components/elements';
-import { issueBadgeAction, reprintBadgeAction, revokeBadgeAction, showBadgeAction } from '@/actions/people';
+import { Pill } from '@/components/elements';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
+import { issueBadgeAction, revokeBadgeAction, showBadgeAction } from '@/actions/people';
 import {
   badgePanelReducer,
   idle,
@@ -23,7 +24,7 @@ export interface BadgePanelProps {
   canManage: boolean;
 }
 
-/** Maps what Show or Reprint returned onto the panel's event. The code is only ever in the `shown` case. */
+/** Maps what Show returned onto the panel's event. The code is only ever in the `shown` case. */
 function revealEvent(result: ShowBadgeState): BadgePanelEvent {
   if (result.status === 'shown') {
     return { type: 'revealed', payload: result.payload };
@@ -44,9 +45,9 @@ function personForm(personId: string): FormData {
 }
 
 /**
- * The badge (QR code) for the door. The header says in words whether a badge is active. The code leaves the server only when Show
- * or Reprint is pressed, and it is held in this panel's state until Close, Issue, Reissue or Revoke replaces it. Issue and Reissue
- * never send the code: the new badge is viewed with Show badge like any other. Nothing about the code is in the page's props.
+ * The badge (QR code) for the door. The header says in words whether a badge is active. The code leaves the server only when Show,
+ * Issue or Reissue opens the badge view, and it is held in this panel's state until Close, Reissue, Revoke or a refresh replaces it.
+ * Success is a toast; failures are a short inline message. Nothing about the code is in the page's props.
  */
 export function BadgePanel({
   personId,
@@ -59,24 +60,28 @@ export function BadgePanel({
 }: BadgePanelProps) {
   const [state, dispatch] = useReducer(badgePanelReducer, hasActiveBadge, initialBadgePanelState);
   const [busy, startTransition] = useTransition();
+  const { toast } = useUi();
 
   // The page's own answer wins when it changes (for example after a refresh); the local state follows the actions in between.
   useEffect(() => {
     dispatch({ type: 'synced', active: hasActiveBadge });
   }, [hasActiveBadge]);
 
-  const reveal = (action: (id: string) => Promise<ShowBadgeState>) =>
+  const show = () =>
     startTransition(async () => {
-      dispatch(revealEvent(await action(personId)));
+      dispatch(revealEvent(await showBadgeAction(personId)));
     });
 
+  // Issue and reissue: the badge is issued, then the new card opens straight away. The toast says which it was.
   const issue = () => {
     const replaced = state.active;
 
     startTransition(async () => {
       const result = await issueBadgeAction(idle, personForm(personId));
       if (result.status === 'success') {
-        dispatch({ type: 'issued', replaced });
+        dispatch({ type: 'issued' });
+        toast(replaced ? 'Badge reissued.' : 'Badge issued.');
+        dispatch(revealEvent(await showBadgeAction(personId)));
       } else if (result.status === 'error') {
         dispatch({ type: 'notice', message: result.message });
       }
@@ -88,6 +93,7 @@ export function BadgePanel({
       const result = await revokeBadgeAction(idle, personForm(personId));
       if (result.status === 'success') {
         dispatch({ type: 'revoked' });
+        toast('Badge revoked.');
       } else if (result.status === 'error') {
         dispatch({ type: 'notice', message: result.message });
       }
@@ -118,29 +124,15 @@ export function BadgePanel({
               {view.message}
             </p>
           )}
-          {view.kind === 'done' && (
-            <p role="status" className="people-message people-message-ok">
-              {view.message}
-            </p>
-          )}
-          <BadgeActions
-            active={state.active}
-            busy={busy}
-            onShow={() => reveal(showBadgeAction)}
-            onReprint={() => reveal(reprintBadgeAction)}
-            onIssue={issue}
-            onRevoke={revoke}
-          />
+          <BadgeActions active={state.active} busy={busy} onShow={show} onIssue={issue} onRevoke={revoke} />
           {view.kind === 'shown' && (
-            <div className="stack people-badge">
-              <BadgeCard personName={personName} roleLabel={roleLabel} campName={campName} payload={view.payload} />
-              <div className="row">
-                <PrintButton />
-                <Button variant="ghost" onClick={() => dispatch({ type: 'closed' })}>
-                  Close
-                </Button>
-              </div>
-            </div>
+            <BadgeView
+              personName={personName}
+              roleLabel={roleLabel}
+              campName={campName}
+              payload={view.payload}
+              onClose={() => dispatch({ type: 'closed' })}
+            />
           )}
         </div>
       )}

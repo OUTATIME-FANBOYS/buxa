@@ -7,7 +7,6 @@ const base: BadgeActionsProps = {
   active: false,
   busy: false,
   onShow: noop,
-  onReprint: noop,
   onIssue: noop,
   onRevoke: noop,
 };
@@ -21,14 +20,15 @@ describe('BadgeActions', () => {
     expect(html).not.toContain('Reprint');
   });
 
-  it('shows Show badge, Reprint, Reissue and Revoke in that order, with no icons', () => {
+  it('shows Show badge, Reissue and Revoke in that order, with no icons and no Reprint', () => {
     const html = renderToStaticMarkup(<BadgeActions {...base} active />);
     const labels = [...html.matchAll(/<button[^>]*>([^<]*)<\/button>/g)].map(m => m[1]);
-    expect(labels).toEqual(['Show badge', 'Reprint', 'Reissue', 'Revoke']);
+    expect(labels).toEqual(['Show badge', 'Reissue', 'Revoke']);
+    expect(html).not.toContain('Reprint');
     expect(html).not.toContain('<svg');
   });
 
-  it('gives each action its own style: secondary, secondary, primary, danger-soft', () => {
+  it('gives each action its own style: secondary, primary, danger-soft', () => {
     const html = renderToStaticMarkup(<BadgeActions {...base} active />);
     const buttons = [...html.matchAll(/<button([^>]*)>([^<]*)<\/button>/g)].map(m => ({
       label: m[2],
@@ -36,13 +36,12 @@ describe('BadgeActions', () => {
     }));
     const variant = (label: string) => buttons.find(b => b.label === label)?.classes ?? '';
     expect(variant('Show badge')).toContain('secondary');
-    expect(variant('Reprint')).toContain('secondary');
     expect(variant('Reissue')).toContain('primary');
     expect(variant('Revoke')).toContain('danger-soft');
   });
 
   it('disables every button while a badge action runs', () => {
     const html = renderToStaticMarkup(<BadgeActions {...base} active busy />);
-    expect(html.match(/disabled=""/g)).toHaveLength(4);
+    expect(html.match(/disabled=""/g)).toHaveLength(3);
   });
 });
