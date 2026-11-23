@@ -3,14 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { CheckInsByDay } from '@buxa/shared/camp/campHomeTypes';
 import { CheckInsPanel } from '@/components/components/kanban/home/CheckInsPanel';
-import {
-  chartTotals,
-  donutSegments,
-  dayOfMonth,
-  lastDays,
-  shortDate,
-  showAxisLabel,
-} from '@/components/components/kanban/home/homeChartMath';
+import { chartTotals, dayOfMonth, lastDays, shortDate } from '@/components/components/kanban/home/homeChartMath';
 
 Object.assign(globalThis, { React });
 
@@ -41,14 +34,16 @@ describe('CheckInsPanel', () => {
     expect(html).toContain('aria-checked="true"');
     expect(html).toContain('6 people checked in from 4 Nov to 17 Nov.');
     expect(html).toContain('Busiest day: 17 Nov, 4.');
-    expect(html.match(/class="home-bar"/g)?.length).toBe(14);
   });
 
-  it('labels every bar with its date for screen readers, and writes the count on the bar for short ranges', () => {
+  it('draws the days with Bars: one column per day with a value, and day-of-month axis labels', () => {
     const html = renderToStaticMarkup(<CheckInsPanel series={series({ '2026-11-17': 4 })} />);
-    expect(html).toContain('aria-label="Check-ins per day, last 14 days"');
-    expect(html).toContain('17 Nov: 4 people');
-    expect(html).toContain('<span class="home-bar-value" aria-hidden="true">4</span>');
+    expect(html).toContain('<svg width="640"');
+    expect(html).toContain('role="img"');
+    expect(html).toContain('aria-label="Check-ins per day, last 14 days, 4 in total"');
+    // Only the one day with a count draws a column; the first day's label is always written (Bars thins the rest).
+    expect(html.match(/class="chart-bar"/g)?.length).toBe(1);
+    expect(html).toContain('class="axis">4</text>');
   });
 
   it('has a table alternative with every day of the range', () => {
@@ -59,22 +54,45 @@ describe('CheckInsPanel', () => {
     expect(html).toContain('<tr><td>17 Nov</td><td>4</td></tr>');
   });
 
-  it('says so, and draws no bars, when nobody checked in during the range', () => {
+  it('says so, and draws no chart, when nobody checked in during the range', () => {
     const html = renderToStaticMarkup(<CheckInsPanel series={series({})} />);
     expect(html).toContain('No check-ins in the last 14 days.');
-    expect(html).not.toContain('home-bars');
+    expect(html).not.toContain('aria-label="Check-ins per day, last 14 days');
     expect(html).not.toContain('<table');
   });
 
   it('says attendance is not shown, with no chart, when the viewer may not read it', () => {
     const html = renderToStaticMarkup(<CheckInsPanel series={null} />);
     expect(html).toContain('Attendance is not shown for your role.');
-    expect(html).not.toContain('home-bars');
+    expect(html).not.toContain('<svg');
   });
 
   it('warns that the older days may be short when the read was cut off', () => {
     const html = renderToStaticMarkup(<CheckInsPanel series={series({ '2026-11-17': 1 }, false)} />);
     expect(html).toContain('the older days may be short');
+  });
+
+  it('shows the change against the period before, as a chip', () => {
+    // Last 14 days: 8. The 14 days before: 0. So it is a plain count up.
+    const html = renderToStaticMarkup(
+      <CheckInsPanel series={series({ '2026-11-17': 5, '2026-11-16': 3 }, true, { '2026-11-17': 2 })} />,
+    );
+    expect(html).toContain('+8 vs previous 14 days');
+  });
+
+  it('keeps the parents and students split in the table, with the total', () => {
+    const html = renderToStaticMarkup(
+      <CheckInsPanel series={series({ '2026-11-17': 5, '2026-11-16': 3 }, true, { '2026-11-17': 2 })} />,
+    );
+    expect(html).toContain('<th scope="col">Students</th>');
+    expect(html).toContain('<tr><td>17 Nov</td><td>3</td><td>2</td><td>5</td></tr>');
+    expect(html).not.toContain('is not shown for your role');
+  });
+
+  it('says the split is not shown, and has no students column, without the minor flag', () => {
+    const html = renderToStaticMarkup(<CheckInsPanel series={series({ '2026-11-17': 5 })} />);
+    expect(html).not.toContain('<th scope="col">Students</th>');
+    expect(html).toContain('The split between Parent/Guardians and Students is not shown for your role.');
   });
 });
 
@@ -95,76 +113,8 @@ describe('homeChartMath', () => {
     expect(chartTotals([{ date: '2026-11-01', count: 0, minors: null }]).busiest).toBeNull();
   });
 
-  it('labels every bar of a short range, and every third bar of a long one, always with the last', () => {
-    expect(showAxisLabel(0, 14) && showAxisLabel(13, 14)).toBe(true);
-    expect([0, 1, 2, 3].filter(i => showAxisLabel(i, 30))).toEqual([0, 3]);
-    expect(showAxisLabel(29, 30)).toBe(true);
-  });
-
   it('formats dates without a zone shift', () => {
     expect(shortDate('2026-11-17')).toBe('17 Nov');
     expect(dayOfMonth('2026-11-04')).toBe('4');
-  });
-});
-
-describe('CheckInsPanel as stacked columns', () => {
-  // 17 Nov: 5 people, 2 of them students. 16 Nov: 3 people, none students. The peak is 5, so 17 Nov fills the column.
-  const stacked = () => series({ '2026-11-17': 5, '2026-11-16': 3 }, true, { '2026-11-17': 2 });
-
-  it('writes each day total above its column, and splits the column into parents and students', () => {
-    const html = renderToStaticMarkup(<CheckInsPanel series={stacked()} />);
-    expect(html).toContain('<span class="home-bar-value" aria-hidden="true">5</span>');
-    expect(html).toContain('<span class="home-bar-value" aria-hidden="true">3</span>');
-    expect(html).toContain('<span class="home-seg home-seg-students" style="flex-grow:2"></span>');
-    expect(html).toContain('<span class="home-seg home-seg-parents" style="flex-grow:3"></span>');
-    expect(html).toContain('<span class="home-stack-col" style="height:100%">');
-    expect(html).toContain('<span class="home-stack-col" style="height:60%">');
-  });
-
-  it('reads each day aloud with its split, and the stacked totals add to the summary', () => {
-    const html = renderToStaticMarkup(<CheckInsPanel series={stacked()} />);
-    expect(html).toContain('17 Nov: 5 people (Parent/Guardians 3, Students 2)');
-    expect(html).toContain('8 people checked in from 4 Nov to 17 Nov.');
-  });
-
-  it('draws a band behind the columns, and a legend that names both groups', () => {
-    const html = renderToStaticMarkup(<CheckInsPanel series={stacked()} />);
-    expect(html).toContain('<svg class="home-band"');
-    expect(html).toContain('<polygon points="0,100 ');
-    expect(html).toContain('aria-label="Legend"');
-    expect(html).toContain('<span class="home-sw home-seg-parents" aria-hidden="true"></span>Parent/Guardians');
-    expect(html).toContain('<span class="home-sw home-seg-students" aria-hidden="true"></span>Students');
-  });
-
-  it('shows the split in the table alternative, with the total', () => {
-    const html = renderToStaticMarkup(<CheckInsPanel series={stacked()} />);
-    expect(html).toContain('<th scope="col">Students</th>');
-    expect(html).toContain('<tr><td>17 Nov</td><td>3</td><td>2</td><td>5</td></tr>');
-  });
-
-  it('shows the change against the period before, as a chip', () => {
-    // Last 14 days: 8. The 14 days before: 0. So it is a plain count up.
-    const html = renderToStaticMarkup(<CheckInsPanel series={stacked()} />);
-    expect(html).toContain('+8 vs previous 14 days');
-  });
-
-  it('says the split is not shown, and draws no students, without the minor flag', () => {
-    const html = renderToStaticMarkup(<CheckInsPanel series={series({ '2026-11-17': 5 })} />);
-    expect(html).not.toContain('home-seg-students');
-    expect(html).toContain('The split between Parent/Guardians and Students is not shown for your role.');
-  });
-});
-
-describe('donutSegments', () => {
-  it('gives each non-empty status a dash of the ring, in order, with its share', () => {
-    const segments = donutSegments({ valid: 3, notStarted: 0, expired: 1, none: 0 }, 100);
-    expect(segments.map(s => s.key)).toEqual(['valid', 'expired']);
-    expect(segments.map(s => s.percent)).toEqual([75, 25]);
-    expect(segments[0].dash).toBeCloseTo(75);
-    expect(segments[1].offset).toBeCloseTo(-75);
-  });
-
-  it('draws nothing for an empty camp', () => {
-    expect(donutSegments({ valid: 0, notStarted: 0, expired: 0, none: 0 }, 100)).toEqual([]);
   });
 });
