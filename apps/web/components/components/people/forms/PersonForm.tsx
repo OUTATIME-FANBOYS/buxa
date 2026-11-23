@@ -155,17 +155,6 @@ export function PersonForm(props: PersonFormProps) {
           autoComplete="off"
           maxLength={80}
         />
-        {person && (
-          <TextField
-            label="Preferred name"
-            name="preferredName"
-            defaultValue={person.preferredName ?? undefined}
-            error={err('preferredName')}
-            hint="The name people use, if it is not the first name."
-            autoComplete="off"
-            maxLength={80}
-          />
-        )}
       </div>
 
       <div className="people-form-half">
