@@ -21,7 +21,7 @@ function Probe() {
 }
 
 const card = {
-  person: { id: 'p-1', givenName: 'Ada', familyName: 'Lee', preferredName: null, status: 'valid' },
+  person: { id: 'p-1', givenName: 'Ada', familyName: 'Lee', status: 'valid' },
   onSiteSince: null,
 } as unknown as PersonCard;
 

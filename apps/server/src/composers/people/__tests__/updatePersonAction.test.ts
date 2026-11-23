@@ -21,7 +21,6 @@ const details = {
   id: IDS.person,
   givenName: 'Ben',
   familyName: 'Lee',
-  preferredName: '',
   dateOfBirth: '2016-05-02',
   email: 'ben@example.test',
   phone: '',
@@ -140,7 +139,6 @@ describe('updatePersonAction', () => {
       {
         givenName: 'Ben',
         familyName: 'Lee',
-        preferredName: '',
         dateOfBirth: null,
         email: '',
         phone: '',

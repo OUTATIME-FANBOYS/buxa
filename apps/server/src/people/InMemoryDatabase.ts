@@ -19,7 +19,6 @@ export interface StoredPerson {
   orgId: string;
   givenName: string;
   familyName: string;
-  preferredName: string | null;
   dateOfBirth: LocalDate | null;
   email: string | null;
   phone: string | null;

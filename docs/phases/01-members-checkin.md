@@ -31,7 +31,7 @@ Every table has `org_id`, forced row-level security, and a policy scoped to the 
 
 | Table                             | Holds                                                                                                                                                                                                                                        |
 | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `people`                          | `given_name`, `family_name`, `preferred_name?`, `date_of_birth?`, `email?`, `phone?`, `archived_at?`                                                                                                                                         |
+| `people`                          | `given_name`, `family_name`, `date_of_birth?`, `email?`, `phone?`, `archived_at?`                                                                                                                                                            |
 | `person_roles`                    | (`person_id`, `role`)                                                                                                                                                                                                                        |
 | `households`, `household_members` | household name; (`household_id`, `person_id`, `relationship`, `is_guardian`, `can_pickup`)                                                                                                                                                   |
 | `memberships`                     | `person_id`, `plan`, `starts_on`, `ends_on` (dates), `revoked_at?`, `revoked_reason?`; `ends_on >= starts_on`                                                                                                                                |
@@ -48,7 +48,7 @@ Every table has `org_id`, forced row-level security, and a policy scoped to the 
 3. **Check-out** of a camper (child) requires choosing a guardian with `can_pickup`; an admin may override with a reason. Adults check out freely. Check-out of someone not on site is refused.
 4. **Minor** = under 18 on the camp's local date (or a `camper` with no date of birth is treated as a minor: safe by default).
 5. **Credential resolve**: an unknown or revoked token answers one neutral "not recognised" with no hint whether it ever existed. Tokens are 128 bits from a CSPRNG, shown once at issue, stored only as a SHA-256 hash, compared in constant time. Reissuing revokes the old badge.
-6. **Name search**: case- and accent-insensitive, matches given, family or preferred name, hides archived people, returns at most 20.
+6. **Name search**: case- and accent-insensitive, matches given or family name, hides archived people, returns at most 20.
 7. Every create, update, archive, membership change, credential issue or revoke, check-in, check-out and override writes an **audit entry** (the `AuditAction` union grows; adding an action is the compiler's cue to handle it).
 
 ## Permissions

@@ -104,7 +104,6 @@ describe('CredentialService', () => {
         id: person.id,
         givenName: 'Ben',
         familyName: 'Stone',
-        preferredName: null,
         roles: ['participant'],
         status: 'valid',
         onSite: false,

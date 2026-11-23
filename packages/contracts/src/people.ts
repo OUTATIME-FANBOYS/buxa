@@ -28,7 +28,6 @@ export const PersonSummarySchema = z.object({
   id: z.string(),
   givenName: z.string(),
   familyName: z.string(),
-  preferredName: z.string().nullable(),
   roles: z.array(CampRoleSchema),
   status: AccessStatusSchema.nullable(),
   /** Checked in and not yet checked out. Null for viewers. */
@@ -86,7 +85,6 @@ export type Person = z.infer<typeof PersonSchema>;
 export const NewPersonInputSchema = z.object({
   givenName: Name,
   familyName: Name,
-  preferredName: Optional(80),
   dateOfBirth: LocalDateSchema.optional(),
   email: OptionalEmailSchema,
   phone: OptionalPhoneSchema,
@@ -103,7 +101,6 @@ export type NewPersonInput = z.infer<typeof NewPersonInputSchema>;
 export const PersonPatchInputSchema = z.object({
   givenName: Name.optional(),
   familyName: Name.optional(),
-  preferredName: z.string().trim().max(80).nullable().optional(),
   dateOfBirth: LocalDateSchema.nullable().optional(),
   email: PatchEmailSchema.nullable().optional(),
   phone: PatchPhoneSchema.nullable().optional(),

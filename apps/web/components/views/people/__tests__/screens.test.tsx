@@ -65,7 +65,6 @@ const summary = (over: Partial<PersonSummary> = {}): PersonSummary => ({
   id: ID.ben,
   givenName: 'Ben',
   familyName: 'Lee',
-  preferredName: null,
   roles: ['camper'],
   status: 'valid',
   onSite: true,

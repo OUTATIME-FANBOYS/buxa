@@ -34,7 +34,7 @@ Paste secrets only into Vercel's form, never into the repo or a chat.
 ## Database requirements
 
 - Postgres 15 or newer. Row-level security is how tenants are kept apart, so it is not optional.
-- Migrations are the `.sql` files in `packages/db/migrations`, applied in filename order. The current set is `0001` to `0042`. Do not add a migration under a number that is already used.
+- Migrations are the `.sql` files in `packages/db/migrations`, applied in filename order. The current set is `0001` to `0044`. Do not add a migration under a number that is already used.
   There are two logins. They must be different, and the web app must only ever hold the restricted one.
   The names: `buxa_app` is a `NOLOGIN` role that migration `0001` creates; tenant queries switch to it. `buxa_runtime` is the runtime login the operator creates (see "Operator steps"). The migration login is whatever login `MIGRATION_DATABASE_URL` names. On Supabase it may be the owner role (`postgres`), which `docs/security.md` (section 7.5) describes as a permanent limit.
 
@@ -120,6 +120,10 @@ The rules are: **the database accepts connections only from the deploy job and f
 ## Badge encryption key (migration 0041)
 
 Migration `0041` adds an encrypted copy of each active badge's token (`credentials.token_ciphertext`, `token_iv`, `token_auth_tag`). The key that seals them is `BADGE_ENCRYPTION_KEY`, read only by the server when a badge is issued or shown (`apps/server/src/credentials/badgeCipher.ts`). Set it in Production and in Preview, and mark it Sensitive in Vercel's form, before the first badge is issued there. Badges issued before `0041` have no copy: the camp reissues them to show them. Do not put the value in a repository, a log or a chat.
+
+## Preferred name removal (migration 0044)
+
+Migration `0044` clears every stored preferred name and drops `people.preferred_name` (release `v0.3.2`, the `drop-approved` label). A person is shown by first name and family name only. Releases before `v0.3.2` still select the column, so do not run `0043` against a database that a build older than `v0.3.2` is serving.
 
 ## Phase 3 migrations (0023 to 0040)
 

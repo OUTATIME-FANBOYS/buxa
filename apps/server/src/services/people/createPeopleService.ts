@@ -31,7 +31,7 @@ import {
   RELATIONSHIP_NEEDED,
 } from './rules';
 
-/** Blank text means "no value" for the optional contact fields and the preferred name. */
+/** Blank text means "no value" for the optional contact fields. */
 const blankToNull = (value: string | null): string | null => (value === null || value.trim() === '' ? null : value);
 
 function toPatchRecord(patch: PersonPatchInput): PersonPatchRecord {
@@ -41,9 +41,6 @@ function toPatchRecord(patch: PersonPatchInput): PersonPatchRecord {
   }
   if (patch.familyName !== undefined) {
     out.familyName = patch.familyName;
-  }
-  if (patch.preferredName !== undefined) {
-    out.preferredName = blankToNull(patch.preferredName);
   }
   if (patch.dateOfBirth !== undefined) {
     out.dateOfBirth = patch.dateOfBirth;
@@ -297,7 +294,6 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
           {
             givenName: input.givenName,
             familyName: input.familyName,
-            preferredName: blankToNull(input.preferredName ?? null),
             dateOfBirth: input.dateOfBirth ?? null,
             email: blankToNull(input.email ?? null),
             phone: blankToNull(input.phone ?? null),
