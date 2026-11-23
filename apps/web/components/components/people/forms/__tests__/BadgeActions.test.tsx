@@ -1,27 +1,48 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { BadgeActions } from '@/components/components/people/forms';
-import { settle } from '@buxa/domain';
+import { BadgeActions, type BadgeActionsProps } from '@/components/components/people/forms';
 
-vi.mock('@buxa/server/composers/people/issueBadgeAction', () => ({
-  issueBadgeAction: () => settle(() => ({ status: 'idle' })),
-}));
-vi.mock('@buxa/server/composers/people/revokeBadgeAction', () => ({
-  revokeBadgeAction: () => settle(() => ({ status: 'idle' })),
-}));
-
-const base = { personId: 'p-1', personName: 'Ada Lee', roleLabel: 'Camper', campName: 'Camp Birchwood' };
+const noop = vi.fn();
+const base: BadgeActionsProps = {
+  active: false,
+  busy: false,
+  onShow: noop,
+  onReprint: noop,
+  onIssue: noop,
+  onRevoke: noop,
+};
 
 describe('BadgeActions', () => {
-  it('offers to issue a first badge, with no revoke until there is one', () => {
-    const html = renderToStaticMarkup(<BadgeActions {...base} hasActiveBadge={false} />);
+  it('offers one primary Issue badge when there is no active badge, and nothing else', () => {
+    const html = renderToStaticMarkup(<BadgeActions {...base} />);
     expect(html).toContain('>Issue badge</button>');
-    expect(html).not.toContain('Revoke badge');
+    expect(html.match(/<button/g)).toHaveLength(1);
+    expect(html).not.toContain('Revoke');
+    expect(html).not.toContain('Reprint');
   });
-  it('offers to reissue and revoke when there is an active badge, and warns the old code stops', () => {
-    const html = renderToStaticMarkup(<BadgeActions {...base} hasActiveBadge />);
-    expect(html).toContain('>Reissue badge</button>');
-    expect(html).toContain('>Revoke badge</button>');
-    expect(html).toContain('The old code stops working at once.');
+
+  it('shows Show badge, Reprint, Reissue and Revoke in that order, with no icons', () => {
+    const html = renderToStaticMarkup(<BadgeActions {...base} active />);
+    const labels = [...html.matchAll(/<button[^>]*>([^<]*)<\/button>/g)].map(m => m[1]);
+    expect(labels).toEqual(['Show badge', 'Reprint', 'Reissue', 'Revoke']);
+    expect(html).not.toContain('<svg');
+  });
+
+  it('gives each action its own style: secondary, secondary, primary, danger-soft', () => {
+    const html = renderToStaticMarkup(<BadgeActions {...base} active />);
+    const buttons = [...html.matchAll(/<button([^>]*)>([^<]*)<\/button>/g)].map(m => ({
+      label: m[2],
+      classes: /class="([^"]*)"/.exec(m[1])?.[1] ?? '',
+    }));
+    const variant = (label: string) => buttons.find(b => b.label === label)?.classes ?? '';
+    expect(variant('Show badge')).toContain('secondary');
+    expect(variant('Reprint')).toContain('secondary');
+    expect(variant('Reissue')).toContain('primary');
+    expect(variant('Revoke')).toContain('danger-soft');
+  });
+
+  it('disables every button while a badge action runs', () => {
+    const html = renderToStaticMarkup(<BadgeActions {...base} active busy />);
+    expect(html.match(/disabled=""/g)).toHaveLength(4);
   });
 });
