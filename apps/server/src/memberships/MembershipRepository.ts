@@ -3,12 +3,16 @@ import type { Actor, LocalDate, MembershipPeriod } from '@buxa/domain';
 export interface MembershipRecord extends MembershipPeriod {
   id: string;
   personId: string;
+  /** The session the membership was made from, or null for a custom membership. */
+  sessionId: string | null;
   plan: string;
   revokedReason: string | null;
 }
 
 export interface NewMembershipRecord {
   personId: string;
+  /** Left out or null for a custom membership. */
+  sessionId?: string | null;
   plan: string;
   startsOn: LocalDate;
   endsOn: LocalDate;

@@ -40,6 +40,8 @@ export type PersonSummary = z.infer<typeof PersonSummarySchema>;
 export const PersonMembershipSchema = z.object({
   id: z.string(),
   personId: z.string(),
+  /** The session the membership was made from, or null for a custom membership. */
+  sessionId: z.string().nullable(),
   plan: z.string(),
   startsOn: LocalDateSchema,
   endsOn: LocalDateSchema,
@@ -148,10 +150,15 @@ export const HouseholdLinkInputSchema = z
   });
 export type HouseholdLinkInput = z.infer<typeof HouseholdLinkInputSchema>;
 
+/** The value of the membership form's Session choice that means "not a session": the name and dates are typed. */
+export const CUSTOM_SESSION_CHOICE = 'custom';
+
 export const NewMembershipInputSchema = z
   .object({
     personId: z.string().uuid(),
-    plan: z.string().trim().min(1, 'Name the plan, for example "Summer 2027".').max(80),
+    /** The camp session the membership is made from, or null for a custom membership (then `plan` is the name typed). */
+    sessionId: z.string().uuid().nullable().optional(),
+    plan: z.string().trim().min(1, 'Enter a name, for example "Summer 2027".').max(80),
     startsOn: LocalDateSchema,
     endsOn: LocalDateSchema,
   })

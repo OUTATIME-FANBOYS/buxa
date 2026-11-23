@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
+import type { Session } from '@buxa/contracts';
 import { AddMembershipForm } from '@/components/components/people/forms';
 import { settle } from '@buxa/domain';
 
@@ -7,24 +8,48 @@ vi.mock('@buxa/server/composers/people/addMembershipAction', () => ({
   addMembershipAction: () => settle(() => ({ status: 'idle' })),
 }));
 
+const SESSION: Session = {
+  id: '5a5a5a5a-5a5a-4a5a-8a5a-5a5a5a5a5a5a',
+  name: 'Summer camp',
+  description: '',
+  startsOn: '2027-07-01',
+  endsOn: '2027-08-30',
+  classCount: 2,
+  isPublic: false,
+  createdAt: '2027-01-01T00:00:00.000Z',
+  price: null,
+};
+
 describe('AddMembershipForm', () => {
-  it('asks for a plan and the first and last camp days, for the person', () => {
-    const html = renderToStaticMarkup(<AddMembershipForm personId="p-1" />);
-    expect(html).toContain('<h3 class="people-subheading">Add a membership</h3>');
-    expect(html).toMatch(/<label[^>]*>Plan<\/label>/);
-    expect(html).toMatch(/<label[^>]*>Starts on<\/label>/);
-    expect(html).toMatch(/<label[^>]*>Ends on<\/label>/);
+  it('starts with a Session dropdown (no Name or dates until Custom is chosen) for the person', () => {
+    const html = renderToStaticMarkup(
+      <AddMembershipForm personId="p-1" sessions={[SESSION]} formId="add-membership-form" />,
+    );
+    expect(html).toMatch(/<label[^>]*>Session/);
+    expect(html).toContain('name="sessionId"');
+    expect(html).toContain('Choose a session');
+    expect(html).toContain('>Custom<');
+    expect(html).not.toMatch(/<label[^>]*>Name/);
+    expect(html).not.toMatch(/<label[^>]*>Starts on/);
     expect(html).toContain('name="personId" value="p-1"');
-    expect(html).toContain('>Add membership</button>');
+    expect(html).toContain('id="add-membership-form"');
   });
 
-  it('gives every field the same parts (label, input, helper line) in one grid, and a primary submit', () => {
-    const html = renderToStaticMarkup(<AddMembershipForm personId="p-1" />);
-    expect(html).toContain('people-form-grid people-membership-fields');
-    expect(html).toContain('The first camp day, included.');
-    expect(html).toContain('The last camp day, included.');
-    const submitTag = /<button([^>]*)>Add membership<\/button>/.exec(html)?.[1] ?? '';
-    expect(submitTag).toContain('button--primary');
-    expect(html).not.toContain('button--sm');
+  it('lists the sessions by name, and leaves out a session with no dates', () => {
+    const html = renderToStaticMarkup(
+      <AddMembershipForm
+        personId="p-1"
+        sessions={[SESSION, { ...SESSION, id: 'no-dates', name: 'Undated', startsOn: null, endsOn: null }]}
+        formId="add-membership-form"
+      />,
+    );
+    expect(html).toContain('>Summer camp<');
+    expect(html).not.toContain('Undated');
+  });
+
+  it('uses the form frame of the pop-ups (no inline heading, no submit button of its own)', () => {
+    const html = renderToStaticMarkup(<AddMembershipForm personId="p-1" sessions={[]} formId="add-membership-form" />);
+    expect(html).not.toContain('Add a membership');
+    expect(html).not.toContain('>Add membership</button>');
   });
 });

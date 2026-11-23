@@ -19,4 +19,12 @@ describe('membership revoke layout', () => {
     expect(ruleFor(people, '.people-member-revoke')).toMatch(/flex:\s*1 1 100%/);
     expect(ruleFor(people, '.people-member-revoke textarea')).toMatch(/width:\s*100%/);
   });
+
+  it('centres the text block, the status pill and the Revoke button on one line, with one gap between them', () => {
+    const row = ruleFor(people, '.people-member-row');
+    expect(row).toMatch(/align-items:\s*center/);
+    expect(row).not.toMatch(/align-items:\s*(start|flex-start|top)/);
+    expect(row).toMatch(/gap:\s*var\(--s2\) var\(--s4\)/);
+    expect(ruleFor(people, '.people-member-row > .people-member-main')).toMatch(/flex:\s*1 1 auto/);
+  });
 });

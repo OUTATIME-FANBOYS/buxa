@@ -17,6 +17,9 @@ vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: { membership
 vi.mock('../camp', () => ({ currentActor: () => settle(() => h.actor) }));
 
 const season = { personId: IDS.person, plan: 'Summer 2027', startsOn: '2027-07-01', endsOn: '2027-08-20' };
+const SESSION_ID = '55555555-5555-4555-8555-555555555555';
+/** The posted form for a custom membership: the Session choice is Custom, then the name and dates. */
+const customForm = (values: Record<string, string>) => formOf({ sessionId: 'custom', ...values });
 
 describe('addMembershipAction', () => {
   beforeEach(() => {
@@ -28,17 +31,17 @@ describe('addMembershipAction', () => {
   it('checks the dates and the plan name with the contract messages', async () => {
     const state = await addMembershipAction(
       idle,
-      formOf({ ...season, plan: '', startsOn: '2027-02-30', endsOn: '2027-01-01' }),
+      customForm({ ...season, plan: '', startsOn: '2027-02-30', endsOn: '2027-01-01' }),
     );
     expect(state).toMatchObject({
       status: 'error',
-      fieldErrors: { plan: 'Name the plan, for example "Summer 2027".', startsOn: 'Use a real date (YYYY-MM-DD).' },
+      fieldErrors: { plan: 'Enter a name, for example "Summer 2027".', startsOn: 'Use a real date (YYYY-MM-DD).' },
     });
     expect(h.memberships.add).not.toHaveBeenCalled();
   });
 
   it('refuses an end date before the start date', async () => {
-    const state = await addMembershipAction(idle, formOf({ ...season, endsOn: '2027-06-01' }));
+    const state = await addMembershipAction(idle, customForm({ ...season, endsOn: '2027-06-01' }));
     expect(state).toMatchObject({
       status: 'error',
       fieldErrors: { endsOn: 'The end date cannot be before the start date.' },
@@ -46,7 +49,7 @@ describe('addMembershipAction', () => {
   });
 
   it('adds the membership, refreshes the person and says so', async () => {
-    expect(await addMembershipAction(idle, formOf(season))).toEqual({
+    expect(await addMembershipAction(idle, customForm(season))).toEqual({
       status: 'success',
       message: 'Membership added.',
     });
@@ -54,9 +57,24 @@ describe('addMembershipAction', () => {
     expect(h.revalidatePath).toHaveBeenCalledWith(personPath(IDS.person));
   });
 
+  it('passes the session id on when the membership is made from a session', async () => {
+    await addMembershipAction(idle, formOf({ ...season, sessionId: SESSION_ID }));
+    expect(h.memberships.add).toHaveBeenCalledWith(h.actor, { ...season, sessionId: SESSION_ID });
+  });
+
+  it('asks for a session choice when none is made, and sends no session id for Custom', async () => {
+    expect(await addMembershipAction(idle, formOf({ ...season, sessionId: '' }))).toMatchObject({
+      status: 'error',
+      fieldErrors: { sessionId: 'Choose a session, or Custom.' },
+    });
+    expect(h.memberships.add).not.toHaveBeenCalled();
+    await addMembershipAction(idle, formOf({ ...season, sessionId: 'custom' }));
+    expect(h.memberships.add).toHaveBeenCalledWith(h.actor, season);
+  });
+
   it('turns a 403 into a friendly state', async () => {
     h.memberships.add.mockRejectedValueOnce(forbidden('no'));
-    expect(await addMembershipAction(idle, formOf(season))).toMatchObject({
+    expect(await addMembershipAction(idle, customForm(season))).toMatchObject({
       status: 'error',
       message: 'Your role cannot do this.',
     });

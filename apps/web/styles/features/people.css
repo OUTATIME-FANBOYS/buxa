@@ -128,13 +128,17 @@
   gap: var(--s2);
   align-items: center;
 }
+/* The text block, the status pill and the Revoke button sit on one centre line, with the same gap between each pair. */
 .people-member-row {
   display: flex;
   flex: 1 1 100%;
   flex-wrap: wrap;
   gap: var(--s2) var(--s4);
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+}
+.people-member-row > .people-member-main {
+  flex: 1 1 auto;
 }
 .people-member-revoke {
   flex: 1 1 100%;

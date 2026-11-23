@@ -71,6 +71,7 @@ export async function createCamp(timeZone = 'UTC', start = '2027-07-10T12:00:00Z
     memberships: createMembershipService({
       memberships: repos.memberships,
       people: repos.people,
+      classes: repos.classes,
       orgs: repos.orgs,
       clock,
     }),

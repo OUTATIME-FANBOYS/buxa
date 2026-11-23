@@ -18,6 +18,7 @@ export function toPersonMembership(record: MembershipRecord, today: LocalDate): 
   return {
     id: record.id,
     personId: record.personId,
+    sessionId: record.sessionId,
     plan: record.plan,
     startsOn: record.startsOn,
     endsOn: record.endsOn,
