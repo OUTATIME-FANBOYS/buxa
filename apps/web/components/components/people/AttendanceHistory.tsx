@@ -1,9 +1,14 @@
 import type { AttendanceEntry } from '@buxa/contracts';
-import { OnSitePill } from './OnSitePill';
 import { formatCampDateTime } from '@buxa/shared';
 import type { ClockFormat } from '@buxa/domain';
 
-/** One person's visits, newest first. Staff are named, never shown as ids. Times are the camp's local time (`timeZone`). */
+/** How many recent check-ins the tile lists. */
+const RECENT_CHECK_INS = 5;
+
+/**
+ * The person's most recent check-ins, date and time, newest first (the service's order). Times are the camp's local time
+ * (`timeZone`). Uses the visit history the page already loads; no query of its own.
+ */
 export function AttendanceHistory({
   entries,
   timeZone,
@@ -13,49 +18,21 @@ export function AttendanceHistory({
   timeZone: string;
   clockFormat: ClockFormat;
 }) {
+  const recent = entries.slice(0, RECENT_CHECK_INS);
+
   return (
-    <section className="panel" aria-labelledby="visits-heading">
-      <h2 id="visits-heading" className="people-heading">
+    <section className="panel" aria-labelledby="attendance-heading">
+      <h2 id="attendance-heading" className="people-heading">
         Attendance
       </h2>
-      {entries.length === 0 ? (
-        <p className="muted">No visits yet.</p>
+      {recent.length === 0 ? (
+        <p className="muted">No check-ins yet.</p>
       ) : (
-        <div className="table-wrap">
-          <table className="table">
-            <caption className="sr-only">Visits to camp, newest first</caption>
-            <thead>
-              <tr>
-                <th scope="col">Arrived</th>
-                <th scope="col">Left</th>
-                <th scope="col">Checked in by</th>
-                <th scope="col">Collected by</th>
-                <th scope="col">Notes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map(entry => (
-                <tr key={entry.id}>
-                  <td>{formatCampDateTime(entry.checkedInAt, timeZone, clockFormat)}</td>
-                  <td>
-                    {entry.checkedOutAt ? (
-                      formatCampDateTime(entry.checkedOutAt, timeZone, clockFormat)
-                    ) : (
-                      <OnSitePill onSite />
-                    )}
-                  </td>
-                  <td>{entry.checkedInByName ?? '—'}</td>
-                  <td>{entry.collectedByName ?? '—'}</td>
-                  <td>
-                    {[entry.overrideReason && `Override: ${entry.overrideReason}`, entry.note]
-                      .filter(Boolean)
-                      .join(' · ') || '—'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ul className="people-list" aria-label="Recent check-ins">
+          {recent.map(entry => (
+            <li key={entry.id}>{formatCampDateTime(entry.checkedInAt, timeZone, clockFormat)}</li>
+          ))}
+        </ul>
       )}
     </section>
   );
