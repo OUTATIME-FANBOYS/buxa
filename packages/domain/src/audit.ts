@@ -51,5 +51,12 @@ export const AUDIT_ACTIONS = [
   'hold.create',
   'hold.release',
   'hold.expire',
+  'group.create',
+  'group.update',
+  'room.create',
+  'room.update',
+  'assignment.create',
+  'assignment.move',
+  'assignment.override',
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

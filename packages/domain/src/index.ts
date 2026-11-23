@@ -6,6 +6,7 @@ export * from './audit';
 export * from './clock';
 export * from './people';
 export * from './classes';
+export * from './groups';
 export * from './registration';
 export * from './money';
 export * from './prices';

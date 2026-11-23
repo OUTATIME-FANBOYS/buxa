@@ -1,6 +1,6 @@
 # Phase 4: seats, groups and rosters
 
-Status: **spec for review. No code yet.** Roadmap row: "Seats & rosters: groups, cabins, rooms, assign people, per-session check-in."
+Status: **in progress.** Groups, rooms, assignments, the ratio override and the Groups and Assign screens are built on branch `v0.4/feat/groups-rooms-assignments` (migration 0047). The rest is listed under "Not built yet" below. Roadmap row: "Seats & rosters: groups, cabins, rooms, assign people, per-session check-in."
 Depends on: phases 2 and 3.
 
 ## Moved from phase 3: seat holds and the waitlist
@@ -33,6 +33,24 @@ Not built yet:
 3. **Gender and age mixing rules** are not built in this phase. Camps can record a group's age range; age checks reuse phase 2's age rules.
 4. **Room double-booking is refused** for overlapping sessions, using the same overlap rule as phase 2.
 5. **Rosters are read-only exports** for printing and sharing with staff; editing happens in the app.
+
+## Built: groups, rooms and assignments
+
+- **Data (migration 0047).** `groups`, `rooms` and `assignments`, each with `org_id` and forced row-level security. A group and a room belong to a session (the Session row, the one with dates that the URL `/camp/sessions/[id]` shows). A group has a capacity, an optional staff ratio (campers per staff member), and an optional age range. A room has a name, a location, a capacity and its session. An assignment places one person as a `camper` or `staff` in one group and one room. A partial unique index allows one active assignment per person per session, so the database refuses a second one. Composite foreign keys keep a group and a room in the same session as the assignment.
+- **Rules (`packages/domain/src/groups`, pure and tested).** Checked in this order: override validity, the role held, group capacity (campers only; staff do not count), the age range on the session's first day (reusing phase 2's `checkAge`), room overlap (reusing phase 2's overlap rule, on the session's days: sharing a day clashes, the next day touches), room capacity, and the staff ratio. Only a ratio refusal can be overridden.
+- **Override.** An admin or owner (`attendance:override`) can override a ratio refusal with a reason of 1 to 500 characters. The reason is stored on the assignment (`ratio_override_reason`) and written to the audit log as `assignment.override`. A reason that is blank is refused, and a non-admin who sends one is refused.
+- **Placing and moving.** `groups.assign` (service) and `assignInTransaction` (Postgres) lock the person, then the group, then the room (and the room's name and place, across sessions), in that fixed order, and run the rules on fresh counts. Two parallel placements into the last place of a group give one success. A move updates the person's one active assignment in that session. Every change writes its audit entry in the same transaction: `group.create`, `group.update`, `room.create`, `room.update`, `assignment.create`, `assignment.move`, `assignment.override`.
+- **Permissions.** Reads need `people:read` (every role). Writes need `classes:manage` (staff and above), so a viewer is refused with a 403 when placing anyone.
+- **Screens.** `/camp/sessions/[id]/groups` (groups and rooms, with capacity, campers, staff and ratio; New and Edit in `FormPopUp`) and `/camp/sessions/[id]/assign` (each group with its members and room, the campers not placed yet, and a Place or move pop-up). A refusal shows as small polite text under the form. A ratio refusal opens a second pop-up that asks for the reason. The session page links to both.
+- **Model choices to review.** Room identity is its name and location, case-insensitive, within the camp: each session books its own room rows, and the rule checks the other sessions' uses of the same name and place. A group's capacity counts campers only. Staff count toward the ratio only. A session without dates cannot take placements yet (refused as "session_undated").
+
+## Not built yet
+
+- **Roster exports** (CSV and printable page), and the export guard for viewers and CSV formula neutralisation.
+- **Per-session check-in** that records the session and flags a camper who is not assigned to it.
+- **A camp-wide holds screen** (holds across every class, not one class at a time). Phase 3 still shows holds for one class only.
+- **Hold length per camp.** Holds are fixed at 15 minutes (`SEAT_HOLD_MINUTES`).
+- Releasing an assignment (unassigning). The schema has the `active` flag; no code path clears it yet.
 
 ## Acceptance criteria
 
