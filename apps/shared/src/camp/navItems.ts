@@ -15,6 +15,8 @@ export interface NavItem {
   requires?: Action;
   /** Roles that never see this item, whatever else they are granted (a teacher's sidebar is its own short list). */
   hiddenFor?: readonly Role[];
+  /** Shown only to these roles, whatever else they are granted. Absent: no role limit. */
+  onlyFor?: readonly Role[];
   /** The item is a child of the item at this address: the sidebar shows it indented, just below its parent. */
   under?: RoutePath;
 }
@@ -44,6 +46,7 @@ export const CAMP_NAV_GROUPS: readonly NavGroup[] = [
     items: [
       // The Sessions entry is the list of sessions (a date range each, holding classes). Its address stays /camp/sessions.
       { href: ROUTES.sessions, label: 'Sessions', icon: 'calendar', requires: 'events:read' },
+      { href: ROUTES.myClasses, label: 'My classes', icon: 'calendar', onlyFor: ['teacher'] },
       { href: ROUTES.registration, label: 'Registration', icon: 'list', requires: 'registration:read' },
       { href: ROUTES.checkIn, label: 'Check-in', icon: 'check', requires: 'attendance:record' },
       { href: ROUTES.onSite, label: 'On site', icon: 'clock', requires: 'attendance:read' },
@@ -86,7 +89,8 @@ export const navFor = (role: Role | null, items: readonly NavItem[] = CAMP_NAV):
   items.filter(
     item =>
       (!item.requires || (role !== null && roleAllows(role, item.requires))) &&
-      !(role !== null && item.hiddenFor?.includes(role)),
+      !(role !== null && item.hiddenFor?.includes(role)) &&
+      (!item.onlyFor || (role !== null && item.onlyFor.includes(role))),
   );
 
 /** The groups a person may see, with the items they may see. A group with nothing visible is dropped. */

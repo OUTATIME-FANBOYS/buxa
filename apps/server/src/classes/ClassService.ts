@@ -39,8 +39,25 @@ export type { Outcome, Failure, FailureReason } from './outcome';
  * What a screen or an API route may ask of sessions, classes and enrolments. Each method checks its permission first (a denial
  * throws a 403) and returns an Outcome for the expected cases. Unexpected errors throw.
  */
+/** One of a teacher's classes, with only what the teacher needs to plan the day: no seats, no campers, no instructors. */
+export type AssignedClass = Pick<Class, 'id' | 'name' | 'ageRange' | 'startsAt' | 'endsAt' | 'location'>;
+
+/** A session that holds at least one of the teacher's classes, and those classes in start order. */
+export interface AssignedSession {
+  id: string;
+  name: string;
+  startsOn: string | null;
+  endsOn: string | null;
+  classes: AssignedClass[];
+}
+
 export interface ClassService {
   listSessions(actor: Actor): Promise<Outcome<Session[]>>;
+  /**
+   * The signed-in teacher's own classes, grouped by session. Only the actor's assigned classes are read (teacherScope), so no other
+   * teacher's class and no camper appears. A person who is not a teacher gets an empty list.
+   */
+  listMyClasses(actor: Actor): Promise<Outcome<AssignedSession[]>>;
   getSession(actor: Actor, sessionId: string): Promise<Outcome<Session>>;
   createSession(actor: Actor, input: NewSessionInput): Promise<Outcome<Session>>;
   /**
@@ -139,6 +156,49 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
       const mine = await sessionIdsOf(repo, actor, scope);
 
       return ok(sessions.filter(s => mine.has(s.id)));
+    },
+
+    async listMyClasses(actor) {
+      const scope = await teacherScopeOf(repo, actor);
+      if (scope === null) {
+        return ok([]);
+      }
+
+      return attempt(
+        async () => {
+          const found = await Promise.all([...scope.classIds].map(id => repo.getClass(actor.userId, actor.orgId, id)));
+          const classes = found.flatMap(c => (c ? [c] : []));
+          const sessionIds = [...new Set(classes.map(c => c.sessionId))];
+          const sessions = await Promise.all(sessionIds.map(id => repo.getSession(actor.userId, actor.orgId, id)));
+
+          const grouped = sessions.flatMap(session => {
+            if (!session) {
+              return [];
+            }
+            const mine = classes
+              .filter(c => c.sessionId === session.id)
+              .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
+              .map(({ id, name, ageRange, startsAt, endsAt, location }) => ({
+                id,
+                name,
+                ageRange,
+                startsAt,
+                endsAt,
+                location,
+              }));
+
+            return [
+              { id: session.id, name: session.name, startsOn: session.startsOn, endsOn: session.endsOn, classes: mine },
+            ];
+          });
+
+          // Sessions in date order (undated ones last), so the page reads the same on every database.
+          return grouped.sort(
+            (a, b) => (a.startsOn ?? '￿').localeCompare(b.startsOn ?? '￿') || a.name.localeCompare(b.name),
+          );
+        },
+        await timezoneOf(actor),
+      );
     },
 
     async getSession(actor, sessionId) {
