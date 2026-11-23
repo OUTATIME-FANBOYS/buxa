@@ -1,5 +1,6 @@
 import type { Pool } from 'pg';
 import { withOrg } from '@buxa/db';
+import { PgCredentialRepository, transactionScope } from '../credentials/PgCredentialRepository';
 import type { Actor } from '@buxa/domain';
 import type { RegistrationForm, RegistrationFormInput, RegistrationRow } from '@buxa/contracts';
 import {
@@ -10,6 +11,7 @@ import {
   requireFormRow,
 } from './PgRegistrationQueries';
 import {
+  camperIdsInTx,
   confirmRegistrationInTx,
   insertForm,
   insertRegistrationInTx,
@@ -18,6 +20,7 @@ import {
 } from './PgRegistrationWrites';
 import type {
   ConfirmationRule,
+  ConfirmationWork,
   NewRegistration,
   PublishedVersion,
   RegistrationRepository,
@@ -75,9 +78,14 @@ export class PgRegistrationRepository implements RegistrationRepository {
     return withOrg(this.pool, actor.userId, actor.orgId, db => insertRegistrationInTx(db, actor, registration, rule));
   }
 
-  confirm(actor: Actor, registrationId: string, rule: ConfirmationRule): Promise<void> {
-    return withOrg(this.pool, actor.userId, actor.orgId, db =>
-      confirmRegistrationInTx(db, actor, registrationId, rule),
-    );
+  confirm<T>(actor: Actor, registrationId: string, rule: ConfirmationRule, work: ConfirmationWork<T>): Promise<T> {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
+      await confirmRegistrationInTx(db, actor, registrationId, rule);
+
+      return work({
+        campers: () => camperIdsInTx(db, registrationId),
+        credentials: new PgCredentialRepository(transactionScope(db)),
+      });
+    });
   }
 }

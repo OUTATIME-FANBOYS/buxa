@@ -6,6 +6,16 @@ import type { Actor } from '@buxa/domain';
 import { PgRegistrationRepository } from './PgRegistrationRepository';
 import { createRegistrationService } from './RegistrationService';
 import { RegistrationRefusedError } from './errors';
+import { createCredentialService } from '../services/credentials/createCredentialService';
+import { createBadgeCipher, parseBadgeKey } from '../credentials/badgeCipher';
+import { PgPeopleRepository } from '../people/PgPeopleRepository';
+import { PgMembershipRepository } from '../memberships/PgMembershipRepository';
+import { PgAttendanceRepository } from '../attendance/PgAttendanceRepository';
+import { PgOrgRepository } from '../orgs/PgOrgRepository';
+import { systemClock } from '../services/clock';
+
+/** A fixed test key (32 bytes, base64). Never a real key. */
+const TEST_KEY = Buffer.alloc(32, 3).toString('base64');
 
 const url = process.env.DATABASE_URL;
 
@@ -25,7 +35,17 @@ describe.skipIf(!url)('registration in Postgres: camps are isolated', () => {
   let actorA: Actor;
   let actorB: Actor;
   const repo = new PgRegistrationRepository(pool);
-  const service = createRegistrationService(repo);
+  const service = createRegistrationService(repo, credentials =>
+    createCredentialService({
+      credentials,
+      people: new PgPeopleRepository(pool),
+      memberships: new PgMembershipRepository(pool),
+      attendance: new PgAttendanceRepository(pool),
+      orgs: new PgOrgRepository(pool),
+      clock: systemClock,
+      cipher: createBadgeCipher(() => parseBadgeKey(TEST_KEY)),
+    }),
+  );
 
   const formInput = (sessionIds: string[]) => ({
     name: `Form ${tag}`,

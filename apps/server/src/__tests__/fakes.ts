@@ -73,7 +73,8 @@ export class InMemoryStore implements UserRepository, OrgRepository {
   readonly users = new Map<string, User & { authId: string }>();
   readonly orgs = new Map<string, StoredOrg>();
   readonly members: { orgId: string; userId: string; role: Role }[] = [];
-  private readonly database = new InMemoryDatabase();
+  /** Public so a test can read the people and badges a camp holds (the fake of the Postgres tables). */
+  readonly database = new InMemoryDatabase();
 
   /** Every audit row written through this store's adapters, oldest first. */
   get audit(): readonly AuditRecord[] {
@@ -340,7 +341,11 @@ export class InMemoryStore implements UserRepository, OrgRepository {
       attendance: new InMemoryAttendanceRepository(db),
       classes,
       imports: new InMemoryImportRepository(classes),
-      registration: new InMemoryRegistrationRepository({}),
+      registration: new InMemoryRegistrationRepository(
+        {},
+        (orgId, answers) => camperIdsFor(db, orgId, answers),
+        new InMemoryCredentialRepository(db),
+      ),
       seatHolds: unavailableSeatHolds,
       calendar: new InMemoryCalendarRepository(),
       memberInvites: new InMemoryMemberInviteRepository(new Map()),
@@ -357,6 +362,28 @@ export class InMemoryStore implements UserRepository, OrgRepository {
  * Seat holds need the database (their capacity rule is in migration 0023), so the in-memory store has none. Holds are tested
  * against Postgres in holds/__tests__; a test that reaches this stub fails loudly.
  */
+/** The camper people a registration's answers name: active, with the camper role, same name and birth date (see camperIdsInTx). */
+export function camperIdsFor(
+  db: InMemoryDatabase,
+  orgId: string,
+  answers: { standard: Record<string, string> },
+): string[] {
+  const { camperFirstName, camperLastName, camperBirthDate } = answers.standard;
+  const norm = (value: string | undefined): string => (value ?? '').trim().toLowerCase();
+
+  return [...db.people.values()]
+    .filter(
+      p =>
+        p.orgId === orgId &&
+        p.archivedAt === null &&
+        p.roles.includes('camper') &&
+        norm(p.givenName) === norm(camperFirstName) &&
+        norm(p.familyName) === norm(camperLastName) &&
+        p.dateOfBirth === camperBirthDate,
+    )
+    .map(p => p.id);
+}
+
 const unavailableSeatHolds: SeatHoldRepository = {
   placeHold: () => Promise.reject(new Error('Seat holds are only available on Postgres')),
   releaseHold: () => Promise.reject(new Error('Seat holds are only available on Postgres')),

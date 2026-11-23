@@ -7,8 +7,10 @@ import {
   RegistrationRefusedError,
   RegistrationSessionNotFoundError,
 } from './errors';
+import type { CredentialRepository } from '../credentials/CredentialRepository';
 import type {
   ConfirmationRule,
+  ConfirmationWork,
   NewRegistration,
   PublishedVersion,
   RegistrationRepository,
@@ -50,7 +52,15 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
   private readonly forms = new Map<string, StoredForm>();
   private readonly registrations = new Map<string, StoredRegistration>();
 
-  constructor(private readonly campSessions: Record<string, string[]>) {}
+  /**
+   * `campersOf` finds the camper people for a registration's answers (the Postgres query in production). `credentials` is the badge
+   * repository a confirmation works with.
+   */
+  constructor(
+    private readonly campSessions: Record<string, string[]>,
+    private readonly campersOf: (orgId: string, answers: NewRegistration['answers']) => string[] = () => [],
+    private readonly credentials: CredentialRepository | null = null,
+  ) {}
 
   private ownForm(orgId: string, formId: string): StoredForm {
     const form = this.forms.get(formId);
@@ -201,18 +211,39 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
     });
   }
 
-  confirm(actor: Actor, registrationId: string, rule: ConfirmationRule): Promise<void> {
-    return later(() => {
-      const registration = this.registrations.get(registrationId);
-      if (!registration || registration.orgId !== actor.orgId) {
+  async confirm<T>(
+    actor: Actor,
+    registrationId: string,
+    rule: ConfirmationRule,
+    work: ConfirmationWork<T>,
+  ): Promise<T> {
+    const registration = await later(() => {
+      const found = this.registrations.get(registrationId);
+      if (!found || found.orgId !== actor.orgId) {
         throw new RegistrationNotFoundError();
       }
-      const decision = rule(registration.status);
+      const decision = rule(found.status);
       if (!decision.allow) {
         throw new RegistrationRefusedError(decision.reason);
       }
-      registration.status = 'confirmed';
-      registration.confirmedAt = new Date().toISOString();
+
+      return found;
     });
+    if (!this.credentials) {
+      throw new Error('InMemoryRegistrationRepository.confirm needs a credentials repository');
+    }
+    const before = { status: registration.status, confirmedAt: registration.confirmedAt };
+    registration.status = 'confirmed';
+    registration.confirmedAt = new Date().toISOString();
+    try {
+      return await work({
+        campers: () => Promise.resolve(this.campersOf(registration.orgId, registration.answers)),
+        credentials: this.credentials,
+      });
+    } catch (error) {
+      // Postgres rolls the whole confirmation back on a failure; this keeps the in-memory store to the same rule.
+      Object.assign(registration, before);
+      throw error;
+    }
   }
 }

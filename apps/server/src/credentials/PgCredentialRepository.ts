@@ -59,9 +59,26 @@ async function activeOf(db: Db, personId: string): Promise<CredentialRecord | nu
   return rows[0] ? toRecord(rows[0]) : null;
 }
 
+/**
+ * Runs a badge query in its own tenant transaction (the pool), or inside an open one (a confirmation writes its badges in its own
+ * transaction, so both commit together).
+ */
+export type CredentialScope = <T>(userId: string, orgId: string, work: (db: Db) => Promise<T>) => Promise<T>;
+
+export const poolScope =
+  (pool: Pool): CredentialScope =>
+  (userId, orgId, work) =>
+    withOrg(pool, userId, orgId, work);
+
+/** A scope that reuses an open transaction. The caller has already set the tenant on it. */
+export const transactionScope =
+  (db: Db): CredentialScope =>
+  (_userId, _orgId, work) =>
+    work(db);
+
 /** Postgres adapter for badges. Only the token hash is passed in and stored; the token never reaches this file. */
 export class PgCredentialRepository implements CredentialRepository {
-  constructor(private readonly pool: Pool) {}
+  constructor(private readonly scope: CredentialScope) {}
 
   /**
    * A concurrent issue that loses the race on the active-badge unique index is reported as BadgeConflictError, not a 500. A reissue
@@ -88,7 +105,7 @@ export class PgCredentialRepository implements CredentialRepository {
     at: string,
     sealed: SealedToken | null,
   ): Promise<CredentialRecord> {
-    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
+    return this.scope(actor.userId, actor.orgId, async db => {
       if (!(await personExists(db, personId))) {
         throw new PersonNotFoundError();
       }
@@ -129,7 +146,7 @@ export class PgCredentialRepository implements CredentialRepository {
       return Promise.resolve(null);
     }
 
-    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
+    return this.scope(actor.userId, actor.orgId, async db => {
       const { rows } = await db.query<CredentialRow>(
         `UPDATE credentials SET revoked_at = $2::timestamptz, ${WIPE_SEALED} WHERE person_id = $1 AND revoked_at IS NULL RETURNING ${COLUMNS}`,
         [personId, at],
@@ -155,7 +172,7 @@ export class PgCredentialRepository implements CredentialRepository {
       return Promise.resolve(null);
     }
 
-    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
+    return this.scope(actor.userId, actor.orgId, async db => {
       const { rows } = await db.query<SealedRow>(
         `SELECT ${SEALED_COLUMNS} FROM credentials WHERE person_id = $1 AND revoked_at IS NULL`,
         [personId],
@@ -171,11 +188,11 @@ export class PgCredentialRepository implements CredentialRepository {
   }
 
   activeFor(userId: string, orgId: string, personId: string): Promise<CredentialRecord | null> {
-    return withOrg(this.pool, userId, orgId, db => activeOf(db, personId));
+    return this.scope(userId, orgId, db => activeOf(db, personId));
   }
 
   resolve(userId: string, orgId: string, tokenHash: Buffer): Promise<string | null> {
-    return withOrg(this.pool, userId, orgId, async db => {
+    return this.scope(userId, orgId, async db => {
       const { rows } = await db.query<{ person_id: string }>(
         'SELECT person_id FROM credentials WHERE token_hash = $1 AND revoked_at IS NULL',
         [tokenHash],
@@ -191,7 +208,7 @@ export class PgCredentialRepository implements CredentialRepository {
       return Promise.resolve(new Set());
     }
 
-    return withOrg(this.pool, userId, orgId, async db => {
+    return this.scope(userId, orgId, async db => {
       const { rows } = await db.query<{ person_id: string }>(
         'SELECT DISTINCT person_id FROM credentials WHERE person_id = ANY($1::uuid[]) AND revoked_at IS NULL',
         [valid],
