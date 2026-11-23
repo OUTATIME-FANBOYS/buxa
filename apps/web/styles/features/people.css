@@ -22,6 +22,10 @@
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--s4);
 }
+/* Fields that sit side by side keep their tops level: a label, its input and its helper line take the same space in each. */
+.people-membership-fields {
+  align-items: start;
+}
 .people-checks {
   display: flex;
   flex-wrap: wrap;

@@ -22,7 +22,8 @@ export function AddMembershipForm({ personId }: { personId: string }) {
     <form ref={formRef} action={formAction} className="stack people-subpanel">
       <HiddenField name="personId" value={personId} />
       <h3 className="people-subheading">Add a membership</h3>
-      <div className="people-form-grid">
+      {/* Every field has the same parts in the same order: label, input, helper line. The three share one row where they fit. */}
+      <div className="people-form-grid people-membership-fields">
         <TextField
           label="Plan"
           name="plan"
@@ -31,12 +32,12 @@ export function AddMembershipForm({ personId }: { personId: string }) {
           maxLength={80}
           autoComplete="off"
         />
-        <DatePicker label="Starts on" name="startsOn" error={err('startsOn')} />
-        <DatePicker label="Ends on" name="endsOn" error={err('endsOn')} />
+        <DatePicker label="Starts on" name="startsOn" error={err('startsOn')} hint="The first camp day, included." />
+        <DatePicker label="Ends on" name="endsOn" error={err('endsOn')} hint="The last camp day, included." />
       </div>
       <FormMessage state={state} />
       <div>
-        <Button icon="plus" disabled={pending}>
+        <Button variant="primary" disabled={pending}>
           {pending ? 'Adding…' : 'Add membership'}
         </Button>
       </div>
