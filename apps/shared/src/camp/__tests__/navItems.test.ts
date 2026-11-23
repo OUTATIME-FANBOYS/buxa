@@ -14,7 +14,7 @@ describe('the sidebar groups', () => {
   it('lists the items of each group in order', () => {
     expect(CAMP_NAV_GROUPS.map(group => group.items.map(item => item.label))).toEqual([
       ['Home'],
-      ['Sessions', 'Registration', 'Check-in', 'On site', 'Attendance'],
+      ['Sessions', 'My classes', 'Registration', 'Check-in', 'On site', 'Attendance'],
       ['My tasks', 'Projects', 'Boards', 'Calendar', 'Agents'],
       ['People', 'Team access'],
     ]);
@@ -63,12 +63,14 @@ describe('the sidebar groups', () => {
 
 describe('navFor', () => {
   it('shows every item to staff and above; a viewer sees no attendance items (check-in, on site, attendance)', () => {
-    // Teachers have their own short sidebar (see teacherNav.test.ts), so they are not in this list.
+    // Teachers have their own short sidebar (see teacherNav.test.ts), and My classes is theirs alone, so neither is in this list.
+    const teacherOnly = CAMP_NAV.filter(item => item.onlyFor).map(item => item.href);
+    const everyoneElse = CAMP_NAV.map(item => item.href).filter(h => !teacherOnly.includes(h));
     for (const role of ROLES.filter(r => r !== 'viewer' && r !== 'teacher')) {
-      expect(hrefs(role)).toEqual(CAMP_NAV.map(item => item.href));
+      expect(hrefs(role)).toEqual(everyoneElse);
     }
     const attendance: string[] = [ROUTES.checkIn, ROUTES.onSite, ROUTES.attendance, ROUTES.registration];
-    expect(hrefs('viewer')).toEqual(CAMP_NAV.map(item => item.href).filter(h => !attendance.includes(h)));
+    expect(hrefs('viewer')).toEqual(everyoneElse.filter(h => !attendance.includes(h)));
   });
 
   it('shows only items needing no permission when there is no camp yet', () => {
