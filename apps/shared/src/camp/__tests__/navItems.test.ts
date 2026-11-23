@@ -67,7 +67,6 @@ describe('navFor', () => {
   it('shows every item to staff and above that holds its permission; a viewer sees no attendance items (check-in, on site, attendance)', () => {
     // Teachers have their own short sidebar (see teacherNav.test.ts), and My classes is theirs alone, so neither is in this list.
     // Reports needs audit:read, which only admin and owner hold, so staff see every other item.
-    const teacherOnly = CAMP_NAV.filter(item => item.onlyFor).map(item => item.href);
     for (const role of ROLES.filter(r => r !== 'viewer' && r !== 'teacher')) {
       const expected = CAMP_NAV.filter(
         item => !item.onlyFor && (!item.requires || roleAllows(role, item.requires)),
