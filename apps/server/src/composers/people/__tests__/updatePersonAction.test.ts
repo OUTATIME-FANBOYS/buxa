@@ -8,7 +8,7 @@ import { settle } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({
   actor: null as null | { userId: string; orgId: string; role: 'owner' | 'admin' | 'staff' | 'viewer' },
-  people: { update: vi.fn() },
+  people: { update: vi.fn(), setHousehold: vi.fn() },
   revalidatePath: vi.fn(),
   redirect: vi.fn(),
 }));
@@ -36,6 +36,95 @@ describe('updatePersonAction', () => {
       throw new Error(`NEXT_REDIRECT ${to}`);
     });
     h.people.update.mockResolvedValue({ id: IDS.person });
+    h.people.setHousehold.mockResolvedValue(undefined);
+  });
+
+  describe('the household section', () => {
+    const family = { ...details, roles: 'guardian' };
+
+    it('joins the existing household the select names, with the relationship typed', async () => {
+      await expect(
+        updatePersonAction(
+          idle,
+          formOf({ ...family, householdId: IDS.household, newHouseholdName: '', relationship: 'Parent' }),
+        ),
+      ).rejects.toThrow(`NEXT_REDIRECT ${personPath(IDS.person)}`);
+      expect(h.people.setHousehold).toHaveBeenCalledWith(
+        h.actor,
+        IDS.person,
+        { householdId: IDS.household, relationship: 'Parent' },
+        ['guardian'],
+      );
+      expect(h.people.update).toHaveBeenCalledTimes(1);
+    });
+
+    it('creates a new household with the name typed and links the person to it', async () => {
+      await expect(
+        updatePersonAction(
+          idle,
+          formOf({ ...family, householdId: '', newHouseholdName: ' Stone house ', relationship: 'Partner' }),
+        ),
+      ).rejects.toThrow(`NEXT_REDIRECT ${personPath(IDS.person)}`);
+      expect(h.people.setHousehold).toHaveBeenCalledWith(
+        h.actor,
+        IDS.person,
+        { newHouseholdName: 'Stone house', relationship: 'Partner' },
+        ['guardian'],
+      );
+    });
+
+    it('leaves the household when "Not an existing household" is chosen with no name', async () => {
+      await expect(
+        updatePersonAction(idle, formOf({ ...family, householdId: '', newHouseholdName: '' })),
+      ).rejects.toThrow(`NEXT_REDIRECT ${personPath(IDS.person)}`);
+      expect(h.people.setHousehold).toHaveBeenCalledWith(h.actor, IDS.person, {}, ['guardian']);
+    });
+
+    it('refuses an existing household and a new name together, and saves nothing', async () => {
+      const state = await updatePersonAction(
+        idle,
+        formOf({ ...family, householdId: IDS.household, newHouseholdName: 'Other' }),
+      );
+      expect(state.status).toBe('error');
+      expect(state.status === 'error' && state.fieldErrors?.householdId).toBeTruthy();
+      expect(h.people.setHousehold).not.toHaveBeenCalled();
+      expect(h.people.update).not.toHaveBeenCalled();
+    });
+
+    it('does not touch the household when the form has no household section', async () => {
+      await expect(updatePersonAction(idle, formOf(details))).rejects.toThrow(
+        `NEXT_REDIRECT ${personPath(IDS.person)}`,
+      );
+      expect(h.people.setHousehold).not.toHaveBeenCalled();
+    });
+
+    it('shows the camper guardian rule as the message, and does not save the details', async () => {
+      h.people.setHousehold.mockRejectedValueOnce(
+        badRequest('A camper needs a household that has a parent or guardian.'),
+      );
+      expect(
+        await updatePersonAction(idle, formOf({ ...details, householdId: IDS.household, relationship: 'Child' })),
+      ).toEqual({
+        status: 'error',
+        message: 'A camper needs a household that has a parent or guardian.',
+        fieldErrors: undefined,
+      });
+      expect(h.people.update).not.toHaveBeenCalled();
+    });
+
+    it('saves the one email the form posts for a family role', async () => {
+      await expect(
+        updatePersonAction(
+          idle,
+          formOf({ ...family, email: 'home@example.test', householdId: '', newHouseholdName: '' }),
+        ),
+      ).rejects.toThrow(`NEXT_REDIRECT ${personPath(IDS.person)}`);
+      expect(h.people.update).toHaveBeenCalledWith(
+        h.actor,
+        IDS.person,
+        expect.objectContaining({ email: 'home@example.test' }),
+      );
+    });
   });
 
   it('sends the whole patch to the service, with a blank date of birth as "none" and blank contact fields as null', async () => {

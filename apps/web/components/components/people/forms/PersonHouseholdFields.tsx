@@ -17,12 +17,14 @@ export function PersonHouseholdFields({
   choices,
   defaultHouseholdId,
   showRelationship,
+  defaultRelationship,
   err,
 }: {
   household: HouseholdTarget | null;
   choices: readonly HouseholdChoice[];
   defaultHouseholdId: string;
   showRelationship: boolean;
+  defaultRelationship?: string;
   err: (name: string) => string | undefined;
 }) {
   return (
@@ -64,6 +66,7 @@ export function PersonHouseholdFields({
         <TextField
           label="How they are related"
           name="relationship"
+          defaultValue={defaultRelationship}
           error={err('relationship')}
           hint="For example: son, daughter, mother, father. Needed when they join a household."
           autoComplete="off"

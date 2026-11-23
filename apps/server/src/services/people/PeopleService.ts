@@ -8,9 +8,10 @@ import type {
   PersonPage,
   PersonPageQuery,
   PersonPatchInput,
+  PersonHouseholdInput,
   PersonSummary,
 } from '@buxa/contracts';
-import type { Actor } from '@buxa/domain';
+import type { Actor, CampRole } from '@buxa/domain';
 import type { AttendanceRepository } from '../../attendance/AttendanceRepository';
 import type { TeacherScopeSource } from '../../classes/teacherScope';
 import type { CredentialRepository } from '../../credentials/CredentialRepository';
@@ -50,6 +51,13 @@ export interface PeopleService {
   linkToHousehold(actor: Actor, input: HouseholdLinkInput): Promise<Household>;
   /** Needs people:update. A camper's last guardian cannot be unlinked (409). */
   unlinkFromHousehold(actor: Actor, householdId: string, personId: string): Promise<Household>;
+  /**
+   * The household an edit sets for a person: join `householdId`, or create `newHouseholdName` (needs people:create as well), or,
+   * with neither, leave the household they are in. Moves the person from their current household. `roles` are the roles the
+   * person will hold after the edit (default: the roles they hold now), so a camper is checked against the new roles.
+   * A camper needs a guardian in the household they join (400), and cannot be left without one (400 or 409).
+   */
+  setHousehold(actor: Actor, personId: string, input: PersonHouseholdInput, roles?: readonly CampRole[]): Promise<void>;
   /** Needs people:read. */
   getHousehold(actor: Actor, id: string): Promise<Household>;
   /** Every household in the camp, by name, with members. For a household picker. Needs people:read. */
