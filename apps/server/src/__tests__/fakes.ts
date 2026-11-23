@@ -15,6 +15,7 @@ import type { Identity } from '../auth/identity';
 import { InMemoryAttendanceRepository } from '../attendance/InMemoryAttendanceRepository';
 import { conflict } from '../http/errors';
 import { InMemoryClassRepository } from '../classes/InMemoryClassRepository';
+import { InMemoryGroupRepository } from '../groups/InMemoryGroupRepository';
 import type { SeatHoldRepository } from '../holds/SeatHoldRepository';
 import { InMemoryImportRepository } from '../classes/import/InMemoryImportRepository';
 import { InMemoryRegistrationRepository } from '../registration/InMemoryRegistrationRepository';
@@ -365,6 +366,7 @@ export class InMemoryStore implements UserRepository, OrgRepository {
       attendance: new InMemoryAttendanceRepository(db),
       classes,
       imports: new InMemoryImportRepository(classes),
+      groups: new InMemoryGroupRepository(),
       registration: new InMemoryRegistrationRepository(
         {},
         (orgId, answers) => camperIdsFor(db, orgId, answers),

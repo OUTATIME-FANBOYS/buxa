@@ -38,6 +38,7 @@ export * from './people/unlinkHouseholdAction';
 export * from './people/updatePersonAction';
 export * from './classes/load';
 export * from './classes/errorReportResponse';
+export * from './groups/loadGroupsPage';
 export * from './classes/templateResponse';
 export * from './registration/loadRegistration';
 export * from './invites/loadInvitePage';
