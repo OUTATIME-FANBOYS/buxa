@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { boardPath } from '@/config/routes';
 import { useStore } from '@buxa/middleware/providers/providers';
-import { Empty } from '@/components/components';
 import { Progress } from '@/components/elements';
 import { Segmented } from '@/components/elements';
 import { Bars, ChartCard } from '@/components/components/charts';
@@ -40,19 +39,6 @@ export function Reports() {
   const series = useMemo(() => completionSeries(done, Number(range)), [range, done]);
   const total = series.reduce((a, b) => a + b.value, 0);
 
-  if (!workspace || live.length === 0) {
-    return (
-      <div className="page">
-        <header className="page-head">
-          <div className="page-title">
-            <h1>Reports</h1>
-          </div>
-        </header>
-        <Empty icon="chart" title="Nothing to report yet" body="Reports fill in as tasks are created and completed." />
-      </div>
-    );
-  }
-
   const prioRows = priorityCounts(open)
     .reverse()
     .map(({ priority, count }) => ({
@@ -68,7 +54,7 @@ export function Reports() {
       <header className="page-head">
         <div className="page-title">
           <h1>Reports</h1>
-          <p className="muted">{workspace.name} · all projects</p>
+          <p className="muted">{workspace ? `${workspace.name} · all projects` : 'All projects'}</p>
         </div>
         <div className="page-actions">
           <Segmented
@@ -104,7 +90,7 @@ export function Reports() {
         />
         <Stat
           label="Avg. time to complete"
-          value={avg === null ? '—' : `${avg.toFixed(1)}d`}
+          value={avg === null ? '–' : `${avg.toFixed(1)}d`}
           note="from creation to done"
           icon="clock"
         />
@@ -135,59 +121,70 @@ export function Reports() {
             ariaLabel={`Tasks completed over the last ${range} days, ${total} in total`}
             unit={Number(range) > 30 ? 'tasks that week' : 'tasks'}
           />
+          {total === 0 && <p className="muted small">No completed tasks in this period yet</p>}
         </ChartCard>
         <section className="panel">
           <h2>Project progress</h2>
-          <ul className="proj-bars big">
-            {projects.map(p => {
-              const pr = progressOf(
-                live.filter(x => x.projectId === p.id),
-                kindOf,
-              );
-              const h = healthOf(pr, p.deadline);
+          {projects.length === 0 ? (
+            <p className="muted small">No projects yet.</p>
+          ) : (
+            <ul className="proj-bars big">
+              {projects.map(p => {
+                const pr = progressOf(
+                  live.filter(x => x.projectId === p.id),
+                  kindOf,
+                );
+                const h = healthOf(pr, p.deadline);
 
-              return (
-                <li key={p.id}>
-                  <Link href={boardPath(p.id)}>
-                    <span>{p.name}</span>
-                    <span className="pb-meta">
-                      <Pill tone={HEALTH_TONE[h]}>{HEALTH_LABEL[h]}</Pill>
-                      <span className="muted small">
-                        {pr.done}/{pr.total} · {Math.round(pr.pct)}%
+                return (
+                  <li key={p.id}>
+                    <Link href={boardPath(p.id)}>
+                      <span>{p.name}</span>
+                      <span className="pb-meta">
+                        <Pill tone={HEALTH_TONE[h]}>{HEALTH_LABEL[h]}</Pill>
+                        <span className="muted small">
+                          {pr.done}/{pr.total} · {Math.round(pr.pct)}%
+                        </span>
                       </span>
-                    </span>
-                  </Link>
-                  <Progress value={pr.pct} tone={HEALTH_TONE[h]} label={`${p.name} progress`} />
-                </li>
-              );
-            })}
-          </ul>
+                    </Link>
+                    <Progress value={pr.pct} tone={HEALTH_TONE[h]} label={`${p.name} progress`} />
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </section>
       </div>
       <div className="grid-3">
         <section className="panel">
           <h2>Workload by member</h2>
-          <Legend
-            items={[
-              { name: 'On track', className: 'seg-brand' },
-              { name: 'Overdue', className: 'seg-crit' },
-            ]}
-          />
-          <HBars
-            ariaLabel="Open tasks per team member"
-            rows={load.map(l => ({
-              label: (
-                <span className="who">
-                  <Avatar user={l.member.user} size={20} />
-                  {l.member.user.name.split(' ')[0]}
-                </span>
-              ),
-              segments: [
-                { value: l.on, className: 'seg-brand', name: 'on track' },
-                { value: l.late, className: 'seg-crit', name: 'overdue' },
-              ],
-            }))}
-          />
+          {open.length === 0 ? (
+            <p className="muted small">No open tasks yet.</p>
+          ) : (
+            <>
+              <Legend
+                items={[
+                  { name: 'On track', className: 'seg-brand' },
+                  { name: 'Overdue', className: 'seg-crit' },
+                ]}
+              />
+              <HBars
+                ariaLabel="Open tasks per team member"
+                rows={load.map(l => ({
+                  label: (
+                    <span className="who">
+                      <Avatar user={l.member.user} size={20} />
+                      {l.member.user.name.split(' ')[0]}
+                    </span>
+                  ),
+                  segments: [
+                    { value: l.on, className: 'seg-brand', name: 'on track' },
+                    { value: l.late, className: 'seg-crit', name: 'overdue' },
+                  ],
+                }))}
+              />
+            </>
+          )}
           {unassigned > 0 && (
             <p className="muted small">
               {unassigned} open task{unassigned === 1 ? ' is' : 's are'} unassigned.
@@ -196,7 +193,11 @@ export function Reports() {
         </section>
         <section className="panel">
           <h2>Open tasks by priority</h2>
-          <HBars ariaLabel="Open tasks by priority" rows={prioRows} />
+          {open.length === 0 ? (
+            <p className="muted small">No open tasks yet.</p>
+          ) : (
+            <HBars ariaLabel="Open tasks by priority" rows={prioRows} />
+          )}
         </section>
         <section className="panel">
           <h2>Overdue</h2>
