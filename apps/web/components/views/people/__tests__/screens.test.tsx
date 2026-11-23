@@ -321,7 +321,7 @@ describe('PersonScreen', () => {
     const admin = render(await PersonScreen({ id: ID.ben }));
     expect(admin).toContain('Add a membership');
     expect(admin).toContain('Revoke');
-    expect(admin).toContain('Reissue badge');
+    expect(admin).toContain('>Reissue</button>');
     expect(admin).toContain('Archive person');
   });
 
@@ -365,8 +365,10 @@ describe('PersonScreen', () => {
     expect(html).toContain('Archived people cannot have a badge');
   });
 
-  it('offers Edit details to staff, and not to viewers', async () => {
-    expect(render(await PersonScreen({ id: ID.ben }))).toContain(`href="/camp/people/${ID.ben}/edit"`);
+  it('offers Edit details to staff as a button that opens the pop-up, not a link to /edit; not to viewers', async () => {
+    const html = render(await PersonScreen({ id: ID.ben }));
+    expect(html).toContain('>Edit details</button>');
+    expect(html).not.toContain(`/people/${ID.ben}/edit`);
     as('viewer');
     expect(render(await PersonScreen({ id: ID.ben }))).not.toContain('Edit details');
   });
@@ -432,24 +434,17 @@ describe('PersonScreen', () => {
 });
 
 describe('EditPerson', () => {
-  it('pre-fills the form with the person and the roles they have', async () => {
-    services.people.get.mockResolvedValueOnce(
-      person({ dateOfBirth: '2016-05-02', email: 'ben@example.test', roles: ['participant'] }),
-    );
+  it('is the person page for the /edit address, with an Edit details button that opens the pop-up', async () => {
+    services.people.get.mockResolvedValueOnce(person({ roles: ['participant'] }));
     const html = render(await EditPerson({ id: ID.ben }));
-    expect(html).toContain('value="Ben"');
-    expect(html).toContain('value="2016-05-02"');
-    expect(html).toContain('value="ben@example.test"');
-    // React's attribute order is not part of the contract, so match the checked box in either order.
-    expect(html).toMatch(/<input[^>]*checked=""[^>]*value="participant"|<input[^>]*value="participant"[^>]*checked=""/);
-    expect(html).not.toMatch(/<input[^>]*checked=""[^>]*value="guardian"|<input[^>]*value="guardian"[^>]*checked=""/);
-    expect(html).toContain('Save changes');
+    expect(html).toContain('>Edit details</button>');
+    expect(html).not.toContain('/edit"');
   });
 
-  it('tells a role that cannot change people why, without a form', async () => {
+  it('shows no Edit details button to a role that cannot change people', async () => {
     as('viewer');
     const html = render(await EditPerson({ id: ID.ben }));
-    expect(html).toContain('Your role cannot change people');
+    expect(html).not.toContain('Edit details');
     expect(html).not.toContain('Save changes');
   });
 

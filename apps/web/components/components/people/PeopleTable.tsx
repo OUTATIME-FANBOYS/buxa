@@ -145,7 +145,6 @@ export function PeopleTable({
                         <Button
                           type="button"
                           variant="glass-danger"
-                          size="sm"
                           iconOnly
                           icon="trash"
                           aria-label={`Delete ${person.givenName} ${person.familyName}`}

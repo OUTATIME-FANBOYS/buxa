@@ -1,10 +1,9 @@
 import { notFound } from 'next/navigation';
 import { can, CAMP_ROLE_LABELS, type Actor, type CampRole } from '@buxa/domain';
-import { personEditPath } from '@/config/routes';
 import { campClock, loadCampProfile } from '@buxa/server/composers/index.server';
 import { loadHouseholdList, loadPersonMatches } from '@buxa/server/composers/index.server';
 import { loadVisitHistory } from '@buxa/server/composers/index.server';
-import { ArchivePersonButton } from '@/components/components/people/forms';
+import { ArchivePersonButton, EditPersonButton } from '@/components/components/people/forms';
 import { AttendanceHistory } from '@/components/components/people';
 import { BadgePanel } from '@/components/components/people';
 import { ContactDetails } from '@/components/components/people';
@@ -12,21 +11,23 @@ import { HouseholdPanel } from '@/components/components/people';
 import { MembershipsPanel } from '@/components/components/people';
 import { PersonHeader } from '@/components/components/people';
 import { currentActor } from '@buxa/server/composers/index.server';
-import { readListParams } from '@buxa/shared';
+import { readListParams, toHouseholdChoices } from '@buxa/shared';
 import { loadPerson } from '@buxa/server/composers/index.server';
-import { Button } from '@/components/elements';
 
 /**
  * One person. What is shown follows the role: contact details come back null for viewers (and are then left out), link and
  * membership and badge controls appear only where the role allows them. The server still decides every change.
  * `searchParams.q` is the name search for someone to link into a household (staff only; the service caps the matches).
+ * `editOpen` opens the Edit person pop-up on arrival (the /edit address).
  */
 export async function PersonScreen({
   id,
   searchParams = {},
+  editOpen = false,
 }: {
   id: string;
   searchParams?: Record<string, string | string[] | undefined>;
+  editOpen?: boolean;
 }) {
   const actor = await currentActor();
   if (!actor) {
@@ -64,9 +65,12 @@ export async function PersonScreen({
           <ContactDetails person={person} />
           <div className="row">
             {canUpdate && (
-              <Button size="sm" icon="edit" href={personEditPath(person.id)}>
-                Edit details
-              </Button>
+              <EditPersonButton
+                personId={person.id}
+                households={toHouseholdChoices(households)}
+                label="Edit details"
+                initiallyOpen={editOpen}
+              />
             )}
             {canArchive && !person.archived && (
               <ArchivePersonButton personId={person.id} personName={`${person.givenName} ${person.familyName}`} />
