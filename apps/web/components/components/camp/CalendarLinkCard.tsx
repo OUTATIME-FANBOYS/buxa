@@ -5,9 +5,10 @@ import { Button } from '@/components/elements';
 import { rotateCalendarTokenAction, rotateOwnCalendarTokenAction } from '@/actions/camp';
 
 /**
- * A calendar link. The raw token exists only in this response: the server keeps a hash. The link is shown once, with a copy
- * button, and making a new one stops the old one working at once. The camp link (org:update) covers every session; a teacher's
- * own link (`own`) covers only the classes that teacher is assigned to.
+ * A calendar link. The raw token exists only in this response: the server keeps a hash. The link is shown once, in a field
+ * with two icon buttons at its right edge: copy, and make a new link (which stops the old one working at once). Before a link
+ * exists, the one action is a primary button. The camp link (org:update) covers every session; a teacher's own link (`own`)
+ * covers only the classes that teacher is assigned to.
  */
 export function CalendarLinkCard({ own = false }: { own?: boolean }) {
   const [link, setLink] = useState<string | null>(null);
@@ -50,39 +51,60 @@ export function CalendarLinkCard({ own = false }: { own?: boolean }) {
       {link ? (
         <>
           <p className="class-helper">Copy it now. It is not shown again.</p>
-          <input
-            className="calendar-link"
-            readOnly
-            value={link}
-            aria-label="Calendar link"
-            onFocus={e => e.currentTarget.select()}
-          />
-          <div className="classes-actions">
-            <Button
-              type="button"
-              variant="glass"
-              onClick={() => {
-                void copy();
-              }}
-            >
-              Copy link
-            </Button>
+          <div className="calendar-link">
+            <input
+              className="calendar-link__input"
+              readOnly
+              value={link}
+              aria-label="Calendar link"
+              onFocus={e => e.currentTarget.select()}
+            />
+            <div className="calendar-link__actions">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                iconOnly
+                icon="copy"
+                aria-label="Copy link"
+                onClick={() => {
+                  void copy();
+                }}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                iconOnly
+                icon="refresh"
+                aria-label="Make a new link"
+                disabled={busy}
+                onClick={() => {
+                  void makeLink();
+                }}
+              />
+            </div>
           </div>
         </>
-      ) : null}
-      {message && <p role="status">{message}</p>}
-      <div className="classes-actions">
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => {
-            void makeLink();
-          }}
-          disabled={busy}
-        >
-          {busy ? 'Making...' : link ? 'Make a new link' : 'Make a calendar link'}
-        </Button>
-      </div>
+      ) : (
+        <div className="classes-actions">
+          <Button
+            type="button"
+            variant="primary"
+            disabled={busy}
+            onClick={() => {
+              void makeLink();
+            }}
+          >
+            {busy ? 'Making...' : 'Make a calendar link'}
+          </Button>
+        </div>
+      )}
+      {message && (
+        <p className="class-helper" role="status">
+          {message}
+        </p>
+      )}
     </section>
   );
 }
