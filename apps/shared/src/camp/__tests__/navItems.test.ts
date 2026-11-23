@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ROLES } from '@buxa/domain';
 import { ROUTES } from '../../config/routes';
 import { CAMP_NAV, CAMP_NAV_GROUPS, isActive, navFor, navGroupsFor, type NavGroup } from '../navItems';
+import { roleAllows } from '../abilities';
 
 const hrefs = (role: Parameters<typeof navFor>[0]) => navFor(role).map(item => item.href);
 const groupLabels = (groups: readonly NavGroup[]) => groups.map(group => group.label);
@@ -14,9 +15,9 @@ describe('the sidebar groups', () => {
   it('lists the items of each group in order', () => {
     expect(CAMP_NAV_GROUPS.map(group => group.items.map(item => item.label))).toEqual([
       ['Home'],
-      ['Sessions', 'Registration', 'Check-in', 'On site', 'Attendance'],
+      ['Sessions', 'My classes', 'Registration', 'Check-in', 'On site', 'Attendance'],
       ['My tasks', 'Projects', 'Boards', 'Calendar', 'Agents'],
-      ['People', 'Team access'],
+      ['People', 'Team access', 'Reports'],
     ]);
   });
 
@@ -29,8 +30,8 @@ describe('the sidebar groups', () => {
     expect(byLabel('Registration')?.icon).toBe('list');
   });
 
-  it('does not list Settings, Help or Reports in the sidebar: they live in the profile menu', () => {
-    for (const href of [ROUTES.settings, ROUTES.help, ROUTES.reports]) {
+  it('does not list Settings or Help in the sidebar: they live in the profile menu', () => {
+    for (const href of [ROUTES.settings, ROUTES.help]) {
       expect(CAMP_NAV.map(item => item.href)).not.toContain(href);
       expect(hrefs('owner')).not.toContain(href);
     }
@@ -57,18 +58,32 @@ describe('the sidebar groups', () => {
       Home: undefined,
       'My tasks': undefined,
       Projects: undefined,
+      Reports: 'audit:read',
     });
   });
 });
 
 describe('navFor', () => {
-  it('shows every item to staff and above; a viewer sees no attendance items (check-in, on site, attendance)', () => {
-    // Teachers have their own short sidebar (see teacherNav.test.ts), so they are not in this list.
+  it('shows every item to staff and above that holds its permission; a viewer sees no attendance items (check-in, on site, attendance)', () => {
+    // Teachers have their own short sidebar (see teacherNav.test.ts), and My classes is theirs alone, so neither is in this list.
+    // Reports needs audit:read, which only admin and owner hold, so staff see every other item.
+    const teacherOnly = CAMP_NAV.filter(item => item.onlyFor).map(item => item.href);
     for (const role of ROLES.filter(r => r !== 'viewer' && r !== 'teacher')) {
-      expect(hrefs(role)).toEqual(CAMP_NAV.map(item => item.href));
+      const expected = CAMP_NAV.filter(
+        item => !item.onlyFor && (!item.requires || roleAllows(role, item.requires)),
+      ).map(item => item.href);
+      expect(hrefs(role)).toEqual(expected);
     }
+    expect(hrefs('staff')).not.toContain(ROUTES.reports);
+    expect(hrefs('admin')).toContain(ROUTES.reports);
+    expect(hrefs('owner')).toContain(ROUTES.reports);
     const attendance: string[] = [ROUTES.checkIn, ROUTES.onSite, ROUTES.attendance, ROUTES.registration];
-    expect(hrefs('viewer')).toEqual(CAMP_NAV.map(item => item.href).filter(h => !attendance.includes(h)));
+    expect(hrefs('viewer')).toEqual(
+      CAMP_NAV.filter(
+        item =>
+          !item.onlyFor && (!item.requires || roleAllows('viewer', item.requires)) && !attendance.includes(item.href),
+      ).map(item => item.href),
+    );
   });
 
   it('shows only items needing no permission when there is no camp yet', () => {

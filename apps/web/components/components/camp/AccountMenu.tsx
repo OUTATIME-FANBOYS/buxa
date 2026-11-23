@@ -68,7 +68,6 @@ export function AccountMenu({ user, hasCamp }: { user: User; hasCamp: boolean })
             ],
           },
           ...(hasCamp ? [{ label: 'Settings', icon: 'settings', href: ROUTES.settings }] : []),
-          { label: 'Reports', icon: 'chart', href: ROUTES.reports },
           { label: '', divider: true, onSelect() {} },
           { label: 'Sign out', icon: 'logout', onSelect: () => form.current?.requestSubmit() },
         ]}

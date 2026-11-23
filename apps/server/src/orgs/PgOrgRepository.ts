@@ -3,6 +3,7 @@ import type { CreatedOrg, Member, NewOrgInput, Org, OrgPatchInput, OrgSummary } 
 import { errorMessage, isUniqueViolation, withOrg } from '@buxa/db';
 import type { Actor, Role } from '@buxa/domain';
 import { recordAudit } from '../audit/recordAudit';
+import { nullableIso } from '../people/pgRows';
 import { conflict, forbidden } from '../http/errors';
 import { OrgNotFoundError, SlugTakenError, type ArchivedCampRecord, type OrgRepository } from './OrgRepository';
 
@@ -85,12 +86,29 @@ export class PgOrgRepository implements OrgRepository {
 
   listMembers(userId: string, orgId: string): Promise<Member[]> {
     return withOrg(this.pool, userId, orgId, async db => {
-      const { rows } = await db.query<Member>(
-        `SELECT u.id, u.name, u.email, m.role FROM org_members m JOIN users u ON u.id = m.user_id ORDER BY u.name`,
+      const { rows } = await db.query<{ id: string; name: string; email: string; role: Role; expires_at: Date | null }>(
+        `SELECT u.id, u.name, u.email, m.role, m.expires_at FROM org_members m JOIN users u ON u.id = m.user_id ORDER BY u.name`,
       );
 
-      return rows;
+      return rows.map(r => ({
+        id: r.id,
+        name: r.name,
+        email: r.email,
+        role: r.role,
+        expiresAt: nullableIso(r.expires_at),
+      }));
     });
+  }
+
+  /** buxa_set_member_expiry (migration 0043) checks the actor's role and the owner rule, and writes the audit row. */
+  async setMemberExpiry(actor: Actor, userId: string, expiresAt: string | null): Promise<void> {
+    try {
+      await withOrg(this.pool, actor.userId, actor.orgId, db =>
+        db.query('SELECT buxa_set_member_expiry($1, $2, $3)', [actor.orgId, userId, expiresAt]),
+      );
+    } catch (error) {
+      throw mapCampFunctionError(error);
+    }
   }
 
   /** buxa_change_member_role (migration 0039) checks the actor's role, the last owner and the archive, and writes the audit row. */

@@ -38,6 +38,8 @@ export interface OrgRepository {
   listMembers(userId: string, orgId: string): Promise<Member[]>;
   /** Sets a member's role and records the audit entry, atomically. The caller has checked members:change_role. */
   changeMemberRole(actor: Actor, userId: string, role: Role): Promise<void>;
+  /** Sets (an ISO instant) or clears (null) a member's team access expiry, and records the audit entry, atomically. */
+  setMemberExpiry(actor: Actor, userId: string, expiresAt: string | null): Promise<void>;
   /** Sets the camp's archive time and records the audit entry, atomically. Refuses a camp that is already archived. */
   archive(actor: Actor): Promise<{ archivedAt: string }>;
   /** Clears the archive time and records the audit entry, atomically. Refuses a camp that is not archived. */
