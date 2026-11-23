@@ -4,6 +4,7 @@ import { updateFormAction as updateFormActionImpl } from '@buxa/server/composers
 import { publishFormAction as publishFormActionImpl } from '@buxa/server/composers/registration/formActions';
 import { submitRegistrationAction as submitRegistrationActionImpl } from '@buxa/server/composers/registration/submitRegistrationAction';
 import { confirmRegistrationAction as confirmRegistrationActionImpl } from '@buxa/server/composers/registration/confirmRegistrationAction';
+import { recordPaymentAction as recordPaymentActionImpl } from '@buxa/server/composers/registration/paymentAction';
 
 // Server action wrappers for the registration screens. Client components import this module, never @buxa/server. Next.js allows only
 // async functions to be exported from a 'use server' file, so each action is wrapped rather than re-exported.
@@ -26,4 +27,8 @@ export async function submitRegistrationAction(...args: Parameters<typeof submit
 
 export async function confirmRegistrationAction(...args: Parameters<typeof confirmRegistrationActionImpl>) {
   return confirmRegistrationActionImpl(...args);
+}
+
+export async function recordPaymentAction(...args: Parameters<typeof recordPaymentActionImpl>) {
+  return recordPaymentActionImpl(...args);
 }

@@ -57,6 +57,8 @@ function service(repo: Pick<SeatHoldRepository, 'placeHold'>, clock: { now: Date
       releaseHold: () => Promise.reject(new Error('not used in this test')),
       releaseExpiredHolds: () => Promise.resolve(0),
       campsWithExpiredHolds: () => Promise.resolve([]),
+      listActiveHolds: () => Promise.resolve([]),
+      promoteWaitlist: () => Promise.resolve(0),
     },
     timezoneOf: () => Promise.resolve('Australia/Sydney'),
     now: () => clock.now,

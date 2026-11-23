@@ -18,7 +18,9 @@ import {
   publishFormRow,
   updateFormRow,
 } from './PgRegistrationWrites';
+import { classLookupsInTx, recordPaymentInTx } from './PgRegistrationPlaces';
 import type {
+  ClassLookup,
   ConfirmationRule,
   ConfirmationWork,
   NewRegistration,
@@ -72,6 +74,20 @@ export class PgRegistrationRepository implements RegistrationRepository {
 
   listSubmissions(userId: string, orgId: string, formId: string): Promise<RegistrationRow[]> {
     return withOrg(this.pool, userId, orgId, db => listSubmissionRows(db, formId));
+  }
+
+  classesFor(userId: string, orgId: string, classIds: readonly string[]): Promise<ClassLookup[]> {
+    return withOrg(this.pool, userId, orgId, db => classLookupsInTx(db, classIds));
+  }
+
+  recordPayment(
+    actor: Actor,
+    registrationClassId: string,
+    input: { paid: boolean; note: string | null },
+  ): Promise<void> {
+    return withOrg(this.pool, actor.userId, actor.orgId, db =>
+      recordPaymentInTx(db, actor, registrationClassId, input),
+    );
   }
 
   submit(actor: Actor, registration: NewRegistration, rule: RegistrationRule): Promise<string> {

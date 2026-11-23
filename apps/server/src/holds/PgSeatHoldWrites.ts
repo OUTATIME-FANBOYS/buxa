@@ -9,7 +9,7 @@ import {
   HouseholdNotFoundError,
   SessionFullError,
 } from '../classes/errors';
-import type { PlaceHoldRequest, SeatHold } from './SeatHoldRepository';
+import type { ActiveHold, PlaceHoldRequest, SeatHold } from './SeatHoldRepository';
 
 /*
  * Seat holds, written inside the caller's transaction (withOrg). Capacity itself is enforced by the trigger in migration 0025,
@@ -186,4 +186,51 @@ function translateHoldError(error: unknown, capacity: number): unknown {
   }
 
   return error;
+}
+
+/** The holds that hold a place in a class now, for the class page. Locks nothing: a read. Throws ClassNotFoundError for an unknown class. */
+export async function listActiveHoldRows(db: Db, sessionId: string): Promise<ActiveHold[]> {
+  if (!isUuid(sessionId)) {
+    throw new ClassNotFoundError();
+  }
+  const { rows: exists } = await db.query(`SELECT 1 FROM sessions WHERE id = $1`, [sessionId]);
+  if (exists.length === 0) {
+    throw new ClassNotFoundError();
+  }
+  const { rows } = await db.query<{
+    id: string;
+    household_id: string;
+    household_name: string;
+    created_at: Date;
+    expires_at: Date;
+  }>(
+    `SELECT h.id, h.household_id, hh.name AS household_name, h.created_at, h.expires_at
+       FROM seat_holds h
+       JOIN households hh ON hh.id = h.household_id AND hh.org_id = h.org_id
+      WHERE h.session_id = $1 AND h.released_at IS NULL AND h.expires_at > now()
+      ORDER BY h.created_at, h.id`,
+    [sessionId],
+  );
+
+  return rows.map(r => ({
+    id: r.id,
+    householdId: r.household_id,
+    householdName: r.household_name,
+    createdAt: toIso(r.created_at),
+    expiresAt: toIso(r.expires_at),
+  }));
+}
+
+/**
+ * Promotes waitlisted enrolments into the free places of a class, under the class lock. Returns how many moved. Each promotion is
+ * audited by promoteWaitlist as `enrolment.promote`. Nothing moves when no place is free.
+ */
+export async function promoteWaitlistInTransaction(db: Db, actor: Actor, sessionId: string): Promise<number> {
+  if (!isUuid(sessionId)) {
+    throw new ClassNotFoundError();
+  }
+  await lockSession(db, sessionId);
+  await releaseExpiredHoldsInSession(db, sessionId, actor);
+
+  return promoteWaitlist(db, sessionId, actor);
 }

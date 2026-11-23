@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { FORBIDDEN_REGISTRATION } from '@buxa/shared';
-import { currentActor, loadRegisterPage } from '@buxa/server/composers/index.server';
+import { campClock, currentActor, loadRegisterPage } from '@buxa/server/composers/index.server';
 import { registrationFormPath } from '@/config/routes';
 import { Empty, PageHeader } from '@/components/components';
 import { RegisterForm } from '@/components/components/registration';
@@ -24,7 +24,8 @@ export async function RegisterFamilyView({ formId }: { formId: string }) {
       </div>
     );
   }
-  const { form, published } = loaded.value;
+  const { form, published, sessions, campers } = loaded.value;
+  const clock = await campClock(actor);
 
   if (!published) {
     return (
@@ -48,9 +49,16 @@ export async function RegisterFamilyView({ formId }: { formId: string }) {
     <div className="page">
       <PageHeader
         title="Take a registration"
-        subtitle={`${form.name}, version ${published.version}. Choose one or more sessions.`}
+        subtitle={`${form.name}, version ${published.version}. Choose the children, then their classes.`}
       />
-      <RegisterForm formId={form.id} sessions={form.sessions} fields={published.fields} />
+      <RegisterForm
+        formId={form.id}
+        sessions={sessions}
+        campers={campers}
+        timeZone={clock.timeZone}
+        clockFormat={clock.clockFormat}
+        fields={published.fields}
+      />
     </div>
   );
 }

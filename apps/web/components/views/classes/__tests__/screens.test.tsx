@@ -26,6 +26,7 @@ const services = vi.hoisted(() => ({
   },
   people: { list: vi.fn() },
   orgs: { getCamp: vi.fn(), listMembers: vi.fn() },
+  seatHolds: { listActiveHolds: vi.fn(() => Promise.resolve([])) },
 }));
 
 vi.mock('next/navigation', () => ({ notFound, redirect: vi.fn() }));
@@ -44,6 +45,7 @@ vi.mock('@/actions/classes', () => ({
   updateSessionAction: vi.fn(),
   deleteSessionAction: vi.fn(),
   enrolAction: vi.fn(),
+  promoteWaitlistAction: vi.fn(),
   cancelEnrolmentAction: vi.fn(),
   addRecurringClassesAction: vi.fn(),
   setTeachersAction: vi.fn(),

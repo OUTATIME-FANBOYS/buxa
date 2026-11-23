@@ -13,6 +13,7 @@ const TABLES = [
   'registration_form_versions',
   'registrations',
   'registration_sessions',
+  'registration_classes',
 ];
 
 describe.skipIf(!url)('registration tables (0023)', () => {

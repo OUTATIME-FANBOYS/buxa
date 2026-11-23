@@ -413,6 +413,8 @@ const unavailableSeatHolds: SeatHoldRepository = {
   releaseHold: () => Promise.reject(new Error('Seat holds are only available on Postgres')),
   releaseExpiredHolds: () => Promise.reject(new Error('Seat holds are only available on Postgres')),
   campsWithExpiredHolds: () => Promise.reject(new Error('Seat holds are only available on Postgres')),
+  listActiveHolds: () => Promise.reject(new Error('Seat holds are only available on Postgres')),
+  promoteWaitlist: () => Promise.reject(new Error('Seat holds are only available on Postgres')),
 };
 
 /** Repositories backed by memory, plus the audit log they write, for tests. */

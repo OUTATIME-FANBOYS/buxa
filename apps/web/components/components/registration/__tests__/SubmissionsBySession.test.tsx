@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { RegistrationRow } from '@buxa/contracts';
 
-vi.mock('@/actions/registration', () => ({ confirmRegistrationAction: vi.fn() }));
+vi.mock('@/actions/registration', () => ({ confirmRegistrationAction: vi.fn(), recordPaymentAction: vi.fn() }));
 
 import { SubmissionsBySession } from '@/components/components/registration/SubmissionsBySession';
 
@@ -17,6 +17,7 @@ const row = (status: 'pending' | 'confirmed', id: string): RegistrationRow => ({
   standard: { camperFirstName: 'Ada', camperLastName: 'Lovelace', guardianPhone: '555-0100' },
   custom: {},
   sessions: [{ sessionId: SESSION.id, sessionName: SESSION.name, status: 'submitted' }],
+  classes: [],
 });
 
 function render(submissions: RegistrationRow[]) {

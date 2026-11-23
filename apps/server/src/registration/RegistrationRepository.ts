@@ -1,4 +1,4 @@
-import type { Actor, RegistrationDecision, RegistrationFacts, RegistrationStatus } from '@buxa/domain';
+import type { Actor, ClassSelection, RegistrationDecision, RegistrationFacts, RegistrationStatus } from '@buxa/domain';
 import type { CustomField, RegistrationForm, RegistrationFormInput, RegistrationRow } from '@buxa/contracts';
 import type { CredentialRepository } from '../credentials/CredentialRepository';
 
@@ -8,11 +8,24 @@ export interface PublishedVersion {
   fields: CustomField[];
 }
 
-/** A validated submission, ready to store. Answers were checked against `version` by the service. */
+/** A class of the camp as a registration reads it: its parent session, its name and its times. */
+export interface ClassLookup {
+  classId: string;
+  sessionId: string;
+  className: string;
+  startsAt: string;
+  endsAt: string;
+}
+
+/**
+ * A validated submission, ready to store. Answers were checked against `version` by the service. `selections` are the child and
+ * class pairs, each with the class's facts; `sessionIds` are the parent sessions of those classes (derived, never typed).
+ */
 export interface NewRegistration {
   formId: string;
   version: number;
   sessionIds: string[];
+  selections: (ClassSelection & { camperId: string })[];
   answers: { standard: Record<string, string>; custom: Record<string, string | boolean> };
 }
 
@@ -55,6 +68,8 @@ export interface RegistrationRepository {
   updateForm(actor: Actor, formId: string, input: RegistrationFormInput): Promise<RegistrationForm>;
   /** Freezes the draft as the next version. Audits `registration_form.publish`. Throws RegistrationFormNotFoundError. */
   publishForm(actor: Actor, formId: string): Promise<RegistrationForm>;
+  /** The classes of the camp among `classIds`, with their parent session. A class outside the camp is simply absent. */
+  classesFor(userId: string, orgId: string, classIds: readonly string[]): Promise<ClassLookup[]>;
   /** Throws RegistrationFormNotFoundError. */
   listSubmissions(userId: string, orgId: string, formId: string): Promise<RegistrationRow[]>;
   /**
@@ -62,6 +77,15 @@ export interface RegistrationRepository {
    * On refuse it throws RegistrationRefusedError and writes nothing. Throws RegistrationFormNotFoundError.
    */
   submit(actor: Actor, registration: NewRegistration, rule: RegistrationRule): Promise<string>;
+  /**
+   * Records a child-and-class place for a registration. Its payment is recorded by hand (unpaid, or paid with a note). Audits
+   * `registration.payment`. Throws RegistrationClassNotFoundError when the place is not in this camp.
+   */
+  recordPayment(
+    actor: Actor,
+    registrationClassId: string,
+    input: { paid: boolean; note: string | null },
+  ): Promise<void>;
   /**
    * Locks the registration, checks the rule on its status and, on allow, sets it confirmed, audits `registration.confirm` and then
    * runs `work` in the same transaction. On refuse it throws RegistrationRefusedError and writes nothing. Throws
