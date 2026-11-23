@@ -16,7 +16,7 @@ describe('the sidebar groups', () => {
       ['Home'],
       ['Sessions', 'Registration', 'Check-in', 'On site', 'Attendance'],
       ['My tasks', 'Projects', 'Boards', 'Calendar', 'Agents'],
-      ['People', 'Team access'],
+      ['People', 'Team access', 'Reports'],
     ]);
   });
 
@@ -29,8 +29,8 @@ describe('the sidebar groups', () => {
     expect(byLabel('Registration')?.icon).toBe('list');
   });
 
-  it('does not list Settings, Help or Reports in the sidebar: they live in the profile menu', () => {
-    for (const href of [ROUTES.settings, ROUTES.help, ROUTES.reports]) {
+  it('does not list Settings or Help in the sidebar: they live in the profile menu', () => {
+    for (const href of [ROUTES.settings, ROUTES.help]) {
       expect(CAMP_NAV.map(item => item.href)).not.toContain(href);
       expect(hrefs('owner')).not.toContain(href);
     }

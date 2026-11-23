@@ -73,6 +73,7 @@ export const CAMP_NAV_GROUPS: readonly NavGroup[] = [
     items: [
       { href: ROUTES.people, label: 'People', icon: 'users', requires: 'people:read', hiddenFor: TEACHER_HIDDEN },
       { href: ROUTES.members, label: 'Team access', icon: 'user', requires: 'members:read' },
+      { href: ROUTES.reports, label: 'Reports', icon: 'chart' },
     ],
   },
 ];
