@@ -1,11 +1,3 @@
-import type { ActionState } from '../actionState';
-
-/**
- * The state of the badge panel: an ordinary ActionState, plus the one moment a new badge is shown. `payload` is what the QR code
- * encodes. The token is never sent to the browser, and it is not kept after the panel is left or refreshed.
- */
-export type BadgeState = ActionState | { status: 'issued'; payload: string };
-
 /**
  * What showing or reprinting a badge returns. `shown` carries the QR payload, sent only when someone presses Show or Reprint.
  * `reissue` means the badge has no encrypted copy (it was issued before one existed): the camp must reissue it to show it.

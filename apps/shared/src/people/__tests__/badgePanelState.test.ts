@@ -4,43 +4,50 @@ import { badgePanelReducer, initialBadgePanelState, type BadgePanelState } from 
 const PAYLOAD = 'bx1.abcdefghijklmnopqrstuv';
 
 describe('badgePanelReducer', () => {
-  it('a new badge is shown once, as fresh, and makes the person active', () => {
-    const next = badgePanelReducer(initialBadgePanelState(false), { type: 'issued', payload: PAYLOAD });
+  it('a new badge is issued with a confirmation and no code on screen', () => {
+    const next = badgePanelReducer(initialBadgePanelState(false), { type: 'issued', replaced: false });
 
-    expect(next).toEqual({ active: true, view: { kind: 'shown', payload: PAYLOAD, fresh: true } });
+    expect(next).toEqual({ active: true, view: { kind: 'done', message: 'Badge issued.' } });
   });
 
-  it('a stored badge shown again is not fresh', () => {
-    const active = initialBadgePanelState(true);
-    expect(badgePanelReducer(active, { type: 'revealed', payload: PAYLOAD })).toEqual({
+  it('a reissue replaces the badge, says so, and shows no code', () => {
+    const shown = badgePanelReducer(initialBadgePanelState(true), { type: 'revealed', payload: PAYLOAD });
+    const reissued = badgePanelReducer(shown, { type: 'issued', replaced: true });
+
+    expect(reissued).toEqual({ active: true, view: { kind: 'done', message: 'Badge reissued.' } });
+    expect(JSON.stringify(reissued)).not.toContain(PAYLOAD);
+  });
+
+  it('a stored badge shown again holds the code and keeps the active flag', () => {
+    expect(badgePanelReducer(initialBadgePanelState(true), { type: 'revealed', payload: PAYLOAD })).toEqual({
       active: true,
-      view: { kind: 'shown', payload: PAYLOAD, fresh: false },
+      view: { kind: 'shown', payload: PAYLOAD },
     });
   });
 
-  it('revoke clears the revealed code and the active flag, so no code stays on screen', () => {
-    const shown = badgePanelReducer(initialBadgePanelState(false), { type: 'issued', payload: PAYLOAD });
+  it('revoke clears the revealed code and the active flag, and confirms it', () => {
+    const shown = badgePanelReducer(initialBadgePanelState(true), { type: 'revealed', payload: PAYLOAD });
     const revoked = badgePanelReducer(shown, { type: 'revoked' });
 
-    expect(revoked).toEqual({ active: false, view: { kind: 'closed' } });
+    expect(revoked).toEqual({ active: false, view: { kind: 'done', message: 'Badge revoked.' } });
     expect(JSON.stringify(revoked)).not.toContain(PAYLOAD);
   });
 
-  it('issue, reveal, revoke ends with no active badge and no code', () => {
-    const steps: BadgePanelState[] = [];
+  it('issue, show, close, revoke ends with no active badge and no code', () => {
+    const states: BadgePanelState[] = [];
     let state = initialBadgePanelState(false);
     for (const event of [
-      { type: 'issued', payload: PAYLOAD },
-      { type: 'closed' },
+      { type: 'issued', replaced: false },
       { type: 'revealed', payload: PAYLOAD },
+      { type: 'closed' },
       { type: 'revoked' },
     ] as const) {
       state = badgePanelReducer(state, event);
-      steps.push(state);
+      states.push(state);
     }
 
-    expect(steps.map(s => s.view.kind)).toEqual(['shown', 'closed', 'shown', 'closed']);
-    expect(state).toEqual({ active: false, view: { kind: 'closed' } });
+    expect(states.map(s => s.view.kind)).toEqual(['done', 'shown', 'closed', 'done']);
+    expect(state).toEqual({ active: false, view: { kind: 'done', message: 'Badge revoked.' } });
   });
 
   it('a notice keeps the active flag and replaces any code', () => {
