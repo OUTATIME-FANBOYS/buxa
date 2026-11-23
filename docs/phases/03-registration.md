@@ -178,7 +178,7 @@ The camp roles are owner, admin, staff, viewer and teacher. A teacher is for the
 
 ## Open for review
 
-- Hold length: decided and built. Each camp sets it from 5 to 60 minutes, default 15 (migration 0047, branch `v0.4/feat/hold-length-per-camp`). Holds already placed keep their time.
+- Hold length: decided and built. Each camp sets it from 5 to 60 minutes, default 15 (migration 0048, branch `v0.4/feat/hold-length-per-camp`). Holds already placed keep their time.
 - Whether a deposit or balance-later option is wanted once payments arrive (phase 9).
 
 ## Decided: families register for classes (owner, 2026)
