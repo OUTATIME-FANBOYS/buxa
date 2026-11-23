@@ -17,6 +17,7 @@ import { createPublicSessionService, type PublicSessionService } from './publicS
 import { createCredentialService } from './services/credentials/createCredentialService';
 import { badgeCipher } from './credentials/badgeCipher';
 import { createImportService, type ImportService } from './classes/import/ImportService';
+import { createGroupService, type GroupService } from './groups/GroupService';
 import { createMembershipService } from './services/memberships/createMembershipService';
 import { createOrgService, type OrgService } from './services/orgs';
 import { createPeopleService } from './services/people/createPeopleService';
@@ -54,6 +55,8 @@ export interface Services {
   attendance: AttendanceService;
   classes: ClassService;
   imports: ImportService;
+  /** Groups, rooms and assignments for a session. Every placement runs the capacity, age, ratio and room rules. */
+  groups: GroupService;
   registration: RegistrationService;
   /** Seat holds for registration. The form calls placeHold; the cleanup calls releaseExpiredHolds. */
   seatHolds: SeatHoldService;
@@ -168,7 +171,9 @@ export function createServices(repositories: Repositories, clock: Clock): Servic
 }
 
 /** Classes, sessions, enrolments and the bulk import. Both storages come from `repositories` (Postgres in production). */
-function createClassServices(repositories: Repositories): Pick<Services, 'classes' | 'imports' | 'seatHolds'> {
+function createClassServices(
+  repositories: Repositories,
+): Pick<Services, 'classes' | 'imports' | 'seatHolds' | 'groups'> {
   const timezoneOf = async (scope: { userId: string; orgId: string }): Promise<string> =>
     (await repositories.orgs.get(scope.userId, scope.orgId)).timezone;
   const holdMinutesOf = async (scope: { userId: string; orgId: string }): Promise<number | null> =>
@@ -177,6 +182,7 @@ function createClassServices(repositories: Repositories): Pick<Services, 'classe
 
   return {
     seatHolds: createSeatHoldService({ repo: repositories.seatHolds, timezoneOf, holdMinutesOf }),
+    groups: createGroupService({ repo: repositories.groups }),
     classes: createClassService({ repo: classes, timezoneOf }),
     imports: createImportService({ classes, imports: repositories.imports, timezoneOf }),
   };

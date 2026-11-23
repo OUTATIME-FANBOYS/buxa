@@ -180,6 +180,7 @@ export * from './attendance';
 export * from './classes';
 export * from './registration';
 export * from './invites';
+export * from './groups';
 
 /** A role change from Team access (Manage access). The role is one of the camp's permission roles. */
 export const ChangeMemberRoleInputSchema = z.object({

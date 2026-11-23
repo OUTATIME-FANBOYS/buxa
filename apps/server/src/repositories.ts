@@ -8,6 +8,8 @@ import { PgPublicSessionRepository } from './publicSessions/PgPublicSessionRepos
 import type { ClassRepository } from './classes/ClassRepository';
 import { PgClassRepository } from './classes/PgClassRepository';
 import type { ImportRepository } from './classes/import/ImportRepository';
+import type { GroupRepository } from './groups/GroupRepository';
+import { PgGroupRepository } from './groups/PgGroupRepository';
 import { PgImportRepository } from './classes/import/PgImportRepository';
 import type { SeatHoldRepository } from './holds/SeatHoldRepository';
 import { PgSeatHoldRepository } from './holds/PgSeatHoldRepository';
@@ -38,6 +40,8 @@ export interface Repositories {
   classes: ClassRepository;
   /** The bulk import of classes' sessions. The Postgres adapter in production; the in-memory one is for tests. */
   imports: ImportRepository;
+  /** Groups, rooms and assignments for a session (phase 4). The Postgres adapter in production; the in-memory one is for tests. */
+  groups: GroupRepository;
   /** Registration forms and submissions. The Postgres adapter in production; the in-memory one is for tests. */
   registration: RegistrationRepository;
   /** Seat holds for registration. Postgres only: the seat rules live in the database (migration 0023). */
@@ -59,6 +63,7 @@ export const createPgRepositories = (pool: Pool): Repositories => ({
   attendance: new PgAttendanceRepository(pool),
   classes: new PgClassRepository(pool),
   imports: new PgImportRepository(pool),
+  groups: new PgGroupRepository(pool),
   registration: new PgRegistrationRepository(pool),
   seatHolds: new PgSeatHoldRepository(pool),
   calendar: new PgCalendarRepository(pool),
