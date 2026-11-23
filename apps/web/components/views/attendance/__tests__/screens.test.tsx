@@ -50,7 +50,6 @@ const ada: PersonSummary = {
   id: '6f1c2b8e-9a3d-4c5e-8f70-1a2b3c4d5e6f',
   givenName: 'Ada',
   familyName: 'Lovelace',
-  preferredName: null,
   roles: ['camper'],
   status: 'valid',
   onSite: true,

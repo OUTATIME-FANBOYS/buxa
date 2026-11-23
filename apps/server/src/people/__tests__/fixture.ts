@@ -28,7 +28,6 @@ export function samplePerson(overrides: Partial<NewPersonRecord> = {}): NewPerso
   return {
     givenName: 'Ada',
     familyName: 'Lovelace',
-    preferredName: null,
     dateOfBirth: null,
     email: null,
     phone: null,

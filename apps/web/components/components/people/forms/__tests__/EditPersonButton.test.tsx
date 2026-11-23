@@ -21,7 +21,6 @@ const ROW = {
   id: ID,
   givenName: 'Ana',
   familyName: 'Lee',
-  preferredName: null,
   roles: ['participant'],
   status: null,
   onSite: null,

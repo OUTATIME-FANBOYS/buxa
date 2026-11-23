@@ -394,8 +394,8 @@ describe('PeopleService lifecycle', () => {
   it("keeps a person's own names and roles when only the contact details change", async () => {
     const camp = await createCamp();
     const admin = camp.actor('admin');
-    const ben = await camp.people.create(admin, adult('Ben', 'Stone', { preferredName: 'Benny' }));
+    const ben = await camp.people.create(admin, adult('Ben', 'Stone'));
     const updated = await camp.people.update(admin, ben.id, { email: '  ' });
-    expect(updated).toMatchObject({ givenName: 'Ben', preferredName: 'Benny', email: null, roles: ['participant'] });
+    expect(updated).toMatchObject({ givenName: 'Ben', familyName: 'Stone', email: null, roles: ['participant'] });
   });
 });

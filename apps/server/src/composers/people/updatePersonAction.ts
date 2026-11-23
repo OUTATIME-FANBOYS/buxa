@@ -31,7 +31,6 @@ export async function updatePersonAction(_previous: ActionState, form: FormData)
   const parsed = parseWith(PersonPatchInputSchema, {
     givenName: field(form, 'givenName'),
     familyName: field(form, 'familyName'),
-    preferredName: field(form, 'preferredName'),
     dateOfBirth: dateOfBirth === '' ? null : dateOfBirth,
     // The email field is shown only for some roles, so it is posted only when it is on the form. Absent means unchanged.
     email: form.has('email') ? field(form, 'email') : undefined,

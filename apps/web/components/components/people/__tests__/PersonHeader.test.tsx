@@ -6,7 +6,6 @@ import { PersonHeader } from '@/components/components/people';
 const person = {
   givenName: 'Ada',
   familyName: 'Lee',
-  preferredName: null,
   roles: [],
   status: 'valid',
   onSite: false,
