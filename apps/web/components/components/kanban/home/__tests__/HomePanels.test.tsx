@@ -92,16 +92,25 @@ describe('MembershipPanel', () => {
     expect(html).not.toContain('Not started');
   });
 
-  it('draws the ring from the shared Ring, with one arc per status and the total in the centre', () => {
+  it('draws the valid share on the shared Ring, at the Reports size, with the summary for screen readers', () => {
     const html = renderToStaticMarkup(<MembershipPanel counts={{ valid: 3, notStarted: 0, expired: 1, none: 0 }} />);
     expect(html).toContain('class="ring"');
     expect(html).toContain('aria-label="Membership status for 4 people: 3 valid, 1 expired."');
-    expect(html).toContain('<span class="stat-num">4</span>');
-    // Valid is three quarters of the ring and starts at the top; expired is the last quarter, offset past valid.
-    const c = 2 * Math.PI * ((120 - 14) / 2);
+    expect(html).toContain('<span class="stat-num">75%</span>');
+    expect(html).toContain('<span class="muted small">valid</span>');
+    // Valid is three quarters of the ring, drawn from the top with round ends at the Reports stroke width of 8 on a 96px ring.
+    const c = 2 * Math.PI * ((96 - 8) / 2);
     expect(html).toContain(`stroke-dasharray="${0.75 * c} ${c}"`);
-    expect(html).toContain(`stroke-dashoffset="${-0.75 * c}"`);
-    expect(html.match(/stroke="var\(--f-(ok|warn)\)"/g)?.length).toBe(2);
+    expect(html).toContain('stroke="var(--f-ok)"');
+    expect(html).toContain('stroke-linecap="round"');
+  });
+
+  it('keeps the legend counts beside the ring', () => {
+    const html = renderToStaticMarkup(<MembershipPanel counts={{ valid: 3, notStarted: 0, expired: 1, none: 0 }} />);
+    expect(html).toContain('aria-label="Membership status, by count"');
+    expect(html).toContain('>3 <span');
+    expect(html).toContain('(75%)');
+    expect(html).toContain('(25%)');
   });
 
   it('says so when nobody is on the list yet', () => {
