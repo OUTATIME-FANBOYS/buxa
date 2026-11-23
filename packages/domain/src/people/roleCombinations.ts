@@ -19,15 +19,10 @@ export const ALLOWED_ROLE_SETS: readonly (readonly CampRole[])[] = [
 ];
 
 /**
- * Placeholder order of the staff roles, highest first. NOT CONFIRMED by the owner yet: it is not used by any rule or the form.
- * Kept here so the hierarchy has one home once the owner confirms it.
+ * The staff hierarchy, highest first, confirmed by the owner. Each person holds one staff role.
+ * Admin staff runs the camp office; organizers run programmes; instructors teach; participants volunteer or help.
  */
-export const STAFF_ROLE_ORDER_UNCONFIRMED: readonly CampRole[] = [
-  'admin_staff',
-  'organizer',
-  'instructor',
-  'participant',
-];
+export const STAFF_ROLE_ORDER: readonly CampRole[] = ['admin_staff', 'organizer', 'instructor', 'participant'];
 
 const sameSet = (a: ReadonlySet<CampRole>, b: readonly CampRole[]): boolean =>
   a.size === new Set(b).size && b.every(role => a.has(role));
