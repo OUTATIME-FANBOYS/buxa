@@ -1,6 +1,7 @@
 import { holdExpiresAt, type Actor } from '@buxa/domain';
 import { assertAllowed } from '../auth/authorize';
 import { attempt, type Outcome } from '../classes/outcome';
+import type { CampActiveHold, ClassRepository } from '../classes/ClassRepository';
 import type { ActiveHold, SeatHold, SeatHoldRepository } from './SeatHoldRepository';
 
 export interface PlaceHoldInput {
@@ -24,6 +25,11 @@ export interface SeatHoldService {
   /** The holds that hold a place in a class now. Needs holds:manage. */
   listActiveHolds(actor: Actor, sessionId: string): Promise<ActiveHold[]>;
   /**
+   * Every hold in the camp that holds a place now, soonest expiry first, for the camp-wide holds screen. Read only. Needs
+   * registration:read (the same people who can read registration).
+   */
+  listCampActiveHolds(actor: Actor): Promise<CampActiveHold[]>;
+  /**
    * Moves the first waitlisted enrolments of a class into its free places (enrolment.promote, audited). Needs holds:manage. Returns
    * how many moved; 0 means no place was free.
    */
@@ -40,6 +46,8 @@ export interface ExpiredHoldsSweep {
 
 export interface SeatHoldServiceDeps {
   repo: SeatHoldRepository;
+  /** The camp-wide read of live holds (one query, in the class repository). */
+  classes: Pick<ClassRepository, 'listCampActiveHolds'>;
   /** The camp's IANA zone, used only to word refusals. */
   timezoneOf: (actor: Pick<Actor, 'userId' | 'orgId'>) => Promise<string>;
   now?: () => Date;
@@ -47,6 +55,7 @@ export interface SeatHoldServiceDeps {
 
 export function createSeatHoldService({
   repo,
+  classes,
   timezoneOf,
   now = () => new Date(),
 }: SeatHoldServiceDeps): SeatHoldService {
@@ -79,6 +88,12 @@ export function createSeatHoldService({
       assertAllowed(actor, 'holds:manage');
 
       return repo.listActiveHolds(actor.userId, actor.orgId, sessionId);
+    },
+
+    async listCampActiveHolds(actor) {
+      assertAllowed(actor, 'registration:read');
+
+      return classes.listCampActiveHolds(actor.userId, actor.orgId);
     },
 
     async promoteWaitlist(actor, sessionId) {

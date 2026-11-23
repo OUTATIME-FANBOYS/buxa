@@ -174,7 +174,7 @@ function createClassServices(repositories: Repositories): Pick<Services, 'classe
   const classes = repositories.classes;
 
   return {
-    seatHolds: createSeatHoldService({ repo: repositories.seatHolds, timezoneOf }),
+    seatHolds: createSeatHoldService({ repo: repositories.seatHolds, classes, timezoneOf }),
     classes: createClassService({ repo: classes, timezoneOf }),
     imports: createImportService({ classes, imports: repositories.imports, timezoneOf }),
   };

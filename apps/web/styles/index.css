@@ -64,6 +64,7 @@
 @import './features/attendance.css';
 @import './features/people.css';
 @import './features/classes.css';
+@import './features/holds.css';
 @import './features/help.css';
 @import './features/home.css';
 @import './features/badge-scanner.css';

@@ -40,8 +40,14 @@ function recordingRepo() {
   return { repo, placed, released };
 }
 
+const noCampHolds = { listCampActiveHolds: () => Promise.resolve([]) };
 const service = (repo: SeatHoldRepository) =>
-  createSeatHoldService({ repo, timezoneOf: () => Promise.resolve('Australia/Sydney'), now: () => NOW });
+  createSeatHoldService({
+    repo,
+    classes: noCampHolds,
+    timezoneOf: () => Promise.resolve('Australia/Sydney'),
+    now: () => NOW,
+  });
 
 describe('seat hold service', () => {
   it('a staff member places a hold that expires 15 minutes after it is taken', async () => {
@@ -76,5 +82,42 @@ describe('seat hold service', () => {
   it('the cleanup needs no actor and returns how many holds it released', async () => {
     const { repo } = recordingRepo();
     await expect(service(repo).releaseExpiredHolds('user-admin', ORG)).resolves.toBe(2);
+  });
+
+  it('the camp-wide holds read needs registration:read: staff, admin and owner see every live hold; a viewer and a teacher are refused', async () => {
+    const listed: string[] = [];
+    const hold = {
+      id: 'hold-9',
+      sessionId: 'session-1',
+      sessionName: 'Summer camp',
+      classId: 'class-1',
+      className: 'Robotics',
+      householdId: 'house-1',
+      householdName: 'Okafor family',
+      childName: 'Ada Okafor',
+      createdAt: NOW.toISOString(),
+      expiresAt: '2027-07-05T09:15:00.000Z',
+    };
+    const { repo } = recordingRepo();
+    const seats = createSeatHoldService({
+      repo,
+      classes: {
+        listCampActiveHolds: (userId, orgId) => {
+          listed.push(`${userId}@${orgId}`);
+
+          return Promise.resolve([hold]);
+        },
+      },
+      timezoneOf: () => Promise.resolve('Australia/Sydney'),
+      now: () => NOW,
+    });
+
+    for (const role of ['staff', 'admin', 'owner'] as const) {
+      await expect(seats.listCampActiveHolds(as(role))).resolves.toEqual([hold]);
+    }
+    expect(listed).toHaveLength(3);
+    await expect(seats.listCampActiveHolds(as('viewer'))).rejects.toThrow();
+    await expect(seats.listCampActiveHolds(as('teacher'))).rejects.toThrow();
+    expect(listed).toHaveLength(3);
   });
 });

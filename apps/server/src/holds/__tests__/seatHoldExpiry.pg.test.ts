@@ -9,6 +9,7 @@ import {
   type ClassFixture,
 } from '../../classes/__tests__/pgClassFixture';
 import { PgSeatHoldRepository } from '../PgSeatHoldRepository';
+import { PgClassRepository } from '../../classes/PgClassRepository';
 import { createSeatHoldService, type SeatHoldService } from '../SeatHoldService';
 
 /*
@@ -22,6 +23,7 @@ describe.skipIf(!url)('seat holds in Postgres: capacity and expiry', () => {
   const pool = new pg.Pool({ connectionString: url });
   const seats: SeatHoldService = createSeatHoldService({
     repo: new PgSeatHoldRepository(pool),
+    classes: new PgClassRepository(pool),
     timezoneOf: () => Promise.resolve('Australia/Sydney'),
   });
 

@@ -99,6 +99,45 @@ export interface ClassRepository {
   replaceTeachers(actor: Actor, classId: string, userIds: readonly string[]): Promise<void>;
   /** Which teachers each class of a session has, for the session page. Row-level security applies. */
   teacherAssignments(userId: string, orgId: string, sessionId: string): Promise<TeacherAssignment[]>;
+  /**
+   * Every seat hold in the camp that holds a place now (unreleased and not yet expired), in one read, ordered by expiry. Read only.
+   * Callers check the permission (SeatHoldService.listCampActiveHolds).
+   */
+  listCampActiveHolds(userId: string, orgId: string): Promise<CampActiveHold[]>;
+  /**
+   * Every waitlisted camper in the camp, grouped by class in the order the classes start, and in the order each camper joined
+   * within a class. Read only; callers check the permission (ClassService.listCampWaitlists).
+   */
+  listCampWaitlists(userId: string, orgId: string): Promise<CampWaitlistEntry[]>;
+}
+
+/**
+ * A seat hold that holds a place right now, in any class of the camp, for the camp-wide holds screen. `childName` is the child the
+ * hold was taken for (from the registration), or null for a hold without one.
+ */
+export interface CampActiveHold {
+  id: string;
+  sessionId: string;
+  sessionName: string;
+  classId: string;
+  className: string;
+  householdId: string;
+  householdName: string;
+  childName: string | null;
+  createdAt: string;
+  expiresAt: string;
+}
+
+/** A camper waiting for a place in a class, with the family name they joined under (null when the camper has no household). */
+export interface CampWaitlistEntry {
+  enrolmentId: string;
+  sessionId: string;
+  sessionName: string;
+  classId: string;
+  className: string;
+  householdName: string | null;
+  camperName: string;
+  joinedAt: string;
 }
 
 /** A teacher assigned to one class (the class's id, and the teacher's user id). */

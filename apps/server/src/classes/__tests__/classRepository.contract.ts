@@ -8,10 +8,13 @@ export interface ClassContractFixture {
   readonly repo: ClassRepository;
   /** An owner of the camp under test. */
   readonly actor: Actor;
-  /** A camper of the camp under test, aged 11 on the class day. */
-  addCamper(): Promise<string>;
-  /** A seat hold on a class. Live when `released` is false and `expiresAt` is in the future. */
-  addSeatHold(classId: string, hold: { expiresAt: string; released: boolean }): Promise<void>;
+  /** A camper of the camp under test, aged 11 on the class day. A family name puts the camper in that household. */
+  addCamper(familyName?: string): Promise<string>;
+  /**
+   * A seat hold on a class. Live when `released` is false and `expiresAt` is in the future. The household it is for is named
+   * `householdName` (a test family when not given).
+   */
+  addSeatHold(classId: string, hold: { expiresAt: string; released: boolean; householdName?: string }): Promise<void>;
   close(): Promise<void>;
 }
 
@@ -182,6 +185,44 @@ export function classRepositoryContract(factory: ClassContractFactory): void {
         (await fx.repo.listEnrolments(fx.actor.userId, fx.actor.orgId, classId)).find(e => e.id === id)?.status;
       expect(await statusOf(waiting.id)).toBe('waitlisted');
       expect(await countsOf(classId)).toEqual({ seatsTaken: 1, waitlisted: 1 });
+    });
+
+    it('lists the live seat holds of every class in the camp, soonest expiry first, and hides expired and released ones', async () => {
+      const first = await classOf(4);
+      const second = await classOf(4);
+      await fx.addSeatHold(first, {
+        expiresAt: '2999-01-02T00:00:00.000Z',
+        released: false,
+        householdName: 'Okafor family',
+      });
+      await fx.addSeatHold(second, {
+        expiresAt: '2999-01-01T00:00:00.000Z',
+        released: false,
+        householdName: 'Lee family',
+      });
+      await fx.addSeatHold(first, { expiresAt: EXPIRED_HOLD_EXPIRY, released: false, householdName: 'Expired family' });
+      await fx.addSeatHold(second, { expiresAt: LIVE_HOLD_EXPIRY, released: true, householdName: 'Released family' });
+
+      const holds = await fx.repo.listCampActiveHolds(fx.actor.userId, fx.actor.orgId);
+
+      expect(holds.map(h => h.householdName)).toEqual(['Lee family', 'Okafor family']);
+      expect(holds[0]).toMatchObject({ classId: second, className: 'Robotics', sessionName: 'Summer camp' });
+      expect(holds[1]).toMatchObject({ classId: first, expiresAt: '2999-01-02T00:00:00.000Z' });
+    });
+
+    it('lists the waitlist of each class in the order the campers joined, with each family name', async () => {
+      const classId = await classOf(1);
+      await enrol(classId, await fx.addCamper('Ruiz family'));
+      await enrol(classId, await fx.addCamper('Ito family'), true);
+      await enrol(classId, await fx.addCamper('Mensah family'), true);
+
+      const waitlist = (await fx.repo.listCampWaitlists(fx.actor.userId, fx.actor.orgId)).filter(
+        entry => entry.classId === classId,
+      );
+
+      expect(waitlist.map(entry => entry.householdName)).toEqual(['Ito family', 'Mensah family']);
+      expect(waitlist[0]).toMatchObject({ className: 'Robotics', sessionName: 'Summer camp' });
+      expect(waitlist[0]?.camperName).not.toBe('');
     });
 
     it('a released seat hold does not count, even before its time', async () => {

@@ -4,7 +4,9 @@ import { isUuid, type Actor } from '@buxa/domain';
 import type { Class, Enrolment, NewSessionInput, Session, SessionEditInput, SessionPriceInput } from '@buxa/contracts';
 import { recordAudit } from '../audit/recordAudit';
 import type {
+  CampActiveHold,
   CampClassSpan,
+  CampWaitlistEntry,
   ClassRecord,
   ClassRepository,
   EnrolRequest,
@@ -35,6 +37,7 @@ import {
   updateSessionRow,
 } from './PgClassWrites';
 import { translateClassWriteError, translateSessionDeleteError } from './pgClassErrors';
+import { listCampActiveHoldRows, listCampWaitlistRows } from './PgCampQueries';
 import { toIso } from '../people/pgRows';
 
 /**
@@ -169,6 +172,14 @@ export class PgClassRepository implements ClassRepository {
 
       return listEnrolmentRows(db, classId);
     });
+  }
+
+  listCampActiveHolds(userId: string, orgId: string): Promise<CampActiveHold[]> {
+    return withOrg(this.pool, userId, orgId, listCampActiveHoldRows);
+  }
+
+  listCampWaitlists(userId: string, orgId: string): Promise<CampWaitlistEntry[]> {
+    return withOrg(this.pool, userId, orgId, listCampWaitlistRows);
   }
 
   enrol(actor: Actor, request: EnrolRequest, rule: EnrolmentRule): Promise<Enrolment> {

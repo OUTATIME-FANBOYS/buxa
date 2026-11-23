@@ -21,12 +21,28 @@ describe.skipIf(!url)('ClassRepository contract on Postgres', () => {
     return {
       repo: fx.repo,
       actor: fx.actor,
-      addCamper: () => fx.addPerson(fx.orgA, '2016-03-01'),
+      addCamper: async familyName => {
+        const personId = await fx.addPerson(fx.orgA, '2016-03-01');
+        if (familyName) {
+          await withOrg(pool, fx.actor.userId, fx.orgA, async db => {
+            const { rows } = await db.query<{ id: string }>(
+              `INSERT INTO households (org_id, name) VALUES ($1, $2) RETURNING id`,
+              [fx.orgA, familyName],
+            );
+            await db.query(
+              `INSERT INTO household_members (org_id, household_id, person_id, relationship) VALUES ($1, $2, $3, 'child')`,
+              [fx.orgA, rows[0].id, personId],
+            );
+          });
+        }
+
+        return personId;
+      },
       addSeatHold: (classId, hold) =>
         withOrg(pool, fx.actor.userId, fx.orgA, async db => {
           const { rows } = await db.query<{ id: string }>(
-            `INSERT INTO households (org_id, name) VALUES ($1, 'Contract family') RETURNING id`,
-            [fx.orgA],
+            `INSERT INTO households (org_id, name) VALUES ($1, $2) RETURNING id`,
+            [fx.orgA, hold.householdName ?? 'Contract family'],
           );
           await db.query(
             `INSERT INTO seat_holds (org_id, session_id, household_id, expires_at, released_at, release_reason)

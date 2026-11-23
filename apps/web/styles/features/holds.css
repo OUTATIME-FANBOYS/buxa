@@ -1,0 +1,18 @@
+/* The camp-wide holds screen: the holds table, with each class's waitlist beside it. One column on a phone. */
+
+.holds-screen {
+  gap: var(--s4);
+}
+
+.holds-board {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--s5);
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .holds-board {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

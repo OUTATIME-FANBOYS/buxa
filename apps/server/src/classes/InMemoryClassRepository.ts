@@ -16,7 +16,9 @@ import { systemClock, type Clock } from '../services/clock';
 import type { AuditRecord } from '../people/InMemoryDatabase';
 import type { AuditData } from '../audit/types';
 import type {
+  CampActiveHold,
   CampClassSpan,
+  CampWaitlistEntry,
   ClassRecord,
   ClassRepository,
   EnrolRequest,
@@ -74,9 +76,17 @@ interface StoredCamper {
   dateOfBirth: LocalDate | null;
 }
 
-/** A seat hold on a class, as Postgres stores it (the household is not needed to count the place). Live while unreleased and not yet expired. */
+/**
+ * A seat hold on a class, as Postgres stores it. A place is counted while it is unreleased and not yet expired. The household and
+ * the child are kept for the camp-wide holds screen only.
+ */
 interface StoredSeatHold {
+  id: string;
   classId: string;
+  householdId: string;
+  householdName: string;
+  childName: string | null;
+  createdAt: string;
   expiresAt: string;
   released: boolean;
 }
@@ -95,6 +105,8 @@ export class InMemoryClassRepository implements ClassRepository {
   private readonly classes = new Map<string, StoredClass>();
   private readonly enrolments = new Map<string, StoredEnrolment>();
   private readonly campers = new Map<string, StoredCamper>();
+  /** Person id to the name of the household the person belongs to (Postgres: household_members). */
+  private readonly householdOf = new Map<string, string>();
   private readonly seatHolds: StoredSeatHold[] = [];
   /** Camp id to the user ids that hold the teacher role there. */
   private readonly teacherUsers = new Map<string, Set<string>>();
@@ -109,9 +121,35 @@ export class InMemoryClassRepository implements ClassRepository {
     this.campers.set(id, { id, orgId, name, dateOfBirth });
   }
 
-  /** Test setup: a seat hold on a class, as the hold repository would write it. Counts as a place while live. */
-  seedSeatHold(classId: string, hold: { expiresAt: string; released: boolean }): void {
-    this.seatHolds.push({ classId, expiresAt: hold.expiresAt, released: hold.released });
+  /** Test setup: a person's household, as household_members would link them. Used for the waitlist's family name. */
+  seedHouseholdMember(personId: string, householdName: string): void {
+    this.householdOf.set(personId, householdName);
+  }
+
+  /**
+   * Test setup: a seat hold on a class, as the hold repository would write it. Counts as a place while live. The household and
+   * child default to a test family and no child.
+   */
+  seedSeatHold(
+    classId: string,
+    hold: {
+      expiresAt: string;
+      released: boolean;
+      householdName?: string;
+      childName?: string;
+      createdAt?: string;
+    },
+  ): void {
+    this.seatHolds.push({
+      id: randomUUID(),
+      classId,
+      householdId: randomUUID(),
+      householdName: hold.householdName ?? 'Test family',
+      childName: hold.childName ?? null,
+      createdAt: hold.createdAt ?? this.now().toISOString(),
+      expiresAt: hold.expiresAt,
+      released: hold.released,
+    });
   }
 
   listSessions(userId: string, orgId: string): Promise<Session[]> {
@@ -338,6 +376,64 @@ export class InMemoryClassRepository implements ClassRepository {
       }
       this.classes.delete(classId);
       this.record(actor, 'class.delete', 'class', classId, { name: row.name });
+    });
+  }
+
+  listCampActiveHolds(userId: string, orgId: string): Promise<CampActiveHold[]> {
+    return settle(() => {
+      const now = this.now().getTime();
+      const live = this.seatHolds.filter(h => !h.released && Date.parse(h.expiresAt) > now);
+      const inCamp = live.filter(h => this.classes.get(h.classId)?.orgId === orgId);
+
+      return inCamp
+        .sort((a, b) => a.expiresAt.localeCompare(b.expiresAt) || a.id.localeCompare(b.id))
+        .map(h => {
+          const cls = this.classes.get(h.classId);
+          const session = cls ? this.sessions.get(cls.sessionId) : undefined;
+
+          return {
+            id: h.id,
+            sessionId: cls?.sessionId ?? '',
+            sessionName: session?.name ?? '',
+            classId: h.classId,
+            className: cls?.name ?? '',
+            householdId: h.householdId,
+            householdName: h.householdName,
+            childName: h.childName,
+            createdAt: h.createdAt,
+            expiresAt: h.expiresAt,
+          };
+        });
+    });
+  }
+
+  listCampWaitlists(userId: string, orgId: string): Promise<CampWaitlistEntry[]> {
+    return settle(() => {
+      const waiting = [...this.enrolments.values()].filter(e => e.orgId === orgId && e.status === 'waitlisted');
+      const startOf = (classId: string) => this.classes.get(classId)?.startsAt ?? '';
+
+      return waiting
+        .sort(
+          (a, b) =>
+            startOf(a.classId).localeCompare(startOf(b.classId)) ||
+            a.classId.localeCompare(b.classId) ||
+            a.enrolledAt.localeCompare(b.enrolledAt),
+        )
+        .map(e => {
+          const cls = this.classes.get(e.classId);
+          const session = cls ? this.sessions.get(cls.sessionId) : undefined;
+
+          return {
+            enrolmentId: e.id,
+            sessionId: cls?.sessionId ?? '',
+            sessionName: session?.name ?? '',
+            classId: e.classId,
+            className: cls?.name ?? '',
+            householdName: this.householdOf.get(e.camperId) ?? null,
+            camperName: this.campers.get(e.camperId)?.name ?? '',
+            joinedAt: e.enrolledAt,
+          };
+        });
     });
   }
 
