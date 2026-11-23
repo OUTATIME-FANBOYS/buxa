@@ -52,7 +52,7 @@ export function MembershipRow({ membership, personId, canManage, timeZone, clock
               aria-controls={formId}
               onClick={() => setRevoking(open => !open)}
             >
-              Revoke
+              {revoking ? 'Cancel' : 'Revoke'}
             </button>
           )}
         </div>
