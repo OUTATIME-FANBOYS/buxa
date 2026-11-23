@@ -1,6 +1,7 @@
 'use server';
 import { cancelEnrolmentAction as cancelEnrolmentActionImpl } from '@buxa/server/composers/classes/cancelEnrolmentAction';
 import { enrolAction as enrolActionImpl } from '@buxa/server/composers/classes/enrolAction';
+import { promoteWaitlistAction as promoteWaitlistActionImpl } from '@buxa/server/composers/classes/promoteWaitlistAction';
 import { importClassesAction as importClassesActionImpl } from '@buxa/server/composers/classes/importClassesAction';
 import { createSessionAction as createSessionActionImpl } from '@buxa/server/composers/classes/createSessionAction';
 import { addClassAction as addClassActionImpl } from '@buxa/server/composers/classes/addClassAction';
@@ -66,4 +67,8 @@ export async function deleteSessionAction(...args: Parameters<typeof deleteSessi
 
 export async function deleteSessionsAction(...args: Parameters<typeof deleteSessionsActionImpl>) {
   return deleteSessionsActionImpl(...args);
+}
+
+export async function promoteWaitlistAction(...args: Parameters<typeof promoteWaitlistActionImpl>) {
+  return promoteWaitlistActionImpl(...args);
 }
