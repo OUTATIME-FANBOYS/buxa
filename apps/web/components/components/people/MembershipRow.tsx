@@ -4,7 +4,7 @@ import { AccessPill } from './AccessPill';
 import { RevokeMembershipForm } from '@/components/components/people/forms';
 import { formatLocalDate } from '@buxa/shared';
 import type { ClockFormat } from '@buxa/domain';
-import { buttonClassName } from '@/components/atoms/Button/buttonClass';
+import { buttonClassName } from '@/components/atoms/Button';
 
 interface MembershipRowProps {
   membership: PersonMembership;
