@@ -170,6 +170,7 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0042_membership_session.sql',
       '0043_membership_expiry.sql',
       '0044_drop_preferred_name.sql',
+      '0045_registration_holds.sql',
     ]);
   });
 

@@ -20,7 +20,15 @@ export interface SeatHoldService {
    * The cleanup: releases the expired holds of one camp and promotes waitlists. It has no actor (it runs from a job), so it makes
    * no permission check. Safe to run twice. Expired holds stop counting on their own; this only tidies the table.
    */
-  releaseExpiredHolds(userId: string, orgId: string): Promise<number>;
+  releaseExpiredHolds(userId: string | null, orgId: string): Promise<number>;
+  /** The cleanup for every camp with expired holds, run by the scheduled job (apps/web/app/api/cron). Safe to run twice. */
+  releaseExpiredHoldsEverywhere(): Promise<ExpiredHoldsSweep>;
+}
+
+/** What the all-camps cleanup did: how many camps it visited and how many holds it released. */
+export interface ExpiredHoldsSweep {
+  camps: number;
+  released: number;
 }
 
 export interface SeatHoldServiceDeps {
@@ -58,6 +66,16 @@ export function createSeatHoldService({
 
     releaseExpiredHolds(userId, orgId) {
       return repo.releaseExpiredHolds(userId, orgId);
+    },
+
+    async releaseExpiredHoldsEverywhere() {
+      const camps = await repo.campsWithExpiredHolds();
+      let released = 0;
+      for (const camp of camps) {
+        released += await repo.releaseExpiredHolds(camp.userId, camp.orgId);
+      }
+
+      return { camps: camps.length, released };
     },
   };
 }

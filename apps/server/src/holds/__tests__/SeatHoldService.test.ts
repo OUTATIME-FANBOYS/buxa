@@ -32,6 +32,7 @@ function recordingRepo() {
       return Promise.resolve({ ...hold, releasedAt: NOW.toISOString(), releaseReason: 'cancelled' });
     },
     releaseExpiredHolds: () => Promise.resolve(2),
+    campsWithExpiredHolds: () => Promise.resolve([]),
   };
 
   return { repo, placed, released };
