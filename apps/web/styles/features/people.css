@@ -1,6 +1,25 @@
 /* ---------- People (members, households, memberships, badges) ---------- */
+/* The person header: the name block on the left, the actions on the right of the same line, top-aligned with the name. */
 .people-head {
-  align-items: center;
+  align-items: flex-start;
+  gap: var(--s5);
+}
+.people-email {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+/* The person page's tiles: two columns on a wide screen, one on a phone. Gaps use the page's spacing token (--s5), and each row's
+ * tiles stretch to the same height. */
+.person-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s5);
+  align-items: stretch;
+}
+@media (max-width: 720px) {
+  .person-tiles {
+    grid-template-columns: 1fr;
+  }
 }
 .people-heading {
   font-size: var(--fs-l, 18px);

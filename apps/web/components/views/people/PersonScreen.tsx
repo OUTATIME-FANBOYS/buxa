@@ -6,7 +6,6 @@ import { loadVisitHistory } from '@buxa/server/composers/index.server';
 import { ArchivePersonButton, EditPersonButton } from '@/components/components/people/forms';
 import { AttendanceHistory } from '@/components/components/people';
 import { BadgePanel } from '@/components/components/people';
-import { ContactDetails } from '@/components/components/people';
 import { HouseholdPanel } from '@/components/components/people';
 import { MembershipsPanel } from '@/components/components/people';
 import { PersonHeader } from '@/components/components/people';
@@ -56,27 +55,35 @@ export async function PersonScreen({
 
   return (
     <div className="page">
-      <PersonHeader person={person} />
-      <div className="grid-2">
-        <section className="panel" aria-labelledby="details-heading">
-          <h2 id="details-heading" className="people-heading">
-            Details
-          </h2>
-          <ContactDetails person={person} />
-          <div className="row">
+      <PersonHeader
+        person={person}
+        actions={
+          <>
             {canUpdate && (
               <EditPersonButton
                 personId={person.id}
                 households={toHouseholdChoices(households)}
                 label="Edit details"
+                variant="primary"
                 initiallyOpen={editOpen}
               />
             )}
             {canArchive && !person.archived && (
               <ArchivePersonButton personId={person.id} personName={`${person.givenName} ${person.familyName}`} />
             )}
-          </div>
-        </section>
+          </>
+        }
+      />
+      <div className="person-tiles">
+        {person.memberships !== null && (
+          <MembershipsPanel
+            personId={person.id}
+            memberships={person.memberships}
+            canManage={canManage}
+            timeZone={camp.timezone}
+            clockFormat={clock.clockFormat}
+          />
+        )}
         <HouseholdPanel
           personId={person.id}
           households={person.households}
@@ -87,15 +94,6 @@ export async function PersonScreen({
           query={q}
           linkable={linkable}
         />
-        {person.memberships !== null && (
-          <MembershipsPanel
-            personId={person.id}
-            memberships={person.memberships}
-            canManage={canManage}
-            timeZone={camp.timezone}
-            clockFormat={clock.clockFormat}
-          />
-        )}
         {person.hasActiveBadge !== null && (
           <BadgePanel
             personId={person.id}
@@ -107,8 +105,10 @@ export async function PersonScreen({
             canManage={canBadge}
           />
         )}
+        {canSeeVisits && (
+          <AttendanceHistory entries={visits} timeZone={camp.timezone} clockFormat={clock.clockFormat} />
+        )}
       </div>
-      {canSeeVisits && <AttendanceHistory entries={visits} timeZone={camp.timezone} clockFormat={clock.clockFormat} />}
     </div>
   );
 }

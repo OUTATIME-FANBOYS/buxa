@@ -57,6 +57,8 @@ const as = (role: Role) => {
   session.camp = { orgId: 'o1', role, name: 'Sunrise', slug: 'sunrise' };
 };
 const render = (node: ReactNode) => renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}>{node}</UiProvider>);
+/** The page header's markup: the name, the status words, the email and the actions. */
+const headerOf = (html: string) => html.match(/<header[\s\S]*?<\/header>/)?.[0] ?? '';
 
 const summary = (over: Partial<PersonSummary> = {}): PersonSummary => ({
   id: ID.ben,
@@ -284,16 +286,20 @@ describe('PersonScreen', () => {
     await expect(PersonScreen({ id: ID.anna })).rejects.toThrow('NEXT_NOT_FOUND');
   });
 
-  it('shows contact details that exist, and never the word null', async () => {
+  it('shows the email under the name in the header, and never the word null', async () => {
     services.people.get.mockResolvedValueOnce(
       person({ email: 'ben@example.test', phone: null, dateOfBirth: '2016-05-02' }),
     );
     const html = render(await PersonScreen({ id: ID.ben }));
-    expect(html).toContain('ben@example.test');
-    expect(html).toContain('Date of birth');
-    expect(html).not.toContain('Phone');
+    const header = headerOf(html);
+    expect(header).toContain('ben@example.test');
+    expect(header.indexOf('Ben Lee')).toBeLessThan(header.indexOf('ben@example.test'));
     // Visible markup only: React's inline bootstrap script legitimately contains the word.
     expect(html.replace(/<script[\s\S]*?<\/script>/g, '')).not.toMatch(/\bnull\b/);
+  });
+
+  it('leaves the email out of the header when the person has none', async () => {
+    expect(headerOf(render(await PersonScreen({ id: ID.ben })))).not.toContain('people-email');
   });
 
   it('shows household members with their guardian and pick-up status in words', async () => {
@@ -353,8 +359,59 @@ describe('PersonScreen', () => {
       },
     ]);
     const html = render(await PersonScreen({ id: ID.ben }));
-    expect(html).toContain('Maya Chen');
-    expect(html).toContain('On site');
+    // 09:12 UTC is 14:42 in Asia/Kolkata, the camp's zone.
+    expect(html).toContain('2 Jul, 14:42');
+    expect(html).toContain('<li>2 Jul, 14:42</li>');
+  });
+
+  it('shows the last five check-ins, and "No check-ins yet." when there are none', async () => {
+    const visit = (n: number) => ({
+      id: `v${n}`,
+      personId: ID.ben,
+      personName: 'Ben Lee',
+      checkedInAt: `2027-07-0${n}T09:00:00Z`,
+      checkedInByName: 'Maya Chen',
+      method: 'qr',
+      checkedOutAt: null,
+      checkedOutByName: null,
+      collectedByName: null,
+      overrideReason: null,
+      note: null,
+    });
+    services.attendance.history.mockResolvedValueOnce([1, 2, 3, 4, 5, 6].map(visit).reverse());
+    const html = render(await PersonScreen({ id: ID.ben }));
+    expect(html.match(/<li>/g)).toHaveLength(5);
+    expect(html).toContain('<li>6 Jul, 14:30</li>');
+    // The sixth, oldest visit (1 Jul) is past the five shown.
+    expect(html).not.toContain('1 Jul, 14:30');
+
+    expect(render(await PersonScreen({ id: ID.ben }))).toContain('No check-ins yet.');
+  });
+
+  it('renders the four tiles in order: Membership, Household, Badge, Attendance', async () => {
+    const html = render(await PersonScreen({ id: ID.ben }));
+    const at = ['membership-heading', 'household-heading', 'badge-heading', 'attendance-heading'].map(id =>
+      html.indexOf(`id="${id}"`),
+    );
+    expect(at.every(i => i >= 0)).toBe(true);
+    expect([...at].sort((a, b) => a - b)).toEqual(at);
+    expect(html).toContain('class="person-tiles"');
+  });
+
+  it('has no Details card', async () => {
+    const html = render(await PersonScreen({ id: ID.ben }));
+    expect(html).not.toContain('details-heading');
+    expect(html).not.toContain('>Details<');
+  });
+
+  it('puts Edit details and Archive person in the header, beside the name', async () => {
+    as('admin');
+    const html = render(await PersonScreen({ id: ID.ben }));
+    const header = headerOf(html);
+    expect(header).toContain('>Edit details</button>');
+    expect(header).toContain('Archive person');
+    expect(header.indexOf('Ben Lee')).toBeLessThan(header.indexOf('Edit details'));
+    expect(html.indexOf('Archive person')).toBeLessThan(html.indexOf('person-tiles'));
   });
 
   it('hides archive for a person already archived, and says a badge cannot be issued', async () => {

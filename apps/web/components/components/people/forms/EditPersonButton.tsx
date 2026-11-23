@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ComponentProps } from 'react';
 import type { Person } from '@buxa/contracts';
 import type { HouseholdChoice } from '@buxa/shared';
 import { FormPopUp } from '@/components/components';
@@ -22,12 +22,15 @@ export function EditPersonButton({
   personId,
   households = [],
   label = 'Edit',
+  variant = 'glass',
   initiallyOpen = false,
 }: {
   personId: string;
   /** The camp's households, for the Household section's select. */
   households?: readonly HouseholdChoice[];
   label?: string;
+  /** The button's look. The rows use the neutral glass; the person page's main action is primary. */
+  variant?: ComponentProps<typeof Button>['variant'];
   initiallyOpen?: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -81,7 +84,7 @@ export function EditPersonButton({
 
   return (
     <>
-      <Button variant="glass" type="button" aria-haspopup="dialog" onClick={openPopUp}>
+      <Button variant={variant} type="button" aria-haspopup="dialog" onClick={openPopUp}>
         {label}
       </Button>
       {open && (
