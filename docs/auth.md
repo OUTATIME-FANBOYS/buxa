@@ -61,6 +61,8 @@ Each person has one role per camp: **viewer**, **staff**, **admin**, **owner** o
 | Team (`members:*`)                                | read members, leave             | as viewer, and invite teachers     | also read contacts, invite teachers, change roles             | as admin, and make or remove an owner                                                          |
 | Camp (`org:*`, `audit:read`, `data:*`)            | read the camp                   | as viewer                          | also rename the camp and read the audit log                   | also delete the camp (owner), archive and unarchive it. Transfer, export and erase are planned |
 
+Showing a badge is wider than this table: the person themself, and a guardian of a child in their household, may also show it (see `docs/security.md`, section 2). Issuing, reprinting, reissuing and revoking stay with `credentials:manage`.
+
 The teacher's grants are not in this table. A teacher can read its assigned classes and the people in them, and rename its own classes. It records check-in and check-out only when an admin turns on that option for it (`member_options`, migration `0030`). A teacher has no People, Team access, Work or Admin screens.
 
 The full category table, with what is built and what is planned, is in `docs/phases/03-registration.md`.
