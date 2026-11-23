@@ -128,15 +128,23 @@
   gap: var(--s2);
   align-items: center;
 }
-.people-disclosure > summary {
-  list-style: none;
-  cursor: pointer;
+.people-member-row {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s4);
+  align-items: center;
+  justify-content: space-between;
 }
-.people-disclosure > summary::-webkit-details-marker {
-  display: none;
-}
-.people-disclosure[open] .people-subpanel {
+.people-member-revoke {
+  flex: 1 1 100%;
   margin-top: var(--s3);
+}
+.people-member-revoke .people-subpanel {
+  width: 100%;
+}
+.people-member-revoke textarea {
+  width: 100%;
 }
 .people-message {
   margin: 0;
