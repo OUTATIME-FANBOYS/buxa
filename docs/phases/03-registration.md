@@ -180,3 +180,12 @@ The camp roles are owner, admin, staff, viewer and teacher. A teacher is for the
 
 - Hold length (proposed 15 minutes) and whether camps can change it.
 - Whether a deposit or balance-later option is wanted once payments arrive (phase 9).
+
+## Decided: families register for classes (owner, 2026)
+
+- A **session** is the period (for example "Summer 2027", or a one-week winter camp). A session with one class is still a session with one class.
+- A **class** is what a family registers for and pays for. Seats, holds and the waitlist sit on classes.
+- A parent registers a child for one or more classes. The child is placed in the session through the class, so nothing extra is entered.
+- A child may take more than one class in the same session, as long as the times do not overlap. Overlap is blocked at registration.
+- Payment is per class. A camp may also sell a package covering several classes at a discount.
+- Confirmation creates the enrolment in each class, and a waitlisted family moves up when a seat frees.
