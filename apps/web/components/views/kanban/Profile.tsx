@@ -11,12 +11,23 @@ import {
   SETTINGS_GRID,
 } from '@/components/components/settings';
 import { fullNameOf } from '@buxa/shared/names';
+import { ProfileBadges } from '@/components/components/badge';
+import type { ProfileBadgeRow } from '@buxa/shared';
 
 /**
  * The signed-in person's profile: display name, email, time format and appearance. It belongs to the account, not a camp,
  * so it opens with or without one. The name is saved to the account first; only then does the board's own copy change.
+ * The badge section lists the person's own badge in the camp, and their children's for a guardian. It is empty with no camp.
  */
-export function Profile({ user }: { user: User }) {
+export function Profile({
+  user,
+  campName,
+  badges,
+}: {
+  user: User;
+  campName: string | null;
+  badges: readonly ProfileBadgeRow[];
+}) {
   const { actions, me } = useStore();
   const { toast } = useUi();
 
@@ -38,6 +49,7 @@ export function Profile({ user }: { user: User }) {
         <TimeFormatCard clockFormat={user.clockFormat ?? undefined} />
         <AppearanceCard />
       </div>
+      <ProfileBadges badges={badges} campName={campName} />
     </div>
   );
 }

@@ -9,16 +9,15 @@ export function normalizeForSearch(text: string): string {
 export interface SearchableName {
   givenName: string;
   familyName: string;
-  preferredName: string | null;
 }
 
-/** Every word of the query must appear in the given, family or preferred name. The in-memory adapter uses this; Postgres mirrors it. */
+/** Every word of the query must appear in the given or family name. The in-memory adapter uses this; Postgres mirrors it. */
 export function matchesName(person: SearchableName, query: string): boolean {
   const words = normalizeForSearch(query).split(' ').filter(Boolean);
   if (words.length === 0) {
     return false;
   }
-  const haystack = normalizeForSearch([person.givenName, person.familyName, person.preferredName ?? ''].join(' '));
+  const haystack = normalizeForSearch([person.givenName, person.familyName].join(' '));
 
   return words.every(w => haystack.includes(w));
 }

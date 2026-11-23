@@ -1,7 +1,7 @@
 import { holdExpiresAt, type Actor } from '@buxa/domain';
 import { assertAllowed } from '../auth/authorize';
 import { attempt, type Outcome } from '../classes/outcome';
-import type { SeatHold, SeatHoldRepository } from './SeatHoldRepository';
+import type { ActiveHold, SeatHold, SeatHoldRepository } from './SeatHoldRepository';
 
 export interface PlaceHoldInput {
   /** The class (a row of `sessions`) to hold a place in. */
@@ -20,7 +20,22 @@ export interface SeatHoldService {
    * The cleanup: releases the expired holds of one camp and promotes waitlists. It has no actor (it runs from a job), so it makes
    * no permission check. Safe to run twice. Expired holds stop counting on their own; this only tidies the table.
    */
-  releaseExpiredHolds(userId: string, orgId: string): Promise<number>;
+  releaseExpiredHolds(userId: string | null, orgId: string): Promise<number>;
+  /** The holds that hold a place in a class now. Needs holds:manage. */
+  listActiveHolds(actor: Actor, sessionId: string): Promise<ActiveHold[]>;
+  /**
+   * Moves the first waitlisted enrolments of a class into its free places (enrolment.promote, audited). Needs holds:manage. Returns
+   * how many moved; 0 means no place was free.
+   */
+  promoteWaitlist(actor: Actor, sessionId: string): Promise<number>;
+  /** The cleanup for every camp with expired holds, run by the scheduled job (apps/web/app/api/cron). Safe to run twice. */
+  releaseExpiredHoldsEverywhere(): Promise<ExpiredHoldsSweep>;
+}
+
+/** What the all-camps cleanup did: how many camps it visited and how many holds it released. */
+export interface ExpiredHoldsSweep {
+  camps: number;
+  released: number;
 }
 
 export interface SeatHoldServiceDeps {
@@ -58,6 +73,28 @@ export function createSeatHoldService({
 
     releaseExpiredHolds(userId, orgId) {
       return repo.releaseExpiredHolds(userId, orgId);
+    },
+
+    async listActiveHolds(actor, sessionId) {
+      assertAllowed(actor, 'holds:manage');
+
+      return repo.listActiveHolds(actor.userId, actor.orgId, sessionId);
+    },
+
+    async promoteWaitlist(actor, sessionId) {
+      assertAllowed(actor, 'holds:manage');
+
+      return repo.promoteWaitlist(actor, sessionId);
+    },
+
+    async releaseExpiredHoldsEverywhere() {
+      const camps = await repo.campsWithExpiredHolds();
+      let released = 0;
+      for (const camp of camps) {
+        released += await repo.releaseExpiredHolds(camp.userId, camp.orgId);
+      }
+
+      return { camps: camps.length, released };
     },
   };
 }

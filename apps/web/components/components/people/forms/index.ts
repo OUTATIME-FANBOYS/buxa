@@ -1,3 +1,4 @@
+export * from './AddMembershipButton';
 export * from './AddMembershipForm';
 export * from './AddPersonButton';
 export * from './ArchivePersonButton';

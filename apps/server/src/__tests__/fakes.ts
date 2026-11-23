@@ -36,6 +36,11 @@ function splitName(name: string): { firstName: string; lastName: string | null }
   return { firstName, lastName: trimmed.slice(firstName.length).trim() || null };
 }
 
+/** A membership is live unless its team access has an expiry in the past (migration 0043 says the same in SQL). */
+function isLive(member: { expiresAt?: string | null }): boolean {
+  return !member.expiresAt || new Date(member.expiresAt).getTime() > Date.now();
+}
+
 /** The User the repository returns: the stored fields, without the auth id. */
 function publicUser(u: {
   id: string;
@@ -72,8 +77,10 @@ interface StoredOrg {
 export class InMemoryStore implements UserRepository, OrgRepository {
   readonly users = new Map<string, User & { authId: string }>();
   readonly orgs = new Map<string, StoredOrg>();
-  readonly members: { orgId: string; userId: string; role: Role }[] = [];
-  private readonly database = new InMemoryDatabase();
+  /** `expiresAt` is the team access end (migration 0043); absent or null means no expiry. */
+  readonly members: { orgId: string; userId: string; role: Role; expiresAt?: string | null }[] = [];
+  /** Public so a test can read the people and badges a camp holds (the fake of the Postgres tables). */
+  readonly database = new InMemoryDatabase();
 
   /** Every audit row written through this store's adapters, oldest first. */
   get audit(): readonly AuditRecord[] {
@@ -123,7 +130,9 @@ export class InMemoryStore implements UserRepository, OrgRepository {
     return Promise.resolve(publicUser(user));
   }
   roleIn(_signedIn: string, orgId: string, userId: string): Promise<Membership['role'] | null> {
-    return Promise.resolve(this.members.find(m => m.orgId === orgId && m.userId === userId)?.role ?? null);
+    const member = this.members.find(m => m.orgId === orgId && m.userId === userId && isLive(m));
+
+    return Promise.resolve(member?.role ?? null);
   }
   renameMember(actor: Actor, userId: string, name: string): Promise<Pick<User, 'id' | 'email' | 'name'> | null> {
     const user = this.users.get(userId);
@@ -172,7 +181,7 @@ export class InMemoryStore implements UserRepository, OrgRepository {
   membershipsOf(userId: string): Promise<Membership[]> {
     const rows = this.members.flatMap(m => {
       const o = this.orgs.get(m.orgId);
-      if (m.userId !== userId || !o || o.archivedAt) {
+      if (m.userId !== userId || !o || o.archivedAt || !isLive(m)) {
         return [];
       }
 
@@ -184,7 +193,7 @@ export class InMemoryStore implements UserRepository, OrgRepository {
   archivedMembershipsOf(userId: string): Promise<Membership[]> {
     const rows = this.members.flatMap(m => {
       const o = this.orgs.get(m.orgId);
-      if (m.userId !== userId || !o?.archivedAt) {
+      if (m.userId !== userId || !o?.archivedAt || !isLive(m)) {
         return [];
       }
 
@@ -311,6 +320,22 @@ export class InMemoryStore implements UserRepository, OrgRepository {
     return Promise.resolve();
   }
 
+  /** The same rule as the database (migration 0043): the owner rule and the self rule are checked by the service, as for a role. */
+  setMemberExpiry(actor: Actor, userId: string, expiresAt: string | null): Promise<void> {
+    const member = this.members.find(m => m.orgId === actor.orgId && m.userId === userId);
+    if (!member) {
+      return Promise.reject(new OrgNotFoundError());
+    }
+    const from = member.expiresAt ?? null;
+    member.expiresAt = expiresAt;
+    this.database.record(actor, expiresAt === null ? 'member.expiry_clear' : 'member.expiry_set', 'member', userId, {
+      from,
+      to: expiresAt,
+    });
+
+    return Promise.resolve();
+  }
+
   listMembers(_userId: string, orgId: string): Promise<Member[]> {
     const rows: Member[] = [];
     for (const m of this.members) {
@@ -321,7 +346,7 @@ export class InMemoryStore implements UserRepository, OrgRepository {
       if (!u) {
         return Promise.reject(new Error(`member ${m.userId} has no user record`));
       }
-      rows.push({ id: u.id, name: u.name, email: u.email, role: m.role });
+      rows.push({ id: u.id, name: u.name, email: u.email, role: m.role, expiresAt: m.expiresAt ?? null });
     }
 
     return Promise.resolve(rows);
@@ -340,7 +365,11 @@ export class InMemoryStore implements UserRepository, OrgRepository {
       attendance: new InMemoryAttendanceRepository(db),
       classes,
       imports: new InMemoryImportRepository(classes),
-      registration: new InMemoryRegistrationRepository({}),
+      registration: new InMemoryRegistrationRepository(
+        {},
+        (orgId, answers) => camperIdsFor(db, orgId, answers),
+        new InMemoryCredentialRepository(db),
+      ),
       seatHolds: unavailableSeatHolds,
       calendar: new InMemoryCalendarRepository(),
       memberInvites: new InMemoryMemberInviteRepository(new Map()),
@@ -357,10 +386,35 @@ export class InMemoryStore implements UserRepository, OrgRepository {
  * Seat holds need the database (their capacity rule is in migration 0023), so the in-memory store has none. Holds are tested
  * against Postgres in holds/__tests__; a test that reaches this stub fails loudly.
  */
+/** The camper people a registration's answers name: active, with the camper role, same name and birth date (see camperIdsInTx). */
+export function camperIdsFor(
+  db: InMemoryDatabase,
+  orgId: string,
+  answers: { standard: Record<string, string> },
+): string[] {
+  const { camperFirstName, camperLastName, camperBirthDate } = answers.standard;
+  const norm = (value: string | undefined): string => (value ?? '').trim().toLowerCase();
+
+  return [...db.people.values()]
+    .filter(
+      p =>
+        p.orgId === orgId &&
+        p.archivedAt === null &&
+        p.roles.includes('camper') &&
+        norm(p.givenName) === norm(camperFirstName) &&
+        norm(p.familyName) === norm(camperLastName) &&
+        p.dateOfBirth === camperBirthDate,
+    )
+    .map(p => p.id);
+}
+
 const unavailableSeatHolds: SeatHoldRepository = {
   placeHold: () => Promise.reject(new Error('Seat holds are only available on Postgres')),
   releaseHold: () => Promise.reject(new Error('Seat holds are only available on Postgres')),
   releaseExpiredHolds: () => Promise.reject(new Error('Seat holds are only available on Postgres')),
+  campsWithExpiredHolds: () => Promise.reject(new Error('Seat holds are only available on Postgres')),
+  listActiveHolds: () => Promise.reject(new Error('Seat holds are only available on Postgres')),
+  promoteWaitlist: () => Promise.reject(new Error('Seat holds are only available on Postgres')),
 };
 
 /** Repositories backed by memory, plus the audit log they write, for tests. */

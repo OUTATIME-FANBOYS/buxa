@@ -7,6 +7,7 @@ import type {
   Org,
   OrgPatchInput,
   OrgSummary,
+  SetMemberExpiryInput,
 } from '@buxa/contracts';
 import { can, type Actor } from '@buxa/domain';
 import { assertAllowed } from '../auth/authorize';
@@ -25,6 +26,11 @@ export interface OrgService {
   listMembers(actor: Actor): Promise<Members>;
   /** Needs members:change_role. Sets one member's permission role; the rules (self, owner, last owner) are checked here and in the database. */
   changeMemberRole(actor: Actor, input: ChangeMemberRoleInput): Promise<void>;
+  /**
+   * Needs members:change_role, with the same owner rule as a role change: an admin cannot expire an owner. Sets the day the
+   * member's access ends, or clears it. An expired member has no access to the camp (see migration 0043).
+   */
+  setMemberExpiry(actor: Actor, input: SetMemberExpiryInput): Promise<void>;
   /** Owner only. Hides the camp and keeps all its data. */
   archiveCamp(actor: Actor, orgId: string): Promise<{ archivedAt: string }>;
   /** Owner only. Makes an archived camp active again; its data is unchanged. Refuses a camp that is not archived. */
@@ -75,6 +81,23 @@ export function createOrgService(orgs: OrgRepository): OrgService {
         newRole: input.role,
       });
       await guard(() => orgs.changeMemberRole(actor, input.userId, input.role));
+    },
+    async setMemberExpiry(actor, input) {
+      const members = await guard(() => orgs.listMembers(actor.userId, actor.orgId));
+      const target = members.find(m => m.id === input.userId);
+      if (!target) {
+        throw notFound('Person not found');
+      }
+      // The role rules: not oneself, and only someone above the target (an owner may act on anyone). newRole is the target's own role,
+      // so this checks the actor's standing and nothing else.
+      assertAllowed(actor, 'members:change_role', {
+        orgId: actor.orgId,
+        target: { userId: target.id, role: target.role },
+        newRole: target.role,
+      });
+      // The day is the start of that day in UTC; a clear is no expiry.
+      const expiresAt = input.intent === 'set' ? `${input.expiresOn}T00:00:00.000Z` : null;
+      await guard(() => orgs.setMemberExpiry(actor, input.userId, expiresAt));
     },
     async archiveCamp(actor, orgId) {
       assertAllowed(actor, 'org:archive', { orgId });

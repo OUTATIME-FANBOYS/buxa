@@ -252,6 +252,189 @@ describe('PeopleService household rules', () => {
   });
 });
 
+describe('PeopleService edit: household and email', () => {
+  it('moves a camper to the chosen household, which has a guardian, and out of the one they left', async () => {
+    const camp = await createCamp();
+    const admin = camp.actor('admin');
+    const ana = await guardianWithHousehold(camp, 'Ana', 'Alpha house');
+    const alpha = (await camp.people.get(admin, ana.id)).households[0];
+    const ben = await guardianWithHousehold(camp, 'Ben', 'Beta house');
+    const beta = (await camp.people.get(admin, ben.id)).households[0];
+    const kim = await camp.people.create(admin, {
+      givenName: 'Kim',
+      familyName: 'Lee',
+      roles: ['camper'],
+      householdId: alpha.id,
+      relationship: 'Child',
+    });
+
+    await camp.people.setHousehold(admin, kim.id, { householdId: beta.id, relationship: 'Child' }, ['camper']);
+
+    const after = await camp.people.get(admin, kim.id);
+    expect(after.households.map(h => h.id)).toEqual([beta.id]);
+    expect((await camp.people.getHousehold(admin, alpha.id)).members.map(m => m.personId)).toEqual([ana.id]);
+  });
+
+  it('creates a new household with the name given and links the person to it', async () => {
+    const camp = await createCamp();
+    const admin = camp.actor('admin');
+    const guardian = await guardianWithHousehold(camp, 'Ana', 'Alpha house');
+    const ben = await camp.people.create(admin, adult('Ben', 'Stone', { roles: ['guardian'] }));
+
+    await camp.people.setHousehold(admin, ben.id, { newHouseholdName: 'Stone house', relationship: 'Partner' }, [
+      'guardian',
+    ]);
+
+    const households = (await camp.people.get(admin, ben.id)).households;
+    expect(households.map(h => h.name)).toEqual(['Stone house']);
+    expect(households[0].members.find(m => m.personId === ben.id)).toMatchObject({ relationship: 'Partner' });
+    expect((await camp.people.get(admin, guardian.id)).households[0].name).toBe('Alpha house');
+  });
+
+  it('refuses a camper a new household (400), and leaves the household they are in', async () => {
+    const camp = await createCamp();
+    const admin = camp.actor('admin');
+    const guardian = await guardianWithHousehold(camp, 'Ana');
+    const household = (await camp.people.get(admin, guardian.id)).households[0];
+    const kim = await camp.people.create(admin, {
+      givenName: 'Kim',
+      familyName: 'Lee',
+      roles: ['camper'],
+      householdId: household.id,
+      relationship: 'Child',
+    });
+
+    const refused = await thrown(() =>
+      camp.people.setHousehold(admin, kim.id, { newHouseholdName: 'Kim house', relationship: 'Child' }, ['camper']),
+    );
+    expect(refused.statusCode).toBe(400);
+    expect((await camp.people.get(admin, kim.id)).households.map(h => h.id)).toEqual([household.id]);
+  });
+
+  it('refuses to unlink a camper from their household (400), since they would have no guardian', async () => {
+    const camp = await createCamp();
+    const admin = camp.actor('admin');
+    const guardian = await guardianWithHousehold(camp, 'Ana');
+    const household = (await camp.people.get(admin, guardian.id)).households[0];
+    const kim = await camp.people.create(admin, {
+      givenName: 'Kim',
+      familyName: 'Lee',
+      roles: ['camper'],
+      householdId: household.id,
+      relationship: 'Child',
+    });
+
+    const refused = await thrown(() => camp.people.setHousehold(admin, kim.id, {}, ['camper']));
+    expect(refused.statusCode).toBe(400);
+    expect((await camp.people.get(admin, kim.id)).households.map(h => h.id)).toEqual([household.id]);
+  });
+
+  it('refuses to unlink a guardian whose camper would be left without one (409)', async () => {
+    const camp = await createCamp();
+    const admin = camp.actor('admin');
+    const guardian = await guardianWithHousehold(camp, 'Ana');
+    const household = (await camp.people.get(admin, guardian.id)).households[0];
+    await camp.people.create(admin, {
+      givenName: 'Kim',
+      familyName: 'Lee',
+      roles: ['camper'],
+      householdId: household.id,
+      relationship: 'Child',
+    });
+
+    const refused = await thrown(() => camp.people.setHousehold(admin, guardian.id, {}, ['guardian']));
+    expect(refused.statusCode).toBe(409);
+    expect((await camp.people.get(admin, guardian.id)).households.map(h => h.id)).toEqual([household.id]);
+  });
+
+  it('a failing person update leaves the household as it was (the household change is undone)', async () => {
+    const camp = await createCamp();
+    const admin = camp.actor('admin');
+    const ana = await guardianWithHousehold(camp, 'Ana', 'Alpha house');
+    const alpha = (await camp.people.get(admin, ana.id)).households[0];
+    const ben = await guardianWithHousehold(camp, 'Ben', 'Beta house');
+    const beta = (await camp.people.get(admin, ben.id)).households[0];
+    const kim = await camp.people.create(admin, {
+      givenName: 'Kim',
+      familyName: 'Lee',
+      roles: ['camper'],
+      householdId: alpha.id,
+      relationship: 'Child',
+    });
+
+    // An empty role set is refused by the details step (400), after the household has already moved.
+    const refused = await thrown(() =>
+      camp.people.updateWithHousehold(admin, kim.id, { roles: [] }, { householdId: beta.id, relationship: 'Child' }),
+    );
+    expect(refused.statusCode).toBe(400);
+    expect((await camp.people.get(admin, kim.id)).households.map(h => h.id)).toEqual([alpha.id]);
+  });
+
+  it('a successful edit changes the details and the household together', async () => {
+    const camp = await createCamp();
+    const admin = camp.actor('admin');
+    const ana = await guardianWithHousehold(camp, 'Ana', 'Alpha house');
+    const alpha = (await camp.people.get(admin, ana.id)).households[0];
+    const ben = await guardianWithHousehold(camp, 'Ben', 'Beta house');
+    const beta = (await camp.people.get(admin, ben.id)).households[0];
+    const kim = await camp.people.create(admin, {
+      givenName: 'Kim',
+      familyName: 'Lee',
+      roles: ['camper'],
+      householdId: alpha.id,
+      relationship: 'Child',
+    });
+
+    const updated = await camp.people.updateWithHousehold(
+      admin,
+      kim.id,
+      { givenName: 'Kimberly' },
+      { householdId: beta.id, relationship: 'Child' },
+    );
+
+    expect(updated.givenName).toBe('Kimberly');
+    expect(updated.households.map(h => h.id)).toEqual([beta.id]);
+  });
+
+  it('the guardian rule still refuses an unsafe household change, and the details are not saved', async () => {
+    const camp = await createCamp();
+    const admin = camp.actor('admin');
+    const guardian = await guardianWithHousehold(camp, 'Ana', 'Alpha house');
+    const household = (await camp.people.get(admin, guardian.id)).households[0];
+    const kim = await camp.people.create(admin, {
+      givenName: 'Kim',
+      familyName: 'Lee',
+      roles: ['camper'],
+      householdId: household.id,
+      relationship: 'Child',
+    });
+
+    const refused = await thrown(() =>
+      camp.people.updateWithHousehold(
+        admin,
+        kim.id,
+        { givenName: 'Kimberly' },
+        { newHouseholdName: 'Kim house', relationship: 'Child' },
+      ),
+    );
+    expect(refused.statusCode).toBe(400);
+    const after = await camp.people.get(admin, kim.id);
+    expect(after.givenName).toBe('Kim');
+    expect(after.households.map(h => h.id)).toEqual([household.id]);
+  });
+
+  it('saves the one email on the person, which staff then read back', async () => {
+    const camp = await createCamp();
+    const admin = camp.actor('admin');
+    const ben = await camp.people.create(admin, adult('Ben', 'Stone', { roles: ['guardian'] }));
+
+    const updated = await camp.people.update(admin, ben.id, { email: 'household@example.org' });
+
+    expect(updated.email).toBe('household@example.org');
+    expect((await camp.people.get(camp.actor('staff'), ben.id)).email).toBe('household@example.org');
+  });
+});
+
 describe('PeopleService lifecycle', () => {
   it('refuses to archive someone who is on site (409), then archives and revokes the badge', async () => {
     const camp = await createCamp();
@@ -287,8 +470,8 @@ describe('PeopleService lifecycle', () => {
   it("keeps a person's own names and roles when only the contact details change", async () => {
     const camp = await createCamp();
     const admin = camp.actor('admin');
-    const ben = await camp.people.create(admin, adult('Ben', 'Stone', { preferredName: 'Benny' }));
+    const ben = await camp.people.create(admin, adult('Ben', 'Stone'));
     const updated = await camp.people.update(admin, ben.id, { email: '  ' });
-    expect(updated).toMatchObject({ givenName: 'Ben', preferredName: 'Benny', email: null, roles: ['participant'] });
+    expect(updated).toMatchObject({ givenName: 'Ben', familyName: 'Stone', email: null, roles: ['participant'] });
   });
 });

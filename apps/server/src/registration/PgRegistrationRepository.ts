@@ -1,5 +1,6 @@
 import type { Pool } from 'pg';
 import { withOrg } from '@buxa/db';
+import { PgCredentialRepository, transactionScope } from '../credentials/PgCredentialRepository';
 import type { Actor } from '@buxa/domain';
 import type { RegistrationForm, RegistrationFormInput, RegistrationRow } from '@buxa/contracts';
 import {
@@ -10,14 +11,18 @@ import {
   requireFormRow,
 } from './PgRegistrationQueries';
 import {
+  camperIdsInTx,
   confirmRegistrationInTx,
   insertForm,
   insertRegistrationInTx,
   publishFormRow,
   updateFormRow,
 } from './PgRegistrationWrites';
+import { classLookupsInTx, recordPaymentInTx } from './PgRegistrationPlaces';
 import type {
+  ClassLookup,
   ConfirmationRule,
+  ConfirmationWork,
   NewRegistration,
   PublishedVersion,
   RegistrationRepository,
@@ -71,13 +76,32 @@ export class PgRegistrationRepository implements RegistrationRepository {
     return withOrg(this.pool, userId, orgId, db => listSubmissionRows(db, formId));
   }
 
+  classesFor(userId: string, orgId: string, classIds: readonly string[]): Promise<ClassLookup[]> {
+    return withOrg(this.pool, userId, orgId, db => classLookupsInTx(db, classIds));
+  }
+
+  recordPayment(
+    actor: Actor,
+    registrationClassId: string,
+    input: { paid: boolean; note: string | null },
+  ): Promise<void> {
+    return withOrg(this.pool, actor.userId, actor.orgId, db =>
+      recordPaymentInTx(db, actor, registrationClassId, input),
+    );
+  }
+
   submit(actor: Actor, registration: NewRegistration, rule: RegistrationRule): Promise<string> {
     return withOrg(this.pool, actor.userId, actor.orgId, db => insertRegistrationInTx(db, actor, registration, rule));
   }
 
-  confirm(actor: Actor, registrationId: string, rule: ConfirmationRule): Promise<void> {
-    return withOrg(this.pool, actor.userId, actor.orgId, db =>
-      confirmRegistrationInTx(db, actor, registrationId, rule),
-    );
+  confirm<T>(actor: Actor, registrationId: string, rule: ConfirmationRule, work: ConfirmationWork<T>): Promise<T> {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
+      await confirmRegistrationInTx(db, actor, registrationId, rule);
+
+      return work({
+        campers: () => camperIdsInTx(db, registrationId),
+        credentials: new PgCredentialRepository(transactionScope(db)),
+      });
+    });
   }
 }

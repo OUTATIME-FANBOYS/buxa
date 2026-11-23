@@ -1,11 +1,11 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import type { CustomField } from '@buxa/contracts';
+import type { ClockFormat, CustomField } from '@buxa/contracts';
 import { FormPopUp } from '@/components/components';
 import { Button } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
-import { RegisterForm } from './RegisterForm';
+import { RegisterForm, type RegisterCamper, type RegisterSession } from './RegisterForm';
 
 const FORM_ID = 'take-registration-form';
 
@@ -16,10 +16,16 @@ const FORM_ID = 'take-registration-form';
 export function TakeRegistrationButton({
   formId,
   sessions,
+  campers,
+  timeZone,
+  clockFormat,
   fields,
 }: {
   formId: string;
-  sessions: readonly { id: string; name: string }[];
+  sessions: readonly RegisterSession[];
+  campers: readonly RegisterCamper[];
+  timeZone: string;
+  clockFormat: ClockFormat;
   fields: readonly CustomField[];
 }) {
   const [open, setOpen] = useState(false);
@@ -55,6 +61,9 @@ export function TakeRegistrationButton({
             id={FORM_ID}
             variant="dialog"
             sessions={sessions}
+            campers={campers}
+            timeZone={timeZone}
+            clockFormat={clockFormat}
             fields={fields}
             onPendingChange={setPending}
             onSaved={saved}

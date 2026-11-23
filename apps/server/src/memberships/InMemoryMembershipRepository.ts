@@ -12,6 +12,7 @@ import { settle } from '@buxa/domain';
 const toRecord = (m: StoredMembership): MembershipRecord => ({
   id: m.id,
   personId: m.personId,
+  sessionId: m.sessionId,
   plan: m.plan,
   startsOn: m.startsOn,
   endsOn: m.endsOn,
@@ -32,6 +33,7 @@ export class InMemoryMembershipRepository implements MembershipRepository {
         id: newId(),
         orgId: actor.orgId,
         personId: input.personId,
+        sessionId: input.sessionId ?? null,
         plan: input.plan,
         startsOn: input.startsOn,
         endsOn: input.endsOn,
@@ -39,7 +41,10 @@ export class InMemoryMembershipRepository implements MembershipRepository {
         revokedReason: null,
       };
       this.db.memberships.set(membership.id, membership);
-      this.db.record(actor, 'membership.create', 'membership', membership.id, { personId: input.personId });
+      this.db.record(actor, 'membership.create', 'membership', membership.id, {
+        personId: input.personId,
+        sessionId: input.sessionId ?? null,
+      });
 
       return toRecord(membership);
     });

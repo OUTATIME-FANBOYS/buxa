@@ -5,7 +5,13 @@ import { recordAudit } from '../audit/recordAudit';
 import { PersonNotFoundError } from '../people/PeopleRepository';
 import { personExists } from '../people/PgPersonQueries';
 import { nullableIso, toIso, type Db } from '../people/pgRows';
-import { BadgeConflictError, type CredentialRecord, type CredentialRepository } from './CredentialRepository';
+import { type SealedToken } from './badgeCipher';
+import {
+  BadgeConflictError,
+  type CredentialRecord,
+  type CredentialRepository,
+  type RevealedBadge,
+} from './CredentialRepository';
 
 interface CredentialRow {
   id: string;
@@ -16,6 +22,22 @@ interface CredentialRow {
 }
 
 const COLUMNS = 'id, person_id, issued_at, issued_by, revoked_at';
+/** A revoked badge keeps no sealed copy: only the active badge of a person can be shown. */
+const WIPE_SEALED = 'token_ciphertext = NULL, token_iv = NULL, token_auth_tag = NULL';
+
+interface SealedRow extends CredentialRow {
+  token_ciphertext: Buffer | null;
+  token_iv: Buffer | null;
+  token_auth_tag: Buffer | null;
+}
+
+const SEALED_COLUMNS = `${COLUMNS}, token_ciphertext, token_iv, token_auth_tag`;
+
+/** The sealed copy in its row, or null for a badge issued before encrypted copies existed. */
+const sealedOf = (row: SealedRow): SealedToken | null =>
+  row.token_ciphertext && row.token_iv && row.token_auth_tag
+    ? { ciphertext: row.token_ciphertext, iv: row.token_iv, authTag: row.token_auth_tag }
+    : null;
 
 const toRecord = (row: CredentialRow): CredentialRecord => ({
   id: row.id,
@@ -37,40 +59,82 @@ async function activeOf(db: Db, personId: string): Promise<CredentialRecord | nu
   return rows[0] ? toRecord(rows[0]) : null;
 }
 
+/**
+ * Runs a badge query in its own tenant transaction (the pool), or inside an open one (a confirmation writes its badges in its own
+ * transaction, so both commit together).
+ */
+export type CredentialScope = <T>(userId: string, orgId: string, work: (db: Db) => Promise<T>) => Promise<T>;
+
+export const poolScope =
+  (pool: Pool): CredentialScope =>
+  (userId, orgId, work) =>
+    withOrg(pool, userId, orgId, work);
+
+/** A scope that reuses an open transaction. The caller has already set the tenant on it. */
+export const transactionScope =
+  (db: Db): CredentialScope =>
+  (_userId, _orgId, work) =>
+    work(db);
+
 /** Postgres adapter for badges. Only the token hash is passed in and stored; the token never reaches this file. */
 export class PgCredentialRepository implements CredentialRepository {
-  constructor(private readonly pool: Pool) {}
+  constructor(private readonly scope: CredentialScope) {}
 
-  /** A concurrent issue that loses the race on the active-badge unique index is reported as BadgeConflictError, not a 500. */
-  async issue(actor: Actor, personId: string, tokenHash: Buffer, at: string): Promise<CredentialRecord> {
+  /**
+   * A concurrent issue that loses the race on the active-badge unique index is reported as BadgeConflictError, not a 500. A reissue
+   * (one that replaces an active badge) audits `badge.reissue`; a first badge audits `credential.issue`.
+   */
+  async issue(
+    actor: Actor,
+    personId: string,
+    tokenHash: Buffer,
+    at: string,
+    sealed: SealedToken | null = null,
+  ): Promise<CredentialRecord> {
     try {
-      return await this.issueOnce(actor, personId, tokenHash, at);
+      return await this.issueOnce(actor, personId, tokenHash, at, sealed);
     } catch (error) {
       throw isUniqueViolation(error) ? new BadgeConflictError() : error;
     }
   }
 
-  private issueOnce(actor: Actor, personId: string, tokenHash: Buffer, at: string): Promise<CredentialRecord> {
-    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
+  private issueOnce(
+    actor: Actor,
+    personId: string,
+    tokenHash: Buffer,
+    at: string,
+    sealed: SealedToken | null,
+  ): Promise<CredentialRecord> {
+    return this.scope(actor.userId, actor.orgId, async db => {
       if (!(await personExists(db, personId))) {
         throw new PersonNotFoundError();
       }
       const revoked = await db.query<{ id: string }>(
-        'UPDATE credentials SET revoked_at = $2::timestamptz WHERE person_id = $1 AND revoked_at IS NULL RETURNING id',
+        `UPDATE credentials SET revoked_at = $2::timestamptz, ${WIPE_SEALED} WHERE person_id = $1 AND revoked_at IS NULL RETURNING id`,
         [personId, at],
       );
       const { rows } = await db.query<CredentialRow>(
-        `INSERT INTO credentials (org_id, person_id, token_hash, issued_at, issued_by)
-         VALUES ($1, $2, $3, $4::timestamptz, $5) RETURNING ${COLUMNS}`,
-        [actor.orgId, personId, tokenHash, at, actor.userId],
+        `INSERT INTO credentials (org_id, person_id, token_hash, issued_at, issued_by, token_ciphertext, token_iv, token_auth_tag)
+         VALUES ($1, $2, $3, $4::timestamptz, $5, $6, $7, $8) RETURNING ${COLUMNS}`,
+        [
+          actor.orgId,
+          personId,
+          tokenHash,
+          at,
+          actor.userId,
+          sealed?.ciphertext ?? null,
+          sealed?.iv ?? null,
+          sealed?.authTag ?? null,
+        ],
       );
       const credential = toRecord(rows[0]);
+      const replaces = revoked.rows[0]?.id ?? null;
       await recordAudit(db, {
         actor,
-        action: 'credential.issue',
+        action: replaces ? 'badge.reissue' : 'credential.issue',
         entity: 'credential',
         entityId: credential.id,
-        data: { personId, replaces: revoked.rows[0]?.id ?? null },
+        data: { personId, replaces },
       });
 
       return credential;
@@ -82,9 +146,9 @@ export class PgCredentialRepository implements CredentialRepository {
       return Promise.resolve(null);
     }
 
-    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
+    return this.scope(actor.userId, actor.orgId, async db => {
       const { rows } = await db.query<CredentialRow>(
-        `UPDATE credentials SET revoked_at = $2::timestamptz WHERE person_id = $1 AND revoked_at IS NULL RETURNING ${COLUMNS}`,
+        `UPDATE credentials SET revoked_at = $2::timestamptz, ${WIPE_SEALED} WHERE person_id = $1 AND revoked_at IS NULL RETURNING ${COLUMNS}`,
         [personId, at],
       );
       const row = rows[0];
@@ -103,12 +167,32 @@ export class PgCredentialRepository implements CredentialRepository {
     });
   }
 
+  reveal(actor: Actor, personId: string, action: 'badge.view' | 'badge.reprint'): Promise<RevealedBadge | null> {
+    if (!isUuid(personId)) {
+      return Promise.resolve(null);
+    }
+
+    return this.scope(actor.userId, actor.orgId, async db => {
+      const { rows } = await db.query<SealedRow>(
+        `SELECT ${SEALED_COLUMNS} FROM credentials WHERE person_id = $1 AND revoked_at IS NULL`,
+        [personId],
+      );
+      const row = rows[0];
+      if (!row) {
+        return null;
+      }
+      await recordAudit(db, { actor, action, entity: 'credential', entityId: row.id, data: { personId } });
+
+      return { credentialId: row.id, sealed: sealedOf(row) };
+    });
+  }
+
   activeFor(userId: string, orgId: string, personId: string): Promise<CredentialRecord | null> {
-    return withOrg(this.pool, userId, orgId, db => activeOf(db, personId));
+    return this.scope(userId, orgId, db => activeOf(db, personId));
   }
 
   resolve(userId: string, orgId: string, tokenHash: Buffer): Promise<string | null> {
-    return withOrg(this.pool, userId, orgId, async db => {
+    return this.scope(userId, orgId, async db => {
       const { rows } = await db.query<{ person_id: string }>(
         'SELECT person_id FROM credentials WHERE token_hash = $1 AND revoked_at IS NULL',
         [tokenHash],
@@ -124,7 +208,7 @@ export class PgCredentialRepository implements CredentialRepository {
       return Promise.resolve(new Set());
     }
 
-    return withOrg(this.pool, userId, orgId, async db => {
+    return this.scope(userId, orgId, async db => {
       const { rows } = await db.query<{ person_id: string }>(
         'SELECT DISTINCT person_id FROM credentials WHERE person_id = ANY($1::uuid[]) AND revoked_at IS NULL',
         [valid],

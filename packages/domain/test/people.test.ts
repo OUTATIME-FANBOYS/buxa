@@ -185,8 +185,8 @@ describe('decideCheckOut', () => {
 
 describe('search', () => {
   it('ignores case, accents and spacing', () => expect(normalizeForSearch('  José   GARCÍA ')).toBe('jose garcia'));
-  const p = { givenName: 'Zoë', familyName: 'Müller-Ñandú', preferredName: 'Zo' };
-  it('matches given, family or preferred names, every word required', () => {
+  const p = { givenName: 'Zoë', familyName: 'Müller-Ñandú' };
+  it('matches given or family names, every word required', () => {
     expect(matchesName(p, 'zoe')).toBe(true);
     expect(matchesName(p, 'MULLER')).toBe(true);
     expect(matchesName(p, 'nandu zoe')).toBe(true);

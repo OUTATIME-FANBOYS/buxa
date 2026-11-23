@@ -1,19 +1,32 @@
-import { decideConfirmation, decideRegistration, isUuid, type Actor } from '@buxa/domain';
+import {
+  can,
+  decideConfirmation,
+  decideRegistration,
+  decideSelections,
+  isUuid,
+  type Actor,
+  type ClassSelection,
+  type SelectionDecision,
+} from '@buxa/domain';
 import {
   buildSubmissionSchema,
+  RecordPaymentInputSchema,
   RegistrationFormInputSchema,
   type RegistrationForm,
   type RegistrationFormInput,
   type RegistrationRow,
 } from '@buxa/contracts';
 import { assertAllowed } from '../auth/authorize';
+import type { CredentialService } from '../services/credentials/CredentialService';
+import type { CredentialRepository } from '../credentials/CredentialRepository';
 import {
+  RegistrationClassNotFoundError,
   RegistrationFormNotFoundError,
   RegistrationInvalidError,
   RegistrationNotFoundError,
   RegistrationRefusedError,
 } from './errors';
-import type { PublishedVersion, RegistrationRepository } from './RegistrationRepository';
+import type { ClassLookup, PublishedVersion, RegistrationRepository } from './RegistrationRepository';
 
 /**
  * What a screen or an API route may ask of registration forms. Each method checks its permission first (a denial throws a 403),
@@ -22,6 +35,15 @@ import type { PublishedVersion, RegistrationRepository } from './RegistrationRep
  *
  * Holds and the waitlist are not here. When they arrive, `submit` gains a step that takes a place per session and records its status.
  */
+/**
+ * What a confirmation reports back. `badgesIssued` counts the campers who got a badge in the same transaction. `badgeNote` is set
+ * when badges are still needed but this actor may not issue them (only credentials:manage may).
+ */
+export interface ConfirmOutcome {
+  badgesIssued: number;
+  badgeNote: string | null;
+}
+
 export interface RegistrationService {
   listForms(actor: Actor): Promise<RegistrationForm[]>;
   getForm(actor: Actor, formId: string): Promise<RegistrationForm>;
@@ -33,8 +55,17 @@ export interface RegistrationService {
   publishedVersion(actor: Actor, formId: string): Promise<PublishedVersion | null>;
   /** Records a registration. `input` is untrusted: it is checked against the form's published version. Returns the new id. */
   submit(actor: Actor, formId: string, input: unknown): Promise<string>;
-  /** Confirms a pending registration. Audited as `registration.confirm`. Refuses a registration that is already confirmed. Needs registration:confirm. */
-  confirm(actor: Actor, registrationId: string): Promise<void>;
+  /**
+   * Records how one child's place in a class was paid. Staff with registration:confirm. `paid` needs a note saying how; the note
+   * is stored, and the audit entry records only that there is one.
+   */
+  recordPayment(actor: Actor, registrationClassId: string, input: unknown): Promise<void>;
+  /**
+   * Confirms a pending registration. Audited as `registration.confirm`. Refuses a registration that is already confirmed. Needs
+   * registration:confirm. Each camper in the registration who has no active badge gets one issued in the same transaction, when the
+   * actor may manage credentials; otherwise the badges are left for an admin and the outcome says so.
+   */
+  confirm(actor: Actor, registrationId: string): Promise<ConfirmOutcome>;
 }
 
 /** Zod's issues, keyed by the field name the form uses. The first message for a field wins. */
@@ -66,7 +97,13 @@ async function requireForm(
   return form;
 }
 
-export function createRegistrationService(repo: RegistrationRepository): RegistrationService {
+/** Builds the credentials service over a given badge repository (the confirmation's transaction, in production). */
+export type CredentialsFor = (credentials: CredentialRepository) => CredentialService;
+
+export function createRegistrationService(
+  repo: RegistrationRepository,
+  credentialsFor: CredentialsFor,
+): RegistrationService {
   return {
     async listForms(actor) {
       assertAllowed(actor, 'registration:read');
@@ -128,7 +165,10 @@ export function createRegistrationService(repo: RegistrationRepository): Registr
       if (!parsed.success) {
         throw new RegistrationInvalidError(fieldErrorsOf(parsed.error.issues));
       }
-      const { sessionIds, standard, custom } = parsed.data;
+      const { selections: chosen, standard, custom } = parsed.data;
+      const selections = await resolveSelections(repo, actor, chosen);
+      // The session is taken from each class: the family never picks one.
+      const sessionIds = [...new Set(selections.map(s => s.sessionId))];
 
       return repo.submit(
         actor,
@@ -136,10 +176,24 @@ export function createRegistrationService(repo: RegistrationRepository): Registr
           formId,
           version: published.version,
           sessionIds,
+          selections,
           answers: { standard: present(standard), custom: present(custom) },
         },
         facts => decideRegistration({ ...facts, requestedSessionIds: sessionIds }),
       );
+    },
+
+    async recordPayment(actor, registrationClassId, input) {
+      assertAllowed(actor, 'registration:confirm');
+      if (!isUuid(registrationClassId)) {
+        throw new RegistrationClassNotFoundError();
+      }
+      const parsed = RecordPaymentInputSchema.safeParse(input);
+      if (!parsed.success) {
+        throw new RegistrationInvalidError(fieldErrorsOf(parsed.error.issues));
+      }
+
+      return repo.recordPayment(actor, registrationClassId, parsed.data);
     },
 
     async confirm(actor, registrationId) {
@@ -148,9 +202,79 @@ export function createRegistrationService(repo: RegistrationRepository): Registr
         throw new RegistrationNotFoundError();
       }
 
-      await repo.confirm(actor, registrationId, decideConfirmation);
+      return repo.confirm(actor, registrationId, decideConfirmation, async unit => {
+        const campers = await unit.campers();
+        const holders = await unit.credentials.withActive(actor.userId, actor.orgId, campers);
+        const missing = campers.filter(id => !holders.has(id));
+        if (missing.length === 0) {
+          return { badgesIssued: 0, badgeNote: null };
+        }
+        if (!can(actor, 'credentials:manage')) {
+          return {
+            badgesIssued: 0,
+            badgeNote: `Badges for ${missing.length} camper${missing.length === 1 ? '' : 's'} need issuing by an admin.`,
+          };
+        }
+        const credentials = credentialsFor(unit.credentials);
+        for (const personId of missing) {
+          await credentials.issue(actor, personId);
+        }
+
+        return { badgesIssued: missing.length, badgeNote: null };
+      });
     },
   };
+}
+
+/** The clash message names the two classes, so staff can see which one to drop. */
+function refuseSelections(decision: Exclude<SelectionDecision, { allow: true }>, names: Map<string, string>): never {
+  if (decision.reason === 'classes_overlap') {
+    const first = names.get(decision.first.classId) ?? decision.first.className;
+    const second = names.get(decision.second.classId) ?? decision.second.className;
+    throw new RegistrationRefusedError(
+      'classes_overlap',
+      `${first} and ${second} overlap for this child. Choose one of them.`,
+    );
+  }
+  throw new RegistrationRefusedError(decision.reason);
+}
+
+/**
+ * Looks up each chosen class in the camp and checks that the child-and-class pairs fit together: no class twice for one child, and
+ * no two classes of one child at overlapping times. Each class must be in the camp; a form's own session set is checked by the rule.
+ */
+async function resolveSelections(
+  repo: RegistrationRepository,
+  actor: Actor,
+  chosen: { camperId: string; classId: string }[],
+): Promise<(ClassSelection & { camperId: string; sessionId: string })[]> {
+  const lookups = await repo.classesFor(
+    actor.userId,
+    actor.orgId,
+    chosen.map(c => c.classId),
+  );
+  const byClass = new Map<string, ClassLookup>(lookups.map(l => [l.classId, l]));
+  const selections: (ClassSelection & { camperId: string; sessionId: string })[] = chosen.map(c => {
+    const lookup = byClass.get(c.classId);
+    if (!lookup) {
+      throw new RegistrationClassNotFoundError();
+    }
+
+    return {
+      camperId: c.camperId,
+      classId: c.classId,
+      className: lookup.className,
+      startsAt: lookup.startsAt,
+      endsAt: lookup.endsAt,
+      sessionId: lookup.sessionId,
+    };
+  });
+  const decision = decideSelections(selections);
+  if (!decision.allow) {
+    refuseSelections(decision, new Map(lookups.map(l => [l.classId, l.className])));
+  }
+
+  return selections;
 }
 
 /** A form as the camp sends it. A bad form is reported with the field names the form uses. */

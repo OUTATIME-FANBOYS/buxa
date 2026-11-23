@@ -1,32 +1,34 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ROUTES } from '@buxa/shared/config/routes';
 import { can, CAMP_ROLE_LABELS, type Actor, type CampRole } from '@buxa/domain';
-import { personEditPath } from '@/config/routes';
 import { campClock, loadCampProfile } from '@buxa/server/composers/index.server';
 import { loadHouseholdList, loadPersonMatches } from '@buxa/server/composers/index.server';
-import { loadVisitHistory } from '@buxa/server/composers/index.server';
-import { ArchivePersonButton } from '@/components/components/people/forms';
+import { loadVisitHistory, loadSessions } from '@buxa/server/composers/index.server';
+import { ArchivePersonButton, EditPersonButton } from '@/components/components/people/forms';
 import { AttendanceHistory } from '@/components/components/people';
 import { BadgePanel } from '@/components/components/people';
-import { ContactDetails } from '@/components/components/people';
 import { HouseholdPanel } from '@/components/components/people';
 import { MembershipsPanel } from '@/components/components/people';
 import { PersonHeader } from '@/components/components/people';
 import { currentActor } from '@buxa/server/composers/index.server';
-import { readListParams } from '@buxa/shared';
+import { readListParams, toHouseholdChoices } from '@buxa/shared';
 import { loadPerson } from '@buxa/server/composers/index.server';
-import { Button } from '@/components/elements';
 
 /**
  * One person. What is shown follows the role: contact details come back null for viewers (and are then left out), link and
  * membership and badge controls appear only where the role allows them. The server still decides every change.
  * `searchParams.q` is the name search for someone to link into a household (staff only; the service caps the matches).
+ * `editOpen` opens the Edit person pop-up on arrival (the /edit address).
  */
 export async function PersonScreen({
   id,
   searchParams = {},
+  editOpen = false,
 }: {
   id: string;
   searchParams?: Record<string, string | string[] | undefined>;
+  editOpen?: boolean;
 }) {
   const actor = await currentActor();
   if (!actor) {
@@ -41,12 +43,14 @@ export async function PersonScreen({
     permissionsFor(actor);
   const { q } = readListParams(searchParams);
   // The camp's own zone (orgs.timezone) is what every time on this page is shown in. Every role may read the camp.
-  const [visits, households, matches, camp, clock] = await Promise.all([
+  const [visits, households, matches, camp, clock, sessions] = await Promise.all([
     canSeeVisits ? loadVisitHistory(actor, person.id) : Promise.resolve([]),
     canUpdate ? loadHouseholdList(actor) : Promise.resolve([]),
     canUpdate && q !== '' ? loadPersonMatches(actor, q) : Promise.resolve([]),
     loadCampProfile(actor),
     campClock(actor),
+    // The camp's sessions for the Add membership pop-up. A viewer, or anyone who may not read sessions, gets none.
+    canManage ? loadSessions(actor) : Promise.resolve({ ok: true as const, value: [] }),
   ]);
   const roleLabel = person.roles.map((role: CampRole) => CAMP_ROLE_LABELS[role]).join(', ');
   const linkable = matches
@@ -55,24 +59,39 @@ export async function PersonScreen({
 
   return (
     <div className="page">
-      <PersonHeader person={person} />
-      <div className="grid-2">
-        <section className="panel" aria-labelledby="details-heading">
-          <h2 id="details-heading" className="people-heading">
-            Details
-          </h2>
-          <ContactDetails person={person} />
-          <div className="row">
+      <Link className="people-back" href={ROUTES.people}>
+        ← People
+      </Link>
+      <PersonHeader
+        person={person}
+        actions={
+          <>
             {canUpdate && (
-              <Button size="sm" icon="edit" href={personEditPath(person.id)}>
-                Edit details
-              </Button>
+              <EditPersonButton
+                personId={person.id}
+                households={toHouseholdChoices(households)}
+                label="Edit details"
+                variant="primary"
+                initiallyOpen={editOpen}
+              />
             )}
             {canArchive && !person.archived && (
               <ArchivePersonButton personId={person.id} personName={`${person.givenName} ${person.familyName}`} />
             )}
-          </div>
-        </section>
+          </>
+        }
+      />
+      <div className="person-tiles">
+        {person.memberships !== null && (
+          <MembershipsPanel
+            personId={person.id}
+            memberships={person.memberships}
+            canManage={canManage}
+            sessions={sessions.ok ? sessions.value : []}
+            timeZone={camp.timezone}
+            clockFormat={clock.clockFormat}
+          />
+        )}
         <HouseholdPanel
           personId={person.id}
           households={person.households}
@@ -83,15 +102,6 @@ export async function PersonScreen({
           query={q}
           linkable={linkable}
         />
-        {person.memberships !== null && (
-          <MembershipsPanel
-            personId={person.id}
-            memberships={person.memberships}
-            canManage={canManage}
-            timeZone={camp.timezone}
-            clockFormat={clock.clockFormat}
-          />
-        )}
         {person.hasActiveBadge !== null && (
           <BadgePanel
             personId={person.id}
@@ -103,8 +113,10 @@ export async function PersonScreen({
             canManage={canBadge}
           />
         )}
+        {canSeeVisits && (
+          <AttendanceHistory entries={visits} timeZone={camp.timezone} clockFormat={clock.clockFormat} />
+        )}
       </div>
-      {canSeeVisits && <AttendanceHistory entries={visits} timeZone={camp.timezone} clockFormat={clock.clockFormat} />}
     </div>
   );
 }

@@ -1,19 +1,41 @@
 import { randomUUID } from 'node:crypto';
 import type { Actor, RegistrationStatus } from '@buxa/domain';
-import type { CustomField, RegistrationForm, RegistrationFormInput, RegistrationRow } from '@buxa/contracts';
+import type {
+  CustomField,
+  RegistrationClass,
+  RegistrationForm,
+  RegistrationFormInput,
+  RegistrationRow,
+} from '@buxa/contracts';
 import {
+  RegistrationClassNotFoundError,
   RegistrationFormNotFoundError,
   RegistrationNotFoundError,
   RegistrationRefusedError,
   RegistrationSessionNotFoundError,
 } from './errors';
+import type { CredentialRepository } from '../credentials/CredentialRepository';
 import type {
+  ClassLookup,
   ConfirmationRule,
+  ConfirmationWork,
   NewRegistration,
   PublishedVersion,
   RegistrationRepository,
   RegistrationRule,
 } from './RegistrationRepository';
+
+/** A child's place in a class, as the in-memory store keeps it. Holds and seats are not modelled here (see the Postgres tests). */
+interface StoredPlace {
+  id: string;
+  classId: string;
+  className: string;
+  sessionId: string;
+  camperId: string;
+  status: RegistrationClass['status'];
+  paymentStatus: 'unpaid' | 'paid';
+  paymentNote: string | null;
+}
 
 interface StoredForm {
   id: string;
@@ -36,6 +58,7 @@ interface StoredRegistration {
   createdAt: string;
   status: RegistrationStatus;
   confirmedAt: string | null;
+  places: StoredPlace[];
 }
 
 /** Runs the work now and settles the promise with its result, or rejects it with what it throws. Same contract as the adapter. */
@@ -50,7 +73,43 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
   private readonly forms = new Map<string, StoredForm>();
   private readonly registrations = new Map<string, StoredRegistration>();
 
-  constructor(private readonly campSessions: Record<string, string[]>) {}
+  /**
+   * `campersOf` finds the camper people for a registration's answers (the Postgres query in production). `credentials` is the badge
+   * repository a confirmation works with.
+   */
+  constructor(
+    private readonly campSessions: Record<string, string[]>,
+    private readonly campersOf: (orgId: string, answers: NewRegistration['answers']) => string[] = () => [],
+    private readonly credentials: CredentialRepository | null = null,
+    /** The classes of each camp, for the class lookups a submission makes. */
+    private readonly campClasses: Record<string, ClassLookup[]> = {},
+  ) {}
+
+  classesFor(userId: string, orgId: string, classIds: readonly string[]): Promise<ClassLookup[]> {
+    return later(() => (this.campClasses[orgId] ?? []).filter(c => classIds.includes(c.classId)));
+  }
+
+  recordPayment(
+    actor: Actor,
+    registrationClassId: string,
+    input: { paid: boolean; note: string | null },
+  ): Promise<void> {
+    return later(() => {
+      for (const registration of this.registrations.values()) {
+        if (registration.orgId !== actor.orgId) {
+          continue;
+        }
+        const place = registration.places.find(p => p.id === registrationClassId);
+        if (place) {
+          place.paymentStatus = input.paid ? 'paid' : 'unpaid';
+          place.paymentNote = input.note;
+
+          return;
+        }
+      }
+      throw new RegistrationClassNotFoundError();
+    });
+  }
 
   private ownForm(orgId: string, formId: string): StoredForm {
     const form = this.forms.get(formId);
@@ -170,6 +229,18 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
             sessionName: sessionId,
             status: 'submitted' as const,
           })),
+          classes: r.places.map(p => ({
+            id: p.id,
+            classId: p.classId,
+            className: p.className,
+            sessionId: p.sessionId,
+            sessionName: p.sessionId,
+            camperId: p.camperId,
+            camperName: p.camperId,
+            status: p.status,
+            paymentStatus: p.paymentStatus,
+            paymentNote: p.paymentNote,
+          })),
         }));
     });
   }
@@ -185,6 +256,21 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
         throw new RegistrationRefusedError(decision.reason);
       }
       const id = randomUUID();
+      const lookups = this.campClasses[actor.orgId] ?? [];
+      const places: StoredPlace[] = registration.selections.map(selection => {
+        const lookup = lookups.find(c => c.classId === selection.classId);
+
+        return {
+          id: randomUUID(),
+          classId: selection.classId,
+          className: lookup?.className ?? '',
+          sessionId: lookup?.sessionId ?? '',
+          camperId: selection.camperId,
+          status: 'held',
+          paymentStatus: 'unpaid',
+          paymentNote: null,
+        };
+      });
       this.registrations.set(id, {
         id,
         orgId: actor.orgId,
@@ -195,24 +281,55 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
         createdAt: new Date().toISOString(),
         status: 'pending',
         confirmedAt: null,
+        places,
       });
 
       return id;
     });
   }
 
-  confirm(actor: Actor, registrationId: string, rule: ConfirmationRule): Promise<void> {
-    return later(() => {
-      const registration = this.registrations.get(registrationId);
-      if (!registration || registration.orgId !== actor.orgId) {
+  async confirm<T>(
+    actor: Actor,
+    registrationId: string,
+    rule: ConfirmationRule,
+    work: ConfirmationWork<T>,
+  ): Promise<T> {
+    const registration = await later(() => {
+      const found = this.registrations.get(registrationId);
+      if (!found || found.orgId !== actor.orgId) {
         throw new RegistrationNotFoundError();
       }
-      const decision = rule(registration.status);
+      const decision = rule(found.status);
       if (!decision.allow) {
         throw new RegistrationRefusedError(decision.reason);
       }
-      registration.status = 'confirmed';
-      registration.confirmedAt = new Date().toISOString();
+
+      return found;
     });
+    if (!this.credentials) {
+      throw new Error('InMemoryRegistrationRepository.confirm needs a credentials repository');
+    }
+    const before = { status: registration.status, confirmedAt: registration.confirmedAt };
+    const beforePlaces = registration.places.map(p => p.status);
+    registration.status = 'confirmed';
+    registration.confirmedAt = new Date().toISOString();
+    for (const place of registration.places) {
+      if (place.status === 'held') {
+        place.status = 'enrolled';
+      }
+    }
+    try {
+      return await work({
+        campers: () => Promise.resolve(this.campersOf(registration.orgId, registration.answers)),
+        credentials: this.credentials,
+      });
+    } catch (error) {
+      // Postgres rolls the whole confirmation back on a failure; this keeps the in-memory store to the same rule.
+      Object.assign(registration, before);
+      registration.places.forEach((p, i) => {
+        p.status = beforePlaces[i];
+      });
+      throw error;
+    }
   }
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { registrationFormForm, registrationSubmissionFromForm } from '../parse';
 
 const SESSION = '3f2b8c1e-5a4d-4b6e-9f70-1a2b3c4d5e6f';
+const CAMPER = '7d6c5b4a-3210-4f9e-8d7c-6b5a49382716';
 
 function formOf(entries: Record<string, string | string[]>): FormData {
   const form = new FormData();
@@ -49,16 +50,16 @@ describe('registrationFormForm', () => {
 });
 
 describe('registrationSubmissionFromForm', () => {
-  it('gathers standard answers by key and custom answers by key, and the sessions chosen', () => {
+  it('gathers standard answers by key, custom answers by key, and each child-and-class selection', () => {
     const raw = registrationSubmissionFromForm(
       formOf({
         'standard.camperFirstName': 'Ada',
         'standard.guardianPhone': '555-0100',
         'custom.photos': 'yes',
-        sessionIds: [SESSION],
+        selections: [`${CAMPER}|${SESSION}`],
       }),
     );
-    expect(raw.sessionIds).toEqual([SESSION]);
+    expect(raw.selections).toEqual([{ camperId: CAMPER, classId: SESSION }]);
     expect(raw.standard.camperFirstName).toBe('Ada');
     expect(raw.standard.emergencyContactName).toBe('');
     expect(raw.custom).toEqual({ photos: 'yes' });

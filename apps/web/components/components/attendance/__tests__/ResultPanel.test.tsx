@@ -10,7 +10,7 @@ vi.mock('@buxa/server/composers/attendance/checkIn', () => ({
 }));
 
 const card = {
-  person: { id: 'p-1', givenName: 'Ada', familyName: 'Lee', preferredName: null, status: 'valid', roles: [] },
+  person: { id: 'p-1', givenName: 'Ada', familyName: 'Lee', status: 'valid', roles: [] },
   onSiteSince: null,
 } as unknown as PersonCard;
 const props = {

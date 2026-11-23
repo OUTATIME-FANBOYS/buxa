@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { CheckInMethod } from '@buxa/contracts';
 import type { Actor, AuditAction, CampRole, LocalDate } from '@buxa/domain';
 import type { AuditData } from '../audit/types';
+import type { SealedToken } from '../credentials/badgeCipher';
 
 /** One audit row, as the in-memory adapters record it (the same fields as an audit_log row). */
 export interface AuditRecord {
@@ -18,7 +19,6 @@ export interface StoredPerson {
   orgId: string;
   givenName: string;
   familyName: string;
-  preferredName: string | null;
   dateOfBirth: LocalDate | null;
   email: string | null;
   phone: string | null;
@@ -45,6 +45,7 @@ export interface StoredMembership {
   id: string;
   orgId: string;
   personId: string;
+  sessionId: string | null;
   plan: string;
   startsOn: LocalDate;
   endsOn: LocalDate;
@@ -57,6 +58,8 @@ export interface StoredCredential {
   orgId: string;
   personId: string;
   tokenHash: Buffer;
+  /** The encrypted copy of the token while the badge is active; null once revoked or when it was issued without one. */
+  sealed: SealedToken | null;
   issuedAt: string;
   issuedBy: string | null;
   revokedAt: string | null;

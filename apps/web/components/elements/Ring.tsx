@@ -1,17 +1,23 @@
 import type { ChartTone } from './chartTone';
 
+/**
+ * A circular gauge. It fills one round-capped arc to `value` (0 to 100), with the percentage and `label` in the centre. Pass `summary`
+ * for the screen-reader description; without it the label says the percentage.
+ */
 export function Ring({
-  value,
+  value = 0,
   size = 132,
   stroke = 10,
   label,
   tone = 'brand',
+  summary,
 }: {
-  value: number;
+  value?: number;
   size?: number;
   stroke?: number;
   label: string;
   tone?: ChartTone;
+  summary?: string;
 }) {
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
@@ -22,7 +28,7 @@ export function Ring({
       className="ring"
       style={{ width: size, height: size }}
       role="img"
-      aria-label={`${label}: ${Math.round(v)} percent`}
+      aria-label={summary ?? `${label}: ${Math.round(v)} percent`}
     >
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--track)" strokeWidth={stroke} />

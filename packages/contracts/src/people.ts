@@ -28,7 +28,6 @@ export const PersonSummarySchema = z.object({
   id: z.string(),
   givenName: z.string(),
   familyName: z.string(),
-  preferredName: z.string().nullable(),
   roles: z.array(CampRoleSchema),
   status: AccessStatusSchema.nullable(),
   /** Checked in and not yet checked out. Null for viewers. */
@@ -40,6 +39,8 @@ export type PersonSummary = z.infer<typeof PersonSummarySchema>;
 export const PersonMembershipSchema = z.object({
   id: z.string(),
   personId: z.string(),
+  /** The session the membership was made from, or null for a custom membership. */
+  sessionId: z.string().nullable(),
   plan: z.string(),
   startsOn: LocalDateSchema,
   endsOn: LocalDateSchema,
@@ -84,7 +85,6 @@ export type Person = z.infer<typeof PersonSchema>;
 export const NewPersonInputSchema = z.object({
   givenName: Name,
   familyName: Name,
-  preferredName: Optional(80),
   dateOfBirth: LocalDateSchema.optional(),
   email: OptionalEmailSchema,
   phone: OptionalPhoneSchema,
@@ -101,13 +101,23 @@ export type NewPersonInput = z.infer<typeof NewPersonInputSchema>;
 export const PersonPatchInputSchema = z.object({
   givenName: Name.optional(),
   familyName: Name.optional(),
-  preferredName: z.string().trim().max(80).nullable().optional(),
   dateOfBirth: LocalDateSchema.nullable().optional(),
   email: PatchEmailSchema.nullable().optional(),
   phone: PatchPhoneSchema.nullable().optional(),
   roles: AllowedRoleSet(z.array(CampRoleSchema).min(1, 'Pick a role.')).optional(),
 });
 export type PersonPatchInput = z.infer<typeof PersonPatchInputSchema>;
+
+/**
+ * The household part of an edit. `householdId` joins an existing household, `newHouseholdName` creates one and links the person
+ * to it. Neither leaves the household the person is in. `relationship` is needed whenever the person joins a household.
+ */
+export const PersonHouseholdInputSchema = z.object({
+  householdId: z.string().uuid().optional(),
+  newHouseholdName: Optional(120),
+  relationship: Optional(40),
+});
+export type PersonHouseholdInput = z.infer<typeof PersonHouseholdInputSchema>;
 
 export const PersonListQuerySchema = z.object({
   query: z.string().trim().max(80).optional(),
@@ -148,10 +158,15 @@ export const HouseholdLinkInputSchema = z
   });
 export type HouseholdLinkInput = z.infer<typeof HouseholdLinkInputSchema>;
 
+/** The value of the membership form's Session choice that means "not a session": the name and dates are typed. */
+export const CUSTOM_SESSION_CHOICE = 'custom';
+
 export const NewMembershipInputSchema = z
   .object({
     personId: z.string().uuid(),
-    plan: z.string().trim().min(1, 'Name the plan, for example "Summer 2027".').max(80),
+    /** The camp session the membership is made from, or null for a custom membership (then `plan` is the name typed). */
+    sessionId: z.string().uuid().nullable().optional(),
+    plan: z.string().trim().min(1, 'Enter a name, for example "Summer 2027".').max(80),
     startsOn: LocalDateSchema,
     endsOn: LocalDateSchema,
   })

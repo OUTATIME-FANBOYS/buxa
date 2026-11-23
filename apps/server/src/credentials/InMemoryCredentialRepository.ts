@@ -1,8 +1,16 @@
 import type { Actor } from '@buxa/domain';
 import { PersonNotFoundError } from '../people/PeopleRepository';
 import { instant, newId, type InMemoryDatabase, type StoredCredential } from '../people/InMemoryDatabase';
-import type { CredentialRecord, CredentialRepository } from './CredentialRepository';
+import type { CredentialRecord, CredentialRepository, RevealedBadge } from './CredentialRepository';
+import type { SealedToken } from './badgeCipher';
 import { settle } from '@buxa/domain';
+
+const copySealed = (sealed: SealedToken | null): SealedToken | null =>
+  sealed && {
+    ciphertext: Buffer.from(sealed.ciphertext),
+    iv: Buffer.from(sealed.iv),
+    authTag: Buffer.from(sealed.authTag),
+  };
 
 const toRecord = (c: StoredCredential): CredentialRecord => ({
   id: c.id,
@@ -16,7 +24,13 @@ const toRecord = (c: StoredCredential): CredentialRecord => ({
 export class InMemoryCredentialRepository implements CredentialRepository {
   constructor(private readonly db: InMemoryDatabase) {}
 
-  issue(actor: Actor, personId: string, tokenHash: Buffer, at: string): Promise<CredentialRecord> {
+  issue(
+    actor: Actor,
+    personId: string,
+    tokenHash: Buffer,
+    at: string,
+    sealed: SealedToken | null = null,
+  ): Promise<CredentialRecord> {
     return settle(() => {
       if (!this.db.inOrg(this.db.people, actor.orgId, personId)) {
         throw new PersonNotFoundError();
@@ -24,18 +38,20 @@ export class InMemoryCredentialRepository implements CredentialRepository {
       const replaced = this.activeOf(actor.orgId, personId);
       if (replaced) {
         replaced.revokedAt = instant(at);
+        replaced.sealed = null;
       }
       const credential: StoredCredential = {
         id: newId(),
         orgId: actor.orgId,
         personId,
         tokenHash: Buffer.from(tokenHash),
+        sealed: copySealed(sealed),
         issuedAt: instant(at),
         issuedBy: actor.userId,
         revokedAt: null,
       };
       this.db.credentials.set(credential.id, credential);
-      this.db.record(actor, 'credential.issue', 'credential', credential.id, {
+      this.db.record(actor, replaced ? 'badge.reissue' : 'credential.issue', 'credential', credential.id, {
         personId,
         replaces: replaced?.id ?? null,
       });
@@ -51,9 +67,22 @@ export class InMemoryCredentialRepository implements CredentialRepository {
         return null;
       }
       credential.revokedAt = instant(at);
+      credential.sealed = null;
       this.db.record(actor, 'credential.revoke', 'credential', credential.id, { personId });
 
       return toRecord(credential);
+    });
+  }
+
+  reveal(actor: Actor, personId: string, action: 'badge.view' | 'badge.reprint'): Promise<RevealedBadge | null> {
+    return settle(() => {
+      const credential = this.activeOf(actor.orgId, personId);
+      if (!credential) {
+        return null;
+      }
+      this.db.record(actor, action, 'credential', credential.id, { personId });
+
+      return { credentialId: credential.id, sealed: copySealed(credential.sealed) };
     });
   }
 

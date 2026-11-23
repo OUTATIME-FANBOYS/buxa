@@ -1,9 +1,11 @@
 import 'server-only';
 import type { Actor, CampRole } from '@buxa/domain';
 import type { Class, Enrolment, Session } from '@buxa/contracts';
+import type { ActiveHold } from '../../holds/SeatHoldRepository';
 import { getRuntime } from '../../runtime';
 import { isHttpError, notFound } from '../../http/errors';
 import type { TeacherAssignment } from '../../classes/ClassRepository';
+import type { AssignedSession } from '../../classes/ClassService';
 
 /** What a page can show: the data, or the reason it cannot be shown. Anything else goes to the error boundary. */
 export type Loaded<T> = { ok: true; value: T } | { ok: false; reason: 'forbidden' | 'not-found' };
@@ -88,4 +90,27 @@ export async function loadTeacherAssignments(actor: Actor, sessionId: string): P
 
     return outcome.value;
   });
+}
+
+/**
+ * The signed-in teacher's own classes, grouped by session. Only a teacher has this page: anyone else gets not found, not a list.
+ * The service reads only the actor's assigned classes, so no other teacher's class and no camper is loaded here.
+ */
+export async function loadMyClasses(actor: Actor): Promise<Loaded<AssignedSession[]>> {
+  return guarded(async () => {
+    if (actor.role !== 'teacher') {
+      throw notFound('That page does not exist.');
+    }
+    const outcome = await getRuntime().services.classes.listMyClasses(actor);
+    if (!outcome.ok) {
+      throw notFound(outcome.failure.message);
+    }
+
+    return outcome.value;
+  });
+}
+
+/** The holds that hold a place in a class right now, oldest first. Needs holds:manage. */
+export async function loadActiveHolds(actor: Actor, classId: string): Promise<Loaded<ActiveHold[]>> {
+  return guarded(async () => getRuntime().services.seatHolds.listActiveHolds(actor, classId));
 }

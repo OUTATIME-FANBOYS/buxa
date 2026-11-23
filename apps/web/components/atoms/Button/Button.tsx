@@ -3,6 +3,10 @@
 import Link from 'next/link';
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, MouseEvent, ReactNode, Ref } from 'react';
 import { Icon } from '../Icon';
+import { buttonClassName, type ButtonSize, type ButtonVariant } from './buttonClass';
+
+export { buttonClassName };
+export type { ButtonSize, ButtonVariant };
 
 /*
  * The one button for the app. Every button is a pill, and each variant's colours come from the Buxa tokens:
@@ -29,31 +33,8 @@ import { Icon } from '../Icon';
  * `type` defaults to "submit", as a native button does, so a button inside a form keeps submitting it.
  */
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'danger-soft' | 'glass' | 'glass-danger';
-export type ButtonSize = 'sm' | 'md' | 'lg' | 'header';
-
 /** Icon size inside a button: the label's cap height, smaller on the dense size. */
 const ICON_SIZE: Record<ButtonSize, number> = { sm: 14, md: 16, lg: 16, header: 16 };
-
-/** The class string for a button, from styles/components/button.css. */
-export function buttonClassName({
-  variant = 'secondary',
-  size = 'md',
-  fullWidth = false,
-  iconOnly = false,
-}: { variant?: ButtonVariant; size?: ButtonSize; fullWidth?: boolean; iconOnly?: boolean } = {}): string {
-  return [
-    'button',
-    `button--${variant}`,
-    size === 'sm' && 'button--sm',
-    iconOnly && 'button--icon-only',
-    fullWidth && 'button--full-width',
-    size === 'lg' && 'button--lg',
-    size === 'header' && 'button--header',
-  ]
-    .filter(Boolean)
-    .join(' ');
-}
 
 type NativeButtonProps = Omit<
   ButtonHTMLAttributes<HTMLButtonElement>,

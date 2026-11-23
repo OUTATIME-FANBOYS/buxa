@@ -68,7 +68,6 @@ const person = (id: string, status: PersonSummary['status']): PersonSummary => (
   id,
   givenName: id,
   familyName: 'Test',
-  preferredName: null,
   roles: ['camper'],
   status,
   onSite: false,

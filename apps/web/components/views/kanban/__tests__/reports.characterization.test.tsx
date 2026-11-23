@@ -225,3 +225,55 @@ describe('Reports today (characterization)', () => {
     expect(html.indexOf('Critical')).toBeLessThan(html.indexOf('Low'));
   });
 });
+
+describe('Reports with no tasks', () => {
+  const statRows = () =>
+    Array.from(container.querySelectorAll('.stat'), stat => ({
+      label: stat.querySelector('.stat-label')?.textContent,
+      value: stat.querySelector('.stat-num')?.textContent,
+    }));
+  const panelFor = (title: string) =>
+    Array.from(container.querySelectorAll('section.panel')).find(p => p.querySelector('h2')?.textContent === title);
+
+  beforeEach(() => {
+    h.store = store({ wsTasks: [] });
+  });
+
+  it('keeps the header, all four stat cards and every chart card, with zero values', () => {
+    render();
+    expect(container.querySelector('h1')?.textContent).toBe('Reports');
+    expect(statRows()).toEqual([
+      { label: 'Completion rate', value: '0%' },
+      { label: 'Completed, 30 days', value: '0' },
+      { label: 'Avg. time to complete', value: '–' },
+      { label: 'Overdue', value: '0' },
+    ]);
+    expect(container.querySelector('[aria-label="Time range"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="Tasks completed over the last 30 days, 0 in total"]')).not.toBeNull();
+    expect(container.querySelectorAll('.chart-card')).toHaveLength(1);
+    for (const title of ['Project progress', 'Workload by member', 'Open tasks by priority', 'Overdue']) {
+      expect(panelFor(title)).toBeDefined();
+    }
+  });
+
+  it('shows a short empty message inside each chart card that has no data', () => {
+    render();
+    expect(container.querySelector('.chart-card')?.textContent).toContain('No completed tasks in this period yet');
+    expect(panelFor('Workload by member')?.textContent).toContain('No open tasks yet.');
+    expect(panelFor('Open tasks by priority')?.textContent).toContain('No open tasks yet.');
+    expect(panelFor('Overdue')?.textContent).toContain('No one has overdue work.');
+  });
+
+  it('never shows a whole-page "Nothing to report yet" message', () => {
+    expect(render()).not.toContain('Nothing to report yet');
+  });
+
+  it('still renders the layout when there is no workspace', () => {
+    h.store = store({ wsTasks: [], workspace: null, projects: [], members: [] });
+    render();
+    expect(container.querySelector('h1')?.textContent).toBe('Reports');
+    expect(statRows()).toHaveLength(4);
+    expect(container.querySelectorAll('.chart-card')).toHaveLength(1);
+    expect(container.innerHTML).not.toContain('Nothing to report yet');
+  });
+});

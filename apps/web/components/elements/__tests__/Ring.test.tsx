@@ -11,6 +11,11 @@ describe('Ring', () => {
     const c = 2 * Math.PI * 45;
     expect(html).toContain(`stroke-dasharray="${(50 / 100) * c} ${c}"`);
   });
+  it('uses the summary given as the screen-reader description', () => {
+    expect(renderToStaticMarkup(<Ring value={10} label="valid" summary="3 of 30 valid" />)).toContain(
+      'aria-label="3 of 30 valid"',
+    );
+  });
   it('clamps values outside 0 to 100', () => {
     expect(renderToStaticMarkup(<Ring value={250} label="x" />)).toContain('100 percent');
     expect(renderToStaticMarkup(<Ring value={-4} label="x" />)).toContain('0 percent');

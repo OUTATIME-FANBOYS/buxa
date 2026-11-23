@@ -3,8 +3,63 @@
  * Pure: the service passes the facts in, the rule answers. Money is not part of this phase (see docs/phases/03-registration.md).
  */
 
+import { overlaps, type Span } from '../classes/interval';
+
 export type RegistrationRefusal =
-  'form_not_published' | 'no_sessions' | 'session_not_in_form' | 'not_pending' | 'already_confirmed';
+  | 'form_not_published'
+  | 'no_sessions'
+  | 'session_not_in_form'
+  | 'not_pending'
+  | 'already_confirmed'
+  | 'no_classes'
+  | 'duplicate_selection'
+  | 'classes_overlap'
+  | 'class_not_in_form'
+  | 'camper_no_household'
+  | 'class_refused'
+  | 'payment_note_required';
+
+/** One child and one class the family asks for. `startsAt`/`endsAt` are the class's times (ISO instants). */
+export interface ClassSelection extends Span {
+  camperId: string;
+  classId: string;
+  className: string;
+}
+
+export type SelectionDecision =
+  | { allow: true }
+  | { allow: false; reason: 'no_classes' }
+  | { allow: false; reason: 'duplicate_selection'; selection: ClassSelection }
+  | { allow: false; reason: 'classes_overlap'; first: ClassSelection; second: ClassSelection };
+
+/**
+ * A child may take several classes in one registration only when their times do not overlap (owner decision). Two selections of
+ * the same class for the same child are a duplicate. Classes of different children never clash with each other.
+ */
+export function decideSelections(selections: readonly ClassSelection[]): SelectionDecision {
+  if (selections.length === 0) {
+    return { allow: false, reason: 'no_classes' };
+  }
+  const seen = new Set<string>();
+  for (const selection of selections) {
+    const key = `${selection.camperId}|${selection.classId}`;
+    if (seen.has(key)) {
+      return { allow: false, reason: 'duplicate_selection', selection };
+    }
+    seen.add(key);
+  }
+  for (let i = 0; i < selections.length; i++) {
+    for (let j = i + 1; j < selections.length; j++) {
+      const a = selections[i];
+      const b = selections[j];
+      if (a.camperId === b.camperId && overlaps(a, b)) {
+        return { allow: false, reason: 'classes_overlap', first: a, second: b };
+      }
+    }
+  }
+
+  return { allow: true };
+}
 
 /** A registration is recorded as pending and becomes confirmed only by a staff action (decision 3 in docs/phases/03-registration.md). */
 export type RegistrationStatus = 'pending' | 'confirmed';

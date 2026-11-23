@@ -5,9 +5,9 @@ import type { MembershipRecord } from '../../memberships/MembershipRepository';
 import type { HouseholdRecord, PeopleRepository, PersonRecord } from '../../people/PeopleRepository';
 import type { OrgRepository } from '../../orgs/OrgRepository';
 
-/** The name a person is shown by: preferred name if they have one, then family name. */
-export const displayName = (person: Pick<PersonRecord, 'givenName' | 'familyName' | 'preferredName'>): string =>
-  `${person.preferredName ?? person.givenName} ${person.familyName}`;
+/** The name a person is shown by: first name, then family name. */
+export const displayName = (person: Pick<PersonRecord, 'givenName' | 'familyName'>): string =>
+  `${person.givenName} ${person.familyName}`;
 
 /** The camp's zone. "Today" and every shown time come from here. */
 export async function campZone(orgs: OrgRepository, actor: Pick<Actor, 'userId' | 'orgId'>): Promise<string> {
@@ -18,6 +18,7 @@ export function toPersonMembership(record: MembershipRecord, today: LocalDate): 
   return {
     id: record.id,
     personId: record.personId,
+    sessionId: record.sessionId,
     plan: record.plan,
     startsOn: record.startsOn,
     endsOn: record.endsOn,
@@ -42,7 +43,6 @@ export function toSummary(
     id: person.id,
     givenName: person.givenName,
     familyName: person.familyName,
-    preferredName: person.preferredName,
     roles: [...person.roles],
     status: staffView ? personAccess(memberships, today).status : null,
     onSite: staffView ? onSite : null,

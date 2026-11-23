@@ -14,7 +14,6 @@ const ada: PersonSummary = {
   id: 'p-ada',
   givenName: 'Ada',
   familyName: 'Lovelace',
-  preferredName: null,
   roles: ['camper'],
   status: 'valid',
   onSite: true,
@@ -25,15 +24,14 @@ const sam: PersonSummary = {
   id: 'p-sam',
   givenName: 'Sam',
   familyName: 'Lee',
-  preferredName: 'Sammy',
   status: 'expired',
 };
 const entry = (personId: string, checkedInAt: string) =>
   ({ id: `e-${personId}`, personId, checkedInAt }) as AttendanceEntry;
 
 describe('displayName', () => {
-  it('uses the preferred name when there is one', () => {
-    expect(displayName(sam)).toBe('Sammy Lee');
+  it('shows first name, then family name', () => {
+    expect(displayName(sam)).toBe('Sam Lee');
     expect(displayName(ada)).toBe('Ada Lovelace');
   });
 });
@@ -170,7 +168,7 @@ describe('check-in announcements', () => {
 
   it('says nothing while idle and names the status in words when a person is ready', () => {
     expect(checkInAnnouncement(CHECK_IN_IDLE, 'UTC', '24h')).toBe('');
-    expect(checkInAnnouncement({ phase: 'ready', card, method: 'qr' }, 'UTC', '24h')).toBe('Sammy Lee. Expired.');
+    expect(checkInAnnouncement({ phase: 'ready', card, method: 'qr' }, 'UTC', '24h')).toBe('Sam Lee. Expired.');
   });
 
   it('announces an unknown code, a check-in time in the camp zone, and a refusal', () => {
@@ -181,7 +179,7 @@ describe('check-in announcements', () => {
         'Asia/Kolkata',
         '24h',
       ),
-    ).toBe('Sammy Lee checked in at 02:00.');
+    ).toBe('Sam Lee checked in at 02:00.');
     expect(
       checkInAnnouncement(
         { phase: 'refused', card, method: 'qr', refusal: { ok: false, reason: 'archived' } },

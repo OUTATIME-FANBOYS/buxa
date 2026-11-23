@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import type { Actor, Role } from '@buxa/domain';
 import { createRegistrationService } from './RegistrationService';
 import { InMemoryRegistrationRepository } from './InMemoryRegistrationRepository';
+import { InMemoryCredentialRepository } from '../credentials/InMemoryCredentialRepository';
+import { InMemoryDatabase } from '../people/InMemoryDatabase';
 import {
+  RegistrationClassNotFoundError,
   RegistrationFormNotFoundError,
   RegistrationInvalidError,
   RegistrationNotFoundError,
@@ -14,6 +17,32 @@ const CAMP_B = '22222222-2222-4222-8222-222222222222';
 const SESSION_A = 'aaaaaaaa-0000-4000-8000-000000000001';
 const SESSION_A2 = 'aaaaaaaa-0000-4000-8000-000000000002';
 const SESSION_B = 'bbbbbbbb-0000-4000-8000-000000000001';
+// Classes of the camp's sessions. CLASS_A1 and CLASS_A2 overlap in time; CLASS_A3 does not overlap CLASS_A1.
+const CLASS_A1 = 'cccccccc-0000-4000-8000-00000000000a';
+const CLASS_A2 = 'cccccccc-0000-4000-8000-00000000000b';
+const CLASS_A3 = 'cccccccc-0000-4000-8000-00000000000c';
+const CLASS_A4 = 'cccccccc-0000-4000-8000-00000000000d';
+const CLASS_B = 'cccccccc-0000-4000-8000-00000000000e';
+const CAMPER_ADA = '5e6f7a8b-1111-4a2b-8c3d-4e5f6a7b8c9d';
+const CAMPER_BEN = '5e6f7a8b-2222-4a2b-8c3d-4e5f6a7b8c9d';
+
+const lookup = (classId: string, sessionId: string, className: string, startsAt: string, endsAt: string) => ({
+  classId,
+  sessionId,
+  className,
+  startsAt,
+  endsAt,
+});
+
+const CLASSES = {
+  [CAMP_A]: [
+    lookup(CLASS_A1, SESSION_A, 'Archery', '2027-07-10T10:00:00.000Z', '2027-07-10T11:00:00.000Z'),
+    lookup(CLASS_A2, SESSION_A, 'Swimming', '2027-07-10T10:30:00.000Z', '2027-07-10T11:30:00.000Z'),
+    lookup(CLASS_A3, SESSION_A, 'Painting', '2027-07-10T13:00:00.000Z', '2027-07-10T14:00:00.000Z'),
+    lookup(CLASS_A4, SESSION_A2, 'Climbing', '2027-07-11T10:00:00.000Z', '2027-07-11T11:00:00.000Z'),
+  ],
+  [CAMP_B]: [lookup(CLASS_B, SESSION_B, 'Kayaking', '2027-07-10T10:00:00.000Z', '2027-07-10T11:00:00.000Z')],
+};
 
 const as = (role: Role, orgId = CAMP_A): Actor => ({ userId: `user-${role}`, orgId, role });
 
@@ -37,13 +66,23 @@ const standard = {
   emergencyContactPhone: '555-0111',
 };
 
-function setup() {
-  const repo = new InMemoryRegistrationRepository({
-    [CAMP_A]: [SESSION_A, SESSION_A2],
-    [CAMP_B]: [SESSION_B],
-  });
+/** These tests have no camper in their registrations, so no badge may be issued. */
+function failNoBadges(): never {
+  throw new Error('no badge expected in this test');
+}
 
-  return { repo, service: createRegistrationService(repo) };
+function setup() {
+  const repo = new InMemoryRegistrationRepository(
+    {
+      [CAMP_A]: [SESSION_A, SESSION_A2],
+      [CAMP_B]: [SESSION_B],
+    },
+    undefined,
+    new InMemoryCredentialRepository(new InMemoryDatabase()),
+    CLASSES,
+  );
+
+  return { repo, service: createRegistrationService(repo, () => failNoBadges()) };
 }
 
 describe('registration service: permissions', () => {
@@ -117,9 +156,10 @@ describe('registration service: submissions', () => {
     return { repo, service, formId: form.id };
   }
 
-  const submission = (formId: string, sessionIds: string[] = [SESSION_A]) => ({
+  /** One child (Ada) for each class named. */
+  const submission = (formId: string, classIds: string[] = [CLASS_A3], camperId = CAMPER_ADA) => ({
     formId,
-    sessionIds,
+    selections: classIds.map(classId => ({ camperId, classId })),
     standard,
     custom: { swim: 'Beginner', photos: 'yes', allergies: '  ' },
   });
@@ -133,7 +173,7 @@ describe('registration service: submissions', () => {
     await expect(service.listSubmissions(as('staff'), form.id)).resolves.toEqual([]);
   });
 
-  it('records a registration for one session, with the answers stored and blank optionals dropped', async () => {
+  it('records a registration for a class, with the session taken from the class and blank optionals dropped', async () => {
     const { service, formId } = await publishedForm();
     const id = await service.submit(as('staff'), formId, submission(formId));
 
@@ -144,19 +184,65 @@ describe('registration service: submissions', () => {
     expect(row.custom).toEqual({ swim: 'Beginner', photos: true });
   });
 
-  it('records several sessions of one form under one registration', async () => {
+  it('records classes of two sessions of one form under one registration', async () => {
     const { service, formId } = await publishedForm([SESSION_A, SESSION_A2]);
-    await service.submit(as('staff'), formId, submission(formId, [SESSION_A, SESSION_A2]));
+    await service.submit(as('staff'), formId, submission(formId, [CLASS_A3, CLASS_A4]));
     const [row] = await service.listSubmissions(as('staff'), formId);
     expect(row.sessions.map(s => s.sessionId).sort()).toEqual([SESSION_A, SESSION_A2].sort());
+    expect(row.classes.map(c => c.classId).sort()).toEqual([CLASS_A3, CLASS_A4].sort());
   });
 
-  it('refuses a session outside the form, and writes nothing', async () => {
+  it('refuses a class whose session is outside the form, and writes nothing', async () => {
     const { service, formId } = await publishedForm([SESSION_A]);
-    await expect(service.submit(as('staff'), formId, submission(formId, [SESSION_A2]))).rejects.toMatchObject({
+    await expect(service.submit(as('staff'), formId, submission(formId, [CLASS_A4]))).rejects.toMatchObject({
       reason: 'session_not_in_form',
     });
     await expect(service.listSubmissions(as('staff'), formId)).resolves.toEqual([]);
+  });
+
+  it('lets one child take two classes whose times do not overlap', async () => {
+    const { service, formId } = await publishedForm();
+    await expect(service.submit(as('staff'), formId, submission(formId, [CLASS_A1, CLASS_A3]))).resolves.toEqual(
+      expect.any(String),
+    );
+  });
+
+  it('refuses one child two classes whose times overlap, names both, and writes nothing', async () => {
+    const { service, formId } = await publishedForm();
+    const error = await service
+      .submit(as('staff'), formId, submission(formId, [CLASS_A1, CLASS_A2]))
+      .catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(RegistrationRefusedError);
+    expect(error).toMatchObject({ reason: 'classes_overlap' });
+    expect((error as Error).message).toContain('Archery');
+    expect((error as Error).message).toContain('Swimming');
+    await expect(service.listSubmissions(as('staff'), formId)).resolves.toEqual([]);
+  });
+
+  it('allows two children to take overlapping classes, because each child is checked on their own', async () => {
+    const { service, formId } = await publishedForm();
+    const twoChildren = {
+      ...submission(formId, [CLASS_A1]),
+      selections: [
+        { camperId: CAMPER_ADA, classId: CLASS_A1 },
+        { camperId: CAMPER_BEN, classId: CLASS_A2 },
+      ],
+    };
+    await expect(service.submit(as('staff'), formId, twoChildren)).resolves.toEqual(expect.any(String));
+  });
+
+  it('refuses the same class twice for one child', async () => {
+    const { service, formId } = await publishedForm();
+    await expect(service.submit(as('staff'), formId, submission(formId, [CLASS_A3, CLASS_A3]))).rejects.toMatchObject({
+      reason: 'duplicate_selection',
+    });
+  });
+
+  it('refuses a class that is not in this camp', async () => {
+    const { service, formId } = await publishedForm();
+    await expect(service.submit(as('staff'), formId, submission(formId, [CLASS_B]))).rejects.toBeInstanceOf(
+      RegistrationClassNotFoundError,
+    );
   });
 
   it('re-validates the answers on the server and reports the field that is wrong', async () => {
@@ -186,7 +272,7 @@ describe('registration service: confirmation', () => {
     await service.publishForm(admin, form.id);
     const id = await service.submit(as('staff'), form.id, {
       formId: form.id,
-      sessionIds: [SESSION_A],
+      selections: [{ camperId: CAMPER_ADA, classId: CLASS_A3 }],
       standard,
       custom: { swim: 'Beginner', photos: 'yes' },
     });
@@ -207,7 +293,7 @@ describe('registration service: confirmation', () => {
 
   it('staff can confirm', async () => {
     const { service, id } = await recorded();
-    await expect(service.confirm(as('staff'), id)).resolves.toBeUndefined();
+    await expect(service.confirm(as('staff'), id)).resolves.toEqual({ badgesIssued: 0, badgeNote: null });
   });
 
   it('a viewer cannot confirm, and the registration stays pending', async () => {
@@ -215,6 +301,30 @@ describe('registration service: confirmation', () => {
     await expect(service.confirm(as('viewer'), id)).rejects.toMatchObject({ statusCode: 403 });
     const [row] = await service.listSubmissions(as('staff'), formId);
     expect(row.status).toBe('pending');
+  });
+
+  it('a payment is recorded by staff: unpaid by default, and marked paid only with a note', async () => {
+    const { service, formId } = await recorded();
+    const [row] = await service.listSubmissions(as('staff'), formId);
+    const place = row.classes[0];
+    expect(place).toMatchObject({ status: 'held', paymentStatus: 'unpaid' });
+
+    await expect(service.recordPayment(as('staff'), place.id, { paid: true, note: '  ' })).rejects.toBeInstanceOf(
+      RegistrationInvalidError,
+    );
+    await service.recordPayment(as('staff'), place.id, { paid: true, note: 'Cheque 1042' });
+    const [paid] = await service.listSubmissions(as('staff'), formId);
+    expect(paid.classes[0]).toMatchObject({ paymentStatus: 'paid', paymentNote: 'Cheque 1042' });
+  });
+
+  it('a viewer cannot record a payment', async () => {
+    const { service, formId } = await recorded();
+    const [row] = await service.listSubmissions(as('staff'), formId);
+    await expect(
+      service.recordPayment(as('viewer'), row.classes[0].id, { paid: false, note: null }),
+    ).rejects.toMatchObject({
+      statusCode: 403,
+    });
   });
 
   it('a second confirmation is refused', async () => {

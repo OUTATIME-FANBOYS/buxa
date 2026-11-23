@@ -30,10 +30,11 @@ describe('issueBadgeAction', () => {
     });
   });
 
-  it('returns the QR payload once, and never the token', async () => {
+  it('returns success only: no payload and no token, so the code never reaches the browser', async () => {
     const state = await issueBadgeAction(idle, formOf({ personId: IDS.person }));
-    expect(state).toEqual({ status: 'issued', payload: 'buxa:badge:payload' });
+    expect(state).toEqual({ status: 'success' });
     expect(JSON.stringify(state)).not.toContain(SECRET_TOKEN);
+    expect(JSON.stringify(state)).not.toContain('buxa:badge:payload');
     expect(h.credentials.issue).toHaveBeenCalledWith(h.actor, IDS.person);
     expect(h.revalidatePath).toHaveBeenCalledWith(personPath(IDS.person));
   });

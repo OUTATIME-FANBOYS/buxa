@@ -121,7 +121,6 @@ export function PeopleTable({
                 <td>
                   <Link className="row-title" href={personPath(person.id)}>
                     {person.givenName} {person.familyName}
-                    {person.preferredName ? ` (${person.preferredName})` : ''}
                   </Link>
                 </td>
                 <td>
@@ -145,7 +144,6 @@ export function PeopleTable({
                         <Button
                           type="button"
                           variant="glass-danger"
-                          size="sm"
                           iconOnly
                           icon="trash"
                           aria-label={`Delete ${person.givenName} ${person.familyName}`}

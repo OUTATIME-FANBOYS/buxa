@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { NewMembershipInputSchema } from '@buxa/contracts';
+import { CUSTOM_SESSION_CHOICE, NewMembershipInputSchema } from '@buxa/contracts';
 import { personPath } from '@buxa/shared/config/routes';
 import { failure, success, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../runtime';
@@ -15,8 +15,14 @@ export async function addMembershipAction(_previous: ActionState, form: FormData
   if (!actor) {
     return failure(NO_CAMP);
   }
+  // The Session choice is a session id, or "custom" (typed name and dates), or blank when nothing was chosen.
+  const choice = field(form, 'sessionId');
+  if (choice === '') {
+    return failure('Check the highlighted fields.', { sessionId: 'Choose a session, or Custom.' });
+  }
   const parsed = parseWith(NewMembershipInputSchema, {
     personId: field(form, 'personId'),
+    sessionId: choice === CUSTOM_SESSION_CHOICE ? undefined : choice,
     plan: field(form, 'plan'),
     startsOn: field(form, 'startsOn'),
     endsOn: field(form, 'endsOn'),

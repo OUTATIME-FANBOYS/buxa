@@ -11,7 +11,6 @@ export const PERSON: EditablePerson = {
   id: '22222222-2222-4222-8222-222222222222',
   givenName: 'Ada',
   familyName: 'Lee',
-  preferredName: null,
   roles: [],
   dateOfBirth: null,
   email: null,

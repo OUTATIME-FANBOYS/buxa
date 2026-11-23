@@ -57,8 +57,13 @@ describe('OnSiteAgePanel', () => {
     expect(html).toContain('Students');
     expect(html).not.toContain('Adults');
     expect(html).not.toContain('Minors');
-    expect(html).toContain('<span class="stat-num home-age-num">10</span>');
-    expect(html).toContain('<span class="stat-num home-age-num">2</span>');
+    expect(html).toContain('<ul class="hbars" aria-label="On site now, by age group">');
+    expect(html).toContain('<span class="hb-label">Parent/Guardians</span>');
+    expect(html).toContain('<span class="hb-label">Students</span>');
+    expect(html).toContain('<span class="hb-val">10</span>');
+    expect(html).toContain('<span class="hb-val">2</span>');
+    expect(html).toContain('<span class="hb-seg seg-brand" style="width:100%"></span>');
+    expect(html).toContain('<span class="hb-seg seg-brand" style="width:20%"></span>');
     expect(html).toContain('href="/camp/on-site"');
   });
 
@@ -87,9 +92,25 @@ describe('MembershipPanel', () => {
     expect(html).not.toContain('Not started');
   });
 
-  it('gives the ring a text summary for screen readers', () => {
+  it('draws the valid share on the shared Ring, at the Reports size, with the summary for screen readers', () => {
     const html = renderToStaticMarkup(<MembershipPanel counts={{ valid: 3, notStarted: 0, expired: 1, none: 0 }} />);
+    expect(html).toContain('class="ring"');
     expect(html).toContain('aria-label="Membership status for 4 people: 3 valid, 1 expired."');
+    expect(html).toContain('<span class="stat-num">75%</span>');
+    expect(html).toContain('<span class="muted small">valid</span>');
+    // Valid is three quarters of the ring, drawn from the top with round ends at the Reports stroke width of 8 on a 96px ring.
+    const c = 2 * Math.PI * ((96 - 8) / 2);
+    expect(html).toContain(`stroke-dasharray="${0.75 * c} ${c}"`);
+    expect(html).toContain('stroke="var(--f-ok)"');
+    expect(html).toContain('stroke-linecap="round"');
+  });
+
+  it('keeps the legend counts beside the ring', () => {
+    const html = renderToStaticMarkup(<MembershipPanel counts={{ valid: 3, notStarted: 0, expired: 1, none: 0 }} />);
+    expect(html).toContain('aria-label="Membership status, by count"');
+    expect(html).toContain('>3 <span');
+    expect(html).toContain('(75%)');
+    expect(html).toContain('(25%)');
   });
 
   it('says so when nobody is on the list yet', () => {

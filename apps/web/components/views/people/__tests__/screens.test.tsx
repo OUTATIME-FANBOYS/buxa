@@ -17,6 +17,7 @@ const session = vi.hoisted(() => ({ camp: null as Membership | null }));
 const services = vi.hoisted(() => ({
   people: { list: vi.fn(), listPage: vi.fn(), get: vi.fn(), getHousehold: vi.fn(), listHouseholds: vi.fn() },
   attendance: { history: vi.fn() },
+  classes: { listSessions: vi.fn() },
   orgs: { getCamp: vi.fn() },
 }));
 
@@ -57,12 +58,13 @@ const as = (role: Role) => {
   session.camp = { orgId: 'o1', role, name: 'Sunrise', slug: 'sunrise' };
 };
 const render = (node: ReactNode) => renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}>{node}</UiProvider>);
+/** The page header's markup: the name, the status words, the email and the actions. */
+const headerOf = (html: string) => html.match(/<header[\s\S]*?<\/header>/)?.[0] ?? '';
 
 const summary = (over: Partial<PersonSummary> = {}): PersonSummary => ({
   id: ID.ben,
   givenName: 'Ben',
   familyName: 'Lee',
-  preferredName: null,
   roles: ['camper'],
   status: 'valid',
   onSite: true,
@@ -105,6 +107,7 @@ const person = (over: Partial<Person> = {}): Person => ({
     {
       id: ID.membership,
       personId: ID.ben,
+      sessionId: null,
       plan: 'Summer 2027',
       startsOn: '2027-07-01',
       endsOn: '2027-08-20',
@@ -133,6 +136,7 @@ beforeEach(() => {
   services.people.getHousehold.mockResolvedValue(household);
   services.people.listHouseholds.mockResolvedValue([household]);
   services.attendance.history.mockResolvedValue([]);
+  services.classes.listSessions.mockResolvedValue({ ok: true, value: [] });
   services.orgs.getCamp.mockResolvedValue({
     id: 'o1',
     name: 'Sunrise',
@@ -284,16 +288,20 @@ describe('PersonScreen', () => {
     await expect(PersonScreen({ id: ID.anna })).rejects.toThrow('NEXT_NOT_FOUND');
   });
 
-  it('shows contact details that exist, and never the word null', async () => {
+  it('shows the email under the name in the header, and never the word null', async () => {
     services.people.get.mockResolvedValueOnce(
       person({ email: 'ben@example.test', phone: null, dateOfBirth: '2016-05-02' }),
     );
     const html = render(await PersonScreen({ id: ID.ben }));
-    expect(html).toContain('ben@example.test');
-    expect(html).toContain('Date of birth');
-    expect(html).not.toContain('Phone');
+    const header = headerOf(html);
+    expect(header).toContain('ben@example.test');
+    expect(header.indexOf('Ben Lee')).toBeLessThan(header.indexOf('ben@example.test'));
     // Visible markup only: React's inline bootstrap script legitimately contains the word.
     expect(html.replace(/<script[\s\S]*?<\/script>/g, '')).not.toMatch(/\bnull\b/);
+  });
+
+  it('leaves the email out of the header when the person has none', async () => {
+    expect(headerOf(render(await PersonScreen({ id: ID.ben })))).not.toContain('people-email');
   });
 
   it('shows household members with their guardian and pick-up status in words', async () => {
@@ -314,14 +322,14 @@ describe('PersonScreen', () => {
   it('gives staff the household and membership controls, and admins the badge and archive controls too', async () => {
     const staff = render(await PersonScreen({ id: ID.ben }));
     expect(staff).toContain('Link someone to a household');
-    expect(staff).not.toContain('Add a membership');
+    expect(staff).not.toContain('Add membership');
     expect(staff).not.toContain('Archive person');
 
     as('admin');
     const admin = render(await PersonScreen({ id: ID.ben }));
-    expect(admin).toContain('Add a membership');
+    expect(admin).toContain('>Add membership</button>');
     expect(admin).toContain('Revoke');
-    expect(admin).toContain('Reissue badge');
+    expect(admin).toContain('>Reissue</button>');
     expect(admin).toContain('Archive person');
   });
 
@@ -329,7 +337,7 @@ describe('PersonScreen', () => {
     as('viewer');
     const html = render(await PersonScreen({ id: ID.ben }));
     expect(html).not.toContain('Link someone to a household');
-    expect(html).not.toContain('Add a membership');
+    expect(html).not.toContain('Add membership');
     expect(html).not.toContain('Issue badge');
     expect(html).not.toContain('Archive person');
     expect(html).not.toContain('Remove ');
@@ -353,8 +361,59 @@ describe('PersonScreen', () => {
       },
     ]);
     const html = render(await PersonScreen({ id: ID.ben }));
-    expect(html).toContain('Maya Chen');
-    expect(html).toContain('On site');
+    // 09:12 UTC is 14:42 in Asia/Kolkata, the camp's zone.
+    expect(html).toContain('2 Jul, 14:42');
+    expect(html).toContain('<li>2 Jul, 14:42</li>');
+  });
+
+  it('shows the last five check-ins, and "No check-ins yet." when there are none', async () => {
+    const visit = (n: number) => ({
+      id: `v${n}`,
+      personId: ID.ben,
+      personName: 'Ben Lee',
+      checkedInAt: `2027-07-0${n}T09:00:00Z`,
+      checkedInByName: 'Maya Chen',
+      method: 'qr',
+      checkedOutAt: null,
+      checkedOutByName: null,
+      collectedByName: null,
+      overrideReason: null,
+      note: null,
+    });
+    services.attendance.history.mockResolvedValueOnce([1, 2, 3, 4, 5, 6].map(visit).reverse());
+    const html = render(await PersonScreen({ id: ID.ben }));
+    expect(html.match(/<li>/g)).toHaveLength(5);
+    expect(html).toContain('<li>6 Jul, 14:30</li>');
+    // The sixth, oldest visit (1 Jul) is past the five shown.
+    expect(html).not.toContain('1 Jul, 14:30');
+
+    expect(render(await PersonScreen({ id: ID.ben }))).toContain('No check-ins yet.');
+  });
+
+  it('renders the four tiles in order: Membership, Household, Badge, Attendance', async () => {
+    const html = render(await PersonScreen({ id: ID.ben }));
+    const at = ['membership-heading', 'household-heading', 'badge-heading', 'attendance-heading'].map(id =>
+      html.indexOf(`id="${id}"`),
+    );
+    expect(at.every(i => i >= 0)).toBe(true);
+    expect([...at].sort((a, b) => a - b)).toEqual(at);
+    expect(html).toContain('class="person-tiles"');
+  });
+
+  it('has no Details card', async () => {
+    const html = render(await PersonScreen({ id: ID.ben }));
+    expect(html).not.toContain('details-heading');
+    expect(html).not.toContain('>Details<');
+  });
+
+  it('puts Edit details and Archive person in the header, beside the name', async () => {
+    as('admin');
+    const html = render(await PersonScreen({ id: ID.ben }));
+    const header = headerOf(html);
+    expect(header).toContain('>Edit details</button>');
+    expect(header).toContain('Archive person');
+    expect(header.indexOf('Ben Lee')).toBeLessThan(header.indexOf('Edit details'));
+    expect(html.indexOf('Archive person')).toBeLessThan(html.indexOf('person-tiles'));
   });
 
   it('hides archive for a person already archived, and says a badge cannot be issued', async () => {
@@ -365,8 +424,10 @@ describe('PersonScreen', () => {
     expect(html).toContain('Archived people cannot have a badge');
   });
 
-  it('offers Edit details to staff, and not to viewers', async () => {
-    expect(render(await PersonScreen({ id: ID.ben }))).toContain(`href="/camp/people/${ID.ben}/edit"`);
+  it('offers Edit details to staff as a button that opens the pop-up, not a link to /edit; not to viewers', async () => {
+    const html = render(await PersonScreen({ id: ID.ben }));
+    expect(html).toContain('>Edit details</button>');
+    expect(html).not.toContain(`/people/${ID.ben}/edit`);
     as('viewer');
     expect(render(await PersonScreen({ id: ID.ben }))).not.toContain('Edit details');
   });
@@ -413,6 +474,7 @@ describe('PersonScreen', () => {
           {
             id: ID.membership,
             personId: ID.ben,
+            sessionId: null,
             plan: 'Summer 2027',
             startsOn: '2027-07-01',
             endsOn: '2027-08-20',
@@ -432,24 +494,17 @@ describe('PersonScreen', () => {
 });
 
 describe('EditPerson', () => {
-  it('pre-fills the form with the person and the roles they have', async () => {
-    services.people.get.mockResolvedValueOnce(
-      person({ dateOfBirth: '2016-05-02', email: 'ben@example.test', roles: ['participant'] }),
-    );
+  it('is the person page for the /edit address, with an Edit details button that opens the pop-up', async () => {
+    services.people.get.mockResolvedValueOnce(person({ roles: ['participant'] }));
     const html = render(await EditPerson({ id: ID.ben }));
-    expect(html).toContain('value="Ben"');
-    expect(html).toContain('value="2016-05-02"');
-    expect(html).toContain('value="ben@example.test"');
-    // React's attribute order is not part of the contract, so match the checked box in either order.
-    expect(html).toMatch(/<input[^>]*checked=""[^>]*value="participant"|<input[^>]*value="participant"[^>]*checked=""/);
-    expect(html).not.toMatch(/<input[^>]*checked=""[^>]*value="guardian"|<input[^>]*value="guardian"[^>]*checked=""/);
-    expect(html).toContain('Save changes');
+    expect(html).toContain('>Edit details</button>');
+    expect(html).not.toContain('/edit"');
   });
 
-  it('tells a role that cannot change people why, without a form', async () => {
+  it('shows no Edit details button to a role that cannot change people', async () => {
     as('viewer');
     const html = render(await EditPerson({ id: ID.ben }));
-    expect(html).toContain('Your role cannot change people');
+    expect(html).not.toContain('Edit details');
     expect(html).not.toContain('Save changes');
   });
 

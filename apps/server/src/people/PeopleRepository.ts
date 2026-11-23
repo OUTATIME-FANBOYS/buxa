@@ -5,7 +5,6 @@ export interface PersonRecord {
   id: string;
   givenName: string;
   familyName: string;
-  preferredName: string | null;
   dateOfBirth: LocalDate | null;
   email: string | null;
   phone: string | null;
@@ -17,7 +16,6 @@ export interface PersonRecord {
 export interface NewPersonRecord {
   givenName: string;
   familyName: string;
-  preferredName: string | null;
   dateOfBirth: LocalDate | null;
   email: string | null;
   phone: string | null;
@@ -108,6 +106,11 @@ export interface PeopleRepository {
   /** Deletes the person; the linked rows (memberships, enrolments, check-ins, badges, household links) go with it. Owner only. Audits `person.delete`. Throws PersonNotFoundError. */
   erase(actor: Actor, id: string): Promise<void>;
   get(userId: string, orgId: string, id: string): Promise<PersonRecord | null>;
+  /**
+   * The camp's people whose email is this one (case-insensitive), archived people left out. A signed-in person finds their own
+   * record this way: there is no link from a user to a person, so the email is the link (see the badge rules in CredentialService).
+   */
+  byEmail(userId: string, orgId: string, email: string): Promise<PersonRecord[]>;
   getMany(userId: string, orgId: string, ids: readonly string[]): Promise<PersonRecord[]>;
   /** Ordered by family name, then given name. Archived people only with `includeArchived`. */
   list(userId: string, orgId: string, filter: PersonFilter): Promise<PersonRecord[]>;

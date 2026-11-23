@@ -3,6 +3,7 @@ import type { Actor } from '@buxa/domain';
 import type { MembershipRepository } from '../../memberships/MembershipRepository';
 import type { OrgRepository } from '../../orgs/OrgRepository';
 import type { PeopleRepository } from '../../people/PeopleRepository';
+import type { ClassRepository } from '../../classes/ClassRepository';
 import type { Clock } from '../clock';
 
 /** Memberships: a person's right to attend for a date range. Status is computed for the camp's local day, never stored. */
@@ -18,6 +19,8 @@ export interface MembershipService {
 export interface MembershipServiceDeps {
   memberships: MembershipRepository;
   people: PeopleRepository;
+  /** Checks that a session belongs to the camp before a membership is made from it. */
+  classes: ClassRepository;
   orgs: OrgRepository;
   clock: Clock;
 }

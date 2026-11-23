@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { CustomFieldSchema, type CustomField, type RegistrationForm, type RegistrationRow } from '@buxa/contracts';
+import {
+  CustomFieldSchema,
+  type CustomField,
+  type RegistrationClass,
+  type RegistrationForm,
+  type RegistrationRow,
+} from '@buxa/contracts';
 import type { Db } from '../people/pgRows';
 import { RegistrationFormNotFoundError } from './errors';
 
@@ -114,6 +120,11 @@ export async function listSubmissionRows(db: Db, formId: string): Promise<Regist
     [rows.map(r => r.id)],
   );
 
+  const places = await listClassRows(
+    db,
+    rows.map(r => r.id),
+  );
+
   return rows.map(r => {
     const answers = StoredAnswersSchema.parse(r.answers);
 
@@ -128,6 +139,87 @@ export async function listSubmissionRows(db: Db, formId: string): Promise<Regist
       sessions: sessions.rows
         .filter(s => s.registration_id === r.id)
         .map(s => ({ sessionId: s.session_id, sessionName: s.name, status: s.status })),
+      classes: places.filter(p => p.registrationId === r.id).map(p => p.row),
     };
   });
+}
+
+interface PlaceRow {
+  id: string;
+  registration_id: string;
+  class_id: string;
+  class_name: string | null;
+  session_id: string;
+  session_name: string;
+  person_id: string;
+  camper_name: string;
+  hold_expires_at: Date | null;
+  hold_released_at: Date | null;
+  enrolment_status: 'enrolled' | 'waitlisted' | 'cancelled' | null;
+  payment_status: 'unpaid' | 'paid';
+  payment_note: string | null;
+  hold_id: string | null;
+}
+
+/**
+ * The status of a place, read from the hold or the enrolment behind it. An enrolment wins: once there is one, the place is what
+ * the enrolment says. Otherwise the hold says: held while it runs, expired once released (expired or cancelled before confirmation).
+ */
+export function placeStatus(
+  row: Pick<PlaceRow, 'enrolment_status' | 'hold_id' | 'hold_released_at' | 'hold_expires_at'>,
+  now: Date,
+): RegistrationClass['status'] {
+  if (row.enrolment_status !== null) {
+    return row.enrolment_status;
+  }
+  if (row.hold_id === null) {
+    return 'expired';
+  }
+  if (row.hold_released_at !== null) {
+    return 'expired';
+  }
+
+  return row.hold_expires_at !== null && row.hold_expires_at.getTime() > now.getTime() ? 'held' : 'expired';
+}
+
+/** Every child-and-class place of the given registrations, with its status and payment. Staff screens only. */
+async function listClassRows(
+  db: Db,
+  registrationIds: string[],
+): Promise<{ registrationId: string; row: RegistrationClass }[]> {
+  if (registrationIds.length === 0) {
+    return [];
+  }
+  const { rows } = await db.query<PlaceRow>(
+    `SELECT rc.id, rc.registration_id, rc.class_id, c.name AS class_name, c.class_id AS session_id, s.name AS session_name,
+            rc.person_id, (p.given_name || ' ' || p.family_name) AS camper_name,
+            rc.hold_id, h.expires_at AS hold_expires_at, h.released_at AS hold_released_at,
+            e.status AS enrolment_status, rc.payment_status, rc.payment_note
+       FROM registration_classes rc
+       JOIN sessions c ON c.id = rc.class_id AND c.org_id = rc.org_id
+       JOIN classes s ON s.id = c.class_id AND s.org_id = c.org_id
+       JOIN people p ON p.id = rc.person_id AND p.org_id = rc.org_id
+       LEFT JOIN seat_holds h ON h.id = rc.hold_id AND h.org_id = rc.org_id
+       LEFT JOIN enrolments e ON e.id = rc.enrolment_id AND e.org_id = rc.org_id
+      WHERE rc.registration_id = ANY($1::uuid[])
+      ORDER BY c.name, rc.id`,
+    [registrationIds],
+  );
+  const now = new Date();
+
+  return rows.map(r => ({
+    registrationId: r.registration_id,
+    row: {
+      id: r.id,
+      classId: r.class_id,
+      className: r.class_name ?? '',
+      sessionId: r.session_id,
+      sessionName: r.session_name,
+      camperId: r.person_id,
+      camperName: r.camper_name,
+      status: placeStatus(r, now),
+      paymentStatus: r.payment_status,
+      paymentNote: r.payment_note,
+    },
+  }));
 }

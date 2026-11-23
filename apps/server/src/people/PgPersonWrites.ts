@@ -14,9 +14,9 @@ async function insertRoles(db: Db, orgId: string, personId: string, roles: reado
 
 export async function insertPerson(db: Db, orgId: string, input: NewPersonRecord): Promise<string> {
   const { rows } = await db.query<{ id: string }>(
-    `INSERT INTO people (org_id, given_name, family_name, preferred_name, date_of_birth, email, phone)
-     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-    [orgId, input.givenName, input.familyName, input.preferredName, input.dateOfBirth, input.email, input.phone],
+    `INSERT INTO people (org_id, given_name, family_name, date_of_birth, email, phone)
+     VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+    [orgId, input.givenName, input.familyName, input.dateOfBirth, input.email, input.phone],
   );
   const id = rows[0].id;
   await insertRoles(db, orgId, id, input.roles);
@@ -39,9 +39,6 @@ export async function updatePerson(db: Db, orgId: string, id: string, patch: Per
   }
   if (patch.familyName !== undefined) {
     set('familyName', 'family_name', patch.familyName);
-  }
-  if (patch.preferredName !== undefined) {
-    set('preferredName', 'preferred_name', patch.preferredName);
   }
   if (patch.dateOfBirth !== undefined) {
     set('dateOfBirth', 'date_of_birth', patch.dateOfBirth);

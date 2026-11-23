@@ -7,13 +7,15 @@ Depends on: phases 2 and 3.
 
 Built on branch `v0.3/feat/seat-holds`: holds reserve a place for a household for 15 minutes (`SEAT_HOLD_MINUTES`); capacity holds under concurrency through the database (migration 0025); a freed place goes to the first waitlisted enrolment, and each promotion is audited.
 
+Built on branch `v0.3/feat/registration-holds` (migration 0043): the scheduled job `GET /api/cron/release-expired-holds` releases expired holds in every camp and promotes waitlists, guarded by `CRON_SECRET` (see `docs/deploy.md`). The `completed` release reason is in the table.
+
+Built on branch `v0.3/feat/class-registration` (migration 0046): seats, holds and the waitlist sit on classes. A registration takes a hold for each child and class (15 minutes), a full class waitlists the child in order, confirmation releases each hold as `completed` and creates the enrolment, and a freed place goes to the first waitlisted child. The class page shows the held places and the waitlist in order, with a button to move the next camper off the waitlist when a place is free (`seatHolds.promoteWaitlist`, audited as `enrolment.promote`). Holds are listed by `seatHolds.listActiveHolds` (staff with `holds:manage`).
+
 Not built yet:
 
-- Taking a hold from the registration submission (the service method exists; the form does not call it yet).
-- Turning a hold into an enrolment when the family completes registration.
-- The waitlist UI, and a screen that shows holds.
-- A scheduled job for `releaseExpiredHolds` (expired holds already stop counting without it).
+- A screen that shows holds across the camp (the class page shows them for one class).
 - Hold length set per camp (fixed at 15 minutes for now).
+- A hold for each child in a household. One active hold per household per class still applies, so a second child of the same household cannot take the same class at the same time (see `docs/phases/03-registration.md`).
 
 ## Words we use
 

@@ -26,6 +26,7 @@ const services = vi.hoisted(() => ({
   },
   people: { list: vi.fn() },
   orgs: { getCamp: vi.fn(), listMembers: vi.fn() },
+  seatHolds: { listActiveHolds: vi.fn(() => Promise.resolve([])) },
 }));
 const session = vi.hoisted<{ role: Role | null }>(() => ({ role: 'staff' }));
 const notFound = vi.hoisted(() =>

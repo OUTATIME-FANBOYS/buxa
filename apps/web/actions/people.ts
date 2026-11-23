@@ -3,6 +3,10 @@ import { addMembershipAction as addMembershipActionImpl } from '@buxa/server/com
 import { archivePersonAction as archivePersonActionImpl } from '@buxa/server/composers/people/archivePersonAction';
 import { issueBadgeAction as issueBadgeActionImpl } from '@buxa/server/composers/people/issueBadgeAction';
 import { revokeBadgeAction as revokeBadgeActionImpl } from '@buxa/server/composers/people/revokeBadgeAction';
+import {
+  showBadgeAction as showBadgeActionImpl,
+  reprintBadgeAction as reprintBadgeActionImpl,
+} from '@buxa/server/composers/people/showBadgeAction';
 import { updatePersonAction as updatePersonActionImpl } from '@buxa/server/composers/people/updatePersonAction';
 import { linkHouseholdAction as linkHouseholdActionImpl } from '@buxa/server/composers/people/linkHouseholdAction';
 import { createPersonAction as createPersonActionImpl } from '@buxa/server/composers/people/createPersonAction';
@@ -28,6 +32,14 @@ export async function issueBadgeAction(...args: Parameters<typeof issueBadgeActi
 
 export async function revokeBadgeAction(...args: Parameters<typeof revokeBadgeActionImpl>) {
   return revokeBadgeActionImpl(...args);
+}
+
+export async function showBadgeAction(...args: Parameters<typeof showBadgeActionImpl>) {
+  return showBadgeActionImpl(...args);
+}
+
+export async function reprintBadgeAction(...args: Parameters<typeof reprintBadgeActionImpl>) {
+  return reprintBadgeActionImpl(...args);
 }
 
 export async function updatePersonAction(...args: Parameters<typeof updatePersonActionImpl>) {
