@@ -29,21 +29,28 @@ describe('BadgePanel', () => {
     expect(renderToStaticMarkup(<BadgePanel {...base} hasActiveBadge />)).toContain('Badge active');
     expect(renderToStaticMarkup(<BadgePanel {...base} />)).toContain('No active badge');
   });
-  it('lets a manager issue or revoke badges', () => {
-    expect(renderToStaticMarkup(<BadgePanel {...base} />)).not.toContain('Only admins');
+  it('with no active badge, says No badge yet and offers only Issue badge', () => {
+    const html = renderToStaticMarkup(<BadgePanel {...base} />);
+    expect(html).toContain('No badge yet.');
+    expect(html).toContain('>Issue badge</button>');
+    expect(html).not.toContain('Reprint');
+    expect(html).not.toContain('Badge revoked.');
+    expect(html).not.toContain('New badge');
   });
-  it('lets a manager show, reprint and reissue an active badge', () => {
+  it('lets a manager show, reprint, reissue and revoke an active badge, and never prints outside a reveal', () => {
     const html = renderToStaticMarkup(<BadgePanel {...base} hasActiveBadge />);
-    expect(html).toContain('Show badge');
-    expect(html).toContain('Reprint badge');
-    expect(html).toContain('Reissue badge');
+    expect(html).toContain('>Show badge</button>');
+    expect(html).toContain('>Reprint</button>');
+    expect(html).toContain('>Reissue</button>');
+    expect(html).toContain('>Revoke</button>');
     expect(html).not.toContain('bx1.');
+    expect(html).not.toContain('Print badge');
   });
   it('shows no Show or Reprint without an active badge, and none to a staff member', () => {
     expect(renderToStaticMarkup(<BadgePanel {...base} />)).not.toContain('Show badge');
     const staff = renderToStaticMarkup(<BadgePanel {...base} hasActiveBadge canManage={false} />);
     expect(staff).not.toContain('Show badge');
-    expect(staff).not.toContain('Reprint badge');
+    expect(staff).not.toContain('Reprint');
   });
   it('explains that archived people cannot have a badge, and that only admins can manage one', () => {
     expect(renderToStaticMarkup(<BadgePanel {...base} archived />)).toContain('Archived people cannot have a badge.');

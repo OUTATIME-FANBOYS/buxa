@@ -17,4 +17,14 @@ describe('AddMembershipForm', () => {
     expect(html).toContain('name="personId" value="p-1"');
     expect(html).toContain('>Add membership</button>');
   });
+
+  it('gives every field the same parts (label, input, helper line) in one grid, and a primary submit', () => {
+    const html = renderToStaticMarkup(<AddMembershipForm personId="p-1" />);
+    expect(html).toContain('people-form-grid people-membership-fields');
+    expect(html).toContain('The first camp day, included.');
+    expect(html).toContain('The last camp day, included.');
+    const submitTag = /<button([^>]*)>Add membership<\/button>/.exec(html)?.[1] ?? '';
+    expect(submitTag).toContain('button--primary');
+    expect(html).not.toContain('button--sm');
+  });
 });

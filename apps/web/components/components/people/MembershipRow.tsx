@@ -4,7 +4,7 @@ import { AccessPill } from './AccessPill';
 import { RevokeMembershipForm } from '@/components/components/people/forms';
 import { formatLocalDate } from '@buxa/shared';
 import type { ClockFormat } from '@buxa/domain';
-import { buttonClassName } from '@/components/atoms/Button/buttonClass';
+import { buttonClassName } from '@/components/atoms/Button';
 
 interface MembershipRowProps {
   membership: PersonMembership;
@@ -39,7 +39,7 @@ export function MembershipRow({ membership, personId, canManage, timeZone, clock
         <AccessPill status={membership.status} />
         {canManage && !revoked && (
           <details className="people-disclosure">
-            <summary className={buttonClassName({ variant: 'danger-soft', size: 'sm' })}>Revoke</summary>
+            <summary className={buttonClassName({ variant: 'danger-soft' })}>Revoke</summary>
             <RevokeMembershipForm membershipId={membership.id} personId={personId} />
           </details>
         )}

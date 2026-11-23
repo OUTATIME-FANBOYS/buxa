@@ -200,3 +200,24 @@ export async function confirmRegistrationInTx(
     data: { formId: registration.form_id },
   });
 }
+
+/**
+ * The people a registration names as campers. A camper matches when the name and birth date in the camper answers equal an active
+ * person's, and that person holds the camper role. Runs inside the confirmation transaction.
+ */
+export async function camperIdsInTx(db: Db, registrationId: string): Promise<string[]> {
+  const { rows } = await db.query<{ id: string }>(
+    `SELECT DISTINCT p.id
+       FROM registrations r
+       JOIN people p ON p.org_id = r.org_id
+        AND lower(btrim(p.given_name)) = lower(btrim(r.answers #>> '{standard,camperFirstName}'))
+        AND lower(btrim(p.family_name)) = lower(btrim(r.answers #>> '{standard,camperLastName}'))
+        AND to_char(p.date_of_birth, 'YYYY-MM-DD') = r.answers #>> '{standard,camperBirthDate}'
+        AND p.archived_at IS NULL
+       JOIN person_roles pr ON pr.org_id = p.org_id AND pr.person_id = p.id AND pr.role = 'camper'
+      WHERE r.id = $1`,
+    [registrationId],
+  );
+
+  return rows.map(r => r.id);
+}

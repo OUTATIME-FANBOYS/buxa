@@ -150,7 +150,17 @@ export function createServices(repositories: Repositories, clock: Clock): Servic
     }),
     attendance: createAttendanceService({ attendance, classes, people, memberships, orgs, clock }),
     ...createClassServices(repositories),
-    registration: createRegistrationService(repositories.registration),
+    registration: createRegistrationService(repositories.registration, badges =>
+      createCredentialService({
+        credentials: badges,
+        people,
+        memberships,
+        attendance,
+        orgs,
+        clock,
+        cipher: badgeCipher,
+      }),
+    ),
     calendar: createCalendarService({ repo: repositories.calendar }),
     publicSessions: createPublicSessionService({ repo: repositories.publicSessions }),
     invites: createInviteService({ invites: repositories.memberInvites }),

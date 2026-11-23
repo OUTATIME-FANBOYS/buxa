@@ -24,13 +24,17 @@ export async function confirmRegistrationAction(_previous: ActionState, form: Fo
     return failure('That registration no longer exists.');
   }
 
+  let outcome;
   try {
-    await getRuntime().services.registration.confirm(actor, registrationId);
+    outcome = await getRuntime().services.registration.confirm(actor, registrationId);
   } catch (error) {
     return registrationFailure(error, 'Could not confirm the registration.');
   }
 
   revalidatePath(registrationFormPath(formId));
 
-  return success('Registration confirmed.');
+  const badges =
+    outcome.badgesIssued > 0 ? ` ${outcome.badgesIssued} badge${outcome.badgesIssued === 1 ? '' : 's'} issued.` : '';
+
+  return success(`Registration confirmed.${badges}${outcome.badgeNote ? ` ${outcome.badgeNote}` : ''}`);
 }

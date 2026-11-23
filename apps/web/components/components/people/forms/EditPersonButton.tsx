@@ -13,20 +13,33 @@ import { PersonForm } from './PersonForm';
 type Loaded = { status: 'idle' } | { status: 'loading' } | { status: 'ready'; person: Person } | { status: 'missing' };
 
 /**
- * The row's Edit button on the People list. It opens the same Edit person pop-up as the form's page-level route would show, but in the
- * list, so the list stays in view. The person is loaded when it opens. Cancel, Escape or the close button dismiss it without saving.
+ * The Edit button for a person: on a People row, and on the person's page (labelled Edit details). It opens the Edit person pop-up in
+ * place, so the list or the page stays in view, and the person is loaded when it opens. Cancel, Escape or the close button dismiss it
+ * without saving. A save toasts and closes; the page's own revalidation refreshes its details. `initiallyOpen` opens it on first
+ * render (the person page's /edit address).
  */
 export function EditPersonButton({
   personId,
   households = [],
+  label = 'Edit',
+  initiallyOpen = false,
 }: {
   personId: string;
   /** The camp's households, for the Household section's select. */
   households?: readonly HouseholdChoice[];
+  label?: string;
+  initiallyOpen?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [loaded, setLoaded] = useState<Loaded>({ status: 'idle' });
+  // The pop-up portals into the page, so it opens after mount, never during server rendering.
+  useEffect(() => {
+    if (initiallyOpen) {
+      setLoaded({ status: 'loading' });
+      setOpen(true);
+    }
+  }, [initiallyOpen]);
   const { toast } = useUi();
   const formId = `edit-person-form-${personId}`;
 
@@ -68,8 +81,8 @@ export function EditPersonButton({
 
   return (
     <>
-      <Button variant="glass" size="sm" type="button" aria-haspopup="dialog" onClick={openPopUp}>
-        Edit
+      <Button variant="glass" type="button" aria-haspopup="dialog" onClick={openPopUp}>
+        {label}
       </Button>
       {open && (
         <FormPopUp

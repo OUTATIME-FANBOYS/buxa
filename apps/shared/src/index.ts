@@ -60,6 +60,7 @@ export * from './kanban/tasks';
 export * from './kanban/types';
 export * from './motion';
 export * from './people/badgeState';
+export * from './people/badgePanelState';
 export * from './people/copy';
 export * from './people/format';
 export * from './people/householdChoices';
