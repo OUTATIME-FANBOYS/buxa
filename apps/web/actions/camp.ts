@@ -4,6 +4,7 @@ import { createCampAction as createCampActionImpl } from '@buxa/server/composers
 import { renameCampAction as renameCampActionImpl } from '@buxa/server/composers/camp/renameCampAction';
 import { changeMemberRoleAction as changeMemberRoleActionImpl } from '@buxa/server/composers/camp/changeMemberRoleAction';
 import { setMemberExpiryAction as setMemberExpiryActionImpl } from '@buxa/server/composers/camp/setMemberExpiryAction';
+import { setHoldLengthAction as setHoldLengthActionImpl } from '@buxa/server/composers/camp/setHoldLengthAction';
 import { archiveCamp as archiveCampImpl } from '@buxa/server/composers/camp/archiveCamp';
 import { deleteCamp as deleteCampImpl } from '@buxa/server/composers/camp/deleteCamp';
 import { unarchiveCamp as unarchiveCampImpl } from '@buxa/server/composers/camp/unarchiveCamp';
@@ -34,6 +35,10 @@ export async function changeMemberRoleAction(...args: Parameters<typeof changeMe
 
 export async function setMemberExpiryAction(...args: Parameters<typeof setMemberExpiryActionImpl>) {
   return setMemberExpiryActionImpl(...args);
+}
+
+export async function setHoldLengthAction(...args: Parameters<typeof setHoldLengthActionImpl>) {
+  return setHoldLengthActionImpl(...args);
 }
 
 // Archive and delete. The server composers return the same CampResult shape as the other camp actions.

@@ -23,6 +23,7 @@ describe.skipIf(!url)('seat holds in Postgres: capacity and expiry', () => {
   const seats: SeatHoldService = createSeatHoldService({
     repo: new PgSeatHoldRepository(pool),
     timezoneOf: () => Promise.resolve('Australia/Sydney'),
+    holdMinutesOf: () => Promise.resolve(null),
   });
 
   beforeAll(async () => {

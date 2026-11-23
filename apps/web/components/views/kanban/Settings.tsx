@@ -9,6 +9,7 @@ import { AgentDialog } from '@/components/components/kanban/dialogs';
 import { ResetDemoButton } from '@/components/components/kanban';
 import {
   CampNameCard,
+  HoldLengthCard,
   SETTINGS_GRID,
   SETTINGS_TILE_HEADING,
   SETTINGS_TILE_TEXT,
@@ -23,6 +24,8 @@ import type { ArchivedCamp } from '@/actions/camp';
 export interface SettingsCamp {
   id: string;
   name: string;
+  /** The seat hold length in minutes, or null for the default (15). */
+  holdMinutes: number | null;
   canRename: boolean;
   canArchive: boolean;
   canDelete: boolean;
@@ -76,6 +79,7 @@ export function Settings({
       </header>
       <div className={`settings-grid ${SETTINGS_GRID}`}>
         {camp?.canRename && !camp.archived && <CampNameCard campId={camp.id} currentName={camp.name} />}
+        {camp?.canRename && !camp.archived && <HoldLengthCard campId={camp.id} currentMinutes={camp.holdMinutes} />}
         <section className="panel settings-tile">
           <h2 className={SETTINGS_TILE_HEADING}>Agents</h2>
           <p className={`muted ${SETTINGS_TILE_TEXT}`}>

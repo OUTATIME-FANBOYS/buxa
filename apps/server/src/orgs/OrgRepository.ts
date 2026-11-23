@@ -35,6 +35,8 @@ export interface OrgRepository {
   createWithOwner(input: NewOrgInput, ownerId: string): Promise<CreatedOrg>;
   get(userId: string, orgId: string): Promise<Org>;
   rename(actor: Actor, input: OrgPatchInput): Promise<OrgSummary>;
+  /** Sets the camp's seat hold length (null for the default) and records the audit entry, atomically. The caller has checked org:update. */
+  setHoldMinutes(actor: Actor, minutes: number | null): Promise<void>;
   listMembers(userId: string, orgId: string): Promise<Member[]>;
   /** Sets a member's role and records the audit entry, atomically. The caller has checked members:change_role. */
   changeMemberRole(actor: Actor, userId: string, role: Role): Promise<void>;

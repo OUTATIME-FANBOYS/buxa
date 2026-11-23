@@ -1,4 +1,4 @@
-import { holdExpiresAt, type Actor } from '@buxa/domain';
+import { holdExpiresAt, holdLengthMinutes, type Actor } from '@buxa/domain';
 import { assertAllowed } from '../auth/authorize';
 import { attempt, type Outcome } from '../classes/outcome';
 import type { ActiveHold, SeatHold, SeatHoldRepository } from './SeatHoldRepository';
@@ -42,24 +42,29 @@ export interface SeatHoldServiceDeps {
   repo: SeatHoldRepository;
   /** The camp's IANA zone, used only to word refusals. */
   timezoneOf: (actor: Pick<Actor, 'userId' | 'orgId'>) => Promise<string>;
+  /** The camp's seat hold length in minutes, or null for the default (orgs.hold_minutes). Read when a hold is placed. */
+  holdMinutesOf: (actor: Pick<Actor, 'userId' | 'orgId'>) => Promise<number | null>;
   now?: () => Date;
 }
 
 export function createSeatHoldService({
   repo,
   timezoneOf,
+  holdMinutesOf,
   now = () => new Date(),
 }: SeatHoldServiceDeps): SeatHoldService {
   return {
     async placeHold(actor, input) {
       assertAllowed(actor, 'holds:manage');
+      // The camp's length as it is now: a hold placed after a change gets the new length, and holds already placed keep their expiry.
+      const minutes = holdLengthMinutes(await holdMinutesOf(actor));
 
       return attempt(
         () =>
           repo.placeHold(actor, {
             sessionId: input.classId,
             householdId: input.householdId,
-            expiresAt: holdExpiresAt(now()),
+            expiresAt: holdExpiresAt(now(), minutes),
           }),
         await timezoneOf(actor),
       );

@@ -86,7 +86,7 @@ Terms: a **session** (the parent row) is the public page's unit, and its **class
 **Built (branch `v0.3/feat/seat-holds`):**
 
 - A hold reserves one place in a class for a household. One active hold per household per class. It counts as taken only while it is unreleased and its time has not passed, so an expired hold returns its place at once, without a job.
-- The length is one constant, `SEAT_HOLD_MINUTES` (15) in `packages/domain/src/classes/holds.ts`.
+- The default length is one constant, `SEAT_HOLD_MINUTES` (15) in `packages/domain/src/classes/holds.ts`. A camp may set its own length, from 5 to 60 minutes (see the registration phase, below).
 - Capacity holds under concurrency: the hold and enrolment triggers (migration 0025) lock the class row and count enrolments plus live holds. Tested on real Postgres with parallel holds and holds racing enrolments for the last place.
 - A place freed by a cancelled hold, an expired hold or a cancelled enrolment goes to the first waitlisted enrolment, in the order they joined. Each promotion is audited (`enrolment.promote`). Waitlist promotion was not in phase 2.
 - The cleanup (`releaseExpiredHolds(orgId)`) releases expired holds and promotes waitlists. It is safe to run twice. Enrolling a camper and placing a hold first free the class's expired holds, so the waitlist is never skipped.
@@ -100,7 +100,7 @@ Terms: a **session** (the parent row) is the public page's unit, and its **class
 
 **Not built yet:**
 
-- Hold length set per camp. It is fixed at 15 minutes (see Open for review).
+- Hold length set per camp: built, see the registration phase ("Hold length per camp").
 - A hold per child. One active hold per household per class still applies (see the registration phase).
 
 ## Words we use
@@ -178,7 +178,7 @@ The camp roles are owner, admin, staff, viewer and teacher. A teacher is for the
 
 ## Open for review
 
-- Hold length (proposed 15 minutes) and whether camps can change it.
+- Hold length: decided and built. Each camp sets it from 5 to 60 minutes, default 15 (migration 0047, branch `v0.4/feat/hold-length-per-camp`). Holds already placed keep their time.
 - Whether a deposit or balance-later option is wanted once payments arrive (phase 9).
 
 ## Decided: families register for classes (owner, 2026)
@@ -187,7 +187,8 @@ The camp roles are owner, admin, staff, viewer and teacher. A teacher is for the
 
 - **Data.** `registration_classes` holds one row per child and class of a registration: the hold taken for it (`hold_id`), the waitlist or enrolment it became (`enrolment_id`), and its payment (`payment_status`, default `unpaid`, with a note, `paid_at` and `paid_by`). It has the same tenant rules as the other registration tables: `org_id`, forced row-level security, composite foreign keys, and no DELETE for the request role.
 - **Form.** Staff with `registration:submit` choose the children (people with the camper role) and then the classes of each child, grouped by session. Each class shows its ages, time, and places left (or Full, waitlist). The session is taken from the class. A class that overlaps another chosen class for the same child is refused in place, with a short note; the server checks the same rule and names both classes.
-- **Submit.** Each place that is free is held for the child's household for 15 minutes (`SEAT_HOLD_MINUTES`, the existing hold service and capacity trigger). A full class puts the child on that class's waitlist, in the order they joined (a waitlisted enrolment, so the existing promotion path applies). A child with no household cannot take a hold, and the form says so.
+- **Hold length per camp.** Built (branch `v0.4/feat/hold-length-per-camp`, migration 0047). The camp settings page has a "Seat hold length (minutes)" field for admins and the owner: 5 to 60 minutes, or empty for the default of 15 (`SEAT_HOLD_MINUTES`). A hold placed after a change takes the new length; a hold already placed keeps its time.
+- **Submit.** Each place that is free is held for the child's household for the camp's hold length (15 minutes unless the camp sets another, `SEAT_HOLD_MINUTES` the default; the existing hold service and capacity trigger). A full class puts the child on that class's waitlist, in the order they joined (a waitlisted enrolment, so the existing promotion path applies). A child with no household cannot take a hold, and the form says so.
 - **Confirm.** Confirming a registration releases each held place as `completed` and creates its enrolment through the existing enrolment path and capacity rule (one enrolment per held class). A hold that ran out before confirmation is taken again: the child gets a place if one is free, or the waitlist. Waitlisted places stay waitlisted.
 - **Waitlist.** A freed place goes to the first waitlisted child (the existing `enrolment.promote` audit). On the class page, staff see the held places and the waitlist in order, and can move the next camper off the waitlist when a place is free.
 - **Payment.** Staff with `registration:confirm` mark each child's place paid by hand. A place marked paid needs a note saying how. The audit entry (`registration.payment`) records whether there is a note, not its text.
