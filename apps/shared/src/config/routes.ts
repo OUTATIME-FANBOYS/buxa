@@ -57,6 +57,12 @@ export const registrationFormPath = (formId: string): string => `${ROUTES.regist
 /** The page where staff take a registration for a family, on a published form. */
 export const registrationRegisterPath = (formId: string): string => `${registrationFormPath(formId)}/register`;
 
+/** A session's groups and rooms page (phase 4). Needs classes:manage to change them; everyone reads them. */
+export const groupsPath = (sessionId: string): string => `${sessionPath(sessionId)}/groups`;
+
+/** A session's assign page: groups with their members, and a way to place or move a person. Needs classes:manage to change. */
+export const assignPath = (sessionId: string): string => `${sessionPath(sessionId)}/assign`;
+
 /** The page that adds a class to a session. */
 export const newClassPath = (sessionId: string): string => `${sessionPath(sessionId)}/classes/new`;
 
