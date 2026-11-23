@@ -58,6 +58,17 @@ export interface PeopleService {
    * A camper needs a guardian in the household they join (400), and cannot be left without one (400 or 409).
    */
   setHousehold(actor: Actor, personId: string, input: PersonHouseholdInput, roles?: readonly CampRole[]): Promise<void>;
+  /**
+   * A person edit as one unit: the household change (when `household` is given) and the details. The household is changed first,
+   * because a camper's guardian check reads the household. If the details then fail, the household is put back as it was, so a
+   * refused edit changes nothing. A refusal from the household rule itself (400, 409) leaves both unchanged. Needs people:update.
+   */
+  updateWithHousehold(
+    actor: Actor,
+    id: string,
+    patch: PersonPatchInput,
+    household?: PersonHouseholdInput,
+  ): Promise<Person>;
   /** Needs people:read. */
   getHousehold(actor: Actor, id: string): Promise<Household>;
   /** Every household in the camp, by name, with members. For a household picker. Needs people:read. */
