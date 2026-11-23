@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { Actor, Role } from '@buxa/domain';
 import { createRegistrationService } from './RegistrationService';
 import { InMemoryRegistrationRepository } from './InMemoryRegistrationRepository';
+import { InMemoryCredentialRepository } from '../credentials/InMemoryCredentialRepository';
+import { InMemoryDatabase } from '../people/InMemoryDatabase';
 import {
   RegistrationFormNotFoundError,
   RegistrationInvalidError,
@@ -37,13 +39,22 @@ const standard = {
   emergencyContactPhone: '555-0111',
 };
 
-function setup() {
-  const repo = new InMemoryRegistrationRepository({
-    [CAMP_A]: [SESSION_A, SESSION_A2],
-    [CAMP_B]: [SESSION_B],
-  });
+/** These tests have no camper in their registrations, so no badge may be issued. */
+function failNoBadges(): never {
+  throw new Error('no badge expected in this test');
+}
 
-  return { repo, service: createRegistrationService(repo) };
+function setup() {
+  const repo = new InMemoryRegistrationRepository(
+    {
+      [CAMP_A]: [SESSION_A, SESSION_A2],
+      [CAMP_B]: [SESSION_B],
+    },
+    undefined,
+    new InMemoryCredentialRepository(new InMemoryDatabase()),
+  );
+
+  return { repo, service: createRegistrationService(repo, () => failNoBadges()) };
 }
 
 describe('registration service: permissions', () => {
@@ -207,7 +218,7 @@ describe('registration service: confirmation', () => {
 
   it('staff can confirm', async () => {
     const { service, id } = await recorded();
-    await expect(service.confirm(as('staff'), id)).resolves.toBeUndefined();
+    await expect(service.confirm(as('staff'), id)).resolves.toEqual({ badgesIssued: 0, badgeNote: null });
   });
 
   it('a viewer cannot confirm, and the registration stays pending', async () => {

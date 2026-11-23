@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createCamp, thrown } from './support';
+import { createClassService } from '../../classes/ClassService';
+import { JULY_SESSION } from '../../classes/__tests__/fixtures';
 
 async function setup(start?: string) {
   const camp = await createCamp('UTC', start);
@@ -65,6 +67,47 @@ describe('MembershipService', () => {
         )
       ).statusCode,
     ).toBe(400);
+  });
+
+  it('stores the session a membership is made from, and refuses a session that is not in this camp (404)', async () => {
+    const { camp, admin, ben } = await setup();
+    const classes = createClassService({ repo: camp.repos.classes, timezoneOf: () => Promise.resolve('UTC') });
+    const session = await classes.createSession(admin, JULY_SESSION);
+    if (!session.ok) {
+      throw new Error('session');
+    }
+    const fromSession = await camp.memberships.add(admin, {
+      personId: ben.id,
+      sessionId: session.value.id,
+      plan: session.value.name,
+      startsOn: '2027-07-01',
+      endsOn: '2027-07-31',
+    });
+    expect(fromSession.sessionId).toBe(session.value.id);
+    expect((await camp.memberships.listFor(admin, ben.id)).map(m => m.sessionId)).toEqual([session.value.id]);
+
+    const otherCamp = await createCamp('UTC');
+    const otherAdmin = otherCamp.actor('admin');
+    const otherSession = await createClassService({
+      repo: otherCamp.repos.classes,
+      timezoneOf: () => Promise.resolve('UTC'),
+    }).createSession(otherAdmin, JULY_SESSION);
+    if (!otherSession.ok) {
+      throw new Error('session');
+    }
+    expect(
+      (
+        await thrown(() =>
+          camp.memberships.add(admin, {
+            personId: ben.id,
+            sessionId: otherSession.value.id,
+            plan: 'Other',
+            startsOn: '2027-07-01',
+            endsOn: '2027-07-31',
+          }),
+        )
+      ).statusCode,
+    ).toBe(404);
   });
 
   it("computes the status for the camp's local day, and lists oldest start first", async () => {

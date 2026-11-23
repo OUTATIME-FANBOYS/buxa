@@ -21,7 +21,7 @@ A staff member can find a person, see at a glance whether they may attend today,
   _Not the same as the permission roles_ (`viewer`, `staff`, `admin`, `owner`), which decide what a **signed-in user** may do. Linking a person to a user account is not in this phase.
 - **Household**: the people who belong together. It carries the guardian relationships.
 - **Guardian link**: a guardian ↔ a camper in a household, with `can_pickup` (may collect the child).
-- **Membership**: a person's right to attend for a date range, with a plan label (for example "Summer 2027"). Its **status** is computed, never stored: _not yet started_, _valid_, _expired_ or _revoked_.
+- **Membership**: a person's right to attend for a date range, with a session (a camp session, or a custom name such as "Summer 2027"); a session membership takes the session's name and dates (migration `0042` records the session). Its **status** is computed, never stored: _not yet started_, _valid_, _expired_ or _revoked_.
 - **Credential** (badge): the QR code that identifies a person at the door. An opaque random token, hashed at rest, revocable. It contains no personal data.
 - **Check-in**: one arrival, with an optional departure. **On site** means checked in and not yet checked out.
 

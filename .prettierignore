@@ -9,3 +9,6 @@ package-lock.json
 # Generated architecture diagrams (hand-tuned HTML, not formatted)
 apps/*/docs/diagrams/*.html
 docs/architecture/*.html
+
+# Generated archify diagram (hand-tuned HTML, not formatted)
+docs/phase-workflow.html

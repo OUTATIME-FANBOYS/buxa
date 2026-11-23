@@ -25,6 +25,7 @@ export function membershipRepositoryContract(factory: RepositoryFactory): void {
     const newPerson = async (): Promise<string> => (await fx.repos.people.create(fx.actor, samplePerson())).id;
     const summer = (personId: string) => ({
       personId,
+      sessionId: null,
       plan: 'Summer 2027',
       startsOn: '2027-06-01',
       endsOn: '2027-08-31',
@@ -36,6 +37,7 @@ export function membershipRepositoryContract(factory: RepositoryFactory): void {
       expect(membership).toEqual({
         id: membership.id,
         personId,
+        sessionId: null,
         plan: 'Summer 2027',
         startsOn: '2027-06-01',
         endsOn: '2027-08-31',
@@ -56,6 +58,7 @@ export function membershipRepositoryContract(factory: RepositoryFactory): void {
       const other = await newPerson();
       const winter = await fx.repos.memberships.add(fx.actor, {
         personId,
+        sessionId: null,
         plan: 'Winter',
         startsOn: '2026-12-01',
         endsOn: '2027-02-28',
@@ -66,6 +69,28 @@ export function membershipRepositoryContract(factory: RepositoryFactory): void {
         winter.id,
         summerRow.id,
       ]);
+    });
+
+    it('stores the session a membership is made from, and null for a custom membership', async () => {
+      const personId = await newPerson();
+      const session = await fx.repos.classes.createSession(fx.actor, {
+        name: 'Summer camp',
+        description: '',
+        startsOn: '2027-07-01',
+        endsOn: '2027-07-31',
+      });
+      const fromSession = await fx.repos.memberships.add(fx.actor, {
+        personId,
+        sessionId: session.id,
+        plan: 'Summer camp',
+        startsOn: '2027-07-01',
+        endsOn: '2027-07-31',
+      });
+      const custom = await fx.repos.memberships.add(fx.actor, summer(personId));
+      expect(fromSession).toMatchObject({ plan: 'Summer camp', sessionId: session.id });
+      expect(custom.sessionId).toBeNull();
+      const listed = await fx.repos.memberships.forPerson(fx.actor.userId, fx.actor.orgId, personId);
+      expect(listed.map(m => m.sessionId)).toEqual([null, session.id]);
     });
 
     it('forPeople returns the memberships of several people in one call', async () => {

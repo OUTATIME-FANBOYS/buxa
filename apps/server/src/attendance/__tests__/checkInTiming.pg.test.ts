@@ -1,5 +1,5 @@
 import { performance } from 'node:perf_hooks';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import pg from 'pg';
 import { migrate } from '@buxa/db';
 import type { NewPersonInput } from '@buxa/contracts';
@@ -34,10 +34,13 @@ describe.skipIf(!url)('check-in timing on Postgres', () => {
   let fx: RepositoryFixture;
 
   beforeAll(async () => {
+    // Badges are sealed with BADGE_ENCRYPTION_KEY: a fixed test key, for this run only.
+    vi.stubEnv('BADGE_ENCRYPTION_KEY', Buffer.alloc(32, 4).toString('base64'));
     await migrate(pool);
     fx = await createPgFixture(pool);
   }, 120_000);
   afterAll(async () => {
+    vi.unstubAllEnvs();
     await fx?.close();
     await pool.end();
   });

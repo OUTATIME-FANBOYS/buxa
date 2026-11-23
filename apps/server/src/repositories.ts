@@ -11,7 +11,7 @@ import type { ImportRepository } from './classes/import/ImportRepository';
 import { PgImportRepository } from './classes/import/PgImportRepository';
 import type { SeatHoldRepository } from './holds/SeatHoldRepository';
 import { PgSeatHoldRepository } from './holds/PgSeatHoldRepository';
-import { PgCredentialRepository } from './credentials/PgCredentialRepository';
+import { PgCredentialRepository, poolScope } from './credentials/PgCredentialRepository';
 import { type CredentialRepository } from './credentials/CredentialRepository';
 import { PgMembershipRepository } from './memberships/PgMembershipRepository';
 import { type MembershipRepository } from './memberships/MembershipRepository';
@@ -55,7 +55,7 @@ export const createPgRepositories = (pool: Pool): Repositories => ({
   orgs: new PgOrgRepository(pool),
   people: new PgPeopleRepository(pool),
   memberships: new PgMembershipRepository(pool),
-  credentials: new PgCredentialRepository(pool),
+  credentials: new PgCredentialRepository(poolScope(pool)),
   attendance: new PgAttendanceRepository(pool),
   classes: new PgClassRepository(pool),
   imports: new PgImportRepository(pool),

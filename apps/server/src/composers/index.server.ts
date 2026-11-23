@@ -30,6 +30,8 @@ export * from './people/loadHousehold';
 export * from './people/loadPerson';
 export * from './people/loadPersonPage';
 export * from './people/revokeBadgeAction';
+export * from './people/showBadgeAction';
+export * from './people/loadProfileBadges';
 export * from './people/revokeMembershipAction';
 export * from './people/unlinkHouseholdAction';
 export * from './people/updatePersonAction';

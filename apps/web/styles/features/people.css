@@ -1,6 +1,29 @@
 /* ---------- People (members, households, memberships, badges) ---------- */
+/* The person header: the name block on the left, the actions on the right of the same line, top-aligned with the name. */
 .people-head {
-  align-items: center;
+  align-items: flex-start;
+  gap: var(--s5);
+}
+.people-tags {
+  gap: var(--s3);
+  margin-top: var(--s2);
+}
+.people-email {
+  margin: var(--s1) 0 0;
+  overflow-wrap: anywhere;
+}
+/* The person page's tiles: two columns on a wide screen, one on a phone. Gaps use the page's spacing token (--s5), and each row's
+ * tiles stretch to the same height. */
+.person-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s5);
+  align-items: stretch;
+}
+@media (max-width: 720px) {
+  .person-tiles {
+    grid-template-columns: 1fr;
+  }
 }
 .people-heading {
   font-size: var(--fs-l, 18px);
@@ -21,6 +44,10 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--s4);
+}
+/* Fields that sit side by side keep their tops level: a label, its input and its helper line take the same space in each. */
+.people-membership-fields {
+  align-items: start;
 }
 .people-checks {
   display: flex;
@@ -101,15 +128,27 @@
   gap: var(--s2);
   align-items: center;
 }
-.people-disclosure > summary {
-  list-style: none;
-  cursor: pointer;
+/* The text block, the status pill and the Revoke button sit on one centre line, with the same gap between each pair. */
+.people-member-row {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s4);
+  align-items: center;
+  justify-content: flex-start;
 }
-.people-disclosure > summary::-webkit-details-marker {
-  display: none;
+.people-member-row > .people-member-main {
+  flex: 1 1 auto;
 }
-.people-disclosure[open] .people-subpanel {
+.people-member-revoke {
+  flex: 1 1 100%;
   margin-top: var(--s3);
+}
+.people-member-revoke .people-subpanel {
+  width: 100%;
+}
+.people-member-revoke textarea {
+  width: 100%;
 }
 .people-message {
   margin: 0;
@@ -243,4 +282,16 @@ form.person-form {
   .people-badge {
     padding: 0;
   }
+}
+
+.people-back {
+  display: inline-block;
+  margin-bottom: var(--s3);
+  color: var(--muted, inherit);
+  font-size: var(--fs-s);
+  text-decoration: none;
+}
+.people-back:hover,
+.people-back:focus-visible {
+  text-decoration: underline;
 }

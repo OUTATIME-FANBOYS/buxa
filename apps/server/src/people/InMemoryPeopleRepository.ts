@@ -163,6 +163,14 @@ export class InMemoryPeopleRepository implements PeopleRepository {
     });
   }
 
+  byEmail(userId: string, orgId: string, email: string): Promise<PersonRecord[]> {
+    return settle(() => {
+      const wanted = email.toLowerCase();
+
+      return this.visible(orgId, p => p.archivedAt === null && p.email !== null && p.email.toLowerCase() === wanted);
+    });
+  }
+
   getMany(userId: string, orgId: string, ids: readonly string[]): Promise<PersonRecord[]> {
     return settle(() => {
       return this.visible(orgId, p => ids.includes(p.id));

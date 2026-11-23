@@ -20,6 +20,7 @@ export * from './people/createPersonAction';
 export * from './people/issueBadgeAction';
 export * from './people/linkHouseholdAction';
 export * from './people/revokeBadgeAction';
+export * from './people/showBadgeAction';
 export * from './people/revokeMembershipAction';
 export * from './people/unlinkHouseholdAction';
 export * from './people/updatePersonAction';
