@@ -1,4 +1,6 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ROUTES } from '@buxa/shared/config/routes';
 import { can, CAMP_ROLE_LABELS, type Actor, type CampRole } from '@buxa/domain';
 import { campClock, loadCampProfile } from '@buxa/server/composers/index.server';
 import { loadHouseholdList, loadPersonMatches } from '@buxa/server/composers/index.server';
@@ -57,6 +59,9 @@ export async function PersonScreen({
 
   return (
     <div className="page">
+      <Link className="people-back" href={ROUTES.people}>
+        ← People
+      </Link>
       <PersonHeader
         person={person}
         actions={
