@@ -44,9 +44,9 @@ function personForm(personId: string): FormData {
 }
 
 /**
- * The badge (QR code) for the door. The header says in words whether a badge is active. The code leaves the server only when Show,
- * Reprint, Issue or Reissue is pressed, and it is shown from this panel's state only: a new badge is shown once, and Revoke or
- * Close removes it. Nothing about the code is in the page's props.
+ * The badge (QR code) for the door. The header says in words whether a badge is active. The code leaves the server only when Show
+ * or Reprint is pressed, and it is held in this panel's state until Close, Issue, Reissue or Revoke replaces it. Issue and Reissue
+ * never send the code: the new badge is viewed with Show badge like any other. Nothing about the code is in the page's props.
  */
 export function BadgePanel({
   personId,
@@ -70,15 +70,18 @@ export function BadgePanel({
       dispatch(revealEvent(await action(personId)));
     });
 
-  const issue = () =>
+  const issue = () => {
+    const replaced = state.active;
+
     startTransition(async () => {
       const result = await issueBadgeAction(idle, personForm(personId));
-      if (result.status === 'issued') {
-        dispatch({ type: 'issued', payload: result.payload });
+      if (result.status === 'success') {
+        dispatch({ type: 'issued', replaced });
       } else if (result.status === 'error') {
         dispatch({ type: 'notice', message: result.message });
       }
     });
+  };
 
   const revoke = () =>
     startTransition(async () => {
@@ -115,6 +118,11 @@ export function BadgePanel({
               {view.message}
             </p>
           )}
+          {view.kind === 'done' && (
+            <p role="status" className="people-message people-message-ok">
+              {view.message}
+            </p>
+          )}
           <BadgeActions
             active={state.active}
             busy={busy}
@@ -125,11 +133,6 @@ export function BadgePanel({
           />
           {view.kind === 'shown' && (
             <div className="stack people-badge">
-              {view.fresh && (
-                <p role="status" className="people-message people-message-ok">
-                  New badge. It is shown once: print it now.
-                </p>
-              )}
               <BadgeCard personName={personName} roleLabel={roleLabel} campName={campName} payload={view.payload} />
               <div className="row">
                 <PrintButton />

@@ -1,10 +1,13 @@
 /**
- * What the badge panel shows, as one value. `closed` shows no code. `shown` holds the QR payload for as long as it is on screen:
- * `fresh` is true only for a badge that was just issued or reissued, which the panel says is shown once. `notice` is a message
- * about the last action. Revoking clears any code, so a revoked badge can never stay on screen.
+ * What the badge panel shows, as one value. `closed` shows no code. `shown` holds the QR payload for as long as it is on screen,
+ * and only after Show or Reprint. `done` is a short confirmation of the last action (for example "Badge reissued."). `notice` is an
+ * error message. Issuing or revoking clears any code, so a code never stays on screen past the action that replaced it.
  */
 export type BadgeView =
-  { kind: 'closed' } | { kind: 'shown'; payload: string; fresh: boolean } | { kind: 'notice'; message: string };
+  | { kind: 'closed' }
+  | { kind: 'shown'; payload: string }
+  | { kind: 'done'; message: string }
+  | { kind: 'notice'; message: string };
 
 export interface BadgePanelState {
   /** Whether the person holds an active badge, as far as this panel knows it. */
@@ -13,8 +16,8 @@ export interface BadgePanelState {
 }
 
 export type BadgePanelEvent =
-  /** A badge was issued or reissued: it is active, and its code is shown once. */
-  | { type: 'issued'; payload: string }
+  /** A badge was issued. `replaced` is true when it replaced an active badge (a reissue). No code is shown. */
+  | { type: 'issued'; replaced: boolean }
   /** Show or Reprint returned the stored code. */
   | { type: 'revealed'; payload: string }
   /** Revoke succeeded: no badge is active and no code remains. */
@@ -31,11 +34,11 @@ export const initialBadgePanelState = (active: boolean): BadgePanelState => ({ a
 export function badgePanelReducer(state: BadgePanelState, event: BadgePanelEvent): BadgePanelState {
   switch (event.type) {
     case 'issued':
-      return { active: true, view: { kind: 'shown', payload: event.payload, fresh: true } };
+      return { active: true, view: { kind: 'done', message: event.replaced ? 'Badge reissued.' : 'Badge issued.' } };
     case 'revealed':
-      return { active: state.active, view: { kind: 'shown', payload: event.payload, fresh: false } };
+      return { active: state.active, view: { kind: 'shown', payload: event.payload } };
     case 'revoked':
-      return { active: false, view: { kind: 'closed' } };
+      return { active: false, view: { kind: 'done', message: 'Badge revoked.' } };
     case 'closed':
       return { active: state.active, view: { kind: 'closed' } };
     case 'notice':
