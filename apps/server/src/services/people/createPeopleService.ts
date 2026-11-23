@@ -91,6 +91,24 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
   const todayFor = async (actor: Pick<Actor, 'userId' | 'orgId'>): Promise<LocalDate> =>
     campToday(clock, await campZone(orgs, actor));
 
+  /** Puts a person back in the household they were in before an edit (or out of any, when there was none). Used only to undo. */
+  async function restoreHousehold(actor: Actor, personId: string, before: HouseholdRecord | undefined): Promise<void> {
+    const now = (await people.householdsOf(actor.userId, actor.orgId, personId))[0];
+    if (now && now.id !== before?.id) {
+      await people.unlink(actor, now.id, personId);
+    }
+    const member = before?.members.find(m => m.personId === personId);
+    if (before && member) {
+      await people.link(actor, {
+        householdId: before.id,
+        personId,
+        relationship: member.relationship,
+        isGuardian: member.isGuardian,
+        canPickup: member.canPickup,
+      });
+    }
+  }
+
   /** The list rows for these people: memberships, on-site state and access status, as far as the actor may see them. */
   async function summarise(actor: Actor, records: readonly PersonRecord[]): Promise<PersonSummary[]> {
     const [ms, onSite, today] = await Promise.all([
@@ -215,7 +233,7 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
     }
   }
 
-  return {
+  const service: PeopleService = {
     async list(actor, query?: PersonListQuery): Promise<PersonSummary[]> {
       const scope = await teacherScopeOf(classes, actor);
       assertAllowed(actor, 'people:read', { assignedToClass: scope === null ? undefined : true });
@@ -307,6 +325,22 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       const record = await guard(() => people.update(actor, id, toPatchRecord(patch)));
 
       return personView(actor, record, await todayFor(actor));
+    },
+
+    async updateWithHousehold(actor, id, patch, household) {
+      if (household === undefined) {
+        return service.update(actor, id, patch);
+      }
+      // The household moves first, so a refused household change (a camper's guardian rule, 400 or 409) saves nothing.
+      const before = (await people.householdsOf(actor.userId, actor.orgId, id))[0];
+      await service.setHousehold(actor, id, household, patch.roles);
+      try {
+        return await service.update(actor, id, patch);
+      } catch (error) {
+        // The details were refused after the household moved: put the household back, then report the original refusal.
+        await restoreHousehold(actor, id, before);
+        throw error;
+      }
     },
 
     async erase(actor, id) {
@@ -490,4 +524,6 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       return toHouseholds(people, actor, await people.listHouseholds(actor.userId, actor.orgId), seesCustody(actor));
     },
   };
+
+  return service;
 }

@@ -8,7 +8,7 @@ import { settle } from '@buxa/domain';
 
 const h = vi.hoisted(() => ({
   actor: null as null | { userId: string; orgId: string; role: 'owner' | 'admin' | 'staff' | 'viewer' },
-  people: { update: vi.fn(), setHousehold: vi.fn() },
+  people: { updateWithHousehold: vi.fn() },
   revalidatePath: vi.fn(),
   redirect: vi.fn(),
 }));
@@ -35,8 +35,7 @@ describe('updatePersonAction', () => {
     h.redirect.mockImplementation((to: string) => {
       throw new Error(`NEXT_REDIRECT ${to}`);
     });
-    h.people.update.mockResolvedValue({ id: IDS.person });
-    h.people.setHousehold.mockResolvedValue(undefined);
+    h.people.updateWithHousehold.mockResolvedValue({ id: IDS.person });
   });
 
   describe('the household section', () => {
@@ -49,13 +48,13 @@ describe('updatePersonAction', () => {
           formOf({ ...family, householdId: IDS.household, newHouseholdName: '', relationship: 'Parent' }),
         ),
       ).rejects.toThrow(`NEXT_REDIRECT ${personPath(IDS.person)}`);
-      expect(h.people.setHousehold).toHaveBeenCalledWith(
+      expect(h.people.updateWithHousehold).toHaveBeenCalledTimes(1);
+      expect(h.people.updateWithHousehold).toHaveBeenCalledWith(
         h.actor,
         IDS.person,
+        expect.objectContaining({ roles: ['guardian'] }),
         { householdId: IDS.household, relationship: 'Parent' },
-        ['guardian'],
       );
-      expect(h.people.update).toHaveBeenCalledTimes(1);
     });
 
     it('creates a new household with the name typed and links the person to it', async () => {
@@ -65,11 +64,11 @@ describe('updatePersonAction', () => {
           formOf({ ...family, householdId: '', newHouseholdName: ' Stone house ', relationship: 'Partner' }),
         ),
       ).rejects.toThrow(`NEXT_REDIRECT ${personPath(IDS.person)}`);
-      expect(h.people.setHousehold).toHaveBeenCalledWith(
+      expect(h.people.updateWithHousehold).toHaveBeenCalledWith(
         h.actor,
         IDS.person,
+        expect.objectContaining({ roles: ['guardian'] }),
         { newHouseholdName: 'Stone house', relationship: 'Partner' },
-        ['guardian'],
       );
     });
 
@@ -77,7 +76,12 @@ describe('updatePersonAction', () => {
       await expect(
         updatePersonAction(idle, formOf({ ...family, householdId: '', newHouseholdName: '' })),
       ).rejects.toThrow(`NEXT_REDIRECT ${personPath(IDS.person)}`);
-      expect(h.people.setHousehold).toHaveBeenCalledWith(h.actor, IDS.person, {}, ['guardian']);
+      expect(h.people.updateWithHousehold).toHaveBeenCalledWith(
+        h.actor,
+        IDS.person,
+        expect.objectContaining({ roles: ['guardian'] }),
+        {},
+      );
     });
 
     it('refuses an existing household and a new name together, and saves nothing', async () => {
@@ -87,19 +91,18 @@ describe('updatePersonAction', () => {
       );
       expect(state.status).toBe('error');
       expect(state.status === 'error' && state.fieldErrors?.householdId).toBeTruthy();
-      expect(h.people.setHousehold).not.toHaveBeenCalled();
-      expect(h.people.update).not.toHaveBeenCalled();
+      expect(h.people.updateWithHousehold).not.toHaveBeenCalled();
     });
 
-    it('does not touch the household when the form has no household section', async () => {
+    it('passes no household to the service when the form has no household section', async () => {
       await expect(updatePersonAction(idle, formOf(details))).rejects.toThrow(
         `NEXT_REDIRECT ${personPath(IDS.person)}`,
       );
-      expect(h.people.setHousehold).not.toHaveBeenCalled();
+      expect(h.people.updateWithHousehold).toHaveBeenCalledWith(h.actor, IDS.person, expect.anything(), undefined);
     });
 
-    it('shows the camper guardian rule as the message, and does not save the details', async () => {
-      h.people.setHousehold.mockRejectedValueOnce(
+    it('shows the camper guardian rule as the message from the one edit call', async () => {
+      h.people.updateWithHousehold.mockRejectedValueOnce(
         badRequest('A camper needs a household that has a parent or guardian.'),
       );
       expect(
@@ -109,7 +112,6 @@ describe('updatePersonAction', () => {
         message: 'A camper needs a household that has a parent or guardian.',
         fieldErrors: undefined,
       });
-      expect(h.people.update).not.toHaveBeenCalled();
     });
 
     it('saves the one email the form posts for a family role', async () => {
@@ -119,10 +121,11 @@ describe('updatePersonAction', () => {
           formOf({ ...family, email: 'home@example.test', householdId: '', newHouseholdName: '' }),
         ),
       ).rejects.toThrow(`NEXT_REDIRECT ${personPath(IDS.person)}`);
-      expect(h.people.update).toHaveBeenCalledWith(
+      expect(h.people.updateWithHousehold).toHaveBeenCalledWith(
         h.actor,
         IDS.person,
         expect.objectContaining({ email: 'home@example.test' }),
+        {},
       );
     });
   });
@@ -131,15 +134,20 @@ describe('updatePersonAction', () => {
     await expect(
       updatePersonAction(idle, formOf({ ...details, dateOfBirth: '', email: '', phone: '  ' })),
     ).rejects.toThrow(`NEXT_REDIRECT ${personPath(IDS.person)}`);
-    expect(h.people.update).toHaveBeenCalledWith(h.actor, IDS.person, {
-      givenName: 'Ben',
-      familyName: 'Lee',
-      preferredName: '',
-      dateOfBirth: null,
-      email: '',
-      phone: '',
-      roles: ['camper'],
-    });
+    expect(h.people.updateWithHousehold).toHaveBeenCalledWith(
+      h.actor,
+      IDS.person,
+      {
+        givenName: 'Ben',
+        familyName: 'Lee',
+        preferredName: '',
+        dateOfBirth: null,
+        email: '',
+        phone: '',
+        roles: ['camper'],
+      },
+      undefined,
+    );
   });
 
   it('saves every role the form posts, so two roles survive an edit that changes nothing', async () => {
@@ -147,10 +155,11 @@ describe('updatePersonAction', () => {
     await expect(
       updatePersonAction(idle, formOf({ ...withoutEmail, roles: ['guardian', 'instructor'] })),
     ).rejects.toThrow(`NEXT_REDIRECT ${personPath(IDS.person)}`);
-    expect(h.people.update).toHaveBeenCalledWith(
+    expect(h.people.updateWithHousehold).toHaveBeenCalledWith(
       h.actor,
       IDS.person,
       expect.objectContaining({ roles: ['guardian', 'instructor'] }),
+      undefined,
     );
   });
 
@@ -159,7 +168,7 @@ describe('updatePersonAction', () => {
     await expect(updatePersonAction(idle, formOf({ ...withoutEmail, roles: 'guardian' }))).rejects.toThrow(
       `NEXT_REDIRECT ${personPath(IDS.person)}`,
     );
-    const patch = h.people.update.mock.calls[0]?.[2] as Record<string, unknown>;
+    const patch = h.people.updateWithHousehold.mock.calls[0]?.[2] as Record<string, unknown>;
     // Undefined means "unchanged": the service only writes the fields that are set.
     expect(patch.email).toBeUndefined();
   });
@@ -167,10 +176,11 @@ describe('updatePersonAction', () => {
   it('refreshes the person page and opens it after saving', async () => {
     await expect(updatePersonAction(idle, formOf(details))).rejects.toThrow(`NEXT_REDIRECT ${personPath(IDS.person)}`);
     expect(h.revalidatePath).toHaveBeenCalledWith(personPath(IDS.person));
-    expect(h.people.update).toHaveBeenCalledWith(
+    expect(h.people.updateWithHousehold).toHaveBeenCalledWith(
       h.actor,
       IDS.person,
       expect.objectContaining({ dateOfBirth: '2016-05-02', roles: ['camper'] }),
+      undefined,
     );
   });
 
@@ -187,7 +197,7 @@ describe('updatePersonAction', () => {
     expect(state.status).toBe('error');
     const fieldErrors = state.status === 'error' ? state.fieldErrors : undefined;
     expect(fieldErrors?.roles).toMatch(/can't go together/);
-    expect(h.people.update).not.toHaveBeenCalled();
+    expect(h.people.updateWithHousehold).not.toHaveBeenCalled();
   });
 
   it('reports the contract messages for missing names and no role, and saves nothing', async () => {
@@ -196,13 +206,13 @@ describe('updatePersonAction', () => {
       status: 'error',
       fieldErrors: { givenName: 'Required.', roles: 'Pick a role.' },
     });
-    expect(h.people.update).not.toHaveBeenCalled();
+    expect(h.people.updateWithHousehold).not.toHaveBeenCalled();
   });
 
   it('rejects a date of birth that is not a real day, as a field error', async () => {
     const state = await updatePersonAction(idle, formOf({ ...details, dateOfBirth: '2016-02-30' }));
     expect(state).toMatchObject({ status: 'error', fieldErrors: { dateOfBirth: 'Use a real date (YYYY-MM-DD).' } });
-    expect(h.people.update).not.toHaveBeenCalled();
+    expect(h.people.updateWithHousehold).not.toHaveBeenCalled();
   });
 
   it('rejects a person id that is not a UUID before calling the service', async () => {
@@ -210,11 +220,11 @@ describe('updatePersonAction', () => {
       status: 'error',
       message: 'That person was not found.',
     });
-    expect(h.people.update).not.toHaveBeenCalled();
+    expect(h.people.updateWithHousehold).not.toHaveBeenCalled();
   });
 
   it('shows a viewer (403) the friendly role message', async () => {
-    h.people.update.mockRejectedValueOnce(forbidden('no'));
+    h.people.updateWithHousehold.mockRejectedValueOnce(forbidden('no'));
     expect(await updatePersonAction(idle, formOf(details))).toEqual({
       status: 'error',
       message: 'Your role cannot do this.',
@@ -223,13 +233,15 @@ describe('updatePersonAction', () => {
   });
 
   it('shows the service reason for a refused camper (400) and a conflict (409)', async () => {
-    h.people.update.mockRejectedValueOnce(badRequest('A camper needs a household that has a parent or guardian.'));
+    h.people.updateWithHousehold.mockRejectedValueOnce(
+      badRequest('A camper needs a household that has a parent or guardian.'),
+    );
     expect(await updatePersonAction(idle, formOf(details))).toEqual({
       status: 'error',
       message: 'A camper needs a household that has a parent or guardian.',
       fieldErrors: undefined,
     });
-    h.people.update.mockRejectedValueOnce(conflict('Already changed.'));
+    h.people.updateWithHousehold.mockRejectedValueOnce(conflict('Already changed.'));
     expect(await updatePersonAction(idle, formOf(details))).toMatchObject({
       status: 'error',
       message: 'Already changed.',
@@ -237,12 +249,12 @@ describe('updatePersonAction', () => {
   });
 
   it('shows a not-found person as a message, and lets server errors reach the error boundary', async () => {
-    h.people.update.mockRejectedValueOnce(notFound('Person not found'));
+    h.people.updateWithHousehold.mockRejectedValueOnce(notFound('Person not found'));
     expect(await updatePersonAction(idle, formOf(details))).toMatchObject({
       status: 'error',
       message: 'Person not found',
     });
-    h.people.update.mockRejectedValueOnce(new Error('db down'));
+    h.people.updateWithHousehold.mockRejectedValueOnce(new Error('db down'));
     await expect(updatePersonAction(idle, formOf(details))).rejects.toThrow('db down');
   });
 });

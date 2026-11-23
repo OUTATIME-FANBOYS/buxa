@@ -61,12 +61,13 @@ export async function updatePersonAction(_previous: ActionState, form: FormData)
   }
 
   try {
-    const people = getRuntime().services.people;
-    if (household?.ok) {
-      // Roles are passed so a camper is checked against the roles this edit saves.
-      await people.setHousehold(actor, id, household.data, parsed.data.roles);
-    }
-    await people.update(actor, id, parsed.data);
+    // One unit: the household and the details are saved together, or neither is.
+    await getRuntime().services.people.updateWithHousehold(
+      actor,
+      id,
+      parsed.data,
+      household?.ok ? household.data : undefined,
+    );
   } catch (error) {
     return expectedFailure(error, 'Could not save the changes.');
   }
