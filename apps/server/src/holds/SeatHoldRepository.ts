@@ -8,7 +8,8 @@ export interface SeatHold {
   createdAt: string;
   expiresAt: string;
   releasedAt: string | null;
-  releaseReason: 'cancelled' | 'expired' | null;
+  /** `completed` is set when a registration is confirmed and its enrolment is created (migration 0043). */
+  releaseReason: 'cancelled' | 'expired' | 'completed' | null;
 }
 
 export interface PlaceHoldRequest {
@@ -29,5 +30,7 @@ export interface SeatHoldRepository {
   /** Throws HoldNotFoundError (also when already released). Audits `hold.release`, then promotes the waitlist into the freed place. */
   releaseHold(actor: Actor, holdId: string): Promise<SeatHold>;
   /** Releases every expired hold in one camp and promotes waitlists. Safe to run twice. Returns how many were released. */
-  releaseExpiredHolds(userId: string, orgId: string): Promise<number>;
+  releaseExpiredHolds(userId: string | null, orgId: string): Promise<number>;
+  /** The camps that have expired holds not yet released, each with a member to run the cleanup as (migration 0043). */
+  campsWithExpiredHolds(): Promise<{ orgId: string; userId: string }[]>;
 }

@@ -121,6 +121,19 @@ The rules are: **the database accepts connections only from the deploy job and f
 
 Migration `0041` adds an encrypted copy of each active badge's token (`credentials.token_ciphertext`, `token_iv`, `token_auth_tag`). The key that seals them is `BADGE_ENCRYPTION_KEY`, read only by the server when a badge is issued or shown (`apps/server/src/credentials/badgeCipher.ts`). Set it in Production and in Preview, and mark it Sensitive in Vercel's form, before the first badge is issued there. Badges issued before `0041` have no copy: the camp reissues them to show them. Do not put the value in a repository, a log or a chat.
 
+## Scheduled job: expired seat holds (migration 0043)
+
+`GET /api/cron/release-expired-holds` releases the expired seat holds in every camp and promotes the waitlists. Expired holds already stop counting on their own, so the job only tidies the table. It is safe to run twice.
+
+- **Secret:** `CRON_SECRET`, a random value of 16 characters or more (for example `openssl rand -base64 32`). Set it in Production and Preview, marked **Sensitive**. Vercel Cron sends it as `Authorization: Bearer <CRON_SECRET>`. With no secret set the route answers 503 and does nothing; a wrong or missing header gets 401.
+- **Schedule:** add this to `apps/web/vercel.json` (or set it in the project's Cron Jobs settings). A five-minute schedule needs a plan that allows it; on a plan that allows only daily runs use `0 3 * * *`.
+
+```json
+"crons": [{ "path": "/api/cron/release-expired-holds", "schedule": "*/5 * * * *" }]
+```
+
+The job runs as one member of each camp that has expired holds, because row-level security shows a camp's rows only to its members. Its audit entries carry no user (the system). The camp list comes from `buxa_orgs_with_expired_holds()`, a definer function that returns only ids.
+
 ## Phase 3 migrations (0023 to 0040)
 
 Migrations `0023` to `0040` add registration forms and registrations, session prices, seat holds, the teacher role and its assignments and options, the calendar feeds, public session pages, confirmation, notifications, the session delete guard, teacher invites, owner role changes and owner person delete. Each is one transaction, and a production build applies them in order, as described above.

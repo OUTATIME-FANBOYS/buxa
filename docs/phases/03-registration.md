@@ -91,13 +91,15 @@ Terms: a **session** (the parent row) is the public page's unit, and its **class
 - The cleanup (`releaseExpiredHolds(orgId)`) releases expired holds and promotes waitlists. It is safe to run twice. Enrolling a camper and placing a hold first free the class's expired holds, so the waitlist is never skipped.
 - Permission `holds:manage` (staff, admin, owner; not viewer). Archived camps are read-only, as for every write.
 - Row-level security and a camp-isolation test on `seat_holds`.
+- The `completed` release reason is in the table (migration 0043). Nothing sets it yet.
+- The scheduled job for `releaseExpiredHolds`: `GET /api/cron/release-expired-holds`, guarded by `CRON_SECRET`, with the Vercel entry in `docs/deploy.md`. Tests refuse the call without the secret and check that the cleanup frees expired holds in every camp.
+- Concurrency and expiry tests for holds: in memory (`seatHoldCapacity.test.ts`) and in Postgres (`seatHoldExpiry.pg.test.ts`).
 
 **Not built yet:**
 
-- Taking a hold from the registration submission. The service method is ready for it (`SeatHoldService.placeHold`, `releaseHold`); the form's submit path does not call it yet.
-- Turning a hold into an enrolment when the family completes registration. The `completed` release reason is not in the table yet; the form adds it with that change.
-- The waitlist UI, and a screen that shows holds.
-- A scheduled job for `releaseExpiredHolds`. Expired holds already stop counting without it.
+- Taking a hold from the registration submission. Blocked on a model decision: a registration names **sessions** (the `classes` rows, which have no capacity), while holds, capacity and enrolments live on **classes** (the `sessions` rows). Until the owner says which row a family registers for, a submission cannot take a place or join a class waitlist.
+- Turning a hold into an enrolment when the family completes registration. Depends on the decision above.
+- The waitlist for registrations, the waitlist UI on the session and registration pages, and a screen that shows holds.
 - Hold length set per camp. It is fixed at 15 minutes (see Open for review).
 
 ## Words we use
