@@ -35,7 +35,7 @@ const user = {
   clockFormat: '12h' as '12h' | '24h' | null,
 };
 
-/** The account menu: a first-name header, a divider, Profile, Appearance and Time format submenus, Settings, Reports, Sign out. */
+/** The account menu: a first-name header, a divider, Profile, Appearance and Time format submenus, Settings, Sign out. */
 describe('the account menu', () => {
   let root: Root;
   beforeEach(() => {
@@ -85,17 +85,7 @@ describe('the account menu', () => {
   it('puts a divider right under the header, then the options in order, then a divider before Sign out', () => {
     openMenu();
     const children = Array.from(menu().children).map(el => (el.tagName === 'HR' ? '---' : el.textContent?.trim()));
-    expect(children).toEqual([
-      'Rosa',
-      '---',
-      'Profile',
-      'Appearance',
-      'Time format',
-      'Settings',
-      'Reports',
-      '---',
-      'Sign out',
-    ]);
+    expect(children).toEqual(['Rosa', '---', 'Profile', 'Appearance', 'Time format', 'Settings', '---', 'Sign out']);
   });
 
   it('has no Help item and no timezone wording', () => {
@@ -116,13 +106,11 @@ describe('the account menu', () => {
     expect(item('Profile').tagName).toBe('A');
     expect(item('Profile').getAttribute('href')).toBe(ROUTES.account);
     expect(item('Settings').getAttribute('href')).toBe(ROUTES.settings);
-    expect(item('Reports').getAttribute('href')).toBe(ROUTES.reports);
   });
 
   it('shows Profile with no camp, and hides the camp-only Settings item', () => {
     openMenu(user, false);
     expect(item('Profile').getAttribute('href')).toBe(ROUTES.account);
-    expect(item('Reports').getAttribute('href')).toBe(ROUTES.reports);
     expect(
       Array.from(document.querySelectorAll<HTMLElement>('[role=menu] [role=menuitem]')).map(el =>
         el.textContent?.trim(),

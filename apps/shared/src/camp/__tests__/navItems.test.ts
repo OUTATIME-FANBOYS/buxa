@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ROLES } from '@buxa/domain';
 import { ROUTES } from '../../config/routes';
 import { CAMP_NAV, CAMP_NAV_GROUPS, isActive, navFor, navGroupsFor, type NavGroup } from '../navItems';
+import { roleAllows } from '../abilities';
 
 const hrefs = (role: Parameters<typeof navFor>[0]) => navFor(role).map(item => item.href);
 const groupLabels = (groups: readonly NavGroup[]) => groups.map(group => group.label);
@@ -57,18 +58,28 @@ describe('the sidebar groups', () => {
       Home: undefined,
       'My tasks': undefined,
       Projects: undefined,
+      Reports: 'audit:read',
     });
   });
 });
 
 describe('navFor', () => {
-  it('shows every item to staff and above; a viewer sees no attendance items (check-in, on site, attendance)', () => {
+  it('shows every item to staff and above that holds its permission; a viewer sees no attendance items (check-in, on site, attendance)', () => {
     // Teachers have their own short sidebar (see teacherNav.test.ts), so they are not in this list.
+    // Reports needs audit:read, which only admin and owner hold, so staff see every other item.
     for (const role of ROLES.filter(r => r !== 'viewer' && r !== 'teacher')) {
-      expect(hrefs(role)).toEqual(CAMP_NAV.map(item => item.href));
+      const expected = CAMP_NAV.filter(item => !item.requires || roleAllows(role, item.requires)).map(
+        item => item.href,
+      );
+      expect(hrefs(role)).toEqual(expected);
     }
+    expect(hrefs('staff')).not.toContain(ROUTES.reports);
+    expect(hrefs('admin')).toContain(ROUTES.reports);
+    expect(hrefs('owner')).toContain(ROUTES.reports);
     const attendance: string[] = [ROUTES.checkIn, ROUTES.onSite, ROUTES.attendance, ROUTES.registration];
-    expect(hrefs('viewer')).toEqual(CAMP_NAV.map(item => item.href).filter(h => !attendance.includes(h)));
+    expect(hrefs('viewer')).toEqual(
+      CAMP_NAV.map(item => item.href).filter(h => !attendance.includes(h) && h !== ROUTES.reports),
+    );
   });
 
   it('shows only items needing no permission when there is no camp yet', () => {
