@@ -39,7 +39,7 @@ describe('MembershipRow', () => {
       renderToStaticMarkup(
         <MembershipRow membership={membership} personId="p-1" canManage timeZone="Europe/London" clockFormat="24h" />,
       ),
-    ).toContain('<summary');
+    ).toContain('aria-expanded="false"');
     const revoked = {
       ...membership,
       status: 'revoked',
@@ -51,6 +51,6 @@ describe('MembershipRow', () => {
     );
     expect(html).toContain('Revoked');
     expect(html).toContain('Left camp');
-    expect(html).not.toContain('<summary');
+    expect(html).not.toContain('aria-expanded');
   });
 });
