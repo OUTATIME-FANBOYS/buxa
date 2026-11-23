@@ -15,24 +15,10 @@
   border: 1px solid var(--line);
   border-radius: var(--r-1);
 }
-/* The app mark in the top-right corner. It is out of the grid flow, so the QR code keeps its place and size. */
-.badge-logo {
-  position: absolute;
-  top: 3mm;
-  right: 3mm;
-  width: 6mm;
-  height: 6mm;
-  color: inherit;
-  pointer-events: none;
-}
 .badge-camp {
   margin: 0;
   font-size: var(--fs-s);
   font-weight: 600;
-}
-.badge-text {
-  /* Keeps the camp name and the person's name clear of the logo in the corner. */
-  padding-right: 7mm;
 }
 .badge-name {
   margin: var(--s2) 0;
