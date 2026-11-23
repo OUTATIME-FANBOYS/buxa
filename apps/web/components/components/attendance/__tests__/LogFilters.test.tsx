@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import type { PersonSummary } from '@buxa/contracts';
 import { LogFilters } from '@/components/components/attendance';
 
-const people = [{ id: 'p-1', givenName: 'Ada', familyName: 'Lee', preferredName: null }] as unknown as PersonSummary[];
+const people = [{ id: 'p-1', givenName: 'Ada', familyName: 'Lee' }] as unknown as PersonSummary[];
 
 describe('LogFilters', () => {
   it('uses next/form, so Show navigates on the client rather than reloading the page', () => {

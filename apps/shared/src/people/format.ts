@@ -7,6 +7,5 @@ export const formatLocalDate = (day: string): string =>
     timeZone: 'UTC',
   });
 
-/** "Anna Lee", or with a preferred name "Anna Lee (Annie)". */
-export const displayName = (p: { givenName: string; familyName: string; preferredName: string | null }): string =>
-  p.preferredName ? `${p.givenName} (${p.preferredName}) ${p.familyName}` : `${p.givenName} ${p.familyName}`;
+/** "Anna Lee": first name, then family name. */
+export const displayName = (p: { givenName: string; familyName: string }): string => `${p.givenName} ${p.familyName}`;

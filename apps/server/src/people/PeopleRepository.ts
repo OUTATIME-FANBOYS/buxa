@@ -5,7 +5,6 @@ export interface PersonRecord {
   id: string;
   givenName: string;
   familyName: string;
-  preferredName: string | null;
   dateOfBirth: LocalDate | null;
   email: string | null;
   phone: string | null;
@@ -17,7 +16,6 @@ export interface PersonRecord {
 export interface NewPersonRecord {
   givenName: string;
   familyName: string;
-  preferredName: string | null;
   dateOfBirth: LocalDate | null;
   email: string | null;
   phone: string | null;

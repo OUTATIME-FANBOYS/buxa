@@ -21,7 +21,6 @@ const PERSON = {
   id: ID,
   givenName: 'Ben',
   familyName: 'Stone',
-  preferredName: null,
   roles: ['participant'],
   dateOfBirth: '2012-05-06',
   email: 'ben@example.test',

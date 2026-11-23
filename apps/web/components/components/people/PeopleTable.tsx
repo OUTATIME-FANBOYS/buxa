@@ -121,7 +121,6 @@ export function PeopleTable({
                 <td>
                   <Link className="row-title" href={personPath(person.id)}>
                     {person.givenName} {person.familyName}
-                    {person.preferredName ? ` (${person.preferredName})` : ''}
                   </Link>
                 </td>
                 <td>

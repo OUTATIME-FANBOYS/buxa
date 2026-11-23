@@ -16,7 +16,7 @@ import {
 import { expectedFailure, NO_CAMP } from './failures';
 import { dropBlank, field, fieldAll, parseWith } from '@buxa/shared';
 
-const OPTIONAL = ['preferredName', 'dateOfBirth', 'email', 'phone', 'householdId', 'relationship'] as const;
+const OPTIONAL = ['dateOfBirth', 'email', 'phone', 'householdId', 'relationship'] as const;
 
 /**
  * Add a person. A child needs a household that already has a guardian: either an existing one (`householdId`, usually from the
@@ -34,7 +34,6 @@ export async function createPersonAction(_previous: ActionState, form: FormData)
     {
       givenName: field(form, 'givenName'),
       familyName: field(form, 'familyName'),
-      preferredName: field(form, 'preferredName'),
       dateOfBirth: field(form, 'dateOfBirth'),
       email: field(form, 'email'),
       phone: field(form, 'phone'),

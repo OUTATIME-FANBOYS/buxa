@@ -347,6 +347,82 @@ describe('PeopleService edit: household and email', () => {
     expect((await camp.people.get(admin, guardian.id)).households.map(h => h.id)).toEqual([household.id]);
   });
 
+  it('a failing person update leaves the household as it was (the household change is undone)', async () => {
+    const camp = await createCamp();
+    const admin = camp.actor('admin');
+    const ana = await guardianWithHousehold(camp, 'Ana', 'Alpha house');
+    const alpha = (await camp.people.get(admin, ana.id)).households[0];
+    const ben = await guardianWithHousehold(camp, 'Ben', 'Beta house');
+    const beta = (await camp.people.get(admin, ben.id)).households[0];
+    const kim = await camp.people.create(admin, {
+      givenName: 'Kim',
+      familyName: 'Lee',
+      roles: ['camper'],
+      householdId: alpha.id,
+      relationship: 'Child',
+    });
+
+    // An empty role set is refused by the details step (400), after the household has already moved.
+    const refused = await thrown(() =>
+      camp.people.updateWithHousehold(admin, kim.id, { roles: [] }, { householdId: beta.id, relationship: 'Child' }),
+    );
+    expect(refused.statusCode).toBe(400);
+    expect((await camp.people.get(admin, kim.id)).households.map(h => h.id)).toEqual([alpha.id]);
+  });
+
+  it('a successful edit changes the details and the household together', async () => {
+    const camp = await createCamp();
+    const admin = camp.actor('admin');
+    const ana = await guardianWithHousehold(camp, 'Ana', 'Alpha house');
+    const alpha = (await camp.people.get(admin, ana.id)).households[0];
+    const ben = await guardianWithHousehold(camp, 'Ben', 'Beta house');
+    const beta = (await camp.people.get(admin, ben.id)).households[0];
+    const kim = await camp.people.create(admin, {
+      givenName: 'Kim',
+      familyName: 'Lee',
+      roles: ['camper'],
+      householdId: alpha.id,
+      relationship: 'Child',
+    });
+
+    const updated = await camp.people.updateWithHousehold(
+      admin,
+      kim.id,
+      { givenName: 'Kimberly' },
+      { householdId: beta.id, relationship: 'Child' },
+    );
+
+    expect(updated.givenName).toBe('Kimberly');
+    expect(updated.households.map(h => h.id)).toEqual([beta.id]);
+  });
+
+  it('the guardian rule still refuses an unsafe household change, and the details are not saved', async () => {
+    const camp = await createCamp();
+    const admin = camp.actor('admin');
+    const guardian = await guardianWithHousehold(camp, 'Ana', 'Alpha house');
+    const household = (await camp.people.get(admin, guardian.id)).households[0];
+    const kim = await camp.people.create(admin, {
+      givenName: 'Kim',
+      familyName: 'Lee',
+      roles: ['camper'],
+      householdId: household.id,
+      relationship: 'Child',
+    });
+
+    const refused = await thrown(() =>
+      camp.people.updateWithHousehold(
+        admin,
+        kim.id,
+        { givenName: 'Kimberly' },
+        { newHouseholdName: 'Kim house', relationship: 'Child' },
+      ),
+    );
+    expect(refused.statusCode).toBe(400);
+    const after = await camp.people.get(admin, kim.id);
+    expect(after.givenName).toBe('Kim');
+    expect(after.households.map(h => h.id)).toEqual([household.id]);
+  });
+
   it('saves the one email on the person, which staff then read back', async () => {
     const camp = await createCamp();
     const admin = camp.actor('admin');
@@ -394,8 +470,8 @@ describe('PeopleService lifecycle', () => {
   it("keeps a person's own names and roles when only the contact details change", async () => {
     const camp = await createCamp();
     const admin = camp.actor('admin');
-    const ben = await camp.people.create(admin, adult('Ben', 'Stone', { preferredName: 'Benny' }));
+    const ben = await camp.people.create(admin, adult('Ben', 'Stone'));
     const updated = await camp.people.update(admin, ben.id, { email: '  ' });
-    expect(updated).toMatchObject({ givenName: 'Ben', preferredName: 'Benny', email: null, roles: ['participant'] });
+    expect(updated).toMatchObject({ givenName: 'Ben', familyName: 'Stone', email: null, roles: ['participant'] });
   });
 });

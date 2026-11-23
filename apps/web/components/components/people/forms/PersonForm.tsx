@@ -27,7 +27,7 @@ const INVITE_ROLE: CampRole = 'instructor';
  */
 export type EditablePerson = Pick<
   Person,
-  'id' | 'givenName' | 'familyName' | 'preferredName' | 'roles' | 'dateOfBirth' | 'email' | 'phone' | 'households'
+  'id' | 'givenName' | 'familyName' | 'roles' | 'dateOfBirth' | 'email' | 'phone' | 'households'
 >;
 
 interface PersonFormCommon {

@@ -417,7 +417,7 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
       const id = (
         await withOrg(pool, userA, orgA, db =>
           db.query<{ id: string }>(
-            `INSERT INTO people (org_id, given_name, family_name, preferred_name) VALUES ($1, 'José', 'García', 'Pepe') RETURNING id`,
+            `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'José', 'García') RETURNING id`,
             [orgA],
           ),
         )
@@ -425,7 +425,7 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
       const found = await withOrg(pool, userA, orgA, async db =>
         (
           await db.query<{ id: string }>(
-            `SELECT id FROM people WHERE strpos(unaccent(lower(concat_ws(' ', given_name, family_name, preferred_name))), 'jose') > 0`,
+            `SELECT id FROM people WHERE strpos(unaccent(lower(concat_ws(' ', given_name, family_name))), 'jose') > 0`,
           )
         ).rows.map(r => r.id),
       );

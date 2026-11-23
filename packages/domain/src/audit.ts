@@ -10,6 +10,8 @@ export const AUDIT_ACTIONS = [
   'person.delete',
   'member.rename',
   'member.role_change',
+  'member.expiry_set',
+  'member.expiry_clear',
   'member.option_set',
   'member.invite',
   'member.invite_accept',

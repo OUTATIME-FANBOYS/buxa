@@ -21,7 +21,6 @@ const person: EditablePerson = {
   id: 'p-1',
   givenName: 'Ada',
   familyName: 'Lee',
-  preferredName: 'Annie',
   roles: ['participant'],
   dateOfBirth: '2016-05-02',
   email: 'ada@example.com',

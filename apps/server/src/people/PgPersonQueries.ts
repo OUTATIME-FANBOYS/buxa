@@ -6,7 +6,6 @@ interface PersonRow {
   id: string;
   given_name: string;
   family_name: string;
-  preferred_name: string | null;
   date_of_birth: string | null;
   email: string | null;
   phone: string | null;
@@ -17,7 +16,7 @@ interface PersonRow {
 
 /** Dates are formatted in SQL, so they never arrive as Date objects. Roles are aggregated and sorted. */
 const SELECT_PEOPLE = `
-  SELECT p.id, p.given_name, p.family_name, p.preferred_name, to_char(p.date_of_birth, 'YYYY-MM-DD') AS date_of_birth,
+  SELECT p.id, p.given_name, p.family_name, to_char(p.date_of_birth, 'YYYY-MM-DD') AS date_of_birth,
          p.email, p.phone, p.archived_at, p.created_at,
          COALESCE((SELECT array_agg(pr.role ORDER BY pr.role) FROM person_roles pr WHERE pr.person_id = p.id), '{}') AS roles
     FROM people p`;
@@ -27,7 +26,6 @@ const toRecord = (row: PersonRow): PersonRecord => ({
   id: row.id,
   givenName: row.given_name,
   familyName: row.family_name,
-  preferredName: row.preferred_name,
   dateOfBirth: row.date_of_birth,
   email: row.email,
   phone: row.phone,
@@ -95,7 +93,7 @@ export function listPeople(db: Db, filter: PersonFilter): Promise<PersonRecord[]
   );
 }
 
-/** Every word must appear in the joined given, family and preferred name (accent-insensitive, as matchesName does). */
+/** Every word must appear in the joined given and family name (accent-insensitive, as matchesName does). */
 export function searchPeople(db: Db, query: string, limit: number): Promise<PersonRecord[]> {
   const words = normalizeForSearch(query).split(' ').filter(Boolean);
   const max = Math.min(Math.max(0, Math.floor(limit)), MAX_SEARCH_RESULTS);
@@ -108,7 +106,7 @@ export function searchPeople(db: Db, query: string, limit: number): Promise<Pers
     `WHERE p.archived_at IS NULL
        AND NOT EXISTS (
          SELECT 1 FROM unnest($1::text[]) AS w(word)
-          WHERE strpos(unaccent(lower(concat_ws(' ', p.given_name, p.family_name, p.preferred_name))), w.word) = 0)`,
+          WHERE strpos(unaccent(lower(concat_ws(' ', p.given_name, p.family_name))), w.word) = 0)`,
     [words],
     max,
   );
@@ -126,7 +124,7 @@ function pageWhere(filter: PersonPageFilter): { where: string; params: SqlParam[
        AND ($3::uuid[] IS NULL OR p.id = ANY($3::uuid[]))
        AND NOT EXISTS (
          SELECT 1 FROM unnest($4::text[]) AS w(word)
-          WHERE strpos(unaccent(lower(concat_ws(' ', p.given_name, p.family_name, p.preferred_name))), w.word) = 0)`;
+          WHERE strpos(unaccent(lower(concat_ws(' ', p.given_name, p.family_name))), w.word) = 0)`;
 
   return { where, params: [filter.role ?? null, filter.includeArchived === true, ids, words] };
 }
