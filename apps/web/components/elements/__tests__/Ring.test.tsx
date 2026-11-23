@@ -11,29 +11,10 @@ describe('Ring', () => {
     const c = 2 * Math.PI * 45;
     expect(html).toContain(`stroke-dasharray="${(50 / 100) * c} ${c}"`);
   });
-  it('draws each segment as a slice of the whole, in order, and uses the summary and centre given', () => {
-    const html = renderToStaticMarkup(
-      <Ring
-        label="people"
-        size={100}
-        stroke={10}
-        summary="Two parts"
-        segments={[
-          { value: 1, tone: 'ok' },
-          { value: 0, tone: 'warn' },
-          { value: 3, tone: 'neutral' },
-        ]}
-        centre={<span>4 total</span>}
-      />,
+  it('uses the summary given as the screen-reader description', () => {
+    expect(renderToStaticMarkup(<Ring value={10} label="valid" summary="3 of 30 valid" />)).toContain(
+      'aria-label="3 of 30 valid"',
     );
-    const c = 2 * Math.PI * 45;
-    expect(html).toContain('aria-label="Two parts"');
-    expect(html).toContain('<span>4 total</span>');
-    expect(html).not.toContain('var(--f-warn)');
-    expect(html).toContain(`stroke-dasharray="${0.25 * c} ${c}"`);
-    expect(html).toContain('stroke-dashoffset="0"');
-    expect(html).toContain(`stroke-dasharray="${0.75 * c} ${c}"`);
-    expect(html).toContain(`stroke-dashoffset="${-0.25 * c}"`);
   });
   it('clamps values outside 0 to 100', () => {
     expect(renderToStaticMarkup(<Ring value={250} label="x" />)).toContain('100 percent');

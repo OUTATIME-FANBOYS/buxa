@@ -43,17 +43,12 @@ export function MembershipPanel({ counts }: { counts: MembershipStatusCounts | n
       ) : (
         <div className="home-membership-row">
           <Ring
-            label="people"
-            size={120}
-            stroke={14}
+            value={total ? (counts.valid / total) * 100 : 0}
+            size={96}
+            stroke={8}
+            label="valid"
+            tone="ok"
             summary={summary}
-            segments={rows.map(r => ({ value: r.count, tone: r.tone }))}
-            centre={
-              <>
-                <span className="stat-num">{total}</span>
-                <span className="muted small">people</span>
-              </>
-            }
           />
           <ul className="home-legend" aria-label="Membership status, by count">
             {rows.map(r => (
