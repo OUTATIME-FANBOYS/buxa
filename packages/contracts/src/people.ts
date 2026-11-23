@@ -111,6 +111,17 @@ export const PersonPatchInputSchema = z.object({
 });
 export type PersonPatchInput = z.infer<typeof PersonPatchInputSchema>;
 
+/**
+ * The household part of an edit. `householdId` joins an existing household, `newHouseholdName` creates one and links the person
+ * to it. Neither leaves the household the person is in. `relationship` is needed whenever the person joins a household.
+ */
+export const PersonHouseholdInputSchema = z.object({
+  householdId: z.string().uuid().optional(),
+  newHouseholdName: Optional(120),
+  relationship: Optional(40),
+});
+export type PersonHouseholdInput = z.infer<typeof PersonHouseholdInputSchema>;
+
 export const PersonListQuerySchema = z.object({
   query: z.string().trim().max(80).optional(),
   role: CampRoleSchema.optional(),
