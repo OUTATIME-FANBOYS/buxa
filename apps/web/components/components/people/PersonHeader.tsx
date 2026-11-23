@@ -15,13 +15,13 @@ export function PersonHeader({ person, actions }: { person: Person; actions?: Re
     <header className="page-head people-head">
       <div className="page-title">
         <h1>{displayName(person)}</h1>
-        <div className="row">
+        {person.email && <p className="muted people-email">{person.email}</p>}
+        <div className="row people-tags">
           <RolePills roles={person.roles} />
           <AccessPill status={person.status} />
           <OnSitePill onSite={person.onSite} />
           {person.archived && <Pill tone="neutral">Archived</Pill>}
         </div>
-        {person.email && <p className="muted people-email">{person.email}</p>}
       </div>
       {actions && <div className="page-actions">{actions}</div>}
     </header>

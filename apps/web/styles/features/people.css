@@ -4,8 +4,12 @@
   align-items: flex-start;
   gap: var(--s5);
 }
+.people-tags {
+  gap: var(--s3);
+  margin-top: var(--s2);
+}
 .people-email {
-  margin: 0;
+  margin: var(--s1) 0 0;
   overflow-wrap: anywhere;
 }
 /* The person page's tiles: two columns on a wide screen, one on a phone. Gaps use the page's spacing token (--s5), and each row's
