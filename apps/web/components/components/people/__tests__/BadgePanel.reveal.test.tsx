@@ -2,24 +2,30 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { BadgePanel, type BadgePanelProps } from '@/components/components/people';
+import type { ActionState, ShowBadgeState } from '@buxa/shared';
 
-// The server actions. Issue, Reissue and Revoke return no code; only Show and Reprint return the stored code.
-vi.mock('@buxa/server/composers/people/issueBadgeAction', () => ({
-  issueBadgeAction: () => Promise.resolve({ status: 'success' }),
+// The server actions. Issue and Revoke return no code; Show returns the stored code, and the panel calls Show after an issue.
+const h = vi.hoisted(() => ({
+  issue: vi.fn<() => Promise<ActionState>>(),
+  revoke: vi.fn<() => Promise<ActionState>>(),
+  show: vi.fn<() => Promise<unknown>>(),
 }));
-vi.mock('@buxa/server/composers/people/revokeBadgeAction', () => ({
-  revokeBadgeAction: () => Promise.resolve({ status: 'success', message: 'Badge revoked.' }),
-}));
+vi.mock('@buxa/server/composers/people/issueBadgeAction', () => ({ issueBadgeAction: h.issue }));
+vi.mock('@buxa/server/composers/people/revokeBadgeAction', () => ({ revokeBadgeAction: h.revoke }));
 vi.mock('@buxa/server/composers/people/showBadgeAction', () => ({
-  showBadgeAction: () => Promise.resolve({ status: 'shown', payload: 'bx1.storedcodeabcdefghijklm' }),
-  reprintBadgeAction: () => Promise.resolve({ status: 'shown', payload: 'bx1.storedcodeabcdefghijklm' }),
+  showBadgeAction: h.show,
+  reprintBadgeAction: () => Promise.resolve({ status: 'failed', message: 'unused' }),
 }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
+const CODE = 'bx1.storedcodeabcdefghijklm';
+const shown: ShowBadgeState = { status: 'shown', payload: CODE };
+
 const base: BadgePanelProps = {
-  personId: 'p-1',
+  personId: '6f1c2a3e-0000-4000-8000-000000000001',
   personName: 'Ada Lee',
   roleLabel: 'Camper',
   campName: 'Camp Birchwood',
@@ -32,6 +38,9 @@ let container: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
+  h.issue.mockReset().mockResolvedValue({ status: 'success' });
+  h.revoke.mockReset().mockResolvedValue({ status: 'success' });
+  h.show.mockReset().mockResolvedValue(shown);
   container = document.createElement('div');
   document.body.append(container);
   root = createRoot(container);
@@ -42,6 +51,16 @@ afterEach(() => {
   container.remove();
 });
 
+function render(props: BadgePanelProps) {
+  act(() => {
+    root.render(
+      <UiProvider Dialog={() => null}>
+        <BadgePanel {...props} />
+      </UiProvider>,
+    );
+  });
+}
+
 function buttonNamed(label: string): HTMLButtonElement {
   const found = [...container.querySelectorAll('button')].find(b => b.textContent === label);
   if (!found) {
@@ -51,7 +70,7 @@ function buttonNamed(label: string): HTMLButtonElement {
   return found;
 }
 
-/** Lets the transition the click starts (a server action) settle inside act. */
+/** Lets the transition the click starts (a server action, then a second one) settle inside act. */
 const flush = () => new Promise<void>(resolve => setTimeout(resolve, 0));
 
 async function click(label: string) {
@@ -62,63 +81,80 @@ async function click(label: string) {
   });
 }
 
-const hasCode = () => container.querySelector('.badge-card') !== null;
+const hasCard = () => container.querySelector('.badge-card') !== null;
+/** The panel's own buttons: the toast's close button sits in `.toasts` and is left out. */
+const buttonLabels = () => [...container.querySelectorAll('section button')].map(b => b.textContent);
+/** The toasts are the only status text the page shows for a success. */
+const toastText = () => container.querySelector('.toasts')?.textContent ?? '';
 
-describe('BadgePanel: issue, reissue, show and revoke', () => {
-  it('after Reissue the card is not rendered, the text shown once is absent, and Show badge then renders the new badge', async () => {
-    act(() => {
-      root.render(<BadgePanel {...base} hasActiveBadge />);
-    });
+describe('BadgePanel: show, issue, reissue and revoke', () => {
+  it('Show badge opens the badge view with the card, Print badge and Close', async () => {
+    render({ ...base, hasActiveBadge: true });
+    expect(hasCard()).toBe(false);
+
+    await click('Show badge');
+
+    expect(hasCard()).toBe(true);
+    expect(buttonLabels()).toContain('Print badge');
+    expect(buttonLabels()).toContain('Close');
+    expect(container.textContent).not.toContain('shown once');
+
+    await click('Close');
+    expect(hasCard()).toBe(false);
+  });
+
+  it('has no Reprint button, and Print badge appears only inside the view', async () => {
+    render({ ...base, hasActiveBadge: true });
+    expect(buttonLabels()).toEqual(['Show badge', 'Reissue', 'Revoke']);
+    expect(buttonLabels()).not.toContain('Print badge');
+
+    await click('Show badge');
+    expect(buttonLabels()).not.toContain('Reprint');
+  });
+
+  it('Reissue reissues, opens the new card straight away and fires the Badge reissued. toast', async () => {
+    render({ ...base, hasActiveBadge: true });
 
     await click('Reissue');
-    expect(hasCode()).toBe(false);
-    expect(container.textContent).toContain('Badge active');
-    expect(container.textContent).toContain('Badge reissued.');
-    expect(container.textContent).not.toContain('shown once');
-    expect(container.textContent).not.toContain('print it now');
-    expect(container.textContent).not.toContain('Print badge');
 
-    await click('Show badge');
-    expect(hasCode()).toBe(true);
-    expect(container.textContent).not.toContain('Badge reissued.');
+    expect(h.issue).toHaveBeenCalledTimes(1);
+    expect(h.show).toHaveBeenCalledTimes(1);
+    expect(hasCard()).toBe(true);
+    expect(toastText()).toContain('Badge reissued.');
+    expect(container.textContent).not.toContain('shown once');
   });
 
-  it('after Issue on a person with no badge, no code is rendered and the confirmation is shown', async () => {
-    act(() => {
-      root.render(<BadgePanel {...base} />);
-    });
+  it('Issue on a person with no badge opens the new card and fires the Badge issued. toast', async () => {
+    render(base);
 
     await click('Issue badge');
-    expect(hasCode()).toBe(false);
-    expect(container.textContent).toContain('Badge issued.');
+
+    expect(hasCard()).toBe(true);
+    expect(toastText()).toContain('Badge issued.');
     expect(container.textContent).toContain('Badge active');
-    expect(container.textContent).not.toContain('shown once');
   });
 
-  it('after Revoke the code is gone, the panel shows Badge revoked. and No active badge', async () => {
-    act(() => {
-      root.render(<BadgePanel {...base} hasActiveBadge />);
-    });
-
+  it('Revoke fires the Badge revoked. toast, closes the open view and shows No active badge', async () => {
+    render({ ...base, hasActiveBadge: true });
     await click('Show badge');
-    expect(hasCode()).toBe(true);
+    expect(hasCard()).toBe(true);
 
     await click('Revoke');
-    expect(hasCode()).toBe(false);
+
+    expect(hasCard()).toBe(false);
+    expect(toastText()).toContain('Badge revoked.');
     expect(container.textContent).toContain('No active badge');
-    expect(container.textContent).toContain('Badge revoked.');
-    expect(container.textContent).not.toContain('Print badge');
-    expect([...container.querySelectorAll('button')].map(b => b.textContent)).toEqual(['Issue badge']);
+    expect(buttonLabels()).toEqual(['Issue badge']);
   });
 
-  it('Show badge shows the stored code only when pressed', async () => {
-    act(() => {
-      root.render(<BadgePanel {...base} hasActiveBadge />);
-    });
-    expect(hasCode()).toBe(false);
+  it('a failed revoke shows a short inline message and no toast', async () => {
+    h.revoke.mockResolvedValue({ status: 'error', message: 'Could not revoke the badge.' });
+    render({ ...base, hasActiveBadge: true });
 
-    await click('Show badge');
-    expect(hasCode()).toBe(true);
-    expect(container.textContent).not.toContain('shown once');
+    await click('Revoke');
+
+    expect(container.querySelector('[role="alert"]')?.textContent).toBe('Could not revoke the badge.');
+    expect(toastText()).not.toContain('Badge revoked.');
+    expect(buttonLabels()).toContain('Revoke');
   });
 });

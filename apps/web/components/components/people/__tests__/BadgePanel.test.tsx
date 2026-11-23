@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { UiProvider } from '@buxa/middleware/providers/UiProvider';
 import { BadgePanel, type BadgePanelProps } from '@/components/components/people';
 import { settle } from '@buxa/domain';
 
@@ -24,37 +25,44 @@ const base: BadgePanelProps = {
   canManage: true,
 };
 
+/** The panel needs the toast provider, as the app's shell provides it. */
+const panel = (props: BadgePanelProps) => (
+  <UiProvider Dialog={() => null}>
+    <BadgePanel {...props} />
+  </UiProvider>
+);
+
 describe('BadgePanel', () => {
   it('says in words whether a badge is active', () => {
-    expect(renderToStaticMarkup(<BadgePanel {...base} hasActiveBadge />)).toContain('Badge active');
-    expect(renderToStaticMarkup(<BadgePanel {...base} />)).toContain('No active badge');
+    expect(renderToStaticMarkup(panel({ ...base, hasActiveBadge: true }))).toContain('Badge active');
+    expect(renderToStaticMarkup(panel(base))).toContain('No active badge');
   });
   it('with no active badge, says No badge yet and offers only Issue badge', () => {
-    const html = renderToStaticMarkup(<BadgePanel {...base} />);
+    const html = renderToStaticMarkup(panel(base));
     expect(html).toContain('No badge yet.');
     expect(html).toContain('>Issue badge</button>');
     expect(html).not.toContain('Reprint');
     expect(html).not.toContain('Badge revoked.');
     expect(html).not.toContain('New badge');
   });
-  it('lets a manager show, reprint, reissue and revoke an active badge, and never prints outside a reveal', () => {
-    const html = renderToStaticMarkup(<BadgePanel {...base} hasActiveBadge />);
+  it('lets a manager show, reissue and revoke an active badge, with no Reprint and no print outside the view', () => {
+    const html = renderToStaticMarkup(panel({ ...base, hasActiveBadge: true }));
     expect(html).toContain('>Show badge</button>');
-    expect(html).toContain('>Reprint</button>');
     expect(html).toContain('>Reissue</button>');
     expect(html).toContain('>Revoke</button>');
+    expect(html).not.toContain('Reprint');
     expect(html).not.toContain('bx1.');
     expect(html).not.toContain('Print badge');
   });
   it('shows no Show or Reprint without an active badge, and none to a staff member', () => {
-    expect(renderToStaticMarkup(<BadgePanel {...base} />)).not.toContain('Show badge');
-    const staff = renderToStaticMarkup(<BadgePanel {...base} hasActiveBadge canManage={false} />);
+    expect(renderToStaticMarkup(panel(base))).not.toContain('Show badge');
+    const staff = renderToStaticMarkup(panel({ ...base, hasActiveBadge: true, canManage: false }));
     expect(staff).not.toContain('Show badge');
     expect(staff).not.toContain('Reprint');
   });
   it('explains that archived people cannot have a badge, and that only admins can manage one', () => {
-    expect(renderToStaticMarkup(<BadgePanel {...base} archived />)).toContain('Archived people cannot have a badge.');
-    expect(renderToStaticMarkup(<BadgePanel {...base} canManage={false} />)).toContain(
+    expect(renderToStaticMarkup(panel({ ...base, archived: true }))).toContain('Archived people cannot have a badge.');
+    expect(renderToStaticMarkup(panel({ ...base, canManage: false }))).toContain(
       'Only admins can issue or revoke badges.',
     );
   });
