@@ -54,3 +54,7 @@ exit. The owner's checks for them (phone timing, install and sign-in from a phon
 ## Not doing yet
 
 Auto-scheduling, SSO, native apps, non-US payments. Agent approvals inside the camp flows are now phase 7 (see `docs/phases/07-staff-board.md`, "AI assistant").
+
+## Future: on-the-spot registration with payment (phase 9)
+
+A camp can register someone at the desk, on the day, and take payment there. It builds on the membership link to sessions (migration 0042), so the registration creates a membership for the chosen session, and the payment step is added in phase 9 with Stripe. Not started; recorded so the membership and payment work stays aligned.
