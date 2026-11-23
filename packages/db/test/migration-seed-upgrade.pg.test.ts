@@ -168,7 +168,7 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0040_delete_person.sql',
       '0041_badge_encrypted_token.sql',
       '0042_membership_session.sql',
-      '0043_drop_preferred_name.sql',
+      '0044_drop_preferred_name.sql',
     ]);
   });
 
