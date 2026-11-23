@@ -75,7 +75,7 @@ A teacher invite is sent from Add person with the Instructor role. The invited p
 
 - **Transfer ownership, the audit-log screen, and exporting or erasing a camp's data** (`org:transfer_ownership`, `audit:read`, `data:export`, `data:erase`). Erase is owner-only and no code for it exists yet. Phase 0 requires that deleting an organisation still works while audit rows stay append-only.
 - **Invitations for other roles, and removing a member.** Only teacher invites exist. `members:remove` has no screen or service yet.
-- **Membership expiry for camp access.** Manage access changes roles only; a time limit on a person's access to the camp is not built. (The valid, expired and not-yet-started status of a person's season membership is built; see `docs/phases/01-members-checkin.md`.)
+- **Team access expiry** (a time limit on a person's access to a camp) is built, migration `0043`: an expired membership is refused on the server, as a non-member. See `docs/security.md` and `docs/phases/03-registration.md`. (The valid, expired and not-yet-started status of a person's season membership is built; see `docs/phases/01-members-checkin.md`.)
 
 ## Code map
 

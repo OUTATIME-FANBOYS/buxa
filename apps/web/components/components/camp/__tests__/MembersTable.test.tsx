@@ -17,7 +17,13 @@ describe('MembersTable', () => {
   });
   it('colours each role pill with its own class: owner violet, admin orange, staff green, viewer blue', () => {
     const roles = ['owner', 'admin', 'staff', 'viewer'] as const;
-    const rows = roles.map((role, i) => ({ id: `m-${i}`, name: `Person ${role}`, email: `${role}@example.com`, role }));
+    const rows = roles.map((role, i) => ({
+      id: `m-${i}`,
+      name: `Person ${role}`,
+      email: `${role}@example.com`,
+      role,
+      expiresAt: null,
+    }));
     const html = renderToStaticMarkup(<MembersTable members={rows} showEmail={false} />);
     expect(html).toMatch(/pill tone-role-owner">Owner</);
     expect(html).toMatch(/pill tone-role-admin">Admin</);
@@ -49,5 +55,30 @@ describe('MembersTable', () => {
     expect(withSwitch.match(/type="checkbox"/g)).toHaveLength(1);
     expect(withSwitch).toContain('Check in and out, for');
     expect(withSwitch).toMatch(/type="checkbox"[^>]*checked/);
+  });
+
+  describe('team access expiry pills', () => {
+    const daysFromNow = (days: number) => new Date(Date.now() + days * 86400000).toISOString();
+    const row = (expiresAt: string | null) =>
+      [{ id: 'm-x', name: 'Ines Park', email: 'ines@example.com', role: 'staff', expiresAt }] as unknown as Member[];
+
+    it('shows an Expired pill for a membership whose expiry is in the past', () => {
+      const html = renderToStaticMarkup(<MembersTable members={row(daysFromNow(-1))} showEmail={false} />);
+      expect(html).toContain('>Expired<');
+    });
+
+    it('shows Expires with the date for an expiry within 14 days', () => {
+      const soon = daysFromNow(5);
+      const html = renderToStaticMarkup(<MembersTable members={row(soon)} showEmail={false} />);
+      expect(html).toMatch(/Expires [A-Z][a-z]{2} \d{1,2}, \d{4}/);
+      expect(html).not.toContain('>Expired<');
+    });
+
+    it('shows neither pill when there is no expiry, or it is more than 14 days away', () => {
+      const none = renderToStaticMarkup(<MembersTable members={row(null)} showEmail={false} />);
+      expect(none).not.toContain('Expire');
+      const later = renderToStaticMarkup(<MembersTable members={row(daysFromNow(60))} showEmail={false} />);
+      expect(later).not.toContain('Expire');
+    });
   });
 });

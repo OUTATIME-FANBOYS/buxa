@@ -12,6 +12,7 @@ export * from './auth/signUp';
 export * from './camp/campContext';
 export * from './camp/campHome';
 export * from './camp/changeMemberRoleAction';
+export * from './camp/setMemberExpiryAction';
 export * from './camp/createCampAction';
 export * from './camp/failures';
 export * from './camp/loadCamp';
