@@ -75,7 +75,7 @@ describe('class input carries its own price', () => {
       firstDate: '2027-07-05',
       startTime: '09:00',
       endTime: '10:00',
-      end: { kind: 'count', count: 2 },
+      end: { kind: 'until', date: '2027-07-12' },
     };
     const series = NewRecurringClassInputSchema.safeParse({
       rule,

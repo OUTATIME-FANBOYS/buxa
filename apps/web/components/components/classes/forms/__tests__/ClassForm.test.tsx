@@ -6,7 +6,11 @@ process.env.TZ = 'Australia/Sydney';
 import type { Class } from '@buxa/contracts';
 import { ClassForm } from '@/components/components/classes/forms';
 
-vi.mock('@/actions/classes', () => ({ addClassAction: vi.fn(), updateClassAction: vi.fn() }));
+vi.mock('@/actions/classes', () => ({
+  addClassAction: vi.fn(),
+  addRecurringClassesAction: vi.fn(),
+  updateClassAction: vi.fn(),
+}));
 
 const SESSION = '11111111-1111-4111-8111-111111111111';
 const CLASS = '22222222-2222-4222-8222-222222222222';
@@ -126,6 +130,12 @@ describe('ClassForm: the price of a class', () => {
 });
 
 describe('ClassForm: adding and editing', () => {
+  it('offers the Specific days toggle only to the New class dialog, not to the page or an edit', () => {
+    expect(render({ variant: 'dialog', seriesOption: true })).toContain('Specific days');
+    expect(render({ variant: 'dialog' })).not.toContain('Specific days');
+    expect(render({ cls, variant: 'dialog', seriesOption: true })).not.toContain('Specific days');
+  });
+
   it('adds a class to the session when no class is given', () => {
     const html = render();
     expect(html).toContain('Add class');

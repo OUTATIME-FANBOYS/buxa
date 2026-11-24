@@ -11,7 +11,6 @@ import {
   MAX_CAMP_SIZE,
   MAX_CLASS_AGE,
   MAX_MINOR_AMOUNT,
-  MAX_RECURRING_CLASSES,
   MIN_CAMP_SIZE,
   MIN_CLASS_AGE,
   normaliseName,
@@ -145,11 +144,8 @@ export type SetSessionPublicInput = z.infer<typeof SetSessionPublicInputSchema>;
 const CampDaySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a date in the format 2027-07-05.');
 const ClockTimeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Use a 24-hour time, such as 09:00.');
 
-/** When a series stops: on a date (inclusive), or after a number of classes. */
-export const RecurrenceEndSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('until'), date: CampDaySchema }),
-  z.object({ kind: z.literal('count'), count: z.number().int().min(1).max(MAX_RECURRING_CLASSES) }),
-]);
+/** When a series stops: on a date (inclusive). */
+export const RecurrenceEndSchema = z.object({ kind: z.literal('until'), date: CampDaySchema });
 
 /** A weekly rule in camp time. The server expands it into classes (see expandClassRule in @buxa/domain). */
 export const ClassRuleSchema = z.object({

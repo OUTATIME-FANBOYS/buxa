@@ -6,7 +6,7 @@ import { Empty, PageHeader } from '@/components/components';
 import { currentActor, loadPeopleWithRole, loadSessionPage } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_READ, resolveSessionTab, visibleSessionTabs } from '@buxa/shared';
 import { SessionTabs } from '@/components/components/classes';
-import { EditSessionButton, NewClassButton, RecurringSeriesButton } from '@/components/components/classes/forms';
+import { EditSessionButton, NewClassButton } from '@/components/components/classes/forms';
 import { Button } from '@/components/elements';
 import { ClassesTab } from './ClassesTab';
 import { SessionHolds } from './SessionHolds';
@@ -91,7 +91,6 @@ export async function ClassPage({
               <Button variant="glass" size="sm" href={assignPath(session.id)} icon="user-plus">
                 Assign people
               </Button>
-              <RecurringSeriesButton sessionId={session.id} />
               <NewClassButton sessionId={session.id} sessionName={session.name} instructors={instructorChoices} />
             </>
           )
