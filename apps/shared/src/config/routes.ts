@@ -65,6 +65,12 @@ export const groupsPath = (sessionId: string): string => `${sessionPath(sessionI
 /** A session's assign page: groups with their members, and a way to place or move a person. Needs classes:manage to change. */
 export const assignPath = (sessionId: string): string => `${sessionPath(sessionId)}/assign`;
 
+/** A session's roster as a printable page (phase 4). Needs the same read as the Groups and Assign screens. */
+export const rosterPrintPath = (sessionId: string): string => `${sessionPath(sessionId)}/roster`;
+
+/** A session's roster as a CSV download (phase 4). Needs the same read as the Groups and Assign screens. */
+export const rosterCsvPath = (sessionId: string): string => `${sessionPath(sessionId)}/roster.csv`;
+
 /** The page that adds a class to a session. */
 export const newClassPath = (sessionId: string): string => `${sessionPath(sessionId)}/classes/new`;
 

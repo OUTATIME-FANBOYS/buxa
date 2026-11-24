@@ -1,0 +1,77 @@
+/* The printable roster (/camp/sessions/[id]/roster). A plain page: no camp shell, so only the sheet and its two controls are drawn. */
+
+.roster-print {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 16px;
+  display: grid;
+  gap: 16px;
+}
+
+.roster-print-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.roster-sheet {
+  display: grid;
+  gap: 20px;
+}
+
+.roster-sheet-head h1 {
+  margin: 0;
+}
+
+.roster-sheet-head p {
+  margin: 4px 0 0;
+}
+
+.roster-group h2 {
+  margin: 0 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid currentColor;
+}
+
+.roster-room h3 {
+  margin: 12px 0 6px;
+}
+
+.roster-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.roster-table th,
+.roster-table td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+}
+
+@media print {
+  @page {
+    margin: 16mm;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .roster-print {
+    max-width: none;
+    padding: 0;
+    color: CanvasText;
+    background: Canvas;
+  }
+
+  .roster-group,
+  .roster-room {
+    break-inside: avoid;
+  }
+
+  .roster-group h2 {
+    break-after: avoid;
+  }
+}

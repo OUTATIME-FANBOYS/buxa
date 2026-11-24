@@ -15,9 +15,11 @@ Built on branch `v0.4/feat/camp-holds-screen`: the camp-wide holds screen at `/c
 
 Built on branch `v0.4/feat/hold-length-per-camp` (migration 0048): each camp sets how long a seat hold lasts, from 5 to 60 minutes, in the camp settings (`orgs.hold_minutes`, null for the default of 15, `SEAT_HOLD_MINUTES`). Only an admin or the owner changes it (`org:update`), and the database checks the range too. The hold service reads the camp's length when it places a hold, so a hold placed after a change takes the new length and holds already placed keep their expiry. The expiry cleanup uses each hold's own expiry, so it is unchanged.
 
+Built on branch `v0.4/feat/roster-exports`: roster exports. A session's roster is a CSV (`/camp/sessions/[id]/roster.csv`, UTF-8 with a byte-order mark, an attachment) and a printable page (`/camp/sessions/[id]/roster`, with print styles, no camp navigation and a Print button hidden in print). Both list every camper and staff member placed in the session, grouped by group, then room, then name. The roster builder is pure (`buildRoster` in `packages/domain/src/groups/roster.ts`), and the CSV escapes RFC 4180 and neutralises spreadsheet formulas (a cell starting with `=`, `+`, `-`, `@`, a tab or a CR gets a leading apostrophe, `apps/shared/src/csv.ts`). The export reads through the same calls as the Groups and Assign screens, so it needs the same permission: every role except a teacher without a class. A viewer receives names and roles only, which the Assign board already shows. The Groups and rooms page has the two export buttons. A session from another camp is not found.
+
 Not built yet:
 
-- Roster exports (CSV and printable), per-session check-in, and unassigning a person from a group.
+- Per-session check-in, and unassigning a person from a group.
 - A hold for each child in a household. One active hold per household per class still applies, so a second child of the same household cannot take the same class at the same time (see `docs/phases/03-registration.md`).
 
 ## Words we use
@@ -49,7 +51,6 @@ Not built yet:
 
 ## Not built yet
 
-- **Roster exports** (CSV and printable page), and the export guard for viewers and CSV formula neutralisation.
 - **Per-session check-in** that records the session and flags a camper who is not assigned to it.
 - **A camp-wide holds screen** (holds across every class, not one class at a time). Phase 3 still shows holds for one class only.
 - **Hold length per camp.** Holds are fixed at 15 minutes (`SEAT_HOLD_MINUTES`).
