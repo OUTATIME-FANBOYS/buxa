@@ -2,12 +2,20 @@ import { randomUUID } from 'node:crypto';
 import { STAFF_ROLES, type Actor, type AssignRole, type AuditAction, type AgeRange, type RoomUse } from '@buxa/domain';
 import { settle } from '@buxa/domain';
 import type { Assignment, Group, GroupInput, Room, RoomInput } from '@buxa/contracts';
-import type { AssignRequest, AssignmentRule, GatheredAssignmentFacts, GroupRepository } from './GroupRepository';
+import type {
+  AssignRequest,
+  AssignmentRule,
+  GatheredAssignmentFacts,
+  GroupRepository,
+  UnassignRequest,
+  Unassigned,
+} from './GroupRepository';
 import {
   AssignmentConflictError,
   AssignmentRefusedError,
   CapacityBelowPlacedError,
   GroupNotFoundError,
+  NotAssignedError,
   SessionUndatedError,
   NameTakenError,
   PersonNotFoundError,
@@ -268,6 +276,35 @@ export class InMemoryGroupRepository implements GroupRepository {
       }
 
       return this.assignmentView(record);
+    });
+  }
+
+  unassign(actor: Actor, request: UnassignRequest): Promise<Unassigned> {
+    return settle(() => {
+      this.requireSession(actor.orgId, request.sessionId);
+      const person = this.people.get(request.personId);
+      if (!person || person.orgId !== actor.orgId) {
+        throw new PersonNotFoundError();
+      }
+      const current = [...this.assignments.values()].find(
+        a => a.active && a.sessionId === request.sessionId && a.personId === request.personId,
+      );
+      if (!current) {
+        throw new NotAssignedError();
+      }
+      current.active = false;
+      this.audit.push({
+        action: 'assignment.unassign',
+        entityId: current.id,
+        data: {
+          sessionId: request.sessionId,
+          personId: request.personId,
+          groupId: current.groupId,
+          roomId: current.roomId,
+        },
+      });
+
+      return { id: current.id, personId: request.personId, groupId: current.groupId, roomId: current.roomId };
     });
   }
 

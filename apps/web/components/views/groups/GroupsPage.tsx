@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
+import { Button } from '@/components/elements';
+import { rosterCsvPath, rosterPrintPath } from '@/config/routes';
 import { Empty, PageHeader } from '@/components/components';
 import { GroupDialog, GroupsTable, RoomDialog, RoomsTable } from '@/components/components/groups';
 import { currentActor, loadSessionGroups } from '@buxa/server/composers/index.server';
@@ -38,12 +40,20 @@ export async function GroupsPage({ sessionId }: { sessionId: string }) {
         title="Groups and rooms"
         subtitle={`${session.name}, ${dates}`}
         actions={
-          canManage && (
-            <>
-              <RoomDialog sessionId={session.id} />
-              <GroupDialog sessionId={session.id} />
-            </>
-          )
+          <>
+            <Button variant="secondary" size="header" href={rosterCsvPath(session.id)} download>
+              Export roster (CSV)
+            </Button>
+            <Button variant="secondary" size="header" href={rosterPrintPath(session.id)}>
+              Printable roster
+            </Button>
+            {canManage && (
+              <>
+                <RoomDialog sessionId={session.id} />
+                <GroupDialog sessionId={session.id} />
+              </>
+            )}
+          </>
         }
       />
 

@@ -100,6 +100,13 @@ export const AssignInputSchema = z.object({
 });
 export type AssignInput = z.infer<typeof AssignInputSchema>;
 
+/** End a person's active placement in a session. The group and room come from that placement, not from the request. */
+export const UnassignInputSchema = z.object({
+  sessionId: z.string().uuid(),
+  personId: z.string().uuid('Choose a person.'),
+});
+export type UnassignInput = z.infer<typeof UnassignInputSchema>;
+
 /** An assignment as the session's Assign page reads it: who, where, and whether a ratio override is recorded. */
 export const AssignmentSchema = z.object({
   id: z.string(),

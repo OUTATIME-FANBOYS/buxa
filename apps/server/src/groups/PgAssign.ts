@@ -43,7 +43,7 @@ interface RoomLock {
   location: string;
 }
 
-interface CurrentPlacement {
+export interface CurrentPlacement {
   id: string;
   groupId: string;
   roomId: string;
@@ -101,7 +101,7 @@ async function lockGroup(db: Db, groupId: string, sessionId: string): Promise<Gr
   };
 }
 
-async function lockRoom(db: Db, orgId: string, roomId: string, sessionId: string): Promise<RoomLock> {
+export async function lockRoom(db: Db, orgId: string, roomId: string, sessionId: string): Promise<RoomLock> {
   const { rows } = await db.query<RoomLock>(
     `SELECT capacity, name, location FROM rooms WHERE id = $1 AND session_id = $2 FOR UPDATE`,
     [roomId, sessionId],
@@ -118,7 +118,7 @@ async function lockRoom(db: Db, orgId: string, roomId: string, sessionId: string
   return row;
 }
 
-async function currentPlacement(db: Db, sessionId: string, personId: string): Promise<CurrentPlacement | null> {
+export async function currentPlacement(db: Db, sessionId: string, personId: string): Promise<CurrentPlacement | null> {
   const { rows } = await db.query<{
     id: string;
     group_id: string;

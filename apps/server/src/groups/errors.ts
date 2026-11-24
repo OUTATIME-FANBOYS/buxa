@@ -73,6 +73,15 @@ export class AssignmentConflictError extends Error {
   }
 }
 
+/** The person has no active assignment in this session, so there is nothing to unassign. Nothing is written. */
+export class NotAssignedError extends Error {
+  readonly kind = 'not-assigned';
+  constructor() {
+    super('The person has no active assignment in this session');
+    this.name = 'NotAssignedError';
+  }
+}
+
 /** An assignment the rules refused. Thrown after the transaction is rolled back, so nothing is written for it. */
 export class AssignmentRefusedError extends Error {
   readonly kind = 'assignment-refused';
@@ -98,3 +107,4 @@ export const isCapacityBelowPlaced = (e: unknown): e is CapacityBelowPlacedError
 export const isAssignmentConflict = (e: unknown): e is AssignmentConflictError =>
   isGroupError(e, 'assignment-conflict');
 export const isAssignmentRefused = (e: unknown): e is AssignmentRefusedError => isGroupError(e, 'assignment-refused');
+export const isNotAssigned = (e: unknown): e is NotAssignedError => isGroupError(e, 'not-assigned');

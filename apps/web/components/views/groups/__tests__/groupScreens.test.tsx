@@ -134,6 +134,17 @@ describe('the assign page', () => {
     expect(html).toContain('Place or move');
   });
 
+  it('shows the Unassign button on each member to staff only', async () => {
+    const staffHtml = render(await AssignPage({ sessionId: SESSION_ID }));
+    expect(staffHtml).toContain('Unassign');
+
+    session.role = 'viewer';
+    expect(render(await AssignPage({ sessionId: SESSION_ID }))).not.toContain('Unassign');
+
+    session.role = 'teacher';
+    expect(render(await AssignPage({ sessionId: SESSION_ID }))).not.toContain('Unassign');
+  });
+
   it('lets a viewer see the board but not place anyone', async () => {
     session.role = 'viewer';
     const html = render(await AssignPage({ sessionId: SESSION_ID }));

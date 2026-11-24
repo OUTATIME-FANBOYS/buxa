@@ -62,6 +62,69 @@ describe('GroupService', () => {
     ).rejects.toMatchObject({ statusCode: 403 });
   });
 
+  it('refuses a viewer and a teacher any unassign, with a 403', async () => {
+    const { service, actor, session, repo } = setUp();
+    const staff = actor('staff');
+    const person = repo.seedPerson({ orgId: staff.orgId, dateOfBirth: '2019-01-01' });
+    const group = expectOk(
+      await service.createGroup(staff, session.id, { name: 'Hawks', capacity: 4, ratioCampers: null, ageRange: null }),
+    );
+    const room = expectOk(
+      await service.createRoom(staff, session.id, { name: 'Lodge 1', location: 'North', capacity: 4 }),
+    );
+    expectOk(
+      await service.assign(staff, {
+        sessionId: session.id,
+        personId: person.id,
+        role: 'camper',
+        groupId: group.id,
+        roomId: room.id,
+      }),
+    );
+
+    await expect(
+      service.unassign(actor('viewer'), { sessionId: session.id, personId: person.id }),
+    ).rejects.toMatchObject({ statusCode: 403 });
+    await expect(
+      service.unassign(actor('teacher'), { sessionId: session.id, personId: person.id }),
+    ).rejects.toMatchObject({ statusCode: 403 });
+    expect(repo.audit.some(a => a.action === 'assignment.unassign')).toBe(false);
+  });
+
+  it('unassigns a placed person, audits it with the session, person, group and room, and refuses a second unassign', async () => {
+    const { service, actor, session, repo } = setUp();
+    const staff = actor('staff');
+    const person = repo.seedPerson({ orgId: staff.orgId, dateOfBirth: '2019-01-01' });
+    const group = expectOk(
+      await service.createGroup(staff, session.id, { name: 'Hawks', capacity: 4, ratioCampers: null, ageRange: null }),
+    );
+    const room = expectOk(
+      await service.createRoom(staff, session.id, { name: 'Lodge 1', location: 'North', capacity: 4 }),
+    );
+    expectOk(
+      await service.assign(staff, {
+        sessionId: session.id,
+        personId: person.id,
+        role: 'camper',
+        groupId: group.id,
+        roomId: room.id,
+      }),
+    );
+
+    const ended = expectOk(await service.unassign(staff, { sessionId: session.id, personId: person.id }));
+    expect(ended).toMatchObject({ personId: person.id, groupId: group.id, roomId: room.id });
+    expect(repo.audit.find(a => a.action === 'assignment.unassign')?.data).toEqual({
+      sessionId: session.id,
+      personId: person.id,
+      groupId: group.id,
+      roomId: room.id,
+    });
+
+    const again = expectFailure(await service.unassign(staff, { sessionId: session.id, personId: person.id }));
+    expect(again.reason).toBe('not_assigned');
+    expect(again.message).toMatch(/nothing to unassign/);
+  });
+
   it('places a camper and returns the placement with the person named', async () => {
     const { service, actor, session, repo } = setUp();
     const staff = actor('staff');
