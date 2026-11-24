@@ -18,6 +18,8 @@ import type {
   SessionEditInput,
   SessionStatus,
 } from '@buxa/contracts';
+import { decideCancel, decideRestore, type OccurrenceCommand, type OccurrenceStatus } from '@buxa/domain';
+import { OccurrenceRefusedError } from './errors';
 import { priceChangeAudit, samePrice } from './priceAudit';
 import { sameSessionDetails, sessionEditAudit, type SessionDetails } from './sessionEditAudit';
 import { systemClock, type Clock } from '../services/clock';
@@ -123,6 +125,7 @@ export class InMemoryClassRepository implements ClassRepository {
   /** Person id to the name of the household the person belongs to (Postgres: household_members). */
   private readonly householdOf = new Map<string, string>();
   private readonly seatHolds: StoredSeatHold[] = [];
+  private readonly occurrenceStatus = new Map<string, { status: OccurrenceStatus; reason: string | null }>();
   /** Camp id to the user ids that hold the teacher role there. */
   private readonly teacherUsers = new Map<string, Set<string>>();
   /** Person id to the login (user id) linked to that person (people.user_id, migration 0051). */
@@ -403,6 +406,33 @@ export class InMemoryClassRepository implements ClassRepository {
       this.record(actor, 'session.update', 'session', sessionId, { isPublic });
 
       return this.toSession(row);
+    });
+  }
+
+  setOccurrenceStatus(actor: Actor, occurrenceId: string, command: OccurrenceCommand): Promise<void> {
+    return settle(() => {
+      const row = this.classIn(actor.orgId, occurrenceId);
+      if (!row) {
+        throw new ClassNotFoundError();
+      }
+      const current = this.occurrenceStatus.get(occurrenceId) ?? { status: 'active' as const, reason: null };
+      if (command.kind === 'cancel') {
+        if (decideCancel(current).kind === 'refuse') {
+          throw new OccurrenceRefusedError('already_cancelled');
+        }
+        this.occurrenceStatus.set(occurrenceId, { status: 'cancelled', reason: command.reason });
+        this.record(actor, 'occurrence.cancel', 'occurrence', occurrenceId, {
+          classId: row.sessionId,
+          reason: command.reason,
+        });
+
+        return;
+      }
+      if (decideRestore(current).kind === 'refuse') {
+        throw new OccurrenceRefusedError('not_cancelled');
+      }
+      this.occurrenceStatus.set(occurrenceId, { status: 'active', reason: null });
+      this.record(actor, 'occurrence.restore', 'occurrence', occurrenceId, { classId: row.sessionId });
     });
   }
 

@@ -207,7 +207,11 @@ function translateHoldError(error: unknown, capacity: number): unknown {
   if (error.code === '23514' && 'constraint' in error && error.constraint === 'seat_holds_capacity') {
     return new SessionFullError({ kind: 'refuse', reason: 'session_full', capacity });
   }
-  if (error.code === '23505' && 'constraint' in error && error.constraint === 'seat_holds_one_active_person_idx') {
+  if (
+    error.code === '23505' &&
+    'constraint' in error &&
+    error.constraint === 'seat_holds_one_active_series_person_idx'
+  ) {
     return new HoldExistsError();
   }
 

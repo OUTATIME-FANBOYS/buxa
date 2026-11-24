@@ -1,4 +1,5 @@
 import type { Actor, DatesPlanClass, EnrolmentDecision, EnrolmentFacts } from '@buxa/domain';
+import type { OccurrenceCommand } from '@buxa/domain';
 import type {
   Class,
   ClassPriceInput,
@@ -89,6 +90,11 @@ export interface ClassRepository {
   sessionNameTaken(userId: string, orgId: string, name: string, exceptId: string | null): Promise<string | null>;
   /** Audits `session.update`. Throws SessionNotFoundError. */
   setSessionPublic(actor: Actor, sessionId: string, isPublic: boolean): Promise<Session>;
+  /**
+   * Cancels one day of a series (with a reason) or restores it. The series is not changed. Audits "occurrence.cancel" or
+   * "occurrence.restore" in the same transaction. Throws ClassNotFoundError and OccurrenceRefusedError.
+   */
+  setOccurrenceStatus(actor: Actor, occurrenceId: string, command: OccurrenceCommand): Promise<void>;
   /**
    * Writes every class of a series in one transaction, or none. Audits `class.create` for each. Throws SessionNotFoundError,
    * or InstructorNotFoundError.

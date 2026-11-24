@@ -243,3 +243,11 @@ The camp roles are owner, admin, staff, viewer and teacher. A teacher is for the
 - A child may take more than one class in the same session, as long as the times do not overlap. Overlap is blocked at registration.
 - Payment is per class. A camp may also sell a package covering several classes at a discount.
 - Confirmation creates the enrolment in each class, and a waitlisted family moves up when a seat frees.
+
+## Class series: who is enrolled, and per day (v0.4, in progress)
+
+See `04-seats-rosters.md`, "Class series and occurrences", for the model and the status. In short, for the series that is being built:
+
+- **Per series:** the enrolment (one per child), the seat holds (one per child), the waitlist, the camp size (capacity), the price, the registration places, and the overlap rule (a child may not be enrolled in two series whose active days overlap).
+- **Per occurrence (a day):** its date and time, its status (active or cancelled, with a reason), and attendance. A cancelled day does not change the series or the places.
+- Built so far: the database model and migrations 0060 and 0061, the domain rules and cancel and restore on the server. The registration form, the pickers and the New class dialog still work per occurrence until the UI moves (see the 04 document).

@@ -69,17 +69,21 @@ describe.skipIf(!url)('class prices: constraints and row-level security', () => 
   });
 
   it('refuses a price with no currency, or a currency that is not three capital letters', async () => {
-    await expect(insertPrice(orgA, [45000, null, null, null])).rejects.toThrow(/sessions_price_shape/);
+    await expect(insertPrice(orgA, [45000, null, null, null])).rejects.toThrow(/(sessions|class_series)_price_shape/);
     await expect(insertPrice(orgA, [45000, 'aud', null, null])).rejects.toThrow(/price_currency/);
   });
 
   it('refuses an early-bird amount without its day, or a day without its amount', async () => {
-    await expect(insertPrice(orgA, [45000, 'AUD', 39900, null])).rejects.toThrow(/sessions_price_shape/);
-    await expect(insertPrice(orgA, [45000, 'AUD', null, '2027-07-05'])).rejects.toThrow(/sessions_price_shape/);
+    await expect(insertPrice(orgA, [45000, 'AUD', 39900, null])).rejects.toThrow(/(sessions|class_series)_price_shape/);
+    await expect(insertPrice(orgA, [45000, 'AUD', null, '2027-07-05'])).rejects.toThrow(
+      /(sessions|class_series)_price_shape/,
+    );
   });
 
   it('refuses an early-bird amount above the regular price, and a negative amount', async () => {
-    await expect(insertPrice(orgA, [39900, 'AUD', 45000, '2027-07-05'])).rejects.toThrow(/sessions_price_shape/);
+    await expect(insertPrice(orgA, [39900, 'AUD', 45000, '2027-07-05'])).rejects.toThrow(
+      /(sessions|class_series)_price_shape/,
+    );
     await expect(insertPrice(orgA, [-1, 'AUD', null, null])).rejects.toThrow(/price_minor|sessions_price_shape/);
   });
 

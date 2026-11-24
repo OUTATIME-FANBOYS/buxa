@@ -42,9 +42,11 @@ import {
   publishSessionRow,
   setSessionArchivedRow,
   setSessionPublicRow,
+  setOccurrenceStatusRow,
   updateClassRow,
   updateSessionRow,
 } from './PgClassWrites';
+import type { OccurrenceCommand } from '@buxa/domain';
 import { translateClassWriteError, translateSessionDeleteError, translateSessionNameError } from './pgClassErrors';
 import { listCampActiveHoldRows, listCampWaitlistRows } from './PgCampQueries';
 import { toIso } from '../people/pgRows';
@@ -166,6 +168,12 @@ export class PgClassRepository implements ClassRepository {
 
       return requireSession(db, sessionId);
     });
+  }
+
+  setOccurrenceStatus(actor: Actor, occurrenceId: string, command: OccurrenceCommand): Promise<void> {
+    return withOrg(this.pool, actor.userId, actor.orgId, db =>
+      setOccurrenceStatusRow(db, actor, occurrenceId, command),
+    );
   }
 
   addClasses(actor: Actor, sessionId: string, inputs: ClassRecord[]): Promise<Class[]> {

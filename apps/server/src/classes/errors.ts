@@ -3,6 +3,8 @@ import {
   sessionDatesBlockedMessage,
   sessionPublishBlockedMessage,
   type Refusal,
+  occurrenceRefusalMessage,
+  type OccurrenceRefusal,
 } from '@buxa/domain';
 
 /*
@@ -219,6 +221,15 @@ export function refusalError(refusal: Refusal): EnrolmentRefusalError {
 }
 
 /** A seat hold names a household that is not in this camp (or a malformed id). */
+/** Cancelling a day that is already cancelled, or restoring one that is not. */
+export class OccurrenceRefusedError extends Error {
+  readonly kind = 'occurrence-refused';
+  constructor(readonly refusal: OccurrenceRefusal) {
+    super(occurrenceRefusalMessage(refusal));
+    this.name = 'OccurrenceRefusedError';
+  }
+}
+
 export class HouseholdNotFoundError extends Error {
   readonly kind = 'household-not-found';
   constructor() {
@@ -260,6 +271,7 @@ export class RecurrenceRefusedError extends Error {
 }
 
 export type ClassErrorKind =
+  | 'occurrence-refused'
   | 'class-not-found'
   | 'session-not-found'
   | 'class-outside-session'

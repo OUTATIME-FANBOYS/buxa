@@ -13,7 +13,9 @@ import {
   MAX_MINOR_AMOUNT,
   MIN_CAMP_SIZE,
   MIN_CLASS_AGE,
+  MAX_CANCEL_REASON_LENGTH,
   normaliseName,
+  OCCURRENCE_STATUSES,
 } from '@buxa/domain';
 
 /** Ages as stored and read back: 0 to 120, so an open-ended class (stored as NULL) reads as its full range. */
@@ -249,3 +251,27 @@ export const CancelEnrolmentInputSchema = z.object({
   note: z.string().trim().max(500).optional(),
 });
 export type CancelEnrolmentInput = z.infer<typeof CancelEnrolmentInputSchema>;
+
+/** Class series: a class a family enrols in once. Its days are occurrences, and one day can be cancelled and restored. */
+export const SeriesWeekdaysSchema = z
+  .array(z.number().int().min(1, 'Choose days from Monday to Sunday.').max(7, 'Choose days from Monday to Sunday.'))
+  .min(1, 'Choose at least one day of the week.')
+  .max(7)
+  .refine(days => new Set(days).size === days.length, { message: 'Each day can be chosen once.' });
+export type SeriesWeekdaysInput = z.infer<typeof SeriesWeekdaysSchema>;
+
+export const OccurrenceStatusSchema = z.enum(OCCURRENCE_STATUSES);
+export type OccurrenceStatusValue = z.infer<typeof OccurrenceStatusSchema>;
+
+export const CancelOccurrenceInputSchema = z.object({
+  occurrenceId: z.string().uuid(),
+  reason: z
+    .string()
+    .trim()
+    .min(1, 'Say why this day is cancelled, for example "Public holiday".')
+    .max(MAX_CANCEL_REASON_LENGTH, `The reason can be ${MAX_CANCEL_REASON_LENGTH} characters at most.`),
+});
+export type CancelOccurrenceInput = z.infer<typeof CancelOccurrenceInputSchema>;
+
+export const RestoreOccurrenceInputSchema = z.object({ occurrenceId: z.string().uuid() });
+export type RestoreOccurrenceInput = z.infer<typeof RestoreOccurrenceInputSchema>;
