@@ -10,7 +10,7 @@ import type { AssignedSession } from '../../classes/ClassService';
 /** What a page can show: the data, or the reason it cannot be shown. Anything else goes to the error boundary. */
 export type Loaded<T> = { ok: true; value: T } | { ok: false; reason: 'forbidden' | 'not-found' };
 
-async function guarded<T>(work: () => Promise<T>): Promise<Loaded<T>> {
+export async function guarded<T>(work: () => Promise<T>): Promise<Loaded<T>> {
   try {
     return { ok: true, value: await work() };
   } catch (error) {
