@@ -178,6 +178,8 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0050_class_prices.sql',
       '0051_teacher_person_link.sql',
       '0052_session_archive_and_delete.sql',
+      '0053_session_status.sql',
+      '0054_registration_lifecycle.sql',
     ]);
   });
 
@@ -379,6 +381,8 @@ describe.skipIf(!url)('migration 0050 copies session prices onto their classes',
       '0050_class_prices.sql',
       '0051_teacher_person_link.sql',
       '0052_session_archive_and_delete.sql',
+      '0053_session_status.sql',
+      '0054_registration_lifecycle.sql',
     ]);
 
     const classes = await tempPool.query<{
@@ -562,7 +566,12 @@ describe.skipIf(!url)('migration 0051 links teachers to their people by email', 
     if (!tempPool) {
       return;
     }
-    expect(applied).toEqual(['0051_teacher_person_link.sql', '0052_session_archive_and_delete.sql']);
+    expect(applied).toEqual([
+      '0051_teacher_person_link.sql',
+      '0052_session_archive_and_delete.sql',
+      '0053_session_status.sql',
+      '0054_registration_lifecycle.sql',
+    ]);
     const linked = await tempPool.query<{ email: string; user_email: string }>(
       `SELECT p.email, u.email AS user_email FROM people p JOIN users u ON u.id = p.user_id`,
     );
@@ -626,5 +635,136 @@ describe.skipIf(!url)('migration 0051 drops class_teachers when every row is mat
     expect(table.rows[0].n).toBe('0');
     const copied = await tempPool.query<{ n: string }>(`SELECT count(*)::text AS n FROM session_instructors`);
     expect(copied.rows[0].n).toBe('1');
+  });
+});
+
+// Migrations 0053 and 0054 run on a database that already holds sessions and registrations. The database is brought to 0052 by hand,
+// seeded with a live and an archived session and with a pending and a confirmed registration, and then migrate() applies 0053 and 0054.
+describe.skipIf(!url)('migrations 0053 and 0054 run over existing sessions and registrations', () => {
+  const tag = randomBytes(4).toString('hex');
+  const dbName = `buxa_lifecycle_${tag}`;
+  let rootPool: pg.Pool | null = null;
+  let tempPool: pg.Pool | null = null;
+  let applied: string[] = [];
+  let confirmedId = '';
+  let pendingId = '';
+
+  beforeAll(async () => {
+    if (!url) {
+      return;
+    }
+    rootPool = new pg.Pool(poolConfigFor(url));
+    rootPool.on('error', () => {});
+    await rootPool.query(`CREATE DATABASE "${dbName}"`);
+    const parsed = new URL(url);
+    parsed.pathname = `/${dbName}`;
+    tempPool = new pg.Pool(poolConfigFor(parsed.toString()));
+    tempPool.on('error', () => {});
+
+    const client = await tempPool.connect();
+    try {
+      await client.query(
+        'CREATE TABLE IF NOT EXISTS schema_migrations (name text PRIMARY KEY, at timestamptz NOT NULL DEFAULT now())',
+      );
+      for (const file of readdirSync(DIR)
+        .filter(f => f.endsWith('.sql') && f.slice(0, 4) < '0053')
+        .sort()) {
+        await client.query('BEGIN');
+        await client.query(readFileSync(join(DIR, file), 'utf8'));
+        await client.query('INSERT INTO schema_migrations(name) VALUES ($1)', [file]);
+        await client.query('COMMIT');
+      }
+      const org = await client.query<{ id: string }>(
+        `INSERT INTO orgs (name, slug) VALUES ('Lifecycle', $1) RETURNING id`,
+        [`lifecycle-${tag}`],
+      );
+      const orgId = org.rows[0].id;
+      await client.query(
+        `INSERT INTO classes (org_id, name, starts_on, ends_on, archived_at)
+         VALUES ($1, 'Live session', '2027-07-01', '2027-07-31', NULL),
+                ($1, 'Old session', '2026-07-01', '2026-07-31', now())`,
+        [orgId],
+      );
+      const form = await client.query<{ id: string }>(
+        `INSERT INTO registration_forms (org_id, name) VALUES ($1, 'Form') RETURNING id`,
+        [orgId],
+      );
+      const formId = form.rows[0].id;
+      await client.query(
+        `INSERT INTO registration_form_versions (org_id, form_id, version, fields) VALUES ($1, $2, 1, '[]'::jsonb)`,
+        [orgId, formId],
+      );
+      const pending = await client.query<{ id: string }>(
+        `INSERT INTO registrations (org_id, form_id, form_version, answers, status)
+         VALUES ($1, $2, 1, '{"standard":{},"custom":{}}'::jsonb, 'pending') RETURNING id`,
+        [orgId, formId],
+      );
+      pendingId = pending.rows[0].id;
+      const confirmed = await client.query<{ id: string }>(
+        `INSERT INTO registrations (org_id, form_id, form_version, answers, status, confirmed_at)
+         VALUES ($1, $2, 1, '{"standard":{},"custom":{}}'::jsonb, 'confirmed', now()) RETURNING id`,
+        [orgId, formId],
+      );
+      confirmedId = confirmed.rows[0].id;
+    } finally {
+      client.release();
+    }
+    applied = await migrate(tempPool);
+  });
+
+  afterAll(async () => {
+    if (tempPool) {
+      await tempPool.end().catch(() => {});
+    }
+    if (rootPool) {
+      await rootPool.query(`DROP DATABASE IF EXISTS "${dbName}" WITH (FORCE)`).catch(() => {});
+      await rootPool.end().catch(() => {});
+    }
+  });
+
+  it('applies exactly 0053 and 0054', () => {
+    if (!tempPool) {
+      return;
+    }
+    expect(applied).toEqual(['0053_session_status.sql', '0054_registration_lifecycle.sql']);
+  });
+
+  it('0053 makes every existing session live, and an archived one archived', async () => {
+    if (!tempPool) {
+      return;
+    }
+    const { rows } = await tempPool.query<{ name: string; status: string }>(
+      `SELECT name, status FROM classes ORDER BY name`,
+    );
+    expect(rows).toEqual([
+      { name: 'Live session', status: 'live' },
+      { name: 'Old session', status: 'archived' },
+    ]);
+  });
+
+  it('0054 leaves existing registrations unarchived and not withdrawn, and the status check now allows withdrawn', async () => {
+    if (!tempPool) {
+      return;
+    }
+    const before = await tempPool.query<{
+      id: string;
+      status: string;
+      archived_at: Date | null;
+      withdrawn_at: Date | null;
+    }>(`SELECT id, status, archived_at, withdrawn_at FROM registrations ORDER BY status`);
+    expect(before.rows.map(r => [r.id, r.status, r.archived_at, r.withdrawn_at])).toEqual([
+      [confirmedId, 'confirmed', null, null],
+      [pendingId, 'pending', null, null],
+    ]);
+    // A confirmed registration that is withdrawn keeps its confirmation time; a pending one cannot claim a confirmation time.
+    await tempPool.query(`UPDATE registrations SET status = 'withdrawn', withdrawn_at = now() WHERE id = $1`, [
+      confirmedId,
+    ]);
+    await expect(
+      tempPool.query(`UPDATE registrations SET status = 'withdrawn' WHERE id = $1`, [pendingId]),
+    ).rejects.toThrow(/registrations_confirmation_check/);
+    await expect(
+      tempPool.query(`UPDATE registrations SET status = 'pending', confirmed_at = now() WHERE id = $1`, [pendingId]),
+    ).rejects.toThrow(/registrations_confirmation_check/);
   });
 });

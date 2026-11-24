@@ -92,6 +92,11 @@ export async function classWithSession(
   if (!session.ok) {
     throw new Error(session.failure.message);
   }
+  // A new session is a draft and takes no enrolments. These helpers are for tests that enrol, so the session goes live.
+  const live = await service.publishSession(as('admin'), session.value.id);
+  if (!live.ok) {
+    throw new Error(live.failure.message);
+  }
   const added = await service.addClass(as('admin'), session.value.id, {
     ...cls,
     ...times,

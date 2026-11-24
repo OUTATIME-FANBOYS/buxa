@@ -57,7 +57,10 @@ export async function RegistrationList() {
             <h2 id="registrations-list-heading" className="people-subheading">
               Registrations
             </h2>
-            <RegistrationSearch rows={registrationSearchRows(loaded.value)} />
+            <RegistrationSearch
+              rows={registrationSearchRows(loaded.value)}
+              canDelete={can(actor, 'registration:delete')}
+            />
           </section>
         </>
       )}

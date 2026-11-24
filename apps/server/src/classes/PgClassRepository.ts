@@ -1,7 +1,14 @@
 import type { Pool } from 'pg';
 import { withOrg } from '@buxa/db';
 import { isUuid, sessionNameKey, type Actor } from '@buxa/domain';
-import type { Class, Enrolment, NewSessionInput, Session, SessionEditInput } from '@buxa/contracts';
+import type {
+  Class,
+  Enrolment,
+  NewSessionInput,
+  Session,
+  SessionDeleteImpact,
+  SessionEditInput,
+} from '@buxa/contracts';
 import type {
   CampActiveHold,
   CampClassSpan,
@@ -15,6 +22,7 @@ import { cancelInTransaction, enrolInTransaction } from './PgEnrolmentWrites';
 import {
   getClass,
   getSession,
+  getSessionDeleteImpact,
   listClassRows,
   listEnrolmentRows,
   listSessionRows,
@@ -25,10 +33,12 @@ import {
 } from './PgClassQueries';
 import {
   deleteClassRow,
+  deleteDraftSessionRow,
   deleteSessionRow,
   deleteSessionWithClassesRow,
   insertClass,
   insertSession,
+  publishSessionRow,
   setSessionArchivedRow,
   setSessionPublicRow,
   updateClassRow,
@@ -97,6 +107,30 @@ export class PgClassRepository implements ClassRepository {
 
       return requireSession(db, sessionId);
     });
+  }
+
+  publishSession(actor: Actor, sessionId: string): Promise<Session> {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
+      await publishSessionRow(db, actor, sessionId);
+
+      return requireSession(db, sessionId);
+    });
+  }
+
+  sessionDeleteImpact(userId: string, orgId: string, sessionId: string): Promise<SessionDeleteImpact> {
+    return withOrg(this.pool, userId, orgId, db => getSessionDeleteImpact(db, sessionId));
+  }
+
+  async deleteDraftSession(actor: Actor, sessionId: string): Promise<void> {
+    try {
+      await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        const existing = await requireSession(db, sessionId);
+        const impact = await getSessionDeleteImpact(db, sessionId);
+        await deleteDraftSessionRow(db, actor, sessionId, existing.name, impact);
+      });
+    } catch (error) {
+      throw translateSessionDeleteError(error);
+    }
   }
 
   async deleteSessionWithClasses(actor: Actor, sessionId: string): Promise<void> {

@@ -3,7 +3,13 @@ import type { Enrolment } from '@buxa/contracts';
 import { recordAudit } from '../audit/recordAudit';
 import { toIso, type Db } from '../people/pgRows';
 import type { EnrolRequest, EnrolmentRule, GatheredEnrolmentFacts } from './ClassRepository';
-import { CamperNotFoundError, ClassNotFoundError, EnrolmentNotFoundError, refusalError } from './errors';
+import {
+  CamperNotFoundError,
+  ClassNotFoundError,
+  EnrolmentNotFoundError,
+  refusalError,
+  SessionNotLiveError,
+} from './errors';
 import { activeFactsFor, requireEnrolment } from './PgClassQueries';
 import { translateCapacityError } from './pgClassErrors';
 import { releaseExpiredHoldsInSession } from '../holds/PgSeatHoldWrites';
@@ -38,7 +44,10 @@ export async function lockCamper(db: Db, camperId: string): Promise<LocalDate | 
   return rows[0].date_of_birth;
 }
 
-/** Locks the class's row and reads the facts the rule needs. The class's own name and ages are what the rule uses. */
+/**
+ * Locks the class's row and reads the facts the rule needs. The class's own name and ages are what the rule uses. Throws
+ * SessionNotLiveError when its session is a draft or archived.
+ */
 export async function lockClass(db: Db, classId: string): Promise<LockedSession> {
   if (!isUuid(classId)) {
     throw new ClassNotFoundError();
@@ -51,15 +60,21 @@ export async function lockClass(db: Db, classId: string): Promise<LockedSession>
     class_name: string;
     age_min: number | null;
     age_max: number | null;
+    session_status: 'draft' | 'live' | 'archived';
   }>(
-    `SELECT s.id, s.capacity, s.starts_at, s.ends_at, s.name AS class_name, s.age_min, s.age_max
+    `SELECT s.id, s.capacity, s.starts_at, s.ends_at, s.name AS class_name, s.age_min, s.age_max, p.status AS session_status
        FROM sessions s
+       JOIN classes p ON p.id = s.class_id AND p.org_id = s.org_id
       WHERE s.id = $1 FOR UPDATE OF s`,
     [classId],
   );
   const row = rows[0];
   if (!row) {
     throw new ClassNotFoundError();
+  }
+  // Registration and enrolment are accepted only while the session is live (a draft is not open yet, an archived one is closed).
+  if (row.session_status !== 'live') {
+    throw new SessionNotLiveError(row.session_status);
   }
 
   return {

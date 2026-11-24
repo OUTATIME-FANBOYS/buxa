@@ -80,6 +80,11 @@ export type ClassInstructor = z.infer<typeof ClassInstructorSchema>;
 /** A class has at most this many instructors. */
 export const MAX_CLASS_INSTRUCTORS = 20;
 
+/** A session's status: a draft takes no registration, a live one does, an archived one is closed and kept. */
+export const SESSION_STATUSES = ['draft', 'live', 'archived'] as const;
+export const SessionStatusSchema = z.enum(SESSION_STATUSES);
+export type SessionStatus = z.infer<typeof SessionStatusSchema>;
+
 /** A session (the parent). Its dates are null until a class is given a time, for sessions written before the date range existed. */
 export const SessionSchema = z.object({
   id: z.string(),
@@ -90,7 +95,9 @@ export const SessionSchema = z.object({
   classCount: z.number().int(),
   /** A public session has a page anyone can read without signing in. */
   isPublic: z.boolean(),
-  /** When the session was archived (hidden from registration and its public page), or null while it is live. */
+  /** Draft (new, takes no registration), live, or archived. */
+  status: SessionStatusSchema,
+  /** When the session was archived (hidden from registration and its public page), or null while it is not archived. */
   archivedAt: z.string().nullable(),
   createdAt: z.string(),
 });
@@ -114,6 +121,17 @@ export const NewSessionInputSchema = z
 export type NewSessionInput = z.infer<typeof NewSessionInputSchema>;
 /** A session's details as edited: the same fields as a new session. */
 export type SessionEditInput = NewSessionInput;
+
+/** What deleting a draft session removes, so the screen can list it before the name is typed. */
+export const SessionDeleteImpactSchema = z.object({
+  classes: z.number().int(),
+  groups: z.number().int(),
+  rooms: z.number().int(),
+  assignments: z.number().int(),
+  instructors: z.number().int(),
+  formLinks: z.number().int(),
+});
+export type SessionDeleteImpact = z.infer<typeof SessionDeleteImpactSchema>;
 
 export const SetSessionPublicInputSchema = z.object({ isPublic: z.boolean() });
 export type SetSessionPublicInput = z.infer<typeof SetSessionPublicInputSchema>;

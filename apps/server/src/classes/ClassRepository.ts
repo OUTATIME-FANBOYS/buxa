@@ -1,5 +1,13 @@
 import type { Actor, EnrolmentDecision, EnrolmentFacts } from '@buxa/domain';
-import type { Class, Enrolment, NewSessionInput, Session, SessionEditInput, ClassPriceInput } from '@buxa/contracts';
+import type {
+  Class,
+  ClassPriceInput,
+  Enrolment,
+  NewSessionInput,
+  Session,
+  SessionDeleteImpact,
+  SessionEditInput,
+} from '@buxa/contracts';
 
 export type { Class, Session, Enrolment } from '@buxa/contracts';
 
@@ -62,6 +70,16 @@ export interface ClassRepository {
    * registration, check-in or season pass.
    */
   deleteSessionWithClasses(actor: Actor, sessionId: string): Promise<void>;
+  /** Takes a draft live. Audits `session.publish`. A live session is returned unchanged. Throws SessionNotFoundError, or SessionNotDraftError for an archived one. */
+  publishSession(actor: Actor, sessionId: string): Promise<Session>;
+  /** What deleting a draft would remove (counts). Throws SessionNotFoundError. */
+  sessionDeleteImpact(userId: string, orgId: string, sessionId: string): Promise<SessionDeleteImpact>;
+  /**
+   * Deletes a draft session with everything under it (classes, groups, rooms, assignments, instructors, form links) in one
+   * transaction. Audits `class.delete` for each class and `session.delete` with the counts. Throws SessionNotFoundError, or
+   * SessionNotDraftError when the session is not a draft.
+   */
+  deleteDraftSession(actor: Actor, sessionId: string): Promise<void>;
   /** Archives (`archived` true) or unarchives a session. Audits `session.archive` or `session.unarchive`. Throws SessionNotFoundError. */
   setSessionArchived(actor: Actor, sessionId: string, archived: boolean): Promise<Session>;
   /** The name of another session in the camp with the same name in the normalised form (see sessionNameKey), or null. `exceptId` is the session being edited. */

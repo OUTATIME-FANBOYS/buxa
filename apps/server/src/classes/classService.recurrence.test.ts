@@ -38,6 +38,8 @@ async function newSession(service: ReturnType<typeof setup>['service']) {
   if (!session.ok) {
     throw new Error(session.failure.message);
   }
+  // A new session is a draft and takes no enrolments, so it goes live here.
+  await service.publishSession(as('admin'), session.value.id);
 
   return session.value.id;
 }

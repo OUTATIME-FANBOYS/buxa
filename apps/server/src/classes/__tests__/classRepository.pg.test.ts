@@ -69,7 +69,7 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
 
     it('writes session.create in the same transaction', async () => {
       await makeSession(fx.repo, fx.actor);
-      expect(await auditActions(pool, fx.orgA)).toEqual(['session.create']);
+      expect(await auditActions(pool, fx.orgA)).toEqual(['session.create', 'session.publish']);
     });
   });
 
@@ -261,7 +261,12 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
 
     it('writes enrolment.create on success', async () => {
       await fx.repo.enrol(fx.actor, { classId, camperId: camper }, enrolRule());
-      expect(await auditActions(pool, fx.orgA)).toEqual(['session.create', 'class.create', 'enrolment.create']);
+      expect(await auditActions(pool, fx.orgA)).toEqual([
+        'session.create',
+        'session.publish',
+        'class.create',
+        'enrolment.create',
+      ]);
     });
 
     it('refuses a camper outside the age range, and writes nothing', async () => {

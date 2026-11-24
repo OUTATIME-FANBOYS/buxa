@@ -45,6 +45,8 @@ vi.mock('@/actions/classes', () => ({
   deleteSessionAction: vi.fn(),
   deleteSessionWithClassesAction: vi.fn(),
   setSessionArchivedAction: vi.fn(),
+  publishSessionAction: vi.fn(),
+  sessionDeleteImpactAction: vi.fn(),
   enrolAction: vi.fn(),
   promoteWaitlistAction: vi.fn(),
   cancelEnrolmentAction: vi.fn(),
@@ -71,6 +73,7 @@ const parent: Session = {
   endsOn: '2027-07-14',
   classCount: 1,
   isPublic: false,
+  status: 'live',
   archivedAt: null,
   createdAt: '2027-07-01T00:00:00.000Z',
 };

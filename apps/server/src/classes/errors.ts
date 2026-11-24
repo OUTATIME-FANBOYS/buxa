@@ -82,12 +82,41 @@ export class SessionNameTakenError extends Error {
   }
 }
 
+export const SESSION_HAS_ENROLMENTS_MESSAGE =
+  'This session has enrolments, holds or registrations. Unenrol every student first (refunds may be needed), clear the holds and registrations, then delete it. Or archive it instead.';
+
 /** A session with a class that has an enrolment, a hold, a registration, a check-in or a season pass cannot be deleted with its classes. */
 export class SessionHasEnrolmentsError extends Error {
   readonly kind = 'session-has-enrolments';
   constructor() {
-    super('This session has enrolments, archive it instead');
+    super(SESSION_HAS_ENROLMENTS_MESSAGE);
     this.name = 'SessionHasEnrolmentsError';
+  }
+}
+
+/** Registration and enrolment are accepted only while the session is live. A draft is not open yet, an archived one is closed. */
+export class SessionNotLiveError extends Error {
+  readonly kind = 'session-not-live';
+  constructor(readonly status: 'draft' | 'archived') {
+    super(
+      status === 'draft'
+        ? 'This session is a draft. Go live before taking registrations or enrolments.'
+        : 'This session is archived, so it takes no registrations or enrolments. Unarchive it first.',
+    );
+    this.name = 'SessionNotLiveError';
+  }
+}
+
+/** Only a draft session can go live, or be deleted together with everything under it. */
+export class SessionNotDraftError extends Error {
+  readonly kind = 'session-not-draft';
+  constructor(readonly status: 'live' | 'archived') {
+    super(
+      status === 'archived'
+        ? 'This session is archived. Unarchive it to open it again.'
+        : 'This session is already live. Only a draft can be deleted with everything under it.',
+    );
+    this.name = 'SessionNotDraftError';
   }
 }
 
@@ -235,6 +264,8 @@ export type ClassErrorKind =
   | 'session-name-taken'
   | 'session-has-enrolments'
   | 'session-name-confirmation'
+  | 'session-not-live'
+  | 'session-not-draft'
   | 'enrolment-not-found'
   | 'camper-not-found'
   | 'instructor-not-found'

@@ -112,12 +112,14 @@ export function makeSession(
   actor: Actor,
   overrides: { name?: string; startsOn?: LocalDate; endsOn?: LocalDate } = {},
 ) {
-  return repo.createSession(actor, {
-    name: overrides.name ?? uniqueSessionName('Summer camp'),
-    description: 'Two weeks in July.',
-    startsOn: overrides.startsOn ?? '2027-07-01',
-    endsOn: overrides.endsOn ?? '2027-07-31',
-  });
+  return repo
+    .createSession(actor, {
+      name: overrides.name ?? uniqueSessionName('Summer camp'),
+      description: 'Two weeks in July.',
+      startsOn: overrides.startsOn ?? '2027-07-01',
+      endsOn: overrides.endsOn ?? '2027-07-31',
+    })
+    .then(draft => repo.publishSession(actor, draft.id)); // a new session is a draft and takes no enrolments, so it goes live here
 }
 
 /**

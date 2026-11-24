@@ -204,8 +204,12 @@ export const RegistrationRowSchema = z.object({
   formVersion: z.number().int(),
   submittedAt: z.string(),
   /** Recorded as pending; a staff member confirms it (decision 3). */
-  status: z.enum(['pending', 'confirmed']),
+  status: z.enum(['pending', 'confirmed', 'withdrawn']),
   confirmedAt: z.string().nullable(),
+  /** When the registration was withdrawn (holds released, enrolments cancelled, record kept), or null. */
+  withdrawnAt: z.string().nullable(),
+  /** When the registration was archived (hidden from lists, kept), or null. */
+  archivedAt: z.string().nullable(),
   standard: z.record(z.string(), z.string().optional()),
   custom: z.record(z.string(), z.union([z.string(), z.boolean()]).optional()),
   sessions: z.array(RegistrationSessionSchema),

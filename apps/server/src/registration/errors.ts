@@ -59,6 +59,11 @@ export const REFUSAL_MESSAGES: Record<RegistrationRefusal, string> = {
   form_not_published: 'Publish this form before taking registrations on it.',
   no_sessions: 'Choose at least one session.',
   session_not_in_form: 'One of the sessions is not part of this form.',
+  session_not_open:
+    'One of the sessions is not open for registration. A draft session must go live first, and an archived one is closed.',
+  already_withdrawn: 'This registration is already withdrawn.',
+  withdraw_first:
+    'This registration is confirmed and still has enrolments. Withdraw it first, which cancels them, then delete it.',
   not_pending: 'Only a pending registration can be confirmed.',
   already_confirmed: 'This registration is already confirmed.',
   no_classes: 'Choose at least one class.',

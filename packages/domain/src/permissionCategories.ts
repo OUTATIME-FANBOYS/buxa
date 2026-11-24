@@ -32,6 +32,7 @@ export const CATEGORY_PERMISSIONS = {
   'Classes and events': [
     'classes:manage',
     'classes:delete_with_classes',
+    'classes:publish',
     'events:read',
     'events:create',
     'events:update',
@@ -44,6 +45,7 @@ export const CATEGORY_PERMISSIONS = {
     'registration:submit',
     'registration:confirm',
     'registration:manage',
+    'registration:delete',
     'holds:manage',
   ],
   Team: [

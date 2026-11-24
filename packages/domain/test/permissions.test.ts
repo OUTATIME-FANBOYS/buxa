@@ -54,6 +54,7 @@ const MATRIX: Record<Action, string> = {
   'events:delete': '.YYY.',
   'classes:manage': '.YYY.',
   'classes:delete_with_classes': '..YY.',
+  'classes:publish': '..YY.',
   'tasks:read': 'YYYY.',
   'tasks:create': '.YYY.',
   'tasks:update': '.YYY.',
@@ -66,6 +67,7 @@ const MATRIX: Record<Action, string> = {
   'registration:submit': '.YYY.',
   'registration:manage': '..YY.',
   'registration:confirm': '.YYY.',
+  'registration:delete': '..YY.',
 };
 
 describe('role grants', () => {

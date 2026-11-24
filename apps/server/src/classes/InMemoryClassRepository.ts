@@ -1,7 +1,16 @@
 import { randomUUID } from 'node:crypto';
 import type { Actor, ActiveEnrolmentFacts, AuditAction, LocalDate } from '@buxa/domain';
 import { capacityCovers, seatsLeft, sessionNameKey } from '@buxa/domain';
-import type { Class, Enrolment, EnrolmentStatus, NewSessionInput, Session, SessionEditInput } from '@buxa/contracts';
+import type {
+  Class,
+  Enrolment,
+  EnrolmentStatus,
+  NewSessionInput,
+  Session,
+  SessionDeleteImpact,
+  SessionEditInput,
+  SessionStatus,
+} from '@buxa/contracts';
 import { priceChangeAudit, samePrice } from './priceAudit';
 import { sameSessionDetails, sessionEditAudit, type SessionDetails } from './sessionEditAudit';
 import { systemClock, type Clock } from '../services/clock';
@@ -26,7 +35,9 @@ import {
   InstructorNotFoundError,
   SessionHasClassesError,
   SessionHasEnrolmentsError,
+  SessionNotDraftError,
   SessionNotFoundError,
+  SessionNotLiveError,
   refusalError,
 } from './errors';
 import { settle } from '@buxa/domain';
@@ -40,6 +51,7 @@ interface StoredSession {
   startsOn: LocalDate | null;
   endsOn: LocalDate | null;
   isPublic: boolean;
+  status: SessionStatus;
   archivedAt: string | null;
   createdAt: string;
 }
@@ -180,6 +192,7 @@ export class InMemoryClassRepository implements ClassRepository {
         startsOn: input.startsOn,
         endsOn: input.endsOn,
         isPublic: input.isPublic ?? false,
+        status: 'draft',
         archivedAt: null,
         createdAt: this.now().toISOString(),
       };
@@ -259,10 +272,79 @@ export class InMemoryClassRepository implements ClassRepository {
       if (!row) {
         throw new SessionNotFoundError();
       }
-      row.archivedAt = archived ? (row.archivedAt ?? this.now().toISOString()) : null;
-      this.record(actor, archived ? 'session.archive' : 'session.unarchive', 'session', sessionId, {});
+      const from = row.status;
+      if (archived) {
+        row.status = 'archived';
+        row.archivedAt = row.archivedAt ?? this.now().toISOString();
+      } else if (row.status === 'archived') {
+        row.status = 'live';
+        row.archivedAt = null;
+      } else {
+        return this.toSession(row);
+      }
+      this.record(actor, archived ? 'session.archive' : 'session.unarchive', 'session', sessionId, { from });
 
       return this.toSession(row);
+    });
+  }
+
+  publishSession(actor: Actor, sessionId: string): Promise<Session> {
+    return settle(() => {
+      const row = this.sessionIn(actor.orgId, sessionId);
+      if (!row) {
+        throw new SessionNotFoundError();
+      }
+      if (row.status === 'archived') {
+        throw new SessionNotDraftError('archived');
+      }
+      if (row.status === 'draft') {
+        row.status = 'live';
+        this.record(actor, 'session.publish', 'session', sessionId, {});
+      }
+
+      return this.toSession(row);
+    });
+  }
+
+  sessionDeleteImpact(userId: string, orgId: string, sessionId: string): Promise<SessionDeleteImpact> {
+    return settle(() => {
+      if (!this.sessionIn(orgId, sessionId)) {
+        throw new SessionNotFoundError();
+      }
+      const classes = [...this.classes.values()].filter(c => c.sessionId === sessionId);
+
+      // Groups, rooms and assignments live in the group repository; a session here has none of them.
+      return {
+        classes: classes.length,
+        groups: 0,
+        rooms: 0,
+        assignments: 0,
+        instructors: classes.reduce((n, c) => n + c.instructorIds.length, 0),
+        formLinks: 0,
+      };
+    });
+  }
+
+  deleteDraftSession(actor: Actor, sessionId: string): Promise<void> {
+    return settle(() => {
+      const row = this.sessionIn(actor.orgId, sessionId);
+      if (!row) {
+        throw new SessionNotFoundError();
+      }
+      if (row.status !== 'draft') {
+        throw new SessionNotDraftError(row.status);
+      }
+      const children = [...this.classes.values()].filter(c => c.sessionId === sessionId);
+      for (const child of children) {
+        this.classes.delete(child.id);
+        this.record(actor, 'class.delete', 'class', child.id, { name: child.name, session: row.name });
+      }
+      this.sessions.delete(sessionId);
+      this.record(actor, 'session.delete', 'session', sessionId, {
+        name: row.name,
+        status: 'draft',
+        classes: children.length,
+      });
     });
   }
 
@@ -475,6 +557,10 @@ export class InMemoryClassRepository implements ClassRepository {
       const camper = this.camperIn(actor.orgId, request.camperId);
       if (!camper) {
         throw new CamperNotFoundError();
+      }
+      const parent = this.sessions.get(cls.sessionId);
+      if (parent && parent.status !== 'live') {
+        throw new SessionNotLiveError(parent.status);
       }
       // As in Postgres: expired holds give their places back and the waitlist takes them, before the seat count is read.
       const undoSweep = this.sweepExpiredHolds(cls.id, actor);
@@ -715,6 +801,7 @@ export class InMemoryClassRepository implements ClassRepository {
       endsOn: s.endsOn,
       classCount: [...this.classes.values()].filter(c => c.sessionId === s.id).length,
       isPublic: s.isPublic,
+      status: s.status,
       archivedAt: s.archivedAt,
       createdAt: s.createdAt,
     };

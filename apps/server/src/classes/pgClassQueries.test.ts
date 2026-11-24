@@ -21,6 +21,7 @@ const sessionRow = (over: Partial<SessionRow> = {}): SessionRow => ({
   ends_on: '2027-07-31',
   class_count: 2,
   is_public: false,
+  status: 'live',
   archived_at: null,
   created_at: created,
   ...over,
@@ -72,6 +73,7 @@ describe('toSession', () => {
       endsOn: '2027-07-31',
       classCount: 2,
       isPublic: false,
+      status: 'live',
       archivedAt: null,
       createdAt: '2027-07-01T00:00:00.000Z',
     });

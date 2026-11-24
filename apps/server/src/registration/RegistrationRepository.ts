@@ -38,6 +38,12 @@ export type RegistrationRule = (facts: RegistrationFactsInTx) => RegistrationDec
 /** Pure: decides from the registration's current status whether it may be confirmed (decideConfirmation). Runs under the row lock. */
 export type ConfirmationRule = (status: RegistrationStatus) => RegistrationDecision;
 
+/** Pure: decides from the registration's current status whether it may be withdrawn (decideWithdrawal). Runs under the row lock. */
+export type WithdrawalRule = (status: RegistrationStatus) => RegistrationDecision;
+
+/** Pure: decides from the status and the number of active enrolments whether it may be erased (decideErasure). Runs under the row lock. */
+export type ErasureRule = (facts: { status: RegistrationStatus; activeEnrolments: number }) => RegistrationDecision;
+
 /**
  * What a confirmation can reach while its transaction is open. Badges are written here, so a confirmation and the badges it
  * issues commit together or not at all.
@@ -55,7 +61,8 @@ export type ConfirmationWork<T> = (unit: ConfirmationUnit) => Promise<T>;
 /**
  * Storage for registration forms and submissions. Callers decide whether something may happen (permissions, rules in
  * @buxa/domain); implementations persist it and audit it in the same transaction. Every method is scoped to the actor's camp.
- * Holds and the waitlist are not here yet: they add a status on registration_sessions (see migration 0023).
+ * A registration's sessions are derived from its places (registration_classes to sessions to classes); registration_sessions is no
+ * longer written (migration 0054 note).
  */
 export interface RegistrationRepository {
   listForms(userId: string, orgId: string): Promise<RegistrationForm[]>;
@@ -92,4 +99,17 @@ export interface RegistrationRepository {
    * RegistrationNotFoundError. Returns what `work` returns.
    */
   confirm<T>(actor: Actor, registrationId: string, rule: ConfirmationRule, work: ConfirmationWork<T>): Promise<T>;
+  /**
+   * Locks the registration, checks the rule on its status and, on allow, releases its holds, cancels its enrolments (the existing
+   * cancel path, so the waitlist moves up) and marks it withdrawn. The record and its answers stay. Audits `registration.withdraw`.
+   * Throws RegistrationNotFoundError, or RegistrationRefusedError.
+   */
+  withdraw(actor: Actor, registrationId: string, rule: WithdrawalRule): Promise<void>;
+  /** Hides a registration from lists (`archived` true) or brings it back. It is kept. Audits `registration.archive` or `registration.unarchive`. Throws RegistrationNotFoundError. */
+  setArchived(actor: Actor, registrationId: string, archived: boolean): Promise<void>;
+  /**
+   * Erases a registration and all its answers. Checks the rule first (a confirmed registration with enrolments is refused:
+   * withdraw it first). Audits `registration.delete` without personal data. Throws RegistrationNotFoundError, or RegistrationRefusedError.
+   */
+  erase(actor: Actor, registrationId: string, rule: ErasureRule): Promise<void>;
 }

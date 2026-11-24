@@ -9,6 +9,9 @@ export type RegistrationRefusal =
   | 'form_not_published'
   | 'no_sessions'
   | 'session_not_in_form'
+  | 'session_not_open'
+  | 'already_withdrawn'
+  | 'withdraw_first'
   | 'not_pending'
   | 'already_confirmed'
   | 'no_classes'
@@ -62,7 +65,7 @@ export function decideSelections(selections: readonly ClassSelection[]): Selecti
 }
 
 /** A registration is recorded as pending and becomes confirmed only by a staff action (decision 3 in docs/phases/03-registration.md). */
-export type RegistrationStatus = 'pending' | 'confirmed';
+export type RegistrationStatus = 'pending' | 'confirmed' | 'withdrawn';
 
 export type RegistrationDecision = { allow: true } | { allow: false; reason: RegistrationRefusal };
 
@@ -73,6 +76,8 @@ export interface RegistrationFacts {
   formSessionIds: readonly string[];
   /** The sessions the family asked for. */
   requestedSessionIds: readonly string[];
+  /** Sessions of the form that are not live (a draft, or archived): they take no registrations. */
+  closedSessionIds: readonly string[];
 }
 
 /** A registration needs a published form, at least one session, and every requested session inside the form's session set. */
@@ -88,6 +93,10 @@ export function decideRegistration(facts: RegistrationFacts): RegistrationDecisi
   if (!requested.every(id => allowed.has(id))) {
     return { allow: false, reason: 'session_not_in_form' };
   }
+  const closed = new Set(facts.closedSessionIds);
+  if (requested.some(id => closed.has(id))) {
+    return { allow: false, reason: 'session_not_open' };
+  }
 
   return { allow: true };
 }
@@ -99,4 +108,21 @@ export function decideConfirmation(status: RegistrationStatus): RegistrationDeci
   }
 
   return status === 'pending' ? { allow: true } : { allow: false, reason: 'not_pending' };
+}
+
+/** A registration can be withdrawn once. Withdrawing keeps the record, releases its holds and cancels its enrolments. */
+export function decideWithdrawal(status: RegistrationStatus): RegistrationDecision {
+  return status === 'withdrawn' ? { allow: false, reason: 'already_withdrawn' } : { allow: true };
+}
+
+/**
+ * A registration may be erased only when no enrolment stands behind it. A confirmed registration that still has an enrolment (or a
+ * waitlist place) must be withdrawn first, so the seats it holds are given back before its record is removed.
+ */
+export function decideErasure(facts: { status: RegistrationStatus; activeEnrolments: number }): RegistrationDecision {
+  if (facts.status === 'confirmed' && facts.activeEnrolments > 0) {
+    return { allow: false, reason: 'withdraw_first' };
+  }
+
+  return { allow: true };
 }

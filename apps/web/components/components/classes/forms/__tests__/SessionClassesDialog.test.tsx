@@ -4,10 +4,13 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import type { ReactNode } from 'react';
 import { UiProvider } from '@buxa/middleware/providers/providers';
+import { sessionDeleteImpactAction } from '@/actions/classes';
 import { classesPrompt, SessionClassesChoice } from '../SessionClassesDialog';
 
 vi.mock('@/actions/classes', () => ({
   setSessionArchivedAction: vi.fn(),
+  publishSessionAction: vi.fn(),
+  sessionDeleteImpactAction: vi.fn(),
   deleteSessionWithClassesAction: vi.fn(),
 }));
 
@@ -81,6 +84,64 @@ describe('SessionClassesChoice', () => {
     act(() => buttonWith('Back')?.click());
     expect(document.querySelector('input[name="confirmName"]')).toBeNull();
     expect(buttonWith('Archive session')).not.toBeNull();
+  });
+});
+
+describe('SessionClassesChoice for a draft', () => {
+  let root: Root;
+  const DRAFT = { ...SESSION, status: 'draft' as const };
+  beforeEach(() => {
+    root = createRoot(document.body.appendChild(document.createElement('div')));
+    vi.mocked(sessionDeleteImpactAction).mockClear();
+    vi.mocked(sessionDeleteImpactAction).mockResolvedValue({
+      ok: true,
+      impact: { classes: 2, groups: 1, rooms: 0, assignments: 3, instructors: 2, formLinks: 1 },
+    });
+  });
+  afterEach(() => {
+    act(() => root.unmount());
+    document.body.innerHTML = '';
+  });
+
+  it('says a draft can be deleted with everything under it', () => {
+    expect(classesPrompt('Summer 2027', 2, 'draft')).toContain('is a draft with 2 classes');
+    expect(classesPrompt('Summer 2027', 2, 'live')).not.toContain('draft');
+  });
+
+  it('lists what will be removed before the name is typed, and only then enables the delete', async () => {
+    act(() => root.render(withUi(<SessionClassesChoice session={DRAFT} onArchived={() => {}} />)));
+    act(() => buttonWith('Delete classes and session')?.click());
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    const text = document.body.textContent ?? '';
+    expect(sessionDeleteImpactAction).toHaveBeenCalledWith(SESSION.id);
+    expect(text).toContain('2 classes');
+    expect(text).toContain('1 group');
+    expect(text).toContain('3 assignments');
+    expect(text).toContain('2 instructor links');
+    expect(text).toContain('1 registration form link');
+    expect(text).not.toContain('rooms');
+
+    const submit = () =>
+      Array.from(document.querySelectorAll('button')).find(
+        b => b.type === 'submit' && b.textContent?.trim() === 'Delete draft and everything under it',
+      );
+    expect(submit()?.disabled).toBe(true);
+    act(() => {
+      setInputValue(document.querySelector<HTMLInputElement>('input[name="confirmName"]'), 'Summer 2027');
+    });
+    expect(submit()?.disabled).toBe(false);
+  });
+
+  it('a live session shows no list, and tells the person to unenrol first', () => {
+    act(() =>
+      root.render(withUi(<SessionClassesChoice session={{ ...SESSION, status: 'live' }} onArchived={() => {}} />)),
+    );
+    act(() => buttonWith('Delete classes and session')?.click());
+    expect(sessionDeleteImpactAction).not.toHaveBeenCalled();
+    expect(document.body.textContent).toContain('unenrol everyone first');
   });
 });
 

@@ -1,9 +1,9 @@
 import { isUuid, type Actor } from '@buxa/domain';
-import type { NewSessionInput, SessionEditInput } from '@buxa/contracts';
+import type { NewSessionInput, SessionDeleteImpact, SessionEditInput, SessionStatus } from '@buxa/contracts';
 import { recordAudit } from '../audit/recordAudit';
 import { type Db } from '../people/pgRows';
 import type { ClassRecord } from './ClassRepository';
-import { ClassNotFoundError, InstructorNotFoundError, SessionNotFoundError } from './errors';
+import { ClassNotFoundError, InstructorNotFoundError, SessionNotDraftError, SessionNotFoundError } from './errors';
 import { toPrice, type PriceRow } from './PgClassQueries';
 import { priceChangeAudit, samePrice } from './priceAudit';
 import { sameSessionDetails, sessionEditAudit, type SessionDetails } from './sessionEditAudit';
@@ -16,8 +16,8 @@ import { sameSessionDetails, sessionEditAudit, type SessionDetails } from './ses
 /** Inserts a session (a date range that holds classes) and audits it. Returns its id. A session has no price; its classes do. */
 export async function insertSession(db: Db, actor: Actor, input: NewSessionInput): Promise<string> {
   const { rows } = await db.query<{ id: string }>(
-    `INSERT INTO classes (org_id, name, description, starts_on, ends_on, is_public)
-     VALUES ($1, $2, $3, $4::date, $5::date, $6) RETURNING id`,
+    `INSERT INTO classes (org_id, name, description, starts_on, ends_on, is_public, status)
+     VALUES ($1, $2, $3, $4::date, $5::date, $6, 'draft') RETURNING id`,
     [actor.orgId, input.name, input.description, input.startsOn, input.endsOn, input.isPublic ?? false],
   );
   const id = rows[0].id;
@@ -26,7 +26,7 @@ export async function insertSession(db: Db, actor: Actor, input: NewSessionInput
     action: 'session.create',
     entity: 'session',
     entityId: id,
-    data: { name: input.name },
+    data: { name: input.name, status: 'draft' },
   });
 
   return id;
@@ -130,24 +130,94 @@ export async function deleteSessionWithClassesRow(
   });
 }
 
-/** Archives or unarchives a session, and audits it. Throws SessionNotFoundError when the session is not in the camp. */
+/**
+ * Archives a session (status archived, archived_at stamped) or unarchives it (back to live, archived_at cleared), and audits it.
+ * Unarchiving a session that is not archived changes nothing. Throws SessionNotFoundError when the session is not in the camp.
+ */
 export async function setSessionArchivedRow(db: Db, actor: Actor, sessionId: string, archived: boolean): Promise<void> {
-  const { rows } = await db.query<{ id: string }>(
-    `UPDATE classes
-        SET archived_at = CASE WHEN $3 THEN COALESCE(archived_at, now()) ELSE NULL END
-      WHERE id = $1 AND org_id = $2
-      RETURNING id`,
-    [sessionId, actor.orgId, archived],
+  const { rows } = await db.query<{ status: SessionStatus }>(
+    'SELECT status FROM classes WHERE id = $1 AND org_id = $2 FOR UPDATE',
+    [sessionId, actor.orgId],
   );
   if (rows.length === 0) {
     throw new SessionNotFoundError();
+  }
+  if (archived) {
+    await db.query(
+      `UPDATE classes SET status = 'archived', archived_at = COALESCE(archived_at, now()) WHERE id = $1 AND org_id = $2`,
+      [sessionId, actor.orgId],
+    );
+  } else if (rows[0].status === 'archived') {
+    await db.query(`UPDATE classes SET status = 'live', archived_at = NULL WHERE id = $1 AND org_id = $2`, [
+      sessionId,
+      actor.orgId,
+    ]);
+  } else {
+    return;
   }
   await recordAudit(db, {
     actor,
     action: archived ? 'session.archive' : 'session.unarchive',
     entity: 'session',
     entityId: sessionId,
-    data: {},
+    data: { from: rows[0].status },
+  });
+}
+
+/**
+ * Takes a draft session live: registration and enrolment are accepted from now on. Audits `session.publish`. A session that is
+ * already live changes nothing. An archived session is refused (SessionNotDraftError): it is unarchived instead.
+ */
+export async function publishSessionRow(db: Db, actor: Actor, sessionId: string): Promise<void> {
+  const { rows } = await db.query<{ status: SessionStatus }>(
+    'SELECT status FROM classes WHERE id = $1 AND org_id = $2 FOR UPDATE',
+    [sessionId, actor.orgId],
+  );
+  if (rows.length === 0) {
+    throw new SessionNotFoundError();
+  }
+  if (rows[0].status === 'live') {
+    return;
+  }
+  if (rows[0].status === 'archived') {
+    throw new SessionNotDraftError('archived');
+  }
+  await db.query(`UPDATE classes SET status = 'live' WHERE id = $1 AND org_id = $2`, [sessionId, actor.orgId]);
+  await recordAudit(db, { actor, action: 'session.publish', entity: 'session', entityId: sessionId, data: {} });
+}
+
+/**
+ * Deletes a draft session with everything under it through buxa_delete_draft_session_v1 (migration 0053): its classes, and through
+ * the cascade its groups, rooms, assignments, instructor links and form links. The database refuses a session that is not a draft.
+ * Audits `class.delete` for each class and `session.delete` with the counts, in the same transaction. The audit holds names and
+ * counts of the session's own setup, no personal data.
+ */
+export async function deleteDraftSessionRow(
+  db: Db,
+  actor: Actor,
+  sessionId: string,
+  name: string,
+  impact: SessionDeleteImpact,
+): Promise<void> {
+  const { rows } = await db.query<{ deleted_class_id: string; deleted_class_name: string }>(
+    'SELECT deleted_class_id, deleted_class_name FROM buxa_delete_draft_session_v1($1, $2)',
+    [actor.orgId, sessionId],
+  );
+  for (const row of rows) {
+    await recordAudit(db, {
+      actor,
+      action: 'class.delete',
+      entity: 'class',
+      entityId: row.deleted_class_id,
+      data: { name: row.deleted_class_name, session: name },
+    });
+  }
+  await recordAudit(db, {
+    actor,
+    action: 'session.delete',
+    entity: 'session',
+    entityId: sessionId,
+    data: { name, status: 'draft', ...impact },
   });
 }
 
