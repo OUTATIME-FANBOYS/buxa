@@ -47,8 +47,14 @@ export const CAMP_NAV_GROUPS: readonly NavGroup[] = [
       // The Sessions entry is the list of sessions (a date range each, holding classes). Its address stays /camp/sessions.
       { href: ROUTES.sessions, label: 'Sessions', icon: 'calendar', requires: 'events:read' },
       { href: ROUTES.myClasses, label: 'My classes', icon: 'calendar-days', onlyFor: ['teacher'] },
-      { href: ROUTES.registration, label: 'Registration', icon: 'list', requires: 'registration:read' },
-      { href: ROUTES.holds, label: 'Holds', icon: 'hourglass', requires: 'registration:read' },
+      {
+        href: ROUTES.registration,
+        label: 'Registration',
+        icon: 'list',
+        requires: 'registration:read',
+        under: ROUTES.sessions,
+      },
+      { href: ROUTES.holds, label: 'Holds', icon: 'hourglass', requires: 'registration:read', under: ROUTES.sessions },
       { href: ROUTES.checkIn, label: 'Check-in', icon: 'check', requires: 'attendance:record' },
       { href: ROUTES.onSite, label: 'On site', icon: 'map-pin', requires: 'attendance:read' },
       {
