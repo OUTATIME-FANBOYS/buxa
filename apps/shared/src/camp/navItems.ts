@@ -46,11 +46,11 @@ export const CAMP_NAV_GROUPS: readonly NavGroup[] = [
     items: [
       // The Sessions entry is the list of sessions (a date range each, holding classes). Its address stays /camp/sessions.
       { href: ROUTES.sessions, label: 'Sessions', icon: 'calendar', requires: 'events:read' },
-      { href: ROUTES.myClasses, label: 'My classes', icon: 'calendar', onlyFor: ['teacher'] },
+      { href: ROUTES.myClasses, label: 'My classes', icon: 'calendar-days', onlyFor: ['teacher'] },
       { href: ROUTES.registration, label: 'Registration', icon: 'list', requires: 'registration:read' },
-      { href: ROUTES.holds, label: 'Holds', icon: 'clock', requires: 'registration:read' },
+      { href: ROUTES.holds, label: 'Holds', icon: 'hourglass', requires: 'registration:read' },
       { href: ROUTES.checkIn, label: 'Check-in', icon: 'check', requires: 'attendance:record' },
-      { href: ROUTES.onSite, label: 'On site', icon: 'clock', requires: 'attendance:read' },
+      { href: ROUTES.onSite, label: 'On site', icon: 'map-pin', requires: 'attendance:read' },
       {
         href: ROUTES.attendance,
         label: 'Attendance',
@@ -67,7 +67,7 @@ export const CAMP_NAV_GROUPS: readonly NavGroup[] = [
       { href: ROUTES.tasks, label: 'My tasks', icon: 'tasks' },
       { href: ROUTES.projects, label: 'Projects', icon: 'folder' },
       { href: ROUTES.boards, label: 'Boards', icon: 'kanban', under: ROUTES.projects },
-      { href: ROUTES.calendar, label: 'Calendar', icon: 'calendar', under: ROUTES.projects },
+      { href: ROUTES.calendar, label: 'Calendar', icon: 'calendar-clock', under: ROUTES.projects },
       { href: ROUTES.agents, label: 'Agents', icon: 'agent' },
     ],
   },

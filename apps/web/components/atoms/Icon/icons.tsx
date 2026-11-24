@@ -67,6 +67,10 @@ import {
   Upload,
   UserMinus,
   UserPlus,
+  CalendarClock,
+  CalendarDays,
+  Hourglass,
+  MapPin,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -144,6 +148,10 @@ export const ICONS: Record<string, LucideIcon> = {
   import: Import,
   'file-up': FileUp,
   'file-down': FileDown,
+  'calendar-clock': CalendarClock,
+  'calendar-days': CalendarDays,
+  hourglass: Hourglass,
+  'map-pin': MapPin,
 };
 
 /** The status glyphs: lucide where one fits, and a dashed clock for "in progress", which lucide does not have. */
