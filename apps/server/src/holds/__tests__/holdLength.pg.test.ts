@@ -13,6 +13,7 @@ import {
 import { isHttpError } from '../../http/errors';
 import { PgOrgRepository } from '../../orgs/PgOrgRepository';
 import { createOrgService, type OrgService } from '../../services/orgs';
+import { householdWithChild } from './holdFixture';
 import { PgSeatHoldRepository } from '../PgSeatHoldRepository';
 import { createSeatHoldService, type SeatHoldService } from '../SeatHoldService';
 
@@ -57,20 +58,16 @@ describe.skipIf(!url)('seat hold length per camp in Postgres', () => {
   async function setUp() {
     const session = await makeSession(fx.repo, fx.actor);
     const cls = await fx.repo.addClass(fx.actor, session.id, sessionInput(9, 12, { capacity: 10 }));
-    const householdIds = await withOrg(pool, fx.actor.userId, fx.orgA, async db => {
-      const out: string[] = [];
+    const made = await withOrg(pool, fx.actor.userId, fx.orgA, async db => {
+      const out: { householdId: string; personId: string }[] = [];
       for (const name of ['Ada', 'Bea', 'Cy']) {
-        const { rows } = await db.query<{ id: string }>(
-          `INSERT INTO households (org_id, name) VALUES ($1, $2) RETURNING id`,
-          [fx.orgA, `${name} ${randomBytes(3).toString('hex')}`],
-        );
-        out.push(rows[0].id);
+        out.push(await householdWithChild(db, fx.orgA, `${name} ${randomBytes(3).toString('hex')}`));
       }
 
       return out;
     });
 
-    return { classId: cls.id, householdIds };
+    return { classId: cls.id, householdIds: made.map(m => m.householdId), personIds: made.map(m => m.personId) };
   }
 
   /** The minutes a stored hold lasts, read back from the database (expiry minus creation). */
@@ -88,12 +85,12 @@ describe.skipIf(!url)('seat hold length per camp in Postgres', () => {
 
   it('a hold placed after the change uses the new length; a hold placed before keeps its own time', async () => {
     await setLength(null);
-    const { classId, householdIds } = await setUp();
+    const { classId, householdIds, personIds } = await setUp();
 
-    const before = await seats.placeHold(fx.actor, { classId, householdId: householdIds[0] });
+    const before = await seats.placeHold(fx.actor, { classId, householdId: householdIds[0], personId: personIds[0] });
     expect(before.ok).toBe(true);
     await setLength(45);
-    const after = await seats.placeHold(fx.actor, { classId, householdId: householdIds[1] });
+    const after = await seats.placeHold(fx.actor, { classId, householdId: householdIds[1], personId: personIds[1] });
     expect(after.ok).toBe(true);
     if (!before.ok || !after.ok) {
       throw new Error('both holds should be taken');
@@ -105,9 +102,9 @@ describe.skipIf(!url)('seat hold length per camp in Postgres', () => {
 
   it('null uses the default, 15 minutes', async () => {
     await setLength(null);
-    const { classId, householdIds } = await setUp();
+    const { classId, householdIds, personIds } = await setUp();
 
-    const held = await seats.placeHold(fx.actor, { classId, householdId: householdIds[0] });
+    const held = await seats.placeHold(fx.actor, { classId, householdId: householdIds[0], personId: personIds[0] });
     expect(held.ok).toBe(true);
     if (!held.ok) {
       throw new Error('the hold should be taken');

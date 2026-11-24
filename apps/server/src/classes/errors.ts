@@ -230,11 +230,11 @@ export class HoldNotFoundError extends Error {
   }
 }
 
-/** The household already holds a place in this session. One hold per household per session. */
+/** The child already holds a place in this class. One hold per child per class (siblings of one household each hold their own). */
 export class HoldExistsError extends Error {
   readonly kind = 'hold-exists';
   constructor() {
-    super('The household already holds a place in this session');
+    super('The child already holds a place in this class');
     this.name = 'HoldExistsError';
   }
 }

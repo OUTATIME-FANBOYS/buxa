@@ -166,6 +166,9 @@ interface PlaceRow {
   payment_status: 'unpaid' | 'paid';
   payment_note: string | null;
   hold_id: string | null;
+  price_minor: number | null;
+  price_currency: string | null;
+  early_bird_applied: boolean | null;
 }
 
 /**
@@ -201,7 +204,8 @@ async function listClassRows(
     `SELECT rc.id, rc.registration_id, rc.class_id, c.name AS class_name, c.class_id AS session_id, s.name AS session_name,
             rc.person_id, (p.given_name || ' ' || p.family_name) AS camper_name,
             rc.hold_id, h.expires_at AS hold_expires_at, h.released_at AS hold_released_at,
-            e.status AS enrolment_status, rc.payment_status, rc.payment_note
+            e.status AS enrolment_status, rc.payment_status, rc.payment_note,
+            rc.price_minor, rc.price_currency, rc.early_bird_applied
        FROM registration_classes rc
        JOIN sessions c ON c.id = rc.class_id AND c.org_id = rc.org_id
        JOIN classes s ON s.id = c.class_id AND s.org_id = c.org_id
@@ -227,6 +231,10 @@ async function listClassRows(
       status: placeStatus(r, now),
       paymentStatus: r.payment_status,
       paymentNote: r.payment_note,
+      price:
+        r.price_minor === null || r.price_currency === null
+          ? null
+          : { amountMinor: r.price_minor, currency: r.price_currency, earlyBird: r.early_bird_applied === true },
     },
   }));
 }

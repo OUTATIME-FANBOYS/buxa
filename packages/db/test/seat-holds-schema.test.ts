@@ -56,10 +56,16 @@ describe.skipIf(!url)('seat holds: isolation and constraints', () => {
           [orgA],
         )
       ).rows[0].id;
+      const childA = (
+        await db.query<{ id: string }>(
+          `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Kid', 'A') RETURNING id`,
+          [orgA],
+        )
+      ).rows[0].id;
       holdA = (
         await db.query<{ id: string }>(
-          `INSERT INTO seat_holds (org_id, session_id, household_id, expires_at) VALUES ($1, $2, $3, now() + interval '15 minutes') RETURNING id`,
-          [orgA, sessionA, householdA],
+          `INSERT INTO seat_holds (org_id, session_id, household_id, person_id, expires_at) VALUES ($1, $2, $3, $4, now() + interval '15 minutes') RETURNING id`,
+          [orgA, sessionA, householdA, childA],
         )
       ).rows[0].id;
     });

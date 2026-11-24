@@ -1,6 +1,6 @@
 import type { Pool } from 'pg';
 import { withOrg } from '@buxa/db';
-import { isUuid, sessionNameKey, type Actor } from '@buxa/domain';
+import { isUuid, type Actor } from '@buxa/domain';
 import type {
   Class,
   Enrolment,
@@ -92,9 +92,9 @@ export class PgClassRepository implements ClassRepository {
     return withOrg(this.pool, userId, orgId, async db => {
       const { rows } = await db.query<{ name: string }>(
         `SELECT name FROM classes
-          WHERE lower(btrim(regexp_replace(name, '\\s+', ' ', 'g'))) = $1 AND ($2::uuid IS NULL OR id <> $2::uuid)
+          WHERE buxa_name_key(name) = buxa_name_key($1) AND ($2::uuid IS NULL OR id <> $2::uuid)
           LIMIT 1`,
-        [sessionNameKey(name), exceptId],
+        [name, exceptId],
       );
 
       return rows[0]?.name ?? null;

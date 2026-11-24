@@ -1,5 +1,6 @@
 import type { CustomField, RegistrationClass, RegistrationRow } from '@buxa/contracts';
 import { STANDARD_FIELDS } from '@buxa/contracts';
+import { formatMoney } from '@buxa/domain';
 import { fmt, isoDay } from '@buxa/shared';
 import { Pill } from '@/components/elements';
 import { ConfirmRegistration } from './ConfirmRegistration';
@@ -40,6 +41,12 @@ function PlaceList({ formId, places }: { formId: string; places: readonly Regist
               {place.camperName}, {place.className}
             </span>{' '}
             <Pill tone={status.tone}>{status.label}</Pill>{' '}
+            {place.price ? (
+              <span className="muted">
+                {formatMoney(place.price.amountMinor, place.price.currency)}
+                {place.price.earlyBird ? ' early bird' : ''}
+              </span>
+            ) : null}{' '}
             <Pill tone={paid ? 'ok' : 'neutral'}>{paid ? 'Paid' : 'Unpaid'}</Pill>
             {paid && place.paymentNote ? <span className="muted"> {place.paymentNote}</span> : null}
             {place.status === 'cancelled' ? null : (

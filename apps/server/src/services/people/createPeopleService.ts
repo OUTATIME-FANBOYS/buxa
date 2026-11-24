@@ -34,6 +34,13 @@ import {
 /** Blank text means "no value" for the optional contact fields. */
 const blankToNull = (value: string | null): string | null => (value === null || value.trim() === '' ? null : value);
 
+/** An email is stored in lower case, so one address is one value (migration 0056 makes it unique in a camp). */
+const emailOrNull = (value: string | null): string | null => {
+  const email = blankToNull(value);
+
+  return email === null ? null : email.trim().toLowerCase();
+};
+
 function toPatchRecord(patch: PersonPatchInput): PersonPatchRecord {
   const out: PersonPatchRecord = {};
   if (patch.givenName !== undefined) {
@@ -46,7 +53,7 @@ function toPatchRecord(patch: PersonPatchInput): PersonPatchRecord {
     out.dateOfBirth = patch.dateOfBirth;
   }
   if (patch.email !== undefined) {
-    out.email = blankToNull(patch.email);
+    out.email = emailOrNull(patch.email);
   }
   if (patch.phone !== undefined) {
     out.phone = blankToNull(patch.phone);
@@ -295,7 +302,7 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
             givenName: input.givenName,
             familyName: input.familyName,
             dateOfBirth: input.dateOfBirth ?? null,
-            email: blankToNull(input.email ?? null),
+            email: emailOrNull(input.email ?? null),
             phone: blankToNull(input.phone ?? null),
             roles: input.roles,
           },

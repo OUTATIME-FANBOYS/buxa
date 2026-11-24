@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { normaliseName } from '@buxa/domain';
 import { AgeRangeSchema } from './classes';
 
 /*
@@ -6,16 +7,15 @@ import { AgeRangeSchema } from './classes';
  * A group holds campers (its capacity counts campers only) and staff (who set its ratio). A room holds campers for one session.
  */
 
+// Group and room names are stored normalised (see normaliseName), so names that look alike clash on the unique index.
 const GroupNameSchema = z
   .string()
-  .trim()
-  .min(1, 'Enter a name for the group.')
-  .max(120, 'Keep the name to 120 characters or fewer.');
+  .transform(normaliseName)
+  .pipe(z.string().min(1, 'Enter a name for the group.').max(120, 'Keep the name to 120 characters or fewer.'));
 const RoomNameSchema = z
   .string()
-  .trim()
-  .min(1, 'Enter a name for the room.')
-  .max(120, 'Keep the name to 120 characters or fewer.');
+  .transform(normaliseName)
+  .pipe(z.string().min(1, 'Enter a name for the room.').max(120, 'Keep the name to 120 characters or fewer.'));
 const LocationSchema = z
   .string()
   .trim()

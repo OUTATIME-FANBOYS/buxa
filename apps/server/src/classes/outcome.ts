@@ -147,7 +147,7 @@ export async function attempt<T>(work: () => Promise<T>, timeZone: string): Prom
     if (isClassError(e, 'hold-exists')) {
       return {
         ok: false,
-        failure: { reason: 'hold_exists', message: 'This family already holds a place in this session.' },
+        failure: { reason: 'hold_exists', message: 'This child already holds a place in this class.' },
       };
     }
     if (isEnrolmentRefusal(e)) {

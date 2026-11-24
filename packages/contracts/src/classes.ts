@@ -14,6 +14,7 @@ import {
   MAX_RECURRING_CLASSES,
   MIN_CAMP_SIZE,
   MIN_CLASS_AGE,
+  normaliseName,
 } from '@buxa/domain';
 
 /** Ages as stored and read back: 0 to 120, so an open-ended class (stored as NULL) reads as its full range. */
@@ -45,6 +46,11 @@ export const CampSizeSchema = z
   .max(MAX_CAMP_SIZE, CAMP_SIZE_MESSAGE);
 
 const NameSchema = z.string().trim().min(1, 'Enter a name.').max(120);
+/**
+ * A session's name is stored in its normalised form (NFKC, space-like characters and runs of spaces turned into one space), so names
+ * that look alike clash on the unique index and the form shows the same "already exists" error. The length is checked after.
+ */
+const SessionNameSchema = z.string().transform(normaliseName).pipe(z.string().min(1, 'Enter a name.').max(120));
 const InstantSchema = z.iso.datetime({ offset: true, message: 'Use a date and time with a time zone offset.' });
 const LocalDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a date like 2027-07-05.');
 
@@ -105,7 +111,7 @@ export type Session = z.infer<typeof SessionSchema>;
 
 export const NewSessionInputSchema = z
   .object({
-    name: NameSchema,
+    name: SessionNameSchema,
     description: z.string().trim().max(2000).default(''),
     startsOn: LocalDateSchema,
     endsOn: LocalDateSchema,

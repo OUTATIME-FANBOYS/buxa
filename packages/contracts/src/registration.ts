@@ -196,6 +196,8 @@ export const RegistrationClassSchema = z.object({
   status: z.enum(REGISTRATION_CLASS_STATUSES),
   paymentStatus: z.enum(['unpaid', 'paid']),
   paymentNote: z.string().nullable(),
+  /** The price the family saw at submission (the early-bird amount when it applied), or null for an old place or a class with no price. */
+  price: z.object({ amountMinor: z.number().int(), currency: z.string(), earlyBird: z.boolean() }).nullable(),
 });
 export type RegistrationClass = z.infer<typeof RegistrationClassSchema>;
 

@@ -25,12 +25,24 @@ export function translateRepositoryError(error: unknown): unknown {
   if (isOrgNotFound(error)) {
     return notFound('Camp not found');
   }
+  if (isUniqueViolationOf(error, 'people_org_email_key')) {
+    return conflict('Someone in this camp already has that email address.');
+  }
   if (isRejectedValue(error)) {
     return badRequest('One of the details is not allowed. Check the form and try again.');
   }
 
   return error;
 }
+
+/** A unique violation (23505) of the named index. */
+const isUniqueViolationOf = (error: unknown, constraint: string): boolean =>
+  typeof error === 'object' &&
+  error !== null &&
+  'code' in error &&
+  error.code === '23505' &&
+  'constraint' in error &&
+  error.constraint === constraint;
 
 /** Postgres codes for a value the database refuses: 23514 check violation, 22001 too long, 22003 out of range, 22007 bad date, 22P02 bad text. */
 const REJECTED_VALUE_CODES = new Set(['23514', '22001', '22003', '22007', '22P02']);

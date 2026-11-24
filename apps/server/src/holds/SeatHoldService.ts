@@ -8,6 +8,8 @@ export interface PlaceHoldInput {
   /** The class (a row of `sessions`) to hold a place in. */
   classId: string;
   householdId: string;
+  /** The child the place is held for: a member of the household. */
+  personId: string;
 }
 
 /**
@@ -73,6 +75,7 @@ export function createSeatHoldService({
           repo.placeHold(actor, {
             sessionId: input.classId,
             householdId: input.householdId,
+            personId: input.personId,
             expiresAt: holdExpiresAt(now(), minutes),
           }),
         await timezoneOf(actor),
