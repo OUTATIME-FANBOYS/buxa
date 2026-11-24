@@ -176,10 +176,12 @@ function createClassServices(
 ): Pick<Services, 'classes' | 'imports' | 'seatHolds' | 'groups'> {
   const timezoneOf = async (scope: { userId: string; orgId: string }): Promise<string> =>
     (await repositories.orgs.get(scope.userId, scope.orgId)).timezone;
+  const holdMinutesOf = async (scope: { userId: string; orgId: string }): Promise<number | null> =>
+    (await repositories.orgs.get(scope.userId, scope.orgId)).holdMinutes;
   const classes = repositories.classes;
 
   return {
-    seatHolds: createSeatHoldService({ repo: repositories.seatHolds, timezoneOf }),
+    seatHolds: createSeatHoldService({ repo: repositories.seatHolds, timezoneOf, holdMinutesOf }),
     groups: createGroupService({ repo: repositories.groups }),
     classes: createClassService({ repo: classes, timezoneOf }),
     imports: createImportService({ classes, imports: repositories.imports, timezoneOf }),

@@ -2,6 +2,7 @@ import type { ArchivedCampRecord } from '../orgs/OrgRepository';
 import type {
   ChangeMemberRoleInput,
   CreatedOrg,
+  HoldLengthInput,
   Members,
   NewOrgInput,
   Org,
@@ -9,7 +10,7 @@ import type {
   OrgSummary,
   SetMemberExpiryInput,
 } from '@buxa/contracts';
-import { can, type Actor } from '@buxa/domain';
+import { can, isValidHoldMinutes, type Actor } from '@buxa/domain';
 import { assertAllowed } from '../auth/authorize';
 import { badRequest, conflict, notFound } from '../http/errors';
 import { isSlugTaken, type OrgRepository } from '../orgs/OrgRepository';
@@ -23,6 +24,8 @@ export interface OrgService {
   createCamp(ownerId: string, input: NewOrgInput): Promise<CreatedOrg>;
   getCamp(actor: Actor): Promise<Org>;
   renameCamp(actor: Actor, input: OrgPatchInput): Promise<OrgSummary>;
+  /** Needs org:update (owner and admin). Sets how long a seat hold lasts; null is the default (15 minutes). Holds already placed keep their time. */
+  setHoldLength(actor: Actor, input: HoldLengthInput): Promise<void>;
   listMembers(actor: Actor): Promise<Members>;
   /** Needs members:change_role. Sets one member's permission role; the rules (self, owner, last owner) are checked here and in the database. */
   changeMemberRole(actor: Actor, input: ChangeMemberRoleInput): Promise<void>;
@@ -60,6 +63,14 @@ export function createOrgService(orgs: OrgRepository): OrgService {
       assertAllowed(actor, 'org:update');
 
       return guard(() => orgs.rename(actor, input));
+    },
+    async setHoldLength(actor, input) {
+      assertAllowed(actor, 'org:update');
+      if (input.holdMinutes !== null && !isValidHoldMinutes(input.holdMinutes)) {
+        throw badRequest('Enter between 5 and 60 minutes, or leave it empty for the default.');
+      }
+
+      await guard(() => orgs.setHoldMinutes(actor, input.holdMinutes));
     },
     async listMembers(actor) {
       assertAllowed(actor, 'members:read');

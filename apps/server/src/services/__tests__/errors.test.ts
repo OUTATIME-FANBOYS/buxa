@@ -40,6 +40,7 @@ describe('the camp service', () => {
     createWithOwner: () => Promise.reject(new Error('unused')),
     get,
     rename: () => Promise.reject(new Error('unused')),
+    setHoldMinutes: () => Promise.reject(new Error('unused')),
     listMembers: () => Promise.resolve([]),
     changeMemberRole: () => Promise.reject(new Error('unused')),
     setMemberExpiry: () => Promise.reject(new Error('unused')),
@@ -74,6 +75,7 @@ describe('the camp service', () => {
       memberCount: 1,
       timezone: 'UTC',
       clockFormat: '24h' as const,
+      holdMinutes: null,
     };
     expect(await createOrgService(repo(() => Promise.resolve(org))).getCamp(owner)).toEqual(org);
   });

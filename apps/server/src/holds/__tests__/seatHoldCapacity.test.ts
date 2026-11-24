@@ -61,6 +61,7 @@ function service(repo: Pick<SeatHoldRepository, 'placeHold'>, clock: { now: Date
       promoteWaitlist: () => Promise.resolve(0),
     },
     timezoneOf: () => Promise.resolve('Australia/Sydney'),
+    holdMinutesOf: () => Promise.resolve(null),
     now: () => clock.now,
   });
 }

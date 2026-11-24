@@ -21,6 +21,7 @@ export default async function Page() {
       camp={{
         id: camp.orgId,
         name: org.name,
+        holdMinutes: org.holdMinutes,
         canRename: authorize(actor, 'org:update').allow,
         canArchive: authorize(actor, 'org:archive').allow,
         canDelete: authorize(actor, 'org:delete').allow,

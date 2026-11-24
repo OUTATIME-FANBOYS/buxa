@@ -59,6 +59,7 @@ describe.skipIf(!url)('registration by class in Postgres', () => {
   const seats: SeatHoldService = createSeatHoldService({
     repo: new PgSeatHoldRepository(pool),
     timezoneOf: () => Promise.resolve('UTC'),
+    holdMinutesOf: () => Promise.resolve(null),
   });
   const tag = randomBytes(4).toString('hex');
 

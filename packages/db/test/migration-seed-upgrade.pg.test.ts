@@ -173,6 +173,7 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0045_registration_holds.sql',
       '0046_registration_classes.sql',
       '0047_groups_rooms_assignments.sql',
+      '0048_camp_hold_length.sql',
     ]);
   });
 
