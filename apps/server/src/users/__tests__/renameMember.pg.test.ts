@@ -7,7 +7,7 @@ import { PgUserRepository } from '../PgUserRepository';
 
 const url = process.env.DATABASE_URL;
 
-// A member rename changes the user's global name, so it must leave exactly one member.rename audit row, in the camp the
+// A member rename changes the camp's roster name (people), never the login's name (users), so it must leave exactly one member.rename audit row, in the camp the
 // actor acted in, written in the same transaction as the rename. A refused rename (the person is not in that camp) must
 // leave none. Creating a camp writes its own org.create row, so the assertions look only at member.rename rows.
 describe.skipIf(!url)('PgUserRepository.renameMember audit', () => {
@@ -52,6 +52,10 @@ describe.skipIf(!url)('PgUserRepository.renameMember audit', () => {
       await orgs.createWithOwner({ name: 'Other camp', slug: `rename-other-${tag}`, timezone: 'UTC' }, ownerId)
     ).id;
     await pool.query(`INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'viewer')`, [campId, targetId]);
+    await pool.query(`INSERT INTO people (org_id, given_name, family_name, user_id) VALUES ($1, 'Old', 'Name', $2)`, [
+      campId,
+      targetId,
+    ]);
   });
 
   afterAll(async () => {
@@ -62,6 +66,13 @@ describe.skipIf(!url)('PgUserRepository.renameMember audit', () => {
     const actor = { userId: ownerId, orgId: campId, role: 'owner' as const };
     const renamed = await users.renameMember(actor, targetId, 'Rosa Delgado');
     expect(renamed).toMatchObject({ id: targetId, name: 'Rosa Delgado' });
+    const roster = await pool.query<{ n: string }>(
+      `SELECT given_name || ' ' || family_name AS n FROM people WHERE user_id = $1`,
+      [targetId],
+    );
+    expect(roster.rows[0].n).toBe('Rosa Delgado');
+    const login = await pool.query<{ name: string }>('SELECT name FROM users WHERE id = $1', [targetId]);
+    expect(login.rows[0].name).toBe('Target');
 
     expect(await renameRows(campId)).toEqual([
       {

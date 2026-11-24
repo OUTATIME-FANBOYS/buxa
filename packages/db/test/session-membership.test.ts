@@ -163,7 +163,11 @@ describe.skipIf(!url)('session membership (0032)', () => {
       expect(rows[0].name).toBe('target');
     });
 
-    it('an admin can rename a member of the camp', async () => {
+    it('an admin can rename a member of the camp (the roster person, not the login)', async () => {
+      await pool.query(`INSERT INTO people (org_id, given_name, family_name, user_id) VALUES ($1, 'Old', 'Name', $2)`, [
+        camp,
+        target,
+      ]);
       const rows = await asUser(
         admin,
         camp,
@@ -172,7 +176,9 @@ describe.skipIf(!url)('session membership (0032)', () => {
             .rows,
       );
       expect(rows).toHaveLength(1);
-      await pool.query(`UPDATE users SET name = 'target' WHERE id = $1`, [target]);
+      const login = await pool.query<{ name: string }>('SELECT name FROM users WHERE id = $1', [target]);
+      expect(login.rows[0].name).toBe('target');
+      await pool.query('DELETE FROM people WHERE org_id = $1 AND user_id = $2', [camp, target]);
     });
 
     it('the list functions return only the signed-in user’s camps', async () => {

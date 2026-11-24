@@ -62,10 +62,10 @@ describe.skipIf(!url)('role-aware policies (migrations 0057 and 0058)', () => {
     }
     outsider = await memberOf(pool, otherCamp, 'owner');
     expired = await memberOf(pool, camp, 'admin');
-    await pool.query(`UPDATE org_members SET expires_at = now() - interval '1 day' WHERE org_id = $1 AND user_id = $2`, [
-      camp,
-      expired,
-    ]);
+    await pool.query(
+      `UPDATE org_members SET expires_at = now() - interval '1 day' WHERE org_id = $1 AND user_id = $2`,
+      [camp, expired],
+    );
     personId = (
       await pool.query<{ id: string }>(
         `INSERT INTO people (org_id, given_name, family_name, email) VALUES ($1, 'Pat', 'Self', $2) RETURNING id`,
@@ -87,10 +87,10 @@ describe.skipIf(!url)('role-aware policies (migrations 0057 and 0058)', () => {
 
   describe('audit_log', () => {
     it('is readable by an admin and an owner only; every member can still write', async () => {
-      await pool.query(`INSERT INTO audit_log (org_id, action, entity, entity_id) VALUES ($1, 'test.seed', 'camp', $2)`, [
-        camp,
-        camp,
-      ]);
+      await pool.query(
+        `INSERT INTO audit_log (org_id, action, entity, entity_id) VALUES ($1, 'test.seed', 'camp', $2)`,
+        [camp, camp],
+      );
       for (const [label, id] of everyone()) {
         const rows = await as(id, db => db.query(`SELECT 1 FROM audit_log WHERE action = 'test.seed'`));
         expect(rows.rowCount, label).toBe(isWriter(label) ? 1 : 0);
@@ -252,7 +252,10 @@ describe.skipIf(!url)('role-aware policies (migrations 0057 and 0058)', () => {
 
   describe('camp_calendar_tokens', () => {
     it('SELECT, INSERT and UPDATE are for an admin and an owner only', async () => {
-      await pool.query(`INSERT INTO camp_calendar_tokens (org_id, token_hash) VALUES ($1, $2)`, [camp, randomBytes(32)]);
+      await pool.query(`INSERT INTO camp_calendar_tokens (org_id, token_hash) VALUES ($1, $2)`, [
+        camp,
+        randomBytes(32),
+      ]);
       for (const [label, id] of everyone()) {
         expect(await attempt(id, `SELECT 1 FROM camp_calendar_tokens`), label).toBe(isWriter(label) ? 1 : 0);
         expect(
@@ -348,7 +351,9 @@ describe.skipIf(!url)('role-aware policies (migrations 0057 and 0058)', () => {
       const user = await pool.query<{ name: string }>('SELECT name FROM users WHERE id = $1', [target]);
       const person = async (id: string): Promise<string> =>
         (
-          await pool.query<{ n: string }>(`SELECT given_name || ' ' || family_name AS n FROM people WHERE id = $1`, [id])
+          await pool.query<{ n: string }>(`SELECT given_name || ' ' || family_name AS n FROM people WHERE id = $1`, [
+            id,
+          ])
         ).rows[0].n;
 
       return { user: user.rows[0].name, a: await person(targetPersonA), b: await person(targetPersonB) };
@@ -356,7 +361,10 @@ describe.skipIf(!url)('role-aware policies (migrations 0057 and 0058)', () => {
 
     beforeAll(async () => {
       target = await memberOf(pool, camp, 'viewer');
-      await pool.query(`INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'viewer')`, [otherCamp, target]);
+      await pool.query(`INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'viewer')`, [
+        otherCamp,
+        target,
+      ]);
       await pool.query(`UPDATE users SET name = 'Login Name' WHERE id = $1`, [target]);
       const person = async (org: string): Promise<string> =>
         (

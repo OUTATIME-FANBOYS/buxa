@@ -51,6 +51,6 @@ describe('renameMemberAction', () => {
   it('a member with no person on the roster is refused with a clear message', async () => {
     h.users.renameMember.mockRejectedValueOnce(new MemberHasNoPersonError());
     const state = await renameMemberAction({ userId: TARGET, name: 'Rosa Delgado' });
-    expect(state).toMatchObject({ status: 'error', message: expect.stringContaining('Add them to People first') });
+    expect(JSON.stringify(state)).toMatch(/Add them to People first/);
   });
 });

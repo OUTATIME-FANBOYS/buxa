@@ -83,7 +83,12 @@ export class PgUserRepository implements UserRepository {
           [actor.orgId, userId, name],
         ));
       } catch (error) {
-        if (typeof error === 'object' && error !== null && 'constraint' in error && error.constraint === 'rename_no_person') {
+        if (
+          typeof error === 'object' &&
+          error !== null &&
+          'constraint' in error &&
+          error.constraint === 'rename_no_person'
+        ) {
           throw new MemberHasNoPersonError();
         }
         throw error;

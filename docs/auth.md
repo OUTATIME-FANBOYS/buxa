@@ -77,6 +77,8 @@ A teacher invite is sent from Add person with the Instructor role. The invited p
 - **Invitations for other roles, and removing a member.** Only teacher invites exist. `members:remove` has no screen or service yet.
 - **Team access expiry** (a time limit on a person's access to a camp) is built, migration `0043`: an expired membership is refused on the server, as a non-member. See `docs/security.md` and `docs/phases/03-registration.md`. (The valid, expired and not-yet-started status of a person's season membership is built; see `docs/phases/01-members-checkin.md`.)
 
+**What the database enforces, and what it does not.** The matrix is enforced in the app, and since migrations `0057` and `0058` the database repeats it for a few tables: `audit_log` reads (admin, owner), `credentials` writes (admin, owner) with the badge ciphertext unreadable by the app role, the camp calendar token (admin, owner), `member_options` and `notifications` (membership required). A camp admin's rename of a member changes the camp's roster name (`people`), not the login's name (`users`). Every other table, including people and enrolment writes, is still app-only: a role-aware policy for them is the next step, to be added with tests for every role. See `docs/security.md`.
+
 ## Code map
 
 `apps/web/app/v1/*/route.ts` (thin) → `apps/server/src/http/route.ts` (request id, authentication, error shape, logging) → `apps/server/src/services/` (permissions, then storage)
