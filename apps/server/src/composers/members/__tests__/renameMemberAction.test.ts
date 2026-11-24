@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { settle } from '@buxa/domain';
+import { MemberHasNoPersonError } from '../../../users/UserRepository';
 import { renameMemberAction } from '../renameMemberAction';
 
 const TARGET = '6f1d2c3e-4b5a-4c6d-8e7f-9a0b1c2d3e4f';
@@ -45,5 +46,11 @@ describe('renameMemberAction', () => {
     const state = await renameMemberAction({ userId: TARGET, name: '' });
     expect(state).toMatchObject({ status: 'error' });
     expect(h.users.renameMember).not.toHaveBeenCalled();
+  });
+
+  it('a member with no person on the roster is refused with a clear message', async () => {
+    h.users.renameMember.mockRejectedValueOnce(new MemberHasNoPersonError());
+    const state = await renameMemberAction({ userId: TARGET, name: 'Rosa Delgado' });
+    expect(state).toMatchObject({ status: 'error', message: expect.stringContaining('Add them to People first') });
   });
 });

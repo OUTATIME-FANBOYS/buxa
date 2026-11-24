@@ -4,7 +4,7 @@ import { isUniqueViolation, withOrg } from '@buxa/db';
 import type { Actor, MemberOption } from '@buxa/domain';
 import { recordAudit } from '../audit/recordAudit';
 import type { Identity } from '../auth/identity';
-import { EmailInUseError, type UserRepository } from './UserRepository';
+import { EmailInUseError, MemberHasNoPersonError, type UserRepository } from './UserRepository';
 
 /**
  * Signing in needs two lookups row-level security cannot scope (no organisation is known yet, or the lookup spans all of
@@ -76,10 +76,18 @@ export class PgUserRepository implements UserRepository {
 
   renameMember(actor: Actor, userId: string, name: string): Promise<Pick<User, 'id' | 'email' | 'name'> | null> {
     return withOrg(this.pool, actor.userId, actor.orgId, async db => {
-      const { rows } = await db.query<Pick<User, 'id' | 'email' | 'name'>>(
-        'SELECT user_id AS id, user_email AS email, user_name AS name FROM buxa_rename_member_v2($1, $2, $3)',
-        [actor.orgId, userId, name],
-      );
+      let rows: Pick<User, 'id' | 'email' | 'name'>[];
+      try {
+        ({ rows } = await db.query<Pick<User, 'id' | 'email' | 'name'>>(
+          'SELECT user_id AS id, user_email AS email, user_name AS name FROM buxa_rename_member_v2($1, $2, $3)',
+          [actor.orgId, userId, name],
+        ));
+      } catch (error) {
+        if (typeof error === 'object' && error !== null && 'constraint' in error && error.constraint === 'rename_no_person') {
+          throw new MemberHasNoPersonError();
+        }
+        throw error;
+      }
       if (!rows[0]) {
         return null;
       }
