@@ -1,7 +1,7 @@
 import { parseCampLocal } from './import/campTime';
 
 /*
- * Recurring classes: a weekly rule (chosen weekdays, from a first day to an end date or a count) expands into the classes it
+ * Recurring classes: a weekly rule (chosen weekdays, from a first day to an end date) expands into the classes it
  * stands for. Pure: it reads nothing and writes nothing. Each occurrence is then checked and written like a manual class, so
  * the overlap and capacity rules apply to every one of them.
  *
@@ -14,7 +14,8 @@ export const MAX_RECURRING_CLASSES = 100;
 /** The longest window a rule may scan. Two years covers any count up to MAX_RECURRING_CLASSES of a weekly rule. */
 export const MAX_RECURRENCE_DAYS = 731;
 
-export type RecurrenceEnd = { kind: 'until'; date: string } | { kind: 'count'; count: number };
+/** When a series stops: on a date, inclusive. The wrapper keeps the shape the contract and the form share. */
+export type RecurrenceEnd = { kind: 'until'; date: string };
 
 export interface ClassRule {
   /** ISO weekdays: 1 is Monday, 7 is Sunday. At least one. */
@@ -86,36 +87,21 @@ export function expandClassRule(rule: ClassRule, timeZone: string): ExpandResult
   }
   const crossesMidnight = rule.endTime < rule.startTime;
 
-  let lastDay: number;
-  let limit: number | null = null;
-  if (rule.end.kind === 'until') {
-    const until = parseDay(rule.end.date);
-    if (until === null) {
-      return { ok: false, message: 'Use a real end date, in the format 2027-08-31.' };
-    }
-    if (until < first) {
-      return { ok: false, message: 'The last date cannot be before the first date.' };
-    }
-    if ((until - first) / DAY_MS > MAX_RECURRENCE_DAYS) {
-      return { ok: false, message: 'A recurring series can run for two years at most.' };
-    }
-    lastDay = until;
-  } else {
-    const count = rule.end.count;
-    if (!Number.isInteger(count) || count < 1 || count > MAX_RECURRING_CLASSES) {
-      return { ok: false, message: `A series has between 1 and ${MAX_RECURRING_CLASSES} classes.` };
-    }
-    limit = count;
-    lastDay = first + MAX_RECURRENCE_DAYS * DAY_MS;
+  const lastDay = parseDay(rule.end.date);
+  if (lastDay === null) {
+    return { ok: false, message: 'Use a real end date, in the format 2027-08-31.' };
+  }
+  if (lastDay < first) {
+    return { ok: false, message: 'The last date cannot be before the first date.' };
+  }
+  if ((lastDay - first) / DAY_MS > MAX_RECURRENCE_DAYS) {
+    return { ok: false, message: 'A recurring series can run for two years at most.' };
   }
 
   const occurrences: Occurrence[] = [];
   for (let day = first; day <= lastDay; day += DAY_MS) {
     if (!weekdays.has(isoWeekday(day))) {
       continue;
-    }
-    if (limit !== null && occurrences.length === limit) {
-      break;
     }
     if (occurrences.length === MAX_RECURRING_CLASSES) {
       return { ok: false, message: `A series has at most ${MAX_RECURRING_CLASSES} classes. Shorten the dates.` };
@@ -130,9 +116,6 @@ export function expandClassRule(rule: ClassRule, timeZone: string): ExpandResult
     occurrences.push({ date, startsAt: start.instant, endsAt: end.instant });
   }
 
-  if (limit !== null && occurrences.length < limit) {
-    return { ok: false, message: 'The rule cannot place that many classes within two years. Lower the count.' };
-  }
   if (occurrences.length === 0) {
     return { ok: false, message: 'No class falls in that range. Check the days and dates.' };
   }

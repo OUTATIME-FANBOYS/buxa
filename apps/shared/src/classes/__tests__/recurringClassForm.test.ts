@@ -21,7 +21,6 @@ const base = {
   firstDate: '2027-07-05',
   startTime: '09:00',
   endTime: '10:30',
-  endKind: 'until',
   endDate: '2027-08-30',
 };
 
@@ -38,15 +37,6 @@ describe('recurringClassForm', () => {
         endTime: '10:30',
         end: { kind: 'until', date: '2027-08-30' },
       });
-    }
-  });
-
-  it('reads a number of classes when that end is chosen', () => {
-    const parsed = recurringClassForm(form({ ...base, weekdays: ['2'], endKind: 'count', endCount: '6' }));
-
-    expect(parsed.ok).toBe(true);
-    if (parsed.ok) {
-      expect(parsed.data.rule.end).toEqual({ kind: 'count', count: 6 });
     }
   });
 

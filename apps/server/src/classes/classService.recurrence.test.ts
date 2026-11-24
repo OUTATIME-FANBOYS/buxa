@@ -21,7 +21,7 @@ const series = (
     firstDate: '2027-07-05',
     startTime: '09:00',
     endTime: '12:00',
-    end: { kind: 'count', count: 3 },
+    end: { kind: 'until', date: '2027-07-19' },
     ...rule,
   },
   name: 'Painting',
@@ -96,7 +96,7 @@ describe('recurring classes: writing a series', () => {
     const refused = await service.addRecurringClasses(
       as('admin'),
       sessionId,
-      series({}, { end: { kind: 'count', count: 1 } }),
+      series({}, { end: { kind: 'until', date: '2027-07-05' } }),
     );
 
     expect(refused.ok).toBe(false);

@@ -272,6 +272,25 @@ form.class-form {
   justify-content: center;
 }
 
+/* The discount row: the type, the value and the day it ends, three equal columns. On a phone (720px and under) they stack. */
+.price-discount-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s3);
+  align-items: start;
+  min-width: 0;
+}
+.price-discount-kind {
+  display: grid;
+  gap: var(--s2);
+  min-width: 0;
+}
+@media (max-width: 720px) {
+  .price-discount-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* Checkbox groups (Sessions this form covers, Sessions): a label row, then the boxes, each with a gap before its label. */
 .check-group {
   display: grid;

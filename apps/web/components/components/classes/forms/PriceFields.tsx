@@ -96,8 +96,9 @@ export function PriceFields({
           error={error('priceCurrency')}
         />
       </div>
-      <div className="buxa:grid buxa:grid-cols-2 buxa:gap-[var(--s3)] buxa:items-start">
-        <div className="buxa:grid buxa:min-w-0 buxa:gap-[var(--s2)]">
+      {/* The discount row: three equal columns (the type, the value, the day it ends), stacked on a phone (see classes.css). */}
+      <div className="price-discount-row">
+        <div className="price-discount-kind">
           <span className="field-label">Discount</span>
           <Segmented
             className="price-discount"
@@ -117,15 +118,15 @@ export function PriceFields({
           error={discountMessage ?? error('earlyBirdAmount')}
           hint={earlyMinor === null ? undefined : `Early-bird price: ${formatMoney(earlyMinor, code)}`}
         />
+        <DatePicker
+          label="Discount applies until"
+          name="earlyBirdUntil"
+          defaultValue={price?.earlyBirdUntil ?? null}
+          error={error('earlyBirdUntil')}
+          hint="The discounted price applies on this day, in the camp's time zone."
+        />
       </div>
       <input type="hidden" name="earlyBirdAmount" value={earlyMinor === null ? '' : minorToInput(earlyMinor, code)} />
-      <DatePicker
-        label="Discount applies until"
-        name="earlyBirdUntil"
-        defaultValue={price?.earlyBirdUntil ?? null}
-        error={error('earlyBirdUntil')}
-        hint="The discounted price applies on this day, in the camp's time zone."
-      />
     </div>
   );
 }

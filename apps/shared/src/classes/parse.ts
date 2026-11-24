@@ -70,6 +70,9 @@ function withProblems<T>(
   return { ok: false, state: failure(CHECK_FIELDS, fieldErrors) };
 }
 
+const ENTER_DATE_TIME = 'Enter a date and time.';
+const NOT_A_DATE_TIME = 'That date or time does not exist. Choose another.';
+
 /** An instant as the browser posts it: an ISO date-time with a Z or an offset (the form converts the local time first). */
 const POSTED_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/;
 
@@ -77,12 +80,12 @@ const POSTED_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|
 function instantField(form: FormData, name: string, problems: FieldErrors): string | undefined {
   const raw = field(form, name).trim();
   if (raw === '') {
-    problems[name] = 'Enter a date and time.';
+    problems[name] = ENTER_DATE_TIME;
 
     return undefined;
   }
   if (!POSTED_INSTANT.test(raw)) {
-    problems[name] = 'That date or time does not exist. Choose another.';
+    problems[name] = NOT_A_DATE_TIME;
 
     return undefined;
   }
@@ -124,7 +127,7 @@ export function classForm(form: FormData): PersonParsed<ClassInput> {
 
 /**
  * A recurring series: the class's own fields, a weekly rule (the weekdays ticked, the first date, the start and end times in the
- * camp's clock) and when it stops (a date, or a number of classes). The server expands the rule; this only reads the form.
+ * camp's clock) and the date it stops on. The server expands the rule; this only reads the form.
  */
 export function recurringClassForm(form: FormData): PersonParsed<NewRecurringClassInput> {
   const problems: FieldErrors = {};
@@ -137,10 +140,6 @@ export function recurringClassForm(form: FormData): PersonParsed<NewRecurringCla
   if (weekdays.length === 0) {
     problems.weekdays = 'Tick at least one day of the week.';
   }
-  const endKind = field(form, 'endKind') === 'count' ? 'count' : 'until';
-  // The count is asked for only when the series stops after a number of classes.
-  const count =
-    endKind === 'count' ? numberField(form, 'endCount', problems, 'Enter how many classes the series has.') : undefined;
   const price = priceFromForm(form, problems);
 
   return withProblems(
@@ -152,7 +151,7 @@ export function recurringClassForm(form: FormData): PersonParsed<NewRecurringCla
           firstDate: field(form, 'firstDate'),
           startTime: field(form, 'startTime'),
           endTime: field(form, 'endTime'),
-          end: endKind === 'count' ? { kind: 'count', count } : { kind: 'until', date: field(form, 'endDate') },
+          end: { kind: 'until', date: field(form, 'endDate') },
         },
         name: field(form, 'name'),
         ageRange: { minAge, maxAge },
@@ -163,6 +162,54 @@ export function recurringClassForm(form: FormData): PersonParsed<NewRecurringCla
       }),
     { ageRange: 'maxAge' },
   );
+}
+
+/** A local date-time as a datetime-local field posts it: `2027-07-05T09:00`. The camp's clock is read as typed. */
+const LOCAL_DATE_TIME = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})$/;
+
+/**
+ * The "Specific days" form: the class's own fields, the weekdays ticked, and the Starts and Ends date-times. The range runs from
+ * Starts's date to Ends's date, and each chosen weekday runs at Starts's and Ends's times. This turns those fields into the weekly
+ * rule and hands it to recurringClassForm, so the rule's checks are the same as the recurring path's.
+ */
+export function specificDaysForm(form: FormData): PersonParsed<NewRecurringClassInput> {
+  const problems: FieldErrors = {};
+  const starts = localDateTime(form, 'startsAt', problems);
+  const ends = localDateTime(form, 'endsAt', problems);
+  if (Object.keys(problems).length > 0 || !starts || !ends) {
+    return { ok: false, state: failure(CHECK_FIELDS, problems) };
+  }
+
+  const rule = new FormData();
+  form.forEach((value, key) => rule.append(key, value));
+  rule.set('firstDate', starts.date);
+  rule.set('startTime', starts.time);
+  rule.set('endDate', ends.date);
+  rule.set('endTime', ends.time);
+
+  return recurringClassForm(rule);
+}
+
+/** A datetime-local value, split into its date and its time. Blank or malformed text is reported against its field. */
+function localDateTime(
+  form: FormData,
+  name: string,
+  problems: FieldErrors,
+): { date: string; time: string } | undefined {
+  const raw = field(form, name).trim();
+  if (raw === '') {
+    problems[name] = ENTER_DATE_TIME;
+
+    return undefined;
+  }
+  const match = LOCAL_DATE_TIME.exec(raw);
+  if (!match?.[1] || !match[2]) {
+    problems[name] = NOT_A_DATE_TIME;
+
+    return undefined;
+  }
+
+  return { date: match[1], time: match[2] };
 }
 
 const MONEY_MESSAGES = {

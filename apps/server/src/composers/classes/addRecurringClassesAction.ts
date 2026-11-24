@@ -3,14 +3,15 @@
 import { revalidatePath } from 'next/cache';
 import { isUuid } from '@buxa/domain';
 import { sessionPath } from '@buxa/shared/config/routes';
-import { failure, field, recurringClassForm, success, type ActionState } from '@buxa/shared';
+import { failure, field, specificDaysForm, success, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../runtime';
 import { currentActor } from '../people/camp';
 import { expectedFailure, NO_CAMP } from '../people/failures';
 
 /**
- * Add a weekly series under a session. Every generated class is a normal class with its own enrolments. The service expands the
- * rule in the camp's time zone and checks classes:manage, overlaps and capacity before anything is written.
+ * Add the classes of a "Specific days" form under a session: the weekdays ticked, between the Starts and Ends date-times. Every
+ * generated class is a normal class with its own enrolments. The service expands the rule in the camp's time zone and checks
+ * classes:manage, overlaps and capacity before anything is written.
  */
 export async function addRecurringClassesAction(_previous: ActionState, form: FormData): Promise<ActionState> {
   const actor = await currentActor();
@@ -23,7 +24,7 @@ export async function addRecurringClassesAction(_previous: ActionState, form: Fo
     return failure('That session no longer exists.');
   }
 
-  const parsed = recurringClassForm(form);
+  const parsed = specificDaysForm(form);
   if (!parsed.ok) {
     return parsed.state;
   }

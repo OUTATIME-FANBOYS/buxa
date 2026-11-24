@@ -2,14 +2,15 @@
 
 import { useActionState, useEffect, useRef, useState, type FormEvent } from 'react';
 import { Button } from '@/components/elements';
-import { DateTimeField, NumberField, TextField } from '@/components/atoms';
+import { Checkbox, DateTimeField, NumberField, TextField } from '@/components/atoms';
 import { sessionPath } from '@/config/routes';
 import { fieldError, idle, instantToLocalInput, localInputToInstant } from '@buxa/shared';
 import { MAX_CAMP_SIZE, MAX_CLASS_AGE, MIN_CAMP_SIZE, MIN_CLASS_AGE } from '@buxa/domain';
-import { addClassAction, updateClassAction } from '@/actions/classes';
+import { addClassAction, addRecurringClassesAction, updateClassAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
 import { InstructorPicker } from './InstructorPicker';
 import { PriceFields } from './PriceFields';
+import { WeekdayField } from './WeekdayField';
 import type { Class } from '@buxa/contracts';
 
 export interface InstructorChoice {
@@ -41,6 +42,8 @@ function postInstants(data: FormData): void {
 /**
  * A class: its name, ages, camp size, its own time range, location and instructors. It adds a class to a session (`cls` is
  * left out) or edits one (`cls` is the class being edited). The fields, validation and action are the same for both.
+ * `seriesOption` (the New class dialog only) adds a "Specific days" toggle. When it is on, the weekdays between Starts and Ends
+ * are added through the recurring path; when it is off, the one class is added as before.
  * `variant` says where it renders: on its own page (a panel, with its own Cancel and save buttons) or in a dialog. A dialog's
  * buttons belong to the dialog's pinned footer, so the form is tied to them by `formId` and reports `pending` through
  * `onPendingChange`. When the save succeeds, `onSaved` runs with the server's message, so the dialog can close and toast it.
@@ -52,6 +55,7 @@ export function ClassForm({
   cls,
   variant = 'page',
   detailsOnly = false,
+  seriesOption = false,
   formId,
   onSaved,
   onPendingChange,
@@ -63,18 +67,32 @@ export function ClassForm({
   variant?: 'page' | 'dialog';
   /** A teacher's edit: only the name is shown. The server keeps every other field as it is saved. */
   detailsOnly?: boolean;
+  /** Shows the "Specific days" toggle. Only the New class dialog sets it. */
+  seriesOption?: boolean;
   /** The id the dialog footer's submit button names with its `form` attribute. */
   formId?: string;
   onSaved?: (message: string) => void;
   onPendingChange?: (pending: boolean) => void;
 }) {
   const editing = cls !== undefined;
-  const [state, formAction, pending] = useActionState(editing ? updateClassAction : addClassAction, idle);
+  const [single, singleAction, singlePending] = useActionState(editing ? updateClassAction : addClassAction, idle);
+  const [series, seriesAction, seriesPending] = useActionState(addRecurringClassesAction, idle);
+  const [specificDays, setSpecificDays] = useState(false);
+  const useSeries = seriesOption && !editing && specificDays;
+  // The form's state is the one of the path it submitted to, so its messages and pending flag are the ones shown.
+  const state = useSeries ? series : single;
+  const pending = useSeries ? seriesPending : singlePending;
   const zone = useBrowserZone();
-  // The form posts the instants: the local times it shows are converted in the browser before the action runs.
+  // The form posts the instants: the local times it shows are converted in the browser before the action runs. A Specific days
+  // form posts its Starts and Ends as typed; the server reads their dates and times in the camp's clock.
   const submit = (data: FormData) => {
+    if (useSeries) {
+      seriesAction(data);
+
+      return;
+    }
     postInstants(data);
-    formAction(data);
+    singleAction(data);
   };
   const formRef = useRef<HTMLFormElement>(null);
   const inDialog = variant === 'dialog';
@@ -134,8 +152,14 @@ export function ClassForm({
         autoComplete="off"
         autoFocus={!inDialog}
       />
+      {seriesOption && !editing && (
+        <Checkbox isSelected={specificDays} onChange={setSpecificDays}>
+          Specific days
+        </Checkbox>
+      )}
       {!detailsOnly && (
         <>
+          {useSeries && <WeekdayField error={err('weekdays')} />}
           {/* Three equal columns (33%) on one row; the labels and inputs start on the same line. */}
           <div className="buxa:grid buxa:grid-cols-3 buxa:gap-[var(--s3)] buxa:items-start">
             <NumberField
