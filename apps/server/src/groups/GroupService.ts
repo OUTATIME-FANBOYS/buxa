@@ -6,15 +6,16 @@ import {
   type AssignmentOptions,
   type AssignmentRefusal,
 } from '@buxa/domain';
-import type { AssignInput, Assignment, Group, GroupInput, Room, RoomInput } from '@buxa/contracts';
+import type { AssignInput, Assignment, Group, GroupInput, Room, RoomInput, UnassignInput } from '@buxa/contracts';
 import { assertAllowed } from '../auth/authorize';
-import type { AssignRequest, GroupRepository } from './GroupRepository';
+import type { AssignRequest, GroupRepository, Unassigned } from './GroupRepository';
 import {
   isAssignmentConflict,
   isAssignmentRefused,
   isCapacityBelowPlaced,
   isGroupNotFound,
   isNameTaken,
+  isNotAssigned,
   isPersonNotFound,
   isRoomNotFound,
   isSessionNotFound,
@@ -49,6 +50,8 @@ export interface GroupService {
   updateRoom(actor: Actor, roomId: string, input: RoomInput): Promise<GroupOutcome<Room>>;
   /** Places a person, or moves them within the session. Every rule runs; a refusal comes back with its reason. */
   assign(actor: Actor, input: AssignInput): Promise<GroupOutcome<Assignment>>;
+  /** Ends a person's active placement in the session. Refused with `not_assigned` when there is none. Needs classes:manage. */
+  unassign(actor: Actor, input: UnassignInput): Promise<GroupOutcome<Unassigned>>;
 }
 
 export function createGroupService({ repo }: GroupServiceDeps): GroupService {
@@ -106,6 +109,12 @@ export function createGroupService({ repo }: GroupServiceDeps): GroupService {
       };
 
       return attempt(() => repo.assign(actor, request, facts => decideAssignment(facts, optionsFor(actor, input))));
+    },
+
+    async unassign(actor, input) {
+      assertAllowed(actor, 'classes:manage');
+
+      return attempt(() => repo.unassign(actor, { sessionId: input.sessionId, personId: input.personId }));
     },
   };
 }
@@ -165,6 +174,12 @@ function failureOf(error: unknown): GroupFailure | null {
     return {
       reason: 'capacity_below_placed',
       message: `The ${error.what} capacity is below the campers already placed in it.`,
+    };
+  }
+  if (isNotAssigned(error)) {
+    return {
+      reason: 'not_assigned',
+      message: 'This person is not placed in this session, so there is nothing to unassign.',
     };
   }
   if (isAssignmentConflict(error)) {
