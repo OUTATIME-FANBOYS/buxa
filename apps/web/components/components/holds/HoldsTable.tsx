@@ -1,5 +1,7 @@
+import Link from 'next/link';
 import type { ClockFormat } from '@buxa/domain';
 import { formatCampDateTime } from '@buxa/shared';
+import { sessionTabPath } from '@/config/routes';
 
 /** One live hold, as the holds screen shows it. Times are ISO strings, shown in camp time. */
 export interface HoldRow {
@@ -40,7 +42,11 @@ export function HoldsTable({
         <tbody>
           {holds.map(hold => (
             <tr key={hold.id}>
-              <td>{hold.sessionName}</td>
+              <td>
+                <Link className="link" href={sessionTabPath(hold.sessionId, 'holds')}>
+                  {hold.sessionName}
+                </Link>
+              </td>
               <td>{hold.className}</td>
               <td>{hold.householdName}</td>
               <td>{hold.childName ?? <span className="muted">Not recorded</span>}</td>

@@ -16,11 +16,14 @@ export function CampHoldsBoard({
   waitlist,
   timeZone,
   clockFormat,
+  showSessionFilter = true,
 }: {
   holds: readonly HoldRow[];
   waitlist: readonly WaitRow[];
   timeZone: string;
   clockFormat: ClockFormat;
+  /** A session's own Holds tab is already one session, so it turns the filter off. */
+  showSessionFilter?: boolean;
 }) {
   const [sessionId, setSessionId] = useState('');
 
@@ -37,7 +40,7 @@ export function CampHoldsBoard({
 
   return (
     <div className="stack holds-screen">
-      {options.length > 0 && (
+      {showSessionFilter && options.length > 0 && (
         <Select
           label="Session"
           hideLabel

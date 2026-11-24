@@ -1,3 +1,5 @@
+import type { SessionTab } from '../camp/sessionTabs';
+
 /**
  * Every URL in the web app, defined once. Links, redirects, navigation and tests all read from here,
  * so renaming a page means changing one line.
@@ -52,6 +54,9 @@ export const personPath = (id: string): string => `${ROUTES.people}/${encodeURIC
 
 /** One session: its classes and their enrolments. */
 export const sessionPath = (sessionId: string): string => `${ROUTES.sessions}/${encodeURIComponent(sessionId)}`;
+
+/** One tab of a session's page. The URL keeps it in `?tab=`, so refresh and back return to it. Classes is the default tab. */
+export const sessionTabPath = (sessionId: string, tab: SessionTab): string => `${sessionPath(sessionId)}?tab=${tab}`;
 
 /** One registration form: its questions, publishing and submissions by session. */
 export const registrationFormPath = (formId: string): string => `${ROUTES.registration}/${encodeURIComponent(formId)}`;

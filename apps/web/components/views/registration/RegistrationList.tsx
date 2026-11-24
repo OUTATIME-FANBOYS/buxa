@@ -1,13 +1,19 @@
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { FORBIDDEN_REGISTRATION } from '@buxa/shared';
-import { currentActor, loadForms, loadSessions } from '@buxa/server/composers/index.server';
+import { currentActor, loadFormSubmissions, loadSessions } from '@buxa/server/composers/index.server';
 import { Empty, PageHeader } from '@/components/components';
-import { FormsTable, NewRegistrationFormButton } from '@/components/components/registration';
+import {
+  FormsTable,
+  NewRegistrationFormButton,
+  RegistrationSearch,
+  registrationSearchRows,
+} from '@/components/components/registration';
 
 /**
- * The camp's registration forms. Anyone who may read them sees the list; only staff with registration:manage see the New form button,
- * which opens the create form in a dialog.
+ * The camp's registration forms, then every registration across all sessions with a search box. Each registration's row links to its
+ * session's Registrations tab. Anyone who may read registration sees the list; only staff with registration:manage see the New form
+ * button, which opens the create form in a dialog.
  */
 export async function RegistrationList() {
   const actor = await currentActor();
@@ -15,7 +21,8 @@ export async function RegistrationList() {
     notFound();
   }
   const canManage = can(actor, 'registration:manage');
-  const loaded = await loadForms(actor);
+  // One read gives the forms and their registrations; the search list and the forms table both come from it.
+  const loaded = await loadFormSubmissions(actor);
   const sessions = canManage ? await loadSessions(actor) : null;
 
   const actions =
@@ -44,7 +51,15 @@ export async function RegistrationList() {
           action={canManage ? actions : undefined}
         />
       ) : (
-        <FormsTable forms={loaded.value} />
+        <>
+          <FormsTable forms={loaded.value.map(entry => entry.form)} />
+          <section className="registration-section" aria-labelledby="registrations-list-heading">
+            <h2 id="registrations-list-heading" className="people-subheading">
+              Registrations
+            </h2>
+            <RegistrationSearch rows={registrationSearchRows(loaded.value)} />
+          </section>
+        </>
       )}
     </div>
   );
