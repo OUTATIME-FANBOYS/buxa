@@ -2,7 +2,6 @@ import type { Pool } from 'pg';
 import { withOrg } from '@buxa/db';
 import { isUuid, type Actor } from '@buxa/domain';
 import type { Class, Enrolment, NewSessionInput, Session, SessionEditInput } from '@buxa/contracts';
-import { recordAudit } from '../audit/recordAudit';
 import type {
   CampActiveHold,
   CampClassSpan,
@@ -11,9 +10,7 @@ import type {
   ClassRepository,
   EnrolRequest,
   EnrolmentRule,
-  TeacherAssignment,
 } from './ClassRepository';
-import { TeacherNotFoundError } from './errors';
 import { cancelInTransaction, enrolInTransaction } from './PgEnrolmentWrites';
 import {
   getClass,
@@ -186,34 +183,18 @@ export class PgClassRepository implements ClassRepository {
       if (!isUuid(teacherId)) {
         return [];
       }
-      // The join checks the role now, so a person who stopped being a teacher has no classes even before the trigger clears them.
+      // A teacher's classes are the classes its linked person (people.user_id) is an instructor of (migration 0051). The join
+      // checks the role too, so a person who stopped being a teacher has no classes.
       const { rows } = await db.query<{ session_id: string }>(
-        `SELECT ct.session_id
-           FROM class_teachers ct
-           JOIN org_members m ON m.org_id = ct.org_id AND m.user_id = ct.user_id
-          WHERE ct.user_id = $1 AND m.role = 'teacher'`,
+        `SELECT si.session_id
+           FROM people p
+           JOIN org_members m ON m.org_id = p.org_id AND m.user_id = p.user_id AND m.role = 'teacher'
+           JOIN session_instructors si ON si.org_id = p.org_id AND si.person_id = p.id
+          WHERE p.user_id = $1`,
         [teacherId],
       );
 
       return rows.map(r => r.session_id);
-    });
-  }
-
-  teacherAssignments(userId: string, orgId: string, sessionId: string): Promise<TeacherAssignment[]> {
-    return withOrg(this.pool, userId, orgId, async db => {
-      if (!isUuid(sessionId)) {
-        return [];
-      }
-      // class_teachers.session_id holds the class's id (the sessions table row), and sessions.class_id the parent session.
-      const { rows } = await db.query<TeacherAssignment>(
-        `SELECT ct.session_id AS "classId", ct.user_id AS "userId"
-           FROM class_teachers ct
-           JOIN sessions s ON s.id = ct.session_id
-          WHERE ct.org_id = $1 AND s.class_id = $2`,
-        [orgId, sessionId],
-      );
-
-      return rows;
     });
   }
 
@@ -232,30 +213,4 @@ export class PgClassRepository implements ClassRepository {
       return rows.map(r => r.person_id);
     });
   }
-
-  async replaceTeachers(actor: Actor, classId: string, userIds: readonly string[]): Promise<void> {
-    const unique = [...new Set(userIds)];
-    try {
-      await withOrg(this.pool, actor.userId, actor.orgId, async db => {
-        await db.query('SELECT buxa_replace_class_teachers_v2($1, $2, $3)', [actor.orgId, classId, unique]);
-        await recordAudit(db, {
-          actor,
-          action: 'class.update',
-          entity: 'class',
-          entityId: classId,
-          data: { teacherIds: unique },
-        });
-      });
-    } catch (error) {
-      // The function raises P0002 for a missing class and for a user who is not a teacher here; the message tells them apart.
-      if (isPgError(error) && error.message.includes('Teacher not found')) {
-        throw new TeacherNotFoundError();
-      }
-      throw translateClassWriteError(error);
-    }
-  }
-}
-
-function isPgError(error: unknown): error is Error & { code: string } {
-  return error instanceof Error && 'code' in error && error.code === 'P0002';
 }

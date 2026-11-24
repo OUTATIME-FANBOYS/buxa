@@ -88,7 +88,7 @@ describe('insertClass (the time range)', () => {
   it('skips the instructor link when there are no instructors, and audits the class', async () => {
     const { client, seen } = fakeDb(sql => (sql.includes('INSERT INTO sessions') ? [{ id: classId }] : undefined));
     await insertClass(client, actor, sessionId, classInput);
-    expect(seen.some(s => s.sql.includes('session_instructors'))).toBe(false);
+    expect(seen.some(s => s.sql.includes('INSERT INTO session_instructors'))).toBe(false);
     const audit = seen.find(s => s.sql.includes('audit_log'));
     expect(audit?.params).toContain('class.create');
   });

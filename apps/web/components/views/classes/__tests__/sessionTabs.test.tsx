@@ -18,7 +18,6 @@ const services = vi.hoisted(() => ({
     getSession: vi.fn(),
     listClasses: vi.fn(),
     listEnrolments: vi.fn(),
-    listTeacherAssignments: vi.fn(),
     listCampWaitlists: vi.fn(),
   },
   people: { list: vi.fn() },
@@ -139,7 +138,6 @@ beforeEach(() => {
   asRole('staff');
   services.orgs.getCamp.mockResolvedValue({ timezone: 'Australia/Sydney' });
   services.orgs.listMembers.mockResolvedValue({ members: [] });
-  services.classes.listTeacherAssignments.mockResolvedValue({ ok: true, value: [] });
   services.classes.getSession.mockImplementation((_actor: unknown, id: string) =>
     Promise.resolve({ ok: true, value: id === AUTUMN ? autumn : summer }),
   );

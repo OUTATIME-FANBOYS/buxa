@@ -462,9 +462,10 @@ async function migrateTeacherDb(
       await client.query('INSERT INTO schema_migrations(name) VALUES ($1)', [file]);
       await client.query('COMMIT');
     }
-    const org = await client.query<{ id: string }>(`INSERT INTO orgs (name, slug) VALUES ('Teacher link', $1) RETURNING id`, [
-      `teacher-link-${tag}`,
-    ]);
+    const org = await client.query<{ id: string }>(
+      `INSERT INTO orgs (name, slug) VALUES ('Teacher link', $1) RETURNING id`,
+      [`teacher-link-${tag}`],
+    );
     const orgId = org.rows[0].id;
     const matchedUser = await client.query<{ id: string }>(
       `INSERT INTO users (email, name, first_name) VALUES ($1, 'Mia Match', 'Mia') RETURNING id`,
@@ -474,19 +475,19 @@ async function migrateTeacherDb(
       `INSERT INTO users (email, name, first_name) VALUES ($1, 'Nina Nobody', 'Nina') RETURNING id`,
       [unmatchedEmail],
     );
-    await client.query(`INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'teacher'), ($1, $3, 'teacher')`, [
-      orgId,
-      matchedUser.rows[0].id,
-      unmatchedUser.rows[0].id,
-    ]);
+    await client.query(
+      `INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'teacher'), ($1, $3, 'teacher')`,
+      [orgId, matchedUser.rows[0].id, unmatchedUser.rows[0].id],
+    );
     // The roster person has the login's email in another case, with spaces around it: the match ignores both.
     await client.query(`INSERT INTO people (org_id, given_name, family_name, email) VALUES ($1, 'Mia', 'Match', $2)`, [
       orgId,
       `  ${matchedEmail.toUpperCase()} `,
     ]);
-    await client.query(`INSERT INTO classes (org_id, name, default_capacity) VALUES ($1, 'Pottery', 10), ($1, 'Painting', 10)`, [
-      orgId,
-    ]);
+    await client.query(
+      `INSERT INTO classes (org_id, name, default_capacity) VALUES ($1, 'Pottery', 10), ($1, 'Painting', 10)`,
+      [orgId],
+    );
     const sessions = await client.query<{ id: string; name: string }>(
       `INSERT INTO sessions (org_id, class_id, name, starts_at, ends_at, location, capacity, ratio_campers, ratio_instructors)
        SELECT c.org_id, c.id, c.name, now(), now() + interval '1 hour', 'Lake', 10, 5, 1

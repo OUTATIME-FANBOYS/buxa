@@ -23,11 +23,14 @@ export async function notifyForAudit(db: Pick<PoolClient, 'query'>, event: Notif
     'SELECT user_id, role FROM org_members WHERE org_id = $1',
     [event.orgId],
   );
+  // A class's teachers are the logins linked to its instructors (people.user_id, migration 0051).
   const teachers = rule.assignedTeachers
-    ? await db.query<{ user_id: string }>('SELECT user_id FROM class_teachers WHERE org_id = $1 AND session_id = $2', [
-        event.orgId,
-        event.entityId,
-      ])
+    ? await db.query<{ user_id: string }>(
+        `SELECT p.user_id FROM session_instructors si
+           JOIN people p ON p.org_id = si.org_id AND p.id = si.person_id
+          WHERE si.org_id = $1 AND si.session_id = $2 AND p.user_id IS NOT NULL`,
+        [event.orgId, event.entityId],
+      )
     : null;
   const recipients = recipientsFor(
     rule,

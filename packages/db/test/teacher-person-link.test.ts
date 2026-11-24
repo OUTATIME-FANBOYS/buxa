@@ -57,10 +57,10 @@ describe.skipIf(!url)('teacher login linked to a roster person (row-level securi
     ).rows[0].id;
     const sessionFor = async (org: string, name: string) => {
       const parent = (
-        await pool.query<{ id: string }>(`INSERT INTO classes (org_id, name, default_capacity) VALUES ($1, $2, 5) RETURNING id`, [
-          org,
-          name,
-        ])
+        await pool.query<{ id: string }>(
+          `INSERT INTO classes (org_id, name, default_capacity) VALUES ($1, $2, 5) RETURNING id`,
+          [org, name],
+        )
       ).rows[0].id;
 
       return (

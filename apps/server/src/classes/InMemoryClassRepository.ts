@@ -16,7 +16,6 @@ import type {
   EnrolRequest,
   EnrolmentRule,
   GatheredEnrolmentFacts,
-  TeacherAssignment,
 } from './ClassRepository';
 import {
   CamperNotFoundError,
@@ -27,7 +26,6 @@ import {
   InstructorNotFoundError,
   SessionHasClassesError,
   SessionNotFoundError,
-  TeacherNotFoundError,
   refusalError,
 } from './errors';
 import { settle } from '@buxa/domain';
@@ -101,8 +99,8 @@ export class InMemoryClassRepository implements ClassRepository {
   private readonly seatHolds: StoredSeatHold[] = [];
   /** Camp id to the user ids that hold the teacher role there. */
   private readonly teacherUsers = new Map<string, Set<string>>();
-  /** Class id to the teacher user ids assigned to it. */
-  private readonly teachersOf = new Map<string, Set<string>>();
+  /** Person id to the login (user id) linked to that person (people.user_id, migration 0051). */
+  private readonly loginOf = new Map<string, string>();
   private readonly locks = new Map<string, Promise<void>>();
 
   constructor(private readonly now: Clock = systemClock) {}
@@ -110,6 +108,11 @@ export class InMemoryClassRepository implements ClassRepository {
   /** Test setup: a person who can be enrolled (or named as an instructor). */
   seedCamper(orgId: string, id: string, name: string, dateOfBirth: LocalDate | null): void {
     this.campers.set(id, { id, orgId, name, dateOfBirth });
+  }
+
+  /** Test setup: the person is the login's roster person (as the invite accept links them). A teacher sees the classes it instructs. */
+  linkPersonToLogin(personId: string, userId: string): void {
+    this.loginOf.set(personId, userId);
   }
 
   /** Test setup: a person's household, as household_members would link them. Used for the waitlist's family name. */
@@ -514,26 +517,13 @@ export class InMemoryClassRepository implements ClassRepository {
     this.teacherUsers.set(orgId, set);
   }
 
-  teacherAssignments(userId: string, orgId: string, sessionId: string): Promise<TeacherAssignment[]> {
-    const rows: TeacherAssignment[] = [];
-    for (const c of this.classes.values()) {
-      if (c.orgId !== orgId || c.sessionId !== sessionId) {
-        continue;
-      }
-      for (const userId of this.teachersOf.get(c.id) ?? []) {
-        rows.push({ classId: c.id, userId });
-      }
-    }
-
-    return Promise.resolve(rows);
-  }
-
   assignedClassIds(userId: string, orgId: string, teacherId: string): Promise<string[]> {
     if (!this.teacherUsers.get(orgId)?.has(teacherId)) {
       return Promise.resolve([]);
     }
+    // As in Postgres: a class is the teacher's when one of its instructors is the person linked to the teacher's login.
     const ids = [...this.classes.values()]
-      .filter(c => c.orgId === orgId && this.teachersOf.get(c.id)?.has(teacherId))
+      .filter(c => c.orgId === orgId && c.instructorIds.some(personId => this.loginOf.get(personId) === teacherId))
       .map(c => c.id);
 
     return Promise.resolve(ids);
@@ -549,21 +539,6 @@ export class InMemoryClassRepository implements ClassRepository {
     }
 
     return Promise.resolve([...ids]);
-  }
-
-  replaceTeachers(actor: Actor, classId: string, userIds: readonly string[]): Promise<void> {
-    if (!this.classIn(actor.orgId, classId)) {
-      return Promise.reject(new ClassNotFoundError());
-    }
-    const unique = [...new Set(userIds)];
-    const members = this.teacherUsers.get(actor.orgId) ?? new Set<string>();
-    if (unique.some(id => !members.has(id))) {
-      return Promise.reject(new TeacherNotFoundError());
-    }
-    this.teachersOf.set(classId, new Set(unique));
-    this.record(actor, 'class.update', 'class', classId, { teacherIds: unique });
-
-    return Promise.resolve();
   }
 
   private async exclusive<T>(key: string, work: () => Promise<T>): Promise<T> {

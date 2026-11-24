@@ -20,13 +20,7 @@ import {
   type SessionEditInput,
 } from '@buxa/contracts';
 import { assertAllowed } from '../auth/authorize';
-import type {
-  CampClassSpan,
-  CampWaitlistEntry,
-  ClassRecord,
-  ClassRepository,
-  TeacherAssignment,
-} from './ClassRepository';
+import type { CampClassSpan, CampWaitlistEntry, ClassRecord, ClassRepository } from './ClassRepository';
 import { teacherScopeOf, type TeacherScope } from './teacherScope';
 import {
   ClassNotFoundError,
@@ -88,10 +82,6 @@ export interface ClassService {
    */
   updateClass(actor: Actor, classId: string, input: ClassInput): Promise<Outcome<Class>>;
   deleteClass(actor: Actor, classId: string): Promise<Outcome<null>>;
-  /** Replaces the class's teachers. Staff and admins (classes:manage). Each user must hold the teacher role in this camp. */
-  setTeachers(actor: Actor, classId: string, userIds: readonly string[]): Promise<Outcome<null>>;
-  /** Each class of a session with its assigned teachers. Staff and admins (classes:manage). */
-  listTeacherAssignments(actor: Actor, sessionId: string): Promise<Outcome<TeacherAssignment[]>>;
   listEnrolments(actor: Actor, classId: string): Promise<Outcome<Enrolment[]>>;
   /**
    * Every waitlisted camper in the camp, by class and then in the order they joined, for the camp-wide holds screen. Needs
@@ -410,25 +400,6 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
         },
         await timezoneOf(actor),
       );
-    },
-
-    async setTeachers(actor, classId, userIds) {
-      assertAllowed(actor, 'classes:manage');
-
-      return attempt(
-        async () => {
-          await repo.replaceTeachers(actor, classId, userIds);
-
-          return null;
-        },
-        await timezoneOf(actor),
-      );
-    },
-
-    async listTeacherAssignments(actor, sessionId) {
-      assertAllowed(actor, 'classes:manage');
-
-      return attempt(() => repo.teacherAssignments(actor.userId, actor.orgId, sessionId), await timezoneOf(actor));
     },
 
     async listEnrolments(actor, classId) {

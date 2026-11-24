@@ -2,14 +2,7 @@ import type { Class, Session } from '@buxa/contracts';
 import { can, seatFor, type Actor } from '@buxa/domain';
 import { sessionPath } from '@/config/routes';
 import { Empty } from '@/components/components';
-import {
-  campClock,
-  loadActiveHolds,
-  loadEnrolments,
-  loadPeopleWithRole,
-  loadMembers,
-  loadTeacherAssignments,
-} from '@buxa/server/composers/index.server';
+import { campClock, loadActiveHolds, loadEnrolments, loadPeopleWithRole } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_ENROLMENTS, formatCampDateTime } from '@buxa/shared';
 import {
   ClassesTable,
@@ -18,11 +11,11 @@ import {
   instructorNames,
   PriceFact,
 } from '@/components/components/classes';
-import { EnrolForm, NewClassButton, TeacherAssignments } from '@/components/components/classes/forms';
+import { EnrolForm, NewClassButton } from '@/components/components/classes/forms';
 import { Button } from '@/components/elements';
 
 /**
- * The Classes tab of a session: its date range and classes, the teachers panel, and a chosen class's details, holds, waitlist and
+ * The Classes tab of a session: its date range and classes, and a chosen class's details, holds, waitlist and
  * enrolments. A teacher sees only its own classes (the list is scoped on the server). Viewers see the schedule and names, with no
  * buttons to change anything.
  */
@@ -42,22 +35,10 @@ export async function ClassesTab({
   /** The class chosen with `?class=`, already checked to be a UUID. */
   selectedId: string | null;
 }) {
-  const sessionId = session.id;
   // A teacher sees only its own classes, so each listed class is one it is assigned to.
   const canEditOwnClass = can(actor, 'events:update_details', { orgId: actor.orgId, assignedToClass: true });
   const { timeZone, clockFormat } = await campClock(actor);
   const selected = classes.find(c => c.id === selectedId) ?? null;
-  // The teacher list and each class's assigned teachers, for the teachers panel (staff and admins only).
-  const teacherMembers = canManage ? (await loadMembers(actor)).members.filter(m => m.role === 'teacher') : [];
-  const teacherChoices = teacherMembers.map(t => ({ id: t.id, name: t.name }));
-  const assignments = canManage ? await loadTeacherAssignments(actor, sessionId) : null;
-  const assignedByClass = assignments?.ok ? assignments.value : [];
-  const classTeachers = classes.map(c => ({
-    id: c.id,
-    name: c.name,
-    teacherIds: assignedByClass.filter(a => a.classId === c.id).map(a => a.userId),
-  }));
-
   const enrolments = selected ? await loadEnrolments(actor, selected.id) : null;
   // Holds and the waitlist are seat work: staff with holds:manage see them (a viewer does not).
   const holds = selected && can(actor, 'holds:manage') ? await loadActiveHolds(actor, selected.id) : null;
@@ -107,15 +88,6 @@ export async function ClassesTab({
           />
         )}
       </section>
-
-      {canManage && classes.length > 0 && (
-        <section aria-labelledby="teachers-heading" className="stack">
-          <h2 id="teachers-heading" className="people-subheading">
-            Teachers
-          </h2>
-          <TeacherAssignments sessionId={session.id} classes={classTeachers} teachers={teacherChoices} />
-        </section>
-      )}
 
       {selected && (
         <section id="enrolments" aria-labelledby="enrolments-heading" className="stack classes-enrolments">
