@@ -2,10 +2,10 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState } from 'react';
 import { MAX_AGE_LIMIT, overlaps, type ClockFormat } from '@buxa/domain';
-import { STANDARD_FIELDS, type Class, type CustomField } from '@buxa/contracts';
-import { fieldError, formatCampDateTime, idle } from '@buxa/shared';
-import { Button, Checkbox, DatePicker, RadioGroup, Select, TextField } from '@/components/elements';
-import { registrationFormPath } from '@/config/routes';
+import { STANDARD_FIELDS, type Class, type CustomField, type FormAttachment } from '@buxa/contracts';
+import { ATTACHMENT_ACCEPT, ATTACHMENT_HINT, fieldError, formatCampDateTime, idle } from '@buxa/shared';
+import { Button, Checkbox, DatePicker, FileField, RadioGroup, Select, TextField } from '@/components/elements';
+import { registrationFormFilePath, registrationFormPath } from '@/config/routes';
 import { submitRegistrationAction } from '@/actions/registration';
 import { ActionMessage } from '@/components/components/classes/forms';
 
@@ -99,6 +99,7 @@ export function RegisterForm({
   timeZone,
   clockFormat,
   fields,
+  attachments = [],
   onPendingChange,
   onSaved,
 }: {
@@ -112,6 +113,8 @@ export function RegisterForm({
   timeZone: string;
   clockFormat: ClockFormat;
   fields: readonly CustomField[];
+  /** The files the form offers to download. Each link names the session the family is registering for (see downloadSessionId). */
+  attachments?: readonly FormAttachment[];
   onPendingChange?: (pending: boolean) => void;
   /** Runs with the server's message when the registration is recorded (a pop-up closes and toasts it). */
   onSaved?: (message: string) => void;
@@ -180,6 +183,9 @@ export function RegisterForm({
 
   const err = (name: string) => fieldError(state, name);
   const chosenChildren = campers.filter(c => childIds.includes(c.id));
+  // The session a family's download is for: the session of the first class they chose, else the form's first session.
+  const downloadSessionId =
+    sessions.find(s => s.classes.some(c => picks.some(p => p.classId === c.id)))?.id ?? sessions[0]?.id ?? null;
 
   return (
     <form
@@ -268,6 +274,26 @@ export function RegisterForm({
         </section>
       )}
 
+      {attachments.length > 0 && (
+        <section className="form-section" aria-labelledby="register-files">
+          <SectionTitle id="register-files">Forms to download</SectionTitle>
+          <ul className="form-files">
+            {attachments.map(file => (
+              <li key={file.id} className="form-file">
+                <span className="form-file__name">{file.name}</span>
+                {downloadSessionId ? (
+                  <Button variant="glass" href={registrationFormFilePath(file.id, downloadSessionId)}>
+                    Download
+                  </Button>
+                ) : (
+                  <span className="muted">Choose a class to download this form.</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {GROUPS.map(group => {
         const titleId = `register-${group.title.replace(/\s+/g, '-').toLowerCase()}`;
 
@@ -306,6 +332,18 @@ export function RegisterForm({
           {fields.map(field => {
             const name = `custom.${field.key}`;
             const error = err(name);
+            if (field.kind === 'document') {
+              // A file, sent with the registration. A required one that is missing does not stop it: staff see Not received.
+              return (
+                <div key={field.key} className="document-field">
+                  <FileField label={field.label} name={name} accept={ATTACHMENT_ACCEPT} error={error} />
+                  <span className="field-hint">
+                    {field.required ? 'Expected. ' : ''}
+                    {ATTACHMENT_HINT}
+                  </span>
+                </div>
+              );
+            }
             if (field.kind === 'text') {
               return (
                 <TextField

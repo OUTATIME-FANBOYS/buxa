@@ -1,6 +1,41 @@
-import type { Actor, ClassSelection, RegistrationDecision, RegistrationFacts, RegistrationStatus } from '@buxa/domain';
-import type { CustomField, RegistrationForm, RegistrationFormInput, RegistrationRow } from '@buxa/contracts';
+import type {
+  Actor,
+  AttachmentContentType,
+  ClassSelection,
+  DocumentReviewStatus,
+  RegistrationDecision,
+  RegistrationFacts,
+  RegistrationStatus,
+} from '@buxa/domain';
+import type {
+  CustomField,
+  DocumentAnswer,
+  RegistrationForm,
+  RegistrationFormInput,
+  RegistrationRow,
+} from '@buxa/contracts';
 import type { CredentialRepository } from '../credentials/CredentialRepository';
+
+/** A file the service has checked and is about to store: its id (made by the service), name, type and bytes. */
+export interface StoredFileInput {
+  id: string;
+  name: string;
+  contentType: AttachmentContentType;
+  bytes: Uint8Array;
+}
+
+/** A document question's file on a submission. */
+export interface NewDocument extends StoredFileInput {
+  fieldKey: string;
+}
+
+/** A stored file read back for a download. `bytes` never leaves the server except through a download route. */
+export interface FileDownload {
+  id: string;
+  name: string;
+  contentType: string;
+  bytes: Uint8Array;
+}
 
 /** The published definitions a submission is checked against. */
 export interface PublishedVersion {
@@ -26,7 +61,9 @@ export interface NewRegistration {
   version: number;
   sessionIds: string[];
   selections: (ClassSelection & { camperId: string })[];
-  answers: { standard: Record<string, string>; custom: Record<string, string | boolean> };
+  answers: { standard: Record<string, string>; custom: Record<string, string | boolean | DocumentAnswer> };
+  /** The files for the document questions, one per question given. Stored with the registration, in the same transaction. */
+  documents: NewDocument[];
 }
 
 /** The facts the rule needs, gathered inside the transaction. The service adds the requested sessions. */
@@ -70,9 +107,29 @@ export interface RegistrationRepository {
   /** The published definitions of a form, or null when the form is missing or never published. */
   getPublishedVersion(userId: string, orgId: string, formId: string): Promise<PublishedVersion | null>;
   /** Audits `registration_form.create`. Throws RegistrationSessionNotFoundError for a session outside the camp. */
-  createForm(actor: Actor, input: RegistrationFormInput): Promise<RegistrationForm>;
+  /** Files in `files` are attached to the new form in the same transaction. Audits `registration_form.file_add` for each. */
+  createForm(actor: Actor, input: RegistrationFormInput, files: readonly StoredFileInput[]): Promise<RegistrationForm>;
+  /** Removes an attachment of a form. Audits `registration_form.file_remove`. Throws RegistrationFileNotFoundError. */
+  removeFormFile(actor: Actor, formId: string, fileId: string): Promise<void>;
+  /**
+   * A form attachment, only when its form covers `sessionId` (the session the family is registering for). Null otherwise: a file of
+   * another camp, of another form or for a session the form does not cover.
+   */
+  formFileDownload(userId: string, orgId: string, fileId: string, sessionId: string): Promise<FileDownload | null>;
+  /** A document a family sent, or null when the file is not in this camp. */
+  documentDownload(userId: string, orgId: string, fileId: string): Promise<FileDownload | null>;
+  /**
+   * Sets a document's review, and the status in the answer that names it, in one statement. Audits `registration.document_review`.
+   * Throws RegistrationFileNotFoundError.
+   */
+  setDocumentReview(actor: Actor, fileId: string, status: DocumentReviewStatus): Promise<void>;
   /** Audits `registration_form.update`. Throws RegistrationFormNotFoundError or RegistrationSessionNotFoundError. */
-  updateForm(actor: Actor, formId: string, input: RegistrationFormInput): Promise<RegistrationForm>;
+  updateForm(
+    actor: Actor,
+    formId: string,
+    input: RegistrationFormInput,
+    files: readonly StoredFileInput[],
+  ): Promise<RegistrationForm>;
   /** Freezes the draft as the next version. Audits `registration_form.publish`. Throws RegistrationFormNotFoundError. */
   publishForm(actor: Actor, formId: string): Promise<RegistrationForm>;
   /** The classes of the camp among `classIds`, with their parent session. A class outside the camp is simply absent. */

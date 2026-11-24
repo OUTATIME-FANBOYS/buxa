@@ -24,6 +24,10 @@ const config: NextConfig = {
   ],
   // Dependencies are hoisted to the repository root, so tell Turbopack where the workspace starts.
   turbopack: { root: fileURLToPath(new URL('../..', import.meta.url)) },
+  // Server actions read a form post in one piece, and Next's default cap is 1 MB: too small for a 1 MB file with its fields. The cap
+  // is raised for every server action in the app, to fit a few uploads at once. Each file is still checked against 1 MB by the
+  // service (see MAX_FORM_FILES and ATTACHMENT_MAX_BYTES). Route handlers keep their own limit. See docs/security.md, section 2.
+  experimental: { serverActions: { bodySizeLimit: '12mb' } },
   // /kanban redirects to /camp. Links with a #/ hash never reach the server, so this redirect only covers plain /kanban paths.
   // The destination is ROUTES.camp (config/routes.ts); written out here because Next loads this file without importing app modules.
   redirects() {

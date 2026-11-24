@@ -7,6 +7,8 @@ import { FormEditor } from '../FormEditor';
 vi.mock('@/actions/registration', () => ({
   createFormAction: vi.fn(),
   updateFormAction: vi.fn(),
+  removeFormFileAction: vi.fn(),
+  reviewDocumentAction: vi.fn(),
 }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;

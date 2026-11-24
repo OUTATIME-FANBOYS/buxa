@@ -483,3 +483,62 @@ form.class-form {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Files for families: a form's attachments (staff, on the form) and the forms a family downloads (on the registration). */
+.form-files {
+  display: grid;
+  gap: var(--s2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.form-file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+}
+.form-file__name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.document-field {
+  display: grid;
+  gap: var(--s2);
+  min-width: 0;
+}
+
+/* Documents on a registration: each question with its file, status and a review, in a list under the answers. */
+.document-review {
+  display: grid;
+  gap: var(--s3);
+  margin: var(--s3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.document-review__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s1) var(--s3);
+}
+.document-review__label {
+  font-weight: 600;
+}
+.document-review__status {
+  font-weight: 600;
+}
+.document-review__form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--s2);
+  width: 100%;
+}
+.document-review__select {
+  display: grid;
+  gap: var(--s1);
+}

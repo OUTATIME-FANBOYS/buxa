@@ -4,6 +4,7 @@ import type { RegistrationStatus } from '@buxa/domain';
 import { recordAudit } from '../audit/recordAudit';
 import type { Db } from '../people/pgRows';
 import { settleClassesInTx, takeClassPlaceInTx } from './PgRegistrationPlaces';
+import { insertDocumentsInTx } from './PgRegistrationFiles';
 import {
   RegistrationFormNotFoundError,
   RegistrationNotFoundError,
@@ -166,6 +167,7 @@ export async function insertRegistrationInTx(
   for (const selection of registration.selections) {
     await takeClassPlaceInTx(db, actor, id, selection);
   }
+  await insertDocumentsInTx(db, actor, id, registration.documents);
   await recordAudit(db, {
     actor,
     action: 'registration.submit',
@@ -175,6 +177,7 @@ export async function insertRegistrationInTx(
       formId: registration.formId,
       sessions: registration.sessionIds.length,
       places: registration.selections.length,
+      documents: registration.documents.length,
     },
   });
 

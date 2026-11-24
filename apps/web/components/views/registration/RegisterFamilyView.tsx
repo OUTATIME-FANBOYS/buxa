@@ -58,6 +58,7 @@ export async function RegisterFamilyView({ formId }: { formId: string }) {
         timeZone={clock.timeZone}
         clockFormat={clock.clockFormat}
         fields={published.fields}
+        attachments={form.attachments}
       />
     </div>
   );

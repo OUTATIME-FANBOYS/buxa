@@ -1,4 +1,5 @@
 export * from './FormEditor';
+export * from './DocumentReviewList';
 export * from './FormsTable';
 export * from './NewRegistrationFormButton';
 export * from './PublishButton';

@@ -75,6 +75,18 @@ export const REFUSAL_MESSAGES: Record<RegistrationRefusal, string> = {
   payment_note_required: 'Add a note saying how it was paid, such as the date and the method.',
 };
 
+/**
+ * A file that is not in this camp, or that a download may not reach: a form attachment for a session its form does not cover, or
+ * a document of another camp. The same message for each, so the response does not show which one it was.
+ */
+export class RegistrationFileNotFoundError extends Error {
+  readonly kind = 'registration-file-not-found';
+  constructor() {
+    super('That file is not available.');
+    this.name = 'RegistrationFileNotFoundError';
+  }
+}
+
 /** The submitted answers do not match the form version. `fieldErrors` is keyed by field name (for example `standard.guardianPhone`). */
 export class RegistrationInvalidError extends Error {
   readonly kind = 'registration-invalid';
@@ -90,7 +102,8 @@ export type RegistrationErrorKind =
   | 'registration-not-found'
   | 'registration-refused'
   | 'registration-invalid'
-  | 'registration-class-not-found';
+  | 'registration-class-not-found'
+  | 'registration-file-not-found';
 
 export const isRegistrationError = (e: unknown, kind: RegistrationErrorKind): boolean =>
   e instanceof Error && 'kind' in e && e.kind === kind;

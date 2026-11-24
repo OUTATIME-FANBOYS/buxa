@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import type { ClockFormat, CustomField } from '@buxa/contracts';
+import type { ClockFormat, CustomField, FormAttachment } from '@buxa/contracts';
 import { FormPopUp } from '@/components/components';
 import { Button } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
@@ -20,6 +20,7 @@ export function TakeRegistrationButton({
   timeZone,
   clockFormat,
   fields,
+  attachments,
 }: {
   formId: string;
   sessions: readonly RegisterSession[];
@@ -27,6 +28,7 @@ export function TakeRegistrationButton({
   timeZone: string;
   clockFormat: ClockFormat;
   fields: readonly CustomField[];
+  attachments: readonly FormAttachment[];
 }) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
@@ -65,6 +67,7 @@ export function TakeRegistrationButton({
             timeZone={timeZone}
             clockFormat={clockFormat}
             fields={fields}
+            attachments={attachments}
             onPendingChange={setPending}
             onSaved={saved}
           />

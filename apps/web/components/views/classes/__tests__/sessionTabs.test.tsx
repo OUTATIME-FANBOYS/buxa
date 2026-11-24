@@ -83,6 +83,7 @@ const submission = (id: string, first: string, last: string, sessionId: string, 
   confirmedAt: null,
   standard: { camperFirstName: first, camperLastName: last, guardianPhone: '0400 000 000' },
   custom: {},
+  documents: [],
   sessions: [{ sessionId, sessionName, status: 'submitted' as const }],
   classes: [
     {

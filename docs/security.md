@@ -18,6 +18,9 @@ section 6 are done and the privacy review is signed off. This page says what is 
 | Audit log                                 | who did what, when, to which record                                           | Postgres, append-only                 | admins                                                                                              | not yet defined                 |
 | Staff board tasks (browser demo)          | task titles and comments                                                      | the user's browser (local storage)    | the browser only                                                                                    | until cleared                   |
 
+| Family documents (uploads) | immunization records sent with a registration (PDF or image, up to 1 MB) | Postgres, row-level security per camp (`registration_files`, migration `0061`) | staff with `registration:read`; a review needs `registration:confirm` | with the registration: erased with it (section 2) |
+| Form attachments | a blank form families download, such as an immunization form (up to 1 MB) | Postgres, row-level security per camp (`registration_form_files`, migration `0060`) | camp members; families only through the download route for the session they register for (section 2) | while the form exists |
+
 **Rule:** the staff board keeps its data only in the browser. It is not sent to the Buxa server, so it must not hold real data.
 
 ## 2. What is built
@@ -45,6 +48,19 @@ section 6 are done and the privacy review is signed off. This page says what is 
   - **Rename ownership.** `buxa_rename_member_v2` now changes the camp's roster name on `people` (the person linked by `people.user_id`) and never writes `users`, so one camp's admin cannot rename a person in another camp. A member with no roster person is refused with a message. A login's own name is still edited only by that user.
   - Tests: `packages/db/test/role-aware-policies.test.ts` (every role, a non-member and an expired member), `narrow-privileges.test.ts`, `security-definer-catalogue.test.ts`.
   - **Still app-only:** writes to `people`, households, enrolments, check-ins, classes, sessions, seat holds and registrations are checked by the app role matrix, not by the database. They are the next step, with tests for every role.
+- **Registration files (migrations `0060` and `0061`).** No object storage is configured (Supabase is used for sign-in only), so files are kept in Postgres as `bytea`, under the same row-level security, backups and deletion as the rest of the camp's data. Adding a second storage provider would add a new place for personal data, so none was added.
+  - **Limits:** one file is at most 1 MB (`ATTACHMENT_MAX_BYTES`, the same limit as a staff task's attachment). The type is read from the file's first bytes (PDF, JPEG, PNG or WebP), never from its name or the browser's type. The tables repeat the type list and the size as constraints; the content check itself stays in the app.
+  - **Form attachments** (`registration_form_files`): members read them; only an admin or the owner adds or removes one (`registration:manage`). A save takes at most ten files.
+  - **Family documents** (`registration_files`): one row per document question per registration. The answer holds the file id and its review (`answers.custom.<key>` = `{ fileId, status }`). A submission stores the file in the same transaction as the registration. A required question with no file is shown as **Not received** and does not stop the registration.
+  - **Review:** `pending` (the default on upload), `accepted` or `needs_replacing`, set by `buxa_set_document_review_v1`. The function updates the file and the answer together, and checks the caller's role (staff, admin or owner). The request role cannot update either table directly.
+  - **Download routes** (Next route handlers, `apps/web/app/(app)/camp/(operations)/registration/`):
+    - `GET /camp/registration/files/{fileId}?session={sessionId}` sends a form attachment. The service needs `registration:submit`, and the join requires the file's form to cover `sessionId` (`registration_form_sessions`). A file of another camp, another form or a session the form does not cover answers **404** with one message. Families reach it through the same route once they have a parent login (phase 6); until then staff who take a registration hand the file out.
+    - `GET /camp/registration/documents/{fileId}` sends a family's document. The service needs `registration:read`; a file of another camp answers 404.
+    - Both answer as an attachment (`Content-Disposition: attachment`), with the stored type, `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff`. The bytes are never served from a public or guessable URL.
+  - **Erasure:** a registration's files are removed by the existing erasure (`buxa_delete_registration_v1`, migration `0054`), because `registration_files` cascades from `registrations`. Withdrawing a registration keeps its files, as it keeps its answers.
+  - **Gaps, not closed:** Postgres keeps the old row version of a deleted file until VACUUM reclaims it, and a backup keeps the file until it ages out. Neither is scrubbed by the erasure. A form attachment is not personal data, but a family's document is, and its retention period is not yet defined (see section 6).
+  - **Request size:** server actions accept a post of up to 12 MB (`experimental.serverActions.bodySizeLimit` in `apps/web/next.config.ts`), so a few uploads fit in one post. The cap applies to every server action in the app; the 1 MB limit for `/v1` requests (above) still applies to route handlers. Each file is checked against 1 MB by the service.
+  - Tests: `apps/server/src/registration/registrationDocuments.test.ts` (in memory) and `apps/server/src/registration/PgRegistrationFiles.pg.test.ts` (Postgres: another camp cannot read or download, a session the form does not cover is refused, a wrong or oversized file is refused, erasure removes the files). The migration test is `packages/db/test/registration-documents-upgrade.pg.test.ts`.
 - **Audit log:** every write to people, memberships, badges and attendance is recorded in the same transaction. The log cannot be updated, deleted or truncated by the app role.
 - **Authentication:** tokens are verified against Supabase's public keys (ES256 or RS256 only). `none` and shared-secret tokens are rejected. Users are matched by provider id, not email. See `docs/auth.md`.
 - **Authorisation:** a permission matrix in `packages/domain` decides every action, server-side. The UI hides controls for convenience only; the server enforces the same rules.
@@ -82,6 +98,7 @@ section 6 are done and the privacy review is signed off. This page says what is 
 - Collect only what each phase needs. Phase 1 holds names, date of birth, household links and attendance. It does not hold medical notes, photos or home addresses.
 - Consent and notices: a parent or guardian must be told what is stored and why. The consent flow is not built.
 - US rules: COPPA and state child-privacy laws apply. A lawyer's review is required before real data is stored.
+- Family documents (immunization records) are personal data about a child. They are kept with the registration and erased with it (section 2). Their retention period is not yet defined.
 - Retention: each record type needs a set period and a deletion process. None is defined yet.
 - Access by viewers: viewers see names and roles only. Minor status and contact details are hidden from them.
 

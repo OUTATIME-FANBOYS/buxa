@@ -1,10 +1,14 @@
 'use server';
 import { createFormAction as createFormActionImpl } from '@buxa/server/composers/registration/formActions';
 import { updateFormAction as updateFormActionImpl } from '@buxa/server/composers/registration/formActions';
-import { publishFormAction as publishFormActionImpl } from '@buxa/server/composers/registration/formActions';
+import {
+  publishFormAction as publishFormActionImpl,
+  removeFormFileAction as removeFormFileActionImpl,
+} from '@buxa/server/composers/registration/formActions';
 import { submitRegistrationAction as submitRegistrationActionImpl } from '@buxa/server/composers/registration/submitRegistrationAction';
 import { confirmRegistrationAction as confirmRegistrationActionImpl } from '@buxa/server/composers/registration/confirmRegistrationAction';
 import { recordPaymentAction as recordPaymentActionImpl } from '@buxa/server/composers/registration/paymentAction';
+import { reviewDocumentAction as reviewDocumentActionImpl } from '@buxa/server/composers/registration/documentActions';
 import {
   archiveRegistrationAction as archiveRegistrationActionImpl,
   deleteRegistrationAction as deleteRegistrationActionImpl,
@@ -21,6 +25,14 @@ export async function createFormAction(...args: Parameters<typeof createFormActi
 
 export async function updateFormAction(...args: Parameters<typeof updateFormActionImpl>) {
   return updateFormActionImpl(...args);
+}
+
+export async function removeFormFileAction(...args: Parameters<typeof removeFormFileActionImpl>) {
+  return removeFormFileActionImpl(...args);
+}
+
+export async function reviewDocumentAction(...args: Parameters<typeof reviewDocumentActionImpl>) {
+  return reviewDocumentActionImpl(...args);
 }
 
 export async function publishFormAction(...args: Parameters<typeof publishFormActionImpl>) {

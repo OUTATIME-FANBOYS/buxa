@@ -43,6 +43,7 @@ const form: RegistrationForm = {
     { id: AUTUMN, name: 'Autumn camp' },
   ],
   fields: [],
+  attachments: [],
   publishedVersion: 1,
   submissionCount: 1,
   updatedAt: '2027-06-01T00:00:00.000Z',
@@ -59,6 +60,7 @@ const ada: RegistrationRow = {
   archivedAt: null,
   standard: { camperFirstName: 'Ada', camperLastName: 'Lovelace' },
   custom: {},
+  documents: [],
   sessions: [{ sessionId: SUMMER, sessionName: 'Summer camp', status: 'submitted' }],
   classes: [],
 };

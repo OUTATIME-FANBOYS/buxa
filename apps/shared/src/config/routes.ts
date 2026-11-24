@@ -61,6 +61,17 @@ export const sessionTabPath = (sessionId: string, tab: SessionTab): string => `$
 /** One registration form: its questions, publishing and submissions by session. */
 export const registrationFormPath = (formId: string): string => `${ROUTES.registration}/${encodeURIComponent(formId)}`;
 
+/**
+ * A file a form offers families (a blank immunization form, say). The session is the one the family registers for: the download
+ * route checks the form covers it, so a link is only as good as its session.
+ */
+export const registrationFormFilePath = (fileId: string, sessionId: string): string =>
+  `${ROUTES.registration}/files/${encodeURIComponent(fileId)}?session=${encodeURIComponent(sessionId)}`;
+
+/** A document a family sent with a registration, for staff to open and check. */
+export const registrationDocumentPath = (fileId: string): string =>
+  `${ROUTES.registration}/documents/${encodeURIComponent(fileId)}`;
+
 /** The page where staff take a registration for a family, on a published form. */
 export const registrationRegisterPath = (formId: string): string => `${registrationFormPath(formId)}/register`;
 
