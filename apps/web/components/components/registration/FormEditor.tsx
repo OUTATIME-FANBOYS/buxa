@@ -3,11 +3,12 @@
 import { useActionState, useEffect, useRef } from 'react';
 import type { CustomField } from '@buxa/contracts';
 import { fieldError, idle } from '@buxa/shared';
-import { Button, Checkbox, TextField } from '@/components/elements';
+import { Button, TextField } from '@/components/elements';
 import { ROUTES } from '@/config/routes';
 import { createFormAction, updateFormAction } from '@/actions/registration';
 import { ActionMessage } from '@/components/components/classes/forms';
 import { QuestionBuilder } from './QuestionBuilder';
+import { SessionPicker } from './SessionPicker';
 
 /*
  * A registration form's name, season, sessions and own questions. The same screen creates a form and edits its draft: the create
@@ -46,7 +47,6 @@ export function FormEditor({
 }) {
   const [state, formAction, pending] = useActionState(mode === 'create' ? createFormAction : updateFormAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
-  const chosen = new Set(initial?.sessionIds ?? []);
   const inDialog = variant === 'dialog';
 
   useEffect(() => {
@@ -107,13 +107,7 @@ export function FormEditor({
         {sessions.length === 0 ? (
           <p className="muted">Create a session first. A form covers the sessions its families can choose from.</p>
         ) : (
-          <div className="check-group">
-            {sessions.map(session => (
-              <Checkbox key={session.id} name="sessionIds" value={session.id} defaultSelected={chosen.has(session.id)}>
-                {session.name}
-              </Checkbox>
-            ))}
-          </div>
+          <SessionPicker sessions={sessions} defaultIds={initial?.sessionIds} labelledBy="registration-sessions" />
         )}
         {err('sessionIds') && (
           <span className="field-error" role="alert">

@@ -382,3 +382,104 @@ form.class-form {
 .class-form.registration-register {
   gap: var(--s4);
 }
+
+/* Sessions this form covers: a text-field box with the chosen sessions as tags and a select to add the next one. The box takes
+ * the control's height as its minimum and wraps; focus turns its border the focus colour, as on every field. */
+.session-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+  min-width: 0;
+  min-height: var(--control-h);
+  padding: var(--s2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-2);
+  background: var(--surface);
+}
+.session-picker:focus-within {
+  border-color: var(--focus);
+}
+.session-picker__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.session-picker__input {
+  flex: 1 1 10rem;
+  min-width: 0;
+  height: calc(var(--control-h) - var(--s2) * 2 - 2px);
+  padding: 0 var(--s2);
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-b);
+}
+.session-picker__input:disabled {
+  color: var(--text-3);
+}
+.session-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  min-height: 32px;
+  padding: 0 var(--s3);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--accent);
+  font: inherit;
+  font-size: var(--fs-b);
+  cursor: pointer;
+}
+
+/* Your questions: the list of the camp's own questions, then the add area. Each row is a bordered line with its remove button. */
+.question-builder {
+  display: grid;
+  gap: var(--s3);
+  min-width: 0;
+}
+.question-list {
+  display: grid;
+  gap: var(--s2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.question-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+}
+.question-list__text {
+  display: grid;
+  gap: var(--s1);
+  min-width: 0;
+}
+.question-add {
+  display: grid;
+  gap: var(--s3);
+  padding: var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+}
+.question-add__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--s3);
+  align-items: end;
+  min-width: 0;
+}
+@media (max-width: 720px) {
+  .question-add__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
