@@ -100,6 +100,19 @@ describe.skipIf(!url)('teacher invites (migration 0038)', () => {
     expect(accepted.rows).toEqual([{ accepted_by: ann }]);
   });
 
+  it('links the accepting login to the person with the invited email (created with the instructor role when none exists)', async () => {
+    const linked = await pool.query<{ user_id: string; given_name: string; family_name: string; email: string }>(
+      `SELECT user_id, given_name, family_name, email FROM people WHERE org_id = $1 AND user_id = $2`,
+      [org, ann],
+    );
+    expect(linked.rows).toEqual([{ user_id: ann, given_name: 'Ann', family_name: 'Ann', email: annEmail }]);
+    const roles = await pool.query<{ role: string }>(
+      `SELECT r.role FROM person_roles r JOIN people p ON p.id = r.person_id WHERE p.org_id = $1 AND p.user_id = $2`,
+      [org, ann],
+    );
+    expect(roles.rows).toEqual([{ role: 'instructor' }]);
+  });
+
   it('refuses a second use of the same invite with the generic reason', async () => {
     const constraint = await refusalOf(
       withOrg(pool, ann, null, db => db.query<Row>('SELECT * FROM buxa_accept_invite($1)', [liveHash])),
