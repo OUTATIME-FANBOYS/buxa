@@ -2,7 +2,7 @@ import type { Class } from '@buxa/contracts';
 import { sessionPath } from '@/config/routes';
 import { formatCampDateTime, priceSummary } from '@buxa/shared';
 import type { ClockFormat } from '@buxa/domain';
-import { Button } from '@/components/elements';
+import { Button, Pill } from '@/components/elements';
 import { ClassStatus } from './ClassStatus';
 import { DeleteClassButton, EditClassButton, type InstructorChoice } from './forms';
 
@@ -65,7 +65,15 @@ export function ClassesTable({
 
             return (
               <tr key={cls.id}>
-                <td>{cls.name}</td>
+                <td>
+                  {cls.name}
+                  {cls.datesOutsideSession && (
+                    <>
+                      {' '}
+                      <Pill tone="warn">Dates outside session</Pill>
+                    </>
+                  )}
+                </td>
                 <td>
                   {cls.ageRange.minAge} to {cls.ageRange.maxAge}
                 </td>

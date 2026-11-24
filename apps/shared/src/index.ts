@@ -84,6 +84,7 @@ export * from './classes/localTime';
 export * from './classes/parse';
 export * from './classes/priceSummary';
 export * from './groups/parse';
+export * from './classes/sessionDatesPreview';
 export * from './classes/sessionDeletion';
 export * from './notifications/notifications';
 export * from './registration/copy';

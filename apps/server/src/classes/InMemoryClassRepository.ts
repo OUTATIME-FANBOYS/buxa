@@ -1,6 +1,13 @@
 import { randomUUID } from 'node:crypto';
-import type { Actor, ActiveEnrolmentFacts, AuditAction, LocalDate } from '@buxa/domain';
-import { capacityCovers, seatsLeft, sessionNameKey } from '@buxa/domain';
+import type {
+  Actor,
+  ActiveEnrolmentFacts,
+  AuditAction,
+  DatesPlanClass,
+  LocalDate,
+  SessionDatesPlan,
+} from '@buxa/domain';
+import { capacityCovers, classDatesRefusal, planSessionDates, seatsLeft, sessionNameKey } from '@buxa/domain';
 import type {
   Class,
   Enrolment,
@@ -29,15 +36,18 @@ import type {
 import {
   CamperNotFoundError,
   CapacityBelowEnrolledError,
+  ClassDatesFlaggedError,
   ClassHasEnrolmentsError,
   ClassNotFoundError,
   EnrolmentNotFoundError,
   InstructorNotFoundError,
+  SessionDatesBlockedError,
   SessionHasClassesError,
   SessionHasEnrolmentsError,
   SessionNotDraftError,
   SessionNotFoundError,
   SessionNotLiveError,
+  SessionPublishBlockedError,
   refusalError,
 } from './errors';
 import { settle } from '@buxa/domain';
@@ -61,6 +71,8 @@ interface StoredClass extends ClassRecord {
   id: string;
   orgId: string;
   sessionId: string;
+  /** The dates flag (migration 0059): the class falls outside its session's dates. */
+  datesOutsideSession: boolean;
 }
 
 interface StoredEnrolment {
@@ -117,7 +129,11 @@ export class InMemoryClassRepository implements ClassRepository {
   private readonly loginOf = new Map<string, string>();
   private readonly locks = new Map<string, Promise<void>>();
 
-  constructor(private readonly now: Clock = systemClock) {}
+  /** `timeZone` is the camp's zone for the dates check (Postgres reads it from the camp). */
+  constructor(
+    private readonly now: Clock = systemClock,
+    private readonly timeZone: string = 'Australia/Sydney',
+  ) {}
 
   /** Test setup: a person who can be enrolled (or named as an instructor). */
   seedCamper(orgId: string, id: string, name: string, dateOfBirth: LocalDate | null): void {
@@ -224,6 +240,20 @@ export class InMemoryClassRepository implements ClassRepository {
         isPublic: input.isPublic ?? false,
       };
       if (!sameSessionDetails(before, after)) {
+        const datesChanged = before.startsOn !== after.startsOn || before.endsOn !== after.endsOn;
+        const plan = datesChanged
+          ? planSessionDates(
+              this.datesPlanRowsOf(actor.orgId, sessionId),
+              { startsOn: input.startsOn, endsOn: input.endsOn },
+              this.timeZone,
+            )
+          : null;
+        if (plan && plan.blocked.length > 0) {
+          throw new SessionDatesBlockedError(plan.blocked.map(c => c.name));
+        }
+        if (plan) {
+          this.applyDatesPlan(actor, sessionId, input, plan);
+        }
         this.record(actor, 'session.update', 'session', sessionId, sessionEditAudit(before, after));
         Object.assign(row, after);
       }
@@ -298,6 +328,10 @@ export class InMemoryClassRepository implements ClassRepository {
         throw new SessionNotDraftError('archived');
       }
       if (row.status === 'draft') {
+        const flagged = this.flaggedNamesOf(actor.orgId, sessionId);
+        if (flagged.length > 0) {
+          throw new SessionPublishBlockedError(flagged);
+        }
         row.status = 'live';
         this.record(actor, 'session.publish', 'session', sessionId, {});
       }
@@ -383,7 +417,13 @@ export class InMemoryClassRepository implements ClassRepository {
       }
 
       return inputs.map(input => {
-        const row: StoredClass = { ...input, id: randomUUID(), orgId: actor.orgId, sessionId };
+        const row: StoredClass = {
+          ...input,
+          id: randomUUID(),
+          orgId: actor.orgId,
+          sessionId,
+          datesOutsideSession: false,
+        };
         this.classes.set(row.id, row);
         this.recordCreate(actor, row, input);
 
@@ -428,7 +468,13 @@ export class InMemoryClassRepository implements ClassRepository {
         throw new SessionNotFoundError();
       }
       this.requireInstructorsInCamp(actor.orgId, input.instructorIds);
-      const row: StoredClass = { ...input, id: randomUUID(), orgId: actor.orgId, sessionId };
+      const row: StoredClass = {
+        ...input,
+        id: randomUUID(),
+        orgId: actor.orgId,
+        sessionId,
+        datesOutsideSession: false,
+      };
       this.classes.set(row.id, row);
       this.recordCreate(actor, row, input);
 
@@ -449,6 +495,8 @@ export class InMemoryClassRepository implements ClassRepository {
       }
       const priceBefore = row.price;
       Object.assign(row, input, { instructorIds: [...new Set(input.instructorIds)] });
+      // The service refused a class outside its session's dates, so a saved class is inside them: its flag is cleared (migration 0059).
+      row.datesOutsideSession = false;
       this.record(actor, 'class.update', 'class', classId, {
         startsAt: row.startsAt,
         endsAt: row.endsAt,
@@ -561,6 +609,10 @@ export class InMemoryClassRepository implements ClassRepository {
       const parent = this.sessions.get(cls.sessionId);
       if (parent && parent.status !== 'live') {
         throw new SessionNotLiveError(parent.status);
+      }
+      const datesRefusal = classDatesRefusal(cls.datesOutsideSession);
+      if (datesRefusal !== null) {
+        throw new ClassDatesFlaggedError();
       }
       // As in Postgres: expired holds give their places back and the waitlist takes them, before the seat count is read.
       const undoSweep = this.sweepExpiredHolds(cls.id, actor);
@@ -690,6 +742,60 @@ export class InMemoryClassRepository implements ClassRepository {
 
   private record(actor: Actor, action: AuditAction, entity: string, entityId: string, data: AuditData): void {
     this.audit.push({ orgId: actor.orgId, actorId: actor.userId, action, entity, entityId, data });
+  }
+
+  /** The classes of a session with what a date change needs (as readDatesPlanRows does in Postgres). */
+  private datesPlanRowsOf(orgId: string, sessionId: string): DatesPlanClass[] {
+    return [...this.classes.values()]
+      .filter(c => c.orgId === orgId && c.sessionId === sessionId)
+      .sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.id.localeCompare(b.id))
+      .map(c => ({
+        id: c.id,
+        name: c.name,
+        startsAt: c.startsAt,
+        endsAt: c.endsAt,
+        datesOutsideSession: c.datesOutsideSession,
+        hasPeople:
+          [...this.enrolments.values()].some(e => e.classId === c.id) || this.seatHolds.some(h => h.classId === c.id),
+      }));
+  }
+
+  private flaggedNamesOf(orgId: string, sessionId: string): string[] {
+    return this.datesPlanRowsOf(orgId, sessionId)
+      .filter(c => c.datesOutsideSession)
+      .map(c => c.name);
+  }
+
+  /** Sets the flags of a plan on the session's classes, then audits each newly flagged class (as applyDatesPlan does in Postgres). */
+  private applyDatesPlan(
+    actor: Actor,
+    sessionId: string,
+    input: { name: string; startsOn: string; endsOn: string },
+    plan: SessionDatesPlan,
+  ): void {
+    for (const c of this.classes.values()) {
+      if (c.orgId === actor.orgId && c.sessionId === sessionId) {
+        c.datesOutsideSession = plan.outside.some(o => o.id === c.id);
+      }
+    }
+    for (const cls of plan.newlyFlagged) {
+      this.record(actor, 'class.dates_flagged', 'class', cls.id, {
+        name: cls.name,
+        session: input.name,
+        startsOn: input.startsOn,
+        endsOn: input.endsOn,
+      });
+    }
+  }
+
+  sessionDatesPlanRows(_userId: string, orgId: string, sessionId: string): Promise<DatesPlanClass[]> {
+    return settle(() => {
+      if (!this.sessionIn(orgId, sessionId)) {
+        throw new SessionNotFoundError();
+      }
+
+      return this.datesPlanRowsOf(orgId, sessionId);
+    });
   }
 
   private sessionIn(orgId: string, id: string): StoredSession | undefined {
@@ -825,6 +931,7 @@ export class InMemoryClassRepository implements ClassRepository {
       seatsTaken: this.takenPlaces(c.id),
       waitlisted: this.countWhere(c.id, 'waitlisted'),
       price: c.price ? { ...c.price } : null,
+      datesOutsideSession: c.datesOutsideSession,
     };
   }
 

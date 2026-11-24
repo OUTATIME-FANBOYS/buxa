@@ -9,6 +9,10 @@ import { UiProvider } from '@buxa/middleware/providers/providers';
 const NoDialog = () => null;
 const render = (node: ReactNode) => renderToStaticMarkup(<UiProvider Dialog={NoDialog}>{node}</UiProvider>);
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: () => undefined }),
+}));
+
 vi.mock('@/actions/classes', () => ({
   updateSessionAction: vi.fn(),
   deleteSessionAction: vi.fn(),

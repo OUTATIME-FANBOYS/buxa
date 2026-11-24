@@ -5,7 +5,9 @@ import {
   expandClassRule,
   findClash,
   formatClash,
+  planSessionDates,
   type Actor,
+  type NamedClass,
 } from '@buxa/domain';
 import {
   NewSessionInputSchema,
@@ -53,6 +55,12 @@ export interface AssignedSession {
   classes: AssignedClass[];
 }
 
+/** The classes a session date change would flag, and the ones that would refuse it (see previewSessionDates). */
+export interface SessionDatesPreview {
+  outside: NamedClass[];
+  blocked: NamedClass[];
+}
+
 export interface ClassService {
   listSessions(actor: Actor): Promise<Outcome<Session[]>>;
   /**
@@ -67,6 +75,11 @@ export interface ClassService {
    * dates (the last day on or after the first), and every class must still fall inside the new dates.
    */
   updateSession(actor: Actor, sessionId: string, input: SessionEditInput): Promise<Outcome<Session>>;
+  /**
+   * What saving these dates would do, before anything is saved: the classes that would fall outside them (and so be flagged), and
+   * the ones that have people on them, which would refuse the save. Needs classes:manage. Read only.
+   */
+  previewSessionDates(actor: Actor, sessionId: string, input: SessionEditInput): Promise<Outcome<SessionDatesPreview>>;
   /** Deletes a session that holds no classes. Needs classes:manage. A session with any class is refused. */
   deleteSession(actor: Actor, sessionId: string): Promise<Outcome<null>>;
   /**
@@ -381,17 +394,36 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
           failure: { reason: 'session_invalid', message: checked.error.issues[0]?.message ?? 'Check the session.' },
         };
       }
-      const { startsOn, endsOn } = checked.data;
 
       return attempt(async () => {
         await requireNameFree(repo, actor, checked.data.name, sessionId);
-        for (const cls of await repo.listClasses(actor.userId, actor.orgId, sessionId)) {
-          if (!classWithinSession(cls, { startsOn, endsOn }, timeZone)) {
-            throw new ClassOutsideSessionError(startsOn, endsOn);
-          }
-        }
 
+        // The repository plans the flags and refuses a shrink that would flag a class with people on it, in the same transaction
+        // as the save (see sessionDateFlags in the domain).
         return repo.updateSession(actor, sessionId, checked.data);
+      }, timeZone);
+    },
+
+    async previewSessionDates(actor, sessionId, input) {
+      assertAllowed(actor, 'classes:manage');
+      const timeZone = await timezoneOf(actor);
+      const checked = NewSessionInputSchema.safeParse(input);
+      if (!checked.success) {
+        return {
+          ok: false,
+          failure: { reason: 'session_invalid', message: checked.error.issues[0]?.message ?? 'Check the session.' },
+        };
+      }
+      const days = { startsOn: checked.data.startsOn, endsOn: checked.data.endsOn };
+
+      return attempt(async () => {
+        const plan = planSessionDates(
+          await repo.sessionDatesPlanRows(actor.userId, actor.orgId, sessionId),
+          days,
+          timeZone,
+        );
+
+        return { outside: plan.outside, blocked: plan.blocked };
       }, timeZone);
     },
 

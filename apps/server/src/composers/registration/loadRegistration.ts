@@ -1,5 +1,5 @@
 import 'server-only';
-import type { Actor } from '@buxa/domain';
+import { classDatesRefusal, type Actor } from '@buxa/domain';
 import type { PublishedVersion } from '../../registration/RegistrationRepository';
 import type { Class, RegistrationForm, RegistrationRow } from '@buxa/contracts';
 import { getRuntime } from '../../runtime';
@@ -74,7 +74,9 @@ export function loadRegisterPage(actor: Actor, formId: string): Promise<LoadedRe
       if (!classes.ok) {
         throw notFound(classes.failure.message);
       }
-      sessions.push({ id: session.id, name: session.name, classes: classes.value });
+      // A class flagged for its dates is not offered: it takes no place until its dates are fixed (the same rule the take refuses by).
+      const offered = classes.value.filter(c => classDatesRefusal(c.datesOutsideSession) === null);
+      sessions.push({ id: session.id, name: session.name, classes: offered });
     }
     const campers = await runtime.services.people.list(actor, { role: 'camper' });
 

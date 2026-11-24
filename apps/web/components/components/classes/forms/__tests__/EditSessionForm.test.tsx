@@ -5,6 +5,7 @@ import { EditSessionForm } from '../EditSessionForm';
 
 vi.mock('@/actions/classes', () => ({
   updateSessionAction: vi.fn(),
+  previewSessionDatesAction: vi.fn(),
   deleteSessionAction: vi.fn(),
   deleteSessionsAction: vi.fn(),
 }));

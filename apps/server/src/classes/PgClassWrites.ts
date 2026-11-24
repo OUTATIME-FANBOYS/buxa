@@ -3,7 +3,15 @@ import type { NewSessionInput, SessionDeleteImpact, SessionEditInput, SessionSta
 import { recordAudit } from '../audit/recordAudit';
 import { type Db } from '../people/pgRows';
 import type { ClassRecord } from './ClassRepository';
-import { ClassNotFoundError, InstructorNotFoundError, SessionNotDraftError, SessionNotFoundError } from './errors';
+import {
+  ClassNotFoundError,
+  InstructorNotFoundError,
+  SessionDatesBlockedError,
+  SessionNotDraftError,
+  SessionNotFoundError,
+  SessionPublishBlockedError,
+} from './errors';
+import { applyDatesPlan, flaggedClassNames, planDatesChange } from './PgSessionDates';
 import { toPrice, type PriceRow } from './PgClassQueries';
 import { priceChangeAudit, samePrice } from './priceAudit';
 import { sameSessionDetails, sessionEditAudit, type SessionDetails } from './sessionEditAudit';
@@ -73,12 +81,23 @@ export async function updateSessionRow(
   if (sameSessionDetails(before, after)) {
     return;
   }
+  // A change of dates re-plans the flags. The plan is made before anything is written: a shrink that would flag a class with people on
+  // it throws, so the rollback leaves the session and every class as they were. A rename alone does not touch the flags.
+  const datesChanged = before.startsOn !== after.startsOn || before.endsOn !== after.endsOn;
+  const days = { startsOn: input.startsOn, endsOn: input.endsOn };
+  const plan = datesChanged ? await planDatesChange(db, actor.orgId, sessionId, days) : null;
+  if (plan && plan.blocked.length > 0) {
+    throw new SessionDatesBlockedError(plan.blocked.map(c => c.name));
+  }
   await db.query(
     `UPDATE classes
         SET name = $3, description = $4, starts_on = $5::date, ends_on = $6::date, is_public = $7
       WHERE id = $1 AND org_id = $2`,
     [sessionId, actor.orgId, after.name, after.description, after.startsOn, after.endsOn, after.isPublic],
   );
+  if (plan) {
+    await applyDatesPlan(db, actor, sessionId, after.name, days, plan);
+  }
   await recordAudit(db, {
     actor,
     action: 'session.update',
@@ -181,6 +200,11 @@ export async function publishSessionRow(db: Db, actor: Actor, sessionId: string)
   }
   if (rows[0].status === 'archived') {
     throw new SessionNotDraftError('archived');
+  }
+  // A session with a flagged class cannot go live until its dates are fixed (migration 0059).
+  const flagged = await flaggedClassNames(db, actor.orgId, sessionId);
+  if (flagged.length > 0) {
+    throw new SessionPublishBlockedError(flagged);
   }
   await db.query(`UPDATE classes SET status = 'live' WHERE id = $1 AND org_id = $2`, [sessionId, actor.orgId]);
   await recordAudit(db, { actor, action: 'session.publish', entity: 'session', entityId: sessionId, data: {} });
@@ -335,11 +359,13 @@ export async function updateClassRow(db: Db, actor: Actor, classId: string, inpu
   }
   const before = toPrice(current[0]);
   const price = input.price;
+  // The service refuses a class outside its session's dates before this runs, so a saved class is inside them and its flag is cleared
+  // here, in the same statement (migration 0059).
   await db.query(
     `UPDATE sessions
         SET name = $3, age_min = $4, age_max = $5, starts_at = $6::timestamptz, ends_at = $7::timestamptz,
             location = $8, capacity = $9, price_minor = $10, price_currency = $11, early_bird_minor = $12,
-            early_bird_until = $13::date
+            early_bird_until = $13::date, dates_outside_session = false
       WHERE id = $1 AND org_id = $2`,
     [
       classId,

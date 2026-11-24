@@ -192,6 +192,8 @@ export const ClassSchema = z.object({
   waitlisted: z.number().int(),
   /** This class's own price, or null when none is set. */
   price: ClassPriceSchema.nullable(),
+  /** True when the class falls outside its session's dates. It takes no places, and is not listed publicly, until its dates are fixed (migration 0059). */
+  datesOutsideSession: z.boolean(),
 });
 export type Class = z.infer<typeof ClassSchema>;
 

@@ -60,9 +60,9 @@ describe('edit session', () => {
     expect(repo.audit.some(a => a.action === 'session.update')).toBe(false);
   });
 
-  it('refuses a new date range that leaves a class outside it', async () => {
+  it('a new date range that leaves a class outside it saves, and flags that class with its times kept', async () => {
     const { service, sessionId } = await sessionSetup();
-    await service.addClass(as('admin'), sessionId, {
+    const added = await service.addClass(as('admin'), sessionId, {
       name: 'Robotics',
       ageRange: { minAge: 8, maxAge: 12 },
       capacity: 12,
@@ -73,10 +73,10 @@ describe('edit session', () => {
       endsAt: '2027-07-05T12:00:00+10:00',
     });
     const outcome = await service.updateSession(as('admin'), sessionId, { ...EDIT, startsOn: '2027-07-06' });
-    expect(outcome.ok).toBe(false);
-    if (!outcome.ok) {
-      expect(outcome.failure.reason).toBe('class_outside_session');
-    }
+    expect(outcome.ok).toBe(true);
+    const classes = await service.listClasses(as('admin'), sessionId);
+    const flagged = classes.ok ? classes.value.find(c => c.id === (added.ok ? added.value.id : '')) : undefined;
+    expect(flagged).toMatchObject({ datesOutsideSession: true, startsAt: '2027-07-05T09:00:00+10:00' });
   });
 
   it('refuses a viewer, a teacher and anyone without classes:manage', async () => {

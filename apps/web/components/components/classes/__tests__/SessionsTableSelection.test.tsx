@@ -12,6 +12,10 @@ const NoDialog = () => null;
 const withUi = (node: ReactNode) => <UiProvider Dialog={NoDialog}>{node}</UiProvider>;
 
 const h = vi.hoisted(() => ({ deleteSessionAction: vi.fn(), deleteSessionsAction: vi.fn() }));
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: () => undefined }),
+}));
+
 vi.mock('@/actions/classes', () => ({
   updateSessionAction: vi.fn(),
   deleteSessionAction: vi.fn(),
