@@ -342,3 +342,109 @@ describe('registration service: confirmation', () => {
     await expect(service.confirm(as('staff'), 'not-a-uuid')).rejects.toBeInstanceOf(RegistrationNotFoundError);
   });
 });
+
+describe('registration service: lifecycle (withdraw, archive, delete)', () => {
+  async function withRegistration() {
+    const { repo, service } = setup();
+    const admin = as('admin');
+    const form = await service.createForm(admin, formInput);
+    await service.publishForm(admin, form.id);
+    const submit = () =>
+      service.submit(as('staff'), form.id, {
+        formId: form.id,
+        selections: [{ camperId: CAMPER_ADA, classId: CLASS_A3 }],
+        standard,
+        custom: { swim: 'Beginner', photos: 'yes' },
+      });
+    const id = await submit();
+
+    return { repo, service, formId: form.id, id, submit };
+  }
+
+  it('a session that is a draft or archived refuses a registration, and the refusal says so', async () => {
+    const { repo, service, formId } = await withRegistration();
+    repo.closedSessionIds.add(SESSION_A);
+
+    await expect(
+      service.submit(as('staff'), formId, {
+        formId,
+        selections: [{ camperId: CAMPER_BEN, classId: CLASS_A3 }],
+        standard,
+        custom: { swim: 'Beginner', photos: 'yes' },
+      }),
+    ).rejects.toMatchObject({ kind: 'registration-refused', reason: 'session_not_open' });
+    await expect(service.listSubmissions(as('staff'), formId)).resolves.toHaveLength(1);
+
+    repo.closedSessionIds.delete(SESSION_A);
+    await expect(
+      service.submit(as('staff'), formId, {
+        formId,
+        selections: [{ camperId: CAMPER_BEN, classId: CLASS_A3 }],
+        standard,
+        custom: { swim: 'Beginner', photos: 'yes' },
+      }),
+    ).resolves.toEqual(expect.any(String));
+  });
+
+  it('withdraw keeps the record, cancels its places, and a second withdraw is refused', async () => {
+    const { service, formId, id } = await withRegistration();
+
+    await service.withdraw(as('staff'), id);
+
+    const [row] = await service.listSubmissions(as('staff'), formId);
+    expect(row).toMatchObject({ id, status: 'withdrawn' });
+    expect(row.withdrawnAt).not.toBeNull();
+    expect(row.standard.camperFirstName).toBe('Ada');
+    expect(row.classes.every(c => c.status !== 'held')).toBe(true);
+    await expect(service.withdraw(as('staff'), id)).rejects.toMatchObject({ reason: 'already_withdrawn' });
+  });
+
+  it('a withdrawn registration cannot be confirmed', async () => {
+    const { service, id } = await withRegistration();
+    await service.withdraw(as('staff'), id);
+    await expect(service.confirm(as('staff'), id)).rejects.toMatchObject({ reason: 'not_pending' });
+  });
+
+  it('archive flags the registration and unarchive clears it; it is kept either way', async () => {
+    const { service, formId, id } = await withRegistration();
+
+    await service.archive(as('staff'), id);
+    expect((await service.listSubmissions(as('staff'), formId))[0].archivedAt).not.toBeNull();
+
+    await service.unarchive(as('staff'), id);
+    expect((await service.listSubmissions(as('staff'), formId))[0].archivedAt).toBeNull();
+  });
+
+  it('delete erases the registration with its answers, for an admin and for the owner', async () => {
+    const { service, formId, id, submit } = await withRegistration();
+    await service.erase(as('admin'), id);
+    await expect(service.listSubmissions(as('staff'), formId)).resolves.toEqual([]);
+
+    const second = await submit();
+    await service.erase(as('owner'), second);
+    await expect(service.listSubmissions(as('staff'), formId)).resolves.toEqual([]);
+  });
+
+  it('delete is refused for staff, a viewer and a teacher, and the registration stays', async () => {
+    const { service, formId, id } = await withRegistration();
+    for (const role of ['staff', 'viewer', 'teacher'] as const) {
+      await expect(service.erase(as(role), id)).rejects.toMatchObject({ statusCode: 403 });
+    }
+    await expect(service.listSubmissions(as('staff'), formId)).resolves.toHaveLength(1);
+  });
+
+  it('withdraw and archive are for staff and above: a viewer and a teacher are refused', async () => {
+    const { service, id } = await withRegistration();
+    for (const role of ['viewer', 'teacher'] as const) {
+      await expect(service.withdraw(as(role), id)).rejects.toMatchObject({ statusCode: 403 });
+      await expect(service.archive(as(role), id)).rejects.toMatchObject({ statusCode: 403 });
+      await expect(service.unarchive(as(role), id)).rejects.toMatchObject({ statusCode: 403 });
+    }
+  });
+
+  it('a registration of another camp, or a malformed id, is not found', async () => {
+    const { service, id } = await withRegistration();
+    await expect(service.withdraw(as('admin', CAMP_B), id)).rejects.toBeInstanceOf(RegistrationNotFoundError);
+    await expect(service.erase(as('admin'), 'not-a-uuid')).rejects.toBeInstanceOf(RegistrationNotFoundError);
+  });
+});

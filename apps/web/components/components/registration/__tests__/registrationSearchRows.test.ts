@@ -10,6 +10,8 @@ const row = (id: string, sessions: { sessionId: string; sessionName: string }[])
   submittedAt: '2027-06-01T00:00:00.000Z',
   status: 'pending',
   confirmedAt: null,
+  withdrawnAt: null,
+  archivedAt: null,
   standard: { camperFirstName: 'Ada', camperLastName: 'Lovelace' },
   custom: {},
   sessions: sessions.map(s => ({ ...s, status: 'submitted' as const })),

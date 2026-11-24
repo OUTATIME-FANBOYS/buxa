@@ -58,6 +58,8 @@ describe('class service: permissions (role x method)', () => {
     if (!session.ok) {
       return;
     }
+    // Staff cannot take a session live (classes:publish is admin and owner), so an admin does.
+    await service.publishSession(as('admin'), session.value.id);
     const added = await service.addClass(staff, session.value.id, classAt(robotics, monday9to12));
     expect(added.ok).toBe(true);
     if (!added.ok) {
@@ -313,7 +315,7 @@ describe('class service: audit', () => {
   it('records session, class and enrolment writes, and nothing for reads or refusals', async () => {
     const { service, repo } = setup();
     const { classId } = await classWithSession(service);
-    expect(repo.audit.map(a => a.action)).toEqual(['session.create', 'class.create']);
+    expect(repo.audit.map(a => a.action)).toEqual(['session.create', 'session.publish', 'class.create']);
     await service.enrol(as('staff'), { classId, camperId: CAMPER_ADA, waitlistIfFull: false });
     const enrolment = repo.audit.find(a => a.action === 'enrolment.create');
     expect(enrolment).toMatchObject({ orgId: ORG, actorId: 'user-staff', entity: 'enrolment' });

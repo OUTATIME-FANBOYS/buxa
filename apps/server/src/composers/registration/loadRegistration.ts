@@ -64,9 +64,10 @@ export function loadRegisterPage(actor: Actor, formId: string): Promise<LoadedRe
     const published = await service.publishedVersion(actor, formId);
     const sessions = [];
     for (const session of form.sessions) {
-      // An archived session is not offered for registration (its classes and history stay; see migration 0052).
+      // Only a live session is offered for registration. A draft is not open yet, and an archived one is closed (its classes and
+      // history stay; see migrations 0052 and 0053).
       const found = await runtime.services.classes.getSession(actor, session.id);
-      if (found.ok && found.value.archivedAt !== null) {
+      if (found.ok && found.value.status !== 'live') {
         continue;
       }
       const classes = await runtime.services.classes.listClasses(actor, session.id);

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { isHttpError } from '../http/errors';
+import { SESSION_HAS_ENROLMENTS_MESSAGE } from './errors';
 import { CAMPER_ADA, JULY_SESSION, as, classWithSession, setup } from './__tests__/fixtures';
 
 // Sessions (rows of `classes`) can be archived, and a session with classes can be deleted with them by an admin or the owner.
@@ -72,7 +73,7 @@ describe('delete a session with its classes', () => {
     expect((await service.getSession(as('admin'), sessionId)).ok).toBe(true);
   });
 
-  it('refuses a session whose class has an enrolment, says to archive it, and keeps the enrolment', async () => {
+  it('refuses a session whose class has an enrolment, says to unenrol first, and keeps the enrolment', async () => {
     const { service, repo } = setup();
     const { sessionId, classId } = await classWithSession(service);
     const name = await sessionNameOf(service, sessionId);
@@ -83,7 +84,8 @@ describe('delete a session with its classes', () => {
     expect(outcome.ok).toBe(false);
     if (!outcome.ok) {
       expect(outcome.failure.reason).toBe('session_has_enrolments');
-      expect(outcome.failure.message).toBe('This session has enrolments, archive it instead');
+      expect(outcome.failure.message).toBe(SESSION_HAS_ENROLMENTS_MESSAGE);
+      expect(outcome.failure.message).toContain('Unenrol every student first');
     }
     expect((await service.getSession(as('admin'), sessionId)).ok).toBe(true);
     const kept = await service.listEnrolments(as('admin'), classId);

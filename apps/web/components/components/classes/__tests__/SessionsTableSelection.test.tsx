@@ -17,6 +17,8 @@ vi.mock('@/actions/classes', () => ({
   deleteSessionAction: vi.fn(),
   deleteSessionsAction: h.deleteSessionsAction,
   setSessionArchivedAction: vi.fn(),
+  publishSessionAction: vi.fn(),
+  sessionDeleteImpactAction: vi.fn(),
   deleteSessionWithClassesAction: vi.fn(),
 }));
 
@@ -32,6 +34,7 @@ const session = (id: string, name: string): Session => ({
   endsOn: '2027-07-14',
   classCount: 0,
   isPublic: false,
+  status: 'live',
   archivedAt: null,
   createdAt: '2027-07-01T00:00:00.000Z',
 });
@@ -148,7 +151,7 @@ describe('SessionsTable: the row trash', () => {
   });
 
   it('shows an Archived pill on an archived session', () => {
-    const archived = [{ ...session(ART, 'Art'), archivedAt: '2027-06-01T00:00:00.000Z' }];
+    const archived = [{ ...session(ART, 'Art'), status: 'archived' as const, archivedAt: '2027-06-01T00:00:00.000Z' }];
     act(() => root.render(withUi(<SessionsTable sessions={archived} canManage />)));
     expect(document.body.textContent).toContain('Archived');
   });

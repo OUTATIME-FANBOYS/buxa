@@ -19,10 +19,12 @@ import type {
   ClassLookup,
   ConfirmationRule,
   ConfirmationWork,
+  ErasureRule,
   NewRegistration,
   PublishedVersion,
   RegistrationRepository,
   RegistrationRule,
+  WithdrawalRule,
 } from './RegistrationRepository';
 
 /** A child's place in a class, as the in-memory store keeps it. Holds and seats are not modelled here (see the Postgres tests). */
@@ -58,6 +60,8 @@ interface StoredRegistration {
   createdAt: string;
   status: RegistrationStatus;
   confirmedAt: string | null;
+  withdrawnAt: string | null;
+  archivedAt: string | null;
   places: StoredPlace[];
 }
 
@@ -72,6 +76,9 @@ const later = <T>(work: () => T): Promise<T> => new Promise<T>(resolve => resolv
 export class InMemoryRegistrationRepository implements RegistrationRepository {
   private readonly forms = new Map<string, StoredForm>();
   private readonly registrations = new Map<string, StoredRegistration>();
+
+  /** Test setup: the sessions that are a draft or archived. A submission that names one is refused (session_not_open). */
+  readonly closedSessionIds = new Set<string>();
 
   /**
    * `campersOf` finds the camper people for a registration's answers (the Postgres query in production). `credentials` is the badge
@@ -222,6 +229,8 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
           submittedAt: r.createdAt,
           status: r.status,
           confirmedAt: r.confirmedAt,
+          withdrawnAt: r.withdrawnAt,
+          archivedAt: r.archivedAt,
           standard: r.answers.standard,
           custom: r.answers.custom,
           sessions: r.sessionIds.map(sessionId => ({
@@ -251,6 +260,7 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
       const decision = rule({
         publishedVersion: form.versions.at(-1)?.version ?? null,
         formSessionIds: form.sessionIds,
+        closedSessionIds: form.sessionIds.filter(id => this.closedSessionIds.has(id)),
       });
       if (!decision.allow) {
         throw new RegistrationRefusedError(decision.reason);
@@ -281,6 +291,8 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
         createdAt: new Date().toISOString(),
         status: 'pending',
         confirmedAt: null,
+        withdrawnAt: null,
+        archivedAt: null,
         places,
       });
 
@@ -331,5 +343,50 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
       });
       throw error;
     }
+  }
+
+  withdraw(actor: Actor, registrationId: string, rule: WithdrawalRule): Promise<void> {
+    return later(() => {
+      const found = this.ownRegistration(actor.orgId, registrationId);
+      const decision = rule(found.status);
+      if (!decision.allow) {
+        throw new RegistrationRefusedError(decision.reason);
+      }
+      found.status = 'withdrawn';
+      found.withdrawnAt = new Date().toISOString();
+      for (const place of found.places) {
+        place.status = place.status === 'held' ? 'expired' : 'cancelled';
+      }
+    });
+  }
+
+  setArchived(actor: Actor, registrationId: string, archived: boolean): Promise<void> {
+    return later(() => {
+      const found = this.ownRegistration(actor.orgId, registrationId);
+      found.archivedAt = archived ? (found.archivedAt ?? new Date().toISOString()) : null;
+    });
+  }
+
+  erase(actor: Actor, registrationId: string, rule: ErasureRule): Promise<void> {
+    return later(() => {
+      const found = this.ownRegistration(actor.orgId, registrationId);
+      const decision = rule({
+        status: found.status,
+        activeEnrolments: found.places.filter(p => p.status === 'enrolled' || p.status === 'waitlisted').length,
+      });
+      if (!decision.allow) {
+        throw new RegistrationRefusedError(decision.reason);
+      }
+      this.registrations.delete(found.id);
+    });
+  }
+
+  private ownRegistration(orgId: string, registrationId: string): StoredRegistration {
+    const found = this.registrations.get(registrationId);
+    if (!found || found.orgId !== orgId) {
+      throw new RegistrationNotFoundError();
+    }
+
+    return found;
   }
 }

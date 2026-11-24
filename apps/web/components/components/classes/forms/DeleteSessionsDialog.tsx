@@ -5,6 +5,7 @@ import { Dialog } from '@/components/components/Dialog';
 import { Button } from '@/components/elements';
 import { deleteSessionsAction } from '@/actions/classes';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
+import type { SessionStatus } from '@buxa/contracts';
 import { idleSessionDeletion, type SessionDeletionDone } from '@buxa/shared';
 import { ActionMessage } from './ActionMessage';
 import { SessionClassesDialog } from './SessionClassesDialog';
@@ -12,6 +13,8 @@ import { SessionClassesDialog } from './SessionClassesDialog';
 export interface SessionRef {
   id: string;
   name: string;
+  /** Draft, live or archived. A draft is deleted with everything under it; the others are refused while anyone is enrolled. */
+  status?: SessionStatus;
   /** How many classes the session holds. A session with classes is never deleted by a plain delete (see SessionClassesDialog). */
   classCount: number;
 }
@@ -44,7 +47,7 @@ export function DeleteSessionsDialog({
   const count = sessions.length;
   const single = count === 1 ? sessions[0] : undefined;
 
-  if (single && single.classCount > 0) {
+  if (single && (single.classCount > 0 || single.status === 'draft')) {
     return (
       <SessionClassesDialog
         session={single}

@@ -1,5 +1,13 @@
 import { isUuid, MAX_AGE_LIMIT, type ActiveEnrolmentFacts } from '@buxa/domain';
-import type { Class, Enrolment, EnrolmentStatus, Session, ClassPriceInput } from '@buxa/contracts';
+import type {
+  Class,
+  ClassPriceInput,
+  Enrolment,
+  EnrolmentStatus,
+  Session,
+  SessionDeleteImpact,
+  SessionStatus,
+} from '@buxa/contracts';
 import { toIso, type Db } from '../people/pgRows';
 import { ClassNotFoundError, EnrolmentNotFoundError, SessionNotFoundError } from './errors';
 
@@ -20,6 +28,7 @@ export interface SessionRow {
   ends_on: string | null;
   class_count: number;
   is_public: boolean;
+  status: SessionStatus;
   archived_at: Date | null;
   created_at: Date;
 }
@@ -94,6 +103,7 @@ export function toSession(row: SessionRow): Session {
     endsOn: row.ends_on,
     classCount: row.class_count,
     isPublic: row.is_public,
+    status: row.status,
     archivedAt: row.archived_at ? toIso(row.archived_at) : null,
     createdAt: toIso(row.created_at),
   };
@@ -147,7 +157,7 @@ export function toActiveFacts(row: {
 }
 
 const SESSION_COLUMNS = `p.id, p.name, p.description, to_char(p.starts_on, 'YYYY-MM-DD') AS starts_on,
-  to_char(p.ends_on, 'YYYY-MM-DD') AS ends_on, p.is_public, p.archived_at, p.created_at,
+  to_char(p.ends_on, 'YYYY-MM-DD') AS ends_on, p.is_public, p.status, p.archived_at, p.created_at,
   (SELECT count(*)::int FROM sessions s WHERE s.class_id = p.id) AS class_count`;
 
 /** Seats and instructors are counted in the same statement, so a class read is one consistent snapshot. */
@@ -273,4 +283,40 @@ export async function activeFactsFor(db: Db, camperId: string): Promise<ActiveEn
   );
 
   return rows.map(toActiveFacts);
+}
+
+/**
+ * What deleting a draft session removes, counted in one statement: its classes, groups, rooms, assignments, instructor links and
+ * registration-form links. The screen lists these before the person types the session's name.
+ */
+export async function getSessionDeleteImpact(db: Db, sessionId: string): Promise<SessionDeleteImpact> {
+  if (!isUuid(sessionId)) {
+    throw new SessionNotFoundError();
+  }
+  const { rows } = await db.query<SessionDeleteImpact>(
+    `SELECT (SELECT count(*)::int FROM sessions s WHERE s.class_id = p.id) AS classes,
+            (SELECT count(*)::int FROM groups g WHERE g.session_id = p.id) AS groups,
+            (SELECT count(*)::int FROM rooms r WHERE r.session_id = p.id) AS rooms,
+            (SELECT count(*)::int FROM assignments a WHERE a.session_id = p.id) AS assignments,
+            (SELECT count(*)::int FROM session_instructors si JOIN sessions s ON s.id = si.session_id
+              WHERE s.class_id = p.id) AS instructors,
+            (SELECT count(*)::int FROM registration_form_sessions f WHERE f.session_id = p.id) AS "formLinks"
+       FROM classes p WHERE p.id = $1`,
+    [sessionId],
+  );
+  if (rows.length === 0) {
+    throw new SessionNotFoundError();
+  }
+
+  return rows[0];
+}
+
+/** A class's session status, or null when the class is not in the camp. The enrolment and hold writes use it to refuse a closed session. */
+export async function sessionStatusOfClass(db: Db, classId: string): Promise<SessionStatus | null> {
+  const { rows } = await db.query<{ status: SessionStatus }>(
+    `SELECT p.status FROM sessions s JOIN classes p ON p.id = s.class_id AND p.org_id = s.org_id WHERE s.id = $1`,
+    [classId],
+  );
+
+  return rows[0]?.status ?? null;
 }

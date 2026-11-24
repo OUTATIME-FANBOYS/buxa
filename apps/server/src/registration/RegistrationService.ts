@@ -1,8 +1,10 @@
 import {
   can,
   decideConfirmation,
+  decideErasure,
   decideRegistration,
   decideSelections,
+  decideWithdrawal,
   isUuid,
   type Actor,
   type ClassSelection,
@@ -66,6 +68,20 @@ export interface RegistrationService {
    * actor may manage credentials; otherwise the badges are left for an admin and the outcome says so.
    */
   confirm(actor: Actor, registrationId: string): Promise<ConfirmOutcome>;
+  /**
+   * Withdraws a registration: its seat holds are released, its enrolments cancelled (the waitlist moves up) and the record is
+   * kept, marked withdrawn. Audited as `registration.withdraw`. A registration already withdrawn is refused. Needs registration:confirm.
+   */
+  withdraw(actor: Actor, registrationId: string): Promise<void>;
+  /** Hides a registration from lists; it is kept. Audited. Needs registration:confirm. */
+  archive(actor: Actor, registrationId: string): Promise<void>;
+  /** Brings an archived registration back into lists. Audited. Needs registration:confirm. */
+  unarchive(actor: Actor, registrationId: string): Promise<void>;
+  /**
+   * Erases a registration and all its answers. Needs registration:delete (admin and owner). A confirmed registration that still has
+   * enrolments is refused: withdraw it first. Audited as `registration.delete`, without personal data.
+   */
+  erase(actor: Actor, registrationId: string): Promise<void>;
 }
 
 /** Zod's issues, keyed by the field name the form uses. The first message for a field wins. */
@@ -95,6 +111,15 @@ async function requireForm(
   }
 
   return form;
+}
+
+/** A registration id that is not a uuid is a registration that does not exist. */
+function requireRegistrationId(registrationId: string): string {
+  if (!isUuid(registrationId)) {
+    throw new RegistrationNotFoundError();
+  }
+
+  return registrationId;
 }
 
 /** Builds the credentials service over a given badge repository (the confirmation's transaction, in production). */
@@ -194,6 +219,26 @@ export function createRegistrationService(
       }
 
       return repo.recordPayment(actor, registrationClassId, parsed.data);
+    },
+
+    async withdraw(actor, registrationId) {
+      assertAllowed(actor, 'registration:confirm');
+      await repo.withdraw(actor, requireRegistrationId(registrationId), decideWithdrawal);
+    },
+
+    async archive(actor, registrationId) {
+      assertAllowed(actor, 'registration:confirm');
+      await repo.setArchived(actor, requireRegistrationId(registrationId), true);
+    },
+
+    async unarchive(actor, registrationId) {
+      assertAllowed(actor, 'registration:confirm');
+      await repo.setArchived(actor, requireRegistrationId(registrationId), false);
+    },
+
+    async erase(actor, registrationId) {
+      assertAllowed(actor, 'registration:delete');
+      await repo.erase(actor, requireRegistrationId(registrationId), decideErasure);
     },
 
     async confirm(actor, registrationId) {

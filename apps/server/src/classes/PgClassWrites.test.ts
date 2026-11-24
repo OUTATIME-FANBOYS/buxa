@@ -71,7 +71,7 @@ describe('insertSession (the date range)', () => {
       'session.create',
       'session',
       sessionId,
-      { name: 'Summer camp' },
+      { name: 'Summer camp', status: 'draft' },
     ]);
   });
 });

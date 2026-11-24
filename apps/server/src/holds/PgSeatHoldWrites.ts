@@ -2,9 +2,11 @@ import { isUuid, type Actor } from '@buxa/domain';
 import { recordAudit, type AuditActor } from '../audit/recordAudit';
 import { toIso, type Db } from '../people/pgRows';
 import { lockSession, promoteWaitlist } from '../classes/PgSeats';
+import { sessionStatusOfClass } from '../classes/PgClassQueries';
 import {
   ClassNotFoundError,
   HoldExistsError,
+  SessionNotLiveError,
   HoldNotFoundError,
   HouseholdNotFoundError,
   SessionFullError,
@@ -99,6 +101,10 @@ export async function placeHoldInTransaction(db: Db, actor: Actor, request: Plac
     throw new HouseholdNotFoundError();
   }
   const capacity = await lockSession(db, request.sessionId);
+  const status = await sessionStatusOfClass(db, request.sessionId);
+  if (status !== null && status !== 'live') {
+    throw new SessionNotLiveError(status);
+  }
   await releaseExpiredHoldsInSession(db, request.sessionId, actor);
 
   const household = await db.query(`SELECT 1 FROM households WHERE id = $1`, [request.householdId]);

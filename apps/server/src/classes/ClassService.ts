@@ -17,6 +17,7 @@ import {
   type NewRecurringClassInput,
   type NewSessionInput,
   type Session,
+  type SessionDeleteImpact,
   type SessionEditInput,
 } from '@buxa/contracts';
 import { assertAllowed } from '../auth/authorize';
@@ -69,9 +70,20 @@ export interface ClassService {
   /** Deletes a session that holds no classes. Needs classes:manage. A session with any class is refused. */
   deleteSession(actor: Actor, sessionId: string): Promise<Outcome<null>>;
   /**
+   * Takes a draft session live, so registration and enrolment are accepted. Needs classes:publish (admin and owner). A live session
+   * is returned unchanged; an archived one is refused (session_not_draft): unarchive it instead. Audited as `session.publish`.
+   */
+  publishSession(actor: Actor, sessionId: string): Promise<Outcome<Session>>;
+  /**
+   * What deleting a draft session would remove (its classes, groups, rooms, assignments, instructors and form links), for the
+   * confirmation that lists them. Needs classes:delete_with_classes.
+   */
+  sessionDeleteImpact(actor: Actor, sessionId: string): Promise<Outcome<SessionDeleteImpact>>;
+  /**
    * Deletes a session with its classes. Needs classes:delete_with_classes (admin and owner). `confirmName` must be the session's
-   * name exactly (case and spaces as written). A session whose classes have enrolments, holds, registrations, check-ins or season
-   * passes is refused, and nothing is deleted.
+   * name exactly (case and spaces as written). A draft is deleted with everything under it. A live or archived session whose
+   * classes have enrolments, holds, registrations, check-ins or season passes is refused with a message to unenrol first, and
+   * nothing is deleted.
    */
   deleteSessionWithClasses(actor: Actor, sessionId: string, confirmName: string): Promise<Outcome<null>>;
   /**
@@ -279,12 +291,28 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
           if (confirmName !== found.name) {
             throw new SessionNameConfirmationError();
           }
-          await repo.deleteSessionWithClasses(actor, sessionId);
+          if (found.status === 'draft') {
+            await repo.deleteDraftSession(actor, sessionId);
+          } else {
+            await repo.deleteSessionWithClasses(actor, sessionId);
+          }
 
           return null;
         },
         await timezoneOf(actor),
       );
+    },
+
+    async publishSession(actor, sessionId) {
+      assertAllowed(actor, 'classes:publish');
+
+      return attempt(() => repo.publishSession(actor, sessionId), await timezoneOf(actor));
+    },
+
+    async sessionDeleteImpact(actor, sessionId) {
+      assertAllowed(actor, 'classes:delete_with_classes');
+
+      return attempt(() => repo.sessionDeleteImpact(actor.userId, actor.orgId, sessionId), await timezoneOf(actor));
     },
 
     async setSessionPublic(actor, sessionId, isPublic) {

@@ -4,6 +4,10 @@ import { fmt, isoDay } from '@buxa/shared';
 /** One registration as the search list shows it: a row per session the registration asks for. */
 export interface RegistrationSearchRow {
   id: string;
+  /** The registration itself (a row is one registration and one session it asks for). */
+  registrationId: string;
+  formId: string;
+  archived: boolean;
   camperName: string;
   formName: string;
   sessionId: string;
@@ -24,6 +28,9 @@ export function registrationSearchRows(
     rows.flatMap(row =>
       row.sessions.map(session => ({
         id: `${row.id}:${session.sessionId}`,
+        registrationId: row.id,
+        formId: form.id,
+        archived: row.archivedAt !== null,
         camperName: `${row.standard.camperFirstName ?? ''} ${row.standard.camperLastName ?? ''}`.trim(),
         formName: form.name,
         sessionId: session.sessionId,

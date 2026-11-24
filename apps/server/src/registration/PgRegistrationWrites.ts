@@ -132,16 +132,19 @@ export async function insertRegistrationInTx(
   if (rows.length === 0) {
     throw new RegistrationFormNotFoundError();
   }
-  // An archived session (migration 0052) is not part of the form for registration, so a submission that names it is refused.
-  const sessions = await db.query<{ session_id: string }>(
-    `SELECT fs.session_id FROM registration_form_sessions fs
+  // A session takes registrations only while it is live (migration 0053). A draft or archived session of the form is closed: a
+  // submission that names it is refused. A session that is archived by archived_at alone (an older release) is closed too.
+  const sessions = await db.query<{ session_id: string; closed: boolean }>(
+    `SELECT fs.session_id, (c.status <> 'live' OR c.archived_at IS NOT NULL) AS closed
+       FROM registration_form_sessions fs
        JOIN classes c ON c.id = fs.session_id AND c.org_id = fs.org_id
-      WHERE fs.form_id = $1 AND c.archived_at IS NULL`,
+      WHERE fs.form_id = $1`,
     [registration.formId],
   );
   const facts: RegistrationFactsInTx = {
     publishedVersion: rows[0].published_version,
     formSessionIds: sessions.rows.map(r => r.session_id),
+    closedSessionIds: sessions.rows.filter(r => r.closed).map(r => r.session_id),
   };
   const decision = rule(facts);
   if (!decision.allow) {
@@ -159,11 +162,7 @@ export async function insertRegistrationInTx(
     [actor.orgId, registration.formId, registration.version, JSON.stringify(registration.answers), actor.userId],
   );
   const id = inserted.rows[0].id;
-  await db.query(
-    `INSERT INTO registration_sessions (org_id, registration_id, session_id)
-     SELECT $1, $2, unnest($3::uuid[])`,
-    [actor.orgId, id, registration.sessionIds],
-  );
+  // registration_sessions is no longer written: a registration's sessions are derived from its places (registration_classes).
   for (const selection of registration.selections) {
     await takeClassPlaceInTx(db, actor, id, selection);
   }

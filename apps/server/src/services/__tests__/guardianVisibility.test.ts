@@ -64,6 +64,7 @@ async function build() {
   if (!session.ok) {
     throw new Error('session');
   }
+  await classes.publishSession(admin, session.value.id);
   // Check-in reads a session's assignments from the group store, which keeps its own copy of sessions.
   (camp.repos.groups as InMemoryGroupRepository).seedSession({
     id: session.value.id,

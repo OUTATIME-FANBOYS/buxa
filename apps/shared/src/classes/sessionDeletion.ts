@@ -24,7 +24,7 @@ export const idleSessionDeletion: SessionDeletion = { status: 'idle' };
 /** The short reason shown after a session's name in "Not deleted: Art (has classes; archive it instead)." */
 const SHORT_REASON: Partial<Record<string, string>> = {
   session_has_classes: 'has classes; archive it instead',
-  session_has_enrolments: 'has enrolments; archive it instead',
+  session_has_enrolments: 'has enrolments; unenrol everyone first',
   session_not_found: 'already gone',
 };
 const NAMED_LIMIT = 3;

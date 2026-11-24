@@ -72,6 +72,7 @@ export function classRepositoryContract(factory: ClassContractFactory): void {
       // Each session gets its own name: session names are unique per camp (migration 0052), and the tests share one camp.
       sessionNumber += 1;
       const session = await fx.repo.createSession(fx.actor, { ...SESSION, name: `${SESSION.name} ${sessionNumber}` });
+      await fx.repo.publishSession(fx.actor, session.id);
       const cls = await fx.repo.addClass(fx.actor, session.id, { ...ROBOTICS, capacity });
 
       return cls.id;

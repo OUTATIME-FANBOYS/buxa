@@ -101,22 +101,27 @@ export async function listSubmissionRows(db: Db, formId: string): Promise<Regist
     form_version: number;
     created_at: Date;
     answers: unknown;
-    status: 'pending' | 'confirmed';
+    status: 'pending' | 'confirmed' | 'withdrawn';
     confirmed_at: Date | null;
+    withdrawn_at: Date | null;
+    archived_at: Date | null;
   }>(
-    `SELECT r.id, r.form_version, r.created_at, r.answers, r.status, r.confirmed_at
+    `SELECT r.id, r.form_version, r.created_at, r.answers, r.status, r.confirmed_at, r.withdrawn_at, r.archived_at
        FROM registrations r WHERE r.form_id = $1 ORDER BY r.created_at, r.id`,
     [formId],
   );
   if (rows.length === 0) {
     return [];
   }
-  const sessions = await db.query<{ registration_id: string; session_id: string; status: 'submitted'; name: string }>(
-    `SELECT rs.registration_id, rs.session_id, rs.status, c.name
-       FROM registration_sessions rs
-       JOIN classes c ON c.id = rs.session_id AND c.org_id = rs.org_id
-      WHERE rs.registration_id = ANY($1::uuid[])
-      ORDER BY c.name, rs.session_id`,
+  // A registration's sessions are derived from its places: registration_classes to sessions (the classes) to classes (the sessions).
+  // registration_sessions is no longer read.
+  const sessions = await db.query<{ registration_id: string; session_id: string; name: string }>(
+    `SELECT DISTINCT rc.registration_id, p.id AS session_id, p.name
+       FROM registration_classes rc
+       JOIN sessions c ON c.id = rc.class_id AND c.org_id = rc.org_id
+       JOIN classes p ON p.id = c.class_id AND p.org_id = c.org_id
+      WHERE rc.registration_id = ANY($1::uuid[])
+      ORDER BY p.name, p.id`,
     [rows.map(r => r.id)],
   );
 
@@ -134,11 +139,13 @@ export async function listSubmissionRows(db: Db, formId: string): Promise<Regist
       submittedAt: r.created_at.toISOString(),
       status: r.status,
       confirmedAt: r.confirmed_at ? r.confirmed_at.toISOString() : null,
+      withdrawnAt: r.withdrawn_at ? r.withdrawn_at.toISOString() : null,
+      archivedAt: r.archived_at ? r.archived_at.toISOString() : null,
       standard: answers.standard,
       custom: answers.custom,
       sessions: sessions.rows
         .filter(s => s.registration_id === r.id)
-        .map(s => ({ sessionId: s.session_id, sessionName: s.name, status: s.status })),
+        .map(s => ({ sessionId: s.session_id, sessionName: s.name, status: 'submitted' as const })),
       classes: places.filter(p => p.registrationId === r.id).map(p => p.row),
     };
   });

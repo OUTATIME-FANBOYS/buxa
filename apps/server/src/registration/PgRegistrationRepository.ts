@@ -19,14 +19,21 @@ import {
   updateFormRow,
 } from './PgRegistrationWrites';
 import { classLookupsInTx, recordPaymentInTx } from './PgRegistrationPlaces';
+import {
+  eraseRegistrationInTx,
+  setRegistrationArchivedInTx,
+  withdrawRegistrationInTx,
+} from './PgRegistrationLifecycle';
 import type {
   ClassLookup,
   ConfirmationRule,
   ConfirmationWork,
+  ErasureRule,
   NewRegistration,
   PublishedVersion,
   RegistrationRepository,
   RegistrationRule,
+  WithdrawalRule,
 } from './RegistrationRepository';
 
 /**
@@ -103,5 +110,21 @@ export class PgRegistrationRepository implements RegistrationRepository {
         credentials: new PgCredentialRepository(transactionScope(db)),
       });
     });
+  }
+
+  withdraw(actor: Actor, registrationId: string, rule: WithdrawalRule): Promise<void> {
+    return withOrg(this.pool, actor.userId, actor.orgId, db =>
+      withdrawRegistrationInTx(db, actor, registrationId, rule),
+    );
+  }
+
+  setArchived(actor: Actor, registrationId: string, archived: boolean): Promise<void> {
+    return withOrg(this.pool, actor.userId, actor.orgId, db =>
+      setRegistrationArchivedInTx(db, actor, registrationId, archived),
+    );
+  }
+
+  erase(actor: Actor, registrationId: string, rule: ErasureRule): Promise<void> {
+    return withOrg(this.pool, actor.userId, actor.orgId, db => eraseRegistrationInTx(db, actor, registrationId, rule));
   }
 }

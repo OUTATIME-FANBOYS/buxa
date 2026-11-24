@@ -10,11 +10,13 @@ import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { deletedMessage, notDeletedMessage, type SessionDeletionDone } from '@buxa/shared';
 import { DeleteSessionsDialog, EditSessionButton, type SessionRef } from './forms';
 import { SessionSelectionBar } from './SessionSelectionBar';
+import { SESSION_STATUS } from './sessionStatus';
 
 const toRef = (session: Session): SessionRef => ({
   id: session.id,
   name: session.name,
   classCount: session.classCount,
+  status: session.status,
 });
 
 /**
@@ -26,11 +28,14 @@ export function SessionsTable({
   sessions,
   canManage,
   canUnarchive = false,
+  canPublish = false,
 }: {
   sessions: readonly Session[];
   canManage: boolean;
   /** Admin and owner (org:update) may unarchive a session from its Edit dialog. */
   canUnarchive?: boolean;
+  /** Admin and owner (classes:publish) may take a draft session live from its Edit dialog. */
+  canPublish?: boolean;
 }) {
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [targets, setTargets] = useState<readonly SessionRef[] | null>(null);
@@ -111,11 +116,9 @@ export function SessionsTable({
                   <Link className="row-title classes-target" href={sessionPath(session.id)}>
                     {session.name}
                   </Link>
-                  {session.archivedAt !== null && (
-                    <Pill tone="neutral" dot={false}>
-                      Archived
-                    </Pill>
-                  )}
+                  <Pill tone={SESSION_STATUS[session.status].tone} dot={false}>
+                    {SESSION_STATUS[session.status].label}
+                  </Pill>
                 </td>
                 <td>
                   {session.startsOn && session.endsOn
@@ -126,7 +129,7 @@ export function SessionsTable({
                 {canManage && (
                   <td>
                     <div className="classes-row-actions">
-                      <EditSessionButton session={session} canUnarchive={canUnarchive} />
+                      <EditSessionButton session={session} canUnarchive={canUnarchive} canPublish={canPublish} />
                       <Button
                         type="button"
                         variant="glass-danger"

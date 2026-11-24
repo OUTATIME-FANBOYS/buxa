@@ -55,6 +55,8 @@ const ada: RegistrationRow = {
   submittedAt: '2027-06-01T00:00:00.000Z',
   status: 'pending',
   confirmedAt: null,
+  withdrawnAt: null,
+  archivedAt: null,
   standard: { camperFirstName: 'Ada', camperLastName: 'Lovelace' },
   custom: {},
   sessions: [{ sessionId: SUMMER, sessionName: 'Summer camp', status: 'submitted' }],

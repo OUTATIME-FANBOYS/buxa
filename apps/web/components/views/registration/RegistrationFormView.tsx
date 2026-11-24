@@ -89,6 +89,7 @@ export async function RegistrationFormView({ formId }: { formId: string }) {
           sessions={form.sessions}
           fields={form.fields}
           submissions={submissions}
+          canDelete={can(actor, 'registration:delete')}
         />
       </section>
     </div>

@@ -1,4 +1,4 @@
-import type { Actor } from '@buxa/domain';
+import { can, type Actor } from '@buxa/domain';
 import { FORBIDDEN_REGISTRATION } from '@buxa/shared';
 import { loadFormSubmissions } from '@buxa/server/composers/index.server';
 import { Empty } from '@/components/components';
@@ -43,6 +43,7 @@ export async function SessionRegistrations({
             sessions={[{ id: sessionId, name: sessionName }]}
             fields={form.fields}
             submissions={rows}
+            canDelete={can(actor, 'registration:delete')}
           />
         </section>
       ))}

@@ -6,6 +6,7 @@ import {
   SessionHasClassesError,
   SessionHasEnrolmentsError,
   SessionNameTakenError,
+  SessionNotDraftError,
   SessionNotFoundError,
 } from './errors';
 
@@ -56,6 +57,9 @@ export function translateClassWriteError(error: unknown): unknown {
 export function translateSessionDeleteError(error: unknown): unknown {
   if (isPgError(error, FOREIGN_KEY_VIOLATION, 'classes_has_classes')) {
     return new SessionHasClassesError();
+  }
+  if (isPgError(error, FOREIGN_KEY_VIOLATION, 'session_not_draft')) {
+    return new SessionNotDraftError('live');
   }
   if (isPgError(error, FOREIGN_KEY_VIOLATION, 'session_has_enrolments')) {
     return new SessionHasEnrolmentsError();

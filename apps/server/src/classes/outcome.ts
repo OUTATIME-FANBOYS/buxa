@@ -26,6 +26,8 @@ export type FailureReason =
   | 'session_name_taken'
   | 'session_has_enrolments'
   | 'session_name_confirmation'
+  | 'session_not_live'
+  | 'session_not_draft'
   | 'session_invalid'
   | 'enrolment_not_found'
   | 'camper_not_found'
@@ -132,6 +134,12 @@ export async function attempt<T>(work: () => Promise<T>, timeZone: string): Prom
     }
     if (e instanceof SessionHasEnrolmentsError) {
       return { ok: false, failure: { reason: 'session_has_enrolments', message: e.message } };
+    }
+    if (isClassError(e, 'session-not-live')) {
+      return { ok: false, failure: { reason: 'session_not_live', message: (e as Error).message } };
+    }
+    if (isClassError(e, 'session-not-draft')) {
+      return { ok: false, failure: { reason: 'session_not_draft', message: (e as Error).message } };
     }
     if (e instanceof SessionNameConfirmationError) {
       return { ok: false, failure: { reason: 'session_name_confirmation', message: e.message } };
