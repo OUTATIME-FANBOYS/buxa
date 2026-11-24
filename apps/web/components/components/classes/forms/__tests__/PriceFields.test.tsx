@@ -29,10 +29,16 @@ describe('PriceFields: the discount row', () => {
     expect(row).toContain('Amount');
   });
 
-  it('keeps the helper text under the date', () => {
+  it('puts the helper text on its own full-width line, after the three columns, not under the date', () => {
     const row = discountRow();
+    const hint = row.indexOf('The discounted price applies on this day');
+    const hintTag = row.lastIndexOf('<p ', hint);
 
-    expect(row.indexOf('name="earlyBirdUntil"')).toBeLessThan(row.indexOf('The discounted price applies on this day'));
+    expect(row.indexOf('name="earlyBirdUntil"')).toBeLessThan(hint);
+    // The date column closes before the helper text opens, so the text is a child of the row, not of the date field.
+    expect(row.indexOf('</div>', row.indexOf('name="earlyBirdUntil"'))).toBeLessThan(hintTag);
+    expect(row.slice(hintTag, hint)).toContain('class="price-discount-hint');
+    expect(row.slice(hintTag, hint)).not.toContain('field-error');
   });
 
   it('still posts the early-bird amount as a hidden field', () => {

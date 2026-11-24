@@ -2,16 +2,51 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { WeekdayField } from '../WeekdayField';
 
-describe('WeekdayField: the Specific days weekday row', () => {
-  it('draws the seven days as one row of checkboxes with no fieldset box', () => {
+/** The chips in the row: each button's visible text and whether it is pressed. */
+const chips = (html: string) =>
+  [...html.matchAll(/<button[^>]*aria-pressed="(true|false)"[^>]*>([^<]*)<\/button>/g)].map(match => ({
+    pressed: match[1],
+    text: match[2],
+  }));
+
+describe('WeekdayField: the day chips', () => {
+  it('draws All and the seven days as toggle buttons in one row, with no checkboxes', () => {
     const html = renderToStaticMarkup(<WeekdayField />);
 
-    expect(html).not.toContain('<fieldset');
-    expect(html.match(/type="checkbox"/g)).toHaveLength(7);
+    expect(html).not.toContain('type="checkbox"');
     expect(html).toContain('class="weekday-row"');
-    for (const day of ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']) {
-      expect(html).toContain(`>${day}<`);
+    expect(chips(html).map(chip => chip.text)).toEqual(['All', 'M', 'T', 'W', 'T', 'F', 'S', 'S']);
+    expect(html.match(/type="button"/g)).toHaveLength(8);
+  });
+
+  it('names each day in full for screen readers, because the letters repeat', () => {
+    const html = renderToStaticMarkup(<WeekdayField />);
+
+    for (const day of ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']) {
+      expect(html).toContain(`aria-label="${day}"`);
     }
+  });
+
+  it('starts with Monday to Friday pressed, and posts those days', () => {
+    const html = renderToStaticMarkup(<WeekdayField />);
+
+    expect(chips(html).map(chip => chip.pressed)).toEqual([
+      'false',
+      'true',
+      'true',
+      'true',
+      'true',
+      'true',
+      'false',
+      'false',
+    ]);
+    expect([...html.matchAll(/name="weekdays" value="(\d)"/g)].map(match => match[1])).toEqual([
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+    ]);
   });
 
   it('marks the group required once, with no double asterisk', () => {

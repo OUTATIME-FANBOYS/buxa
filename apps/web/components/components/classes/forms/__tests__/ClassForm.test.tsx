@@ -130,10 +130,32 @@ describe('ClassForm: the price of a class', () => {
 });
 
 describe('ClassForm: adding and editing', () => {
-  it('offers the Specific days toggle only to the New class dialog, not to the page or an edit', () => {
-    expect(render({ variant: 'dialog', seriesOption: true })).toContain('Specific days');
-    expect(render({ variant: 'dialog' })).not.toContain('Specific days');
-    expect(render({ cls, variant: 'dialog', seriesOption: true })).not.toContain('Specific days');
+  it('shows the weekday row only in the New class dialog, not on the page or in an edit', () => {
+    expect(render({ variant: 'dialog', weekly: true })).toContain('Days of the week');
+    expect(render({ variant: 'dialog' })).not.toContain('Days of the week');
+    expect(render({ cls, variant: 'dialog', weekly: true })).not.toContain('Days of the week');
+    expect(render({ variant: 'dialog', weekly: true })).not.toContain('Specific days');
+  });
+
+  it('lists the fields in the order Class name, ages, Camp Size, Starts, Ends, days, Location, Instructors, Price', () => {
+    const html = render({ variant: 'dialog', weekly: true });
+    const order = [
+      'Class name',
+      'Youngest age',
+      'Oldest age',
+      'Camp Size',
+      'Starts',
+      'Ends',
+      'Days of the week',
+      'Location',
+      'Instructors',
+      '>Price<',
+    ];
+    const positions = order.map(label => html.indexOf(label));
+    for (const position of positions) {
+      expect(position).toBeGreaterThan(-1);
+    }
+    expect([...positions].sort((a, b) => a - b)).toEqual(positions);
   });
 
   it('adds a class to the session when no class is given', () => {

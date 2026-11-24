@@ -54,7 +54,7 @@ export function NewClassButton({
             sessionName={sessionName}
             instructors={instructors}
             variant="dialog"
-            seriesOption
+            weekly
             formId={FORM_ID}
             onPendingChange={setPending}
             onSaved={saved}

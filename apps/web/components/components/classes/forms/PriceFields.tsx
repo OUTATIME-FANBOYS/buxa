@@ -123,8 +123,11 @@ export function PriceFields({
           name="earlyBirdUntil"
           defaultValue={price?.earlyBirdUntil ?? null}
           error={error('earlyBirdUntil')}
-          hint="The discounted price applies on this day, in the camp's time zone."
         />
+        {/* Spans the whole row, under the Discount label, so it reads from the left edge rather than under the date. */}
+        <p className="price-discount-hint field-hint">
+          The discounted price applies on this day, in the camp&apos;s time zone.
+        </p>
       </div>
       <input type="hidden" name="earlyBirdAmount" value={earlyMinor === null ? '' : minorToInput(earlyMinor, code)} />
     </div>

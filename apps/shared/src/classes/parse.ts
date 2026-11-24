@@ -14,7 +14,7 @@ import {
 } from '@buxa/contracts';
 import { failure, type FieldErrors } from '../actionState';
 import { field, fieldAll, parseWith, type PersonParsed } from '../people/parse';
-import { CHECK_FIELDS, WHOLE_NUMBER } from './copy';
+import { CHECK_FIELDS, NO_WEEKDAY, WHOLE_NUMBER } from './copy';
 
 /*
  * Turns posted form fields into the contract's inputs. Problems the form can name in plain words (a blank required number, a time
@@ -138,7 +138,7 @@ export function recurringClassForm(form: FormData): PersonParsed<NewRecurringCla
     .map(Number)
     .filter(n => Number.isInteger(n));
   if (weekdays.length === 0) {
-    problems.weekdays = 'Tick at least one day of the week.';
+    problems.weekdays = NO_WEEKDAY;
   }
   const price = priceFromForm(form, problems);
 

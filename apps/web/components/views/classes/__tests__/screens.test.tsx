@@ -168,7 +168,7 @@ describe('ClassPage (one session and its classes)', () => {
     expect(html).toContain('>New class</button>');
   });
 
-  it('has no Add a weekly series button: the Specific days toggle in New class replaces it', async () => {
+  it('has no Add a weekly series button: New class sets the days of the week itself', async () => {
     const html = render(await ClassPage({ classId: SESSION_ID, searchParams: {} }));
     expect(html).not.toContain('Add a weekly series');
     expect(html).toContain('>New class</button>');
