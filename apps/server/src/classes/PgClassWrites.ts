@@ -1,4 +1,5 @@
 import { isUuid, type Actor } from '@buxa/domain';
+import { decideCancel, decideRestore, type OccurrenceCommand, type OccurrenceStatus } from '@buxa/domain';
 import type { NewSessionInput, SessionDeleteImpact, SessionEditInput, SessionStatus } from '@buxa/contracts';
 import { recordAudit } from '../audit/recordAudit';
 import { type Db } from '../people/pgRows';
@@ -10,6 +11,7 @@ import {
   SessionNotDraftError,
   SessionNotFoundError,
   SessionPublishBlockedError,
+  OccurrenceRefusedError,
 } from './errors';
 import { applyDatesPlan, flaggedClassNames, planDatesChange } from './PgSessionDates';
 import { toPrice, type PriceRow } from './PgClassQueries';
@@ -281,6 +283,59 @@ export async function requireInstructors(db: Db, instructorIds: readonly string[
   }
 
   return unique;
+}
+
+/**
+ * Cancels one day of a series, or restores it. The row is locked first, so the decision is made on the state it is
+ * written over. The series and its other days are not changed. Audits "occurrence.cancel" or "occurrence.restore" in
+ * the same transaction.
+ */
+export async function setOccurrenceStatusRow(
+  db: Db,
+  actor: Actor,
+  occurrenceId: string,
+  command: OccurrenceCommand,
+): Promise<void> {
+  const { rows } = await db.query<{ class_id: string; series_id: string; status: OccurrenceStatus }>(
+    'SELECT class_id, series_id, status FROM sessions WHERE id = $1 AND org_id = $2 FOR UPDATE',
+    [occurrenceId, actor.orgId],
+  );
+  if (rows.length === 0) {
+    throw new ClassNotFoundError();
+  }
+  const current = rows[0];
+  if (command.kind === 'cancel') {
+    if (decideCancel(current).kind === 'refuse') {
+      throw new OccurrenceRefusedError('already_cancelled');
+    }
+    await db.query(
+      "UPDATE sessions SET status = 'cancelled', cancelled_at = now(), cancel_reason = $3 WHERE id = $1 AND org_id = $2",
+      [occurrenceId, actor.orgId, command.reason],
+    );
+    await recordAudit(db, {
+      actor,
+      action: 'occurrence.cancel',
+      entity: 'occurrence',
+      entityId: occurrenceId,
+      data: { classId: current.class_id, seriesId: current.series_id, reason: command.reason },
+    });
+
+    return;
+  }
+  if (decideRestore(current).kind === 'refuse') {
+    throw new OccurrenceRefusedError('not_cancelled');
+  }
+  await db.query(
+    "UPDATE sessions SET status = 'active', cancelled_at = NULL, cancel_reason = NULL WHERE id = $1 AND org_id = $2",
+    [occurrenceId, actor.orgId],
+  );
+  await recordAudit(db, {
+    actor,
+    action: 'occurrence.restore',
+    entity: 'occurrence',
+    entityId: occurrenceId,
+    data: { classId: current.class_id, seriesId: current.series_id },
+  });
 }
 
 /**

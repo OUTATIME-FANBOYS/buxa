@@ -40,6 +40,8 @@ export const AUDIT_ACTIONS = [
   'session.archive',
   'session.unarchive',
   'session.publish',
+  'occurrence.cancel',
+  'occurrence.restore',
   'calendar.token_rotate',
   'calendar.rotate_self',
   'import.upload',

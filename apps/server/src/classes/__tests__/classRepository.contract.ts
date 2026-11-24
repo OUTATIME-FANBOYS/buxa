@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { decideEnrolment, type Actor } from '@buxa/domain';
 import type { ClassRecord, ClassRepository, EnrolmentRule } from '../ClassRepository';
-import { CapacityBelowEnrolledError, SessionFullError } from '../errors';
+import { CapacityBelowEnrolledError, ClassNotFoundError, OccurrenceRefusedError, SessionFullError } from '../errors';
 
 /** What a class contract test runs against: a repository, an owner of the camp under test, and ways to add people and holds. */
 export interface ClassContractFixture {
@@ -63,6 +63,29 @@ export function classRepositoryContract(factory: ClassContractFactory): void {
     });
     afterEach(async () => {
       await fx.close();
+    });
+
+    describe('one day of a series', () => {
+      it('cancels a day once, refuses a second cancel, and restores it once', async () => {
+        const classId = await classOf(5);
+        await fx.repo.setOccurrenceStatus(fx.actor, classId, { kind: 'cancel', reason: 'Public holiday' });
+        await expect(
+          fx.repo.setOccurrenceStatus(fx.actor, classId, { kind: 'cancel', reason: 'Again' }),
+        ).rejects.toBeInstanceOf(OccurrenceRefusedError);
+        await fx.repo.setOccurrenceStatus(fx.actor, classId, { kind: 'restore' });
+        await expect(fx.repo.setOccurrenceStatus(fx.actor, classId, { kind: 'restore' })).rejects.toBeInstanceOf(
+          OccurrenceRefusedError,
+        );
+      });
+
+      it('refuses a day that is not in the camp', async () => {
+        await expect(
+          fx.repo.setOccurrenceStatus(fx.actor, '00000000-0000-4000-8000-000000000000', {
+            kind: 'cancel',
+            reason: 'Holiday',
+          }),
+        ).rejects.toBeInstanceOf(ClassNotFoundError);
+      });
     });
 
     let sessionNumber = 0;

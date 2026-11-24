@@ -15,6 +15,7 @@ const isOutsideSession = (e: unknown): e is ClassOutsideSessionError => isClassE
 export type Outcome<T> = { ok: true; value: T } | { ok: false; failure: Failure };
 
 export type FailureReason =
+  | 'occurrence_refused'
   | 'class_not_found'
   | 'session_not_found'
   | 'class_outside_session'
@@ -105,6 +106,9 @@ export async function attempt<T>(work: () => Promise<T>, timeZone: string): Prom
           message: 'The class falls outside the session dates. Change the session dates first.',
         },
       };
+    }
+    if (isClassError(e, 'occurrence-refused')) {
+      return { ok: false, failure: { reason: 'occurrence_refused', message: (e as Error).message } };
     }
     if (isClassError(e, 'teacher-field-refused')) {
       return { ok: false, failure: { reason: 'teacher_field_refused', message: (e as Error).message } };

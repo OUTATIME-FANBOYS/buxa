@@ -36,6 +36,7 @@ import {
 } from './errors';
 import { createEnrolmentMethods } from './EnrolmentService';
 import { attempt, ok, type Outcome } from './outcome';
+import { cancelReasonOf } from '@buxa/domain';
 
 export type { Outcome, Failure, FailureReason } from './outcome';
 
@@ -106,6 +107,10 @@ export interface ClassService {
   setSessionArchived(actor: Actor, sessionId: string, archived: boolean): Promise<Outcome<Session>>;
   /** Shows or hides a session's public page. */
   setSessionPublic(actor: Actor, sessionId: string, isPublic: boolean): Promise<Outcome<Session>>;
+  /** Cancels one day of a series, with a reason. Needs classes:manage. The series is not changed. */
+  cancelOccurrence(actor: Actor, occurrenceId: string, reasonText: string): Promise<Outcome<void>>;
+  /** Restores a cancelled day. Needs classes:manage. */
+  restoreOccurrence(actor: Actor, occurrenceId: string): Promise<Outcome<void>>;
   /**
    * A weekly series of classes under a session. Each class is checked against the session's dates and against every class in
    * the camp (and the earlier classes of the series), then all are written, or none.
@@ -334,6 +339,24 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
       return attempt(() => repo.setSessionPublic(actor, sessionId, isPublic), await timezoneOf(actor));
     },
 
+    async cancelOccurrence(actor, occurrenceId, reasonText) {
+      assertAllowed(actor, 'classes:manage');
+      const reason = cancelReasonOf(reasonText);
+      if (!reason.ok) {
+        return { ok: false, failure: { reason: 'occurrence_refused', message: reason.message } };
+      }
+
+      return attempt(
+        () => repo.setOccurrenceStatus(actor, occurrenceId, { kind: 'cancel', reason: reason.reason }),
+        await timezoneOf(actor),
+      );
+    },
+
+    async restoreOccurrence(actor, occurrenceId) {
+      assertAllowed(actor, 'classes:manage');
+
+      return attempt(() => repo.setOccurrenceStatus(actor, occurrenceId, { kind: 'restore' }), await timezoneOf(actor));
+    },
     async addRecurringClasses(actor, sessionId, input) {
       assertAllowed(actor, 'classes:manage');
       const timeZone = await timezoneOf(actor);

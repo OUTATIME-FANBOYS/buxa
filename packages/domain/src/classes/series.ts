@@ -14,6 +14,9 @@ import { parseCampLocal } from './import/campTime';
 export const OCCURRENCE_STATUSES = ['active', 'cancelled'] as const;
 export type OccurrenceStatus = (typeof OCCURRENCE_STATUSES)[number];
 
+/** What is written to one day: cancel it with a reason, or restore it. */
+export type OccurrenceCommand = { kind: 'cancel'; reason: string } | { kind: 'restore' };
+
 /** The longest reason a cancelled day can carry. Matches the database check on sessions.cancel_reason. */
 export const MAX_CANCEL_REASON_LENGTH = 500;
 
@@ -140,8 +143,11 @@ export function decideRestore(occurrence: OccurrenceFacts): RestoreDecision {
   return occurrence.status === 'active' ? { kind: 'refuse', reason: 'not_cancelled' } : { kind: 'restore' };
 }
 
+/** Why a day cannot take the change asked of it. */
+export type OccurrenceRefusal = 'already_cancelled' | 'not_cancelled';
+
 /** The refusal copy the screen and the action share, so both say the same thing. */
-export function occurrenceRefusalMessage(reason: 'already_cancelled' | 'not_cancelled'): string {
+export function occurrenceRefusalMessage(reason: OccurrenceRefusal): string {
   return reason === 'already_cancelled'
     ? 'This day is already cancelled.'
     : 'This day is not cancelled, so there is nothing to restore.';
