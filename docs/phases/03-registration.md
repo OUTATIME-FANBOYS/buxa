@@ -1,6 +1,6 @@
 # Phase 3: registration
 
-Status: **in progress.** Built on the v0.3 phase 3 branch (`v0.3/enhance/phase3-fixups`, migrations 0023 to 0041): sign-up forms and their versions, confirmation, session prices, seat-hold rules, the teacher role with its class assignments and per-person options, the camp and teacher calendar links, public session pages, and session edit and delete. Taking a hold on the registration, the waitlist UI and price display moved to phases 4 and 6 (see below). Public self-registration by a family is phase 6. Teacher invites by email are built (migration 0038); invites for other roles are not. Roadmap row: "Registration: sign-up forms with custom fields, confirmation. No card payments yet (demo only)." Card payments and refunds moved to phase 9 (`09-payments-go-live.md`).
+Status: **in progress.** Built on the v0.3 phase 3 branch (`v0.3/enhance/phase3-fixups`, migrations 0023 to 0041): sign-up forms and their versions, confirmation, class prices (moved from sessions to classes in migration 0050), seat-hold rules, the teacher role with its class assignments and per-person options, the camp and teacher calendar links, public session pages, and session edit and delete. Taking a hold on the registration, the waitlist UI and price display moved to phases 4 and 6 (see below). Public self-registration by a family is phase 6. Teacher invites by email are built (migration 0038); invites for other roles are not. Roadmap row: "Registration: sign-up forms with custom fields, confirmation. No card payments yet (demo only)." Card payments and refunds moved to phase 9 (`09-payments-go-live.md`).
 Depends on: phase 2 (sessions and enrolments).
 
 ## What is built (sign-up forms)
@@ -23,12 +23,12 @@ Depends on: phase 2 (sessions and enrolments).
 **Not built, and the seam for it:**
 
 - Holds and the waitlist moved to phase 4 (Seats & rosters). See `04-seats-rosters.md`, "Moved from phase 3".
-- Price display on the registration moved to phase 6 (Comms & extras). See `06-comms-extras.md`, "Moved from phase 3". Prices are stored and shown on the session and class screens.
+- Price display on the registration moved to phase 6 (Comms & extras). See `06-comms-extras.md`, "Moved from phase 3". Prices are stored on each class and shown on the class and public session screens.
 - Public self-registration by a family is phase 6 (the parent portal). Registration is staff-only in this phase.
 
 ## Sessions, public pages and time zones
 
-- **Edit and delete a session.** Staff, admins and owners (`classes:manage`) edit a session's name, description, dates and public flag (the price is set separately, from the session page). Delete is allowed only when the session has no classes. The database refuses the rest: migration `0035_session_delete_guard.sql` puts a trigger on `classes` (`classes_refuse_delete_with_classes`), so a delete that would cascade into classes fails even if the app check were missing.
+- **Edit and delete a session.** Staff, admins and owners (`classes:manage`) edit a session's name, description, dates and public flag. A session has no price (see "Prices" below). Delete is allowed only when the session has no classes. The database refuses the rest: migration `0035_session_delete_guard.sql` puts a trigger on `classes` (`classes_refuse_delete_with_classes`), so a delete that would cascade into classes fails even if the app check were missing.
 - **Public flag.** A session is public only when staff tick "Public" in New session or Edit session. The session page has no toggle in this phase.
 - **Public session pages** (migration `0029_public_sessions.sql`, `/camps/[slug]/sessions/[sessionId]`). Read without signing in. They list the session's upcoming classes and show no contact details and no enrolled campers. Off by default.
 - **Time zones.** Class times are typed and shown in the user's own local zone and stored as UTC instants. The day-boundary rules (a class must fall on days inside its session) and the weekly series are worked out in the camp's time zone.
@@ -72,15 +72,18 @@ Terms: a **session** (the parent row) is the public page's unit, and its **class
 - **Camp calendar link:** admins and owners make it in Settings (`CalendarLinkCard`, `rotateToken`). Making a new one stops the old URL working at once. Staff and teachers do not see the camp link.
 - **Open:** the token is in the feed URL's query string. Calendar apps cannot send headers, so the token has to be in the URL. The remaining risk is platform request logs; check their retention.
 
-## Prices (built, branch `v0.3/feat/session-prices`)
+## Prices (per class; migration `0050_class_prices.sql`)
 
-- A price belongs to a **session** (the parent row in `classes`), so every class in it shows the same price. Stored as integer minor units with an ISO 4217 code, plus an optional early-bird amount and its last day (migration `0024_session_prices.sql`). Nothing is charged.
+- **A price belongs to a class, not a session.** A session (a row of `classes`) carries no price. Each class (a row of `sessions`) carries its own price, and a family pays per class. Stored as integer minor units with an ISO 4217 code, plus an optional early-bird amount and its last day, with the same shape check as before (the early bird is not above the price, and the amount and day come together). Nothing is charged.
+- **Moving the price.** Migration 0050 adds the price columns to `sessions`, copies each session's price onto each of its classes (a class that already has its own price keeps it), then drops the price columns from `classes` (the drop is approved in the file). A session with a price and no classes has nowhere to copy it to; the migration prints a notice with the count. The earlier migration `0024_session_prices.sql` is unchanged. The public class list reads through the new function `buxa_public_classes_v2` (the 0029 function keeps its return type for the release still running).
 - **Early-bird rule:** the early-bird amount is shown while today, as a calendar day in the camp's time zone, is on or before the early-bird last day. From the next day, the regular price is shown. Tested in `packages/domain/test/session-prices.test.ts` (boundary day, 23:30 in the camp zone, and the day after).
 - **Rounding:** amounts are integers, and typed input is never rounded. Extra decimal places are refused (`parseMoney`). Formatting uses integer arithmetic only.
-- **Who:** staff and above (`classes:manage`). A viewer is refused by the service and the server action. The permission matrix is unchanged.
-- **Audit:** every change writes `session.price_change` with the previous and new price (minor units). An unchanged price writes nothing. Session creation with a price writes one entry.
-- **Screens:** the New session form takes a price; the session page has a Set/Change price dialog; the session and selected-class details show the price for today.
-- **Not yet:** the class form does not set the price (the price is per session). Multi-currency conversion is out of scope.
+- **Input.** The class form (and the recurring series form) takes the price, the currency and an optional early-bird discount, which the form turns into the early-bird amount. The session form and the session input take no price: `NewSessionInputSchema` is strict, so a price sent with a session is refused.
+- **Who:** staff and above (`classes:manage`) set a class's price. A viewer is refused by the service. A teacher may not change a class's price (it is one of the locked fields, `teacher_field_refused`).
+- **Audit:** a change to a class's price writes `class.price_change` with the previous and new price (minor units), in the same transaction as the class write. An unchanged price writes nothing. A class created with a price writes one entry. The old `session.price_change` action stays in the list because earlier audit rows use it.
+- **Screens:** the session form has no price field and the session page shows none. The class list has a Price column, and the selected class's details show its price for today. The public session page shows each class's price beside its ages.
+- **Seed:** `scripts/seed-mock` gives each planned class its price (one class has none). A re-run brings an existing class's price to the plan and changes nothing else.
+- **Not yet:** multi-currency conversion is out of scope.
 
 ## Status: seat holds
 
@@ -110,7 +113,7 @@ Terms: a **session** (the parent row) is the public page's unit, and its **class
 - **Registration form**: a camp's form for a season, with standard fields (camper, guardian, emergency contact) and custom fields the camp defines. Custom fields are typed (text, choice, date, yes/no) and validated by schema.
 - **Hold**: a short reservation of a session place while a family completes payment. A hold expires after a set time (proposed: 15 minutes) and returns the place.
 - **Waitlist**: an ordered queue for a full session. A place released by a cancellation goes to the first waitlisted registration.
-- **Price**: an amount shown for a session, with an optional early-bird date. Shown for information only in this phase; nothing is charged.
+- **Price**: an amount shown for a class, with an optional early-bird date. Each class has its own price. Shown for information only in this phase; nothing is charged.
 
 ## Decisions
 
