@@ -30,6 +30,9 @@ const sessionRow = (over: Partial<SessionRow> = {}): SessionRow => ({
 const classRow = (over: Partial<ClassRow> = {}): ClassRow => ({
   id: 'c1',
   dates_outside_session: false,
+  series_id: 's1',
+  occurrence_status: 'active',
+  cancel_reason: null,
   session_id: 'p1',
   session_name: 'Summer camp',
   name: 'Robotics',
@@ -113,6 +116,9 @@ describe('toClass', () => {
       seatsTaken: 2,
       waitlisted: 1,
       datesOutsideSession: false,
+      seriesId: 's1',
+      occurrenceStatus: 'active',
+      cancelReason: null,
     });
     expect(mapped.instructors).not.toBe(classRow().instructors);
   });

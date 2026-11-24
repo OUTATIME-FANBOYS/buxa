@@ -50,7 +50,7 @@ vi.mock('@/actions/classes', () => ({
   enrolAction: vi.fn(),
   promoteWaitlistAction: vi.fn(),
   cancelEnrolmentAction: vi.fn(),
-  addRecurringClassesAction: vi.fn(),
+  addSeriesAction: vi.fn(),
   importClassesAction: vi.fn(),
 }));
 
@@ -93,6 +93,9 @@ const full: Class = {
   seatsTaken: 2,
   waitlisted: 1,
   datesOutsideSession: false,
+  seriesId: 'series-1',
+  occurrenceStatus: 'active',
+  cancelReason: null,
   price: null,
 };
 const enrolment: Enrolment = {

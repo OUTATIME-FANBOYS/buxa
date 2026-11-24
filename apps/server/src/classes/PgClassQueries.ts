@@ -76,6 +76,9 @@ export interface ClassRow {
   early_bird_minor: number | null;
   early_bird_until: string | null;
   dates_outside_session: boolean;
+  series_id: string;
+  occurrence_status: 'active' | 'cancelled';
+  cancel_reason: string | null;
 }
 
 export interface EnrolmentRow {
@@ -127,6 +130,9 @@ export function toClass(row: ClassRow): Class {
     waitlisted: row.waitlisted,
     price: toPrice(row),
     datesOutsideSession: row.dates_outside_session,
+    seriesId: row.series_id,
+    occurrenceStatus: row.occurrence_status,
+    cancelReason: row.cancel_reason,
   };
 }
 
@@ -160,15 +166,15 @@ export function toActiveFacts(row: {
 
 const SESSION_COLUMNS = `p.id, p.name, p.description, to_char(p.starts_on, 'YYYY-MM-DD') AS starts_on,
   to_char(p.ends_on, 'YYYY-MM-DD') AS ends_on, p.is_public, p.status, p.archived_at, p.created_at,
-  (SELECT count(*)::int FROM sessions s WHERE s.class_id = p.id) AS class_count`;
+  (SELECT count(*)::int FROM class_series cs WHERE cs.class_id = p.id) AS class_count`;
 
 /** Seats and instructors are counted in the same statement, so a class read is one consistent snapshot. */
-const CLASS_COLUMNS = `s.id, s.class_id AS session_id, p.name AS session_name, s.name, s.age_min, s.age_max, s.capacity,
+export const CLASS_COLUMNS = `s.id, s.class_id AS session_id, p.name AS session_name, s.name, s.age_min, s.age_max, s.capacity,
   s.starts_at, s.ends_at, s.location,
   s.price_minor, s.price_currency, s.early_bird_minor, to_char(s.early_bird_until, 'YYYY-MM-DD') AS early_bird_until,
-  s.dates_outside_session,
+  s.dates_outside_session, s.series_id, s.status AS occurrence_status, s.cancel_reason,
   session_seats_taken(s.id) AS seats_taken,
-  (SELECT count(*)::int FROM enrolments e WHERE e.session_id = s.id AND e.status = 'waitlisted') AS waitlisted,
+  (SELECT count(*)::int FROM enrolments e WHERE e.series_id = s.series_id AND e.status = 'waitlisted') AS waitlisted,
   COALESCE((SELECT json_agg(json_build_object('id', i.id::text, 'name', trim(i.given_name || ' ' || i.family_name))
                              ORDER BY i.family_name, i.given_name, i.id)
               FROM session_instructors si JOIN people i ON i.id = si.person_id
@@ -181,7 +187,7 @@ const ENROLMENT_FROM = `FROM enrolments e
   JOIN sessions s ON s.id = e.session_id
   JOIN people p ON p.id = e.person_id`;
 
-const CLASS_FROM = 'FROM sessions s JOIN classes p ON p.id = s.class_id';
+export const CLASS_FROM = 'FROM sessions s JOIN classes p ON p.id = s.class_id';
 
 export async function listSessionRows(db: Db): Promise<Session[]> {
   const { rows } = await db.query<SessionRow>(
@@ -258,7 +264,9 @@ export async function requireClassExists(db: Db, id: string): Promise<void> {
 
 export async function listEnrolmentRows(db: Db, classId: string): Promise<Enrolment[]> {
   const { rows } = await db.query<EnrolmentRow>(
-    `SELECT ${ENROLMENT_COLUMNS} ${ENROLMENT_FROM} WHERE e.session_id = $1 ORDER BY e.created_at, e.id`,
+    `SELECT ${ENROLMENT_COLUMNS} ${ENROLMENT_FROM}
+      WHERE e.series_id = (SELECT x.series_id FROM sessions x WHERE x.id = $1)
+      ORDER BY e.created_at, e.id`,
     [classId],
   );
 

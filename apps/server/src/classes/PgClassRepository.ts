@@ -5,6 +5,7 @@ import type {
   Class,
   Enrolment,
   NewSessionInput,
+  Series,
   Session,
   SessionDeleteImpact,
   SessionEditInput,
@@ -17,7 +18,12 @@ import type {
   ClassRepository,
   EnrolRequest,
   EnrolmentRule,
+  SeriesFields,
+  SeriesRecord,
 } from './ClassRepository';
+import { deleteSeriesRow, insertSeries, updateSeriesRow } from './PgSeriesWrites';
+import { getSeriesRow, listSeriesDayRows, listSeriesRows } from './PgSeriesQueries';
+import { ClassNotFoundError } from './errors';
 import { cancelInTransaction, enrolInTransaction } from './PgEnrolmentWrites';
 import { readDatesPlanRows } from './PgSessionDates';
 import {
@@ -176,16 +182,67 @@ export class PgClassRepository implements ClassRepository {
     );
   }
 
-  addClasses(actor: Actor, sessionId: string, inputs: ClassRecord[]): Promise<Class[]> {
-    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
-      await requireSessionExists(db, sessionId);
-      const written: Class[] = [];
-      for (const input of inputs) {
-        written.push(await requireClass(db, await insertClass(db, actor, sessionId, input)));
-      }
+  async addSeries(actor: Actor, sessionId: string, input: SeriesRecord): Promise<Series> {
+    try {
+      return await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        await requireSessionExists(db, sessionId);
+        const seriesId = await insertSeries(db, actor, sessionId, input);
+        const made = await getSeriesRow(db, seriesId);
+        if (!made) {
+          throw new ClassNotFoundError();
+        }
 
-      return written;
+        return made;
+      });
+    } catch (error) {
+      throw translateClassWriteError(error);
+    }
+  }
+
+  listSeries(userId: string, orgId: string, sessionId: string): Promise<Series[]> {
+    return withOrg(this.pool, userId, orgId, async db => {
+      await requireSessionExists(db, sessionId);
+
+      return listSeriesRows(db, sessionId);
     });
+  }
+
+  getSeries(userId: string, orgId: string, seriesId: string): Promise<Series | null> {
+    return withOrg(this.pool, userId, orgId, db => getSeriesRow(db, seriesId));
+  }
+
+  listSeriesOccurrences(userId: string, orgId: string, seriesId: string): Promise<Class[]> {
+    return withOrg(this.pool, userId, orgId, db => listSeriesDayRows(db, seriesId));
+  }
+
+  async updateSeries(actor: Actor, seriesId: string, input: SeriesFields): Promise<Series> {
+    try {
+      return await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        await updateSeriesRow(db, actor, seriesId, input);
+        const updated = await getSeriesRow(db, seriesId);
+        if (!updated) {
+          throw new ClassNotFoundError();
+        }
+
+        return updated;
+      });
+    } catch (error) {
+      throw translateClassWriteError(error);
+    }
+  }
+
+  async deleteSeries(actor: Actor, seriesId: string): Promise<void> {
+    try {
+      await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        const existing = await getSeriesRow(db, seriesId);
+        if (!existing) {
+          throw new ClassNotFoundError();
+        }
+        await deleteSeriesRow(db, actor, seriesId, existing.name);
+      });
+    } catch (error) {
+      throw translateClassWriteError(error);
+    }
   }
 
   listCampClassSpans(userId: string, orgId: string): Promise<CampClassSpan[]> {

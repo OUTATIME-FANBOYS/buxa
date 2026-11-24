@@ -342,12 +342,19 @@ export async function setOccurrenceStatusRow(
  * Inserts a class under a session and links its instructors. The name and ages are given here; the session's date range is
  * widened by the database trigger (migration 0022) so it covers the class. The session must exist in the camp.
  */
-export async function insertClass(db: Db, actor: Actor, sessionId: string, input: ClassRecord): Promise<string> {
+export async function insertClass(
+  db: Db,
+  actor: Actor,
+  sessionId: string,
+  input: ClassRecord,
+  seriesId: string | null = null,
+): Promise<string> {
   const price = input.price;
+  // A day written with no series (seriesId null) gets its own one-day series from the trigger (migration 0060); a series write passes it.
   const { rows } = await db.query<{ id: string }>(
     `INSERT INTO sessions (org_id, class_id, name, age_min, age_max, starts_at, ends_at, location, capacity,
-                           price_minor, price_currency, early_bird_minor, early_bird_until)
-     SELECT $1, p.id, $3, $4, $5, $6::timestamptz, $7::timestamptz, $8, $9, $10, $11, $12, $13::date
+                           price_minor, price_currency, early_bird_minor, early_bird_until, series_id)
+     SELECT $1, p.id, $3, $4, $5, $6::timestamptz, $7::timestamptz, $8, $9, $10, $11, $12, $13::date, $14::uuid
        FROM classes p WHERE p.id = $2
      RETURNING id`,
     [
@@ -364,6 +371,7 @@ export async function insertClass(db: Db, actor: Actor, sessionId: string, input
       price?.currency ?? null,
       price?.earlyBirdMinor ?? null,
       price?.earlyBirdUntil ?? null,
+      seriesId,
     ],
   );
   if (rows.length === 0) {

@@ -13,7 +13,7 @@ const NO_WEEKDAY = 'Tick at least one day of the week.';
 const actions = vi.hoisted(() => ({
   createSessionAction: vi.fn(),
   addClassAction: vi.fn(),
-  addRecurringClassesAction: vi.fn(),
+  addSeriesAction: vi.fn(),
   updateClassAction: vi.fn(),
   deleteClassAction: vi.fn(),
 }));
@@ -37,7 +37,7 @@ let root: Root;
 beforeEach(() => {
   vi.clearAllMocks();
   actions.addClassAction.mockResolvedValue({ status: 'success', message: 'Class added.' });
-  actions.addRecurringClassesAction.mockResolvedValue({ status: 'success', message: 'Added 3 classes.' });
+  actions.addSeriesAction.mockResolvedValue({ status: 'success', message: 'Added 3 classes.' });
   host = document.createElement('div');
   document.body.appendChild(host);
   root = createRoot(host);
@@ -204,7 +204,7 @@ describe('the New class dialog: every class is set on weekdays', () => {
 
     await submit();
 
-    expect(actions.addRecurringClassesAction).not.toHaveBeenCalled();
+    expect(actions.addSeriesAction).not.toHaveBeenCalled();
     expect(actions.addClassAction).not.toHaveBeenCalled();
     expect(document.querySelector('.weekday-row')?.parentElement?.textContent).toContain(NO_WEEKDAY);
   });
@@ -219,8 +219,8 @@ describe('the New class dialog: every class is set on weekdays', () => {
     await submit();
 
     expect(actions.addClassAction).not.toHaveBeenCalled();
-    expect(actions.addRecurringClassesAction).toHaveBeenCalledTimes(1);
-    const data = postedTo(actions.addRecurringClassesAction);
+    expect(actions.addSeriesAction).toHaveBeenCalledTimes(1);
+    const data = postedTo(actions.addSeriesAction);
     expect(data.getAll('weekdays')).toEqual(['1', '3', '5']);
     expect(data.get('startsAt')).toBe('2027-07-05T09:00');
     expect(data.get('endsAt')).toBe('2027-07-30T10:30');
@@ -228,7 +228,7 @@ describe('the New class dialog: every class is set on weekdays', () => {
   });
 
   it('shows the server refusal for a series and keeps the dialog open', async () => {
-    actions.addRecurringClassesAction.mockResolvedValue({
+    actions.addSeriesAction.mockResolvedValue({
       status: 'error',
       message: 'The class falls outside the session dates. Change the session dates first.',
     });
@@ -243,7 +243,7 @@ describe('the New class dialog: every class is set on weekdays', () => {
   });
 
   it('keeps Starts and Ends required: their refusal shows on the field', async () => {
-    actions.addRecurringClassesAction.mockResolvedValue({
+    actions.addSeriesAction.mockResolvedValue({
       status: 'error',
       message: 'Check the highlighted fields.',
       fieldErrors: { startsAt: 'Enter a date and time.', endsAt: 'Enter a date and time.' },
@@ -253,6 +253,6 @@ describe('the New class dialog: every class is set on weekdays', () => {
     await submit();
 
     expect(shownText()).toContain('Enter a date and time.');
-    expect(actions.addRecurringClassesAction).toHaveBeenCalledTimes(1);
+    expect(actions.addSeriesAction).toHaveBeenCalledTimes(1);
   });
 });

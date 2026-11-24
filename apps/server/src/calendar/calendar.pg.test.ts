@@ -68,7 +68,7 @@ describe.skipIf(!url)('calendar feed on Postgres', () => {
 
   it("lists only the camp's own classes in the feed (another camp sees none of them)", async () => {
     const session = await makeSession(fx.repo, fx.actor);
-    await fx.repo.addClasses(fx.actor, session.id, [sessionInput(9, 10)]);
+    await fx.repo.addClass(fx.actor, session.id, sessionInput(9, 10));
 
     const tokenA = randomBytes(32);
     const tokenB = randomBytes(32);

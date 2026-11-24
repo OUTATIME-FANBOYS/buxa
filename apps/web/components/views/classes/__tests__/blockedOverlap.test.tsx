@@ -85,6 +85,9 @@ const painting: Class = {
   seatsTaken: 0,
   waitlisted: 0,
   datesOutsideSession: false,
+  seriesId: 'series-1',
+  occurrenceStatus: 'active',
+  cancelReason: null,
   price: null,
 };
 

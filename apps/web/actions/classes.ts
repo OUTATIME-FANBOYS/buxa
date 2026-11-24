@@ -7,7 +7,7 @@ import { createSessionAction as createSessionActionImpl } from '@buxa/server/com
 import { addClassAction as addClassActionImpl } from '@buxa/server/composers/classes/addClassAction';
 import { updateClassAction as updateClassActionImpl } from '@buxa/server/composers/classes/updateClassAction';
 import { deleteClassAction as deleteClassActionImpl } from '@buxa/server/composers/classes/deleteClassAction';
-import { addRecurringClassesAction as addRecurringClassesActionImpl } from '@buxa/server/composers/classes/addRecurringClassesAction';
+import { addSeriesAction as addSeriesActionImpl } from '@buxa/server/composers/classes/addSeriesAction';
 import { updateSessionAction as updateSessionActionImpl } from '@buxa/server/composers/classes/updateSessionAction';
 import { previewSessionDatesAction as previewSessionDatesActionImpl } from '@buxa/server/composers/classes/previewSessionDatesAction';
 import { deleteSessionAction as deleteSessionActionImpl } from '@buxa/server/composers/classes/deleteSessionAction';
@@ -48,8 +48,8 @@ export async function deleteClassAction(...args: Parameters<typeof deleteClassAc
   return deleteClassActionImpl(...args);
 }
 
-export async function addRecurringClassesAction(...args: Parameters<typeof addRecurringClassesActionImpl>) {
-  return addRecurringClassesActionImpl(...args);
+export async function addSeriesAction(...args: Parameters<typeof addSeriesActionImpl>) {
+  return addSeriesActionImpl(...args);
 }
 
 export async function updateSessionAction(...args: Parameters<typeof updateSessionActionImpl>) {

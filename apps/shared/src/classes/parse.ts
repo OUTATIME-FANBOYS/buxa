@@ -3,12 +3,12 @@ import {
   CancelEnrolmentInputSchema,
   ClassInputSchema,
   EnrolInputSchema,
-  NewRecurringClassInputSchema,
+  NewSeriesInputSchema,
   NewSessionInputSchema,
   type CancelEnrolmentInput,
   type ClassInput,
   type EnrolInput,
-  type NewRecurringClassInput,
+  type NewSeriesInput,
   type NewSessionInput,
   type ClassPriceInput,
 } from '@buxa/contracts';
@@ -126,10 +126,10 @@ export function classForm(form: FormData): PersonParsed<ClassInput> {
 }
 
 /**
- * A recurring series: the class's own fields, a weekly rule (the weekdays ticked, the first date, the start and end times in the
- * camp's clock) and the date it stops on. The server expands the rule; this only reads the form.
+ * A class series, from the New class form: the class's own fields, the weekdays ticked, and the Starts and Ends date-times. The
+ * Starts and Ends date-times are read as typed, in the camp's clock. The server expands them (planSeries in @buxa/domain).
  */
-export function recurringClassForm(form: FormData): PersonParsed<NewRecurringClassInput> {
+export function seriesForm(form: FormData): PersonParsed<NewSeriesInput> {
   const problems: FieldErrors = {};
   const minAge = numberField(form, 'minAge', problems, 'Enter the youngest age.');
   const maxAge = numberField(form, 'maxAge', problems, 'Enter the oldest age.');
@@ -140,25 +140,23 @@ export function recurringClassForm(form: FormData): PersonParsed<NewRecurringCla
   if (weekdays.length === 0) {
     problems.weekdays = NO_WEEKDAY;
   }
+  const starts = localDateTime(form, 'startsAt', problems);
+  const ends = localDateTime(form, 'endsAt', problems);
   const price = priceFromForm(form, problems);
 
   return withProblems(
     problems,
     () =>
-      parseWith<NewRecurringClassInput>(NewRecurringClassInputSchema, {
-        rule: {
-          weekdays,
-          firstDate: field(form, 'firstDate'),
-          startTime: field(form, 'startTime'),
-          endTime: field(form, 'endTime'),
-          end: { kind: 'until', date: field(form, 'endDate') },
-        },
+      parseWith<NewSeriesInput>(NewSeriesInputSchema, {
         name: field(form, 'name'),
         ageRange: { minAge, maxAge },
         capacity,
         location: field(form, 'location'),
         instructorIds: fieldAll(form, 'instructorIds'),
         price: price ?? null,
+        weekdays,
+        startsAt: starts ? `${starts.date}T${starts.time}` : '',
+        endsAt: ends ? `${ends.date}T${ends.time}` : '',
       }),
     { ageRange: 'maxAge' },
   );
@@ -166,29 +164,6 @@ export function recurringClassForm(form: FormData): PersonParsed<NewRecurringCla
 
 /** A local date-time as a datetime-local field posts it: `2027-07-05T09:00`. The camp's clock is read as typed. */
 const LOCAL_DATE_TIME = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})$/;
-
-/**
- * The "Specific days" form: the class's own fields, the weekdays ticked, and the Starts and Ends date-times. The range runs from
- * Starts's date to Ends's date, and each chosen weekday runs at Starts's and Ends's times. This turns those fields into the weekly
- * rule and hands it to recurringClassForm, so the rule's checks are the same as the recurring path's.
- */
-export function specificDaysForm(form: FormData): PersonParsed<NewRecurringClassInput> {
-  const problems: FieldErrors = {};
-  const starts = localDateTime(form, 'startsAt', problems);
-  const ends = localDateTime(form, 'endsAt', problems);
-  if (Object.keys(problems).length > 0 || !starts || !ends) {
-    return { ok: false, state: failure(CHECK_FIELDS, problems) };
-  }
-
-  const rule = new FormData();
-  form.forEach((value, key) => rule.append(key, value));
-  rule.set('firstDate', starts.date);
-  rule.set('startTime', starts.time);
-  rule.set('endDate', ends.date);
-  rule.set('endTime', ends.time);
-
-  return recurringClassForm(rule);
-}
 
 /** A datetime-local value, split into its date and its time. Blank or malformed text is reported against its field. */
 function localDateTime(

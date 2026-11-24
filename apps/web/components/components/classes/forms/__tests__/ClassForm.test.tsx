@@ -8,7 +8,7 @@ import { ClassForm } from '@/components/components/classes/forms';
 
 vi.mock('@/actions/classes', () => ({
   addClassAction: vi.fn(),
-  addRecurringClassesAction: vi.fn(),
+  addSeriesAction: vi.fn(),
   updateClassAction: vi.fn(),
 }));
 
@@ -31,6 +31,9 @@ const cls: Class = {
   seatsTaken: 0,
   waitlisted: 0,
   datesOutsideSession: false,
+  seriesId: 'series-1',
+  occurrenceStatus: 'active',
+  cancelReason: null,
   price: null,
 };
 

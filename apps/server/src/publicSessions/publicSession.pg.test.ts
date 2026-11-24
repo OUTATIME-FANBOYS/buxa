@@ -49,9 +49,11 @@ describe.skipIf(!url)('public session pages on Postgres', () => {
     const session = await makeSession(fx.repo, fx.actor);
     await fx.repo.setSessionPublic(fx.actor, session.id, true);
     const instructor = await fx.addPerson(fx.orgA, '1980-01-01', 'Secret');
-    await fx.repo.addClasses(fx.actor, session.id, [
+    await fx.repo.addClass(
+      fx.actor,
+      session.id,
       sessionInput(9, 12, { name: 'Robotics', instructorIds: [instructor], capacity: 3 }),
-    ]);
+    );
 
     const service = createPublicSessionService({ repo });
     const page = await service.getPage(slugA, session.id, now);

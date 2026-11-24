@@ -5,6 +5,7 @@ import type {
   ClassPriceInput,
   Enrolment,
   NewSessionInput,
+  Series,
   Session,
   SessionDeleteImpact,
   SessionEditInput,
@@ -32,6 +33,24 @@ export interface CampClassSpan {
   startsAt: string;
   endsAt: string;
   className: string;
+}
+
+/** The fields every day of a series shares: the name, ages, camp size, location, instructors and price. */
+export interface SeriesFields {
+  name: string;
+  ageRange: { minAge: number; maxAge: number };
+  capacity: number;
+  location: string;
+  instructorIds: string[];
+  price: ClassPriceInput | null;
+}
+
+/** A new series: its shared fields, its weekdays, its first and last allowed times, and one occurrence per day (see planSeries). */
+export interface SeriesRecord extends SeriesFields {
+  weekdays: number[];
+  seriesStartsAt: string;
+  seriesEndsAt: string;
+  occurrences: { startsAt: string; endsAt: string }[];
 }
 
 export interface EnrolRequest {
@@ -96,10 +115,26 @@ export interface ClassRepository {
    */
   setOccurrenceStatus(actor: Actor, occurrenceId: string, command: OccurrenceCommand): Promise<void>;
   /**
-   * Writes every class of a series in one transaction, or none. Audits `class.create` for each. Throws SessionNotFoundError,
-   * or InstructorNotFoundError.
+   * Writes a series and every one of its days in one transaction, or none: the series row, then one occurrence per day, each linked
+   * to the series. Audits `series.create` and `class.create` for each day. Throws SessionNotFoundError, or InstructorNotFoundError.
    */
-  addClasses(actor: Actor, sessionId: string, inputs: ClassRecord[]): Promise<Class[]>;
+  addSeries(actor: Actor, sessionId: string, input: SeriesRecord): Promise<Series>;
+  /** The series of a session, one per series, in the order their first days start. Read only. Throws SessionNotFoundError. */
+  listSeries(userId: string, orgId: string, sessionId: string): Promise<Series[]>;
+  /** One series, or null when it is not in the camp. */
+  getSeries(userId: string, orgId: string, seriesId: string): Promise<Series | null>;
+  /** Every day of a series, active and cancelled, in order. Read only. */
+  listSeriesOccurrences(userId: string, orgId: string, seriesId: string): Promise<Class[]>;
+  /**
+   * Saves a series' shared fields on every day of it, and replaces its instructors. Audits `series.update`. Throws
+   * ClassNotFoundError, InstructorNotFoundError, or CapacityBelowEnrolledError when the camp size is below the places taken.
+   */
+  updateSeries(actor: Actor, seriesId: string, input: SeriesFields): Promise<Series>;
+  /**
+   * Deletes a series and all its days. Audits `series.delete`. Throws ClassNotFoundError, or ClassHasEnrolmentsError when any
+   * enrolment, hold or registration is on the series.
+   */
+  deleteSeries(actor: Actor, seriesId: string): Promise<void>;
   /** Times and names of every class in the camp, for the clash check. */
   listCampClassSpans(userId: string, orgId: string): Promise<CampClassSpan[]>;
   /** Throws SessionNotFoundError. */
