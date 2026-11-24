@@ -6,22 +6,31 @@ import { memberOf } from './support';
 
 const url = process.env.DATABASE_URL;
 
-// The session price columns (migration 0024) on the sessions table, `classes`. These need a real Postgres (DATABASE_URL).
-describe.skipIf(!url)('session prices: constraints and row-level security', () => {
+// The class price columns (migration 0050) on the sessions table, `sessions`: each class carries its own price. A session (a row
+// of `classes`) has no price columns any more. These need a real Postgres (DATABASE_URL).
+describe.skipIf(!url)('class prices: constraints and row-level security', () => {
   const pool = new pg.Pool({ connectionString: url });
   const tag = randomBytes(6).toString('hex');
   let orgA = '';
   let orgB = '';
   let ownerB = '';
 
+  // Inserts a session (its parent row in `classes`) and one class under it with the given price values.
   const insertPrice = async (org: string, values: (string | number | null)[]) =>
-    withOrg(pool, await memberOf(pool, org), org, db =>
-      db.query<{ id: string }>(
-        `INSERT INTO classes (org_id, name, price_minor, price_currency, early_bird_minor, early_bird_until)
-         VALUES ($1, 'Summer', $2, $3, $4, $5::date) RETURNING id`,
-        [org, ...values],
-      ),
-    );
+    withOrg(pool, await memberOf(pool, org), org, async db => {
+      const parent = await db.query<{ id: string }>(
+        `INSERT INTO classes (org_id, name, default_capacity) VALUES ($1, 'Summer', 10) RETURNING id`,
+        [org],
+      );
+
+      return db.query<{ id: string }>(
+        `INSERT INTO sessions (org_id, class_id, name, starts_at, ends_at, location, capacity, ratio_campers, ratio_instructors,
+                               price_minor, price_currency, early_bird_minor, early_bird_until)
+         VALUES ($1, $2, 'Week one', now(), now() + interval '2 hours', 'Lake', 10, 5, 1, $3, $4, $5, $6::date)
+         RETURNING id`,
+        [org, parent.rows[0].id, ...values],
+      );
+    });
 
   beforeAll(async () => {
     await migrate(pool);
@@ -43,6 +52,13 @@ describe.skipIf(!url)('session prices: constraints and row-level security', () =
     await pool.end();
   });
 
+  it('the session row (classes) no longer has price columns', async () => {
+    const { rows } = await pool.query<{ column_name: string }>(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = 'classes' AND column_name LIKE '%price%'`,
+    );
+    expect(rows).toEqual([]);
+  });
+
   it('accepts no price, a regular price, and a regular price with its early-bird amount and day', async () => {
     await expect(insertPrice(orgA, [null, null, null, null])).resolves.toBeDefined();
     await expect(insertPrice(orgA, [45000, 'AUD', null, null])).resolves.toBeDefined();
@@ -50,24 +66,24 @@ describe.skipIf(!url)('session prices: constraints and row-level security', () =
   });
 
   it('refuses a price with no currency, or a currency that is not three capital letters', async () => {
-    await expect(insertPrice(orgA, [45000, null, null, null])).rejects.toThrow(/classes_price_shape/);
+    await expect(insertPrice(orgA, [45000, null, null, null])).rejects.toThrow(/sessions_price_shape/);
     await expect(insertPrice(orgA, [45000, 'aud', null, null])).rejects.toThrow(/price_currency/);
   });
 
   it('refuses an early-bird amount without its day, or a day without its amount', async () => {
-    await expect(insertPrice(orgA, [45000, 'AUD', 39900, null])).rejects.toThrow(/classes_price_shape/);
-    await expect(insertPrice(orgA, [45000, 'AUD', null, '2027-07-05'])).rejects.toThrow(/classes_price_shape/);
+    await expect(insertPrice(orgA, [45000, 'AUD', 39900, null])).rejects.toThrow(/sessions_price_shape/);
+    await expect(insertPrice(orgA, [45000, 'AUD', null, '2027-07-05'])).rejects.toThrow(/sessions_price_shape/);
   });
 
   it('refuses an early-bird amount above the regular price, and a negative amount', async () => {
-    await expect(insertPrice(orgA, [39900, 'AUD', 45000, '2027-07-05'])).rejects.toThrow(/classes_price_shape/);
-    await expect(insertPrice(orgA, [-1, 'AUD', null, null])).rejects.toThrow(/price_minor|classes_price_shape/);
+    await expect(insertPrice(orgA, [39900, 'AUD', 45000, '2027-07-05'])).rejects.toThrow(/sessions_price_shape/);
+    await expect(insertPrice(orgA, [-1, 'AUD', null, null])).rejects.toThrow(/price_minor|sessions_price_shape/);
   });
 
-  it("keeps one camp's prices invisible to another camp", async () => {
+  it("keeps one camp's class prices invisible to another camp", async () => {
     const row = await insertPrice(orgA, [12345, 'NZD', null, null]);
     const seenByB = await withOrg(pool, ownerB, orgB, db =>
-      db.query<{ id: string }>('SELECT id FROM classes WHERE id = $1', [row.rows[0].id]),
+      db.query<{ id: string }>('SELECT id FROM sessions WHERE id = $1', [row.rows[0].id]),
     );
     expect(seenByB.rows).toHaveLength(0);
   });

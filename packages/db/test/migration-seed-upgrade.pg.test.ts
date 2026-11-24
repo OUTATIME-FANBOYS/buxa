@@ -175,6 +175,7 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0047_groups_rooms_assignments.sql',
       '0048_camp_hold_length.sql',
       '0049_check_in_session.sql',
+      '0050_class_prices.sql',
     ]);
   });
 
@@ -272,5 +273,150 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       `SELECT column_name FROM information_schema.columns WHERE table_name = 'orgs' AND column_name = 'clock_format'`,
     );
     expect(rows).toHaveLength(0);
+  });
+});
+
+// Migration 0050 moves each session's price (the `classes` row) onto its classes (the `sessions` rows), on a database that already
+// holds priced data. The database is brought to 0049 by hand, seeded with prices, and then migrate() applies 0050 alone.
+describe.skipIf(!url)('migration 0050 copies session prices onto their classes', () => {
+  const tag = randomBytes(4).toString('hex');
+  const tempDbName = `buxa_price_copy_${tag}`;
+  let rootPool: pg.Pool | null = null;
+  let tempPool: pg.Pool | null = null;
+  let canCreateDb = true;
+
+  const requireUrl = (): string => {
+    if (!url) {
+      throw new Error('DATABASE_URL is not set for the price copy test.');
+    }
+
+    return url;
+  };
+
+  beforeAll(async () => {
+    rootPool = new pg.Pool(poolConfigFor(requireUrl()));
+    rootPool.on('error', () => {});
+    try {
+      await rootPool.query(`CREATE DATABASE "${tempDbName}"`);
+    } catch (err) {
+      console.warn(`Could not CREATE DATABASE for the price copy test (insufficient privileges?): ${String(err)}`);
+      canCreateDb = false;
+
+      return;
+    }
+    const parsed = new URL(requireUrl());
+    parsed.pathname = `/${tempDbName}`;
+    tempPool = new pg.Pool(poolConfigFor(parsed.toString()));
+    tempPool.on('error', () => {});
+
+    const client = await tempPool.connect();
+    try {
+      await client.query(
+        'CREATE TABLE IF NOT EXISTS schema_migrations (name text PRIMARY KEY, at timestamptz NOT NULL DEFAULT now())',
+      );
+      for (const file of readdirSync(DIR)
+        .filter(f => f.endsWith('.sql') && f.slice(0, 4) < '0050')
+        .sort()) {
+        await client.query('BEGIN');
+        await client.query(readFileSync(join(DIR, file), 'utf8'));
+        await client.query('INSERT INTO schema_migrations(name) VALUES ($1)', [file]);
+        await client.query('COMMIT');
+      }
+      const org = await client.query<{ id: string }>(
+        `INSERT INTO orgs (name, slug) VALUES ('Price copy', $1) RETURNING id`,
+        [`price-copy-${tag}`],
+      );
+      const orgId = org.rows[0].id;
+      // Session A (a row of classes) has a price and two classes; session B has no price and one class.
+      await client.query(
+        `INSERT INTO classes (org_id, name, default_capacity, price_minor, price_currency, early_bird_minor, early_bird_until)
+         VALUES ($1, 'Session A', 10, 45000, 'AUD', 39900, '2027-07-05'), ($1, 'Session B', 10, NULL, NULL, NULL, NULL)`,
+        [orgId],
+      );
+      const sessions = await client.query<{ id: string; name: string }>(
+        `SELECT id, name FROM classes WHERE org_id = $1`,
+        [orgId],
+      );
+      const idOf = (name: string) => sessions.rows.find(r => r.name === name)?.id;
+      const aId = idOf('Session A');
+      const bId = idOf('Session B');
+      for (const [parent, label] of [
+        [aId, 'Mon'],
+        [aId, 'Tue'],
+        [bId, 'Wed'],
+      ] as const) {
+        await client.query(
+          `INSERT INTO sessions (org_id, class_id, name, starts_at, ends_at, location, capacity, ratio_campers, ratio_instructors)
+           VALUES ($1, $2, $3, now(), now() + interval '1 hour', 'Lake', 10, 5, 1)`,
+          [orgId, parent, label],
+        );
+      }
+    } finally {
+      client.release();
+    }
+  });
+
+  afterAll(async () => {
+    if (tempPool) {
+      await tempPool.end().catch(() => {});
+    }
+    if (canCreateDb && rootPool) {
+      await rootPool.query(`DROP DATABASE IF EXISTS "${tempDbName}" WITH (FORCE)`).catch(() => {});
+    }
+    if (rootPool) {
+      await rootPool.end().catch(() => {});
+    }
+  });
+
+  it('copies each session price onto every class of that session and drops the session columns', async () => {
+    if (!canCreateDb || !tempPool) {
+      return;
+    }
+    const applied = await migrate(tempPool);
+    expect(applied).toEqual(['0050_class_prices.sql']);
+
+    const classes = await tempPool.query<{
+      name: string;
+      label: string;
+      price_minor: number | null;
+      currency: string | null;
+      early_bird_minor: number | null;
+      early_bird_until: string | null;
+    }>(
+      `SELECT p.name, s.name AS label, s.price_minor, s.price_currency AS currency, s.early_bird_minor,
+              to_char(s.early_bird_until, 'YYYY-MM-DD') AS early_bird_until
+         FROM sessions s JOIN classes p ON p.id = s.class_id ORDER BY s.name`,
+    );
+    expect(classes.rows).toEqual([
+      {
+        name: 'Session A',
+        label: 'Mon',
+        price_minor: 45000,
+        currency: 'AUD',
+        early_bird_minor: 39900,
+        early_bird_until: '2027-07-05',
+      },
+      {
+        name: 'Session A',
+        label: 'Tue',
+        price_minor: 45000,
+        currency: 'AUD',
+        early_bird_minor: 39900,
+        early_bird_until: '2027-07-05',
+      },
+      {
+        name: 'Session B',
+        label: 'Wed',
+        price_minor: null,
+        currency: null,
+        early_bird_minor: null,
+        early_bird_until: null,
+      },
+    ]);
+
+    const dropped = await tempPool.query<{ column_name: string }>(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = 'classes' AND column_name LIKE '%price%'`,
+    );
+    expect(dropped.rows).toEqual([]);
   });
 });

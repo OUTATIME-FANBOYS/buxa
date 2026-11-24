@@ -39,6 +39,8 @@ const NO_SIGNED_IN_USER: Record<string, string> = {
     'teacher calendar feed: only the classes assigned to the one teacher who owns the token hash (migration 0033)',
   buxa_public_session: 'public session page: returns only public fields, for a camp that is not archived',
   buxa_public_classes: 'public session page: returns only public class fields, for a camp that is not archived',
+  buxa_public_classes_v2:
+    'public session page: the public class fields plus each class price (migration 0050), for a camp that is not archived',
   rate_limit_hit: 'rate-limit counter: reads and writes only its own key, no tenant data',
   buxa_orgs_with_expired_holds:
     'seat-hold cleanup job (migration 0043): returns camp ids and one member id per camp, takes no argument, and is called only by the CRON_SECRET route',
