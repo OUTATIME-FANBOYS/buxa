@@ -9,6 +9,7 @@ import { getRuntime } from '../../runtime';
 import { currentActor } from '../people/camp';
 import { NO_CAMP } from '../people/failures';
 import { registrationFailure } from './failures';
+import { filesNamed } from './uploads';
 
 /*
  * Create, edit and publish a registration form. Each one checks the form with the contract (through registrationFormForm), then calls
@@ -28,7 +29,9 @@ export async function createFormAction(_previous: ActionState, form: FormData): 
 
   let id: string;
   try {
-    id = (await getRuntime().services.registration.createForm(actor, parsed.data)).id;
+    id = (
+      await getRuntime().services.registration.createForm(actor, parsed.data, await filesNamed(form, 'attachments'))
+    ).id;
   } catch (error) {
     return registrationFailure(error, 'Could not create the form.');
   }
@@ -57,7 +60,12 @@ export async function updateFormAction(_previous: ActionState, form: FormData): 
   }
 
   try {
-    await getRuntime().services.registration.updateForm(actor, formId, parsed.data);
+    await getRuntime().services.registration.updateForm(
+      actor,
+      formId,
+      parsed.data,
+      await filesNamed(form, 'attachments'),
+    );
   } catch (error) {
     return registrationFailure(error, 'Could not save the form.');
   }
@@ -90,4 +98,23 @@ export async function publishFormAction(_previous: ActionState, form: FormData):
   revalidatePath(ROUTES.registration);
 
   return success(`Published as version ${version ?? 1}. Families can now register on it.`);
+}
+
+/** Removes one attachment from a form. The file is named by its id; the service checks the form and the file are in this camp. */
+export async function removeFormFileAction(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const actor = await currentActor();
+  if (!actor) {
+    return failure(NO_CAMP);
+  }
+  const formId = field(form, 'formId');
+  const fileId = field(form, 'fileId');
+  try {
+    await getRuntime().services.registration.removeFormFile(actor, formId, fileId);
+  } catch (error) {
+    return registrationFailure(error, 'Could not remove the file.');
+  }
+
+  revalidatePath(registrationFormPath(formId));
+
+  return success('File removed.');
 }

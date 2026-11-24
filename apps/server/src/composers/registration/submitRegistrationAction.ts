@@ -8,6 +8,7 @@ import { getRuntime } from '../../runtime';
 import { currentActor } from '../people/camp';
 import { NO_CAMP } from '../people/failures';
 import { registrationFailure } from './failures';
+import { documentFilesOf } from './uploads';
 
 /**
  * Records a family's registration on a published form. The posted answers are not trusted: the service checks them against the
@@ -24,7 +25,8 @@ export async function submitRegistrationAction(_previous: ActionState, form: For
   }
 
   try {
-    await getRuntime().services.registration.submit(actor, formId, registrationSubmissionFromForm(form));
+    const documents = await documentFilesOf(form);
+    await getRuntime().services.registration.submit(actor, formId, registrationSubmissionFromForm(form), documents);
   } catch (error) {
     return registrationFailure(error, 'Could not record the registration.');
   }

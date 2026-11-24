@@ -14,6 +14,7 @@ const row = (id: string, sessions: { sessionId: string; sessionName: string }[])
   archivedAt: null,
   standard: { camperFirstName: 'Ada', camperLastName: 'Lovelace' },
   custom: {},
+  documents: [],
   sessions: sessions.map(s => ({ ...s, status: 'submitted' as const })),
   classes: [],
 });

@@ -3,8 +3,7 @@
 import { useRef, useState } from 'react';
 import { useStore } from '../providers/providers';
 import { useUi } from '../providers/UiProvider';
-
-const MAX_FILE = 1024 * 1024;
+import { ATTACHMENT_MAX_BYTES as MAX_FILE } from '@buxa/shared/files/attachmentTypes';
 
 const readAsDataUrl = (f: File) =>
   new Promise<string>((res, rej) => {

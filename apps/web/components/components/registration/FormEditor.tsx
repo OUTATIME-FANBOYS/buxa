@@ -1,13 +1,14 @@
 'use client';
 
 import { useActionState, useEffect, useRef } from 'react';
-import type { CustomField } from '@buxa/contracts';
-import { fieldError, idle } from '@buxa/shared';
-import { Button, Checkbox, TextField } from '@/components/elements';
+import type { CustomField, FormAttachment } from '@buxa/contracts';
+import { ATTACHMENT_ACCEPT, ATTACHMENT_HINT, fieldError, idle } from '@buxa/shared';
+import { Button, FileField, TextField } from '@/components/elements';
 import { ROUTES } from '@/config/routes';
-import { createFormAction, updateFormAction } from '@/actions/registration';
+import { createFormAction, removeFormFileAction, updateFormAction } from '@/actions/registration';
 import { ActionMessage } from '@/components/components/classes/forms';
 import { QuestionBuilder } from './QuestionBuilder';
+import { SessionPicker } from './SessionPicker';
 
 /*
  * A registration form's name, season, sessions and own questions. The same screen creates a form and edits its draft: the create
@@ -21,6 +22,7 @@ export interface FormEditorInitial {
   season: string | null;
   sessionIds: string[];
   fields: CustomField[];
+  attachments: FormAttachment[];
 }
 
 export function FormEditor({
@@ -45,8 +47,9 @@ export function FormEditor({
   onSaved?: (message: string) => void;
 }) {
   const [state, formAction, pending] = useActionState(mode === 'create' ? createFormAction : updateFormAction, idle);
+  // Removing an attachment is its own action, posted from the row's button (formAction), so it never submits the form's draft.
+  const [removeState, removeFile] = useActionState(removeFormFileAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
-  const chosen = new Set(initial?.sessionIds ?? []);
   const inDialog = variant === 'dialog';
 
   useEffect(() => {
@@ -107,13 +110,7 @@ export function FormEditor({
         {sessions.length === 0 ? (
           <p className="muted">Create a session first. A form covers the sessions its families can choose from.</p>
         ) : (
-          <div className="check-group">
-            {sessions.map(session => (
-              <Checkbox key={session.id} name="sessionIds" value={session.id} defaultSelected={chosen.has(session.id)}>
-                {session.name}
-              </Checkbox>
-            ))}
-          </div>
+          <SessionPicker sessions={sessions} defaultIds={initial?.sessionIds} labelledBy="registration-sessions" />
         )}
         {err('sessionIds') && (
           <span className="field-error" role="alert">
@@ -133,6 +130,44 @@ export function FormEditor({
             {err('fields')}
           </span>
         )}
+      </section>
+
+      <section className="form-section" aria-labelledby="registration-files">
+        <h3 id="registration-files" className="form-section__title">
+          Files for families
+        </h3>
+        <p className="muted">Forms families can download with the registration, such as a blank immunization form.</p>
+        {initial && initial.attachments.length > 0 && (
+          <ul className="form-files">
+            {initial.attachments.map(file => (
+              <li key={file.id} className="form-file">
+                <span className="form-file__name">{file.name}</span>
+                {mode === 'edit' && (
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    size="sm"
+                    name="fileId"
+                    value={file.id}
+                    formAction={removeFile}
+                    aria-label={`Remove ${file.name}`}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+        <ActionMessage state={removeState} />
+        <FileField
+          label="Add files"
+          name="attachments"
+          multiple
+          accept={ATTACHMENT_ACCEPT}
+          error={err('attachments')}
+        />
+        <span className="field-hint">{ATTACHMENT_HINT}</span>
       </section>
 
       {/* A pop-up's create posts dialog=1, so the action returns a success instead of redirecting to the new form. */}

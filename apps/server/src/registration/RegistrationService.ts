@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import {
   can,
   decideConfirmation,
@@ -12,8 +13,12 @@ import {
 } from '@buxa/domain';
 import {
   buildSubmissionSchema,
+  checkUpload,
+  DocumentReviewStatusSchema,
   RecordPaymentInputSchema,
   RegistrationFormInputSchema,
+  type CustomField,
+  type DocumentAnswer,
   type RegistrationForm,
   type RegistrationFormInput,
   type RegistrationRow,
@@ -23,12 +28,29 @@ import type { CredentialService } from '../services/credentials/CredentialServic
 import type { CredentialRepository } from '../credentials/CredentialRepository';
 import {
   RegistrationClassNotFoundError,
+  RegistrationFileNotFoundError,
   RegistrationFormNotFoundError,
   RegistrationInvalidError,
   RegistrationNotFoundError,
   RegistrationRefusedError,
 } from './errors';
-import type { ClassLookup, PublishedVersion, RegistrationRepository } from './RegistrationRepository';
+import type {
+  ClassLookup,
+  FileDownload,
+  NewDocument,
+  PublishedVersion,
+  RegistrationRepository,
+  StoredFileInput,
+} from './RegistrationRepository';
+
+/** A file as the composer reads it from a form post: its name and bytes, before it is checked. */
+export interface UploadedFile {
+  name: string;
+  bytes: Uint8Array;
+}
+
+/** A form may carry at most this many attachments in one save. */
+export const MAX_FORM_FILES = 10;
 
 /**
  * What a screen or an API route may ask of registration forms. Each method checks its permission first (a denial throws a 403),
@@ -49,14 +71,26 @@ export interface ConfirmOutcome {
 export interface RegistrationService {
   listForms(actor: Actor): Promise<RegistrationForm[]>;
   getForm(actor: Actor, formId: string): Promise<RegistrationForm>;
-  createForm(actor: Actor, input: unknown): Promise<RegistrationForm>;
-  updateForm(actor: Actor, formId: string, input: unknown): Promise<RegistrationForm>;
+  /** `files` are the attachments families may download. Each is checked (type by its bytes, at most 1 MB). Needs registration:manage. */
+  createForm(actor: Actor, input: unknown, files?: readonly UploadedFile[]): Promise<RegistrationForm>;
+  updateForm(actor: Actor, formId: string, input: unknown, files?: readonly UploadedFile[]): Promise<RegistrationForm>;
+  /** Removes one attachment of a form. Needs registration:manage. Audited. */
+  removeFormFile(actor: Actor, formId: string, fileId: string): Promise<void>;
+  /**
+   * A form attachment, for the session the family registers for. The form must cover that session, or the file reads as not found.
+   * Needs registration:submit (the people who take a registration hand the form's files out).
+   */
+  downloadFormFile(actor: Actor, fileId: string, sessionId: string): Promise<FileDownload>;
+  /** A document a family sent with a registration. Needs registration:read. */
+  downloadDocument(actor: Actor, fileId: string): Promise<FileDownload>;
+  /** Sets a document to pending, accepted or needs_replacing. Needs registration:confirm. Audited. */
+  reviewDocument(actor: Actor, fileId: string, status: unknown): Promise<void>;
   publishForm(actor: Actor, formId: string): Promise<RegistrationForm>;
   listSubmissions(actor: Actor, formId: string): Promise<RegistrationRow[]>;
   /** The definitions a family answers: the published version, or null when the form is not published. Needs registration:submit. */
   publishedVersion(actor: Actor, formId: string): Promise<PublishedVersion | null>;
   /** Records a registration. `input` is untrusted: it is checked against the form's published version. Returns the new id. */
-  submit(actor: Actor, formId: string, input: unknown): Promise<string>;
+  submit(actor: Actor, formId: string, input: unknown, documents?: Record<string, UploadedFile>): Promise<string>;
   /**
    * Records how one child's place in a class was paid. Staff with registration:confirm. `paid` needs a note saying how; the note
    * is stored, and the audit entry records only that there is one.
@@ -93,6 +127,67 @@ function fieldErrorsOf(issues: { path: PropertyKey[]; message: string }[]): Reco
   }
 
   return errors;
+}
+
+/** Checks the attachments of a form. Each one is refused with its message, keyed `attachments`, and nothing is stored. */
+function storeFormFiles(files: readonly UploadedFile[]): StoredFileInput[] {
+  if (files.length > MAX_FORM_FILES) {
+    throw new RegistrationInvalidError({ attachments: `Attach at most ${MAX_FORM_FILES} files at a time.` });
+  }
+
+  return checkedFiles(files, 'attachments');
+}
+
+/**
+ * Checks the files a family sent for the document questions of a form version. A file is for a document question only; any other
+ * key is ignored. The answer stores the file id and the review (pending when it arrives). A question left empty stores nothing.
+ */
+function storeDocuments(
+  fields: readonly CustomField[],
+  documents: Record<string, UploadedFile>,
+): { documents: NewDocument[]; answers: Record<string, DocumentAnswer> } {
+  const questions = fields.filter(f => f.kind === 'document' && documents[f.key] !== undefined);
+  const stored: NewDocument[] = [];
+  const errors: Record<string, string> = {};
+  for (const question of questions) {
+    const file = documents[question.key];
+    if (!file) {
+      continue;
+    }
+    const checked = checkUpload(file.name, file.bytes);
+    if (!checked.ok) {
+      errors[`custom.${question.key}`] = checked.message;
+      continue;
+    }
+    stored.push({ id: randomUUID(), fieldKey: question.key, ...checked.value });
+  }
+  if (Object.keys(errors).length > 0) {
+    throw new RegistrationInvalidError(errors);
+  }
+
+  return {
+    documents: stored,
+    answers: Object.fromEntries(stored.map(d => [d.fieldKey, { fileId: d.id, status: 'pending' as const }])),
+  };
+}
+
+/** Checks files that all go to one field: the first message for the field is kept. */
+function checkedFiles(files: readonly UploadedFile[], field: string): StoredFileInput[] {
+  const errors: Record<string, string> = {};
+  const stored: StoredFileInput[] = [];
+  for (const file of files) {
+    const checked = checkUpload(file.name, file.bytes);
+    if (checked.ok) {
+      stored.push({ id: randomUUID(), ...checked.value });
+    } else {
+      errors[field] ??= checked.message;
+    }
+  }
+  if (Object.keys(errors).length > 0) {
+    throw new RegistrationInvalidError(errors);
+  }
+
+  return stored;
 }
 
 /** Drops the answers that were left blank, so only given answers are stored. */
@@ -142,18 +237,64 @@ export function createRegistrationService(
       return requireForm(repo, actor, formId);
     },
 
-    async createForm(actor, input) {
+    async createForm(actor, input, files = []) {
       assertAllowed(actor, 'registration:manage');
       const parsed = parseFormInput(input);
 
-      return repo.createForm(actor, parsed);
+      return repo.createForm(actor, parsed, storeFormFiles(files));
     },
 
-    async updateForm(actor, formId, input) {
+    async updateForm(actor, formId, input, files = []) {
       assertAllowed(actor, 'registration:manage');
       const parsed = parseFormInput(input);
 
-      return repo.updateForm(actor, formId, parsed);
+      return repo.updateForm(actor, formId, parsed, storeFormFiles(files));
+    },
+
+    async removeFormFile(actor, formId, fileId) {
+      assertAllowed(actor, 'registration:manage');
+      if (!isUuid(formId) || !isUuid(fileId)) {
+        throw new RegistrationFileNotFoundError();
+      }
+      await repo.removeFormFile(actor, formId, fileId);
+    },
+
+    async downloadFormFile(actor, fileId, sessionId) {
+      assertAllowed(actor, 'registration:submit');
+      if (!isUuid(fileId) || !isUuid(sessionId)) {
+        throw new RegistrationFileNotFoundError();
+      }
+      const file = await repo.formFileDownload(actor.userId, actor.orgId, fileId, sessionId);
+      if (!file) {
+        throw new RegistrationFileNotFoundError();
+      }
+
+      return file;
+    },
+
+    async downloadDocument(actor, fileId) {
+      assertAllowed(actor, 'registration:read');
+      if (!isUuid(fileId)) {
+        throw new RegistrationFileNotFoundError();
+      }
+      const file = await repo.documentDownload(actor.userId, actor.orgId, fileId);
+      if (!file) {
+        throw new RegistrationFileNotFoundError();
+      }
+
+      return file;
+    },
+
+    async reviewDocument(actor, fileId, status) {
+      assertAllowed(actor, 'registration:confirm');
+      const parsed = DocumentReviewStatusSchema.safeParse(status);
+      if (!parsed.success) {
+        throw new RegistrationInvalidError({ status: 'Choose pending, accepted or needs replacing.' });
+      }
+      if (!isUuid(fileId)) {
+        throw new RegistrationFileNotFoundError();
+      }
+      await repo.setDocumentReview(actor, fileId, parsed.data);
     },
 
     async publishForm(actor, formId) {
@@ -175,7 +316,7 @@ export function createRegistrationService(
       return repo.getPublishedVersion(actor.userId, actor.orgId, formId);
     },
 
-    async submit(actor, formId, input) {
+    async submit(actor, formId, input, documents = {}) {
       assertAllowed(actor, 'registration:submit');
       await requireForm(repo, actor, formId);
 
@@ -191,6 +332,7 @@ export function createRegistrationService(
         throw new RegistrationInvalidError(fieldErrorsOf(parsed.error.issues));
       }
       const { selections: chosen, standard, custom } = parsed.data;
+      const uploaded = storeDocuments(published.fields, documents);
       const selections = await resolveSelections(repo, actor, chosen);
       // The session is taken from each class: the family never picks one.
       const sessionIds = [...new Set(selections.map(s => s.sessionId))];
@@ -202,7 +344,8 @@ export function createRegistrationService(
           version: published.version,
           sessionIds,
           selections,
-          answers: { standard: present(standard), custom: present(custom) },
+          answers: { standard: present(standard), custom: { ...present(custom), ...uploaded.answers } },
+          documents: uploaded.documents,
         },
         facts => decideRegistration({ ...facts, requestedSessionIds: sessionIds }),
       );

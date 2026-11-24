@@ -6,6 +6,7 @@ import { Pill } from '@/components/elements';
 import { ConfirmRegistration } from './ConfirmRegistration';
 import { RecordPayment } from './RecordPayment';
 import { RegistrationActions } from './RegistrationActions';
+import { DocumentReviewList } from './DocumentReviewList';
 
 /*
  * The registrations for each session of a form, one table per session. A row's answers sit behind a disclosure, so the table stays
@@ -66,8 +67,9 @@ function answerRows(row: RegistrationRow, fields: readonly CustomField[]): { lab
     .filter((entry): entry is [string, string] => typeof entry[1] === 'string')
     .map(([key, value]) => ({ label: STANDARD_LABEL[key] ?? key, value }));
   // An answer keeps the question it was given under, even if the form has changed since (the key is the fallback label).
+  // A document answer is a file, shown with its review in DocumentReviewList rather than as a value here.
   const custom = Object.entries(row.custom).flatMap(([key, value]) => {
-    if (value === undefined) {
+    if (value === undefined || typeof value === 'object') {
       return [];
     }
     const shown = typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value;
@@ -149,6 +151,7 @@ function RegistrationsTable({
                       </div>
                     ))}
                   </dl>
+                  <DocumentReviewList formId={formId} documents={row.documents} />
                 </details>
               </td>
               <td>

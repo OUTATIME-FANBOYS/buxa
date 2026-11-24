@@ -29,6 +29,7 @@ const row = (
   archivedAt: null,
   standard: { camperFirstName: 'Ada', camperLastName: 'Lovelace', guardianPhone: '555-0100' },
   custom: {},
+  documents: [],
   sessions: [{ sessionId: SESSION.id, sessionName: SESSION.name, status: 'submitted' }],
   classes: [],
   ...over,

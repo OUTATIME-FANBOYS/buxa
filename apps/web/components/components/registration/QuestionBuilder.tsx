@@ -14,6 +14,7 @@ const KIND_LABEL: Record<FieldKind, string> = {
   choice: 'Choice',
   date: 'Date',
   yes_no: 'Yes or no',
+  document: 'Document upload',
 };
 
 const KIND_OPTIONS = (Object.keys(KIND_LABEL) as FieldKind[]).map(kind => ({ value: kind, label: KIND_LABEL[kind] }));
@@ -148,6 +149,12 @@ export function QuestionBuilder({ initial = [] }: { initial?: CustomField[] }) {
               onChange={setOptionsText}
               hint="Separate the choices with commas, for example None, Beginner, Strong."
             />
+          )}
+          {kind === 'document' && (
+            <p className="muted">
+              The family uploads a PDF or image when the registration is taken. If a required one is missing, staff see
+              Not received.
+            </p>
           )}
           <div className="classes-actions">
             <Button variant="primary" type="button" onClick={add}>

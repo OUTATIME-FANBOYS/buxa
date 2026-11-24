@@ -26,6 +26,7 @@ const row = (id: string, over: Partial<RegistrationRow> = {}): RegistrationRow =
   archivedAt: null,
   standard: { camperFirstName: 'Ada', camperLastName: 'Lovelace' },
   custom: {},
+  documents: [],
   sessions: [{ sessionId: 'summer', sessionName: 'Summer camp', status: 'submitted' }],
   classes: [],
   ...over,
