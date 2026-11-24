@@ -45,6 +45,30 @@ const render = (canManage: boolean, selectedId: string | null = null) =>
   );
 
 describe('ClassesTable: the classes of one session', () => {
+  it('shows each class its own price, and says so when a class has none', () => {
+    const html = renderToStaticMarkup(
+      <UiProvider Dialog={NoDialog}>
+        <ClassesTable
+          sessionId={SESSION}
+          sessionName="Summer camp"
+          classes={[
+            cls({ price: { currency: 'USD', regularMinor: 45000, earlyBirdMinor: null, earlyBirdUntil: null } }),
+            cls({ id: '44444444-4444-4444-8444-444444444444', name: 'Painting', price: null }),
+          ]}
+          timeZone="Australia/Sydney"
+          clockFormat="24h"
+          selectedId={null}
+          canManage={false}
+          canEdit={false}
+          instructors={[]}
+        />
+      </UiProvider>,
+    );
+    expect(html).toContain('>Price<');
+    expect(html).toContain('$450.00');
+    expect(html).toContain('Not set');
+  });
+
   it('shows the ages, the Camp Size, the time, location, instructors and seats of each class', () => {
     const html = render(false);
     expect(html).toContain('Camp Size');

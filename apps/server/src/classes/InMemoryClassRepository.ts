@@ -1,15 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { Actor, ActiveEnrolmentFacts, AuditAction, LocalDate } from '@buxa/domain';
 import { capacityCovers, seatsLeft } from '@buxa/domain';
-import type {
-  Class,
-  Enrolment,
-  EnrolmentStatus,
-  NewSessionInput,
-  Session,
-  SessionEditInput,
-  SessionPriceInput,
-} from '@buxa/contracts';
+import type { Class, Enrolment, EnrolmentStatus, NewSessionInput, Session, SessionEditInput } from '@buxa/contracts';
 import { priceChangeAudit, samePrice } from './priceAudit';
 import { sameSessionDetails, sessionEditAudit, type SessionDetails } from './sessionEditAudit';
 import { systemClock, type Clock } from '../services/clock';
@@ -50,7 +42,6 @@ interface StoredSession {
   endsOn: LocalDate | null;
   isPublic: boolean;
   createdAt: string;
-  price: SessionPriceInput | null;
 }
 
 /** A class: a time range under a session, with its own name, ages, camp size and location. */
@@ -185,13 +176,9 @@ export class InMemoryClassRepository implements ClassRepository {
         endsOn: input.endsOn,
         isPublic: input.isPublic ?? false,
         createdAt: this.now().toISOString(),
-        price: input.price ?? null,
       };
       this.sessions.set(row.id, row);
       this.record(actor, 'session.create', 'session', row.id, { name: row.name });
-      if (row.price) {
-        this.record(actor, 'session.price_change', 'session', row.id, priceChangeAudit(null, row.price));
-      }
 
       return this.toSession(row);
     });
@@ -240,21 +227,6 @@ export class InMemoryClassRepository implements ClassRepository {
     });
   }
 
-  setSessionPrice(actor: Actor, sessionId: string, price: SessionPriceInput | null): Promise<Session> {
-    return settle(() => {
-      const row = this.sessionIn(actor.orgId, sessionId);
-      if (!row) {
-        throw new SessionNotFoundError();
-      }
-      if (!samePrice(row.price, price)) {
-        this.record(actor, 'session.price_change', 'session', sessionId, priceChangeAudit(row.price, price));
-        row.price = price;
-      }
-
-      return this.toSession(row);
-    });
-  }
-
   setSessionPublic(actor: Actor, sessionId: string, isPublic: boolean): Promise<Session> {
     return settle(() => {
       const row = this.sessionIn(actor.orgId, sessionId);
@@ -281,12 +253,7 @@ export class InMemoryClassRepository implements ClassRepository {
       return inputs.map(input => {
         const row: StoredClass = { ...input, id: randomUUID(), orgId: actor.orgId, sessionId };
         this.classes.set(row.id, row);
-        this.record(actor, 'class.create', 'class', row.id, {
-          sessionId,
-          startsAt: row.startsAt,
-          endsAt: row.endsAt,
-          instructorIds: [...new Set(input.instructorIds)],
-        });
+        this.recordCreate(actor, row, input);
 
         return this.toClass(row);
       });
@@ -331,12 +298,7 @@ export class InMemoryClassRepository implements ClassRepository {
       this.requireInstructorsInCamp(actor.orgId, input.instructorIds);
       const row: StoredClass = { ...input, id: randomUUID(), orgId: actor.orgId, sessionId };
       this.classes.set(row.id, row);
-      this.record(actor, 'class.create', 'class', row.id, {
-        sessionId,
-        startsAt: row.startsAt,
-        endsAt: row.endsAt,
-        instructorIds: [...new Set(input.instructorIds)],
-      });
+      this.recordCreate(actor, row, input);
 
       return this.toClass(row);
     });
@@ -353,6 +315,7 @@ export class InMemoryClassRepository implements ClassRepository {
       if (!capacityCovers(input.capacity, this.takenPlaces(classId))) {
         throw new CapacityBelowEnrolledError();
       }
+      const priceBefore = row.price;
       Object.assign(row, input, { instructorIds: [...new Set(input.instructorIds)] });
       this.record(actor, 'class.update', 'class', classId, {
         startsAt: row.startsAt,
@@ -360,6 +323,9 @@ export class InMemoryClassRepository implements ClassRepository {
         capacity: row.capacity,
         instructorIds: row.instructorIds,
       });
+      if (!samePrice(priceBefore, input.price)) {
+        this.record(actor, 'class.price_change', 'class', classId, priceChangeAudit(priceBefore, input.price));
+      }
 
       return this.toClass(row);
     });
@@ -728,7 +694,6 @@ export class InMemoryClassRepository implements ClassRepository {
       classCount: [...this.classes.values()].filter(c => c.sessionId === s.id).length,
       isPublic: s.isPublic,
       createdAt: s.createdAt,
-      price: s.price ? { ...s.price } : null,
     };
   }
 
@@ -749,8 +714,21 @@ export class InMemoryClassRepository implements ClassRepository {
       instructors: c.instructorIds.map(id => ({ id, name: this.campers.get(id)?.name ?? '' })),
       seatsTaken: this.takenPlaces(c.id),
       waitlisted: this.countWhere(c.id, 'waitlisted'),
-      price: session?.price ? { ...session.price } : null,
+      price: c.price ? { ...c.price } : null,
     };
+  }
+
+  /** Audits a new class, and `class.price_change` when it is created with a price (as Postgres does). */
+  private recordCreate(actor: Actor, row: StoredClass, input: ClassRecord): void {
+    this.record(actor, 'class.create', 'class', row.id, {
+      sessionId: row.sessionId,
+      startsAt: row.startsAt,
+      endsAt: row.endsAt,
+      instructorIds: [...new Set(input.instructorIds)],
+    });
+    if (input.price) {
+      this.record(actor, 'class.price_change', 'class', row.id, priceChangeAudit(null, input.price));
+    }
   }
 
   private toEnrolment(e: StoredEnrolment): Enrolment {

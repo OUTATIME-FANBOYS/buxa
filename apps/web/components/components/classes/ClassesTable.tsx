@@ -1,6 +1,6 @@
 import type { Class } from '@buxa/contracts';
 import { sessionPath } from '@/config/routes';
-import { formatCampDateTime } from '@buxa/shared';
+import { formatCampDateTime, priceSummary } from '@buxa/shared';
 import type { ClockFormat } from '@buxa/domain';
 import { Button } from '@/components/elements';
 import { ClassStatus } from './ClassStatus';
@@ -50,6 +50,7 @@ export function ClassesTable({
             <th scope="col">Location</th>
             <th scope="col">Instructors</th>
             <th scope="col">Camp Size</th>
+            <th scope="col">Price</th>
             <th scope="col">Enrolled</th>
             <th scope="col">Waitlisted</th>
             <th scope="col">Places</th>
@@ -73,6 +74,7 @@ export function ClassesTable({
                 <td>{cls.location}</td>
                 <td>{instructorNames(cls)}</td>
                 <td>{cls.capacity}</td>
+                <td>{priceSummary(cls.price, timeZone)}</td>
                 <td>{cls.seatsTaken}</td>
                 <td>{cls.waitlisted}</td>
                 <td>

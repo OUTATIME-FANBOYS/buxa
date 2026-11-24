@@ -49,7 +49,6 @@ vi.mock('../../../runtime', () => ({
             classCount: 0,
             isPublic: false,
             createdAt: '2027-01-01T00:00:00.000Z',
-            price: null,
           };
 
           return Promise.resolve({ ok: true as const, value: session });

@@ -34,6 +34,7 @@ export const AUDIT_ACTIONS = [
   'session.create',
   'session.update',
   'session.price_change',
+  'class.price_change',
   'session.delete',
   'calendar.token_rotate',
   'calendar.rotate_self',

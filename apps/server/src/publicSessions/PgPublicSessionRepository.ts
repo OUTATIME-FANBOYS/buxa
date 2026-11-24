@@ -50,7 +50,11 @@ export class PgPublicSessionRepository implements PublicSessionRepository {
         location: string;
         starts_at: Date;
         ends_at: Date;
-      }>('SELECT * FROM buxa_public_classes($1, $2, $3)', [slug, sessionId, from]);
+        price_minor: number | null;
+        price_currency: string | null;
+        early_bird_minor: number | null;
+        early_bird_until: string | null;
+      }>('SELECT * FROM buxa_public_classes_v2($1, $2, $3)', [slug, sessionId, from]);
 
       return rows.map(r => ({
         name: r.class_name,
@@ -59,6 +63,15 @@ export class PgPublicSessionRepository implements PublicSessionRepository {
         location: r.location,
         startsAt: toIso(r.starts_at),
         endsAt: toIso(r.ends_at),
+        price:
+          r.price_minor === null || r.price_currency === null
+            ? null
+            : {
+                currency: r.price_currency,
+                regularMinor: r.price_minor,
+                earlyBirdMinor: r.early_bird_minor,
+                earlyBirdUntil: r.early_bird_until,
+              },
       }));
     });
   }

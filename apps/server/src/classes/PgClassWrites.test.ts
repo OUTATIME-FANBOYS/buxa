@@ -21,6 +21,7 @@ const classInput = {
   endsAt: '2027-07-05T12:00:00+10:00',
   location: 'Lab 1',
   instructorIds: [],
+  price: null,
 };
 
 describe('requireInstructors', () => {
@@ -104,6 +105,11 @@ describe('updateClassRow', () => {
     const { client, seen } = fakeDb(sql => {
       if (sql.startsWith('UPDATE sessions')) {
         return [{ id: classId }];
+      }
+      if (sql.includes('FOR UPDATE') && sql.includes('FROM sessions')) {
+        return [
+          { id: classId, price_minor: null, price_currency: null, early_bird_minor: null, early_bird_until: null },
+        ];
       }
 
       return sql.includes('FROM people') ? [{ id: personA }] : undefined;

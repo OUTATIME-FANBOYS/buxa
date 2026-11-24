@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { priceSummary } from '../PriceFact';
+import { priceSummary } from '@buxa/shared';
 
 const ZONE = 'Australia/Sydney';
 const price = {

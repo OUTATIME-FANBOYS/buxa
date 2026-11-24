@@ -9,8 +9,7 @@ import { updateSessionAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
 
 /**
- * The fields of the Edit session dialog: name, description, first and last day, and the public flag. The price is not here; it has
- * its own Set price dialog. The Save and Cancel buttons belong to the dialog's pinned footer, so the form is tied to them by
+ * The fields of the Edit session dialog: name, description, first and last day, and the public flag. The Save and Cancel buttons belong to the dialog's pinned footer, so the form is tied to them by
  * `formId` and reports `pending` through `onPendingChange`. The dialog closes, and toasts the message, through `onSaved`.
  */
 export function EditSessionForm({
@@ -45,7 +44,7 @@ export function EditSessionForm({
   return (
     <form id={formId} ref={formRef} action={formAction} noValidate className="class-form session-form">
       <input type="hidden" name="sessionId" value={session.id} />
-      <p className="class-helper">Fields marked * are required. The price is changed with Set price.</p>
+      <p className="class-helper">Fields marked * are required.</p>
       <TextField
         label="Session name"
         isRequired

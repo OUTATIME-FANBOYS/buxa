@@ -29,6 +29,7 @@ const series = (
   capacity: 5,
   location: 'Studio',
   instructorIds: [],
+  price: null,
   ...overrides,
 });
 

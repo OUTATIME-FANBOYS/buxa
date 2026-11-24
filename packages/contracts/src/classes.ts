@@ -49,10 +49,11 @@ const InstantSchema = z.iso.datetime({ offset: true, message: 'Use a date and ti
 const LocalDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a date like 2027-07-05.');
 
 /**
- * A session's price, in minor units (cents, yen) with an ISO currency code. Shown for information only: nothing is charged.
- * The early-bird amount and its end date are given together, and the early-bird amount is not above the regular price.
+ * A class's price, in minor units (cents, yen) with an ISO currency code. Shown for information only: nothing is charged. Each
+ * class carries its own price, so a family pays per class. The early-bird amount and its end date are given together, and the
+ * early-bird amount is not above the regular price.
  */
-export const SessionPriceSchema = z
+export const ClassPriceSchema = z
   .object({
     currency: z.string().regex(/^[A-Z]{3}$/, 'Use a three-letter currency code, for example USD.'),
     regularMinor: z.number().int().min(0).max(MAX_MINOR_AMOUNT),
@@ -67,7 +68,7 @@ export const SessionPriceSchema = z
     message: 'The early-bird price cannot be above the regular price.',
     path: ['earlyBirdMinor'],
   });
-export type SessionPriceInput = z.infer<typeof SessionPriceSchema>;
+export type ClassPriceInput = z.infer<typeof ClassPriceSchema>;
 
 /** A class's instructor as the screens show them: the person's id and name. Names are trimmed and bounded like a person's name. */
 export const ClassInstructorSchema = z.object({
@@ -90,8 +91,6 @@ export const SessionSchema = z.object({
   /** A public session has a page anyone can read without signing in. */
   isPublic: z.boolean(),
   createdAt: z.string(),
-  /** The session's price, or null when none is set. Its classes show this same price. */
-  price: SessionPriceSchema.nullable(),
 });
 export type Session = z.infer<typeof SessionSchema>;
 
@@ -101,17 +100,18 @@ export const NewSessionInputSchema = z
     description: z.string().trim().max(2000).default(''),
     startsOn: LocalDateSchema,
     endsOn: LocalDateSchema,
-    price: SessionPriceSchema.nullable().optional(),
     /** Left out means not public. */
     isPublic: z.boolean().optional(),
   })
+  // Strict: a session has no price, so a price sent with a session is refused rather than silently dropped.
+  .strict()
   .refine(v => v.endsOn >= v.startsOn, {
     message: 'The session must end on or after its first day.',
     path: ['endsOn'],
   });
 export type NewSessionInput = z.infer<typeof NewSessionInputSchema>;
-/** A session's details as edited: the same fields as a new session, without the price (the price has its own dialog). */
-export type SessionEditInput = Omit<NewSessionInput, 'price'>;
+/** A session's details as edited: the same fields as a new session. */
+export type SessionEditInput = NewSessionInput;
 
 export const SetSessionPublicInputSchema = z.object({ isPublic: z.boolean() });
 export type SetSessionPublicInput = z.infer<typeof SetSessionPublicInputSchema>;
@@ -146,6 +146,7 @@ export const NewRecurringClassInputSchema = z.object({
   capacity: CampSizeSchema,
   location: z.string().trim().min(1, 'Location missing.').max(200),
   instructorIds: z.array(z.string().uuid()).max(MAX_CLASS_INSTRUCTORS).default([]),
+  price: ClassPriceSchema.nullable().default(null),
 });
 export type NewRecurringClassInput = z.infer<typeof NewRecurringClassInputSchema>;
 
@@ -163,8 +164,8 @@ export const ClassSchema = z.object({
   instructors: z.array(ClassInstructorSchema).max(MAX_CLASS_INSTRUCTORS),
   seatsTaken: z.number().int(),
   waitlisted: z.number().int(),
-  /** The price of the session this class runs in. Each class shows its session's price. */
-  price: SessionPriceSchema.nullable(),
+  /** This class's own price, or null when none is set. */
+  price: ClassPriceSchema.nullable(),
 });
 export type Class = z.infer<typeof ClassSchema>;
 
@@ -178,6 +179,8 @@ export const ClassInputSchema = z
     endsAt: InstantSchema,
     location: z.string().trim().min(1, 'Location missing.').max(200),
     instructorIds: z.array(z.string().uuid()).max(MAX_CLASS_INSTRUCTORS).default([]),
+    /** The class's own price. Left out or null means no price. */
+    price: ClassPriceSchema.nullable().default(null),
   })
   .refine(v => isValidSpan({ startsAt: v.startsAt, endsAt: v.endsAt }), {
     message: 'The class must end after it starts.',

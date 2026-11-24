@@ -18,7 +18,6 @@ import {
   type NewSessionInput,
   type Session,
   type SessionEditInput,
-  type SessionPriceInput,
 } from '@buxa/contracts';
 import { assertAllowed } from '../auth/authorize';
 import type {
@@ -68,13 +67,11 @@ export interface ClassService {
   createSession(actor: Actor, input: NewSessionInput): Promise<Outcome<Session>>;
   /**
    * Saves a session's name, description, first and last day and public flag. Needs classes:manage. The session schema checks the
-   * dates (the last day on or after the first), and every class must still fall inside the new dates. The price is not changed here.
+   * dates (the last day on or after the first), and every class must still fall inside the new dates.
    */
   updateSession(actor: Actor, sessionId: string, input: SessionEditInput): Promise<Outcome<Session>>;
   /** Deletes a session that holds no classes. Needs classes:manage. A session with any class is refused. */
   deleteSession(actor: Actor, sessionId: string): Promise<Outcome<null>>;
-  /** Sets or clears a session's price. Needs classes:manage (staff and above); a viewer is refused. */
-  setSessionPrice(actor: Actor, sessionId: string, price: SessionPriceInput | null): Promise<Outcome<Session>>;
   /** Shows or hides a session's public page. */
   setSessionPublic(actor: Actor, sessionId: string, isPublic: boolean): Promise<Outcome<Session>>;
   /**
@@ -144,6 +141,7 @@ function toRecord(input: ClassInput): ClassRecord {
     endsAt: input.endsAt,
     location: input.location,
     instructorIds: input.instructorIds,
+    price: input.price,
   };
 }
 
@@ -285,6 +283,7 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
           endsAt: o.endsAt,
           location: input.location,
           instructorIds: input.instructorIds,
+          price: input.price,
         }));
 
         return repo.addClasses(actor, sessionId, records);
@@ -294,8 +293,7 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
     async updateSession(actor, sessionId, input) {
       assertAllowed(actor, 'classes:manage');
       const timeZone = await timezoneOf(actor);
-      // The price is not part of an edit, so it is passed as none; the schema then checks the rest, as a new session does.
-      const checked = NewSessionInputSchema.safeParse({ ...input, price: null });
+      const checked = NewSessionInputSchema.safeParse(input);
       if (!checked.success) {
         return {
           ok: false,
@@ -326,12 +324,6 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
         },
         await timezoneOf(actor),
       );
-    },
-
-    async setSessionPrice(actor, sessionId, price) {
-      assertAllowed(actor, 'classes:manage');
-
-      return attempt(() => repo.setSessionPrice(actor, sessionId, price), await timezoneOf(actor));
     },
 
     async listClasses(actor, sessionId) {

@@ -23,8 +23,7 @@
 .classes-facts {
   margin: 0;
 }
-/* The price row: the value, then its Change or Set price button. The value's text is centred on a 30px line, the button's height,
- * so the button sits on the first line of the price, whatever the label's height. */
+/* The price row: the value, centred on a 30px line so it lines up with the label. */
 .price-fact {
   display: flex;
   flex-wrap: wrap;
@@ -35,9 +34,6 @@
   min-height: 30px;
   display: inline-flex;
   align-items: center;
-}
-.price-action {
-  display: inline-flex;
 }
 .classes-columns {
   display: inline-block;

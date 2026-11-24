@@ -8,6 +8,7 @@ import { Segmented } from '@/components/elements';
 import { fieldError, idle } from '@buxa/shared';
 import { addRecurringClassesAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
+import { PriceFields } from './PriceFields';
 
 const WEEKDAYS = [
   { value: '1', label: 'Mon' },
@@ -161,6 +162,7 @@ function SeriesForm({
         <TextField label="Camp Size" name="capacity" error={err('capacity')} isRequired />
       </div>
       <TextField label="Location" name="location" error={err('location')} isRequired />
+      <PriceFields error={err} />
       <ActionMessage state={state} />
     </form>
   );

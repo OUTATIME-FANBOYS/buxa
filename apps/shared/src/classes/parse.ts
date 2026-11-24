@@ -5,13 +5,12 @@ import {
   EnrolInputSchema,
   NewRecurringClassInputSchema,
   NewSessionInputSchema,
-  SessionPriceSchema,
   type CancelEnrolmentInput,
   type ClassInput,
   type EnrolInput,
   type NewRecurringClassInput,
   type NewSessionInput,
-  type SessionPriceInput,
+  type ClassPriceInput,
 } from '@buxa/contracts';
 import { failure, type FieldErrors } from '../actionState';
 import { field, fieldAll, parseWith, type PersonParsed } from '../people/parse';
@@ -103,6 +102,7 @@ export function classForm(form: FormData): PersonParsed<ClassInput> {
   const capacity = numberField(form, 'capacity', problems, 'Enter the camp size.');
   const startsAt = instantField(form, 'startsAt', problems);
   const endsAt = instantField(form, 'endsAt', problems);
+  const price = priceFromForm(form, problems);
 
   // The contract reports the age-range refinement under `ageRange`; the form shows it on the oldest-age field.
   return withProblems(
@@ -116,6 +116,7 @@ export function classForm(form: FormData): PersonParsed<ClassInput> {
         endsAt,
         location: field(form, 'location'),
         instructorIds: fieldAll(form, 'instructorIds'),
+        price: price ?? null,
       }),
     { ageRange: 'maxAge' },
   );
@@ -140,6 +141,7 @@ export function recurringClassForm(form: FormData): PersonParsed<NewRecurringCla
   // The count is asked for only when the series stops after a number of classes.
   const count =
     endKind === 'count' ? numberField(form, 'endCount', problems, 'Enter how many classes the series has.') : undefined;
+  const price = priceFromForm(form, problems);
 
   return withProblems(
     problems,
@@ -157,6 +159,7 @@ export function recurringClassForm(form: FormData): PersonParsed<NewRecurringCla
         capacity,
         location: field(form, 'location'),
         instructorIds: fieldAll(form, 'instructorIds'),
+        price: price ?? null,
       }),
     { ageRange: 'maxAge' },
   );
@@ -169,11 +172,11 @@ const MONEY_MESSAGES = {
 } as const;
 
 /**
- * The price fields of a session form: `priceAmount`, `priceCurrency` (default USD), `earlyBirdAmount` and `earlyBirdUntil`.
+ * The price fields of a class form: `priceAmount`, `priceCurrency` (default USD), `earlyBirdAmount` and `earlyBirdUntil`.
  * A blank price means no price. Amounts become minor units with parseMoney, which refuses extra decimals rather than rounding.
  * Returns undefined when a problem was recorded in `problems`.
  */
-function priceFromForm(form: FormData, problems: FieldErrors): SessionPriceInput | null | undefined {
+function priceFromForm(form: FormData, problems: FieldErrors): ClassPriceInput | null | undefined {
   const currency = field(form, 'priceCurrency').trim().toUpperCase() || DEFAULT_CURRENCY;
   const amount = field(form, 'priceAmount').trim();
   const early = field(form, 'earlyBirdAmount').trim();
@@ -211,7 +214,10 @@ function priceFromForm(form: FormData, problems: FieldErrors): SessionPriceInput
   };
 }
 
-/** A session (the parent): its name, description, first and last day (calendar dates) and an optional price. */
+/**
+ * A session (the parent): its name, description, first and last day (calendar dates) and whether it is public. A session has no
+ * price; each of its classes carries its own.
+ */
 export function sessionForm(form: FormData): PersonParsed<NewSessionInput> {
   const problems: FieldErrors = {};
   const startsOn = field(form, 'startsOn');
@@ -222,7 +228,6 @@ export function sessionForm(form: FormData): PersonParsed<NewSessionInput> {
   if (endsOn === '') {
     problems.endsOn = 'Pick a last day.';
   }
-  const price = priceFromForm(form, problems);
 
   return withProblems(problems, () =>
     parseWith<NewSessionInput>(NewSessionInputSchema, {
@@ -230,49 +235,14 @@ export function sessionForm(form: FormData): PersonParsed<NewSessionInput> {
       description: field(form, 'description'),
       startsOn,
       endsOn,
-      price: price ?? null,
       // A ticked "Show this session on the public pages" box posts `isPublic=on`; left unticked, the session is not public.
       isPublic: form.get('isPublic') === 'on',
     }),
   );
 }
 
-/**
- * A session's details as edited (the Edit session dialog): the same fields as a new session, without the price. The session schema
- * checks them; the price is passed as none, so the schema's price rule does not apply.
- */
-export function sessionEditForm(form: FormData): PersonParsed<NewSessionInput> {
-  const problems: FieldErrors = {};
-  const startsOn = field(form, 'startsOn');
-  const endsOn = field(form, 'endsOn');
-  if (startsOn === '') {
-    problems.startsOn = 'Pick a first day.';
-  }
-  if (endsOn === '') {
-    problems.endsOn = 'Pick a last day.';
-  }
-
-  return withProblems(problems, () =>
-    parseWith<NewSessionInput>(NewSessionInputSchema, {
-      name: field(form, 'name'),
-      description: field(form, 'description'),
-      startsOn,
-      endsOn,
-      price: null,
-      isPublic: form.get('isPublic') === 'on',
-    }),
-  );
-}
-
-/** Sets or clears a session's price (the session's Price dialog). A blank amount clears it. */
-export function sessionPriceForm(form: FormData): PersonParsed<SessionPriceInput | null> {
-  const problems: FieldErrors = {};
-  const price = priceFromForm(form, problems);
-
-  return withProblems(problems, () =>
-    parseWith<SessionPriceInput | null>(SessionPriceSchema.nullable(), price ?? null),
-  );
-}
+/** A session's details as edited (the Edit session dialog): the same fields as a new session. */
+export const sessionEditForm = sessionForm;
 
 /** An enrolment. The button pressed decides the waitlist: "waitlist" puts a camper on the list when the session is full. */
 export function enrolForm(form: FormData): PersonParsed<EnrolInput> {

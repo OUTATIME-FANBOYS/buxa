@@ -53,7 +53,6 @@ const summer: Session = {
   classCount: 1,
   isPublic: false,
   createdAt: '2027-07-01T00:00:00.000Z',
-  price: null,
 };
 const autumn: Session = { ...summer, id: AUTUMN, name: 'Autumn camp', description: 'Autumn weeks.' };
 

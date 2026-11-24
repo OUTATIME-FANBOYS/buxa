@@ -1,13 +1,14 @@
 import { notFound } from 'next/navigation';
 import { getRuntime } from '@buxa/server/runtime';
 import { formatWhen } from '@buxa/server/publicSessions/PublicSessionService';
+import { priceSummary } from '@buxa/shared';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Session' };
 
 /**
- * A public session page: read by anyone, no sign-in. It lists the session's upcoming classes, each with when, where and the ages,
- * and nothing else: no instructors, no enrolled campers, no seats, no contact details. A session that is not public, or a camp
+ * A public session page: read by anyone, no sign-in. It lists the session's upcoming classes, each with when, where, the ages and
+ * the class's own price, and nothing else: no instructors, no enrolled campers, no seats, no contact details. A session that is not public, or a camp
  * that is archived, is a plain 404.
  */
 export default async function PublicSessionPage({ params }: { params: Promise<{ slug: string; sessionId: string }> }) {
@@ -36,6 +37,7 @@ export default async function PublicSessionPage({ params }: { params: Promise<{ 
               </p>
               <p className="text-sm text-neutral-600">
                 Ages {cls.ageRange.minAge} to {cls.ageRange.maxAge}
+                {cls.price && <> · {priceSummary(cls.price, page.timeZone)}</>}
               </p>
             </li>
           ))}

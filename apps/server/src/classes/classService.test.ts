@@ -168,6 +168,7 @@ describe('class service: sessions and classes', () => {
     const added = await service.addClass(as('admin'), session.value.id, {
       ...classAt(robotics, monday9to12),
       instructorIds: [CAMPER_ADA],
+      price: null,
     });
     expect(added).toMatchObject({
       ok: true,
@@ -228,6 +229,7 @@ describe('class service: editing and deleting a class', () => {
     const edited = await service.updateClass(as('admin'), classId, {
       ...classAt(painting, { startsAt: '2027-07-06T13:00:00+10:00', endsAt: '2027-07-06T15:00:00+10:00' }),
       instructorIds: [CAMPER_ADA],
+      price: null,
     });
     expect(edited).toMatchObject({
       ok: true,

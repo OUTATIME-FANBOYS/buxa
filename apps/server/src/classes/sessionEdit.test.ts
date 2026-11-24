@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import type { SessionPriceInput } from '@buxa/contracts';
 import { isHttpError } from '../http/errors';
 import { CAMPER_ADA, JULY_SESSION, as, classWithSession, setup } from './__tests__/fixtures';
 
-const PRICE: SessionPriceInput = { currency: 'AUD', regularMinor: 45000, earlyBirdMinor: null, earlyBirdUntil: null };
 const EDIT = {
   name: 'Winter camp',
   description: 'Three weeks in July.',
@@ -40,12 +38,11 @@ describe('edit session', () => {
     }
   });
 
-  it('leaves the price alone: the price has its own dialog', async () => {
+  it('a session carries no price: its read has no price field, and an edit writes none', async () => {
     const { service, sessionId } = await sessionSetup();
-    await service.setSessionPrice(as('admin'), sessionId, PRICE);
     await service.updateSession(as('admin'), sessionId, EDIT);
     const session = await service.getSession(as('admin'), sessionId);
-    expect(session.ok && session.value.price).toEqual(PRICE);
+    expect(session.ok && 'price' in session.value).toBe(false);
   });
 
   it('refuses a last day before the first day, and changes nothing', async () => {
@@ -71,6 +68,7 @@ describe('edit session', () => {
       capacity: 12,
       location: 'Lab 1',
       instructorIds: [],
+      price: null,
       startsAt: '2027-07-05T09:00:00+10:00',
       endsAt: '2027-07-05T12:00:00+10:00',
     });

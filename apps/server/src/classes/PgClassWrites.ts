@@ -1,5 +1,5 @@
 import { isUuid, type Actor } from '@buxa/domain';
-import type { NewSessionInput, SessionEditInput, SessionPriceInput } from '@buxa/contracts';
+import type { NewSessionInput, SessionEditInput } from '@buxa/contracts';
 import { recordAudit } from '../audit/recordAudit';
 import { type Db } from '../people/pgRows';
 import type { ClassRecord } from './ClassRepository';
@@ -13,24 +13,12 @@ import { sameSessionDetails, sessionEditAudit, type SessionDetails } from './ses
  * Table names follow migration 0022: a session is a row of `classes`, a class is a row of `sessions`.
  */
 
-/** Inserts a session (a date range that holds classes, and an optional price) and audits it. Returns its id. */
+/** Inserts a session (a date range that holds classes) and audits it. Returns its id. A session has no price; its classes do. */
 export async function insertSession(db: Db, actor: Actor, input: NewSessionInput): Promise<string> {
-  const price = input.price ?? null;
   const { rows } = await db.query<{ id: string }>(
-    `INSERT INTO classes (org_id, name, description, starts_on, ends_on, price_minor, price_currency, early_bird_minor, early_bird_until, is_public)
-     VALUES ($1, $2, $3, $4::date, $5::date, $6, $7, $8, $9::date, $10) RETURNING id`,
-    [
-      actor.orgId,
-      input.name,
-      input.description,
-      input.startsOn,
-      input.endsOn,
-      price?.regularMinor ?? null,
-      price?.currency ?? null,
-      price?.earlyBirdMinor ?? null,
-      price?.earlyBirdUntil ?? null,
-      input.isPublic ?? false,
-    ],
+    `INSERT INTO classes (org_id, name, description, starts_on, ends_on, is_public)
+     VALUES ($1, $2, $3, $4::date, $5::date, $6) RETURNING id`,
+    [actor.orgId, input.name, input.description, input.startsOn, input.endsOn, input.isPublic ?? false],
   );
   const id = rows[0].id;
   await recordAudit(db, {
@@ -40,15 +28,6 @@ export async function insertSession(db: Db, actor: Actor, input: NewSessionInput
     entityId: id,
     data: { name: input.name },
   });
-  if (price) {
-    await recordAudit(db, {
-      actor,
-      action: 'session.price_change',
-      entity: 'session',
-      entityId: id,
-      data: priceChangeAudit(null, price),
-    });
-  }
 
   return id;
 }
@@ -137,50 +116,6 @@ export async function setSessionPublicRow(db: Db, actor: Actor, sessionId: strin
 }
 
 /**
- * Sets or clears a session's price. Locks the session row first, so the audit entry records the price that was really replaced.
- * An unchanged price writes nothing. Throws SessionNotFoundError when the session is not in the camp.
- */
-export async function setSessionPriceRow(
-  db: Db,
-  actor: Actor,
-  sessionId: string,
-  price: SessionPriceInput | null,
-): Promise<void> {
-  const { rows } = await db.query<PriceRow & { id: string }>(
-    `SELECT id, price_minor, price_currency, early_bird_minor, to_char(early_bird_until, 'YYYY-MM-DD') AS early_bird_until
-       FROM classes WHERE id = $1 AND org_id = $2 FOR UPDATE`,
-    [sessionId, actor.orgId],
-  );
-  if (rows.length === 0) {
-    throw new SessionNotFoundError();
-  }
-  const before = toPrice(rows[0]);
-  if (samePrice(before, price)) {
-    return;
-  }
-  await db.query(
-    `UPDATE classes
-        SET price_minor = $3, price_currency = $4, early_bird_minor = $5, early_bird_until = $6::date
-      WHERE id = $1 AND org_id = $2`,
-    [
-      sessionId,
-      actor.orgId,
-      price?.regularMinor ?? null,
-      price?.currency ?? null,
-      price?.earlyBirdMinor ?? null,
-      price?.earlyBirdUntil ?? null,
-    ],
-  );
-  await recordAudit(db, {
-    actor,
-    action: 'session.price_change',
-    entity: 'session',
-    entityId: sessionId,
-    data: priceChangeAudit(before, price),
-  });
-}
-
-/**
  * Every instructor must be a person in this camp. Row-level security makes another camp's people invisible, so a foreign id
  * is simply missing from the result.
  */
@@ -205,9 +140,11 @@ export async function requireInstructors(db: Db, instructorIds: readonly string[
  * widened by the database trigger (migration 0022) so it covers the class. The session must exist in the camp.
  */
 export async function insertClass(db: Db, actor: Actor, sessionId: string, input: ClassRecord): Promise<string> {
+  const price = input.price;
   const { rows } = await db.query<{ id: string }>(
-    `INSERT INTO sessions (org_id, class_id, name, age_min, age_max, starts_at, ends_at, location, capacity)
-     SELECT $1, p.id, $3, $4, $5, $6::timestamptz, $7::timestamptz, $8, $9
+    `INSERT INTO sessions (org_id, class_id, name, age_min, age_max, starts_at, ends_at, location, capacity,
+                           price_minor, price_currency, early_bird_minor, early_bird_until)
+     SELECT $1, p.id, $3, $4, $5, $6::timestamptz, $7::timestamptz, $8, $9, $10, $11, $12, $13::date
        FROM classes p WHERE p.id = $2
      RETURNING id`,
     [
@@ -220,6 +157,10 @@ export async function insertClass(db: Db, actor: Actor, sessionId: string, input
       input.endsAt,
       input.location,
       input.capacity,
+      price?.regularMinor ?? null,
+      price?.currency ?? null,
+      price?.earlyBirdMinor ?? null,
+      price?.earlyBirdUntil ?? null,
     ],
   );
   if (rows.length === 0) {
@@ -241,6 +182,15 @@ export async function insertClass(db: Db, actor: Actor, sessionId: string, input
     entityId: id,
     data: { sessionId, startsAt: input.startsAt, endsAt: input.endsAt, instructorIds: instructors },
   });
+  if (price) {
+    await recordAudit(db, {
+      actor,
+      action: 'class.price_change',
+      entity: 'class',
+      entityId: id,
+      data: priceChangeAudit(null, price),
+    });
+  }
 
   return id;
 }
@@ -250,12 +200,23 @@ export async function insertClass(db: Db, actor: Actor, sessionId: string, input
  * that replaces instructors is in migration 0022. Throws ClassNotFoundError when the class is not in the camp.
  */
 export async function updateClassRow(db: Db, actor: Actor, classId: string, input: ClassRecord): Promise<void> {
-  const { rows } = await db.query<{ id: string }>(
+  // The row is locked first, so the price audit records the price that was really replaced.
+  const { rows: current } = await db.query<PriceRow & { id: string }>(
+    `SELECT id, price_minor, price_currency, early_bird_minor, to_char(early_bird_until, 'YYYY-MM-DD') AS early_bird_until
+       FROM sessions WHERE id = $1 AND org_id = $2 FOR UPDATE`,
+    [classId, actor.orgId],
+  );
+  if (current.length === 0) {
+    throw new ClassNotFoundError();
+  }
+  const before = toPrice(current[0]);
+  const price = input.price;
+  await db.query(
     `UPDATE sessions
         SET name = $3, age_min = $4, age_max = $5, starts_at = $6::timestamptz, ends_at = $7::timestamptz,
-            location = $8, capacity = $9
-      WHERE id = $1 AND org_id = $2
-      RETURNING id`,
+            location = $8, capacity = $9, price_minor = $10, price_currency = $11, early_bird_minor = $12,
+            early_bird_until = $13::date
+      WHERE id = $1 AND org_id = $2`,
     [
       classId,
       actor.orgId,
@@ -266,11 +227,12 @@ export async function updateClassRow(db: Db, actor: Actor, classId: string, inpu
       input.endsAt,
       input.location,
       input.capacity,
+      price?.regularMinor ?? null,
+      price?.currency ?? null,
+      price?.earlyBirdMinor ?? null,
+      price?.earlyBirdUntil ?? null,
     ],
   );
-  if (rows.length === 0) {
-    throw new ClassNotFoundError();
-  }
   const instructors = await requireInstructors(db, input.instructorIds);
   await db.query('SELECT buxa_replace_class_instructors_v2($1, $2, $3::uuid[])', [actor.orgId, classId, instructors]);
   await recordAudit(db, {
@@ -280,6 +242,15 @@ export async function updateClassRow(db: Db, actor: Actor, classId: string, inpu
     entityId: classId,
     data: { startsAt: input.startsAt, endsAt: input.endsAt, capacity: input.capacity, instructorIds: instructors },
   });
+  if (!samePrice(before, price)) {
+    await recordAudit(db, {
+      actor,
+      action: 'class.price_change',
+      entity: 'class',
+      entityId: classId,
+      data: priceChangeAudit(before, price),
+    });
+  }
 }
 
 /** Deletes a class through buxa_delete_class (migration 0022), which refuses a class with enrolments. Audits `class.delete`. */

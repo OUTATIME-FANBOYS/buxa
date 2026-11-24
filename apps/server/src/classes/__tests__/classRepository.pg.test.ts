@@ -171,6 +171,7 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
         location: 'Lab 1',
         startsAt: '2027-07-05T03:00:00.000Z',
         instructorIds: [second],
+        price: null,
       });
       const links = await pool.query<{ person_id: string }>(
         'SELECT person_id FROM session_instructors WHERE session_id = $1',

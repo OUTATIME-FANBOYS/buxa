@@ -40,6 +40,7 @@ const saved = {
   capacity: robotics.capacity,
   location: robotics.location,
   instructorIds: [],
+  price: null,
   ...TIMES,
 };
 
@@ -72,6 +73,7 @@ describe('a teacher edits its own class: the name only', () => {
       { ageRange: { minAge: 7, maxAge: 13 } },
       { endsAt: '2027-07-10T13:00:00Z' },
       { instructorIds: ['00000000-0000-4000-8000-000000000001'] },
+      { price: { currency: 'USD', regularMinor: 1000, earlyBirdMinor: null, earlyBirdUntil: null } },
     ]) {
       const out = await classes.updateClass(teacher, classId, { ...saved, ...change });
       expect(out.ok, JSON.stringify(change)).toBe(false);

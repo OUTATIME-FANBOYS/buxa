@@ -72,7 +72,6 @@ const parent: Session = {
   classCount: 1,
   isPublic: false,
   createdAt: '2027-07-01T00:00:00.000Z',
-  price: null,
 };
 // Full: two places, both taken, and one on the waitlist. Monday 5 July 2027, 09:00 to 12:00 in Sydney.
 const full: Class = {

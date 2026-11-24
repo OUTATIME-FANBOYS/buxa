@@ -30,6 +30,7 @@ export const robotics = {
   capacity: 2,
   location: 'Lab 1',
   instructorIds: [],
+  price: null,
 };
 export const painting = {
   name: 'Painting',
@@ -37,6 +38,7 @@ export const painting = {
   capacity: 10,
   location: 'Art room',
   instructorIds: [],
+  price: null,
 };
 
 /** Monday 5 July 2027, 09:00-12:00 in Sydney (UTC+10 in July). */
@@ -88,6 +90,7 @@ export async function classWithSession(
     ...times,
     location: times.location ?? cls.location,
     instructorIds: times.instructorIds ?? cls.instructorIds,
+    price: cls.price,
   });
   if (!added.ok) {
     throw new Error(added.failure.message);

@@ -1,9 +1,10 @@
-import { isUuid } from '@buxa/domain';
+import { isUuid, type ClassPrice } from '@buxa/domain';
 
 /*
  * The public session page: read by anyone, with no sign-in. It shows the session's name and dates and its upcoming classes (when,
- * where, which ages). Instructors, enrolled campers, seats, counts and contact details are never part of this page's data, so
- * they cannot leak through it. Only sessions marked public are returned, and only for camps that are not archived.
+ * where, which ages, and each class's own price). Instructors, enrolled campers, seats, counts and contact details are never part
+ * of this page's data, so they cannot leak through it. Only sessions marked public are returned, and only for camps that are not
+ * archived.
  */
 
 export interface PublicSessionRecord {
@@ -24,6 +25,8 @@ export interface PublicClass {
   location: string;
   startsAt: string;
   endsAt: string;
+  /** The class's own price, or null when it has none. */
+  price: ClassPrice | null;
 }
 
 export interface PublicSessionPage {
@@ -39,6 +42,7 @@ export interface PublicSessionPage {
     location: string;
     startsAt: string;
     endsAt: string;
+    price: ClassPrice | null;
   }[];
 }
 
@@ -78,6 +82,7 @@ export function createPublicSessionService({ repo }: { repo: PublicSessionReposi
           location: c.location,
           startsAt: c.startsAt,
           endsAt: c.endsAt,
+          price: c.price,
         })),
       };
     },

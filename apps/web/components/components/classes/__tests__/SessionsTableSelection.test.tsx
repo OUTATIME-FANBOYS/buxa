@@ -31,7 +31,6 @@ const session = (id: string, name: string): Session => ({
   classCount: 0,
   isPublic: false,
   createdAt: '2027-07-01T00:00:00.000Z',
-  price: null,
 });
 const SESSIONS = [session(ART, 'Art'), session(MUSIC, 'Music')];
 

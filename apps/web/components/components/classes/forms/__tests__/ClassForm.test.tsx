@@ -95,6 +95,35 @@ describe('ClassForm: the fields of a class', () => {
   });
 });
 
+describe('ClassForm: the price of a class', () => {
+  it('has the price and the early-bird fields, on the class (not the session)', () => {
+    const html = render();
+    expect(html).toContain('name="priceAmount"');
+    expect(html).toContain('name="priceCurrency"');
+    expect(html).toContain('name="earlyBirdUntil"');
+    expect(html).toContain('For information only. Nothing is charged.');
+  });
+
+  it('starts from the saved price of the class', () => {
+    const priced: Class = {
+      ...cls,
+      price: { currency: 'AUD', regularMinor: 45000, earlyBirdMinor: null, earlyBirdUntil: null },
+    };
+    const html = renderToStaticMarkup(
+      <ClassForm sessionId={SESSION} sessionName="Summer camp" instructors={[]} cls={priced} />,
+    );
+    expect(html).toMatch(/name="priceAmount"[^>]*value="450\.00"/);
+    expect(html).toMatch(/name="priceCurrency"[^>]*value="AUD"/);
+  });
+
+  it('a teacher editing the name only has no price field to send', () => {
+    const html = renderToStaticMarkup(
+      <ClassForm sessionId={SESSION} sessionName="Summer camp" instructors={[]} cls={cls} detailsOnly />,
+    );
+    expect(html).not.toContain('name="priceAmount"');
+  });
+});
+
 describe('ClassForm: adding and editing', () => {
   it('adds a class to the session when no class is given', () => {
     const html = render();

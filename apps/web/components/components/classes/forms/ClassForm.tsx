@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useRef, useState } from 'react';
+import { useActionState, useEffect, useRef, useState, type FormEvent } from 'react';
 import { Button } from '@/components/elements';
 import { DateTimeField, NumberField, TextField } from '@/components/atoms';
 import { sessionPath } from '@/config/routes';
@@ -9,6 +9,7 @@ import { MAX_CAMP_SIZE, MAX_CLASS_AGE, MIN_CAMP_SIZE, MIN_CLASS_AGE } from '@bux
 import { addClassAction, updateClassAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
 import { InstructorPicker } from './InstructorPicker';
+import { PriceFields } from './PriceFields';
 import type { Class } from '@buxa/contracts';
 
 export interface InstructorChoice {
@@ -77,6 +78,13 @@ export function ClassForm({
   };
   const formRef = useRef<HTMLFormElement>(null);
   const inDialog = variant === 'dialog';
+  const [discountProblem, setDiscountProblem] = useState(false);
+  // A discount that leaves no price is refused here, with its message on the field, before anything is sent.
+  const refuseIfDiscountInvalid = (event: FormEvent<HTMLFormElement>) => {
+    if (discountProblem) {
+      event.preventDefault();
+    }
+  };
 
   useEffect(() => {
     if (state.status === 'error' && state.fieldErrors) {
@@ -99,6 +107,7 @@ export function ClassForm({
       ref={formRef}
       action={submit}
       noValidate
+      onSubmit={refuseIfDiscountInvalid}
       className={`${inDialog ? '' : 'panel '}class-form class-form-time`}
       aria-describedby="class-form-help"
     >
@@ -184,6 +193,7 @@ export function ClassForm({
             autoComplete="off"
           />
           <InstructorPicker instructors={instructors} defaultIds={cls?.instructorIds ?? []} />
+          <PriceFields price={cls?.price} error={err} onDiscountProblem={setDiscountProblem} />
         </>
       )}
       <ActionMessage state={state} />
@@ -192,7 +202,13 @@ export function ClassForm({
           <Button variant="ghost" className="classes-target" href={sessionPath(sessionId)}>
             Cancel
           </Button>
-          <Button type="submit" variant="primary" icon="plus" className="classes-target" disabled={pending}>
+          <Button
+            type="submit"
+            variant="primary"
+            icon="plus"
+            className="classes-target"
+            disabled={pending || discountProblem}
+          >
             {pending ? 'Saving...' : editing ? 'Save class' : 'Add class'}
           </Button>
         </div>

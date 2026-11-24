@@ -29,6 +29,5 @@ export * from './classes/cancelEnrolmentAction';
 export * from './classes/createSessionAction';
 export * from './classes/deleteClassAction';
 export * from './classes/updateClassAction';
-export * from './classes/setSessionPriceAction';
 export * from './classes/enrolAction';
 export * from './classes/importClassesAction';

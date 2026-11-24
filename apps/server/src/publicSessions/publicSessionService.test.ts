@@ -27,6 +27,7 @@ const classes: PublicClass[] = [
     location: 'Studio',
     startsAt: '2027-07-04T23:00:00.000Z',
     endsAt: '2027-07-05T02:00:00.000Z',
+    price: { currency: 'AUD', regularMinor: 45000, earlyBirdMinor: 39900, earlyBirdUntil: '2027-07-01' },
   },
 ];
 
@@ -57,9 +58,25 @@ describe('public session page', () => {
           location: 'Studio',
           startsAt: '2027-07-04T23:00:00.000Z',
           endsAt: '2027-07-05T02:00:00.000Z',
+          price: { currency: 'AUD', regularMinor: 45000, earlyBirdMinor: 39900, earlyBirdUntil: '2027-07-01' },
         },
       ],
     });
+  });
+
+  it('shows each class its own price, and a class with no price shows none', async () => {
+    const mixed: PublicClass[] = [
+      { ...classes[0], name: 'Painting', price: classes[0].price },
+      { ...classes[0], name: 'Pottery', startsAt: '2027-07-06T01:00:00.000Z', price: null },
+    ];
+    const page = await createPublicSessionService({
+      repo: fakeRepo({ listUpcomingClasses: () => Promise.resolve(mixed) }),
+    }).getPage('lakeside', SESSION_ID, NOW);
+
+    expect(page?.classes.map(c => [c.name, c.price])).toEqual([
+      ['Painting', { currency: 'AUD', regularMinor: 45000, earlyBirdMinor: 39900, earlyBirdUntil: '2027-07-01' }],
+      ['Pottery', null],
+    ]);
   });
 
   it('exposes no instructors, enrolled campers, seats or contact details', async () => {

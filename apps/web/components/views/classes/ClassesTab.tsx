@@ -18,12 +18,7 @@ import {
   instructorNames,
   PriceFact,
 } from '@/components/components/classes';
-import {
-  EnrolForm,
-  NewClassButton,
-  SessionPriceButton,
-  TeacherAssignments,
-} from '@/components/components/classes/forms';
+import { EnrolForm, NewClassButton, TeacherAssignments } from '@/components/components/classes/forms';
 import { Button } from '@/components/elements';
 
 /**
@@ -77,11 +72,6 @@ export async function ClassesTab({
         <dd>{dates}</dd>
         <dt>Classes</dt>
         <dd>{classes.length}</dd>
-        <PriceFact
-          price={session.price}
-          timeZone={timeZone}
-          action={canManage && <SessionPriceButton sessionId={session.id} price={session.price} />}
-        />
       </dl>
 
       <section aria-labelledby="classes-heading" className="stack">

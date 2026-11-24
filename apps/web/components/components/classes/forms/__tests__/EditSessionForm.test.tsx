@@ -18,7 +18,6 @@ const session = (over: Partial<Session> = {}): Session => ({
   classCount: 0,
   isPublic: false,
   createdAt: '2027-07-01T00:00:00.000Z',
-  price: null,
   ...over,
 });
 

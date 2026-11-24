@@ -42,6 +42,7 @@ const ROBOTICS: Omit<ClassRecord, 'capacity'> = {
   startsAt: `${CLASS_DAY}T09:00:00+10:00`,
   endsAt: `${CLASS_DAY}T12:00:00+10:00`,
   instructorIds: [],
+  price: null,
 };
 
 /** The domain's enrolment rule, with no override and no waitlist unless asked for. */

@@ -11,11 +11,11 @@ import {
   parseMoney,
   type DiscountKind,
   type EarlyBirdResult,
-  type SessionPrice,
+  type ClassPrice,
 } from '@buxa/domain';
 
 /*
- * The price block of a session: the regular price and its currency (one row, two equal columns), then the discount (a percentage
+ * The price block of a class: the regular price and its currency (one row, two equal columns), then the discount (a percentage
  * or an amount off, and the value, one row) and the day it ends. The contract stores only the early-bird price and its last day,
  * so the discount is worked out here: earlyBirdFromDiscount turns it into the early-bird amount, which goes in a hidden field
  * named earlyBirdAmount. Blank means no price. Nothing here is charged; the hint says so.
@@ -34,7 +34,7 @@ const REASON_MESSAGE: Record<'format' | 'precision' | 'range' | 'not-positive', 
 };
 
 /** A saved early-bird price shows as the amount off it, so the form starts with the same discount. */
-function startingDiscount(price: SessionPrice | null | undefined): { kind: DiscountKind; value: string } {
+function startingDiscount(price: ClassPrice | null | undefined): { kind: DiscountKind; value: string } {
   if (!price || price.earlyBirdMinor === null) {
     return { kind: 'percent', value: '' };
   }
@@ -47,7 +47,7 @@ export function PriceFields({
   error,
   onDiscountProblem,
 }: {
-  price?: SessionPrice | null;
+  price?: ClassPrice | null;
   error: (name: string) => string | undefined;
   /** Tells the form whether the discount leaves no price, so it can refuse to submit. */
   onDiscountProblem?: (problem: boolean) => void;

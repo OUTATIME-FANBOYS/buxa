@@ -132,6 +132,7 @@ export function sessionInput(
     endsAt: at(toHour),
     location: 'Lab 1',
     instructorIds: extra.instructorIds ?? [],
+    price: null,
   };
 }
 
