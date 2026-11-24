@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can, isUuid, seatFor } from '@buxa/domain';
-import { ROUTES, sessionPath } from '@/config/routes';
+import { ROUTES, assignPath, groupsPath, sessionPath } from '@/config/routes';
 import { Empty, PageHeader } from '@/components/components';
 import { campClock } from '@buxa/server/composers/index.server';
 import { currentActor } from '@buxa/server/composers/index.server';
@@ -107,6 +107,12 @@ export async function ClassPage({
           canManage && (
             <>
               <EditSessionButton session={session} />
+              <Button variant="glass" size="sm" href={groupsPath(session.id)} icon="users">
+                Groups and rooms
+              </Button>
+              <Button variant="glass" size="sm" href={assignPath(session.id)} icon="user-plus">
+                Assign people
+              </Button>
               <RecurringSeriesButton sessionId={session.id} />
               <NewClassButton sessionId={session.id} sessionName={session.name} instructors={instructorChoices} />
             </>

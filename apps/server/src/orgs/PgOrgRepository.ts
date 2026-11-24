@@ -4,7 +4,7 @@ import { errorMessage, isUniqueViolation, withOrg } from '@buxa/db';
 import type { Actor, Role } from '@buxa/domain';
 import { recordAudit } from '../audit/recordAudit';
 import { nullableIso } from '../people/pgRows';
-import { conflict, forbidden } from '../http/errors';
+import { badRequest, conflict, forbidden } from '../http/errors';
 import { OrgNotFoundError, SlugTakenError, type ArchivedCampRecord, type OrgRepository } from './OrgRepository';
 
 interface OrgRow {
@@ -14,6 +14,7 @@ interface OrgRow {
   created_at: Date;
   member_count: number;
   timezone: string;
+  hold_minutes: number | null;
 }
 
 export class PgOrgRepository implements OrgRepository {
@@ -41,7 +42,7 @@ export class PgOrgRepository implements OrgRepository {
   get(userId: string, orgId: string): Promise<Org> {
     return withOrg(this.pool, userId, orgId, async db => {
       const { rows } = await db.query<OrgRow>(
-        `SELECT id, name, slug, timezone, created_at, (SELECT count(*)::int FROM org_members) AS member_count FROM orgs`,
+        `SELECT id, name, slug, timezone, hold_minutes, created_at, (SELECT count(*)::int FROM org_members) AS member_count FROM orgs`,
       );
       if (!rows[0]) {
         throw new OrgNotFoundError();
@@ -55,6 +56,7 @@ export class PgOrgRepository implements OrgRepository {
         createdAt: row.created_at.toISOString(),
         memberCount: row.member_count,
         timezone: row.timezone,
+        holdMinutes: row.hold_minutes,
       };
     });
   }
@@ -82,6 +84,35 @@ export class PgOrgRepository implements OrgRepository {
 
       return rows[0];
     });
+  }
+
+  /**
+   * The camp's seat hold length. The database checks the range (migration 0047) and the row policy lets only an admin or the
+   * owner update it (0036). A refused update changes no row, so it is reported as the camp not being visible to the caller.
+   */
+  async setHoldMinutes(actor: Actor, minutes: number | null): Promise<void> {
+    try {
+      await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        const { rows } = await db.query<{ id: string }>(
+          `UPDATE orgs SET hold_minutes = $1 WHERE id = $2 RETURNING id`,
+          [minutes, actor.orgId],
+        );
+        if (!rows[0]) {
+          throw new OrgNotFoundError();
+        }
+        await recordAudit(db, {
+          actor,
+          action: 'org.update',
+          entity: 'org',
+          entityId: actor.orgId,
+          data: { holdMinutes: minutes },
+        });
+      });
+    } catch (error) {
+      throw isHoldMinutesViolation(error)
+        ? badRequest('Enter between 5 and 60 minutes, or leave it empty for the default.')
+        : error;
+    }
   }
 
   listMembers(userId: string, orgId: string): Promise<Member[]> {
@@ -185,4 +216,16 @@ function mapCampFunctionError(error: unknown): unknown {
     default:
       return error;
   }
+}
+
+/** True when the database refused the hold length range (the orgs_hold_minutes_check constraint, migration 0047). */
+function isHoldMinutesViolation(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === '23514' &&
+    'constraint' in error &&
+    error.constraint === 'orgs_hold_minutes_check'
+  );
 }

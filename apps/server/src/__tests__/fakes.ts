@@ -15,6 +15,7 @@ import type { Identity } from '../auth/identity';
 import { InMemoryAttendanceRepository } from '../attendance/InMemoryAttendanceRepository';
 import { conflict } from '../http/errors';
 import { InMemoryClassRepository } from '../classes/InMemoryClassRepository';
+import { InMemoryGroupRepository } from '../groups/InMemoryGroupRepository';
 import type { SeatHoldRepository } from '../holds/SeatHoldRepository';
 import { InMemoryImportRepository } from '../classes/import/InMemoryImportRepository';
 import { InMemoryRegistrationRepository } from '../registration/InMemoryRegistrationRepository';
@@ -68,6 +69,7 @@ interface StoredOrg {
   timezone: string;
   clockFormat: ClockFormat;
   archivedAt: string | null;
+  holdMinutes: number | null;
 }
 
 /**
@@ -275,6 +277,7 @@ export class InMemoryStore implements UserRepository, OrgRepository {
       timezone: input.timezone,
       clockFormat: DEFAULT_CLOCK_FORMAT,
       archivedAt: null,
+      holdMinutes: null,
     };
     this.orgs.set(org.id, org);
     this.members.push({ orgId: org.id, userId: ownerId, role: 'owner' });
@@ -306,6 +309,17 @@ export class InMemoryStore implements UserRepository, OrgRepository {
     this.database.record(actor, 'org.update', 'org', o.id);
 
     return Promise.resolve({ id: o.id, name: o.name, slug: o.slug });
+  }
+
+  setHoldMinutes(actor: Actor, minutes: number | null): Promise<void> {
+    const o = this.orgs.get(actor.orgId);
+    if (!o) {
+      return Promise.reject(new OrgNotFoundError());
+    }
+    o.holdMinutes = minutes;
+    this.database.record(actor, 'org.update', 'org', o.id, { holdMinutes: minutes });
+
+    return Promise.resolve();
   }
 
   changeMemberRole(actor: Actor, userId: string, role: Role): Promise<void> {
@@ -365,6 +379,7 @@ export class InMemoryStore implements UserRepository, OrgRepository {
       attendance: new InMemoryAttendanceRepository(db),
       classes,
       imports: new InMemoryImportRepository(classes),
+      groups: new InMemoryGroupRepository(),
       registration: new InMemoryRegistrationRepository(
         {},
         (orgId, answers) => camperIdsFor(db, orgId, answers),

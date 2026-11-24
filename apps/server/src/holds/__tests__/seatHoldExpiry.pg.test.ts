@@ -25,6 +25,7 @@ describe.skipIf(!url)('seat holds in Postgres: capacity and expiry', () => {
     repo: new PgSeatHoldRepository(pool),
     classes: new PgClassRepository(pool),
     timezoneOf: () => Promise.resolve('Australia/Sydney'),
+    holdMinutesOf: () => Promise.resolve(null),
   });
 
   beforeAll(async () => {

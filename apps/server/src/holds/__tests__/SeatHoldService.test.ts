@@ -46,6 +46,7 @@ const service = (repo: SeatHoldRepository) =>
     repo,
     classes: noCampHolds,
     timezoneOf: () => Promise.resolve('Australia/Sydney'),
+    holdMinutesOf: () => Promise.resolve(null),
     now: () => NOW,
   });
 
@@ -79,6 +80,30 @@ describe('seat hold service', () => {
     }
   });
 
+  it('a hold placed after the camp changes its length uses the new length; a hold placed before keeps its own', async () => {
+    const { repo, placed } = recordingRepo();
+    let setting: number | null = null;
+    const seats = createSeatHoldService({
+      repo,
+      classes: noCampHolds,
+      timezoneOf: () => Promise.resolve('Australia/Sydney'),
+      holdMinutesOf: () => Promise.resolve(setting),
+      now: () => NOW,
+    });
+
+    await seats.placeHold(as('staff'), { classId: 'class-1', householdId: 'house-1' });
+    setting = 45;
+    await seats.placeHold(as('staff'), { classId: 'class-1', householdId: 'house-2' });
+    setting = null;
+    await seats.placeHold(as('staff'), { classId: 'class-1', householdId: 'house-3' });
+
+    expect(placed.map(p => p.expiresAt.toISOString())).toEqual([
+      '2027-07-05T09:15:00.000Z',
+      '2027-07-05T09:45:00.000Z',
+      '2027-07-05T09:15:00.000Z',
+    ]);
+  });
+
   it('the cleanup needs no actor and returns how many holds it released', async () => {
     const { repo } = recordingRepo();
     await expect(service(repo).releaseExpiredHolds('user-admin', ORG)).resolves.toBe(2);
@@ -109,6 +134,7 @@ describe('seat hold service', () => {
         },
       },
       timezoneOf: () => Promise.resolve('Australia/Sydney'),
+      holdMinutesOf: () => Promise.resolve(null),
       now: () => NOW,
     });
 

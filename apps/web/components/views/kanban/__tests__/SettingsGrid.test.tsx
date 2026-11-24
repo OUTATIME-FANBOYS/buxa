@@ -21,6 +21,7 @@ vi.mock('@/actions/camp', () => ({
   deleteCamp: () => Promise.resolve({ ok: true }),
   unarchiveCamp: () => Promise.resolve({ ok: true }),
   renameCampAction: camp.rename,
+  setHoldLengthAction: () => Promise.resolve({ status: 'success' }),
 }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -41,6 +42,7 @@ const TILES = ['Agents', 'Your data', 'Keyboard shortcuts'];
 const OWNER_CAMP = {
   id: 'o-1',
   name: 'Camp Birchwood',
+  holdMinutes: null,
   canRename: true,
   canArchive: true,
   canDelete: true,
@@ -166,7 +168,7 @@ describe('the camp settings page', () => {
 
   it('shows the camp name card first, and the danger zone at the bottom, to the owner', () => {
     render({ camp: OWNER_CAMP });
-    expect(titles()).toEqual(['Camp name', ...TILES, 'Danger zone']);
+    expect(titles()).toEqual(['Camp name', 'Seat hold length', ...TILES, 'Danger zone']);
     expect(tiles().at(-1)?.querySelector('h2')?.textContent).toBe('Danger zone');
     const labels = Array.from(document.querySelectorAll('.danger-zone button')).map(b => b.textContent);
     expect(labels).toEqual(['Archive camp', 'Delete camp']);
@@ -174,7 +176,7 @@ describe('the camp settings page', () => {
 
   it('gives an admin Archive camp in the danger zone, but no Delete camp', () => {
     render({ camp: ADMIN_CAMP });
-    expect(titles()).toEqual(['Camp name', ...TILES, 'Danger zone']);
+    expect(titles()).toEqual(['Camp name', 'Seat hold length', ...TILES, 'Danger zone']);
     const labels = Array.from(document.querySelectorAll('.danger-zone button')).map(b => b.textContent);
     expect(labels).toEqual(['Archive camp']);
   });

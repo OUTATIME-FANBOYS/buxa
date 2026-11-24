@@ -3,7 +3,17 @@
  * receives, the client validates what it gets back, and the TypeScript types come from the same source.
  */
 import { z } from 'zod';
-import { CLOCK_FORMATS, ROLES, SLUG_HINT, isSlug, isTimeZone, DEFAULT_TIMEZONE } from '@buxa/domain';
+import {
+  CLOCK_FORMATS,
+  DEFAULT_TIMEZONE,
+  HOLD_MINUTES_MAX,
+  HOLD_MINUTES_MIN,
+  ROLES,
+  SEAT_HOLD_MINUTES,
+  SLUG_HINT,
+  isSlug,
+  isTimeZone,
+} from '@buxa/domain';
 
 export const RoleSchema = z.enum(ROLES);
 export const ClockFormatSchema = z.enum(CLOCK_FORMATS);
@@ -36,6 +46,8 @@ export const OrgSchema = z.object({
   createdAt: z.string(),
   memberCount: z.number().int(),
   timezone: z.string(),
+  /** How long a seat hold lasts for this camp, in minutes, or null for the default (15). */
+  holdMinutes: z.number().int().nullable(),
 });
 export type Org = z.infer<typeof OrgSchema>;
 
@@ -76,6 +88,33 @@ export const OrgPatchInputSchema = z
   })
   .refine(v => v.name !== undefined || v.timezone !== undefined, 'Nothing to change.');
 export type OrgPatchInput = z.infer<typeof OrgPatchInputSchema>;
+
+/**
+ * The seat hold length from the camp settings form, as the field posts it. An empty field means the default (null, 15 minutes).
+ * Anything else must be a whole number of minutes from 5 to 60.
+ */
+export const HoldLengthInputSchema = z.object({
+  holdMinutes: z
+    .string()
+    .trim()
+    .transform((raw, ctx) => {
+      if (raw === '') {
+        return null;
+      }
+      const minutes = Number(raw);
+      if (!/^\d+$/.test(raw) || minutes < HOLD_MINUTES_MIN || minutes > HOLD_MINUTES_MAX) {
+        ctx.addIssue({
+          code: 'custom',
+          message: `Enter a whole number from ${HOLD_MINUTES_MIN} to ${HOLD_MINUTES_MAX}, or leave it empty for the default of ${SEAT_HOLD_MINUTES}.`,
+        });
+
+        return z.NEVER;
+      }
+
+      return minutes;
+    }),
+});
+export type HoldLengthInput = z.output<typeof HoldLengthInputSchema>;
 
 /** The signed-in person's first and last name, from the Update display name dialog. The first name is required. */
 export const ProfileInputSchema = z.object({
@@ -141,6 +180,7 @@ export * from './attendance';
 export * from './classes';
 export * from './registration';
 export * from './invites';
+export * from './groups';
 
 /** A role change from Team access (Manage access). The role is one of the camp's permission roles. */
 export const ChangeMemberRoleInputSchema = z.object({
