@@ -63,6 +63,16 @@ Not built yet:
 - **Audit.** Every unassign writes `assignment.unassign` in the same transaction, with the session, person, group and room.
 - **Screen.** On the Assign page, each member of a group has an Unassign button, shown only to roles with `classes:manage`. It opens a short confirmation pop-up (`FormPopUp`) that names the person and the group. Success shows a toast; a refusal shows as small polite text.
 
+## Built: one source for a class's teachers (migration 0051)
+
+Built on branch `v0.4/fix/teacher-person-link`. Decision (owner): a class's teachers are its instructors. The class table's Instructors column, the Edit class popup and teacher access all read `session_instructors`, keyed by person.
+
+- **Login link.** `people.user_id` links a roster person to the teacher's login. It is nullable, unique per camp, and has a composite foreign key to the camp's membership, so a person can be linked only to a login that belongs to the same camp. Removing the membership clears the link.
+- **Setting the link.** `buxa_accept_invite` links the accepting login to the person with the invited email in that camp (the oldest unlinked one), or creates that person with the instructor role when none exists. The invite email must still match the login.
+- **Teacher access.** A teacher sees a class only when its linked person is one of the class's instructors. A teacher with no linked person sees no classes. Staff keep their rules. The same read drives the scope (`assignedClassIds`, `teacherScope`), My classes, the teacher calendar feed (`buxa_teacher_calendar_feed_classes`) and the audit notices (`notifyForAudit`).
+- **Removed.** The Teachers section on the session page, `setTeachers` and `listTeacherAssignments`, their server action, and their tests. The Edit class popup and its save path are unchanged.
+- **Backfill and the unmatched-row rule.** Migration `0051` links each `class_teachers` login to the one person in the camp with the same email (case-insensitive, trimmed) when that is unambiguous: one matching person, not already linked, and matched by one login only. It copies each linked row into `session_instructors` once. A row with no unambiguous match is not copied, is listed in a migration NOTICE (class and email), and keeps `class_teachers` in place. The owner reviews those rows and links or re-adds them by hand. Only when every row matches is `class_teachers` dropped (with its trigger and its assignment function). The migration test covers both outcomes.
+
 ## Not built yet
 
 - **Roster exports** (CSV and printable page), and the export guard for viewers and CSV formula neutralisation.
