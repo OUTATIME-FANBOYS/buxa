@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { STAFF_ROLES, type Actor, type AssignRole, type AuditAction, type AgeRange, type RoomUse } from '@buxa/domain';
-import { settle } from '@buxa/domain';
+import { nameKey, settle } from '@buxa/domain';
 import type { Assignment, Group, GroupInput, Room, RoomInput } from '@buxa/contracts';
 import type {
   AssignRequest,
@@ -401,11 +401,7 @@ export class InMemoryGroupRepository implements GroupRepository {
 
   private assertGroupName(orgId: string, sessionId: string, name: string, exceptId: string | null): void {
     const taken = [...this.groups.values()].some(
-      g =>
-        g.orgId === orgId &&
-        g.sessionId === sessionId &&
-        g.id !== exceptId &&
-        g.name.toLowerCase() === name.toLowerCase(),
+      g => g.orgId === orgId && g.sessionId === sessionId && g.id !== exceptId && nameKey(g.name) === nameKey(name),
     );
     if (taken) {
       throw new NameTakenError('group');
@@ -414,11 +410,7 @@ export class InMemoryGroupRepository implements GroupRepository {
 
   private assertRoomName(orgId: string, sessionId: string, name: string, exceptId: string | null): void {
     const taken = [...this.rooms.values()].some(
-      r =>
-        r.orgId === orgId &&
-        r.sessionId === sessionId &&
-        r.id !== exceptId &&
-        r.name.toLowerCase() === name.toLowerCase(),
+      r => r.orgId === orgId && r.sessionId === sessionId && r.id !== exceptId && nameKey(r.name) === nameKey(name),
     );
     if (taken) {
       throw new NameTakenError('room');

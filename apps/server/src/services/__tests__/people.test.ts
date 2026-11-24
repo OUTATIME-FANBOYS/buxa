@@ -475,3 +475,14 @@ describe('PeopleService lifecycle', () => {
     expect(updated).toMatchObject({ givenName: 'Ben', familyName: 'Stone', email: null, roles: ['participant'] });
   });
 });
+
+describe('PeopleService email', () => {
+  it('stores an email in lower case, on create and on update', async () => {
+    const camp = await createCamp();
+    const admin = camp.actor('admin');
+    const ana = await camp.people.create(admin, adult('Ana', 'Lee', { email: 'Ana.Lee@Example.COM' }));
+    expect(ana.email).toBe('ana.lee@example.com');
+    const updated = await camp.people.update(admin, ana.id, { email: 'ANA@Example.com' });
+    expect(updated.email).toBe('ana@example.com');
+  });
+});

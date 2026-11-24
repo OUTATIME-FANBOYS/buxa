@@ -3,6 +3,7 @@ import pg from 'pg';
 import { migrate, withOrg } from '@buxa/db';
 import { holdExpiresAt } from '@buxa/domain';
 import { SessionFullError } from '../../classes/errors';
+import { householdWithChild } from './holdFixture';
 import { PgSeatHoldRepository } from '../PgSeatHoldRepository';
 import {
   createClassFixture,
@@ -40,19 +41,8 @@ async function activeHolds(fx: ClassFixture, classId: string): Promise<number> {
   });
 }
 
-async function addHousehold(fx: ClassFixture, label: string): Promise<string> {
-  return withOrg(
-    fx.pool,
-    fx.actor.userId,
-    fx.orgA,
-    async db =>
-      (
-        await db.query<{ id: string }>(`INSERT INTO households (org_id, name) VALUES ($1, $2) RETURNING id`, [
-          fx.orgA,
-          label,
-        ])
-      ).rows[0].id,
-  );
+async function addHousehold(fx: ClassFixture, label: string): Promise<{ householdId: string; personId: string }> {
+  return withOrg(fx.pool, fx.actor.userId, fx.orgA, db => householdWithChild(db, fx.orgA, label));
 }
 
 describe.skipIf(!url)('seat hold races on Postgres', () => {
@@ -78,8 +68,13 @@ describe.skipIf(!url)('seat hold races on Postgres', () => {
         );
 
         const results = await Promise.allSettled(
-          households.map(householdId =>
-            holds.placeHold(fx.actor, { sessionId: cls.id, householdId, expiresAt: holdExpiresAt(new Date()) }),
+          households.map(({ householdId, personId }) =>
+            holds.placeHold(fx.actor, {
+              sessionId: cls.id,
+              householdId,
+              personId,
+              expiresAt: holdExpiresAt(new Date()),
+            }),
           ),
         );
 
@@ -110,8 +105,13 @@ describe.skipIf(!url)('seat hold races on Postgres', () => {
         const campers = await Promise.all([0, 1, 2].map(i => fx.addPerson(fx.orgA, '2016-03-01', `Racer${trial}${i}`)));
 
         const calls = [
-          ...households.map(householdId =>
-            holds.placeHold(fx.actor, { sessionId: cls.id, householdId, expiresAt: holdExpiresAt(new Date()) }),
+          ...households.map(({ householdId, personId }) =>
+            holds.placeHold(fx.actor, {
+              sessionId: cls.id,
+              householdId,
+              personId,
+              expiresAt: holdExpiresAt(new Date()),
+            }),
           ),
           ...campers.map(camperId => fx.repo.enrol(fx.actor, { classId: cls.id, camperId }, enrolRule())),
         ];
@@ -143,7 +143,8 @@ describe.skipIf(!url)('seat hold races on Postgres', () => {
         const results = await Promise.allSettled([
           holds.placeHold(fx.actor, {
             sessionId: cls.id,
-            householdId: household,
+            householdId: household.householdId,
+            personId: household.personId,
             expiresAt: holdExpiresAt(new Date()),
           }),
           fx.repo.enrol(fx.actor, { classId: cls.id, camperId: camper }, enrolRule()),

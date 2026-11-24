@@ -5,7 +5,7 @@ Depends on: phases 2 and 3.
 
 ## Moved from phase 3: seat holds and the waitlist
 
-Built on branch `v0.3/feat/seat-holds`: holds reserve a place for a household for 15 minutes (`SEAT_HOLD_MINUTES`); capacity holds under concurrency through the database (migration 0025); a freed place goes to the first waitlisted enrolment, and each promotion is audited.
+Built on branch `v0.3/feat/seat-holds`: holds reserve a place for a child (recorded with their household) for 15 minutes (`SEAT_HOLD_MINUTES`); capacity holds under concurrency through the database (migration 0025); a freed place goes to the first waitlisted enrolment, and each promotion is audited.
 
 Built on branch `v0.3/feat/registration-holds` (migration 0043): the scheduled job `GET /api/cron/release-expired-holds` releases expired holds in every camp and promotes waitlists, guarded by `CRON_SECRET` (see `docs/deploy.md`). The `completed` release reason is in the table.
 
@@ -27,7 +27,7 @@ Built on branch `v0.4/feat/session-delete-archive` (migration 0052): archive and
 
 Not built yet:
 
-- A hold for each child in a household. One active hold per household per class still applies, so a second child of the same household cannot take the same class at the same time (see `docs/phases/03-registration.md`).
+- Nothing about holds per household remains open: holds are per child since migration 0055, so siblings can each take the same class (see `docs/phases/03-registration.md`). Group and room names are unique per session after normalisation (NFKC, space-like characters), the same rule as session names.
 
 ## Words we use
 

@@ -35,6 +35,7 @@ function memoryHolds(capacity: number, clock: { now: Date }) {
         id: `hold-${holds.length + 1}`,
         sessionId: request.sessionId,
         householdId: request.householdId,
+        personId: request.personId,
         createdAt: clock.now.toISOString(),
         expiresAt: request.expiresAt.toISOString(),
         releasedAt: null,
@@ -74,7 +75,9 @@ describe('seat holds in memory: capacity', () => {
     const seats = service(repo, clock);
 
     const outcomes = await Promise.all(
-      Array.from({ length: 10 }, (_, i) => seats.placeHold(actor, { classId: 'class-1', householdId: `house-${i}` })),
+      Array.from({ length: 10 }, (_, i) =>
+        seats.placeHold(actor, { classId: 'class-1', householdId: `house-${i}`, personId: `house-${i}` }),
+      ),
     );
 
     expect(outcomes.filter(o => o.ok)).toHaveLength(3);
@@ -89,16 +92,24 @@ describe('seat holds in memory: capacity', () => {
     const { repo } = memoryHolds(1, clock);
     const seats = service(repo, clock);
 
-    expect(await seats.placeHold(actor, { classId: 'class-1', householdId: 'house-a' })).toMatchObject({ ok: true });
-    expect(await seats.placeHold(actor, { classId: 'class-1', householdId: 'house-b' })).toMatchObject({
+    expect(
+      await seats.placeHold(actor, { classId: 'class-1', householdId: 'house-a', personId: 'house-a' }),
+    ).toMatchObject({ ok: true });
+    expect(
+      await seats.placeHold(actor, { classId: 'class-1', householdId: 'house-b', personId: 'house-b' }),
+    ).toMatchObject({
       ok: false,
       failure: { reason: 'session_full' },
     });
 
     clock.now = new Date(START.getTime() + SEAT_HOLD_MINUTES * 60_000 - 1);
-    expect(await seats.placeHold(actor, { classId: 'class-1', householdId: 'house-b' })).toMatchObject({ ok: false });
+    expect(
+      await seats.placeHold(actor, { classId: 'class-1', householdId: 'house-b', personId: 'house-b' }),
+    ).toMatchObject({ ok: false });
 
     clock.now = holdExpiresAt(START);
-    expect(await seats.placeHold(actor, { classId: 'class-1', householdId: 'house-b' })).toMatchObject({ ok: true });
+    expect(
+      await seats.placeHold(actor, { classId: 'class-1', householdId: 'house-b', personId: 'house-b' }),
+    ).toMatchObject({ ok: true });
   });
 });

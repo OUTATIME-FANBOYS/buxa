@@ -3,12 +3,14 @@ import pg from 'pg';
 import { migrate, withOrg } from '@buxa/db';
 import { holdExpiresAt, type Actor } from '@buxa/domain';
 import {
+  CamperNotFoundError,
   ClassNotFoundError,
   HoldExistsError,
   HoldNotFoundError,
   HouseholdNotFoundError,
   SessionFullError,
 } from '../../classes/errors';
+import { addSibling, householdWithChild } from './holdFixture';
 import { PgSeatHoldRepository } from '../PgSeatHoldRepository';
 import {
   auditActions,
@@ -21,27 +23,34 @@ import {
 
 const url = process.env.DATABASE_URL;
 
-/** A household in a camp. Holds are taken for households, so each test makes its own. */
-async function addHousehold(fx: ClassFixture, orgId: string, name: string): Promise<string> {
-  return withOrg(
-    fx.pool,
-    orgId === fx.orgB ? fx.otherActor.userId : fx.actor.userId,
-    orgId,
-    async db =>
-      (
-        await db.query<{ id: string }>(`INSERT INTO households (org_id, name) VALUES ($1, $2) RETURNING id`, [
-          orgId,
-          name,
-        ])
-      ).rows[0].id,
+/** A household with one child in a camp. Holds are taken for a child of a household, so each test makes its own. */
+async function addHousehold(
+  fx: ClassFixture,
+  orgId: string,
+  name: string,
+): Promise<{ householdId: string; personId: string }> {
+  return withOrg(fx.pool, orgId === fx.orgB ? fx.otherActor.userId : fx.actor.userId, orgId, db =>
+    householdWithChild(db, orgId, name),
   );
 }
 
-/** Moves a hold's expiry into the past, as if its time had passed, without waiting for the clock. */
-async function expireHoldNow(fx: ClassFixture, orgId: string, holdId: string): Promise<void> {
-  await withOrg(fx.pool, orgId === fx.orgB ? fx.otherActor.userId : fx.actor.userId, orgId, db =>
-    db.query(`UPDATE seat_holds SET expires_at = now() - interval '1 minute' WHERE id = $1`, [holdId]),
-  );
+/**
+ * Moves a hold's expiry into the past, as if its time had passed, without waiting for the clock. The request role cannot change an
+ * expiry (migration 0055), so this runs as the test login with triggers off for the one statement.
+ */
+async function expireHoldNow(fx: ClassFixture, _orgId: string, holdId: string): Promise<void> {
+  const client = await fx.pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query(`SET LOCAL session_replication_role = replica`);
+    await client.query(`UPDATE seat_holds SET expires_at = now() - interval '1 minute' WHERE id = $1`, [holdId]);
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 /** The unreleased hold row, whether or not its time has passed. */
@@ -85,14 +94,20 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
 
     const hold = await holds.placeHold(actor, {
       sessionId: cls.id,
-      householdId: first,
+      householdId: first.householdId,
+      personId: first.personId,
       expiresAt: holdExpiresAt(new Date()),
     });
     expect(hold.releasedAt).toBeNull();
     expect((await fx.repo.getClass(fx.actor.userId, fx.orgA, cls.id))?.seatsTaken).toBe(1);
 
     await expect(
-      holds.placeHold(actor, { sessionId: cls.id, householdId: second, expiresAt: holdExpiresAt(new Date()) }),
+      holds.placeHold(actor, {
+        sessionId: cls.id,
+        householdId: second.householdId,
+        personId: second.personId,
+        expiresAt: holdExpiresAt(new Date()),
+      }),
     ).rejects.toBeInstanceOf(SessionFullError);
     // A full session also refuses a camper: the hold is taken from the same places.
     const camper = await fx.addPerson(fx.orgA, '2016-03-01', 'Ivy');
@@ -101,19 +116,34 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
     );
   });
 
-  it('one household holds at most one place per session, and may hold again after releasing it', async () => {
+  it('one child holds at most one place per class, and may hold again after releasing it', async () => {
     const session = await makeSession(fx.repo, actor);
     const cls = await fx.repo.addClass(actor, session.id, sessionInput(9, 12, { capacity: 3 }));
     const household = await addHousehold(fx, fx.orgA, 'Repeat family');
     const expiresAt = holdExpiresAt(new Date());
 
-    const hold = await holds.placeHold(actor, { sessionId: cls.id, householdId: household, expiresAt });
+    const hold = await holds.placeHold(actor, {
+      sessionId: cls.id,
+      householdId: household.householdId,
+      personId: household.personId,
+      expiresAt,
+    });
     await expect(
-      holds.placeHold(actor, { sessionId: cls.id, householdId: household, expiresAt }),
+      holds.placeHold(actor, {
+        sessionId: cls.id,
+        householdId: household.householdId,
+        personId: household.personId,
+        expiresAt,
+      }),
     ).rejects.toBeInstanceOf(HoldExistsError);
 
     await holds.releaseHold(actor, hold.id);
-    const again = await holds.placeHold(actor, { sessionId: cls.id, householdId: household, expiresAt });
+    const again = await holds.placeHold(actor, {
+      sessionId: cls.id,
+      householdId: household.householdId,
+      personId: household.personId,
+      expiresAt,
+    });
     expect(again.id).not.toBe(hold.id);
   });
 
@@ -123,7 +153,8 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
     const household = await addHousehold(fx, fx.orgA, 'Late family');
     const hold = await holds.placeHold(actor, {
       sessionId: cls.id,
-      householdId: household,
+      householdId: household.householdId,
+      personId: household.personId,
       expiresAt: holdExpiresAt(new Date()),
     });
     await expireHoldNow(fx, fx.orgA, hold.id);
@@ -142,7 +173,8 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
     const household = await addHousehold(fx, fx.orgA, 'Waiting family');
     const hold = await holds.placeHold(actor, {
       sessionId: cls.id,
-      householdId: household,
+      householdId: household.householdId,
+      personId: household.personId,
       expiresAt: holdExpiresAt(new Date()),
     });
     const camper = await fx.addPerson(fx.orgA, '2016-03-01', 'Wes');
@@ -175,7 +207,8 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
     const household = await addHousehold(fx, fx.orgA, 'Release family');
     const hold = await holds.placeHold(actor, {
       sessionId: cls.id,
-      householdId: household,
+      householdId: household.householdId,
+      personId: household.personId,
       expiresAt: holdExpiresAt(new Date()),
     });
     const camper = await fx.addPerson(fx.orgA, '2016-03-01', 'Ruth');
@@ -232,10 +265,101 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
     const expiresAt = holdExpiresAt(new Date());
     const otherHousehold = await addHousehold(fx, fx.orgB, 'Other camp family');
     await expect(
-      holds.placeHold(actor, { sessionId: cls.id, householdId: otherHousehold, expiresAt }),
+      holds.placeHold(actor, {
+        sessionId: cls.id,
+        householdId: otherHousehold.householdId,
+        personId: otherHousehold.personId,
+        expiresAt,
+      }),
     ).rejects.toBeInstanceOf(HouseholdNotFoundError);
     await expect(
-      holds.placeHold(actor, { sessionId: 'nope', householdId: otherHousehold, expiresAt }),
+      holds.placeHold(actor, {
+        sessionId: 'nope',
+        householdId: otherHousehold.householdId,
+        personId: otherHousehold.personId,
+        expiresAt,
+      }),
     ).rejects.toBeInstanceOf(ClassNotFoundError);
+  });
+  it('siblings of one household each hold a place in the same class, and one child cannot hold it twice', async () => {
+    const session = await makeSession(fx.repo, actor);
+    const cls = await fx.repo.addClass(actor, session.id, sessionInput(9, 12, { capacity: 5 }));
+    const first = await addHousehold(fx, fx.orgA, 'Sibling family');
+    const sibling = await withOrg(pool, actor.userId, fx.orgA, db =>
+      addSibling(db, fx.orgA, first.householdId, 'Second'),
+    );
+    const expiresAt = holdExpiresAt(new Date());
+
+    const a = await holds.placeHold(actor, {
+      sessionId: cls.id,
+      householdId: first.householdId,
+      personId: first.personId,
+      expiresAt,
+    });
+    const b = await holds.placeHold(actor, {
+      sessionId: cls.id,
+      householdId: first.householdId,
+      personId: sibling,
+      expiresAt,
+    });
+    expect(a.personId).toBe(first.personId);
+    expect(b.personId).toBe(sibling);
+    expect((await fx.repo.getClass(actor.userId, fx.orgA, cls.id))?.seatsTaken).toBe(2);
+    await expect(
+      holds.placeHold(actor, { sessionId: cls.id, householdId: first.householdId, personId: sibling, expiresAt }),
+    ).rejects.toBeInstanceOf(HoldExistsError);
+  });
+
+  it('a child who is not in the household cannot be held for it', async () => {
+    const session = await makeSession(fx.repo, actor);
+    const cls = await fx.repo.addClass(actor, session.id, sessionInput(9, 12, { capacity: 2 }));
+    const one = await addHousehold(fx, fx.orgA, 'Own family');
+    const other = await addHousehold(fx, fx.orgA, 'Stranger family');
+    await expect(
+      holds.placeHold(actor, {
+        sessionId: cls.id,
+        householdId: one.householdId,
+        personId: other.personId,
+        expiresAt: holdExpiresAt(new Date()),
+      }),
+    ).rejects.toBeInstanceOf(CamperNotFoundError);
+  });
+
+  it('a released hold cannot change, and the request role cannot update any column but the release ones', async () => {
+    const session = await makeSession(fx.repo, actor);
+    const cls = await fx.repo.addClass(actor, session.id, sessionInput(9, 12, { capacity: 2 }));
+    const family = await addHousehold(fx, fx.orgA, 'Final family');
+    const hold = await holds.placeHold(actor, {
+      sessionId: cls.id,
+      householdId: family.householdId,
+      personId: family.personId,
+      expiresAt: holdExpiresAt(new Date()),
+    });
+    await holds.releaseHold(actor, hold.id);
+
+    // Even the table owner cannot un-release a hold or move it (the guard trigger).
+    await expect(
+      pool.query(`UPDATE seat_holds SET released_at = NULL, release_reason = NULL WHERE id = $1`, [hold.id]),
+    ).rejects.toThrow(/released hold cannot be changed/);
+    await expect(
+      pool.query(`UPDATE seat_holds SET expires_at = now() + interval '1 day' WHERE id = $1`, [hold.id]),
+    ).rejects.toThrow(/keeps its class, household, child and expiry/);
+    // The request role has no UPDATE on the other columns at all.
+    const live = await holds.placeHold(actor, {
+      sessionId: cls.id,
+      householdId: family.householdId,
+      personId: family.personId,
+      expiresAt: holdExpiresAt(new Date()),
+    });
+    await expect(
+      withOrg(pool, actor.userId, fx.orgA, db =>
+        db.query(`UPDATE seat_holds SET expires_at = now() + interval '1 day' WHERE id = $1`, [live.id]),
+      ),
+    ).rejects.toThrow(/permission denied/);
+    await expect(
+      withOrg(pool, actor.userId, fx.orgA, db =>
+        db.query(`UPDATE seat_holds SET session_id = $2 WHERE id = $1`, [live.id, cls.id]),
+      ),
+    ).rejects.toThrow(/permission denied/);
   });
 });

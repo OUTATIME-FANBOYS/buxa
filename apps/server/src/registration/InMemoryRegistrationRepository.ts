@@ -35,6 +35,7 @@ interface StoredPlace {
   status: RegistrationClass['status'];
   paymentStatus: 'unpaid' | 'paid';
   paymentNote: string | null;
+  price: RegistrationClass['price'];
 }
 
 interface StoredForm {
@@ -240,6 +241,7 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
             status: p.status,
             paymentStatus: p.paymentStatus,
             paymentNote: p.paymentNote,
+            price: p.price,
           })),
         }));
     });
@@ -269,6 +271,7 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
           status: 'held',
           paymentStatus: 'unpaid',
           paymentNote: null,
+          price: null,
         };
       });
       this.registrations.set(id, {

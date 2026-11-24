@@ -5,6 +5,8 @@ export interface SeatHold {
   id: string;
   sessionId: string;
   householdId: string;
+  /** The child the place is held for. Null only on a hold released before holds were per child (migration 0055). */
+  personId: string | null;
   createdAt: string;
   expiresAt: string;
   releasedAt: string | null;
@@ -15,6 +17,8 @@ export interface SeatHold {
 export interface PlaceHoldRequest {
   sessionId: string;
   householdId: string;
+  /** The child (a member of the household) the place is held for. Two children of one household each hold their own place. */
+  personId: string;
   /** Set by the service (now plus the hold length). A repository test may pass another time. */
   expiresAt: Date;
 }
@@ -34,7 +38,7 @@ export interface ActiveHold {
  * Refusals are thrown as the errors in ../classes/errors.ts, and nothing is written for them.
  */
 export interface SeatHoldRepository {
-  /** Throws ClassNotFoundError, HouseholdNotFoundError, SessionFullError or HoldExistsError. Audits `hold.create`. */
+  /** Throws ClassNotFoundError, HouseholdNotFoundError, CamperNotFoundError (the child is not in the household), SessionFullError or HoldExistsError. Audits `hold.create`. */
   placeHold(actor: Actor, request: PlaceHoldRequest): Promise<SeatHold>;
   /** Throws HoldNotFoundError (also when already released). Audits `hold.release`, then promotes the waitlist into the freed place. */
   releaseHold(actor: Actor, holdId: string): Promise<SeatHold>;

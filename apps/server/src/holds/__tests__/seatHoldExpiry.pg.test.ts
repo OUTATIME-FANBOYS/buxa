@@ -8,6 +8,7 @@ import {
   sessionInput,
   type ClassFixture,
 } from '../../classes/__tests__/pgClassFixture';
+import { backdateHolds, householdWithChild } from './holdFixture';
 import { PgSeatHoldRepository } from '../PgSeatHoldRepository';
 import { PgClassRepository } from '../../classes/PgClassRepository';
 import { createSeatHoldService, type SeatHoldService } from '../SeatHoldService';
@@ -41,27 +42,23 @@ describe.skipIf(!url)('seat holds in Postgres: capacity and expiry', () => {
     const session = await makeSession(fx.repo, fx.actor);
     const cls = await fx.repo.addClass(fx.actor, session.id, sessionInput(9, 12, { capacity }));
     const ids = await withOrg(pool, fx.actor.userId, fx.orgA, async db => {
-      const out: string[] = [];
+      const out: { householdId: string; personId: string }[] = [];
       for (const name of households) {
-        const { rows } = await db.query<{ id: string }>(
-          `INSERT INTO households (org_id, name) VALUES ($1, $2) RETURNING id`,
-          [fx.orgA, name],
-        );
-        out.push(rows[0].id);
+        out.push(await householdWithChild(db, fx.orgA, name));
       }
 
       return out;
     });
 
-    return { fx, classId: cls.id, householdIds: ids };
+    return { fx, classId: cls.id, householdIds: ids.map(i => i.householdId), personIds: ids.map(i => i.personId) };
   }
 
   it('concurrent holds on a 2-place class take exactly 2 places', async () => {
     const names = ['Ana', 'Ben', 'Cal', 'Dot', 'Eli'];
-    const { fx, classId, householdIds } = await setUp(2, names);
+    const { fx, classId, householdIds, personIds } = await setUp(2, names);
 
     const outcomes = await Promise.all(
-      householdIds.map(householdId => seats.placeHold(fx.actor, { classId, householdId })),
+      householdIds.map((householdId, i) => seats.placeHold(fx.actor, { classId, householdId, personId: personIds[i] })),
     );
 
     expect(outcomes.filter(o => o.ok)).toHaveLength(2);
@@ -78,8 +75,8 @@ describe.skipIf(!url)('seat holds in Postgres: capacity and expiry', () => {
   });
 
   it('a hold lasts SEAT_HOLD_MINUTES; once it has passed, its place is free without any cleanup', async () => {
-    const { fx, classId, householdIds } = await setUp(1, ['Ada', 'Bea']);
-    const held = await seats.placeHold(fx.actor, { classId, householdId: householdIds[0] });
+    const { fx, classId, householdIds, personIds } = await setUp(1, ['Ada', 'Bea']);
+    const held = await seats.placeHold(fx.actor, { classId, householdId: householdIds[0], personId: personIds[0] });
     expect(held).toMatchObject({ ok: true });
     if (!held.ok) {
       throw new Error('the first hold should be taken');
@@ -88,27 +85,31 @@ describe.skipIf(!url)('seat holds in Postgres: capacity and expiry', () => {
     // The database and this process read the clock separately, so allow a second of difference.
     expect(Math.abs(minutes - SEAT_HOLD_MINUTES)).toBeLessThan(1 / 60);
 
-    await expect(seats.placeHold(fx.actor, { classId, householdId: householdIds[1] })).resolves.toMatchObject({
+    await expect(
+      seats.placeHold(fx.actor, { classId, householdId: householdIds[1], personId: personIds[1] }),
+    ).resolves.toMatchObject({
       ok: false,
       failure: { reason: 'session_full' },
     });
 
-    await pool.query(`UPDATE seat_holds SET expires_at = now() - interval '1 second' WHERE id = $1`, [held.value.id]);
+    await backdateHolds(pool, 'id = $1', [held.value.id]);
 
-    await expect(seats.placeHold(fx.actor, { classId, householdId: householdIds[1] })).resolves.toMatchObject({
+    await expect(
+      seats.placeHold(fx.actor, { classId, householdId: householdIds[1], personId: personIds[1] }),
+    ).resolves.toMatchObject({
       ok: true,
     });
   });
 
   it('the cleanup releases expired holds in every camp, marks them expired, and leaves live holds alone', async () => {
-    const { fx, classId, householdIds } = await setUp(2, ['Cy', 'Dee']);
+    const { fx, classId, householdIds, personIds } = await setUp(2, ['Cy', 'Dee']);
     const [first, second] = await Promise.all(
-      householdIds.map(householdId => seats.placeHold(fx.actor, { classId, householdId })),
+      householdIds.map((householdId, i) => seats.placeHold(fx.actor, { classId, householdId, personId: personIds[i] })),
     );
     if (!first?.ok || !second?.ok) {
       throw new Error('both holds should be taken');
     }
-    await pool.query(`UPDATE seat_holds SET expires_at = now() - interval '1 second' WHERE id = $1`, [first.value.id]);
+    await backdateHolds(pool, 'id = $1', [first.value.id]);
 
     const sweep = await seats.releaseExpiredHoldsEverywhere();
     expect(sweep.camps).toBeGreaterThanOrEqual(1);
@@ -132,8 +133,8 @@ describe.skipIf(!url)('seat holds in Postgres: capacity and expiry', () => {
   });
 
   it('the table accepts the completed release reason that a confirmed registration will use', async () => {
-    const { fx, classId, householdIds } = await setUp(1, ['Eli']);
-    const held = await seats.placeHold(fx.actor, { classId, householdId: householdIds[0] });
+    const { fx, classId, householdIds, personIds } = await setUp(1, ['Eli']);
+    const held = await seats.placeHold(fx.actor, { classId, householdId: householdIds[0], personId: personIds[0] });
     if (!held.ok) {
       throw new Error('the hold should be taken');
     }

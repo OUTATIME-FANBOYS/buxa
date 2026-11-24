@@ -15,6 +15,7 @@ function recordingRepo() {
     id: 'hold-1',
     sessionId: 'class-1',
     householdId: 'house-1',
+    personId: 'child-1',
     createdAt: NOW.toISOString(),
     expiresAt: '2027-07-05T09:15:00.000Z',
     releasedAt: null,
@@ -53,18 +54,27 @@ const service = (repo: SeatHoldRepository) =>
 describe('seat hold service', () => {
   it('a staff member places a hold that expires 15 minutes after it is taken', async () => {
     const { repo, placed } = recordingRepo();
-    const outcome = await service(repo).placeHold(as('staff'), { classId: 'class-1', householdId: 'house-1' });
+    const outcome = await service(repo).placeHold(as('staff'), {
+      classId: 'class-1',
+      householdId: 'house-1',
+      personId: 'child-1',
+    });
 
     expect(outcome.ok).toBe(true);
     expect(placed).toEqual([
-      { sessionId: 'class-1', householdId: 'house-1', expiresAt: new Date('2027-07-05T09:15:00Z') },
+      {
+        sessionId: 'class-1',
+        householdId: 'house-1',
+        personId: 'child-1',
+        expiresAt: new Date('2027-07-05T09:15:00Z'),
+      },
     ]);
   });
 
   it('a viewer cannot place or release a hold (403, nothing reaches the repository)', async () => {
     const { repo, placed, released } = recordingRepo();
     await expect(
-      service(repo).placeHold(as('viewer'), { classId: 'class-1', householdId: 'house-1' }),
+      service(repo).placeHold(as('viewer'), { classId: 'class-1', householdId: 'house-1', personId: 'child-1' }),
     ).rejects.toThrow();
     await expect(service(repo).releaseHold(as('viewer'), 'hold-1')).rejects.toThrow();
     expect(placed).toEqual([]);
@@ -91,11 +101,11 @@ describe('seat hold service', () => {
       now: () => NOW,
     });
 
-    await seats.placeHold(as('staff'), { classId: 'class-1', householdId: 'house-1' });
+    await seats.placeHold(as('staff'), { classId: 'class-1', householdId: 'house-1', personId: 'child-1' });
     setting = 45;
-    await seats.placeHold(as('staff'), { classId: 'class-1', householdId: 'house-2' });
+    await seats.placeHold(as('staff'), { classId: 'class-1', householdId: 'house-2', personId: 'child-2' });
     setting = null;
-    await seats.placeHold(as('staff'), { classId: 'class-1', householdId: 'house-3' });
+    await seats.placeHold(as('staff'), { classId: 'class-1', householdId: 'house-3', personId: 'child-3' });
 
     expect(placed.map(p => p.expiresAt.toISOString())).toEqual([
       '2027-07-05T09:15:00.000Z',
@@ -118,6 +128,7 @@ describe('seat hold service', () => {
       classId: 'class-1',
       className: 'Robotics',
       householdId: 'house-1',
+      personId: 'child-1',
       householdName: 'Okafor family',
       childName: 'Ada Okafor',
       createdAt: NOW.toISOString(),
