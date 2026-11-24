@@ -283,15 +283,3 @@ form.person-form {
     padding: 0;
   }
 }
-
-.people-back {
-  display: inline-block;
-  margin-bottom: var(--s3);
-  color: var(--muted, inherit);
-  font-size: var(--fs-s);
-  text-decoration: none;
-}
-.people-back:hover,
-.people-back:focus-visible {
-  text-decoration: underline;
-}
