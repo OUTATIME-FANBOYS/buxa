@@ -144,3 +144,10 @@ If someone gets the migration password and can reach the database, row-level pol
 On a managed host such as Supabase, the owner role (`postgres`) may not be removable, and the app's migration login may be that owner. Then this limit is permanent for that host, and the controls above are the whole defence. Do not describe the database as protected from a stolen migration password while this is the case.
 
 Also, a schema change made by the migration login is not checked by row-level security at all. Review each migration as code.
+
+## 8. Class series and occurrences (v0.4, in progress)
+
+- **Series and days.** `class_series` (migration 0060) is org-scoped with forced row-level security and has no DELETE for the request role. A series is removed only with its session, through the owner's functions. A day (`sessions`) can be cancelled and restored by staff with `classes:manage`. Each change writes `occurrence.cancel` or `occurrence.restore` in the same transaction, with the reason (a short note, no personal data).
+- **One place per child per series.** Enforced in the database (migration 0061): a unique index on active enrolments and on active seat holds per series and child, so a child cannot take two places in one series by writing on two days.
+- **Overlap across series** is refused by a database check on enrolments (active days only). An admin override with a recorded reason still bypasses it, as before.
+- **Not yet:** cancelled days are still shown in the calendar and the check-in list (see `phases/04-seats-rosters.md`), so a cancelled day is not yet hidden from the people who read those lists.

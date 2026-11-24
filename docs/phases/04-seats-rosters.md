@@ -110,3 +110,24 @@ Automatic group creation or auto-assignment (phase 5), transport, meal plans, me
 
 - Whether ratio rules differ by session type (day camp, overnight).
 - Whether a camper's group carries over between sessions by default.
+
+## Class series and occurrences (v0.4, branch `v0.4/feat/class-series`, in progress)
+
+**Terms.** A **session** is a row of `classes` (date range). A **class** is a **series** (`class_series`): the name, ages, camp size, location, price, weekdays and first and last allowed times. Its days are **occurrences**: the rows of `sessions` the app used to call classes. Each occurrence keeps its own date and time of day, and its own status (`active` or `cancelled`), `cancelled_at` and `cancel_reason`.
+
+**Built.**
+
+- Migration `0060_class_series.sql`: the series table (org-scoped, row-level security, no DELETE for the request role), the occurrence status columns and `sessions.series_id`. Existing occurrences are grouped into series by the rule in the file header: same session, name, ages, capacity, location, price and currency, early-bird amount and day, instructor set, and time of day (camp time). The migration stops, changing nothing, when two occurrences of one group fall on the same day, and lists them. A row written without a series (the release still running) gets its own one-occurrence series.
+- Migration `0061_series_enrolment_keys.sql`: the enrolment key (below), the capacity checks per series and the overlap check across series. It stops and lists a child with two active enrolments or holds in one series, or with enrolments in two series whose active occurrences overlap.
+- Domain (`packages/domain/src/classes/series.ts`): `planSeries` (weekdays and first and last allowed times to occurrences, reusing the weekly rule), `normaliseWeekdays` (at least one day), `decideCancel` and `decideRestore` (a day can be cancelled once and restored once; a reason of 1 to 500 characters), and `findSeriesClash` (active days only; a day that only touches does not clash).
+- Server: `cancelOccurrence` and `restoreOccurrence` (`classes:manage`). The write locks the day, applies the domain decision and writes `occurrence.cancel` or `occurrence.restore` in the same transaction. A refused change writes nothing.
+
+**Enrolment key (decision).** `enrolments`, `seat_holds` and `registration_classes` carry `series_id`. It is the key for everything that counts a child's place: one active enrolment or hold per child per series (a unique index), the capacity count and its lock (`class_series.capacity`), and the overlap check. `session_id` stays on those rows as the **anchor**: the occurrence the row was made against. A composite foreign key `(org_id, session_id, series_id)` makes the anchor belong to its own series. Cancelling an occurrence does not move or remove an enrolment. Existing duplicates stop the migration (see its header).
+
+**Not built yet (the next steps, in order).**
+
+1. The recurring form and the New class dialog still write one-occurrence series (the legacy trigger). Creating a series and its occurrences in one transaction is not done.
+2. Cancelled days still appear in the calendar (`PgCalendarRepository`), in the teacher calendar feed and public class list (SQL functions from 0051 and 0059), and in the check-in list. They need a status filter and, for the two SQL functions, a new migration.
+3. The Classes table (one row per series), the Classes count on the session page (counts series), the series page with Cancel and Restore, and the registration and enrolment pickers offering series. No UI is changed yet.
+4. Instructors are still stored per occurrence (`session_instructors`); the series reads them from its occurrences. `sessions.capacity`, `price` and `name` still mirror the occurrence, and the app reads them, not the series, until the UI moves.
+5. The enrolment, hold and place writes still name only the occurrence; the database fills `series_id` from it. Holds map the new duplicate index (`seat_holds_one_active_series_person_idx`). The enrolment path does not yet map `enrolments_one_active_series_idx`, so a second place in one series surfaces as a generic error, and `class_series_capacity_floor` is not mapped to its message.
