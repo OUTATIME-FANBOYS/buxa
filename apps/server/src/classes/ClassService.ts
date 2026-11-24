@@ -26,6 +26,8 @@ import {
   ClassNotFoundError,
   ClassOutsideSessionError,
   RecurrenceRefusedError,
+  SessionNameConfirmationError,
+  SessionNameTakenError,
   SessionNotFoundError,
   TeacherFieldRefusedError,
 } from './errors';
@@ -66,6 +68,17 @@ export interface ClassService {
   updateSession(actor: Actor, sessionId: string, input: SessionEditInput): Promise<Outcome<Session>>;
   /** Deletes a session that holds no classes. Needs classes:manage. A session with any class is refused. */
   deleteSession(actor: Actor, sessionId: string): Promise<Outcome<null>>;
+  /**
+   * Deletes a session with its classes. Needs classes:delete_with_classes (admin and owner). `confirmName` must be the session's
+   * name exactly (case and spaces as written). A session whose classes have enrolments, holds, registrations, check-ins or season
+   * passes is refused, and nothing is deleted.
+   */
+  deleteSessionWithClasses(actor: Actor, sessionId: string, confirmName: string): Promise<Outcome<null>>;
+  /**
+   * Archives a session (hidden from registration and its public page; its classes and history are kept). Needs classes:manage.
+   * Unarchiving needs org:update (admin and owner).
+   */
+  setSessionArchived(actor: Actor, sessionId: string, archived: boolean): Promise<Outcome<Session>>;
   /** Shows or hides a session's public page. */
   setSessionPublic(actor: Actor, sessionId: string, isPublic: boolean): Promise<Outcome<Session>>;
   /**
@@ -133,6 +146,19 @@ function toRecord(input: ClassInput): ClassRecord {
     instructorIds: input.instructorIds,
     price: input.price,
   };
+}
+
+/** A session name is unique in the camp, ignoring case and spaces. Throws SessionNameTakenError when another session has it. */
+async function requireNameFree(
+  repo: ClassRepository,
+  actor: Actor,
+  name: string,
+  exceptId: string | null,
+): Promise<void> {
+  const existing = await repo.sessionNameTaken(actor.userId, actor.orgId, name, exceptId);
+  if (existing !== null) {
+    throw new SessionNameTakenError(existing);
+  }
 }
 
 /** The sessions that hold at least one of the teacher's classes. */
@@ -221,7 +247,44 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
     async createSession(actor, input) {
       assertAllowed(actor, 'classes:manage');
 
-      return attempt(() => repo.createSession(actor, input), await timezoneOf(actor));
+      return attempt(
+        async () => {
+          await requireNameFree(repo, actor, input.name, null);
+
+          return repo.createSession(actor, input);
+        },
+        await timezoneOf(actor),
+      );
+    },
+
+    async setSessionArchived(actor, sessionId, archived) {
+      if (archived) {
+        assertAllowed(actor, 'classes:manage');
+      } else {
+        assertAllowed(actor, 'org:update');
+      }
+
+      return attempt(() => repo.setSessionArchived(actor, sessionId, archived), await timezoneOf(actor));
+    },
+
+    async deleteSessionWithClasses(actor, sessionId, confirmName) {
+      assertAllowed(actor, 'classes:delete_with_classes');
+
+      return attempt(
+        async () => {
+          const found = await repo.getSession(actor.userId, actor.orgId, sessionId);
+          if (!found) {
+            throw new SessionNotFoundError();
+          }
+          if (confirmName !== found.name) {
+            throw new SessionNameConfirmationError();
+          }
+          await repo.deleteSessionWithClasses(actor, sessionId);
+
+          return null;
+        },
+        await timezoneOf(actor),
+      );
     },
 
     async setSessionPublic(actor, sessionId, isPublic) {
@@ -293,6 +356,7 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
       const { startsOn, endsOn } = checked.data;
 
       return attempt(async () => {
+        await requireNameFree(repo, actor, checked.data.name, sessionId);
         for (const cls of await repo.listClasses(actor.userId, actor.orgId, sessionId)) {
           if (!classWithinSession(cls, { startsOn, endsOn }, timeZone)) {
             throw new ClassOutsideSessionError(startsOn, endsOn);

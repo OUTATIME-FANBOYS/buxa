@@ -64,6 +64,11 @@ export function loadRegisterPage(actor: Actor, formId: string): Promise<LoadedRe
     const published = await service.publishedVersion(actor, formId);
     const sessions = [];
     for (const session of form.sessions) {
+      // An archived session is not offered for registration (its classes and history stay; see migration 0052).
+      const found = await runtime.services.classes.getSession(actor, session.id);
+      if (found.ok && found.value.archivedAt !== null) {
+        continue;
+      }
       const classes = await runtime.services.classes.listClasses(actor, session.id);
       if (!classes.ok) {
         throw notFound(classes.failure.message);

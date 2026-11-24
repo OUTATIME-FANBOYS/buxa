@@ -54,14 +54,18 @@ describe('deleteSessionAction', () => {
     h.classes.getSession.mockResolvedValue({ ok: true, value: { id: IDS.session, name: 'Art' } });
     h.classes.deleteSession.mockResolvedValue({
       ok: false,
-      failure: { reason: 'session_has_classes', message: 'This session has classes. Delete them first.' },
+      failure: {
+        reason: 'session_has_classes',
+        message:
+          'This session has classes, so it cannot be deleted. Archive it, or delete its classes and the session.',
+      },
     });
 
     const state = await deleteSessionAction(idle, formOf({ sessionId: IDS.session }));
 
     expect(state).toEqual({
       status: 'error',
-      message: 'This session has classes. Delete them first.',
+      message: 'This session has classes, so it cannot be deleted. Archive it, or delete its classes and the session.',
       fieldErrors: undefined,
     });
     expect(h.redirect).not.toHaveBeenCalled();

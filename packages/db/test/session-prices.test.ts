@@ -15,12 +15,15 @@ describe.skipIf(!url)('class prices: constraints and row-level security', () => 
   let orgB = '';
   let ownerB = '';
 
+  // Session names are unique per camp (migration 0052), so each price test row gets its own name.
+  let priceRows = 0;
   // Inserts a session (its parent row in `classes`) and one class under it with the given price values.
   const insertPrice = async (org: string, values: (string | number | null)[]) =>
     withOrg(pool, await memberOf(pool, org), org, async db => {
+      priceRows += 1;
       const parent = await db.query<{ id: string }>(
-        `INSERT INTO classes (org_id, name, default_capacity) VALUES ($1, 'Summer', 10) RETURNING id`,
-        [org],
+        `INSERT INTO classes (org_id, name, default_capacity) VALUES ($1, $2, 10) RETURNING id`,
+        [org, `Summer ${priceRows}`],
       );
 
       return db.query<{ id: string }>(

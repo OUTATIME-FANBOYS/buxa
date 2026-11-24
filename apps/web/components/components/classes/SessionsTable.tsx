@@ -5,20 +5,33 @@ import { useCallback, useState } from 'react';
 import type { Session } from '@buxa/contracts';
 import { sessionPath } from '@/config/routes';
 import { Checkbox } from '@/components/atoms';
-import { Button } from '@/components/elements';
+import { Button, Pill } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { deletedMessage, notDeletedMessage, type SessionDeletionDone } from '@buxa/shared';
 import { DeleteSessionsDialog, EditSessionButton, type SessionRef } from './forms';
 import { SessionSelectionBar } from './SessionSelectionBar';
 
-const toRef = (session: Session): SessionRef => ({ id: session.id, name: session.name });
+const toRef = (session: Session): SessionRef => ({
+  id: session.id,
+  name: session.name,
+  classCount: session.classCount,
+});
 
 /**
  * The camp's sessions: name, the date range it covers, and how many classes it holds. Staff (canManage) also get a checkbox per row
  * with a select-all, a bar with the count, Clear and Delete selected, and per row an Edit (the Edit session dialog) and a Delete.
  * After a delete, a toast says how many went; any refused session is named in a line above the table, and stays selected.
  */
-export function SessionsTable({ sessions, canManage }: { sessions: readonly Session[]; canManage: boolean }) {
+export function SessionsTable({
+  sessions,
+  canManage,
+  canUnarchive = false,
+}: {
+  sessions: readonly Session[];
+  canManage: boolean;
+  /** Admin and owner (org:update) may unarchive a session from its Edit dialog. */
+  canUnarchive?: boolean;
+}) {
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [targets, setTargets] = useState<readonly SessionRef[] | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -98,6 +111,11 @@ export function SessionsTable({ sessions, canManage }: { sessions: readonly Sess
                   <Link className="row-title classes-target" href={sessionPath(session.id)}>
                     {session.name}
                   </Link>
+                  {session.archivedAt !== null && (
+                    <Pill tone="neutral" dot={false}>
+                      Archived
+                    </Pill>
+                  )}
                 </td>
                 <td>
                   {session.startsOn && session.endsOn
@@ -108,7 +126,7 @@ export function SessionsTable({ sessions, canManage }: { sessions: readonly Sess
                 {canManage && (
                   <td>
                     <div className="classes-row-actions">
-                      <EditSessionButton session={session} />
+                      <EditSessionButton session={session} canUnarchive={canUnarchive} />
                       <Button
                         type="button"
                         variant="glass-danger"

@@ -39,7 +39,7 @@ describe.skipIf(!url)('public session pages on Postgres', () => {
     await fx.repo.setSessionPublic(fx.actor, session.id, true);
     expect(await repo.findPublicSession(slugA, session.id)).toMatchObject({
       campName: 'Class test camp',
-      sessionName: 'Summer camp',
+      sessionName: session.name,
       startsOn: '2027-07-01',
       endsOn: '2027-07-31',
     });

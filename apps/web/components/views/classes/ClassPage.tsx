@@ -80,7 +80,7 @@ export async function ClassPage({
         actions={
           canManage && (
             <>
-              <EditSessionButton session={session} />
+              <EditSessionButton session={session} canUnarchive={can(actor, 'org:update')} />
               <Button variant="glass" size="sm" href={groupsPath(session.id)} icon="users">
                 Groups and rooms
               </Button>

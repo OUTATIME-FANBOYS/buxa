@@ -20,6 +20,7 @@ export interface SessionRow {
   ends_on: string | null;
   class_count: number;
   is_public: boolean;
+  archived_at: Date | null;
   created_at: Date;
 }
 
@@ -93,6 +94,7 @@ export function toSession(row: SessionRow): Session {
     endsOn: row.ends_on,
     classCount: row.class_count,
     isPublic: row.is_public,
+    archivedAt: row.archived_at ? toIso(row.archived_at) : null,
     createdAt: toIso(row.created_at),
   };
 }
@@ -145,7 +147,7 @@ export function toActiveFacts(row: {
 }
 
 const SESSION_COLUMNS = `p.id, p.name, p.description, to_char(p.starts_on, 'YYYY-MM-DD') AS starts_on,
-  to_char(p.ends_on, 'YYYY-MM-DD') AS ends_on, p.is_public, p.created_at,
+  to_char(p.ends_on, 'YYYY-MM-DD') AS ends_on, p.is_public, p.archived_at, p.created_at,
   (SELECT count(*)::int FROM sessions s WHERE s.class_id = p.id) AS class_count`;
 
 /** Seats and instructors are counted in the same statement, so a class read is one consistent snapshot. */

@@ -21,6 +21,7 @@ const sessionRow = (over: Partial<SessionRow> = {}): SessionRow => ({
   ends_on: '2027-07-31',
   class_count: 2,
   is_public: false,
+  archived_at: null,
   created_at: created,
   ...over,
 });
@@ -71,7 +72,14 @@ describe('toSession', () => {
       endsOn: '2027-07-31',
       classCount: 2,
       isPublic: false,
+      archivedAt: null,
       createdAt: '2027-07-01T00:00:00.000Z',
+    });
+  });
+
+  it('carries the archive time when the session is archived, and null while it is live', () => {
+    expect(toSession(sessionRow({ archived_at: new Date('2027-06-01T02:00:00Z') }))).toMatchObject({
+      archivedAt: '2027-06-01T02:00:00.000Z',
     });
   });
 

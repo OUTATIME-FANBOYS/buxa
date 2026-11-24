@@ -31,6 +31,7 @@ export const CATEGORY_PERMISSIONS = {
   ],
   'Classes and events': [
     'classes:manage',
+    'classes:delete_with_classes',
     'events:read',
     'events:create',
     'events:update',

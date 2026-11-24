@@ -54,7 +54,8 @@ describe('deleteSessionsAction', () => {
           id: artId,
           name: 'Art',
           code: 'session_has_classes',
-          reason: 'This session has classes. Delete them first.',
+          reason:
+            'This session has classes, so it cannot be deleted. Archive it, or delete its classes and the session.',
         },
       ],
     });

@@ -132,8 +132,11 @@ export async function insertRegistrationInTx(
   if (rows.length === 0) {
     throw new RegistrationFormNotFoundError();
   }
+  // An archived session (migration 0052) is not part of the form for registration, so a submission that names it is refused.
   const sessions = await db.query<{ session_id: string }>(
-    'SELECT session_id FROM registration_form_sessions WHERE form_id = $1',
+    `SELECT fs.session_id FROM registration_form_sessions fs
+       JOIN classes c ON c.id = fs.session_id AND c.org_id = fs.org_id
+      WHERE fs.form_id = $1 AND c.archived_at IS NULL`,
     [registration.formId],
   );
   const facts: RegistrationFactsInTx = {

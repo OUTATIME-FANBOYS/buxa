@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { Actor, ActiveEnrolmentFacts, AuditAction, LocalDate } from '@buxa/domain';
-import { capacityCovers, seatsLeft } from '@buxa/domain';
+import { capacityCovers, seatsLeft, sessionNameKey } from '@buxa/domain';
 import type { Class, Enrolment, EnrolmentStatus, NewSessionInput, Session, SessionEditInput } from '@buxa/contracts';
 import { priceChangeAudit, samePrice } from './priceAudit';
 import { sameSessionDetails, sessionEditAudit, type SessionDetails } from './sessionEditAudit';
@@ -25,6 +25,7 @@ import {
   EnrolmentNotFoundError,
   InstructorNotFoundError,
   SessionHasClassesError,
+  SessionHasEnrolmentsError,
   SessionNotFoundError,
   refusalError,
 } from './errors';
@@ -39,6 +40,7 @@ interface StoredSession {
   startsOn: LocalDate | null;
   endsOn: LocalDate | null;
   isPublic: boolean;
+  archivedAt: string | null;
   createdAt: string;
 }
 
@@ -178,6 +180,7 @@ export class InMemoryClassRepository implements ClassRepository {
         startsOn: input.startsOn,
         endsOn: input.endsOn,
         isPublic: input.isPublic ?? false,
+        archivedAt: null,
         createdAt: this.now().toISOString(),
       };
       this.sessions.set(row.id, row);
@@ -227,6 +230,50 @@ export class InMemoryClassRepository implements ClassRepository {
       }
       this.sessions.delete(sessionId);
       this.record(actor, 'session.delete', 'session', sessionId, { name: row.name });
+    });
+  }
+
+  deleteSessionWithClasses(actor: Actor, sessionId: string): Promise<void> {
+    return settle(() => {
+      const row = this.sessionIn(actor.orgId, sessionId);
+      if (!row) {
+        throw new SessionNotFoundError();
+      }
+      const children = [...this.classes.values()].filter(c => c.sessionId === sessionId);
+      const enrolled = [...this.enrolments.values()].some(e => children.some(c => c.id === e.classId));
+      if (enrolled) {
+        throw new SessionHasEnrolmentsError();
+      }
+      for (const child of children) {
+        this.classes.delete(child.id);
+        this.record(actor, 'class.delete', 'class', child.id, { name: child.name, session: row.name });
+      }
+      this.sessions.delete(sessionId);
+      this.record(actor, 'session.delete', 'session', sessionId, { name: row.name, classes: children.length });
+    });
+  }
+
+  setSessionArchived(actor: Actor, sessionId: string, archived: boolean): Promise<Session> {
+    return settle(() => {
+      const row = this.sessionIn(actor.orgId, sessionId);
+      if (!row) {
+        throw new SessionNotFoundError();
+      }
+      row.archivedAt = archived ? (row.archivedAt ?? this.now().toISOString()) : null;
+      this.record(actor, archived ? 'session.archive' : 'session.unarchive', 'session', sessionId, {});
+
+      return this.toSession(row);
+    });
+  }
+
+  sessionNameTaken(_userId: string, orgId: string, name: string, exceptId: string | null): Promise<string | null> {
+    return settle(() => {
+      const key = sessionNameKey(name);
+      const same = [...this.sessions.values()].find(
+        s => s.orgId === orgId && s.id !== exceptId && sessionNameKey(s.name) === key,
+      );
+
+      return same?.name ?? null;
     });
   }
 
@@ -668,6 +715,7 @@ export class InMemoryClassRepository implements ClassRepository {
       endsOn: s.endsOn,
       classCount: [...this.classes.values()].filter(c => c.sessionId === s.id).length,
       isPublic: s.isPublic,
+      archivedAt: s.archivedAt,
       createdAt: s.createdAt,
     };
   }

@@ -18,6 +18,13 @@ describe('TextField: the required mark and the error state', () => {
     expect(html).toContain('aria-invalid="true"');
     expect(html).toMatch(/class="field-error"[^>]*role="alert"[^>]*>Enter a name\.</);
   });
+  it('announces a polite error politely when errorRole is status, for a refusal the person can fix later', () => {
+    const html = renderToStaticMarkup(
+      <TextField {...base} error="A session named Summer 2027 already exists." errorRole="status" />,
+    );
+    expect(html).toMatch(/class="field-error"[^>]*role="status"[^>]*>A session named Summer 2027 already exists\./);
+    expect(html).not.toContain('role="alert"');
+  });
 });
 
 describe('TextField', () => {

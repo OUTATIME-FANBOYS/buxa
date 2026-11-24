@@ -139,7 +139,9 @@ describe('delete session', () => {
     expect(outcome.ok).toBe(false);
     if (!outcome.ok) {
       expect(outcome.failure.reason).toBe('session_has_classes');
-      expect(outcome.failure.message).toBe('This session has classes. Delete them first.');
+      expect(outcome.failure.message).toBe(
+        'This session has classes, so it cannot be deleted. Archive it, or delete its classes and the session.',
+      );
     }
     expect((await service.getSession(as('admin'), sessionId)).ok).toBe(true);
   });
@@ -152,7 +154,9 @@ describe('delete session', () => {
     const outcome = await service.deleteSession(as('admin'), sessionId);
     expect(outcome.ok).toBe(false);
     if (!outcome.ok) {
-      expect(outcome.failure.message).toBe('This session has classes. Delete them first.');
+      expect(outcome.failure.message).toBe(
+        'This session has classes, so it cannot be deleted. Archive it, or delete its classes and the session.',
+      );
     }
     const kept = await service.listEnrolments(as('admin'), classId);
     expect(kept.ok && kept.value).toHaveLength(1);

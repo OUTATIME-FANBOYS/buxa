@@ -56,6 +56,16 @@ export interface ClassRepository {
   updateSession(actor: Actor, sessionId: string, input: SessionEditInput): Promise<Session>;
   /** Audits `session.delete`. Throws SessionNotFoundError, or SessionHasClassesError when the session holds any class. */
   deleteSession(actor: Actor, sessionId: string): Promise<void>;
+  /**
+   * Deletes a session's classes and then the session, in one transaction, for an admin or the owner. Audits `class.delete` for each
+   * class and `session.delete`. Throws SessionNotFoundError, or SessionHasEnrolmentsError when any class has an enrolment, hold,
+   * registration, check-in or season pass.
+   */
+  deleteSessionWithClasses(actor: Actor, sessionId: string): Promise<void>;
+  /** Archives (`archived` true) or unarchives a session. Audits `session.archive` or `session.unarchive`. Throws SessionNotFoundError. */
+  setSessionArchived(actor: Actor, sessionId: string, archived: boolean): Promise<Session>;
+  /** The name of another session in the camp with the same name in the normalised form (see sessionNameKey), or null. `exceptId` is the session being edited. */
+  sessionNameTaken(userId: string, orgId: string, name: string, exceptId: string | null): Promise<string | null>;
   /** Audits `session.update`. Throws SessionNotFoundError. */
   setSessionPublic(actor: Actor, sessionId: string, isPublic: boolean): Promise<Session>;
   /**

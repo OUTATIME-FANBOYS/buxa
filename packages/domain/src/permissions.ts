@@ -48,6 +48,7 @@ export const ACTIONS = [
   'events:update_details',
   'events:delete',
   'classes:manage',
+  'classes:delete_with_classes',
   'holds:manage',
   'tasks:read',
   'tasks:create',
@@ -88,6 +89,7 @@ const STAFF: Action[] = [
 ];
 const ADMIN: Action[] = [
   ...STAFF,
+  'classes:delete_with_classes',
   'org:update',
   'org:archive',
   'org:unarchive',
