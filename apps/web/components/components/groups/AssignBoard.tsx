@@ -1,5 +1,6 @@
 import type { Assignment, Group, Room } from '@buxa/contracts';
 import { ratioText } from './GroupsTable';
+import { UnassignButton } from './UnassignButton';
 
 export interface BoardPerson {
   id: string;
@@ -11,11 +12,16 @@ export interface BoardPerson {
  * page is what changes it. A ratio override is shown under the person it applies to, with its reason.
  */
 export function AssignBoard({
+  sessionId,
+  canManage,
   groups,
   rooms,
   assignments,
   unplaced,
 }: {
+  sessionId: string;
+  /** True when the viewer may place or move people (classes:manage). Only then is each member's Unassign button shown. */
+  canManage: boolean;
   groups: readonly Group[];
   rooms: readonly Room[];
   assignments: readonly Assignment[];
@@ -50,6 +56,14 @@ export function AssignBoard({
                       {a.role === 'staff' ? 'Staff' : 'Camper'}, {roomName(a.roomId)}
                     </span>
                     {a.overrideReason && <p className="muted">Ratio overridden: {a.overrideReason}</p>}
+                    {canManage && (
+                      <UnassignButton
+                        sessionId={sessionId}
+                        personId={a.personId}
+                        personName={a.personName}
+                        groupName={group.name}
+                      />
+                    )}
                   </li>
                 ))}
               </ul>

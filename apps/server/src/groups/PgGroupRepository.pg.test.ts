@@ -78,6 +78,57 @@ describe.skipIf(!url)('PgGroupRepository', () => {
     }
   });
 
+  it('writes the unassign to the audit log with the session, person, group and room', async () => {
+    const fx = await createClassFixture(pool);
+    try {
+      const repo = new PgGroupRepository(pool);
+      const session = await fx.repo.createSession(fx.actor, {
+        name: 'Unassign audit',
+        description: '',
+        startsOn: '2027-07-05',
+        endsOn: '2027-07-17',
+      });
+      const group = await repo.createGroup(fx.actor, session.id, {
+        name: 'Hawks',
+        capacity: 2,
+        ratioCampers: null,
+        ageRange: null,
+      });
+      const room = await repo.createRoom(fx.actor, session.id, { name: 'Lodge 1', location: 'North', capacity: 4 });
+      const personId = await fx.addPerson(fx.orgA, '2019-01-01');
+      await withOrg(pool, fx.actor.userId, fx.orgA, db =>
+        db.query(`INSERT INTO person_roles (org_id, person_id, role) VALUES ($1, $2, 'camper')`, [fx.orgA, personId]),
+      );
+      await repo.assign(
+        fx.actor,
+        { sessionId: session.id, personId, role: 'camper', groupId: group.id, roomId: room.id },
+        () => ({
+          kind: 'allow',
+          overrode: null,
+        }),
+      );
+
+      await repo.unassign(fx.actor, { sessionId: session.id, personId });
+
+      expect(await auditActions(pool, fx.orgA)).toContain('assignment.unassign');
+      const rows = await withOrg(pool, fx.actor.userId, fx.orgA, db =>
+        db.query<{ data: Record<string, string> }>(`SELECT data FROM audit_log WHERE action = 'assignment.unassign'`),
+      );
+      expect(rows.rows[0].data).toMatchObject({ sessionId: session.id, personId, groupId: group.id, roomId: room.id });
+      // The place is free again: the same person can be placed in the session.
+      await repo.assign(
+        fx.actor,
+        { sessionId: session.id, personId, role: 'camper', groupId: group.id, roomId: room.id },
+        () => ({
+          kind: 'allow',
+          overrode: null,
+        }),
+      );
+    } finally {
+      await fx.close();
+    }
+  });
+
   it('refuses a second active assignment for one person in one session, in the database', async () => {
     const fx = await createClassFixture(pool);
     try {

@@ -2,9 +2,10 @@ import type { Pool } from 'pg';
 import { withOrg } from '@buxa/db';
 import type { Actor } from '@buxa/domain';
 import type { GroupInput, RoomInput } from '@buxa/contracts';
-import type { AssignRequest, AssignmentRule, GroupRepository } from './GroupRepository';
+import type { AssignRequest, AssignmentRule, GroupRepository, UnassignRequest, Unassigned } from './GroupRepository';
 import type { Assignment, Group, Room } from './GroupRepository';
 import { assignInTransaction } from './PgAssign';
+import { unassignInTransaction } from './PgUnassign';
 import {
   listAssignmentRows,
   listGroupRows,
@@ -73,5 +74,9 @@ export class PgGroupRepository implements GroupRepository {
 
       return requireAssignment(db, id);
     });
+  }
+
+  unassign(actor: Actor, request: UnassignRequest): Promise<Unassigned> {
+    return withOrg(this.pool, actor.userId, actor.orgId, db => unassignInTransaction(db, actor, request));
   }
 }

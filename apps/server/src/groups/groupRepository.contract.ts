@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { decideAssignment, type Actor, type AssignmentOptions } from '@buxa/domain';
 import type { AssignmentRule, AssignRequest, GroupRepository } from './GroupRepository';
-import { AssignmentRefusedError, NameTakenError, PersonNotFoundError } from './errors';
+import { AssignmentRefusedError, NameTakenError, NotAssignedError, PersonNotFoundError } from './errors';
 
 /** What a contract run needs from an adapter: its repository, an owner actor, and ways to seed a session and a person. */
 export interface GroupFixture {
@@ -214,6 +214,62 @@ export function groupRepositoryContract(factory: () => Promise<GroupFixture>): v
           rule,
         ),
       ).rejects.toBeInstanceOf(AssignmentRefusedError);
+    });
+
+    it('unassigns a placed person, frees the place, and lets them be placed again', async () => {
+      const sessionId = await fx.session('2027-07-05', '2027-07-17');
+      const room = await fx.repo.createRoom(fx.actor, sessionId, { name: 'Lodge 1', location: 'North', capacity: 10 });
+      const group = await fx.repo.createGroup(fx.actor, sessionId, {
+        name: 'Hawks',
+        capacity: 1,
+        ratioCampers: null,
+        ageRange: null,
+      });
+      const a = await fx.person({ dateOfBirth: '2019-01-01' });
+      const b = await fx.person({ dateOfBirth: '2019-01-01' });
+      await fx.repo.assign(fx.actor, request({ sessionId, personId: a, groupId: group.id, roomId: room.id }), rule);
+
+      const ended = await fx.repo.unassign(fx.actor, { sessionId, personId: a });
+
+      expect(ended).toMatchObject({ personId: a, groupId: group.id, roomId: room.id });
+      expect(await fx.repo.listAssignments(fx.actor.userId, fx.actor.orgId, sessionId)).toHaveLength(0);
+      expect((await fx.repo.listGroups(fx.actor.userId, fx.actor.orgId, sessionId))[0]).toMatchObject({ campers: 0 });
+      // The freed place can go to someone else, and the same person can be placed again.
+      await fx.repo.assign(fx.actor, request({ sessionId, personId: b, groupId: group.id, roomId: room.id }), rule);
+      await expect(
+        fx.repo.assign(fx.actor, request({ sessionId, personId: a, groupId: group.id, roomId: room.id }), rule),
+      ).rejects.toBeInstanceOf(AssignmentRefusedError);
+    });
+
+    it('refuses to unassign a person with no active assignment, and writes nothing', async () => {
+      const sessionId = await fx.session('2027-07-05', '2027-07-17');
+      const a = await fx.person({ dateOfBirth: '2019-01-01' });
+
+      await expect(fx.repo.unassign(fx.actor, { sessionId, personId: a })).rejects.toBeInstanceOf(NotAssignedError);
+      expect(await fx.repo.listAssignments(fx.actor.userId, fx.actor.orgId, sessionId)).toHaveLength(0);
+    });
+
+    it('two parallel unassigns of one person: one succeeds, the other is refused as not assigned', async () => {
+      const sessionId = await fx.session('2027-07-05', '2027-07-17');
+      const room = await fx.repo.createRoom(fx.actor, sessionId, { name: 'Lodge 1', location: 'North', capacity: 10 });
+      const group = await fx.repo.createGroup(fx.actor, sessionId, {
+        name: 'Hawks',
+        capacity: 4,
+        ratioCampers: null,
+        ageRange: null,
+      });
+      const a = await fx.person({ dateOfBirth: '2019-01-01' });
+      await fx.repo.assign(fx.actor, request({ sessionId, personId: a, groupId: group.id, roomId: room.id }), rule);
+
+      const results = await Promise.allSettled([
+        fx.repo.unassign(fx.actor, { sessionId, personId: a }),
+        fx.repo.unassign(fx.actor, { sessionId, personId: a }),
+      ]);
+
+      expect(results.filter(r => r.status === 'fulfilled')).toHaveLength(1);
+      const rejected = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
+      expect(rejected).toHaveLength(1);
+      expect(rejected[0].reason).toBeInstanceOf(NotAssignedError);
     });
 
     it('refuses a person who is not in the camp', async () => {

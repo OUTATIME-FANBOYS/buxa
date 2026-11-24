@@ -58,5 +58,6 @@ export const AUDIT_ACTIONS = [
   'assignment.create',
   'assignment.move',
   'assignment.override',
+  'assignment.unassign',
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
