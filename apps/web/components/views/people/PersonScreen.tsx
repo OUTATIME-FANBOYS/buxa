@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ROUTES } from '@buxa/shared/config/routes';
+import { displayName } from '@buxa/shared';
 import { can, CAMP_ROLE_LABELS, type Actor, type CampRole } from '@buxa/domain';
 import { campClock, loadCampProfile } from '@buxa/server/composers/index.server';
 import { loadHouseholdList, loadPersonMatches } from '@buxa/server/composers/index.server';
@@ -59,9 +60,12 @@ export async function PersonScreen({
 
   return (
     <div className="page">
-      <Link className="people-back" href={ROUTES.people}>
-        ← People
-      </Link>
+      <nav aria-label="Breadcrumb" className="muted">
+        <Link className="link" href={ROUTES.people}>
+          People
+        </Link>{' '}
+        / {displayName(person)}
+      </nav>
       <PersonHeader
         person={person}
         actions={
