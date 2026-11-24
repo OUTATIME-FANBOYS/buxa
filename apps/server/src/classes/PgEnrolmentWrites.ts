@@ -1,10 +1,18 @@
-import { isUuid, MAX_AGE_LIMIT, type Actor, type EnrolmentDecision, type LocalDate } from '@buxa/domain';
+import {
+  classDatesRefusal,
+  isUuid,
+  MAX_AGE_LIMIT,
+  type Actor,
+  type EnrolmentDecision,
+  type LocalDate,
+} from '@buxa/domain';
 import type { Enrolment } from '@buxa/contracts';
 import { recordAudit } from '../audit/recordAudit';
 import { toIso, type Db } from '../people/pgRows';
 import type { EnrolRequest, EnrolmentRule, GatheredEnrolmentFacts } from './ClassRepository';
 import {
   CamperNotFoundError,
+  ClassDatesFlaggedError,
   ClassNotFoundError,
   EnrolmentNotFoundError,
   refusalError,
@@ -26,6 +34,8 @@ import { lockSession, promoteWaitlist } from './PgSeats';
 export interface LockedSession {
   facts: GatheredEnrolmentFacts['session'];
   capacity: number;
+  /** The class is flagged: its dates are outside its session's dates (migration 0059). Callers refuse it with classDatesRefusal. */
+  datesOutsideSession: boolean;
 }
 
 /** Locks the camper's row. Row-level security makes a camper of another camp look missing. */
@@ -61,8 +71,9 @@ export async function lockClass(db: Db, classId: string): Promise<LockedSession>
     age_min: number | null;
     age_max: number | null;
     session_status: 'draft' | 'live' | 'archived';
+    dates_outside_session: boolean;
   }>(
-    `SELECT s.id, s.capacity, s.starts_at, s.ends_at, s.name AS class_name, s.age_min, s.age_max, p.status AS session_status
+    `SELECT s.id, s.capacity, s.starts_at, s.ends_at, s.name AS class_name, s.age_min, s.age_max, s.dates_outside_session, p.status AS session_status
        FROM sessions s
        JOIN classes p ON p.id = s.class_id AND p.org_id = s.org_id
       WHERE s.id = $1 FOR UPDATE OF s`,
@@ -79,6 +90,7 @@ export async function lockClass(db: Db, classId: string): Promise<LockedSession>
 
   return {
     capacity: row.capacity,
+    datesOutsideSession: row.dates_outside_session,
     facts: {
       sessionId: row.id,
       className: row.class_name,
@@ -109,6 +121,9 @@ export async function enrolInTransaction(
 ): Promise<Enrolment> {
   const dateOfBirth = await lockCamper(db, request.camperId);
   const session = await lockClass(db, request.classId);
+  if (classDatesRefusal(session.datesOutsideSession) !== null) {
+    throw new ClassDatesFlaggedError();
+  }
   // Expired holds give their places back first, and the waitlist takes them, so the seat count below is current.
   await releaseExpiredHoldsInSession(db, session.facts.sessionId, actor);
   const camperActive = await activeFactsFor(db, request.camperId);

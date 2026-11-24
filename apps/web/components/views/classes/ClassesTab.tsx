@@ -1,7 +1,7 @@
 import type { Class, Session } from '@buxa/contracts';
 import { can, seatFor, type Actor } from '@buxa/domain';
 import { sessionPath } from '@/config/routes';
-import { Empty } from '@/components/components';
+import { Empty, Notice } from '@/components/components';
 import { campClock, loadActiveHolds, loadEnrolments, loadPeopleWithRole } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_ENROLMENTS, formatCampDateTime } from '@buxa/shared';
 import {
@@ -45,6 +45,7 @@ export async function ClassesTab({
   const waitlist = enrolments?.ok && canManage ? enrolments.value.filter(e => e.status === 'waitlisted') : [];
   const campers = selected && canManage ? await loadPeopleWithRole(actor, 'camper') : null;
   const dates = session.startsOn && session.endsOn ? `${session.startsOn} to ${session.endsOn}` : 'Dates not set yet';
+  const flaggedCount = classes.filter(c => c.datesOutsideSession).length;
 
   return (
     <>
@@ -59,6 +60,13 @@ export async function ClassesTab({
         <h2 id="classes-heading" className="people-subheading">
           Classes
         </h2>
+        {flaggedCount > 0 && (
+          <Notice
+            tone="warn"
+            title={`${flaggedCount} ${flaggedCount === 1 ? 'class has' : 'classes have'} dates outside this session`}
+            body="They take no places and are not on the public page until their dates are fixed. Edit each one marked Dates outside session, and give it dates inside the session."
+          />
+        )}
         {classes.length === 0 ? (
           <Empty
             icon="calendar"

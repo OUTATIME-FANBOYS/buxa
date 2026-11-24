@@ -7,6 +7,10 @@ import type { Session } from '@buxa/contracts';
 import { UiProvider } from '@buxa/middleware/providers/providers';
 import { EditSessionButton } from '../EditSessionButton';
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: () => undefined }),
+}));
+
 vi.mock('@/actions/classes', () => ({
   updateSessionAction: vi.fn(),
   deleteSessionAction: vi.fn(),

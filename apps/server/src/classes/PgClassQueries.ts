@@ -75,6 +75,7 @@ export interface ClassRow {
   price_currency: string | null;
   early_bird_minor: number | null;
   early_bird_until: string | null;
+  dates_outside_session: boolean;
 }
 
 export interface EnrolmentRow {
@@ -125,6 +126,7 @@ export function toClass(row: ClassRow): Class {
     seatsTaken: row.seats_taken,
     waitlisted: row.waitlisted,
     price: toPrice(row),
+    datesOutsideSession: row.dates_outside_session,
   };
 }
 
@@ -164,6 +166,7 @@ const SESSION_COLUMNS = `p.id, p.name, p.description, to_char(p.starts_on, 'YYYY
 const CLASS_COLUMNS = `s.id, s.class_id AS session_id, p.name AS session_name, s.name, s.age_min, s.age_max, s.capacity,
   s.starts_at, s.ends_at, s.location,
   s.price_minor, s.price_currency, s.early_bird_minor, to_char(s.early_bird_until, 'YYYY-MM-DD') AS early_bird_until,
+  s.dates_outside_session,
   session_seats_taken(s.id) AS seats_taken,
   (SELECT count(*)::int FROM enrolments e WHERE e.session_id = s.id AND e.status = 'waitlisted') AS waitlisted,
   COALESCE((SELECT json_agg(json_build_object('id', i.id::text, 'name', trim(i.given_name || ' ' || i.family_name))
@@ -312,11 +315,19 @@ export async function getSessionDeleteImpact(db: Db, sessionId: string): Promise
 }
 
 /** A class's session status, or null when the class is not in the camp. The enrolment and hold writes use it to refuse a closed session. */
-export async function sessionStatusOfClass(db: Db, classId: string): Promise<SessionStatus | null> {
-  const { rows } = await db.query<{ status: SessionStatus }>(
-    `SELECT p.status FROM sessions s JOIN classes p ON p.id = s.class_id AND p.org_id = s.org_id WHERE s.id = $1`,
+/** The session status and the dates flag of a class (null when the class is not in the camp). Read with the hold and enrolment checks. */
+export async function classAcceptanceOf(
+  db: Db,
+  classId: string,
+): Promise<{ status: SessionStatus; datesOutsideSession: boolean } | null> {
+  const { rows } = await db.query<{ status: SessionStatus; dates_outside_session: boolean }>(
+    `SELECT p.status, s.dates_outside_session FROM sessions s JOIN classes p ON p.id = s.class_id AND p.org_id = s.org_id WHERE s.id = $1`,
     [classId],
   );
+  const row = rows[0];
+  if (!row) {
+    return null;
+  }
 
-  return rows[0]?.status ?? null;
+  return { status: row.status, datesOutsideSession: row.dates_outside_session };
 }

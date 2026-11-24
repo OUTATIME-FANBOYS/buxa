@@ -71,6 +71,7 @@ const robotics: Class = {
   instructors: [],
   seatsTaken: 0,
   waitlisted: 0,
+  datesOutsideSession: false,
   price: null,
 };
 

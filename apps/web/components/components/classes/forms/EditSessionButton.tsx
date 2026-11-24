@@ -1,12 +1,14 @@
 'use client';
 
 import { useActionState, useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { FormPopUp } from '@/components/components';
 import { Button } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { publishSessionAction, setSessionArchivedAction } from '@/actions/classes';
 import type { Session } from '@buxa/contracts';
-import { idle } from '@buxa/shared';
+import { fixClassesLabel, idle } from '@buxa/shared';
+import { sessionTabPath } from '@buxa/shared/config/routes';
 import { ActionMessage } from './ActionMessage';
 import { SESSION_STATUS } from '../sessionStatus';
 import { EditSessionForm } from './EditSessionForm';
@@ -33,13 +35,24 @@ export function EditSessionButton({
   const [publishState, publishAction, publishing] = useActionState(publishSessionAction, idle);
   const close = useCallback(() => setOpen(false), []);
   const { toast } = useUi();
-  // A saved session closes the pop-up and toasts the server's message.
+  const router = useRouter();
+  // A saved session closes the pop-up and toasts the server's message. When the save flagged classes, the toast offers to fix them
+  // on the session's Classes tab.
   const saved = useCallback(
-    (message: string) => {
-      toast(message);
+    (message: string, flaggedCount = 0) => {
+      if (flaggedCount > 0) {
+        toast(message, {
+          action: {
+            label: fixClassesLabel(flaggedCount),
+            run: () => router.push(sessionTabPath(session.id, 'classes')),
+          },
+        });
+      } else {
+        toast(message);
+      }
       close();
     },
-    [toast, close],
+    [toast, close, router, session.id],
   );
   useEffect(() => {
     if (unarchiveState.status === 'success') {

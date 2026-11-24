@@ -28,6 +28,9 @@ export type FailureReason =
   | 'session_name_confirmation'
   | 'session_not_live'
   | 'session_not_draft'
+  | 'session_dates_blocked'
+  | 'session_publish_blocked'
+  | 'class_dates_flagged'
   | 'session_invalid'
   | 'enrolment_not_found'
   | 'camper_not_found'
@@ -95,13 +98,11 @@ export async function attempt<T>(work: () => Promise<T>, timeZone: string): Prom
       return { ok: false, failure: { reason: refused.reason, message: refused.message } };
     }
     if (isOutsideSession(e)) {
-      const { startsOn, endsOn } = e;
-
       return {
         ok: false,
         failure: {
           reason: 'class_outside_session',
-          message: `The class must fall on days between ${startsOn} and ${endsOn}, the session's first and last day.`,
+          message: 'The class falls outside the session dates. Change the session dates first.',
         },
       };
     }
@@ -137,6 +138,15 @@ export async function attempt<T>(work: () => Promise<T>, timeZone: string): Prom
     }
     if (isClassError(e, 'session-not-live')) {
       return { ok: false, failure: { reason: 'session_not_live', message: (e as Error).message } };
+    }
+    if (isClassError(e, 'session-dates-blocked')) {
+      return { ok: false, failure: { reason: 'session_dates_blocked', message: (e as Error).message } };
+    }
+    if (isClassError(e, 'session-publish-blocked')) {
+      return { ok: false, failure: { reason: 'session_publish_blocked', message: (e as Error).message } };
+    }
+    if (isClassError(e, 'class-dates-flagged')) {
+      return { ok: false, failure: { reason: 'class_dates_flagged', message: (e as Error).message } };
     }
     if (isClassError(e, 'session-not-draft')) {
       return { ok: false, failure: { reason: 'session_not_draft', message: (e as Error).message } };

@@ -1,4 +1,9 @@
-import type { Refusal } from '@buxa/domain';
+import {
+  CLASS_DATES_FLAGGED_MESSAGE,
+  sessionDatesBlockedMessage,
+  sessionPublishBlockedMessage,
+  type Refusal,
+} from '@buxa/domain';
 
 /*
  * Domain errors for classes and enrolment. Adapters throw these; services map them to outcomes.
@@ -274,6 +279,9 @@ export type ClassErrorKind =
   | 'hold-exists'
   | 'teacher-not-found'
   | 'teacher-field-refused'
+  | 'session-dates-blocked'
+  | 'session-publish-blocked'
+  | 'class-dates-flagged'
   | EnrolmentRefusalError['kind'];
 
 export const isClassError = (e: unknown, kind: ClassErrorKind): boolean =>
@@ -284,3 +292,30 @@ export const isEnrolmentRefusal = (e: unknown): e is EnrolmentRefusalError =>
   'kind' in e &&
   typeof e.kind === 'string' &&
   ['session-full', 'age-out-of-range', 'overlap', 'enrolment-refused'].includes(e.kind);
+
+/** A class whose dates fall outside its session's dates is flagged: it takes no place, hold or registration until fixed (migration 0059). */
+export class ClassDatesFlaggedError extends Error {
+  readonly kind = 'class-dates-flagged';
+  constructor() {
+    super(CLASS_DATES_FLAGGED_MESSAGE);
+    this.name = 'ClassDatesFlaggedError';
+  }
+}
+
+/** A session date change would flag a class that has people on it, so the whole change is refused. Names the classes. */
+export class SessionDatesBlockedError extends Error {
+  readonly kind = 'session-dates-blocked';
+  constructor(readonly classNames: readonly string[]) {
+    super(sessionDatesBlockedMessage(classNames));
+    this.name = 'SessionDatesBlockedError';
+  }
+}
+
+/** A session with a flagged class cannot go live. */
+export class SessionPublishBlockedError extends Error {
+  readonly kind = 'session-publish-blocked';
+  constructor(readonly classNames: readonly string[]) {
+    super(sessionPublishBlockedMessage(classNames));
+    this.name = 'SessionPublishBlockedError';
+  }
+}

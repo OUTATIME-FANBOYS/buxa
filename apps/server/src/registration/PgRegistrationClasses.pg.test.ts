@@ -304,4 +304,27 @@ describe.skipIf(!url)('registration by class in Postgres', () => {
       earlyBird: true,
     });
   });
+
+  it('a class flagged for its dates takes no place: the registration is refused with the owner-approved message, and nothing is written', async () => {
+    const { fx, formId, staff, admin } = await campWithForm();
+    // Shrink the session to days none of its classes fall on. Nobody is on a class yet, so the change is allowed and flags them all.
+    const session = await classes.getSession(admin, fx.sessionId);
+    if (!session.ok) {
+      throw new Error(session.failure.message);
+    }
+    const shrunk = await classes.updateSession(admin, fx.sessionId, {
+      name: session.value.name,
+      description: session.value.description,
+      startsOn: '2027-07-01',
+      endsOn: '2027-07-05',
+      isPublic: session.value.isPublic,
+    });
+    expect(shrunk.ok).toBe(true);
+
+    const attempt = submit(formId, staff, [pick(fx.children.ada, fx.classes.painting)]);
+
+    await expect(attempt).rejects.toBeInstanceOf(RegistrationRefusedError);
+    await expect(attempt).rejects.toThrow("This class falls outside its session's dates. Fix its dates first.");
+    expect(await rowsOf(staff, formId)).toEqual([]);
+  });
 });

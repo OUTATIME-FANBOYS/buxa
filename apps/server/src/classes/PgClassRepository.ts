@@ -1,6 +1,6 @@
 import type { Pool } from 'pg';
 import { withOrg } from '@buxa/db';
-import { isUuid, type Actor } from '@buxa/domain';
+import { isUuid, type Actor, type DatesPlanClass } from '@buxa/domain';
 import type {
   Class,
   Enrolment,
@@ -19,6 +19,7 @@ import type {
   EnrolmentRule,
 } from './ClassRepository';
 import { cancelInTransaction, enrolInTransaction } from './PgEnrolmentWrites';
+import { readDatesPlanRows } from './PgSessionDates';
 import {
   getClass,
   getSession,
@@ -86,6 +87,10 @@ export class PgClassRepository implements ClassRepository {
     } catch (error) {
       throw translateSessionNameError(error, input.name);
     }
+  }
+
+  sessionDatesPlanRows(userId: string, orgId: string, sessionId: string): Promise<DatesPlanClass[]> {
+    return withOrg(this.pool, userId, orgId, db => readDatesPlanRows(db, orgId, sessionId));
   }
 
   sessionNameTaken(userId: string, orgId: string, name: string, exceptId: string | null): Promise<string | null> {

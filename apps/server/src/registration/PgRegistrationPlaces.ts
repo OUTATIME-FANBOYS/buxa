@@ -1,4 +1,5 @@
 import {
+  classDatesRefusal,
   decideEnrolment,
   describeRefusal,
   holdExpiresAt,
@@ -97,6 +98,10 @@ export async function takeClassPlaceInTx(
   const timeZone = await timeZoneInTx(db, actor.orgId);
   const dateOfBirth = await lockCamper(db, selection.camperId);
   const session = await lockClass(db, selection.classId);
+  const datesRefusal = classDatesRefusal(session.datesOutsideSession);
+  if (datesRefusal !== null) {
+    throw new RegistrationRefusedError('class_refused', datesRefusal);
+  }
   // Expired holds give their places back first (and the waitlist takes them), so the seat count below is current.
   await releaseExpiredHoldsInSession(db, session.facts.sessionId, actor);
   const camperActive = await activeFactsFor(db, selection.camperId);

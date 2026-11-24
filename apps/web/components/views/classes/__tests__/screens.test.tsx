@@ -92,6 +92,7 @@ const full: Class = {
   instructors: [{ id: INSTRUCTOR_ID, name: 'Ivy Chen' }],
   seatsTaken: 2,
   waitlisted: 1,
+  datesOutsideSession: false,
   price: null,
 };
 const enrolment: Enrolment = {

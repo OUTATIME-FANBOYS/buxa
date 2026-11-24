@@ -1,10 +1,11 @@
-import { isUuid, type Actor } from '@buxa/domain';
+import { classDatesRefusal, isUuid, type Actor } from '@buxa/domain';
 import { recordAudit, type AuditActor } from '../audit/recordAudit';
 import { toIso, type Db } from '../people/pgRows';
 import { lockSession, promoteWaitlist } from '../classes/PgSeats';
-import { sessionStatusOfClass } from '../classes/PgClassQueries';
+import { classAcceptanceOf } from '../classes/PgClassQueries';
 import {
   CamperNotFoundError,
+  ClassDatesFlaggedError,
   ClassNotFoundError,
   HoldExistsError,
   SessionNotLiveError,
@@ -107,9 +108,13 @@ export async function placeHoldInTransaction(db: Db, actor: Actor, request: Plac
     throw new CamperNotFoundError();
   }
   const capacity = await lockSession(db, request.sessionId);
-  const status = await sessionStatusOfClass(db, request.sessionId);
-  if (status !== null && status !== 'live') {
-    throw new SessionNotLiveError(status);
+  const acceptance = await classAcceptanceOf(db, request.sessionId);
+  if (acceptance !== null && acceptance.status !== 'live') {
+    throw new SessionNotLiveError(acceptance.status);
+  }
+  // A flagged class (its dates are outside its session's) takes no hold until its dates are fixed (migration 0059).
+  if (acceptance !== null && classDatesRefusal(acceptance.datesOutsideSession) !== null) {
+    throw new ClassDatesFlaggedError();
   }
   await releaseExpiredHoldsInSession(db, request.sessionId, actor);
 

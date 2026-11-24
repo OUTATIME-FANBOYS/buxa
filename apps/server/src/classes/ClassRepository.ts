@@ -1,4 +1,4 @@
-import type { Actor, EnrolmentDecision, EnrolmentFacts } from '@buxa/domain';
+import type { Actor, DatesPlanClass, EnrolmentDecision, EnrolmentFacts } from '@buxa/domain';
 import type {
   Class,
   ClassPriceInput,
@@ -58,10 +58,13 @@ export interface ClassRepository {
   /** Audits `session.create`. */
   createSession(actor: Actor, input: NewSessionInput): Promise<Session>;
   /**
-   * Saves a session's name, description, dates and public flag. Audits `session.update` with the old and new values,
-   * and writes nothing when no value changed. Throws SessionNotFoundError.
+   * Saves a session's name, description, dates and public flag, and flags the classes that fall outside the new dates, in one
+   * transaction. Audits `session.update` with the old and new values, and `class.dates_flagged` for each newly flagged class. A shrink
+   * that would flag a class with people on it is refused (SessionDatesBlockedError) and nothing is written. Throws SessionNotFoundError.
    */
   updateSession(actor: Actor, sessionId: string, input: SessionEditInput): Promise<Session>;
+  /** The classes of a session with what a date change needs (times, flag, people), read only. Throws SessionNotFoundError. */
+  sessionDatesPlanRows(userId: string, orgId: string, sessionId: string): Promise<DatesPlanClass[]>;
   /** Audits `session.delete`. Throws SessionNotFoundError, or SessionHasClassesError when the session holds any class. */
   deleteSession(actor: Actor, sessionId: string): Promise<void>;
   /**
