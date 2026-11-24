@@ -1,5 +1,7 @@
+import Link from 'next/link';
 import type { ClockFormat } from '@buxa/domain';
 import { formatCampDateTime } from '@buxa/shared';
+import { sessionTabPath } from '@/config/routes';
 
 /** One waitlisted camper, as the holds screen shows it. `joinedAt` is an ISO string, shown in camp time. */
 export interface WaitRow {
@@ -51,7 +53,10 @@ export function WaitlistTable({
           {positioned.map(({ row, position }) => (
             <tr key={row.id}>
               <td>
-                {row.className} <span className="muted">{row.sessionName}</span>
+                {row.className}{' '}
+                <Link className="link muted" href={sessionTabPath(row.sessionId, 'holds')}>
+                  {row.sessionName}
+                </Link>
               </td>
               <td>{position}</td>
               <td>{row.householdName ?? <span className="muted">No family</span>}</td>

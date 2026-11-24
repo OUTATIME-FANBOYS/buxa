@@ -1,44 +1,24 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { can, isUuid, seatFor } from '@buxa/domain';
-import { ROUTES, assignPath, groupsPath, sessionPath } from '@/config/routes';
+import { can, isUuid } from '@buxa/domain';
+import { ROUTES, assignPath, groupsPath } from '@/config/routes';
 import { Empty, PageHeader } from '@/components/components';
-import { campClock } from '@buxa/server/composers/index.server';
-import { currentActor } from '@buxa/server/composers/index.server';
-import { FORBIDDEN_ENROLMENTS, FORBIDDEN_READ } from '@buxa/shared';
-import {
-  loadActiveHolds,
-  loadSessionPage,
-  loadEnrolments,
-  loadPeopleWithRole,
-  loadTeacherAssignments,
-  loadMembers,
-} from '@buxa/server/composers/index.server';
-import {
-  ClassesTable,
-  ClassHoldsAndWaitlist,
-  EnrolmentTable,
-  instructorNames,
-  PriceFact,
-} from '@/components/components/classes';
-import {
-  EditSessionButton,
-  EnrolForm,
-  NewClassButton,
-  RecurringSeriesButton,
-  SessionPriceButton,
-  TeacherAssignments,
-} from '@/components/components/classes/forms';
-import { formatCampDateTime } from '@buxa/shared';
+import { currentActor, loadPeopleWithRole, loadSessionPage } from '@buxa/server/composers/index.server';
+import { FORBIDDEN_READ, resolveSessionTab, visibleSessionTabs } from '@buxa/shared';
+import { SessionTabs } from '@/components/components/classes';
+import { EditSessionButton, NewClassButton, RecurringSeriesButton } from '@/components/components/classes/forms';
 import { Button } from '@/components/elements';
+import { ClassesTab } from './ClassesTab';
+import { SessionHolds } from './SessionHolds';
+import { SessionRegistrations } from './SessionRegistrations';
 
 const pick = (value: string | string[] | undefined): string | null =>
   typeof value === 'string' && isUuid(value) ? value : null;
 
 /**
- * One session: its date range and its classes, each with its ages, camp size, times, location, instructors and seat counts. A
- * chosen class shows who is enrolled there. A full class offers the waitlist instead of a place. Viewers see the schedule and the
- * names enrolled, with no buttons to change anything.
+ * One session's page: its name and actions, then three tabs. Classes is the default and holds the schedule (see ClassesTab).
+ * Registrations and Holds need registration:read, the same read as the Registration and Holds screens; without it the tabs are not
+ * shown and a URL that names one falls back to Classes. The tab is in the URL (`?tab=`).
  */
 export async function ClassPage({
   classId: sessionId,
@@ -67,30 +47,24 @@ export async function ClassPage({
 
   const { session, classes } = loaded.value;
   const canManage = can(actor, 'classes:manage');
-  // A teacher sees only its own classes (the list is scoped on the server), so each listed class is one it is assigned to.
-  const canEditOwnClass = can(actor, 'events:update_details', { orgId: actor.orgId, assignedToClass: true });
-  const { timeZone, clockFormat } = await campClock(actor);
-  const selectedId = pick(searchParams.class);
-  const selected = classes.find(c => c.id === selectedId) ?? null;
   const instructors = canManage ? await loadPeopleWithRole(actor, 'instructor') : null;
   const instructorChoices = instructors?.ok ? instructors.value.map(i => ({ id: i.id, name: i.name })) : [];
-  // The teacher list and each class's assigned teachers, for the teachers panel (staff and admins only).
-  const teacherMembers = canManage ? (await loadMembers(actor)).members.filter(m => m.role === 'teacher') : [];
-  const teacherChoices = teacherMembers.map(t => ({ id: t.id, name: t.name }));
-  const assignments = canManage ? await loadTeacherAssignments(actor, sessionId) : null;
-  const assignedByClass = assignments?.ok ? assignments.value : [];
-  const classTeachers = classes.map(c => ({
-    id: c.id,
-    name: c.name,
-    teacherIds: assignedByClass.filter(a => a.classId === c.id).map(a => a.userId),
-  }));
-
-  const enrolments = selected ? await loadEnrolments(actor, selected.id) : null;
-  // Holds and the waitlist are seat work: staff with holds:manage see them (a viewer does not).
-  const holds = selected && can(actor, 'holds:manage') ? await loadActiveHolds(actor, selected.id) : null;
-  const waitlist = enrolments?.ok && canManage ? enrolments.value.filter(e => e.status === 'waitlisted') : [];
-  const campers = selected && canManage ? await loadPeopleWithRole(actor, 'camper') : null;
-  const dates = session.startsOn && session.endsOn ? `${session.startsOn} to ${session.endsOn}` : 'Dates not set yet';
+  const tabs = visibleSessionTabs(can(actor, 'registration:read'));
+  const tab = resolveSessionTab(searchParams.tab, tabs);
+  // The tab bodies are async, so they are awaited here rather than left as nested elements.
+  const body =
+    tab === 'registrations'
+      ? await SessionRegistrations({ actor, sessionId: session.id, sessionName: session.name })
+      : tab === 'holds'
+        ? await SessionHolds({ actor, sessionId: session.id })
+        : await ClassesTab({
+            actor,
+            session,
+            classes,
+            canManage,
+            instructorChoices,
+            selectedId: pick(searchParams.class),
+          });
 
   return (
     <div className="page">
@@ -120,125 +94,9 @@ export async function ClassPage({
         }
       />
 
-      <dl className="people-facts classes-facts">
-        <dt>Dates</dt>
-        <dd>{dates}</dd>
-        <dt>Classes</dt>
-        <dd>{classes.length}</dd>
-        <PriceFact
-          price={session.price}
-          timeZone={timeZone}
-          action={canManage && <SessionPriceButton sessionId={session.id} price={session.price} />}
-        />
-      </dl>
+      {tabs.length > 1 && <SessionTabs sessionId={session.id} tabs={tabs} active={tab} />}
 
-      <section aria-labelledby="classes-heading" className="stack">
-        <h2 id="classes-heading" className="people-subheading">
-          Classes
-        </h2>
-        {classes.length === 0 ? (
-          <Empty
-            icon="calendar"
-            title="No classes yet"
-            body={
-              canManage
-                ? 'Add the first class, with its time, ages, camp size and location.'
-                : 'No classes are scheduled in this session yet.'
-            }
-            action={
-              canManage && (
-                <NewClassButton sessionId={session.id} sessionName={session.name} instructors={instructorChoices} />
-              )
-            }
-          />
-        ) : (
-          <ClassesTable
-            sessionId={session.id}
-            sessionName={session.name}
-            classes={classes}
-            timeZone={timeZone}
-            clockFormat={clockFormat}
-            selectedId={selected?.id ?? null}
-            canManage={canManage}
-            canEdit={canManage || canEditOwnClass}
-            instructors={instructorChoices}
-          />
-        )}
-      </section>
-
-      {canManage && classes.length > 0 && (
-        <section aria-labelledby="teachers-heading" className="stack">
-          <h2 id="teachers-heading" className="people-subheading">
-            Teachers
-          </h2>
-          <TeacherAssignments sessionId={session.id} classes={classTeachers} teachers={teacherChoices} />
-        </section>
-      )}
-
-      {selected && (
-        <section id="enrolments" aria-labelledby="enrolments-heading" className="stack classes-enrolments">
-          <h2 id="enrolments-heading" className="people-subheading">
-            Enrolments
-          </h2>
-          <dl className="people-facts classes-facts" aria-label="Class details">
-            <dt>Class</dt>
-            <dd>{selected.name}</dd>
-            <dt>Starts</dt>
-            <dd>{formatCampDateTime(selected.startsAt, timeZone, clockFormat)}</dd>
-            <dt>Ends</dt>
-            <dd>{formatCampDateTime(selected.endsAt, timeZone, clockFormat)}</dd>
-            <dt>Location</dt>
-            <dd>{selected.location}</dd>
-            <dt>Instructors</dt>
-            <dd>{instructorNames(selected)}</dd>
-            <PriceFact price={selected.price} timeZone={timeZone} />
-          </dl>
-          <p aria-live="polite" className="muted">
-            {selected.seatsTaken} of {selected.capacity} places taken, {selected.waitlisted} on the waitlist.
-          </p>
-          {canManage && campers && (
-            <EnrolForm
-              classId={selected.id}
-              campers={campers.ok ? campers.value.map(c => ({ id: c.id, name: c.name })) : []}
-              full={seatFor(selected.capacity, selected.seatsTaken).kind === 'full'}
-              canOverride={can(actor, 'attendance:override')}
-            />
-          )}
-          {holds?.ok && (
-            <ClassHoldsAndWaitlist
-              sessionId={session.id}
-              classId={selected.id}
-              holds={holds.value.map(h => ({ id: h.id, householdName: h.householdName, expiresAt: h.expiresAt }))}
-              waitlist={waitlist.map(w => ({ id: w.id, camperName: w.camperName, enrolledAt: w.enrolledAt }))}
-              freePlaces={Math.max(0, selected.capacity - selected.seatsTaken)}
-              timeZone={timeZone}
-              clockFormat={clockFormat}
-            />
-          )}
-          {!enrolments ? null : enrolments.ok ? (
-            enrolments.value.length === 0 ? (
-              <Empty icon="users" title="Nobody is enrolled yet" body="Enrolled and waitlisted campers appear here." />
-            ) : (
-              <EnrolmentTable
-                classId={selected.id}
-                enrolments={enrolments.value}
-                canManage={canManage}
-                timeZone={timeZone}
-                clockFormat={clockFormat}
-              />
-            )
-          ) : (
-            <Empty icon="alert" title="You cannot see who is enrolled" body={FORBIDDEN_ENROLMENTS} />
-          )}
-        </section>
-      )}
-      {selected && (
-        <p className="muted">
-          <Button variant="ghost" href={sessionPath(session.id)}>
-            Clear the class choice
-          </Button>
-        </p>
-      )}
+      {body}
     </div>
   );
 }

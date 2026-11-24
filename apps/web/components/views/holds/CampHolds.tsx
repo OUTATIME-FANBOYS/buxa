@@ -39,7 +39,7 @@ export async function CampHolds() {
 }
 
 /** The waitlist row the board shows: the enrolment's id is the row key. */
-const toWaitRow = (row: CampWaitlistEntry): WaitRow => ({
+export const toWaitRow = (row: CampWaitlistEntry): WaitRow => ({
   id: row.enrolmentId,
   sessionId: row.sessionId,
   sessionName: row.sessionName,

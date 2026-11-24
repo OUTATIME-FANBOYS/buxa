@@ -29,7 +29,7 @@ const services = vi.hoisted(() => ({
   seatHolds: { listActiveHolds: vi.fn(() => Promise.resolve([])) },
 }));
 
-vi.mock('next/navigation', () => ({ notFound, redirect: vi.fn() }));
+vi.mock('next/navigation', () => ({ notFound, redirect: vi.fn(), useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('@buxa/server/runtime', () => ({ getRuntime: () => ({ services }) }));
 vi.mock('@buxa/server/session/index', () => ({
   requireSession: () => Promise.resolve({ user: { clockFormat: null } }),

@@ -4,5 +4,7 @@ export * from './NewRegistrationFormButton';
 export * from './PublishButton';
 export * from './QuestionBuilder';
 export * from './RegisterForm';
+export * from './RegistrationSearch';
+export * from './registrationSearchRows';
 export * from './SubmissionsBySession';
 export * from './TakeRegistrationButton';
