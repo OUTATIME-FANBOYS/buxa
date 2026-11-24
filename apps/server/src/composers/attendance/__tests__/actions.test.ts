@@ -66,8 +66,8 @@ describe('scanCodeAction rate limit', () => {
 
 describe('checkInAction', () => {
   const branches: readonly [string, CheckInResult][] = [
-    ['ok', { ok: true, entry, overridden: false }],
-    ['ok with override', { ok: true, entry, overridden: true }],
+    ['ok', { ok: true, entry, overridden: false, unassigned: false }],
+    ['ok with override', { ok: true, entry, overridden: true, unassigned: false }],
     ['already_on_site', { ok: false, reason: 'already_on_site', since: '2026-11-13T08:12:00Z' }],
     ['not_valid, override offered', { ok: false, reason: 'not_valid', status: 'expired', canOverride: true }],
     ['not_valid, no override', { ok: false, reason: 'not_valid', status: 'none', canOverride: false }],
@@ -81,7 +81,7 @@ describe('checkInAction', () => {
   });
 
   it('passes the actor and the validated input to the service', async () => {
-    mocks.services.attendance.checkIn.mockResolvedValue({ ok: true, entry, overridden: true });
+    mocks.services.attendance.checkIn.mockResolvedValue({ ok: true, entry, overridden: true, unassigned: false });
     await checkInAction({ personId: PERSON, method: 'search', overrideReason: 'Parent confirmed' });
     expect(mocks.services.attendance.checkIn).toHaveBeenCalledWith(actor, {
       personId: PERSON,

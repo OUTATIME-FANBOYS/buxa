@@ -9,6 +9,8 @@ export type CheckInMethod = z.infer<typeof CheckInMethodSchema>;
 export const CheckInInputSchema = z.object({
   personId: z.string().uuid(),
   method: CheckInMethodSchema,
+  /** The session the camper attends. Required when the camp has a session in progress today; optional otherwise. */
+  sessionId: z.string().uuid().optional(),
   /** Present only when an admin is overriding a refused check-in. */
   overrideReason: z.string().max(500).optional(),
   note: z.string().trim().max(500).optional(),

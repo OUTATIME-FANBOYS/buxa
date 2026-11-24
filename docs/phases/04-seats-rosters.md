@@ -13,11 +13,13 @@ Built on branch `v0.3/feat/class-registration` (migration 0046): seats, holds an
 
 Built on branch `v0.4/feat/camp-holds-screen`: the camp-wide holds screen at `/camp/holds` (Operations, under Registration). It lists every live hold in the camp, in order of expiry, with the session, class, family, child, when the hold was placed and when it expires (in camp time), and a session filter. Each class's waitlist sits beside it, in join order, with each family's name and when the camper joined. It is read only; promotion stays on the class page. Both reads are one query each (`ClassRepository.listCampActiveHolds` and `listCampWaitlists`, Postgres and in memory, with a contract test), and both need `registration:read`, so staff, admins and the owner see the screen and teachers and viewers do not.
 
+Built on branch `v0.4/feat/session-checkin` (migration 0049): per-session check-in. The check-in screen has a Session select listing the camp's sessions in progress today or starting today (camp time); with one such session it is pre-selected. A check-in names its session (`check_ins.session_id`, nullable, so camp-day visits keep null), and a camp with a session in progress today must name one. A camper with no active assignment (group and room) in that session is still checked in, with `check_ins.session_unassigned` set, the flag in the attendance audit entry, and the small note "Not assigned to a group in this session" on the result. Camps without sessions are unchanged. The on-site list has no session column, so it is unchanged.
+
 Built on branch `v0.4/feat/hold-length-per-camp` (migration 0048): each camp sets how long a seat hold lasts, from 5 to 60 minutes, in the camp settings (`orgs.hold_minutes`, null for the default of 15, `SEAT_HOLD_MINUTES`). Only an admin or the owner changes it (`org:update`), and the database checks the range too. The hold service reads the camp's length when it places a hold, so a hold placed after a change takes the new length and holds already placed keep their expiry. The expiry cleanup uses each hold's own expiry, so it is unchanged.
 
 Not built yet:
 
-- Roster exports (CSV and printable), per-session check-in, and unassigning a person from a group.
+- Roster exports (CSV and printable), and unassigning a person from a group.
 - A hold for each child in a household. One active hold per household per class still applies, so a second child of the same household cannot take the same class at the same time (see `docs/phases/03-registration.md`).
 
 ## Words we use
@@ -50,7 +52,6 @@ Not built yet:
 ## Not built yet
 
 - **Roster exports** (CSV and printable page), and the export guard for viewers and CSV formula neutralisation.
-- **Per-session check-in** that records the session and flags a camper who is not assigned to it.
 - **A camp-wide holds screen** (holds across every class, not one class at a time). Phase 3 still shows holds for one class only.
 - **Hold length per camp.** Holds are fixed at 15 minutes (`SEAT_HOLD_MINUTES`).
 - Releasing an assignment (unassigning). The schema has the `active` flag; no code path clears it yet.

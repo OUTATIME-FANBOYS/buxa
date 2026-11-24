@@ -16,7 +16,7 @@ export type CheckInState =
   | { phase: 'submitting'; card: PersonCard; method: CheckInMethod }
   | { phase: 'refused'; card: PersonCard; method: CheckInMethod; refusal: CheckInRefusal }
   | { phase: 'failed'; card: PersonCard; method: CheckInMethod; message: string }
-  | { phase: 'done'; card: PersonCard; entry: AttendanceEntry; overridden: boolean };
+  | { phase: 'done'; card: PersonCard; entry: AttendanceEntry; overridden: boolean; unassigned: boolean };
 
 export type CheckInEvent =
   | { type: 'unknown' }
@@ -70,7 +70,13 @@ function answered(
   }
   const result = outcome.value;
   if (result.ok) {
-    return { phase: 'done', card: state.card, entry: result.entry, overridden: result.overridden };
+    return {
+      phase: 'done',
+      card: state.card,
+      entry: result.entry,
+      overridden: result.overridden,
+      unassigned: result.unassigned,
+    };
   }
 
   return { phase: 'refused', card: state.card, method: state.method, refusal: result };

@@ -175,7 +175,7 @@ describe('check-in announcements', () => {
     expect(checkInAnnouncement({ phase: 'unknown' }, 'UTC', '24h')).toBe('Code not recognised.');
     expect(
       checkInAnnouncement(
-        { phase: 'done', card, entry: entry('p-sam', '2026-11-13T20:30:00Z'), overridden: false },
+        { phase: 'done', card, entry: entry('p-sam', '2026-11-13T20:30:00Z'), overridden: false, unassigned: false },
         'Asia/Kolkata',
         '24h',
       ),

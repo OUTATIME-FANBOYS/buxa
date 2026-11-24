@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Actor } from '@buxa/domain';
 import { createClassService } from '../../classes/ClassService';
 import type { InMemoryClassRepository } from '../../classes/InMemoryClassRepository';
+import type { InMemoryGroupRepository } from '../../groups/InMemoryGroupRepository';
 import { JULY_SESSION, robotics } from '../../classes/__tests__/fixtures';
 import { createCamp, type Camp } from './support';
 
@@ -63,6 +64,14 @@ async function build() {
   if (!session.ok) {
     throw new Error('session');
   }
+  // Check-in reads a session's assignments from the group store, which keeps its own copy of sessions.
+  (camp.repos.groups as InMemoryGroupRepository).seedSession({
+    id: session.value.id,
+    orgId: camp.orgId,
+    name: JULY_SESSION.name,
+    startsOn: JULY_SESSION.startsOn,
+    endsOn: JULY_SESSION.endsOn,
+  });
   const added = await classes.addClass(admin, session.value.id, {
     ...robotics,
     startsAt: '2027-07-10T09:00:00Z',
@@ -76,13 +85,13 @@ async function build() {
   }
   expect((await classes.setTeachers(admin, added.value.id, [teacher.userId])).ok).toBe(true);
 
-  return { camp, teacher, staff, kim, ana, gus, householdId };
+  return { camp, teacher, staff, kim, ana, gus, householdId, sessionId: session.value.id };
 }
 
 describe('guardian names are withheld from a teacher', () => {
   it('a refused check-out names no guardian to a teacher, but lists the pick-up guardians to staff', async () => {
-    const { camp, teacher, staff, kim, gus } = await build();
-    expect((await camp.attendance.checkIn(teacher, { personId: kim.id, method: 'manual' })).ok).toBe(true);
+    const { camp, teacher, staff, kim, gus, sessionId } = await build();
+    expect((await camp.attendance.checkIn(teacher, { personId: kim.id, method: 'manual', sessionId })).ok).toBe(true);
 
     const asTeacher = await camp.attendance.checkOut(teacher, { personId: kim.id, collectedByPersonId: gus.id });
     expect(asTeacher).toMatchObject({ ok: false, guardians: [] });
@@ -93,8 +102,8 @@ describe('guardian names are withheld from a teacher', () => {
   });
 
   it('on site, a teacher gets no pick-up options for a camper; staff get them', async () => {
-    const { camp, teacher, staff, kim } = await build();
-    await camp.attendance.checkIn(teacher, { personId: kim.id, method: 'manual' });
+    const { camp, teacher, staff, kim, sessionId } = await build();
+    await camp.attendance.checkIn(teacher, { personId: kim.id, method: 'manual', sessionId });
 
     const asTeacher = await camp.attendance.onSite(teacher);
     expect(asTeacher.map(e => e.pickupOptions)).toEqual([[]]);
@@ -106,8 +115,8 @@ describe('guardian names are withheld from a teacher', () => {
   });
 
   it('a log entry names no collector to a teacher; staff see who collected the child', async () => {
-    const { camp, teacher, staff, kim, ana } = await build();
-    await camp.attendance.checkIn(teacher, { personId: kim.id, method: 'manual' });
+    const { camp, teacher, staff, kim, ana, sessionId } = await build();
+    await camp.attendance.checkIn(teacher, { personId: kim.id, method: 'manual', sessionId });
     expect((await camp.attendance.checkOut(staff, { personId: kim.id, collectedByPersonId: ana.id })).ok).toBe(true);
 
     const asTeacher = await camp.attendance.log(teacher, FILTER);

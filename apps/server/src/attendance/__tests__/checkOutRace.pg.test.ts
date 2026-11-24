@@ -41,6 +41,8 @@ describe.skipIf(!url)('check-out race on Postgres (S-01)', () => {
       method: 'qr',
       overrideReason: null,
       note: null,
+      sessionId: null,
+      sessionUnassigned: false,
     });
 
     // The first check-out is written in a transaction that stays open, so the second one must wait on the same row.
@@ -102,6 +104,8 @@ describe.skipIf(!url)('check-out race on Postgres (S-01)', () => {
         method: 'qr',
         overrideReason: null,
         note: null,
+        sessionId: null,
+        sessionUnassigned: false,
       });
 
       const outcomes = await Promise.allSettled([

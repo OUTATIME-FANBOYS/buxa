@@ -27,7 +27,15 @@ export function attendanceRepositoryContract(factory: RepositoryFactory): void {
 
     const newPerson = async (): Promise<string> => (await fx.repos.people.create(fx.actor, samplePerson())).id;
     const arrive = (personId: string, at = MORNING, overrideReason: string | null = null) =>
-      fx.repos.attendance.checkIn(fx.actor, { personId, at, method: 'qr', overrideReason, note: null });
+      fx.repos.attendance.checkIn(fx.actor, {
+        personId,
+        at,
+        method: 'qr',
+        overrideReason,
+        note: null,
+        sessionId: null,
+        sessionUnassigned: false,
+      });
     const leave = (
       personId: string,
       at = NOON,
@@ -49,6 +57,8 @@ export function attendanceRepositoryContract(factory: RepositoryFactory): void {
         collectedByPersonId: null,
         overrideReason: null,
         note: null,
+        sessionId: null,
+        sessionUnassigned: false,
       });
       expect(visit.checkedInAt).toMatch(ISO_INSTANT);
       expect(await fx.repos.attendance.openFor(fx.actor.userId, fx.actor.orgId, personId)).toEqual(visit);

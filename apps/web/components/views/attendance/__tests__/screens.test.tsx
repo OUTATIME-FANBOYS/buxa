@@ -13,7 +13,14 @@ const notFound = vi.hoisted(() =>
 const session = vi.hoisted(() => ({ camp: true, role: 'staff', timeZone: 'Asia/Kolkata' }));
 const services = vi.hoisted(() => ({
   orgs: { getCamp: vi.fn() },
-  attendance: { onSite: vi.fn(), log: vi.fn(), checkIn: vi.fn(), checkOut: vi.fn(), exportCsv: vi.fn() },
+  attendance: {
+    onSite: vi.fn(),
+    log: vi.fn(),
+    checkIn: vi.fn(),
+    checkOut: vi.fn(),
+    exportCsv: vi.fn(),
+    checkInSessions: vi.fn(() => Promise.resolve([])),
+  },
   people: { list: vi.fn() },
   credentials: { scan: vi.fn() },
 }));

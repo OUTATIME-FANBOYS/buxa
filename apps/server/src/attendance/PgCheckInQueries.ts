@@ -14,11 +14,13 @@ interface CheckInRow {
   collected_by_person_id: string | null;
   override_reason: string | null;
   note: string | null;
+  session_id: string | null;
+  session_unassigned: boolean;
 }
 
 const SELECT_CHECK_INS = `
   SELECT id, person_id, checked_in_at, checked_in_by, method, checked_out_at, checked_out_by,
-         collected_by_person_id, override_reason, note
+         collected_by_person_id, override_reason, note, session_id, session_unassigned
     FROM check_ins`;
 
 export const toCheckIn = (row: CheckInRow): CheckInRecord => ({
@@ -32,6 +34,8 @@ export const toCheckIn = (row: CheckInRow): CheckInRecord => ({
   collectedByPersonId: row.collected_by_person_id,
   overrideReason: row.override_reason,
   note: row.note,
+  sessionId: row.session_id,
+  sessionUnassigned: row.session_unassigned,
 });
 
 /** Runs a visit query. The limit, when given, is the last parameter. */

@@ -3,7 +3,8 @@ import type { AccessStatus } from '@buxa/domain';
 
 /** Expected outcomes are results, not exceptions, so a screen can render each one. Unexpected problems still throw. */
 export type CheckInResult =
-  | { ok: true; entry: AttendanceEntry; overridden: boolean }
+  /** `unassigned`: the camper had no active place in the session they were checked in to. The check-in still stands. */
+  | { ok: true; entry: AttendanceEntry; overridden: boolean; unassigned: boolean }
   | { ok: false; reason: 'already_on_site'; since: string }
   | { ok: false; reason: 'not_valid'; status: Exclude<AccessStatus, 'valid'>; canOverride: boolean }
   | { ok: false; reason: 'override_needs_reason' }

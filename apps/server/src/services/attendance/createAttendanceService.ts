@@ -1,6 +1,15 @@
 import type { AttendanceEntry, AttendanceFilter, CheckInInput, CheckOutInput } from '@buxa/contracts';
-import { can, decideCheckIn, decideCheckOut, isMinor, personAccess, toLocalDate, type Actor } from '@buxa/domain';
-import { encodeCsv, type CsvCell } from '@buxa/shared';
+import {
+  can,
+  decideCheckIn,
+  decideCheckOut,
+  isMinor,
+  personAccess,
+  toLocalDate,
+  type Actor,
+  type LocalDate,
+} from '@buxa/domain';
+import { encodeCsv, sessionsOpenOn, type CsvCell } from '@buxa/shared';
 import { assertAllowed } from '../../auth/authorize';
 import { badRequest, notFound } from '../../http/errors';
 import {
@@ -39,7 +48,34 @@ const EXPORT_HEADER: CsvCell[] = [
 ];
 
 export function createAttendanceService(deps: AttendanceServiceDeps): AttendanceService {
-  const { attendance, classes, people, memberships, orgs, clock } = deps;
+  const { attendance, classes, groups, people, memberships, orgs, clock } = deps;
+
+  /**
+   * The session a check-in names, or null for a camp-day visit. A named session must be one of the camp's. When the camp has a
+   * session in progress today, a check-in must name one: a per-session check-in has to say which session the camper attends.
+   */
+  async function sessionOf(actor: Actor, sessionId: string | undefined, today: LocalDate): Promise<string | null> {
+    const sessions = await classes.listSessions(actor.userId, actor.orgId);
+    if (sessionId !== undefined) {
+      if (!sessions.some(s => s.id === sessionId)) {
+        throw badRequest('Choose a session from the list.');
+      }
+
+      return sessionId;
+    }
+    if (sessionsOpenOn(sessions, today).length > 0) {
+      throw badRequest('Choose the session this camper is attending.');
+    }
+
+    return null;
+  }
+
+  /** Whether the person has an active assignment (a group and a room) in the session. */
+  async function isAssignedIn(actor: Actor, sessionId: string, personId: string): Promise<boolean> {
+    const assignments = await groups.listAssignments(actor.userId, actor.orgId, sessionId);
+
+    return assignments.some(a => a.personId === personId);
+  }
 
   /** Records for the filter's camp-local days, newest first. */
   async function recordsFor(
@@ -71,6 +107,14 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
     scope === null ? records : records.filter(r => scope.camperIds.has(r.personId));
 
   return {
+    async checkInSessions(actor) {
+      const scope = await teacherScopeOf(classes, actor);
+      assertAllowed(actor, 'attendance:record', { assignedToClass: scope === null ? undefined : true });
+      const timeZone = await campZone(orgs, actor);
+
+      return sessionsOpenOn(await classes.listSessions(actor.userId, actor.orgId), toLocalDate(clock(), timeZone));
+    },
+
     async checkIn(actor, input: CheckInInput): Promise<CheckInResult> {
       const scope = await teacherScopeOf(classes, actor);
       assertAllowed(actor, 'attendance:record', { assignedToClass: assignedTo(scope, input.personId) });
@@ -85,6 +129,8 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
 
       const timeZone = await campZone(orgs, actor);
       const now = clock();
+      const sessionId = await sessionOf(actor, input.sessionId, toLocalDate(now, timeZone));
+      const sessionUnassigned = sessionId !== null && !(await isAssignedIn(actor, sessionId, input.personId));
       const [open, ms] = await Promise.all([
         attendance.openFor(actor.userId, orgId, input.personId),
         memberships.forPerson(actor.userId, orgId, input.personId),
@@ -116,10 +162,12 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
           method: input.method,
           overrideReason: decision.kind === 'allow_override' ? decision.reason : null,
           note: input.note ?? null,
+          sessionId,
+          sessionUnassigned,
         });
         const [entry] = await entriesOf(actor, [record]);
 
-        return { ok: true, entry, overridden };
+        return { ok: true, entry, overridden, unassigned: sessionUnassigned };
       } catch (error) {
         // Another check-in won a race between the read above and this write: report it as the already-on-site answer.
         if (!isAlreadyCheckedIn(error)) {
