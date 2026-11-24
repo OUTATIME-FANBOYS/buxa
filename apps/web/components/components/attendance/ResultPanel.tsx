@@ -45,11 +45,18 @@ export function ResultPanel({ state, timeZone, clockFormat, canOverride, onCheck
       return <Notice tone="crit" title="Could not look that up" body={state.message} />;
     case 'done':
       return (
-        <Notice
-          tone="ok"
-          title={`${attendanceDisplayName(state.card.person)} checked in`}
-          body={`At ${formatCampTime(state.entry.checkedInAt, timeZone, clockFormat)}${state.overridden ? ', with an override on record' : ''}. Next person in a moment.`}
-        />
+        <>
+          <Notice
+            tone="ok"
+            title={`${attendanceDisplayName(state.card.person)} checked in`}
+            body={`At ${formatCampTime(state.entry.checkedInAt, timeZone, clockFormat)}${state.overridden ? ', with an override on record' : ''}. Next person in a moment.`}
+          />
+          {state.unassigned && (
+            <p role="status" className="buxa:text-[length:var(--fs-s)] buxa:text-[var(--text-2)]">
+              Not assigned to a group in this session
+            </p>
+          )}
+        </>
       );
     case 'ready':
     case 'submitting':

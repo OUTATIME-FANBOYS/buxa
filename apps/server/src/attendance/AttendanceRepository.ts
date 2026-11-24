@@ -13,6 +13,10 @@ export interface CheckInRecord {
   collectedByPersonId: string | null;
   overrideReason: string | null;
   note: string | null;
+  /** The session (a row of classes) the camper attends, or null for a camp-day visit. */
+  sessionId: string | null;
+  /** True when the camper had no active place in that session at check-in. */
+  sessionUnassigned: boolean;
 }
 
 export interface NewCheckIn {
@@ -21,6 +25,8 @@ export interface NewCheckIn {
   method: CheckInMethod;
   overrideReason: string | null;
   note: string | null;
+  sessionId: string | null;
+  sessionUnassigned: boolean;
 }
 export interface NewCheckOut {
   personId: string;

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Actor } from '@buxa/domain';
 import { createClassService } from '../../classes/ClassService';
 import type { InMemoryClassRepository } from '../../classes/InMemoryClassRepository';
+import type { InMemoryGroupRepository } from '../../groups/InMemoryGroupRepository';
 import { painting, robotics, JULY_SESSION } from '../../classes/__tests__/fixtures';
 import { createCamp, thrown, type Camp } from './support';
 
@@ -42,6 +43,14 @@ async function build() {
   if (!session.ok) {
     throw new Error('session');
   }
+  // Check-in reads a session's assignments from the group store, which keeps its own copy of sessions.
+  (camp.repos.groups as InMemoryGroupRepository).seedSession({
+    id: session.value.id,
+    orgId: camp.orgId,
+    name: JULY_SESSION.name,
+    startsOn: JULY_SESSION.startsOn,
+    endsOn: JULY_SESSION.endsOn,
+  });
   const addClass = async (cls: typeof robotics, times: typeof ROBOTICS_TIMES) => {
     const added = await classes.addClass(admin, session.value.id, { ...cls, ...times });
     if (!added.ok) {
@@ -91,8 +100,8 @@ describe('teacher: attendance is limited to its classes', () => {
   });
 
   it('checks in and out its own campers', async () => {
-    const { camp, teacher, kim } = await build();
-    expect((await camp.attendance.checkIn(teacher, { personId: kim.id, method: 'manual' })).ok).toBe(true);
+    const { camp, teacher, kim, sessionId } = await build();
+    expect((await camp.attendance.checkIn(teacher, { personId: kim.id, method: 'manual', sessionId })).ok).toBe(true);
     expect((await camp.attendance.checkOut(teacher, { personId: kim.id })).ok).toBe(true);
   });
 
@@ -107,9 +116,9 @@ describe('teacher: attendance is limited to its classes', () => {
   });
 
   it('lists only its own campers on site and in the log', async () => {
-    const { camp, teacher, staff, kim, mo } = await build();
-    await camp.attendance.checkIn(teacher, { personId: kim.id, method: 'manual' });
-    await camp.attendance.checkIn(staff, { personId: mo.id, method: 'manual' });
+    const { camp, teacher, staff, kim, mo, sessionId } = await build();
+    await camp.attendance.checkIn(teacher, { personId: kim.id, method: 'manual', sessionId });
+    await camp.attendance.checkIn(staff, { personId: mo.id, method: 'manual', sessionId });
 
     expect((await camp.attendance.onSite(teacher)).map(e => e.person.id)).toEqual([kim.id]);
     expect((await camp.attendance.onSite(staff)).map(e => e.person.id).sort()).toEqual([kim.id, mo.id].sort());
@@ -117,8 +126,8 @@ describe('teacher: attendance is limited to its classes', () => {
   });
 
   it('refuses another camper history (403) and shows its own', async () => {
-    const { camp, teacher, kim, mo } = await build();
-    await camp.attendance.checkIn(teacher, { personId: kim.id, method: 'manual' });
+    const { camp, teacher, kim, mo, sessionId } = await build();
+    await camp.attendance.checkIn(teacher, { personId: kim.id, method: 'manual', sessionId });
     expect((await camp.attendance.history(teacher, kim.id)).length).toBe(1);
     expect((await thrown(() => camp.attendance.history(teacher, mo.id))).statusCode).toBe(403);
   });

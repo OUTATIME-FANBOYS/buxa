@@ -7,6 +7,9 @@ type AttendanceService = ReturnType<typeof getRuntime>['services']['attendance']
 /** Who is on site now, for the on-site screen. */
 export const loadOnSiteEntries = (actor: Actor) => getRuntime().services.attendance.onSite(actor);
 
+/** The sessions the check-in screen offers today (in progress or starting today). */
+export const loadCheckInSessions = (actor: Actor) => getRuntime().services.attendance.checkInSessions(actor);
+
 /** Everyone the log filter can name. */
 export const loadPeopleOptions = (actor: Actor) => getRuntime().services.people.list(actor);
 

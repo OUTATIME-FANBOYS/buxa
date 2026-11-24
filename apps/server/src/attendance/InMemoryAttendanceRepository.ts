@@ -24,6 +24,8 @@ const toRecord = (v: StoredCheckIn): CheckInRecord => ({
   collectedByPersonId: v.collectedByPersonId,
   overrideReason: v.overrideReason,
   note: v.note,
+  sessionId: v.sessionId,
+  sessionUnassigned: v.sessionUnassigned,
 });
 
 /** In-memory adapter for check-ins: one open visit per person, the same errors, audit entries and ordering as Postgres. */
@@ -67,11 +69,15 @@ export class InMemoryAttendanceRepository implements AttendanceRepository {
         collectedByPersonId: null,
         overrideReason: input.overrideReason,
         note: input.note,
+        sessionId: input.sessionId,
+        sessionUnassigned: input.sessionUnassigned,
       };
       this.db.checkIns.set(visit.id, visit);
       this.db.record(actor, 'attendance.check_in', 'check_in', visit.id, {
         personId: input.personId,
         method: input.method,
+        sessionId: input.sessionId,
+        sessionUnassigned: input.sessionUnassigned,
       });
       if (input.overrideReason !== null) {
         this.db.record(actor, 'attendance.override', 'check_in', visit.id, {

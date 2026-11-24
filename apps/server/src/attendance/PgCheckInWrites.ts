@@ -6,9 +6,20 @@ import { NotOnSiteError, type CheckInRecord, type NewCheckIn, type NewCheckOut }
 /** Inserts a visit and its audit entries (one for the check-in, and one for an override). Returns the new id. */
 export async function insertCheckIn(db: Db, actor: Actor, input: NewCheckIn): Promise<string> {
   const { rows } = await db.query<{ id: string }>(
-    `INSERT INTO check_ins (org_id, person_id, checked_in_at, checked_in_by, method, override_reason, note)
-     VALUES ($1, $2, $3::timestamptz, $4, $5, $6, $7) RETURNING id`,
-    [actor.orgId, input.personId, input.at, actor.userId, input.method, input.overrideReason, input.note],
+    `INSERT INTO check_ins (org_id, person_id, checked_in_at, checked_in_by, method, override_reason, note,
+                            session_id, session_unassigned)
+     VALUES ($1, $2, $3::timestamptz, $4, $5, $6, $7, $8, $9) RETURNING id`,
+    [
+      actor.orgId,
+      input.personId,
+      input.at,
+      actor.userId,
+      input.method,
+      input.overrideReason,
+      input.note,
+      input.sessionId,
+      input.sessionUnassigned,
+    ],
   );
   const id = rows[0].id;
   await recordAudit(db, {
@@ -16,7 +27,12 @@ export async function insertCheckIn(db: Db, actor: Actor, input: NewCheckIn): Pr
     action: 'attendance.check_in',
     entity: 'check_in',
     entityId: id,
-    data: { personId: input.personId, method: input.method },
+    data: {
+      personId: input.personId,
+      method: input.method,
+      sessionId: input.sessionId,
+      sessionUnassigned: input.sessionUnassigned,
+    },
   });
   if (input.overrideReason !== null) {
     await recordAudit(db, {

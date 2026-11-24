@@ -39,12 +39,13 @@ export function useCheckIn(actions: CheckInActions) {
   const pickPerson = useCallback((card: PersonCard) => dispatch({ type: 'selected', card, method: 'search' }), []);
 
   const checkIn = useCallback(
-    async (card: PersonCard, method: CheckInMethod, overrideReason?: string) => {
+    async (card: PersonCard, method: CheckInMethod, overrideReason?: string, sessionId?: string) => {
       dispatch({ type: 'submitted' });
       const outcome = await actions.checkIn({
         personId: card.person.id,
         method,
         ...(overrideReason ? { overrideReason } : {}),
+        ...(sessionId ? { sessionId } : {}),
       });
       dispatch({ type: 'answered', outcome });
     },

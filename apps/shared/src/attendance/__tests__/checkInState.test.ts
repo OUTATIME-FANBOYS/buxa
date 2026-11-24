@@ -30,7 +30,9 @@ describe('checkInReducer: selecting and resetting', () => {
 
   it('shows an unknown code neutrally, from any phase', () => {
     expect(checkInReducer(ready, { type: 'unknown' })).toEqual({ phase: 'unknown' });
-    expect(checkInReducer({ phase: 'done', card, entry, overridden: false }, { type: 'unknown' })).toEqual({
+    expect(
+      checkInReducer({ phase: 'done', card, entry, overridden: false, unassigned: false }, { type: 'unknown' }),
+    ).toEqual({
       phase: 'unknown',
     });
   });
@@ -73,13 +75,13 @@ describe('checkInReducer: answers', () => {
   const answers: readonly [string, ActionOutcome<CheckInResult>, CheckInState][] = [
     [
       'an ok check-in',
-      { kind: 'ok', value: { ok: true, entry, overridden: false } },
-      { phase: 'done', card, entry, overridden: false },
+      { kind: 'ok', value: { ok: true, entry, overridden: false, unassigned: false } },
+      { phase: 'done', card, entry, overridden: false, unassigned: false },
     ],
     [
       'an override that went through',
-      { kind: 'ok', value: { ok: true, entry, overridden: true } },
-      { phase: 'done', card, entry, overridden: true },
+      { kind: 'ok', value: { ok: true, entry, overridden: true, unassigned: false } },
+      { phase: 'done', card, entry, overridden: true, unassigned: false },
     ],
     [
       'already on site',

@@ -49,6 +49,28 @@ describe('ResultPanel', () => {
     } as unknown as CheckInState);
     expect(html).toContain('Clear and scan the next person');
   });
+  it('still confirms a check-in of an unassigned camper, and flags it in small text', () => {
+    const state = {
+      phase: 'done',
+      card,
+      entry: { checkedInAt: '2027-07-03T09:00:00.000Z' },
+      overridden: false,
+      unassigned: true,
+    } as unknown as CheckInState;
+    const html = render(state);
+    expect(html).toContain('Ada Lee checked in');
+    expect(html).toContain('Not assigned to a group in this session');
+  });
+  it('does not flag a camper who is assigned to the session', () => {
+    const state = {
+      phase: 'done',
+      card,
+      entry: { checkedInAt: '2027-07-03T09:00:00.000Z' },
+      overridden: false,
+      unassigned: false,
+    } as unknown as CheckInState;
+    expect(render(state)).not.toContain('Not assigned to a group in this session');
+  });
   it('confirms a check-in and says whether an override is on record', () => {
     const state = {
       phase: 'done',

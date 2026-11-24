@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ScanFieldHandle } from '@/components/components/scanner';
-import { checkInAnnouncement } from '@buxa/shared';
+import { checkInAnnouncement, defaultSessionId, type CheckInSessionOption } from '@buxa/shared';
+import { Select } from '@/components/atoms';
 import { LiveRegion } from '@/components/elements';
 import { NameSearch } from './NameSearch';
 import { ResultPanel } from './ResultPanel';
@@ -15,13 +16,19 @@ interface Props {
   timeZone: string;
   clockFormat: ClockFormat;
   canOverride: boolean;
+  /** The camp's sessions in progress or starting today. Empty for a camp without sessions: check-in is then camp-day only. */
+  sessions: CheckInSessionOption[];
 }
 
-/** The fast screen: one scan field and a name search on the left, the result on the right. Focus returns to the scan field after each person. */
-export function CheckInConsole({ timeZone, clockFormat, canOverride }: Props) {
+/**
+ * The fast screen: a session choice (when the camp has sessions), one scan field and a name search on the left, the result on the
+ * right. Focus returns to the scan field after each person. The session is pre-selected when it is the only one on offer.
+ */
+export function CheckInConsole({ timeZone, clockFormat, canOverride, sessions }: Props) {
   const { state, scanCode, pickPerson, checkIn, clear } = useCheckIn(attendance);
   const scanRef = useRef<ScanFieldHandle>(null);
   const busy = state.phase === 'submitting';
+  const [sessionId, setSessionId] = useState<string | null>(() => defaultSessionId(sessions));
 
   // Back to the scan field whenever the screen is clear for the next person.
   useEffect(() => {
@@ -33,6 +40,15 @@ export function CheckInConsole({ timeZone, clockFormat, canOverride }: Props) {
   return (
     <div className="checkin">
       <section className="checkin-input" aria-label="Scan a badge">
+        {sessions.length > 0 && (
+          <Select
+            label="Session"
+            options={sessions.map(s => ({ value: s.id, label: s.name }))}
+            value={sessionId}
+            placeholder="Choose a session"
+            onChange={setSessionId}
+          />
+        )}
         <ScanPanel
           scanRef={scanRef}
           disabled={busy}
@@ -49,7 +65,7 @@ export function CheckInConsole({ timeZone, clockFormat, canOverride }: Props) {
           clockFormat={clockFormat}
           canOverride={canOverride}
           onCheckIn={(card, method, reason) => {
-            void checkIn(card, method, reason);
+            void checkIn(card, method, reason, sessionId ?? undefined);
           }}
           onClear={clear}
         />

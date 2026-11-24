@@ -77,6 +77,8 @@ export interface StoredCheckIn {
   collectedByPersonId: string | null;
   overrideReason: string | null;
   note: string | null;
+  sessionId: string | null;
+  sessionUnassigned: boolean;
 }
 
 interface OrgOwned {
