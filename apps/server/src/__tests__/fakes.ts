@@ -27,7 +27,7 @@ import { OrgNotFoundError, SlugTakenError, type ArchivedCampRecord, type OrgRepo
 import { InMemoryPeopleRepository } from '../people/InMemoryPeopleRepository';
 import { InMemoryDatabase, type AuditRecord } from '../people/InMemoryDatabase';
 import type { Repositories } from '../repositories';
-import { EmailInUseError, type UserRepository } from '../users/UserRepository';
+import { EmailInUseError, MemberHasNoPersonError, type UserRepository } from '../users/UserRepository';
 
 /** The first word of a full name is the first name, the rest the last name (migration 0017 does the same in SQL). */
 function splitName(name: string): { firstName: string; lastName: string | null } {
@@ -136,17 +136,22 @@ export class InMemoryStore implements UserRepository, OrgRepository {
 
     return Promise.resolve(member?.role ?? null);
   }
+  /** The roster name of a member's linked person, as `${orgId}:${userId}`. A member with no entry has no person in that camp. */
+  readonly rosterNames = new Map<string, string>();
   renameMember(actor: Actor, userId: string, name: string): Promise<Pick<User, 'id' | 'email' | 'name'> | null> {
     const user = this.users.get(userId);
     const inCamp = this.members.some(m => m.orgId === actor.orgId && m.userId === userId);
     if (!user || !inCamp) {
       return Promise.resolve(null);
     }
-    Object.assign(user, splitName(name));
-    user.name = name;
+    if (!this.rosterNames.has(`${actor.orgId}:${userId}`)) {
+      return Promise.reject(new MemberHasNoPersonError());
+    }
+    // The camp's roster name changes; the login's own name (users) does not.
+    this.rosterNames.set(`${actor.orgId}:${userId}`, name);
     this.database.record(actor, 'member.rename', 'user', userId, { name });
 
-    return Promise.resolve({ id: user.id, email: user.email, name: user.name });
+    return Promise.resolve({ id: user.id, email: user.email, name });
   }
   /** Options that are on, as `${orgId}:${userId}:${option}`. */
   readonly memberOptions = new Set<string>();

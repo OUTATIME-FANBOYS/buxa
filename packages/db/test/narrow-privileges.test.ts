@@ -88,4 +88,13 @@ describe.skipIf(!url)('narrow privileges (S-06)', () => {
     // Without an organisation, the tables themselves stay empty.
     expect((await withOrg(pool, null, null, db => db.query<Row>('SELECT 1 FROM orgs'))).rowCount).toBe(0);
   });
+
+  it('the request role cannot read the sealed badge columns of credentials (migration 0057)', async () => {
+    const r = await pool.query<Row>(`SELECT
+        has_column_privilege('buxa_app', 'credentials', 'token_ciphertext', 'SELECT') AS cipher,
+        has_column_privilege('buxa_app', 'credentials', 'token_iv', 'SELECT') AS iv,
+        has_column_privilege('buxa_app', 'credentials', 'token_auth_tag', 'SELECT') AS tag,
+        has_column_privilege('buxa_app', 'credentials', 'token_hash', 'SELECT') AS hash`);
+    expect(r.rows[0]).toEqual({ cipher: false, iv: false, tag: false, hash: true });
+  });
 });

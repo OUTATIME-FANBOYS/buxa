@@ -25,18 +25,18 @@ const COLUMNS = 'id, person_id, issued_at, issued_by, revoked_at';
 /** A revoked badge keeps no sealed copy: only the active badge of a person can be shown. */
 const WIPE_SEALED = 'token_ciphertext = NULL, token_iv = NULL, token_auth_tag = NULL';
 
-interface SealedRow extends CredentialRow {
-  token_ciphertext: Buffer | null;
-  token_iv: Buffer | null;
-  token_auth_tag: Buffer | null;
+/** A row of buxa_reveal_badge(): the request role cannot SELECT the sealed columns of credentials (migration 0057). */
+interface SealedRow {
+  credential_id: string;
+  sealed_ciphertext: Buffer | null;
+  sealed_iv: Buffer | null;
+  sealed_auth_tag: Buffer | null;
 }
-
-const SEALED_COLUMNS = `${COLUMNS}, token_ciphertext, token_iv, token_auth_tag`;
 
 /** The sealed copy in its row, or null for a badge issued before encrypted copies existed. */
 const sealedOf = (row: SealedRow): SealedToken | null =>
-  row.token_ciphertext && row.token_iv && row.token_auth_tag
-    ? { ciphertext: row.token_ciphertext, iv: row.token_iv, authTag: row.token_auth_tag }
+  row.sealed_ciphertext && row.sealed_iv && row.sealed_auth_tag
+    ? { ciphertext: row.sealed_ciphertext, iv: row.sealed_iv, authTag: row.sealed_auth_tag }
     : null;
 
 const toRecord = (row: CredentialRow): CredentialRecord => ({
@@ -174,16 +174,16 @@ export class PgCredentialRepository implements CredentialRepository {
 
     return this.scope(actor.userId, actor.orgId, async db => {
       const { rows } = await db.query<SealedRow>(
-        `SELECT ${SEALED_COLUMNS} FROM credentials WHERE person_id = $1 AND revoked_at IS NULL`,
-        [personId],
+        'SELECT credential_id, sealed_ciphertext, sealed_iv, sealed_auth_tag FROM buxa_reveal_badge($1, $2)',
+        [actor.orgId, personId],
       );
       const row = rows[0];
       if (!row) {
         return null;
       }
-      await recordAudit(db, { actor, action, entity: 'credential', entityId: row.id, data: { personId } });
+      await recordAudit(db, { actor, action, entity: 'credential', entityId: row.credential_id, data: { personId } });
 
-      return { credentialId: row.id, sealed: sealedOf(row) };
+      return { credentialId: row.credential_id, sealed: sealedOf(row) };
     });
   }
 
