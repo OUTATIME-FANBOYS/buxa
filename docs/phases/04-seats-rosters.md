@@ -19,7 +19,7 @@ Built on branch `v0.4/feat/roster-exports`: roster exports. A session's roster i
 
 Not built yet:
 
-- Per-session check-in, and unassigning a person from a group.
+- Per-session check-in (in review, PR #397).
 - A hold for each child in a household. One active hold per household per class still applies, so a second child of the same household cannot take the same class at the same time (see `docs/phases/03-registration.md`).
 
 ## Words we use
@@ -49,12 +49,20 @@ Not built yet:
 - **Screens.** `/camp/sessions/[id]/groups` (groups and rooms, with capacity, campers, staff and ratio; New and Edit in `FormPopUp`) and `/camp/sessions/[id]/assign` (each group with its members and room, the campers not placed yet, and a Place or move pop-up). A refusal shows as small polite text under the form. A ratio refusal opens a second pop-up that asks for the reason. The session page links to both.
 - **Model choices to review.** Room identity is its name and location, case-insensitive, within the camp: each session books its own room rows, and the rule checks the other sessions' uses of the same name and place. A group's capacity counts campers only. Staff count toward the ratio only. A session without dates cannot take placements yet (refused as "session_undated").
 
+## Built: unassign a person from a group
+
+- **Service.** `groups.unassign` (`GroupService`) and `unassign` in the repository end a person's one active assignment in a session. The row is set inactive (`assignments.active = false`); nothing is deleted, and the partial unique index lets the person be placed again in the same session.
+- **Locks.** The same locks as a placement, in the same order: the person, then the group, then the room (with the camp-wide room lock). The placement is read under the person's lock, then again under the group and room locks; if it changed, the call is refused as a conflict (`PgUnassign.ts`).
+- **Refusal.** A person with no active assignment in the session is refused with the reason `not_assigned` ("This person is not placed in this session, so there is nothing to unassign."). Nothing is written.
+- **Permission.** The same as assign: `classes:manage` (staff and above). A viewer or a teacher is refused with a 403.
+- **Audit.** Every unassign writes `assignment.unassign` in the same transaction, with the session, person, group and room.
+- **Screen.** On the Assign page, each member of a group has an Unassign button, shown only to roles with `classes:manage`. It opens a short confirmation pop-up (`FormPopUp`) that names the person and the group. Success shows a toast; a refusal shows as small polite text.
+
 ## Not built yet
 
 - **Per-session check-in** that records the session and flags a camper who is not assigned to it.
 - **A camp-wide holds screen** (holds across every class, not one class at a time). Phase 3 still shows holds for one class only.
 - **Hold length per camp.** Holds are fixed at 15 minutes (`SEAT_HOLD_MINUTES`).
-- Releasing an assignment (unassigning). The schema has the `active` flag; no code path clears it yet.
 
 ## Acceptance criteria
 

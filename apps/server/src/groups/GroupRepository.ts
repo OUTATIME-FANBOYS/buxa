@@ -3,6 +3,20 @@ import type { Assignment, Group, GroupInput, Room, RoomInput } from '@buxa/contr
 
 export type { Assignment, Group, Room } from '@buxa/contracts';
 
+/** Ends one person's active placement in a session. The group and room are read from that placement. */
+export interface UnassignRequest {
+  sessionId: string;
+  personId: string;
+}
+
+/** The placement that was ended: the assignment's id and where it was. */
+export interface Unassigned {
+  id: string;
+  personId: string;
+  groupId: string;
+  roomId: string;
+}
+
 /** What placing one person needs to name: the session, the person, the role, and the group and room to place them in. */
 export interface AssignRequest {
   sessionId: string;
@@ -50,4 +64,10 @@ export interface GroupRepository {
    * RoomNotFoundError, AssignmentConflictError.
    */
   assign(actor: Actor, request: AssignRequest, rule: AssignmentRule): Promise<Assignment>;
+  /**
+   * Ends the person's one active assignment in the session (sets it inactive; no row is deleted). Takes the same locks as assign, in
+   * the same order: person, group, room. Audits `assignment.unassign` in the same transaction. Throws PersonNotFoundError,
+   * NotAssignedError, AssignmentConflictError.
+   */
+  unassign(actor: Actor, request: UnassignRequest): Promise<Unassigned>;
 }

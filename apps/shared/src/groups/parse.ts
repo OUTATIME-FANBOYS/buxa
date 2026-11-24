@@ -2,9 +2,11 @@ import {
   AssignInputSchema,
   GroupInputSchema,
   RoomInputSchema,
+  UnassignInputSchema,
   type AssignInput,
   type GroupInput,
   type RoomInput,
+  type UnassignInput,
 } from '@buxa/contracts';
 import { failure, type FieldErrors } from '../actionState';
 import { field, parseWith, type PersonParsed } from '../people/parse';
@@ -98,5 +100,13 @@ export function assignForm(form: FormData): PersonParsed<AssignInput> {
     groupId: field(form, 'groupId'),
     roomId: field(form, 'roomId'),
     ...(reason ? { override: { reason } } : {}),
+  });
+}
+
+/** An unassign: the session and the person. The group and room come from the person's placement. */
+export function unassignForm(form: FormData): PersonParsed<UnassignInput> {
+  return parseWith<UnassignInput>(UnassignInputSchema, {
+    sessionId: field(form, 'sessionId'),
+    personId: field(form, 'personId'),
   });
 }

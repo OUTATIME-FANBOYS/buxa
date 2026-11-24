@@ -46,7 +46,14 @@ export async function AssignPage({ sessionId }: { sessionId: string }) {
       {needsGroupsAndRooms && canManage && (
         <p className="muted">Create at least one group and one room on the Groups and rooms page first.</p>
       )}
-      <AssignBoard groups={groups} rooms={rooms} assignments={assignments} unplaced={unplaced} />
+      <AssignBoard
+        sessionId={session.id}
+        canManage={canManage}
+        groups={groups}
+        rooms={rooms}
+        assignments={assignments}
+        unplaced={unplaced}
+      />
     </div>
   );
 }
