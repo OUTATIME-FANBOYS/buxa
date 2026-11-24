@@ -76,4 +76,27 @@ describe('EditSessionButton: the session status', () => {
     expect(buttonWith('Unarchive session')).not.toBeNull();
     expect(buttonWith('Go live')).toBeNull();
   });
+
+  it('never offers Delete in the pop-up: deleting is the sessions table trash icon', () => {
+    open(<EditSessionButton session={session()} />);
+    expect(buttonWith('Delete session')).toBeNull();
+    expect(buttonWith('Delete classes and session')).toBeNull();
+  });
+
+  it('puts Unarchive in the footer on the left, before Cancel and Save', () => {
+    open(
+      <EditSessionButton
+        session={session({ status: 'archived', archivedAt: '2027-06-01T00:00:00.000Z' })}
+        canUnarchive
+      />,
+    );
+    const unarchive = buttonWith('Unarchive session');
+    const cancel = buttonWith('Cancel');
+    const save = buttonWith('Save session');
+    if (!unarchive || !cancel || !save) {
+      throw new Error('the footer should hold Unarchive, Cancel and Save');
+    }
+    expect(unarchive.compareDocumentPosition(cancel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(cancel.compareDocumentPosition(save) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
 });
