@@ -18,8 +18,10 @@ export interface FormPopUpProps {
   /** Turns the submit button off, for example while a required list is empty. */
   submitDisabled?: boolean;
   onCancel: () => void;
-  /** An action on the footer's left, away from Cancel and submit (for example a delete). */
+  /** An action in the footer (for example a delete). By default it sits on the left, away from Cancel and submit. */
   leading?: ReactNode;
+  /** 'end' puts `leading` in the same bottom-right group as Cancel and submit, in that order. */
+  leadingPlacement?: 'start' | 'end';
   className?: string;
   children: ReactNode;
 }
@@ -40,6 +42,7 @@ export function FormPopUp({
   submitDisabled = false,
   onCancel,
   leading,
+  leadingPlacement = 'start',
   className = 'class-dialog',
   children,
 }: FormPopUpProps) {
@@ -60,11 +63,19 @@ export function FormPopUp({
       onClose={onCancel}
       className={className}
       footer={
-        <>
-          {leading}
-          <span className="buxa:flex-1" />
-          {buttons}
-        </>
+        leadingPlacement === 'end' ? (
+          <>
+            <span className="buxa:flex-1" />
+            {leading}
+            {buttons}
+          </>
+        ) : (
+          <>
+            {leading}
+            <span className="buxa:flex-1" />
+            {buttons}
+          </>
+        )
       }
     >
       {intro ? <p className="muted">{intro}</p> : null}

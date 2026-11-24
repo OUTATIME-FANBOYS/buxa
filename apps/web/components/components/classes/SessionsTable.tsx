@@ -95,6 +95,7 @@ export function SessionsTable({
               <th scope="col">Session</th>
               <th scope="col">Dates</th>
               <th scope="col">Classes</th>
+              <th scope="col">Status</th>
               {canManage && (
                 <th scope="col">
                   <span className="sr-only">Actions</span>
@@ -116,9 +117,6 @@ export function SessionsTable({
                   <Link className="row-title classes-target" href={sessionPath(session.id)}>
                     {session.name}
                   </Link>
-                  <Pill tone={SESSION_STATUS[session.status].tone} dot={false}>
-                    {SESSION_STATUS[session.status].label}
-                  </Pill>
                 </td>
                 <td>
                   {session.startsOn && session.endsOn
@@ -126,8 +124,13 @@ export function SessionsTable({
                     : 'Dates not set yet'}
                 </td>
                 <td>{session.classCount}</td>
+                <td>
+                  <Pill tone={SESSION_STATUS[session.status].tone} dot={false}>
+                    {SESSION_STATUS[session.status].label}
+                  </Pill>
+                </td>
                 {canManage && (
-                  <td>
+                  <td className="classes-actions-cell">
                     <div className="classes-row-actions">
                       <EditSessionButton session={session} canUnarchive={canUnarchive} canPublish={canPublish} />
                       <Button

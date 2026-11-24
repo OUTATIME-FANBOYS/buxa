@@ -87,6 +87,7 @@ export function EditSessionButton({
           submitIcon="save"
           pending={pending || deleting || unarchiving || publishing}
           onCancel={close}
+          leadingPlacement="end"
           leading={
             hasClasses ? (
               <Button
