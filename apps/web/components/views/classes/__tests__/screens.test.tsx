@@ -22,7 +22,6 @@ const services = vi.hoisted(() => ({
     listClasses: vi.fn(),
     getClass: vi.fn(),
     listEnrolments: vi.fn(),
-    listTeacherAssignments: vi.fn(),
   },
   people: { list: vi.fn() },
   orgs: { getCamp: vi.fn(), listMembers: vi.fn() },
@@ -48,7 +47,6 @@ vi.mock('@/actions/classes', () => ({
   promoteWaitlistAction: vi.fn(),
   cancelEnrolmentAction: vi.fn(),
   addRecurringClassesAction: vi.fn(),
-  setTeachersAction: vi.fn(),
   importClassesAction: vi.fn(),
 }));
 
@@ -113,7 +111,6 @@ beforeEach(() => {
   });
   asRole('staff');
   services.orgs.getCamp.mockResolvedValue({ timezone: 'Australia/Sydney' });
-  services.classes.listTeacherAssignments.mockResolvedValue({ ok: true, value: [] });
   services.orgs.listMembers.mockResolvedValue({ members: [] });
   services.classes.listSessions.mockResolvedValue({ ok: true, value: [parent] });
   services.classes.getSession.mockResolvedValue({ ok: true, value: parent });
@@ -220,6 +217,29 @@ describe('ClassPage (one session and its classes)', () => {
     const html = render(await ClassPage({ classId: SESSION_ID, searchParams: { class: CLASS_ID } }));
     expect(html).toContain('aria-label="Class details"');
     expect(html).toContain('<dt>Instructors</dt><dd>Ivy Chen</dd>');
+  });
+
+  it('shows the instructor names in the Instructors column, and None yet for a class with none', async () => {
+    const unstaffed: Class = {
+      ...full,
+      id: '77777777-7777-4777-8777-777777777777',
+      name: 'Painting',
+      instructorIds: [],
+      instructors: [],
+    };
+    services.classes.listClasses.mockResolvedValue({ ok: true, value: [full, unstaffed] });
+    const html = render(await ClassPage({ classId: SESSION_ID, searchParams: {} }));
+    expect(html).toContain('<td>Ivy Chen</td>');
+    expect(html).toContain('<td>None yet</td>');
+  });
+
+  it('has no Teachers section, for staff or an admin', async () => {
+    for (const role of ['staff', 'admin'] as const) {
+      asRole(role);
+      const html = render(await ClassPage({ classId: SESSION_ID, searchParams: {} }));
+      expect(html).not.toContain('Teachers');
+      expect(html).not.toContain('teachers-heading');
+    }
   });
 });
 

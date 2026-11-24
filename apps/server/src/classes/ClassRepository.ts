@@ -88,19 +88,13 @@ export interface ClassRepository {
   /** Frees the seat and the time. Audits `enrolment.cancel`. Throws EnrolmentNotFoundError (also when already cancelled). */
   cancelEnrolment(actor: Actor, enrolmentId: string, note: string | null): Promise<Enrolment>;
   /**
-   * The classes a teacher is assigned to in this camp. Only members with the teacher role count, so a person who stopped being a
-   * teacher has no classes even before their assignments are cleared. Used by the assigned-classes scope (teacherScope.ts).
+   * The classes a teacher is assigned to in this camp: the classes whose instructors include the person linked to the teacher's
+   * login (people.user_id). Only members with the teacher role count. A teacher with no linked person has no classes. Used by the
+   * assigned-classes scope (teacherScope.ts).
    */
   assignedClassIds(userId: string, orgId: string, teacherId: string): Promise<string[]>;
   /** The people with an enrolled (not waitlisted or cancelled) place in any of the classes. */
   camperIdsIn(userId: string, orgId: string, classIds: readonly string[]): Promise<string[]>;
-  /**
-   * Replaces a class's teachers (staff and admins, classes:manage). Audits `class.update`. Throws ClassNotFoundError, or
-   * TeacherNotFoundError for a user who is not a teacher in this camp.
-   */
-  replaceTeachers(actor: Actor, classId: string, userIds: readonly string[]): Promise<void>;
-  /** Which teachers each class of a session has, for the session page. Row-level security applies. */
-  teacherAssignments(userId: string, orgId: string, sessionId: string): Promise<TeacherAssignment[]>;
   /**
    * Every seat hold in the camp that holds a place now (unreleased and not yet expired), in one read, ordered by expiry. Read only.
    * Callers check the permission (SeatHoldService.listCampActiveHolds).
@@ -140,10 +134,4 @@ export interface CampWaitlistEntry {
   householdName: string | null;
   camperName: string;
   joinedAt: string;
-}
-
-/** A teacher assigned to one class (the class's id, and the teacher's user id). */
-export interface TeacherAssignment {
-  classId: string;
-  userId: string;
 }

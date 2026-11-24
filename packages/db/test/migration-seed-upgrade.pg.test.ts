@@ -176,6 +176,7 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0048_camp_hold_length.sql',
       '0049_check_in_session.sql',
       '0050_class_prices.sql',
+      '0051_teacher_person_link.sql',
     ]);
   });
 
@@ -373,7 +374,7 @@ describe.skipIf(!url)('migration 0050 copies session prices onto their classes',
       return;
     }
     const applied = await migrate(tempPool);
-    expect(applied).toEqual(['0050_class_prices.sql']);
+    expect(applied).toEqual(['0050_class_prices.sql', '0051_teacher_person_link.sql']);
 
     const classes = await tempPool.query<{
       name: string;
@@ -418,5 +419,207 @@ describe.skipIf(!url)('migration 0050 copies session prices onto their classes',
       `SELECT column_name FROM information_schema.columns WHERE table_name = 'classes' AND column_name LIKE '%price%'`,
     );
     expect(dropped.rows).toEqual([]);
+  });
+});
+
+// Migration 0051 links each teacher's login to its roster person by email, copies the assignments into session_instructors, and
+// keeps class_teachers while any row is unmatched. The database is brought to 0050 by hand, seeded with teacher assignments, and
+// then migrate() applies 0051 alone. The notices it prints are the report for the owner.
+const requireDatabaseUrl = (): string => {
+  if (!url) {
+    throw new Error('DATABASE_URL is not set for the teacher link test.');
+  }
+
+  return url;
+};
+
+async function migrateTeacherDb(
+  dbName: string,
+  seed: { matchedLogin: boolean; unmatchedLogin: boolean },
+): Promise<{ rootPool: pg.Pool; tempPool: pg.Pool; applied: string[]; notices: string[]; unmatchedEmail: string }> {
+  const tag = randomBytes(4).toString('hex');
+  const rootPool = new pg.Pool(poolConfigFor(requireDatabaseUrl()));
+  rootPool.on('error', () => {});
+  await rootPool.query(`CREATE DATABASE "${dbName}"`);
+  const parsed = new URL(requireDatabaseUrl());
+  parsed.pathname = `/${dbName}`;
+  const tempUrl = parsed.toString();
+
+  const setup = new pg.Pool(poolConfigFor(tempUrl));
+  setup.on('error', () => {});
+  const client = await setup.connect();
+  const matchedEmail = `match-${tag}@teachers.test`;
+  const unmatchedEmail = `nobody-${tag}@teachers.test`;
+  try {
+    await client.query(
+      'CREATE TABLE IF NOT EXISTS schema_migrations (name text PRIMARY KEY, at timestamptz NOT NULL DEFAULT now())',
+    );
+    for (const file of readdirSync(DIR)
+      .filter(f => f.endsWith('.sql') && f.slice(0, 4) < '0051')
+      .sort()) {
+      await client.query('BEGIN');
+      await client.query(readFileSync(join(DIR, file), 'utf8'));
+      await client.query('INSERT INTO schema_migrations(name) VALUES ($1)', [file]);
+      await client.query('COMMIT');
+    }
+    const org = await client.query<{ id: string }>(
+      `INSERT INTO orgs (name, slug) VALUES ('Teacher link', $1) RETURNING id`,
+      [`teacher-link-${tag}`],
+    );
+    const orgId = org.rows[0].id;
+    const matchedUser = await client.query<{ id: string }>(
+      `INSERT INTO users (email, name, first_name) VALUES ($1, 'Mia Match', 'Mia') RETURNING id`,
+      [matchedEmail],
+    );
+    const unmatchedUser = await client.query<{ id: string }>(
+      `INSERT INTO users (email, name, first_name) VALUES ($1, 'Nina Nobody', 'Nina') RETURNING id`,
+      [unmatchedEmail],
+    );
+    await client.query(
+      `INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'teacher'), ($1, $3, 'teacher')`,
+      [orgId, matchedUser.rows[0].id, unmatchedUser.rows[0].id],
+    );
+    // The roster person has the login's email in another case, with spaces around it: the match ignores both.
+    await client.query(`INSERT INTO people (org_id, given_name, family_name, email) VALUES ($1, 'Mia', 'Match', $2)`, [
+      orgId,
+      `  ${matchedEmail.toUpperCase()} `,
+    ]);
+    await client.query(
+      `INSERT INTO classes (org_id, name, default_capacity) VALUES ($1, 'Pottery', 10), ($1, 'Painting', 10)`,
+      [orgId],
+    );
+    const sessions = await client.query<{ id: string; name: string }>(
+      `INSERT INTO sessions (org_id, class_id, name, starts_at, ends_at, location, capacity, ratio_campers, ratio_instructors)
+       SELECT c.org_id, c.id, c.name, now(), now() + interval '1 hour', 'Lake', 10, 5, 1
+         FROM classes c WHERE c.org_id = $1
+       RETURNING id, name`,
+      [orgId],
+    );
+    const sessionNamed = (name: string) => sessions.rows.find(r => r.name === name)?.id;
+    if (seed.matchedLogin) {
+      await client.query(`INSERT INTO class_teachers (org_id, session_id, user_id) VALUES ($1, $2, $3)`, [
+        orgId,
+        sessionNamed('Pottery'),
+        matchedUser.rows[0].id,
+      ]);
+    }
+    if (seed.unmatchedLogin) {
+      await client.query(`INSERT INTO class_teachers (org_id, session_id, user_id) VALUES ($1, $2, $3)`, [
+        orgId,
+        sessionNamed('Painting'),
+        unmatchedUser.rows[0].id,
+      ]);
+    }
+  } finally {
+    client.release();
+    await setup.end();
+  }
+
+  // A fresh pool, so that every connection migrate() opens reports its notices here.
+  const notices: string[] = [];
+  const tempPool = new pg.Pool(poolConfigFor(tempUrl));
+  tempPool.on('error', () => {});
+  tempPool.on('connect', c => c.on('notice', (m: { message?: string }) => notices.push(m.message ?? '')));
+  const applied = await migrate(tempPool);
+
+  return { rootPool, tempPool, applied, notices, unmatchedEmail };
+}
+
+describe.skipIf(!url)('migration 0051 links teachers to their people by email', () => {
+  const tag = randomBytes(4).toString('hex');
+  const dbName = `buxa_teacher_link_${tag}`;
+  let rootPool: pg.Pool | null = null;
+  let tempPool: pg.Pool | null = null;
+  let applied: string[] = [];
+  let notices: string[] = [];
+  let unmatchedEmail = '';
+
+  beforeAll(async () => {
+    const built = await migrateTeacherDb(dbName, { matchedLogin: true, unmatchedLogin: true });
+    rootPool = built.rootPool;
+    tempPool = built.tempPool;
+    applied = built.applied;
+    notices = built.notices;
+    unmatchedEmail = built.unmatchedEmail;
+  });
+
+  afterAll(async () => {
+    if (tempPool) {
+      await tempPool.end().catch(() => {});
+    }
+    if (rootPool) {
+      await rootPool.query(`DROP DATABASE IF EXISTS "${dbName}" WITH (FORCE)`).catch(() => {});
+      await rootPool.end().catch(() => {});
+    }
+  });
+
+  it('applies 0051 and links the matched login to its person (case and spaces ignored)', async () => {
+    if (!tempPool) {
+      return;
+    }
+    expect(applied).toEqual(['0051_teacher_person_link.sql']);
+    const linked = await tempPool.query<{ email: string; user_email: string }>(
+      `SELECT p.email, u.email AS user_email FROM people p JOIN users u ON u.id = p.user_id`,
+    );
+    expect(linked.rows).toHaveLength(1);
+    expect(linked.rows[0].email.trim().toLowerCase()).toBe(linked.rows[0].user_email);
+  });
+
+  it('copies the matched assignment into session_instructors', async () => {
+    if (!tempPool) {
+      return;
+    }
+    const copied = await tempPool.query<{ name: string }>(
+      `SELECT s.name FROM session_instructors si JOIN sessions s ON s.id = si.session_id`,
+    );
+    expect(copied.rows).toEqual([{ name: 'Pottery' }]);
+  });
+
+  it('reports the unmatched row in a notice and keeps class_teachers', async () => {
+    if (!tempPool) {
+      return;
+    }
+    expect(notices.some(n => n.includes('Painting') && n.includes(unmatchedEmail))).toBe(true);
+    expect(notices.some(n => n.includes('class_teachers is KEPT'))).toBe(true);
+    const kept = await tempPool.query<{ n: string }>(`SELECT count(*)::text AS n FROM class_teachers`);
+    expect(kept.rows[0].n).toBe('2');
+  });
+});
+
+describe.skipIf(!url)('migration 0051 drops class_teachers when every row is matched', () => {
+  const tag = randomBytes(4).toString('hex');
+  const dbName = `buxa_teacher_drop_${tag}`;
+  let rootPool: pg.Pool | null = null;
+  let tempPool: pg.Pool | null = null;
+  let notices: string[] = [];
+
+  beforeAll(async () => {
+    const built = await migrateTeacherDb(dbName, { matchedLogin: true, unmatchedLogin: false });
+    rootPool = built.rootPool;
+    tempPool = built.tempPool;
+    notices = built.notices;
+  });
+
+  afterAll(async () => {
+    if (tempPool) {
+      await tempPool.end().catch(() => {});
+    }
+    if (rootPool) {
+      await rootPool.query(`DROP DATABASE IF EXISTS "${dbName}" WITH (FORCE)`).catch(() => {});
+      await rootPool.end().catch(() => {});
+    }
+  });
+
+  it('copies the assignment, then drops class_teachers without a kept notice', async () => {
+    if (!tempPool) {
+      return;
+    }
+    expect(notices.some(n => n.includes('KEPT'))).toBe(false);
+    const table = await tempPool.query<{ n: string }>(
+      `SELECT count(*)::text AS n FROM information_schema.tables WHERE table_name = 'class_teachers'`,
+    );
+    expect(table.rows[0].n).toBe('0');
+    const copied = await tempPool.query<{ n: string }>(`SELECT count(*)::text AS n FROM session_instructors`);
+    expect(copied.rows[0].n).toBe('1');
   });
 });

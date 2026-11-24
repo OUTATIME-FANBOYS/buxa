@@ -8,7 +8,6 @@ import { addClassAction as addClassActionImpl } from '@buxa/server/composers/cla
 import { updateClassAction as updateClassActionImpl } from '@buxa/server/composers/classes/updateClassAction';
 import { deleteClassAction as deleteClassActionImpl } from '@buxa/server/composers/classes/deleteClassAction';
 import { addRecurringClassesAction as addRecurringClassesActionImpl } from '@buxa/server/composers/classes/addRecurringClassesAction';
-import { setTeachersAction as setTeachersActionImpl } from '@buxa/server/composers/classes/setTeachersAction';
 import { updateSessionAction as updateSessionActionImpl } from '@buxa/server/composers/classes/updateSessionAction';
 import { deleteSessionAction as deleteSessionActionImpl } from '@buxa/server/composers/classes/deleteSessionAction';
 import { deleteSessionsAction as deleteSessionsActionImpl } from '@buxa/server/composers/classes/deleteSessionsAction';
@@ -46,10 +45,6 @@ export async function deleteClassAction(...args: Parameters<typeof deleteClassAc
 
 export async function addRecurringClassesAction(...args: Parameters<typeof addRecurringClassesActionImpl>) {
   return addRecurringClassesActionImpl(...args);
-}
-
-export async function setTeachersAction(...args: Parameters<typeof setTeachersActionImpl>) {
-  return setTeachersActionImpl(...args);
 }
 
 export async function updateSessionAction(...args: Parameters<typeof updateSessionActionImpl>) {

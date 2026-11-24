@@ -4,7 +4,7 @@ import type { Class, Enrolment, Session } from '@buxa/contracts';
 import type { ActiveHold } from '../../holds/SeatHoldRepository';
 import { getRuntime } from '../../runtime';
 import { isHttpError, notFound } from '../../http/errors';
-import type { CampActiveHold, CampWaitlistEntry, TeacherAssignment } from '../../classes/ClassRepository';
+import type { CampActiveHold, CampWaitlistEntry } from '../../classes/ClassRepository';
 import type { AssignedSession } from '../../classes/ClassService';
 
 /** What a page can show: the data, or the reason it cannot be shown. Anything else goes to the error boundary. */
@@ -72,18 +72,6 @@ export async function loadPeopleWithRole(
 export async function loadEnrolments(actor: Actor, classId: string): Promise<Loaded<Enrolment[]>> {
   return guarded(async () => {
     const outcome = await getRuntime().services.classes.listEnrolments(actor, classId);
-    if (!outcome.ok) {
-      throw notFound(outcome.failure.message);
-    }
-
-    return outcome.value;
-  });
-}
-
-/** Which teachers each class of a session has (the session page's teacher list). Needs classes:manage. */
-export async function loadTeacherAssignments(actor: Actor, sessionId: string): Promise<Loaded<TeacherAssignment[]>> {
-  return guarded(async () => {
-    const outcome = await getRuntime().services.classes.listTeacherAssignments(actor, sessionId);
     if (!outcome.ok) {
       throw notFound(outcome.failure.message);
     }
