@@ -85,20 +85,19 @@ export function EditSessionButton({
                   {unarchiving ? 'Unarchiving...' : 'Unarchive session'}
                 </Button>
               </form>
+            ) : session.status === 'draft' && canPublish ? (
+              <form action={publishAction} className="class-form">
+                <input type="hidden" name="sessionId" value={session.id} />
+                <Button type="submit" variant="glass" icon="check" disabled={publishing}>
+                  {publishing ? 'Going live...' : 'Go live'}
+                </Button>
+              </form>
             ) : undefined
           }
         >
           <p className="class-helper" data-testid="session-status-note">
             {SESSION_STATUS[session.status].note}
           </p>
-          {session.status === 'draft' && canPublish && (
-            <form action={publishAction} className="class-form">
-              <input type="hidden" name="sessionId" value={session.id} />
-              <Button type="submit" variant="glass" icon="check" disabled={publishing}>
-                {publishing ? 'Going live...' : 'Go live'}
-              </Button>
-            </form>
-          )}
           <EditSessionForm session={session} formId={formId} onPendingChange={onPendingChange} onSaved={saved} />
           <ActionMessage state={unarchiveState} />
           <ActionMessage state={publishState} />
