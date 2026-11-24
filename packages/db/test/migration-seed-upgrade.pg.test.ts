@@ -185,8 +185,8 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0057_role_aware_policies.sql',
       '0058_rename_member_roster_name.sql',
       '0059_session_dates_flag.sql',
-      '0060_registration_form_files.sql',
-      '0061_registration_documents.sql',
+      '0062_registration_form_files.sql',
+      '0063_registration_documents.sql',
     ]);
   });
 
@@ -395,8 +395,8 @@ describe.skipIf(!url)('migration 0050 copies session prices onto their classes',
       '0057_role_aware_policies.sql',
       '0058_rename_member_roster_name.sql',
       '0059_session_dates_flag.sql',
-      '0060_registration_form_files.sql',
-      '0061_registration_documents.sql',
+      '0062_registration_form_files.sql',
+      '0063_registration_documents.sql',
     ]);
 
     const classes = await tempPool.query<{
@@ -590,8 +590,8 @@ describe.skipIf(!url)('migration 0051 links teachers to their people by email', 
       '0057_role_aware_policies.sql',
       '0058_rename_member_roster_name.sql',
       '0059_session_dates_flag.sql',
-      '0060_registration_form_files.sql',
-      '0061_registration_documents.sql',
+      '0062_registration_form_files.sql',
+      '0063_registration_documents.sql',
     ]);
     const linked = await tempPool.query<{ email: string; user_email: string }>(
       `SELECT p.email, u.email AS user_email FROM people p JOIN users u ON u.id = p.user_id`,

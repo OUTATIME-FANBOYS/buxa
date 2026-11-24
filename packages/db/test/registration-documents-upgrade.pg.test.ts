@@ -102,7 +102,7 @@ describe.skipIf(!url)('migrations 0060 and 0061 on a database that already has r
     }
     const applied = await migrate(tempPool);
     expect(applied).toEqual(
-      expect.arrayContaining(['0060_registration_form_files.sql', '0061_registration_documents.sql']),
+      expect.arrayContaining(['0062_registration_form_files.sql', '0063_registration_documents.sql']),
     );
 
     const row = await tempPool.query<{ answers: unknown }>('SELECT answers FROM registrations WHERE id = $1', [
