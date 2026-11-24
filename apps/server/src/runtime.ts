@@ -181,7 +181,7 @@ function createClassServices(
   const classes = repositories.classes;
 
   return {
-    seatHolds: createSeatHoldService({ repo: repositories.seatHolds, timezoneOf, holdMinutesOf }),
+    seatHolds: createSeatHoldService({ repo: repositories.seatHolds, classes, timezoneOf, holdMinutesOf }),
     groups: createGroupService({ repo: repositories.groups }),
     classes: createClassService({ repo: classes, timezoneOf }),
     imports: createImportService({ classes, imports: repositories.imports, timezoneOf }),

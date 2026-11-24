@@ -134,6 +134,7 @@ describe('CampFrame', () => {
       'Home',
       'Sessions',
       'Registration',
+      'Holds',
       'Check-in',
       'On site',
       'Attendance',

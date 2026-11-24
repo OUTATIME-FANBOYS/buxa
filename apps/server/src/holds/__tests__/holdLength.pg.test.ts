@@ -1,3 +1,4 @@
+import { PgClassRepository } from '../../classes/PgClassRepository';
 import { randomBytes } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
@@ -29,6 +30,7 @@ describe.skipIf(!url)('seat hold length per camp in Postgres', () => {
   const camp: OrgService = createOrgService(orgs);
   const seats: SeatHoldService = createSeatHoldService({
     repo: new PgSeatHoldRepository(pool),
+    classes: new PgClassRepository(pool),
     timezoneOf: () => Promise.resolve('Australia/Sydney'),
     holdMinutesOf: async scope => (await orgs.get(scope.userId, scope.orgId)).holdMinutes,
   });

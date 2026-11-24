@@ -52,6 +52,7 @@ function memoryHolds(capacity: number, clock: { now: Date }) {
 /** The seat hold service over the in-memory repository. Only placeHold is reached here, so the other methods are stubs. */
 function service(repo: Pick<SeatHoldRepository, 'placeHold'>, clock: { now: Date }) {
   return createSeatHoldService({
+    classes: { listCampActiveHolds: () => Promise.resolve([]) },
     repo: {
       ...repo,
       releaseHold: () => Promise.reject(new Error('not used in this test')),

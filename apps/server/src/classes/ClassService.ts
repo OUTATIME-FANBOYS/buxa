@@ -21,7 +21,13 @@ import {
   type SessionPriceInput,
 } from '@buxa/contracts';
 import { assertAllowed } from '../auth/authorize';
-import type { ClassRecord, ClassRepository, CampClassSpan, TeacherAssignment } from './ClassRepository';
+import type {
+  CampClassSpan,
+  CampWaitlistEntry,
+  ClassRecord,
+  ClassRepository,
+  TeacherAssignment,
+} from './ClassRepository';
 import { teacherScopeOf, type TeacherScope } from './teacherScope';
 import {
   ClassNotFoundError,
@@ -90,6 +96,11 @@ export interface ClassService {
   /** Each class of a session with its assigned teachers. Staff and admins (classes:manage). */
   listTeacherAssignments(actor: Actor, sessionId: string): Promise<Outcome<TeacherAssignment[]>>;
   listEnrolments(actor: Actor, classId: string): Promise<Outcome<Enrolment[]>>;
+  /**
+   * Every waitlisted camper in the camp, by class and then in the order they joined, for the camp-wide holds screen. Needs
+   * registration:read (the same people who can read registration). Read only.
+   */
+  listCampWaitlists(actor: Actor): Promise<CampWaitlistEntry[]>;
   enrol(actor: Actor, input: EnrolInput): Promise<Outcome<Enrolment>>;
   cancelEnrolment(actor: Actor, input: CancelEnrolmentInput): Promise<Outcome<Enrolment>>;
 }
@@ -436,6 +447,12 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
       });
 
       return attempt(() => repo.listEnrolments(actor.userId, actor.orgId, classId), await timezoneOf(actor));
+    },
+
+    async listCampWaitlists(actor) {
+      assertAllowed(actor, 'registration:read');
+
+      return repo.listCampWaitlists(actor.userId, actor.orgId);
     },
 
     ...createEnrolmentMethods({ repo, timezoneOf }),

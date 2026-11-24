@@ -48,6 +48,7 @@ export const CAMP_NAV_GROUPS: readonly NavGroup[] = [
       { href: ROUTES.sessions, label: 'Sessions', icon: 'calendar', requires: 'events:read' },
       { href: ROUTES.myClasses, label: 'My classes', icon: 'calendar', onlyFor: ['teacher'] },
       { href: ROUTES.registration, label: 'Registration', icon: 'list', requires: 'registration:read' },
+      { href: ROUTES.holds, label: 'Holds', icon: 'clock', requires: 'registration:read' },
       { href: ROUTES.checkIn, label: 'Check-in', icon: 'check', requires: 'attendance:record' },
       { href: ROUTES.onSite, label: 'On site', icon: 'clock', requires: 'attendance:read' },
       {

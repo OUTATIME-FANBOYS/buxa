@@ -58,6 +58,7 @@ describe.skipIf(!url)('registration by class in Postgres', () => {
   });
   const seats: SeatHoldService = createSeatHoldService({
     repo: new PgSeatHoldRepository(pool),
+    classes: new PgClassRepository(pool),
     timezoneOf: () => Promise.resolve('UTC'),
     holdMinutesOf: () => Promise.resolve(null),
   });

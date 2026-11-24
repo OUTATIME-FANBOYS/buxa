@@ -12,9 +12,12 @@ function createMemoryClassFixture(): Promise<ClassContractFixture> {
   return Promise.resolve({
     repo,
     actor,
-    addCamper: () => {
+    addCamper: familyName => {
       const id = randomUUID();
       repo.seedCamper(actor.orgId, id, 'Test camper', '2016-03-01');
+      if (familyName) {
+        repo.seedHouseholdMember(id, familyName);
+      }
 
       return Promise.resolve(id);
     },
