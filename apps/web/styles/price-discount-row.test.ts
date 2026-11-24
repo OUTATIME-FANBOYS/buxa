@@ -16,6 +16,13 @@ describe('the discount row', () => {
     expect(ruleFor('.price-discount-row')).toContain('grid-template-columns: repeat(3, minmax(0, 1fr));');
   });
 
+  it('sets the helper text on a full-width line at the left edge of the row', () => {
+    const hint = ruleFor('.price-discount-hint');
+
+    expect(hint).toContain('grid-column: 1 / -1;');
+    expect(hint).toContain('text-align: left;');
+  });
+
   it('stacks to one column at the phone breakpoint that the stylesheet already uses', () => {
     const phone = classes.slice(classes.indexOf('@media (max-width: 720px) { .price-discount-row'));
 

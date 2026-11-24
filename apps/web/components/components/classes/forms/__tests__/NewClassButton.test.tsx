@@ -8,6 +8,7 @@ import { UiProvider } from '@buxa/middleware/providers/providers';
 
 const NoDialog = () => null;
 const SESSION = '11111111-1111-4111-8111-111111111111';
+const NO_WEEKDAY = 'Tick at least one day of the week.';
 
 const actions = vi.hoisted(() => ({
   createSessionAction: vi.fn(),
@@ -61,8 +62,6 @@ const openDialog = () => {
 };
 const form = () => document.querySelector<HTMLFormElement>('form#new-class-form');
 const input = (name: string) => document.querySelector<HTMLInputElement>(`#new-class-form [name="${name}"]`);
-const specificDays = () =>
-  [...document.querySelectorAll('label')].find(label => label.textContent === 'Specific days')?.querySelector('input');
 const setValue = (name: string, value: string) => {
   const field = input(name);
   if (!field) {
@@ -72,9 +71,17 @@ const setValue = (name: string, value: string) => {
     field.value = value;
   });
 };
-const toggleSpecificDays = () => {
-  act(() => specificDays()?.click());
+/** A day chip, found by its accessible name (Monday) or its visible text (All). */
+const chip = (label: string) =>
+  [...document.querySelectorAll<HTMLButtonElement>('.weekday-row button')].find(
+    button => button.getAttribute('aria-label') === label || button.textContent === label,
+  );
+const chipPressed = (label: string) => chip(label)?.getAttribute('aria-pressed');
+const clickChip = (label: string) => {
+  act(() => chip(label)?.click());
 };
+const postedWeekdays = () =>
+  [...(form()?.querySelectorAll<HTMLInputElement>('input[name="weekdays"]') ?? [])].map(field => field.value);
 const submit = async () => {
   await act(() => {
     form()?.requestSubmit();
@@ -126,33 +133,102 @@ describe('the New class dialog: its pinned footer', () => {
   });
 });
 
-describe('the New class dialog: the default one-class form', () => {
-  it('starts with one class: Starts and Ends date-times, and the Specific days toggle off', () => {
+describe('the New class dialog: every class is set on weekdays', () => {
+  it('has no Specific days checkbox and no one-class toggle', () => {
     openDialog();
 
-    expect(input('startsAt')?.type).toBe('datetime-local');
-    expect(input('endsAt')?.type).toBe('datetime-local');
-    expect(document.querySelector('[name="weekdays"]')).toBeNull();
-    expect(specificDays()?.checked).toBe(false);
+    expect(shownText()).not.toContain('Specific days');
+    expect(document.querySelector('#new-class-form input[type="checkbox"]')).toBeNull();
   });
 
-  it('submits one class with its start and end date-times, and no recurring fields', async () => {
+  it('shows the day chips All, M, T, W, T, F, S, S, with Monday to Friday pressed by default', () => {
     openDialog();
+
+    const labels = [...document.querySelectorAll<HTMLButtonElement>('.weekday-row button')].map(b => b.textContent);
+    expect(labels).toEqual(['All', 'M', 'T', 'W', 'T', 'F', 'S', 'S']);
+    expect(chipPressed('All')).toBe('false');
+    expect(chipPressed('Monday')).toBe('true');
+    expect(chipPressed('Tuesday')).toBe('true');
+    expect(chipPressed('Wednesday')).toBe('true');
+    expect(chipPressed('Thursday')).toBe('true');
+    expect(chipPressed('Friday')).toBe('true');
+    expect(chipPressed('Saturday')).toBe('false');
+    expect(chipPressed('Sunday')).toBe('false');
+    expect(postedWeekdays()).toEqual(['1', '2', '3', '4', '5']);
+  });
+
+  it('places the day chips after Starts and Ends, and before Location', () => {
+    openDialog();
+    const text = shownText();
+
+    expect(text.indexOf('Starts')).toBeLessThan(text.indexOf('Ends'));
+    expect(text.indexOf('Ends')).toBeLessThan(text.indexOf('Days of the week'));
+    expect(text.indexOf('Days of the week')).toBeLessThan(text.indexOf('Location'));
+  });
+
+  it('clicking one day toggles only that day', () => {
+    openDialog();
+
+    clickChip('Wednesday');
+    expect(chipPressed('Wednesday')).toBe('false');
+    expect(chipPressed('Monday')).toBe('true');
+    expect(postedWeekdays()).toEqual(['1', '2', '4', '5']);
+
+    clickChip('Saturday');
+    expect(chipPressed('Saturday')).toBe('true');
+    expect(postedWeekdays()).toEqual(['1', '2', '4', '5', '6']);
+  });
+
+  it('All selects all seven days, and a second press on All clears them', () => {
+    openDialog();
+
+    clickChip('All');
+    expect(chipPressed('All')).toBe('true');
+    for (const day of ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']) {
+      expect(chipPressed(day), day).toBe('true');
+    }
+    expect(postedWeekdays()).toEqual(['1', '2', '3', '4', '5', '6', '7']);
+
+    clickChip('All');
+    expect(chipPressed('All')).toBe('false');
+    expect(postedWeekdays()).toEqual([]);
+  });
+
+  it('no days selected: the form does not submit, and the weekday message shows under the row', async () => {
+    openDialog();
+    for (const day of ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']) {
+      clickChip(day);
+    }
     setValue('startsAt', '2027-07-05T09:00');
-    setValue('endsAt', '2027-07-05T10:30');
+    setValue('endsAt', '2027-07-30T10:30');
 
     await submit();
 
-    expect(actions.addClassAction).toHaveBeenCalledTimes(1);
     expect(actions.addRecurringClassesAction).not.toHaveBeenCalled();
-    const data = postedTo(actions.addClassAction);
-    expect(data.get('startsAt')).toMatch(/^2027-07-0\dT\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
-    expect(data.get('endsAt')).toMatch(/^2027-07-0\dT\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
-    expect(data.has('weekdays')).toBe(false);
+    expect(actions.addClassAction).not.toHaveBeenCalled();
+    expect(document.querySelector('.weekday-row')?.parentElement?.textContent).toContain(NO_WEEKDAY);
   });
 
-  it('shows the server refusal for a class outside the session dates, and keeps the dialog open', async () => {
-    actions.addClassAction.mockResolvedValue({
+  it('submits the recurring request with the chosen days and the Starts and Ends date-times', async () => {
+    openDialog();
+    clickChip('Tuesday');
+    clickChip('Thursday');
+    setValue('startsAt', '2027-07-05T09:00');
+    setValue('endsAt', '2027-07-30T10:30');
+
+    await submit();
+
+    expect(actions.addClassAction).not.toHaveBeenCalled();
+    expect(actions.addRecurringClassesAction).toHaveBeenCalledTimes(1);
+    const data = postedTo(actions.addRecurringClassesAction);
+    expect(data.getAll('weekdays')).toEqual(['1', '3', '5']);
+    expect(data.get('startsAt')).toBe('2027-07-05T09:00');
+    expect(data.get('endsAt')).toBe('2027-07-30T10:30');
+    expect(data.has('firstDate')).toBe(false);
+  });
+
+  it('shows the server refusal for a series and keeps the dialog open', async () => {
+    actions.addRecurringClassesAction.mockResolvedValue({
       status: 'error',
       message: 'The class falls outside the session dates. Change the session dates first.',
     });
@@ -165,55 +241,6 @@ describe('the New class dialog: the default one-class form', () => {
     );
     expect(form()).not.toBeNull();
   });
-});
-
-describe('the New class dialog: the Specific days form', () => {
-  it('turning it on shows the weekdays and keeps Starts and Ends, with no first day, last day, time-only fields or Stops', () => {
-    openDialog();
-    toggleSpecificDays();
-
-    expect(specificDays()?.checked).toBe(true);
-    expect(document.querySelectorAll('[name="weekdays"]')).toHaveLength(7);
-    expect(input('startsAt')?.type).toBe('datetime-local');
-    expect(input('endsAt')?.type).toBe('datetime-local');
-    for (const name of ['firstDate', 'endDate', 'startTime', 'endTime', 'endKind', 'endCount']) {
-      expect(input(name), name).toBeNull();
-    }
-    const text = shownText();
-    expect(text).not.toContain('First day');
-    expect(text).not.toContain('Last day');
-    expect(text).not.toContain('Stops');
-    expect(text).not.toContain('Number of classes');
-  });
-
-  it('turning it off again returns the default one-class form', () => {
-    openDialog();
-    toggleSpecificDays();
-    toggleSpecificDays();
-
-    expect(specificDays()?.checked).toBe(false);
-    expect(document.querySelector('[name="weekdays"]')).toBeNull();
-    expect(input('startsAt')?.type).toBe('datetime-local');
-  });
-
-  it('requires at least one weekday: the refusal shows under the weekday row, and nothing is added', async () => {
-    actions.addRecurringClassesAction.mockResolvedValue({
-      status: 'error',
-      message: 'Check the highlighted fields.',
-      fieldErrors: { weekdays: 'Tick at least one day of the week.' },
-    });
-    openDialog();
-    toggleSpecificDays();
-    setValue('startsAt', '2027-07-05T09:00');
-    setValue('endsAt', '2027-07-30T10:30');
-
-    await submit();
-
-    expect(document.querySelector('.weekday-row')?.parentElement?.textContent).toContain(
-      'Tick at least one day of the week.',
-    );
-    expect(actions.addClassAction).not.toHaveBeenCalled();
-  });
 
   it('keeps Starts and Ends required: their refusal shows on the field', async () => {
     actions.addRecurringClassesAction.mockResolvedValue({
@@ -222,31 +249,10 @@ describe('the New class dialog: the Specific days form', () => {
       fieldErrors: { startsAt: 'Enter a date and time.', endsAt: 'Enter a date and time.' },
     });
     openDialog();
-    toggleSpecificDays();
-    const weekday = document.querySelector<HTMLInputElement>('[name="weekdays"][value="1"]');
-    act(() => weekday?.click());
 
     await submit();
 
     expect(shownText()).toContain('Enter a date and time.');
     expect(actions.addRecurringClassesAction).toHaveBeenCalledTimes(1);
-  });
-
-  it('posts the ticked weekdays with Starts and Ends as typed, to the recurring path only', async () => {
-    openDialog();
-    toggleSpecificDays();
-    act(() => document.querySelector<HTMLInputElement>('[name="weekdays"][value="2"]')?.click());
-    act(() => document.querySelector<HTMLInputElement>('[name="weekdays"][value="4"]')?.click());
-    setValue('startsAt', '2027-07-05T09:00');
-    setValue('endsAt', '2027-07-30T10:30');
-
-    await submit();
-
-    expect(actions.addClassAction).not.toHaveBeenCalled();
-    expect(actions.addRecurringClassesAction).toHaveBeenCalledTimes(1);
-    const data = postedTo(actions.addRecurringClassesAction);
-    expect(data.getAll('weekdays')).toEqual(['2', '4']);
-    expect(data.get('startsAt')).toBe('2027-07-05T09:00');
-    expect(data.get('endsAt')).toBe('2027-07-30T10:30');
   });
 });

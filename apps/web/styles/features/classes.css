@@ -285,6 +285,11 @@ form.class-form {
   gap: var(--s2);
   min-width: 0;
 }
+/* The helper text under the discount row: a full-width line at the left edge, under the Discount label's column. */
+.price-discount-row .price-discount-hint {
+  grid-column: 1 / -1;
+  text-align: left;
+}
 @media (max-width: 720px) {
   .price-discount-row {
     grid-template-columns: minmax(0, 1fr);
@@ -310,14 +315,16 @@ form.class-form {
   gap: var(--s2);
 }
 
-/* Weekly series: the seven days sit in one row, each box with a gap before its label. */
+/* Days of the week: All and the seven day chips sit in one row. Each chip is a round toggle at the 44px control height. */
 .weekday-row {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--s2) var(--s4);
-}
-.weekday-row .check-field {
   gap: var(--s2);
+}
+.weekday-row .weekday-chip {
+  min-width: var(--control-h);
+  justify-content: center;
+  padding-inline: var(--s2);
 }
 /* Stops: a label above one compact row of two options, and the date or count field below it. */
 .stops-row {
