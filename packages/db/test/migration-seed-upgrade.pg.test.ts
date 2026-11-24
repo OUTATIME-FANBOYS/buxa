@@ -185,6 +185,8 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0057_role_aware_policies.sql',
       '0058_rename_member_roster_name.sql',
       '0059_session_dates_flag.sql',
+      '0060_class_series.sql',
+      '0061_series_enrolment_keys.sql',
     ]);
   });
 
@@ -393,6 +395,8 @@ describe.skipIf(!url)('migration 0050 copies session prices onto their classes',
       '0057_role_aware_policies.sql',
       '0058_rename_member_roster_name.sql',
       '0059_session_dates_flag.sql',
+      '0060_class_series.sql',
+      '0061_series_enrolment_keys.sql',
     ]);
 
     const classes = await tempPool.query<{
@@ -586,6 +590,8 @@ describe.skipIf(!url)('migration 0051 links teachers to their people by email', 
       '0057_role_aware_policies.sql',
       '0058_rename_member_roster_name.sql',
       '0059_session_dates_flag.sql',
+      '0060_class_series.sql',
+      '0061_series_enrolment_keys.sql',
     ]);
     const linked = await tempPool.query<{ email: string; user_email: string }>(
       `SELECT p.email, u.email AS user_email FROM people p JOIN users u ON u.id = p.user_id`,
@@ -741,7 +747,7 @@ describe.skipIf(!url)('migrations 0053 and 0054 run over existing sessions and r
     if (!tempPool) {
       return;
     }
-    expect(applied).toEqual(['0053_session_status.sql', '0054_registration_lifecycle.sql']);
+    expect(applied.slice(0, 2)).toEqual(['0053_session_status.sql', '0054_registration_lifecycle.sql']);
   });
 
   it('0053 makes every existing session live, and an archived one archived', async () => {
@@ -781,5 +787,610 @@ describe.skipIf(!url)('migrations 0053 and 0054 run over existing sessions and r
     await expect(
       tempPool.query(`UPDATE registrations SET status = 'pending', confirmed_at = now() WHERE id = $1`, [pendingId]),
     ).rejects.toThrow(/registrations_confirmation_check/);
+  });
+});
+
+describe.skipIf(!url)('migration 0060 groups existing occurrences into class series', () => {
+  const tag = randomBytes(4).toString('hex');
+  const dbName = `buxa_series_${tag}`;
+  let rootPool: pg.Pool | null = null;
+  let tempPool: pg.Pool | null = null;
+  let applied: string[] = [];
+  let classId = '';
+  let orgId = '';
+
+  beforeAll(async () => {
+    if (!url) {
+      return;
+    }
+    rootPool = new pg.Pool(poolConfigFor(url));
+    rootPool.on('error', () => {});
+    await rootPool.query(`CREATE DATABASE "${dbName}"`);
+    const parsed = new URL(url);
+    parsed.pathname = `/${dbName}`;
+    tempPool = new pg.Pool(poolConfigFor(parsed.toString()));
+    tempPool.on('error', () => {});
+
+    const client = await tempPool.connect();
+    try {
+      await client.query(
+        'CREATE TABLE IF NOT EXISTS schema_migrations (name text PRIMARY KEY, at timestamptz NOT NULL DEFAULT now())',
+      );
+      for (const file of readdirSync(DIR)
+        .filter(f => f.endsWith('.sql') && f.slice(0, 4) < '0060')
+        .sort()) {
+        await client.query('BEGIN');
+        await client.query(readFileSync(join(DIR, file), 'utf8'));
+        await client.query('INSERT INTO schema_migrations(name) VALUES ($1)', [file]);
+        await client.query('COMMIT');
+      }
+      const org = await client.query<{ id: string }>(
+        `INSERT INTO orgs (name, slug) VALUES ('Series camp', $1) RETURNING id`,
+        [`series-${tag}`],
+      );
+      orgId = org.rows[0].id;
+      const cls = await client.query<{ id: string }>(
+        `INSERT INTO classes (org_id, name, starts_on, ends_on) VALUES ($1, 'Summer 2027', '2027-04-05', '2027-04-23') RETURNING id`,
+        [orgId],
+      );
+      classId = cls.rows[0].id;
+      // The Art Camp rows: 15 weekday mornings in three weeks, one shape.
+      await client.query(
+        `INSERT INTO sessions (org_id, class_id, name, age_min, age_max, capacity, location, starts_at, ends_at)
+         SELECT $1, $2, 'Art Camp', 5, 15, 20, 'Studio 5',
+                (d::timestamp + time '09:00') AT TIME ZONE 'UTC',
+                (d::timestamp + time '12:00') AT TIME ZONE 'UTC'
+           FROM generate_series('2027-04-05'::date, '2027-04-23'::date, interval '1 day') AS d
+          WHERE extract(isodow FROM d) <= 5`,
+        [orgId, classId],
+      );
+    } finally {
+      client.release();
+    }
+    applied = await migrate(tempPool);
+  });
+
+  afterAll(async () => {
+    if (tempPool) {
+      await tempPool.end().catch(() => {});
+    }
+    if (rootPool) {
+      await rootPool.query(`DROP DATABASE IF EXISTS "${dbName}" WITH (FORCE)`).catch(() => {});
+      await rootPool.end().catch(() => {});
+    }
+  });
+
+  it('applies 0060 first', () => {
+    if (!tempPool) {
+      return;
+    }
+    expect(applied[0]).toBe('0060_class_series.sql');
+  });
+
+  it('turns the 15 Art Camp rows into ONE series with weekdays Monday to Friday, and every row keeps its own date', async () => {
+    if (!tempPool) {
+      return;
+    }
+    const series = await tempPool.query<{
+      id: string;
+      weekdays: number[];
+      capacity: number;
+      starts: string;
+      ends: string;
+    }>(
+      `SELECT id, weekdays, capacity, to_char(series_starts_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI') AS starts,
+              to_char(series_ends_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI') AS ends
+         FROM class_series WHERE class_id = $1`,
+      [classId],
+    );
+    expect(series.rows).toHaveLength(1);
+    expect(series.rows[0].weekdays).toEqual([1, 2, 3, 4, 5]);
+    expect(series.rows[0].capacity).toBe(20);
+    expect(series.rows[0].starts).toBe('2027-04-05T09:00');
+    expect(series.rows[0].ends).toBe('2027-04-23T12:00');
+
+    const occurrences = await tempPool.query<{ n: string; in_series: string; active: string }>(
+      `SELECT count(*) AS n,
+              count(*) FILTER (WHERE series_id = $2) AS in_series,
+              count(*) FILTER (WHERE status = 'active') AS active
+         FROM sessions WHERE class_id = $1`,
+      [classId, series.rows[0].id],
+    );
+    expect(occurrences.rows[0]).toEqual({ n: '15', in_series: '15', active: '15' });
+  });
+
+  it('gives a row written by the release that is still running its own one-occurrence series', async () => {
+    if (!tempPool) {
+      return;
+    }
+    const inserted = await tempPool.query<{ series_id: string }>(
+      `INSERT INTO sessions (org_id, class_id, starts_at, ends_at, location, capacity)
+       VALUES ($1, $2, '2027-05-01 09:00+00', '2027-05-01 10:00+00', 'Hall', 8)
+       RETURNING series_id`,
+      [orgId, classId],
+    );
+    const row = await tempPool.query<{ weekdays: number[]; name: string }>(
+      `SELECT weekdays, name FROM class_series WHERE id = $1`,
+      [inserted.rows[0].series_id],
+    );
+    expect(row.rows[0].weekdays).toEqual([6]);
+    expect(row.rows[0].name).toBe('Summer 2027');
+  });
+
+  it('refuses a cancelled occurrence without its time and reason, and accepts one with both', async () => {
+    if (!tempPool) {
+      return;
+    }
+    const one = await tempPool.query<{ id: string }>(
+      `SELECT id FROM sessions WHERE class_id = $1 AND name = 'Art Camp' ORDER BY starts_at LIMIT 1`,
+      [classId],
+    );
+    await expect(
+      tempPool.query(`UPDATE sessions SET status = 'cancelled' WHERE id = $1`, [one.rows[0].id]),
+    ).rejects.toThrow(/sessions_status_shape/);
+    await tempPool.query(
+      `UPDATE sessions SET status = 'cancelled', cancelled_at = now(), cancel_reason = 'Public holiday' WHERE id = $1`,
+      [one.rows[0].id],
+    );
+    const after = await tempPool.query<{ status: string; cancel_reason: string }>(
+      `SELECT status, cancel_reason FROM sessions WHERE id = $1`,
+      [one.rows[0].id],
+    );
+    expect(after.rows[0]).toEqual({ status: 'cancelled', cancel_reason: 'Public holiday' });
+  });
+});
+
+describe.skipIf(!url)('migration 0060 stops on an ambiguous group and changes nothing', () => {
+  const tag = randomBytes(4).toString('hex');
+  const dbName = `buxa_series_stop_${tag}`;
+  let rootPool: pg.Pool | null = null;
+  let tempPool: pg.Pool | null = null;
+  let error: Error | null = null;
+  let twoOnOneDay: string[] = [];
+
+  beforeAll(async () => {
+    if (!url) {
+      return;
+    }
+    rootPool = new pg.Pool(poolConfigFor(url));
+    rootPool.on('error', () => {});
+    await rootPool.query(`CREATE DATABASE "${dbName}"`);
+    const parsed = new URL(url);
+    parsed.pathname = `/${dbName}`;
+    tempPool = new pg.Pool(poolConfigFor(parsed.toString()));
+    tempPool.on('error', () => {});
+
+    const client = await tempPool.connect();
+    try {
+      await client.query(
+        'CREATE TABLE IF NOT EXISTS schema_migrations (name text PRIMARY KEY, at timestamptz NOT NULL DEFAULT now())',
+      );
+      for (const file of readdirSync(DIR)
+        .filter(f => f.endsWith('.sql') && f.slice(0, 4) < '0060')
+        .sort()) {
+        await client.query('BEGIN');
+        await client.query(readFileSync(join(DIR, file), 'utf8'));
+        await client.query('INSERT INTO schema_migrations(name) VALUES ($1)', [file]);
+        await client.query('COMMIT');
+      }
+      const org = await client.query<{ id: string }>(
+        `INSERT INTO orgs (name, slug) VALUES ('Series stop', $1) RETURNING id`,
+        [`stop-${tag}`],
+      );
+      const orgId = org.rows[0].id;
+      const cls = await client.query<{ id: string }>(
+        `INSERT INTO classes (org_id, name, starts_on, ends_on) VALUES ($1, 'Clash', '2027-04-05', '2027-04-06') RETURNING id`,
+        [orgId],
+      );
+      const classId = cls.rows[0].id;
+      // Two rows on 5 April with the same shape: they cannot form a clean series.
+      const rows = await client.query<{ id: string }>(
+        `INSERT INTO sessions (org_id, class_id, name, age_min, age_max, capacity, location, starts_at, ends_at)
+         VALUES ($1, $2, 'Clash', 5, 9, 10, 'Yard', '2027-04-05 09:00+00', '2027-04-05 10:00+00'),
+                ($1, $2, 'Clash', 5, 9, 10, 'Yard', '2027-04-05 09:00+00', '2027-04-05 10:00+00')
+         RETURNING id`,
+        [orgId, classId],
+      );
+      twoOnOneDay = rows.rows.map(r => r.id);
+    } finally {
+      client.release();
+    }
+    try {
+      await migrate(tempPool);
+    } catch (err) {
+      error = err instanceof Error ? err : new Error(String(err));
+    }
+  });
+
+  afterAll(async () => {
+    if (tempPool) {
+      await tempPool.end().catch(() => {});
+    }
+    if (rootPool) {
+      await rootPool.query(`DROP DATABASE IF EXISTS "${dbName}" WITH (FORCE)`).catch(() => {});
+      await rootPool.end().catch(() => {});
+    }
+  });
+
+  it('refuses the file and lists both occurrences', () => {
+    if (!tempPool) {
+      return;
+    }
+    expect(error).not.toBeNull();
+    expect(error?.message).toContain('0060_class_series.sql');
+    for (const id of twoOnOneDay) {
+      expect(error?.message).toContain(id);
+    }
+  });
+
+  it('leaves the schema and the record as they were', async () => {
+    if (!tempPool) {
+      return;
+    }
+    const table = await tempPool.query<{ reg: string | null }>(`SELECT to_regclass('class_series')::text AS reg`);
+    expect(table.rows[0].reg).toBeNull();
+    const column = await tempPool.query<{ n: string }>(
+      `SELECT count(*) AS n FROM information_schema.columns WHERE table_name = 'sessions' AND column_name = 'series_id'`,
+    );
+    expect(column.rows[0].n).toBe('0');
+    const recorded = await tempPool.query<{ n: string }>(
+      `SELECT count(*) AS n FROM schema_migrations WHERE name = '0060_class_series.sql'`,
+    );
+    expect(recorded.rows[0].n).toBe('0');
+  });
+});
+
+// Migration 0061 (series keys). Seeds are written after 0060 has run, so the rows the new keys must move exist.
+const ART_CAMP_OCCURRENCES = `INSERT INTO sessions (org_id, class_id, name, age_min, age_max, capacity, location, starts_at, ends_at)
+  SELECT $1, $2, 'Art Camp', 5, 15, 20, 'Studio 5',
+         (d::timestamp + time '09:00') AT TIME ZONE 'UTC',
+         (d::timestamp + time '12:00') AT TIME ZONE 'UTC'
+    FROM generate_series('2027-04-05'::date, '2027-04-23'::date, interval '1 day') AS d
+   WHERE extract(isodow FROM d) <= 5`;
+
+async function applyMigrationFile(client: pg.PoolClient, file: string): Promise<void> {
+  await client.query('BEGIN');
+  await client.query(readFileSync(join(DIR, file), 'utf8'));
+  await client.query('INSERT INTO schema_migrations(name) VALUES ($1)', [file]);
+  await client.query('COMMIT');
+}
+
+/** A database at 0059 plus the 0060 grouping run by hand, so the rows 0061 must move are in place before it runs. */
+async function databaseAfter0060(
+  dbName: string,
+  seed: (client: pg.PoolClient, orgId: string) => Promise<void>,
+): Promise<{
+  root: pg.Pool;
+  pool: pg.Pool;
+  client: pg.PoolClient;
+}> {
+  const root = new pg.Pool(poolConfigFor(url ?? ''));
+  root.on('error', () => {});
+  await root.query(`CREATE DATABASE "${dbName}"`);
+  const parsed = new URL(url ?? '');
+  parsed.pathname = `/${dbName}`;
+  const pool = new pg.Pool(poolConfigFor(parsed.toString()));
+  pool.on('error', () => {});
+  const client = await pool.connect();
+  await client.query(
+    'CREATE TABLE IF NOT EXISTS schema_migrations (name text PRIMARY KEY, at timestamptz NOT NULL DEFAULT now())',
+  );
+  for (const file of readdirSync(DIR)
+    .filter(f => f.endsWith('.sql') && f.slice(0, 4) < '0060')
+    .sort()) {
+    await applyMigrationFile(client, file);
+  }
+  const org = await client.query<{ id: string }>(
+    `INSERT INTO orgs (name, slug) VALUES ('Series keys', $1) RETURNING id`,
+    [dbName.replace(/[^a-z0-9]/g, '').slice(0, 40)],
+  );
+  const orgId = org.rows[0].id;
+  const cls = await client.query<{ id: string }>(
+    `INSERT INTO classes (org_id, name, starts_on, ends_on) VALUES ($1, 'Summer 2027', '2027-04-05', '2027-04-23') RETURNING id`,
+    [orgId],
+  );
+  await client.query(ART_CAMP_OCCURRENCES, [orgId, cls.rows[0].id]);
+  await applyMigrationFile(client, '0060_class_series.sql');
+  await seed(client, orgId);
+
+  return { root, pool, client };
+}
+
+async function closeDatabase(
+  dbName: string,
+  handle: { root: pg.Pool; pool: pg.Pool; client: pg.PoolClient },
+): Promise<void> {
+  handle.client.release();
+  await handle.pool.end().catch(() => {});
+  await handle.root.query(`DROP DATABASE IF EXISTS "${dbName}" WITH (FORCE)`).catch(() => {});
+  await handle.root.end().catch(() => {});
+}
+
+describe.skipIf(!url)('migration 0061 moves enrolments, holds and places onto the series', () => {
+  const tag = randomBytes(4).toString('hex');
+  const dbName = `buxa_keys_${tag}`;
+  let handle: { root: pg.Pool; pool: pg.Pool; client: pg.PoolClient } | null = null;
+  let orgId = '';
+  let childA = '';
+  let childB = '';
+  let childC = '';
+  let applied: string[] = [];
+  let seriesId = '';
+  let firstOccurrence = '';
+  let laterOccurrence = '';
+  let fifthOccurrence = '';
+
+  beforeAll(async () => {
+    if (!url) {
+      return;
+    }
+    handle = await databaseAfter0060(dbName, async (client, org) => {
+      orgId = org;
+      const people = await client.query<{ id: string }>(
+        `INSERT INTO people (org_id, given_name, family_name)
+         VALUES ($1, 'Ada', 'Lovelace'), ($1, 'Ben', 'Holt'), ($1, 'Cleo', 'Park') RETURNING id`,
+        [org],
+      );
+      [childA, childB, childC] = people.rows.map(r => r.id);
+      const occurrences = await client.query<{ id: string }>(
+        `SELECT id FROM sessions WHERE org_id = $1 ORDER BY starts_at`,
+        [org],
+      );
+      [firstOccurrence, laterOccurrence] = occurrences.rows.map(r => r.id);
+      fifthOccurrence = occurrences.rows[4].id;
+      const enrolmentA = await client.query<{ id: string }>(
+        `INSERT INTO enrolments (org_id, session_id, person_id, status) VALUES ($1, $2, $3, 'enrolled') RETURNING id`,
+        [org, firstOccurrence, childA],
+      );
+      await client.query(
+        `INSERT INTO enrolments (org_id, session_id, person_id, status) VALUES ($1, $2, $3, 'waitlisted')`,
+        [org, laterOccurrence, childB],
+      );
+      const household = await client.query<{ id: string }>(
+        `INSERT INTO households (org_id, name) VALUES ($1, 'Park household') RETURNING id`,
+        [org],
+      );
+      await client.query(
+        `INSERT INTO seat_holds (org_id, session_id, household_id, person_id, expires_at)
+         VALUES ($1, $2, $3, $4, now() + interval '1 hour')`,
+        [org, fifthOccurrence, household.rows[0].id, childC],
+      );
+      const form = await client.query<{ id: string }>(
+        `INSERT INTO registration_forms (org_id, name) VALUES ($1, 'Form') RETURNING id`,
+        [org],
+      );
+      await client.query(
+        `INSERT INTO registration_form_versions (org_id, form_id, version, fields) VALUES ($1, $2, 1, '[]'::jsonb)`,
+        [org, form.rows[0].id],
+      );
+      const registration = await client.query<{ id: string }>(
+        `INSERT INTO registrations (org_id, form_id, form_version, answers, status)
+         VALUES ($1, $2, 1, '{"standard":{},"custom":{}}'::jsonb, 'pending') RETURNING id`,
+        [org, form.rows[0].id],
+      );
+      await client.query(
+        `INSERT INTO registration_classes (org_id, registration_id, class_id, person_id, enrolment_id) VALUES ($1, $2, $3, $4, $5)`,
+        [org, registration.rows[0].id, firstOccurrence, childA, enrolmentA.rows[0].id],
+      );
+    });
+    applied = await migrate(handle.pool);
+    const series = await handle.pool.query<{ series_id: string }>(`SELECT series_id FROM sessions WHERE id = $1`, [
+      firstOccurrence,
+    ]);
+    seriesId = series.rows[0].series_id;
+  });
+
+  afterAll(async () => {
+    if (handle) {
+      await closeDatabase(dbName, handle);
+    }
+  });
+
+  it('applies 0061 as the first pending file', () => {
+    if (!handle) {
+      return;
+    }
+    expect(applied[0]).toBe('0061_series_enrolment_keys.sql');
+  });
+
+  it('gives every enrolment, hold and place the series of its occurrence, and keeps the occurrence as the anchor', async () => {
+    if (!handle) {
+      return;
+    }
+    const rows = await handle.pool.query<{ table_name: string; series: string; anchored: string; n: string }>(
+      `SELECT 'enrolments' AS table_name, e.series_id::text AS series, count(*) FILTER (WHERE s.series_id = e.series_id)::text AS anchored, count(*)::text AS n
+         FROM enrolments e JOIN sessions s ON s.id = e.session_id GROUP BY e.series_id
+       UNION ALL
+       SELECT 'seat_holds', h.series_id::text, count(*) FILTER (WHERE s.series_id = h.series_id)::text, count(*)::text
+         FROM seat_holds h JOIN sessions s ON s.id = h.session_id GROUP BY h.series_id
+       UNION ALL
+       SELECT 'registration_classes', r.series_id::text, count(*) FILTER (WHERE s.series_id = r.series_id)::text, count(*)::text
+         FROM registration_classes r JOIN sessions s ON s.id = r.class_id GROUP BY r.series_id`,
+    );
+    expect(rows.rows.map(r => r.table_name).sort()).toEqual(['enrolments', 'registration_classes', 'seat_holds']);
+    for (const row of rows.rows) {
+      expect(row.series).toBe(seriesId);
+      expect(row.anchored).toBe(row.n);
+    }
+  });
+
+  it('enrols a child once in the series: a second place for the same child in another day is refused', async () => {
+    if (!handle) {
+      return;
+    }
+    await expect(
+      handle.pool.query(
+        `INSERT INTO enrolments (org_id, session_id, series_id, person_id, status) VALUES ($1, $2, $3, $4, 'enrolled')`,
+        [orgId, laterOccurrence, seriesId, childA],
+      ),
+    ).rejects.toMatchObject({ code: '23505', constraint: 'enrolments_one_active_series_idx' });
+  });
+
+  it('holds one place per child in the series', async () => {
+    if (!handle) {
+      return;
+    }
+    const household = await handle.pool.query<{ id: string }>(`SELECT id FROM households WHERE org_id = $1 LIMIT 1`, [
+      orgId,
+    ]);
+    await expect(
+      handle.pool.query(
+        `INSERT INTO seat_holds (org_id, session_id, series_id, household_id, person_id, expires_at)
+         VALUES ($1, $2, $3, $4, $5, now() + interval '1 hour')`,
+        [orgId, laterOccurrence, seriesId, household.rows[0].id, childC],
+      ),
+    ).rejects.toMatchObject({ code: '23505', constraint: 'seat_holds_one_active_series_person_idx' });
+  });
+
+  it('counts capacity per series: the camp size cannot drop below the places taken (one enrolment and one live hold)', async () => {
+    if (!handle) {
+      return;
+    }
+    await expect(
+      handle.pool.query(`UPDATE class_series SET capacity = 1 WHERE id = $1`, [seriesId]),
+    ).rejects.toMatchObject({ code: '23514', constraint: 'class_series_capacity_floor' });
+    await handle.pool.query(`UPDATE class_series SET capacity = 2 WHERE id = $1`, [seriesId]);
+    const after = await handle.pool.query<{ capacity: number }>(`SELECT capacity FROM class_series WHERE id = $1`, [
+      seriesId,
+    ]);
+    expect(after.rows[0].capacity).toBe(2);
+  });
+
+  it('cancelling one occurrence leaves the series, its places and the other occurrences intact', async () => {
+    if (!handle) {
+      return;
+    }
+    await handle.pool.query(
+      `UPDATE sessions SET status = 'cancelled', cancelled_at = now(), cancel_reason = 'Holiday' WHERE id = $1`,
+      [firstOccurrence],
+    );
+    const enrolled = await handle.pool.query<{ n: string }>(
+      `SELECT count(*) AS n FROM enrolments WHERE series_id = $1 AND status = 'enrolled'`,
+      [seriesId],
+    );
+    expect(enrolled.rows[0].n).toBe('1');
+    const active = await handle.pool.query<{ n: string }>(
+      `SELECT count(*) AS n FROM sessions WHERE series_id = $1 AND status = 'active'`,
+      [seriesId],
+    );
+    expect(active.rows[0].n).toBe('14');
+    await handle.pool.query(
+      `UPDATE sessions SET status = 'active', cancelled_at = NULL, cancel_reason = NULL WHERE id = $1`,
+      [firstOccurrence],
+    );
+  });
+
+  it("refuses an enrolment in another series whose occurrence overlaps one of this child's active days", async () => {
+    if (!handle) {
+      return;
+    }
+    const pottery = await handle.pool.query<{ id: string }>(
+      `INSERT INTO classes (org_id, name) VALUES ($1, 'Pottery') RETURNING id`,
+      [orgId],
+    );
+    const session = await handle.pool.query<{ id: string }>(
+      `INSERT INTO sessions (org_id, class_id, name, capacity, location, starts_at, ends_at)
+       VALUES ($1, $2, 'Pottery', 10, 'Kiln', '2027-04-05 10:30+00', '2027-04-05 11:30+00') RETURNING id`,
+      [orgId, pottery.rows[0].id],
+    );
+    await expect(
+      handle.pool.query(
+        `INSERT INTO enrolments (org_id, session_id, series_id, person_id, status)
+         SELECT $1::uuid, $2::uuid, series_id, $3::uuid, 'enrolled' FROM sessions WHERE id = $2::uuid`,
+        [orgId, session.rows[0].id, childA],
+      ),
+    ).rejects.toMatchObject({ code: '23514', constraint: 'enrolments_series_overlap' });
+    await handle.pool.query(
+      `INSERT INTO enrolments (org_id, session_id, series_id, person_id, status)
+       SELECT $1::uuid, $2::uuid, series_id, $3::uuid, 'enrolled' FROM sessions WHERE id = $2::uuid`,
+      [orgId, session.rows[0].id, childC],
+    );
+  });
+});
+
+describe.skipIf(!url)('migration 0061 stops on data that would break a key', () => {
+  it('stops when one child has two active enrolments in one series, lists them, and changes nothing', async () => {
+    if (!url) {
+      return;
+    }
+    const dbName = `buxa_keys_dup_${randomBytes(4).toString('hex')}`;
+    const handle = await databaseAfter0060(dbName, async (client, org) => {
+      const person = await client.query<{ id: string }>(
+        `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Dana', 'Kerr') RETURNING id`,
+        [org],
+      );
+      const occurrences = await client.query<{ id: string }>(
+        `SELECT id FROM sessions WHERE org_id = $1 ORDER BY starts_at LIMIT 2`,
+        [org],
+      );
+      for (const row of occurrences.rows) {
+        await client.query(
+          `INSERT INTO enrolments (org_id, session_id, person_id, status) VALUES ($1, $2, $3, 'enrolled')`,
+          [org, row.id, person.rows[0].id],
+        );
+      }
+    });
+    try {
+      let message = '';
+      try {
+        await migrate(handle.pool);
+      } catch (err) {
+        message = err instanceof Error ? err.message : String(err);
+      }
+      expect(message).toContain('0061_series_enrolment_keys.sql');
+      expect(message).toContain('two active enrolments in one series');
+      const column = await handle.pool.query<{ n: string }>(
+        `SELECT count(*) AS n FROM information_schema.columns WHERE table_name = 'enrolments' AND column_name = 'series_id'`,
+      );
+      expect(column.rows[0].n).toBe('0');
+    } finally {
+      await closeDatabase(dbName, handle);
+    }
+  });
+
+  it('stops when a child is enrolled in two series whose occurrences overlap, and lists the pair', async () => {
+    if (!url) {
+      return;
+    }
+    const dbName = `buxa_keys_overlap_${randomBytes(4).toString('hex')}`;
+    const handle = await databaseAfter0060(dbName, async (client, org) => {
+      const person = await client.query<{ id: string }>(
+        `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Eli', 'Stone') RETURNING id`,
+        [org],
+      );
+      const pottery = await client.query<{ id: string }>(
+        `INSERT INTO classes (org_id, name) VALUES ($1, 'Pottery') RETURNING id`,
+        [org],
+      );
+      const kiln = await client.query<{ id: string }>(
+        `INSERT INTO sessions (org_id, class_id, name, capacity, location, starts_at, ends_at)
+         VALUES ($1, $2, 'Pottery', 10, 'Kiln', '2027-04-05 10:30+00', '2027-04-05 11:30+00') RETURNING id`,
+        [org, pottery.rows[0].id],
+      );
+      const art = await client.query<{ id: string }>(
+        `SELECT id FROM sessions WHERE org_id = $1 ORDER BY starts_at LIMIT 1`,
+        [org],
+      );
+      await client.query(
+        `INSERT INTO enrolments (org_id, session_id, person_id, status) VALUES ($1, $2, $3, 'enrolled')`,
+        [org, art.rows[0].id, person.rows[0].id],
+      );
+      await client.query(
+        `INSERT INTO enrolments (org_id, session_id, person_id, status) VALUES ($1, $2, $3, 'enrolled')`,
+        [org, kiln.rows[0].id, person.rows[0].id],
+      );
+    });
+    try {
+      let message = '';
+      try {
+        await migrate(handle.pool);
+      } catch (err) {
+        message = err instanceof Error ? err.message : String(err);
+      }
+      expect(message).toContain('0061_series_enrolment_keys.sql');
+      expect(message).toContain('overlap in time');
+    } finally {
+      await closeDatabase(dbName, handle);
+    }
   });
 });
