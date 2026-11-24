@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 import { migrate, withOrg } from '@buxa/db';
-import { auditActions, createClassFixture } from '../classes/__tests__/pgClassFixture';
+import { auditActions, createClassFixture, uniqueSessionName } from '../classes/__tests__/pgClassFixture';
 import { groupRepositoryContract } from './groupRepository.contract';
 import { PgGroupRepository } from './PgGroupRepository';
 
@@ -25,7 +25,14 @@ describe.skipIf(!url)('PgGroupRepository', () => {
       repo,
       actor: fx.actor,
       session: async (startsOn, endsOn) =>
-        (await fx.repo.createSession(fx.actor, { name: 'Summer', description: '', startsOn, endsOn })).id,
+        (
+          await fx.repo.createSession(fx.actor, {
+            name: uniqueSessionName('Summer'),
+            description: '',
+            startsOn,
+            endsOn,
+          })
+        ).id,
       person: async ({ dateOfBirth, roles = ['camper'] }) => {
         const id = await fx.addPerson(fx.orgA, dateOfBirth);
         await withOrg(pool, fx.actor.userId, fx.orgA, async db => {

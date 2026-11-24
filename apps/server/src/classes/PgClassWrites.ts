@@ -97,6 +97,60 @@ export async function deleteSessionRow(db: Db, actor: Actor, sessionId: string, 
   await recordAudit(db, { actor, action: 'session.delete', entity: 'session', entityId: sessionId, data: { name } });
 }
 
+/**
+ * Deletes a session's classes (rows of `sessions`) and then the session, through buxa_delete_session_with_classes_v1 (migration 0052).
+ * The function refuses a session whose classes hold enrolments, holds, registrations, check-ins or season passes, and deletes nothing
+ * then. Audits `class.delete` for each class and `session.delete` for the session, in the same transaction.
+ */
+export async function deleteSessionWithClassesRow(
+  db: Db,
+  actor: Actor,
+  sessionId: string,
+  name: string,
+): Promise<void> {
+  const { rows } = await db.query<{ deleted_class_id: string; deleted_class_name: string }>(
+    'SELECT deleted_class_id, deleted_class_name FROM buxa_delete_session_with_classes_v1($1, $2)',
+    [actor.orgId, sessionId],
+  );
+  for (const row of rows) {
+    await recordAudit(db, {
+      actor,
+      action: 'class.delete',
+      entity: 'class',
+      entityId: row.deleted_class_id,
+      data: { name: row.deleted_class_name, session: name },
+    });
+  }
+  await recordAudit(db, {
+    actor,
+    action: 'session.delete',
+    entity: 'session',
+    entityId: sessionId,
+    data: { name, classes: rows.length },
+  });
+}
+
+/** Archives or unarchives a session, and audits it. Throws SessionNotFoundError when the session is not in the camp. */
+export async function setSessionArchivedRow(db: Db, actor: Actor, sessionId: string, archived: boolean): Promise<void> {
+  const { rows } = await db.query<{ id: string }>(
+    `UPDATE classes
+        SET archived_at = CASE WHEN $3 THEN COALESCE(archived_at, now()) ELSE NULL END
+      WHERE id = $1 AND org_id = $2
+      RETURNING id`,
+    [sessionId, actor.orgId, archived],
+  );
+  if (rows.length === 0) {
+    throw new SessionNotFoundError();
+  }
+  await recordAudit(db, {
+    actor,
+    action: archived ? 'session.archive' : 'session.unarchive',
+    entity: 'session',
+    entityId: sessionId,
+    data: {},
+  });
+}
+
 /** Sets whether a session has a public page, and audits it. Throws SessionNotFoundError when the session is not in the camp. */
 export async function setSessionPublicRow(db: Db, actor: Actor, sessionId: string, isPublic: boolean): Promise<void> {
   const { rows } = await db.query<{ id: string }>(

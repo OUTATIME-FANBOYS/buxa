@@ -17,6 +17,8 @@ export interface TextFieldProps {
   onChange?: (value: string) => void;
   /** Validation message. When set the field is invalid and the message replaces the hint. */
   error?: string | null;
+  /** How the message is announced. `alert` (the default) interrupts; `status` is polite, for a refusal the person can fix at leisure. */
+  errorRole?: 'alert' | 'status';
   /** Helper text shown under the field while there is no error. */
   hint?: ReactNode;
   type?: 'text' | 'email' | 'tel' | 'password' | 'url';
@@ -48,6 +50,7 @@ export function TextField({
   defaultValue,
   onChange,
   error,
+  errorRole = 'alert',
   hint,
   type = 'text',
   maxLength,
@@ -114,7 +117,7 @@ export function TextField({
         className="buxa:box-border buxa:h-[var(--control-h)] buxa:w-full buxa:min-w-0 buxa:rounded-[var(--r-1)] buxa:border buxa:border-[var(--line)] buxa:bg-[var(--surface)] buxa:px-3 buxa:font-[inherit] buxa:text-[var(--text)] buxa:outline-none buxa:aria-[invalid=true]:border-[var(--crit)] buxa:disabled:opacity-60 buxa:disabled:cursor-not-allowed"
       />
       {error ? (
-        <p id={hintId} className="field-error" role="alert">
+        <p id={hintId} className="field-error" role={errorRole}>
           {error}
         </p>
       ) : hint ? (

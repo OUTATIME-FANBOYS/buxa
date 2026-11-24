@@ -36,6 +36,8 @@ export const AUDIT_ACTIONS = [
   'session.price_change',
   'class.price_change',
   'session.delete',
+  'session.archive',
+  'session.unarchive',
   'calendar.token_rotate',
   'calendar.rotate_self',
   'import.upload',

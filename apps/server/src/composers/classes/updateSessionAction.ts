@@ -5,6 +5,7 @@ import { isUuid } from '@buxa/domain';
 import { ROUTES, sessionPath } from '@buxa/shared/config/routes';
 import { failure, field, sessionEditForm, success, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../runtime';
+import { nameFieldError } from './sessionNameError';
 import { currentActor } from '../people/camp';
 import { expectedFailure, NO_CAMP } from '../people/failures';
 
@@ -32,7 +33,7 @@ export async function updateSessionAction(_previous: ActionState, form: FormData
   try {
     const outcome = await getRuntime().services.classes.updateSession(actor, sessionId, parsed.data);
     if (!outcome.ok) {
-      return failure(outcome.failure.message);
+      return failure(outcome.failure.message, nameFieldError(outcome.failure.reason, outcome.failure.message));
     }
   } catch (error) {
     return expectedFailure(error, 'Could not save the session.');

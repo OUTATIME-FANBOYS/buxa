@@ -16,6 +16,7 @@ const SESSION: Session = {
   endsOn: '2027-08-30',
   classCount: 2,
   isPublic: false,
+  archivedAt: null,
   createdAt: '2027-01-01T00:00:00.000Z',
 };
 

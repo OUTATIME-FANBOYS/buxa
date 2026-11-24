@@ -65,9 +65,13 @@ export function classRepositoryContract(factory: ClassContractFactory): void {
       await fx.close();
     });
 
+    let sessionNumber = 0;
+
     /** A session with one class of the given camp size. Returns the class id, which is what enrolments and holds name. */
     const classOf = async (capacity: number): Promise<string> => {
-      const session = await fx.repo.createSession(fx.actor, SESSION);
+      // Each session gets its own name: session names are unique per camp (migration 0052), and the tests share one camp.
+      sessionNumber += 1;
+      const session = await fx.repo.createSession(fx.actor, { ...SESSION, name: `${SESSION.name} ${sessionNumber}` });
       const cls = await fx.repo.addClass(fx.actor, session.id, { ...ROBOTICS, capacity });
 
       return cls.id;
@@ -207,7 +211,8 @@ export function classRepositoryContract(factory: ClassContractFactory): void {
       const holds = await fx.repo.listCampActiveHolds(fx.actor.userId, fx.actor.orgId);
 
       expect(holds.map(h => h.householdName)).toEqual(['Lee family', 'Okafor family']);
-      expect(holds[0]).toMatchObject({ classId: second, className: 'Robotics', sessionName: 'Summer camp' });
+      expect(holds[0]).toMatchObject({ classId: second, className: 'Robotics' });
+      expect(holds[0]?.sessionName).toMatch(/^Summer camp \d+$/);
       expect(holds[1]).toMatchObject({ classId: first, expiresAt: '2999-01-02T00:00:00.000Z' });
     });
 
@@ -222,7 +227,8 @@ export function classRepositoryContract(factory: ClassContractFactory): void {
       );
 
       expect(waitlist.map(entry => entry.householdName)).toEqual(['Ito family', 'Mensah family']);
-      expect(waitlist[0]).toMatchObject({ className: 'Robotics', sessionName: 'Summer camp' });
+      expect(waitlist[0]).toMatchObject({ className: 'Robotics' });
+      expect(waitlist[0]?.sessionName).toMatch(/^Summer camp \d+$/);
       expect(waitlist[0]?.camperName).not.toBe('');
     });
 

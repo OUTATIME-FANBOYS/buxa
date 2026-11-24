@@ -90,6 +90,8 @@ export const SessionSchema = z.object({
   classCount: z.number().int(),
   /** A public session has a page anyone can read without signing in. */
   isPublic: z.boolean(),
+  /** When the session was archived (hidden from registration and its public page), or null while it is live. */
+  archivedAt: z.string().nullable(),
   createdAt: z.string(),
 });
 export type Session = z.infer<typeof SessionSchema>;

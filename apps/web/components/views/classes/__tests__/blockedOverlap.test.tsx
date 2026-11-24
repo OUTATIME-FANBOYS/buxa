@@ -66,6 +66,7 @@ const parent: Session = {
   endsOn: '2027-07-14',
   classCount: 2,
   isPublic: false,
+  archivedAt: null,
   createdAt: '2027-07-01T00:00:00.000Z',
 };
 const painting: Class = {

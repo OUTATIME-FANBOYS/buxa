@@ -4,6 +4,8 @@ import {
   ClassNotFoundError,
   SessionFullError,
   SessionHasClassesError,
+  SessionHasEnrolmentsError,
+  SessionNameTakenError,
   SessionNotFoundError,
 } from './errors';
 
@@ -15,6 +17,8 @@ import {
 
 const CHECK_VIOLATION = '23514';
 const FOREIGN_KEY_VIOLATION = '23503';
+const UNIQUE_VIOLATION = '23505';
+export const SESSION_NAME_CONSTRAINT = 'classes_org_name_normal_key';
 export const CAPACITY_CONSTRAINT = 'enrolments_capacity';
 
 /** True for a Postgres error with this SQLSTATE and, when given, this constraint name. Anything else (including non-errors) is false. */
@@ -53,11 +57,19 @@ export function translateSessionDeleteError(error: unknown): unknown {
   if (isPgError(error, FOREIGN_KEY_VIOLATION, 'classes_has_classes')) {
     return new SessionHasClassesError();
   }
+  if (isPgError(error, FOREIGN_KEY_VIOLATION, 'session_has_enrolments')) {
+    return new SessionHasEnrolmentsError();
+  }
   if (isPgError(error, 'P0002', null)) {
     return new SessionNotFoundError();
   }
 
   return translateClassWriteError(error);
+}
+
+/** Turns the unique index on session names (migration 0052) into SessionNameTakenError for the name that was written. */
+export function translateSessionNameError(error: unknown, sessionName: string): unknown {
+  return isPgError(error, UNIQUE_VIOLATION, SESSION_NAME_CONSTRAINT) ? new SessionNameTakenError(sessionName) : error;
 }
 
 /** Turns the capacity trigger's error into a SessionFullError for `capacity`. Any other error is returned unchanged. */

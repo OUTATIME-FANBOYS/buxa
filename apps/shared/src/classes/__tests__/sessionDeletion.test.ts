@@ -5,7 +5,7 @@ const refused = (name: string, code = 'session_has_classes'): RefusedSession => 
   id: `id-${name}`,
   name,
   code,
-  reason: 'This session has classes. Delete them first.',
+  reason: 'This session has classes, so it cannot be deleted. Archive it, or delete its classes and the session.',
 });
 
 describe('deletedMessage', () => {
@@ -21,12 +21,14 @@ describe('notDeletedMessage', () => {
   });
 
   it('names each refused session with its short reason', () => {
-    expect(notDeletedMessage([refused('Art')])).toBe('Not deleted: Art (has classes).');
+    expect(notDeletedMessage([refused('Art')])).toBe('Not deleted: Art (has classes; archive it instead).');
   });
 
   it('names at most three, then counts the rest', () => {
     const message = notDeletedMessage(['Art', 'Music', 'Drama', 'Dance', 'Chess'].map(name => refused(name)));
-    expect(message).toBe('Not deleted: Art (has classes), Music (has classes), Drama (has classes) and 2 more.');
+    expect(message).toBe(
+      'Not deleted: Art (has classes; archive it instead), Music (has classes; archive it instead), Drama (has classes; archive it instead) and 2 more.',
+    );
   });
 });
 

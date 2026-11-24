@@ -48,8 +48,8 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
     it('stores a session and reads back exactly what it created', async () => {
       const created = await makeSession(fx.repo, fx.actor);
       expect(await fx.repo.getSession(fx.actor.userId, fx.orgA, created.id)).toEqual(created);
+      expect(created.name).toMatch(/^Summer camp \d+$/);
       expect(created).toMatchObject({
-        name: 'Summer camp',
         startsOn: '2027-07-01',
         endsOn: '2027-07-31',
         classCount: 0,
@@ -80,7 +80,7 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
       expect(await fx.repo.getClass(fx.actor.userId, fx.orgA, cls.id)).toEqual(cls);
       expect(cls).toMatchObject({
         sessionId: session.id,
-        sessionName: 'Summer camp',
+        sessionName: session.name,
         name: 'Robotics',
         ageRange: { minAge: 8, maxAge: 12 },
         capacity: 7,

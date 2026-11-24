@@ -43,6 +43,8 @@ vi.mock('@/actions/classes', () => ({
   deleteClassAction: vi.fn(),
   updateSessionAction: vi.fn(),
   deleteSessionAction: vi.fn(),
+  deleteSessionWithClassesAction: vi.fn(),
+  setSessionArchivedAction: vi.fn(),
   enrolAction: vi.fn(),
   promoteWaitlistAction: vi.fn(),
   cancelEnrolmentAction: vi.fn(),
@@ -69,6 +71,7 @@ const parent: Session = {
   endsOn: '2027-07-14',
   classCount: 1,
   isPublic: false,
+  archivedAt: null,
   createdAt: '2027-07-01T00:00:00.000Z',
 };
 // Full: two places, both taken, and one on the waitlist. Monday 5 July 2027, 09:00 to 12:00 in Sydney.

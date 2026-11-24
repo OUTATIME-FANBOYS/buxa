@@ -177,6 +177,7 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0049_check_in_session.sql',
       '0050_class_prices.sql',
       '0051_teacher_person_link.sql',
+      '0052_session_archive_and_delete.sql',
     ]);
   });
 
@@ -374,7 +375,11 @@ describe.skipIf(!url)('migration 0050 copies session prices onto their classes',
       return;
     }
     const applied = await migrate(tempPool);
-    expect(applied).toEqual(['0050_class_prices.sql', '0051_teacher_person_link.sql']);
+    expect(applied).toEqual([
+      '0050_class_prices.sql',
+      '0051_teacher_person_link.sql',
+      '0052_session_archive_and_delete.sql',
+    ]);
 
     const classes = await tempPool.query<{
       name: string;
@@ -557,7 +562,7 @@ describe.skipIf(!url)('migration 0051 links teachers to their people by email', 
     if (!tempPool) {
       return;
     }
-    expect(applied).toEqual(['0051_teacher_person_link.sql']);
+    expect(applied).toEqual(['0051_teacher_person_link.sql', '0052_session_archive_and_delete.sql']);
     const linked = await tempPool.query<{ email: string; user_email: string }>(
       `SELECT p.email, u.email AS user_email FROM people p JOIN users u ON u.id = p.user_id`,
     );

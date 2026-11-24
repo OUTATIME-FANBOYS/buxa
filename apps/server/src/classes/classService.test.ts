@@ -114,11 +114,12 @@ describe('class service: sessions and classes', () => {
     const { service } = setup();
     const { sessionId, classId } = await classWithSession(service);
     const cls = await service.getClass(as('viewer'), classId);
+    const session = await service.getSession(as('viewer'), sessionId);
     expect(cls).toMatchObject({
       ok: true,
       value: {
         sessionId,
-        sessionName: 'Summer camp',
+        sessionName: session.ok ? session.value.name : '',
         name: 'Robotics',
         ageRange: { minAge: 8, maxAge: 12 },
         capacity: 2,

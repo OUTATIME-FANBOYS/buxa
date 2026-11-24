@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { ROUTES, sessionPath } from '@buxa/shared/config/routes';
 import { failure, field, sessionForm, success, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../runtime';
+import { nameFieldError } from './sessionNameError';
 import { currentActor } from '../people/camp';
 import { expectedFailure, NO_CAMP } from '../people/failures';
 
@@ -28,7 +29,7 @@ export async function createSessionAction(_previous: ActionState, form: FormData
   try {
     const outcome = await getRuntime().services.classes.createSession(actor, parsed.data);
     if (!outcome.ok) {
-      return failure(outcome.failure.message);
+      return failure(outcome.failure.message, nameFieldError(outcome.failure.reason, outcome.failure.message));
     }
     createdId = outcome.value.id;
   } catch (error) {

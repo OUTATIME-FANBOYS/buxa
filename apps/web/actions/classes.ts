@@ -11,6 +11,8 @@ import { addRecurringClassesAction as addRecurringClassesActionImpl } from '@bux
 import { updateSessionAction as updateSessionActionImpl } from '@buxa/server/composers/classes/updateSessionAction';
 import { deleteSessionAction as deleteSessionActionImpl } from '@buxa/server/composers/classes/deleteSessionAction';
 import { deleteSessionsAction as deleteSessionsActionImpl } from '@buxa/server/composers/classes/deleteSessionsAction';
+import { deleteSessionWithClassesAction as deleteSessionWithClassesActionImpl } from '@buxa/server/composers/classes/deleteSessionWithClassesAction';
+import { setSessionArchivedAction as setSessionArchivedActionImpl } from '@buxa/server/composers/classes/setSessionArchivedAction';
 
 // Server action wrappers for the classes screens. Client components import this module, never @buxa/server. Next.js allows only
 // async functions to be exported from a 'use server' file, so each action is wrapped rather than re-exported.
@@ -57,6 +59,14 @@ export async function deleteSessionAction(...args: Parameters<typeof deleteSessi
 
 export async function deleteSessionsAction(...args: Parameters<typeof deleteSessionsActionImpl>) {
   return deleteSessionsActionImpl(...args);
+}
+
+export async function deleteSessionWithClassesAction(...args: Parameters<typeof deleteSessionWithClassesActionImpl>) {
+  return deleteSessionWithClassesActionImpl(...args);
+}
+
+export async function setSessionArchivedAction(...args: Parameters<typeof setSessionArchivedActionImpl>) {
+  return setSessionArchivedActionImpl(...args);
 }
 
 export async function promoteWaitlistAction(...args: Parameters<typeof promoteWaitlistActionImpl>) {

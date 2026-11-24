@@ -1,6 +1,6 @@
 import type { Pool } from 'pg';
 import { withOrg } from '@buxa/db';
-import { isUuid, type Actor } from '@buxa/domain';
+import { isUuid, sessionNameKey, type Actor } from '@buxa/domain';
 import type { Class, Enrolment, NewSessionInput, Session, SessionEditInput } from '@buxa/contracts';
 import type {
   CampActiveHold,
@@ -26,13 +26,15 @@ import {
 import {
   deleteClassRow,
   deleteSessionRow,
+  deleteSessionWithClassesRow,
   insertClass,
   insertSession,
+  setSessionArchivedRow,
   setSessionPublicRow,
   updateClassRow,
   updateSessionRow,
 } from './PgClassWrites';
-import { translateClassWriteError, translateSessionDeleteError } from './pgClassErrors';
+import { translateClassWriteError, translateSessionDeleteError, translateSessionNameError } from './pgClassErrors';
 import { listCampActiveHoldRows, listCampWaitlistRows } from './PgCampQueries';
 import { toIso } from '../people/pgRows';
 
@@ -52,20 +54,60 @@ export class PgClassRepository implements ClassRepository {
     return withOrg(this.pool, userId, orgId, db => getSession(db, sessionId));
   }
 
-  createSession(actor: Actor, input: NewSessionInput): Promise<Session> {
-    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
-      const id = await insertSession(db, actor, input);
+  async createSession(actor: Actor, input: NewSessionInput): Promise<Session> {
+    try {
+      return await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        const id = await insertSession(db, actor, input);
 
-      return requireSession(db, id);
+        return requireSession(db, id);
+      });
+    } catch (error) {
+      throw translateSessionNameError(error, input.name);
+    }
+  }
+
+  async updateSession(actor: Actor, sessionId: string, input: SessionEditInput): Promise<Session> {
+    try {
+      return await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        await updateSessionRow(db, actor, sessionId, input);
+
+        return requireSession(db, sessionId);
+      });
+    } catch (error) {
+      throw translateSessionNameError(error, input.name);
+    }
+  }
+
+  sessionNameTaken(userId: string, orgId: string, name: string, exceptId: string | null): Promise<string | null> {
+    return withOrg(this.pool, userId, orgId, async db => {
+      const { rows } = await db.query<{ name: string }>(
+        `SELECT name FROM classes
+          WHERE lower(btrim(regexp_replace(name, '\\s+', ' ', 'g'))) = $1 AND ($2::uuid IS NULL OR id <> $2::uuid)
+          LIMIT 1`,
+        [sessionNameKey(name), exceptId],
+      );
+
+      return rows[0]?.name ?? null;
     });
   }
 
-  updateSession(actor: Actor, sessionId: string, input: SessionEditInput): Promise<Session> {
+  setSessionArchived(actor: Actor, sessionId: string, archived: boolean): Promise<Session> {
     return withOrg(this.pool, actor.userId, actor.orgId, async db => {
-      await updateSessionRow(db, actor, sessionId, input);
+      await setSessionArchivedRow(db, actor, sessionId, archived);
 
       return requireSession(db, sessionId);
     });
+  }
+
+  async deleteSessionWithClasses(actor: Actor, sessionId: string): Promise<void> {
+    try {
+      await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        const existing = await requireSession(db, sessionId);
+        await deleteSessionWithClassesRow(db, actor, sessionId, existing.name);
+      });
+    } catch (error) {
+      throw translateSessionDeleteError(error);
+    }
   }
 
   async deleteSession(actor: Actor, sessionId: string): Promise<void> {

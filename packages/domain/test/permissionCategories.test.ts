@@ -74,6 +74,7 @@ const SPEC: Record<PermissionCategory, Record<Role, Action[]>> = {
     admin: [
       'events:read',
       'classes:manage',
+      'classes:delete_with_classes',
       'events:create',
       'events:update',
       'events:update_details',
@@ -82,6 +83,7 @@ const SPEC: Record<PermissionCategory, Record<Role, Action[]>> = {
     owner: [
       'events:read',
       'classes:manage',
+      'classes:delete_with_classes',
       'events:create',
       'events:update',
       'events:update_details',

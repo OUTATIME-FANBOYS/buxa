@@ -51,6 +51,7 @@ export function EditSessionForm({
         name="name"
         defaultValue={session.name}
         error={err('name')}
+        errorRole="status"
         maxLength={120}
         autoComplete="off"
         autoFocus

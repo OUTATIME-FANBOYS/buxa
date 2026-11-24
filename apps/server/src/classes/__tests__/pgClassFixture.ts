@@ -94,6 +94,18 @@ export async function createClassFixture(pool: Pool): Promise<ClassFixture> {
   };
 }
 
+let sessionSeq = 0;
+
+/**
+ * A session name no other session in the same camp has. Session names are unique per camp (migration 0052), and the tests share one
+ * camp, so the default name is numbered.
+ */
+export function uniqueSessionName(base: string): string {
+  sessionSeq += 1;
+
+  return `${base} ${sessionSeq}`;
+}
+
 /** A session (the parent) covering July 2027. */
 export function makeSession(
   repo: PgClassRepository,
@@ -101,7 +113,7 @@ export function makeSession(
   overrides: { name?: string; startsOn?: LocalDate; endsOn?: LocalDate } = {},
 ) {
   return repo.createSession(actor, {
-    name: overrides.name ?? 'Summer camp',
+    name: overrides.name ?? uniqueSessionName('Summer camp'),
     description: 'Two weeks in July.',
     startsOn: overrides.startsOn ?? '2027-07-01',
     endsOn: overrides.endsOn ?? '2027-07-31',

@@ -1,25 +1,29 @@
 'use client';
 
-import { useActionState, useCallback, useState } from 'react';
+import { useActionState, useCallback, useEffect, useState } from 'react';
 import { FormPopUp } from '@/components/components';
 import { Button } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
-import { deleteSessionAction } from '@/actions/classes';
+import { deleteSessionAction, setSessionArchivedAction } from '@/actions/classes';
 import type { Session } from '@buxa/contracts';
 import { idle } from '@buxa/shared';
 import { ActionMessage } from './ActionMessage';
 import { EditSessionForm } from './EditSessionForm';
+import { SessionClassesDialog } from './SessionClassesDialog';
 
 /**
- * The session page's pencil button. It opens the Edit session dialog. Delete session is in the dialog's footer: the first click asks
- * for confirmation by naming the session, and a second click on Confirm delete deletes it. The server refuses a session that holds
- * classes, and the refusal is shown in the dialog. On success the server sends the user to the sessions list.
+ * The session page's pencil button. It opens the Edit session dialog. A session with no classes is deleted from the dialog's footer:
+ * the first click asks for confirmation by naming the session, and a second click on Confirm delete deletes it. A session with classes
+ * is never deleted this way: its button opens the archive-or-delete prompt instead. An archived session can be unarchived here by an
+ * admin or the owner (`canUnarchive`). On success the server sends the user to the sessions list.
  */
-export function EditSessionButton({ session }: { session: Session }) {
+export function EditSessionButton({ session, canUnarchive = false }: { session: Session; canUnarchive?: boolean }) {
   const [open, setOpen] = useState(false);
+  const [choosing, setChoosing] = useState(false);
   const [pending, setPending] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [deleteState, deleteFormAction, deleting] = useActionState(deleteSessionAction, idle);
+  const [unarchiveState, unarchiveAction, unarchiving] = useActionState(setSessionArchivedAction, idle);
   const close = useCallback(() => {
     setOpen(false);
     setConfirming(false);
@@ -33,9 +37,15 @@ export function EditSessionButton({ session }: { session: Session }) {
     },
     [toast, close],
   );
+  useEffect(() => {
+    if (unarchiveState.status === 'success') {
+      saved(unarchiveState.message ?? 'Session unarchived.');
+    }
+  }, [unarchiveState, saved]);
   const onPendingChange = useCallback((value: boolean) => setPending(value), []);
   const formId = `edit-session-${session.id}`;
   const deleteFormId = `delete-session-${session.id}`;
+  const hasClasses = session.classCount > 0;
 
   return (
     <>
@@ -57,24 +67,51 @@ export function EditSessionButton({ session }: { session: Session }) {
           submitLabel="Save session"
           pendingLabel="Saving..."
           submitIcon="save"
-          pending={pending || deleting}
+          pending={pending || deleting || unarchiving}
           onCancel={close}
           leading={
-            <Button
-              type={confirming ? 'submit' : 'button'}
-              form={confirming ? deleteFormId : undefined}
-              variant="glass-danger"
-              icon="trash"
-              disabled={pending || deleting}
-              onClick={confirming ? undefined : () => setConfirming(true)}
-            >
-              {deleting ? 'Deleting...' : confirming ? 'Confirm delete' : 'Delete session'}
-            </Button>
+            hasClasses ? (
+              <Button
+                type="button"
+                variant="glass-danger"
+                icon="trash"
+                disabled={pending || deleting}
+                onClick={() => {
+                  close();
+                  setChoosing(true);
+                }}
+              >
+                Delete session
+              </Button>
+            ) : (
+              <Button
+                type={confirming ? 'submit' : 'button'}
+                form={confirming ? deleteFormId : undefined}
+                variant="glass-danger"
+                icon="trash"
+                disabled={pending || deleting}
+                onClick={confirming ? undefined : () => setConfirming(true)}
+              >
+                {deleting ? 'Deleting...' : confirming ? 'Confirm delete' : 'Delete session'}
+              </Button>
+            )
           }
         >
+          {session.archivedAt !== null && canUnarchive && (
+            <form action={unarchiveAction} className="class-form">
+              <input type="hidden" name="sessionId" value={session.id} />
+              <input type="hidden" name="archived" value="0" />
+              <p className="class-helper">
+                This session is archived. It is hidden from registration and its public page.
+              </p>
+              <Button type="submit" variant="glass" disabled={unarchiving}>
+                {unarchiving ? 'Unarchiving...' : 'Unarchive session'}
+              </Button>
+            </form>
+          )}
           {confirming && (
             <p className="class-helper" role="alert">
-              Delete &ldquo;{session.name}&rdquo;? This cannot be undone. A session with classes cannot be deleted.
+              Delete &ldquo;{session.name}&rdquo;? This cannot be undone.
             </p>
           )}
           <EditSessionForm session={session} formId={formId} onPendingChange={onPendingChange} onSaved={saved} />
@@ -82,7 +119,18 @@ export function EditSessionButton({ session }: { session: Session }) {
             <input type="hidden" name="sessionId" value={session.id} />
           </form>
           <ActionMessage state={deleteState} />
+          <ActionMessage state={unarchiveState} />
         </FormPopUp>
+      )}
+      {choosing && (
+        <SessionClassesDialog
+          session={session}
+          onArchived={message => {
+            toast(message);
+            setChoosing(false);
+          }}
+          onClose={() => setChoosing(false)}
+        />
       )}
     </>
   );

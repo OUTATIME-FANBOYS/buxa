@@ -1,5 +1,13 @@
 import { describeRefusal, type Refusal } from '@buxa/domain';
-import { ClassOutsideSessionError, isClassError, isEnrolmentRefusal, SESSION_HAS_CLASSES_MESSAGE } from './errors';
+import {
+  ClassOutsideSessionError,
+  isClassError,
+  isEnrolmentRefusal,
+  SESSION_HAS_CLASSES_MESSAGE,
+  SessionHasEnrolmentsError,
+  SessionNameConfirmationError,
+  SessionNameTakenError,
+} from './errors';
 
 const isOutsideSession = (e: unknown): e is ClassOutsideSessionError => isClassError(e, 'class-outside-session');
 
@@ -15,6 +23,9 @@ export type FailureReason =
   | 'capacity_below_enrolled'
   | 'class_has_enrolments'
   | 'session_has_classes'
+  | 'session_name_taken'
+  | 'session_has_enrolments'
+  | 'session_name_confirmation'
   | 'session_invalid'
   | 'enrolment_not_found'
   | 'camper_not_found'
@@ -115,6 +126,15 @@ export async function attempt<T>(work: () => Promise<T>, timeZone: string): Prom
     }
     if (isClassError(e, 'session-has-classes')) {
       return { ok: false, failure: { reason: 'session_has_classes', message: SESSION_HAS_CLASSES_MESSAGE } };
+    }
+    if (e instanceof SessionNameTakenError) {
+      return { ok: false, failure: { reason: 'session_name_taken', message: e.message } };
+    }
+    if (e instanceof SessionHasEnrolmentsError) {
+      return { ok: false, failure: { reason: 'session_has_enrolments', message: e.message } };
+    }
+    if (e instanceof SessionNameConfirmationError) {
+      return { ok: false, failure: { reason: 'session_name_confirmation', message: e.message } };
     }
     if (isClassError(e, 'hold-exists')) {
       return {

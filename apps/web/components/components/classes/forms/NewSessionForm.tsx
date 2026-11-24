@@ -65,6 +65,7 @@ export function NewSessionForm({
         isRequired
         name="name"
         error={err('name')}
+        errorRole="status"
         maxLength={120}
         autoComplete="off"
         autoFocus={!inDialog}

@@ -61,7 +61,8 @@ export class ClassHasEnrolmentsError extends Error {
   }
 }
 
-export const SESSION_HAS_CLASSES_MESSAGE = 'This session has classes. Delete them first.';
+export const SESSION_HAS_CLASSES_MESSAGE =
+  'This session has classes, so it cannot be deleted. Archive it, or delete its classes and the session.';
 
 /** A session (the parent) that still holds classes cannot be deleted. Migration 0035 refuses it at the database too. */
 export class SessionHasClassesError extends Error {
@@ -69,6 +70,33 @@ export class SessionHasClassesError extends Error {
   constructor() {
     super(SESSION_HAS_CLASSES_MESSAGE);
     this.name = 'SessionHasClassesError';
+  }
+}
+
+/** Another session in the camp already has this name, ignoring case and spaces (the unique index in migration 0052). */
+export class SessionNameTakenError extends Error {
+  readonly kind = 'session-name-taken';
+  constructor(readonly sessionName: string) {
+    super(`A session named ${sessionName} already exists.`);
+    this.name = 'SessionNameTakenError';
+  }
+}
+
+/** A session with a class that has an enrolment, a hold, a registration, a check-in or a season pass cannot be deleted with its classes. */
+export class SessionHasEnrolmentsError extends Error {
+  readonly kind = 'session-has-enrolments';
+  constructor() {
+    super('This session has enrolments, archive it instead');
+    this.name = 'SessionHasEnrolmentsError';
+  }
+}
+
+/** The typed name for a delete with classes does not match the session's name exactly. */
+export class SessionNameConfirmationError extends Error {
+  readonly kind = 'session-name-confirmation';
+  constructor() {
+    super('Type the session name exactly as it is written to confirm.');
+    this.name = 'SessionNameConfirmationError';
   }
 }
 
@@ -204,6 +232,9 @@ export type ClassErrorKind =
   | 'capacity-below-enrolled'
   | 'class-has-enrolments'
   | 'session-has-classes'
+  | 'session-name-taken'
+  | 'session-has-enrolments'
+  | 'session-name-confirmation'
   | 'enrolment-not-found'
   | 'camper-not-found'
   | 'instructor-not-found'
