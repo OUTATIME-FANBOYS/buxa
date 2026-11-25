@@ -32,13 +32,17 @@ export async function RosterPage({ sessionId }: { sessionId: string }) {
 
   return (
     <main className="roster-print">
-      <nav aria-label="Roster actions" className="roster-print-actions no-print">
-        <Button variant="ghost" size="sm" href={groupsPath(session.id)}>
+      <nav aria-label="Roster actions" className="roster-back no-print">
+        <Button variant="ghost" size="sm" className="roster-back-link" href={groupsPath(session.id)}>
           Back to groups and rooms
         </Button>
-        <PrintButton label="Print roster" className="no-print" />
       </nav>
-      <RosterSheet sessionName={session.name} dates={datesOf(session.startsOn, session.endsOn)} roster={roster} />
+      <RosterSheet
+        sessionName={session.name}
+        dates={datesOf(session.startsOn, session.endsOn)}
+        roster={roster}
+        actions={<PrintButton label="Print roster" className="no-print" />}
+      />
     </main>
   );
 }

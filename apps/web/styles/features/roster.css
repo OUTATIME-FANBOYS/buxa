@@ -1,4 +1,5 @@
-/* The printable roster (/camp/sessions/[id]/roster). A plain page: no camp shell, so only the sheet and its two controls are drawn. */
+/* The printable roster (/camp/sessions/[id]/roster). A plain page: no camp shell, so only the sheet and its two controls are drawn.
+ * Everything sits on one left edge: the back link, the title block, the group headings and the tables. */
 
 .roster-print {
   max-width: 48rem;
@@ -8,46 +9,85 @@
   gap: 16px;
 }
 
-.roster-print-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: space-between;
+/* The ghost button pads its label inward; the back link takes no padding so its text lines up with the title. */
+.roster-print .roster-back-link {
+  padding-inline: 0;
 }
 
 .roster-sheet {
   display: grid;
-  gap: 20px;
+  gap: 24px;
 }
 
-.roster-sheet-head h1 {
+/* The title block and the Print button share one row, the button centred against the title block. */
+.roster-sheet-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.roster-sheet-title {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.roster-sheet-title h1 {
   margin: 0;
 }
 
-.roster-sheet-head p {
-  margin: 4px 0 0;
+.roster-sheet-title p {
+  margin: 0;
 }
 
+.roster-group {
+  display: grid;
+  gap: 8px;
+}
+
+/* The group heading is a thin divider in the table-rule colour, not a heavy line. */
 .roster-group h2 {
-  margin: 0 0 8px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid currentColor;
+  margin: 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
 }
 
-.roster-room h3 {
-  margin: 12px 0 6px;
+.roster-group > p {
+  margin: 0;
+}
+
+.roster-room {
+  display: grid;
+  gap: 4px;
+}
+
+.roster-room-name {
+  margin: 4px 0 0;
+  font-size: var(--fs-s);
 }
 
 .roster-table {
-  width: 100%;
-  border-collapse: collapse;
+  margin: 0;
 }
 
-.roster-table th,
+.roster-table th:first-child,
+.roster-table td:first-child {
+  width: 60%;
+}
+
+.roster-table td,
+.roster-table th {
+  padding-inline: 0;
+}
+
 .roster-table td {
-  text-align: left;
-  padding: 6px 8px;
-  border-bottom: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  padding-block: 10px;
+}
+
+.roster-table th {
+  padding-block: 8px;
 }
 
 @media print {
@@ -67,7 +107,8 @@
   }
 
   .roster-group,
-  .roster-room {
+  .roster-room,
+  .roster-table tr {
     break-inside: avoid;
   }
 
