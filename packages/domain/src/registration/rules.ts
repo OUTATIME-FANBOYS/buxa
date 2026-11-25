@@ -20,7 +20,8 @@ export type RegistrationRefusal =
   | 'class_not_in_form'
   | 'camper_no_household'
   | 'class_refused'
-  | 'payment_note_required';
+  | 'payment_note_required'
+  | 'form_has_registrations';
 
 /** One child and one class the family asks for. `startsAt`/`endsAt` are the class's times (ISO instants). */
 export interface ClassSelection extends Span {
@@ -122,6 +123,21 @@ export function decideWithdrawal(status: RegistrationStatus): RegistrationDecisi
 export function decideErasure(facts: { status: RegistrationStatus; activeEnrolments: number }): RegistrationDecision {
   if (facts.status === 'confirmed' && facts.activeEnrolments > 0) {
     return { allow: false, reason: 'withdraw_first' };
+  }
+
+  return { allow: true };
+}
+
+/** The copy a person sees when a form with registrations is refused. The UI shows the same sentence before the server answers. */
+export const FORM_HAS_REGISTRATIONS_MESSAGE = 'This form has registrations, so it cannot be deleted.';
+
+/**
+ * A form may be deleted only when no registration names it, in any status (confirmed, pending, withdrawn or archived). A form with
+ * registrations keeps its versions, which the answers were checked against, so the record is never lost by a delete.
+ */
+export function decideFormDeletion(facts: { registrationCount: number }): RegistrationDecision {
+  if (facts.registrationCount > 0) {
+    return { allow: false, reason: 'form_has_registrations' };
   }
 
   return { allow: true };
