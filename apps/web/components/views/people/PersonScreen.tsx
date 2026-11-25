@@ -108,7 +108,7 @@ export async function PersonScreen({
             clockFormat={clock.clockFormat}
           />
         )}
-        {person.roles.some(isFamilyRole) ? (
+        {person.roles.some(isFamilyRole) && (
           <HouseholdPanel
             personId={person.id}
             households={person.households}
@@ -119,10 +119,8 @@ export async function PersonScreen({
             query={q}
             linkable={linkable}
           >
-            <EmergencyContactPanel person={person} embedded />
+            {person.roles.includes('camper') && <EmergencyContactPanel person={person} embedded />}
           </HouseholdPanel>
-        ) : (
-          <EmergencyContactPanel person={person} />
         )}
         {person.hasActiveBadge !== null && (
           <BadgePanel
