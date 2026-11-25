@@ -28,3 +28,11 @@ export function findClash<T extends Span>(candidate: Span, others: readonly T[])
 
   return clashing[0] ?? null;
 }
+
+/**
+ * True when any span of `a` overlaps any span of `b`. A series is a list of days, so two series clash when one of their days clashes
+ * with one of the other's, not only when their anchor days do.
+ */
+export function anySpanOverlaps(a: readonly Span[], b: readonly Span[]): boolean {
+  return a.some(x => b.some(y => overlaps(x, y)));
+}

@@ -135,7 +135,7 @@ Automatic group creation or auto-assignment (phase 5), transport, meal plans, me
 
 **Not built yet.**
 
-- Pickers on the registration and enrolment forms still offer days, not series (one choice per series is still to do).
+- The enrolment form takes the series' anchor day, so it enrols per series. The registration form lists each series once (branch `v0.4/feat/series-registration`): a child takes one place per series, the loader reads series with their active days, and a series whose days overlap another the child takes is refused. Registration writes one hold per child per series, keyed by `series_id` (the database rule of migration 0061). The attendance log filter still lists days, by design.
 - The camp calendar, the check-in list and My classes are filtered for cancelled days in SQL and in the service; the check-in list reads sessions, so there is no day row in it to hide.
 - Series page as its own route: the days open as a panel on the session page.
 

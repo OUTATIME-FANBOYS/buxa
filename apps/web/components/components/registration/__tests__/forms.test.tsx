@@ -12,8 +12,8 @@ vi.mock('@/actions/registration', () => ({
 }));
 
 const SESSIONS = [
-  { id: 's-1', name: 'Art', classes: [] },
-  { id: 's-2', name: 'Robotics', classes: [] },
+  { id: 's-1', name: 'Art', series: [] },
+  { id: 's-2', name: 'Robotics', series: [] },
 ];
 
 const CAMPERS = [{ id: 'c-1', name: 'Ada Lovelace' }];

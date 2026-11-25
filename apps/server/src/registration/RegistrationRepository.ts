@@ -47,13 +47,18 @@ export interface FileDownload {
 /** The published version a family registers on: its name, season, sessions and questions (see PublishedForm in contracts). */
 export type PublishedVersion = PublishedForm;
 
-/** A class of the camp as a registration reads it: its parent session, its name and its times. */
+/**
+ * A class of the camp as a registration reads it: its parent session, its name and its times, and the series it is a day of, with
+ * the series' active days (the ones a child's places are checked against).
+ */
 export interface ClassLookup {
   classId: string;
   sessionId: string;
   className: string;
   startsAt: string;
   endsAt: string;
+  seriesId: string;
+  occurrences: { startsAt: string; endsAt: string }[];
 }
 
 /**

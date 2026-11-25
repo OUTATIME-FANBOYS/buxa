@@ -442,8 +442,8 @@ function refuseSelections(decision: Exclude<SelectionDecision, { allow: true }>,
 }
 
 /**
- * Looks up each chosen class in the camp and checks that the child-and-class pairs fit together: no class twice for one child, and
- * no two classes of one child at overlapping times. Each class must be in the camp; a form's own session set is checked by the rule.
+ * Looks up each chosen class in the camp and checks that the child-and-series pairs fit together: no series twice for one child, and
+ * no two series of one child with a day that overlaps. Each class must be in the camp; a form's own session set is checked by the rule.
  */
 async function resolveSelections(
   repo: RegistrationRepository,
@@ -468,6 +468,8 @@ async function resolveSelections(
       className: lookup.className,
       startsAt: lookup.startsAt,
       endsAt: lookup.endsAt,
+      seriesId: lookup.seriesId,
+      occurrences: lookup.occurrences,
       sessionId: lookup.sessionId,
     };
   });
