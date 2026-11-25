@@ -9,7 +9,7 @@ import {
   SESSION_PARAM,
 } from '@buxa/shared';
 import { ROUTES } from '@/config/routes';
-import { Empty, PageHeader } from '@/components/components';
+import { Empty, PageHeader, PageHeaderRow } from '@/components/components';
 import { CampHoldsBoard, type WaitRow } from '@/components/components/holds';
 import { SessionFilter } from '@/components/components/filters';
 import type { CampWaitlistEntry } from '@buxa/server/classes/ClassRepository';
@@ -55,15 +55,13 @@ export async function CampHolds({ searchParams = {} }: { searchParams?: SearchPa
 
   return (
     <div className="page">
-      <div className="holds-head">
-        <PageHeader
-          title="Holds"
-          subtitle="Places families hold while they finish registering, and the waitlist for each class. Promote a camper from the class page."
-          actions={
-            choices.length > 0 ? <SessionFilter action={ROUTES.holds} sessions={choices} value={chosen} /> : undefined
-          }
-        />
-      </div>
+      <PageHeaderRow
+        title="Holds"
+        subtitle="Places families hold while they finish registering, and the waitlist for each class. Promote a camper from the class page."
+        controls={
+          choices.length > 0 ? <SessionFilter action={ROUTES.holds} sessions={choices} value={chosen} /> : undefined
+        }
+      />
       <CampHoldsBoard
         holds={holds.value.filter(hold => inChosenSession(hold.sessionId, chosen))}
         waitlist={waitlist.value.filter(row => inChosenSession(row.sessionId, chosen)).map(toWaitRow)}

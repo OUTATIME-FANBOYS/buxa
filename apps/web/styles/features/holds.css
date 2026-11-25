@@ -11,15 +11,6 @@
   align-items: start;
 }
 
-/* The session dropdown sits at the right of the title, centred on the title block, 320px wide like the on-site search. Phones stack it under the title. */
-.holds-head .page-head {
-  align-items: center;
-}
-.holds-head .session-filter {
-  width: 320px;
-  max-width: 100%;
-}
-
 @media (max-width: 720px) {
   .holds-board {
     grid-template-columns: minmax(0, 1fr);
