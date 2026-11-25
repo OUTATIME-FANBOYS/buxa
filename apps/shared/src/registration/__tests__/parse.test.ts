@@ -62,7 +62,8 @@ describe('registrationSubmissionFromForm', () => {
     );
     expect(raw.selections).toEqual([{ camperId: CAMPER, classId: SESSION }]);
     expect(raw.standard.camperFirstName).toBe('Ada');
-    expect(raw.standard.emergencyContactName).toBe('');
+    // The emergency contact is not a registration answer: it is kept on the person's page only.
+    expect(raw.standard).not.toHaveProperty('emergencyContactName');
     expect(raw.custom).toEqual({ photos: 'yes' });
   });
 });

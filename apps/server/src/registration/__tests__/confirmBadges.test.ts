@@ -31,16 +31,20 @@ function registrationsFor(camp: Camp): RegistrationService {
     },
   );
 
-  return createRegistrationService(repo, credentials =>
-    createCredentialService({
-      credentials,
-      people: camp.repos.people,
-      memberships: camp.repos.memberships,
-      attendance: camp.repos.attendance,
-      orgs: camp.repos.orgs,
-      clock: () => new Date(NOW),
-      cipher: createBadgeCipher(() => parseBadgeKey(TEST_BADGE_KEY)),
-    }),
+  return createRegistrationService(
+    repo,
+    credentials =>
+      createCredentialService({
+        credentials,
+        people: camp.repos.people,
+        memberships: camp.repos.memberships,
+        attendance: camp.repos.attendance,
+        orgs: camp.repos.orgs,
+        clock: () => new Date(NOW),
+        cipher: createBadgeCipher(() => parseBadgeKey(TEST_BADGE_KEY)),
+      }),
+    // The real people service of this camp: the camper and their household are the ones created above.
+    camp.people,
   );
 }
 

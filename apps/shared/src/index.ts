@@ -100,6 +100,7 @@ export * from './notifications/notifications';
 export * from './registration/copy';
 export * from './registration/documentLabels';
 export * from './registration/parse';
+export * from './registration/registrant';
 export * from './invites/invitePath';
 export * from './invites/inviteEmail';
 export * from './groups/rosterCsv';

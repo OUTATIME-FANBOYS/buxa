@@ -4,6 +4,7 @@ import { createRegistrationService } from './RegistrationService';
 import { InMemoryRegistrationRepository } from './InMemoryRegistrationRepository';
 import { InMemoryCredentialRepository } from '../credentials/InMemoryCredentialRepository';
 import { InMemoryDatabase } from '../people/InMemoryDatabase';
+import { adaFixture, registrantPeople } from './__tests__/registrantPeople';
 import { RegistrationFormNoSessionsError, RegistrationRefusedError } from './errors';
 
 /*
@@ -71,9 +72,13 @@ function setup() {
 
   return {
     repo,
-    service: createRegistrationService(repo, () => {
-      throw new Error('no badge expected in this test');
-    }),
+    service: createRegistrationService(
+      repo,
+      () => {
+        throw new Error('no badge expected in this test');
+      },
+      registrantPeople([adaFixture(CAMPER, '5e6f7a8b-3333-4a2b-8c3d-4e5f6a7b8c9d')]),
+    ),
   };
 }
 

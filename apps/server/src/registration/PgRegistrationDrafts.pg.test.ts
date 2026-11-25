@@ -7,7 +7,7 @@ import { PgRegistrationRepository } from './PgRegistrationRepository';
 import { createRegistrationService, type RegistrationService } from './RegistrationService';
 import { updateFormRow } from './PgRegistrationWrites';
 import { RegistrationFormNoSessionsError, RegistrationSessionNotFoundError } from './errors';
-import { createRegistrationFixture, type RegistrationFixture } from './__tests__/registrationFixture';
+import { createRegistrationFixture, pgPeopleService, type RegistrationFixture } from './__tests__/registrationFixture';
 
 const url = process.env.DATABASE_URL;
 
@@ -19,9 +19,13 @@ describe.skipIf(!url)('registration form drafts in Postgres', () => {
   const pool = new pg.Pool({ connectionString: url });
   const repo = new PgRegistrationRepository(pool);
   // Confirmation is not part of these tests, so no badge is ever issued.
-  const registration: RegistrationService = createRegistrationService(repo, () => {
-    throw new Error('no badge expected in this test');
-  });
+  const registration: RegistrationService = createRegistrationService(
+    repo,
+    () => {
+      throw new Error('no badge expected in this test');
+    },
+    pgPeopleService(pool),
+  );
   const tag = randomBytes(4).toString('hex');
 
   beforeAll(async () => {

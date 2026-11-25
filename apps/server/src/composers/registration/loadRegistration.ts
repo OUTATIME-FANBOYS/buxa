@@ -5,6 +5,8 @@ import type { RegistrationForm, RegistrationRow, RegistrationSeries } from '@bux
 import { getRuntime } from '../../runtime';
 import { isHttpError, notFound } from '../../http/errors';
 import { isRegistrationError } from '../../registration/errors';
+import { readCamper } from '../../registration/registrantPeople';
+import type { CamperRecord } from '@buxa/shared';
 
 /** What a page can show: the data, or the reason it cannot be shown. Anything else goes to the error boundary. */
 export type LoadedRegistration<T> = { ok: true; value: T } | { ok: false; reason: 'forbidden' | 'not-found' };
@@ -48,8 +50,11 @@ export interface RegisterPageData {
   published: PublishedVersion | null;
   /** The form's sessions, in name order, each with its series (one entry per series, with its days, times, seats left and waitlist). */
   sessions: { id: string; name: string; series: RegistrationSeries[] }[];
-  /** The people with the camper role: the children a family can register. */
-  campers: { id: string; name: string }[];
+  /**
+   * The people with the camper role: the children a family can register, each with the name, date of birth and parent or guardian
+   * on file that the form fills in (read only when on file). The server reads these again on submit.
+   */
+  campers: CamperRecord[];
 }
 
 /**
@@ -91,13 +96,15 @@ export function loadRegisterPage(actor: Actor, formId: string): Promise<LoadedRe
       }
       sessions.push({ id: session.id, name: session.name, series: offered });
     }
-    const campers = await runtime.services.people.list(actor, { role: 'camper' });
+    const campers: CamperRecord[] = [];
+    for (const person of await runtime.services.people.list(actor, { role: 'camper' })) {
+      const camper = await readCamper(runtime.services.people, actor, person.id);
+      if (camper) {
+        const { id, name, givenName, familyName, dateOfBirth, parent } = camper;
+        campers.push({ id, name, givenName, familyName, dateOfBirth, parent });
+      }
+    }
 
-    return {
-      form,
-      published,
-      sessions,
-      campers: campers.map(p => ({ id: p.id, name: `${p.givenName} ${p.familyName}` })),
-    };
+    return { form, published, sessions, campers };
   });
 }

@@ -3,6 +3,7 @@ import type { Actor, Role } from '@buxa/domain';
 import { createRegistrationService } from './RegistrationService';
 import { InMemoryRegistrationRepository } from './InMemoryRegistrationRepository';
 import { InMemoryCredentialRepository } from '../credentials/InMemoryCredentialRepository';
+import { adaFixture, benFixture, registrantPeople } from './__tests__/registrantPeople';
 import { InMemoryDatabase } from '../people/InMemoryDatabase';
 import {
   RegistrationClassNotFoundError,
@@ -25,6 +26,8 @@ const CLASS_A4 = 'cccccccc-0000-4000-8000-00000000000d';
 const CLASS_B = 'cccccccc-0000-4000-8000-00000000000e';
 const CAMPER_ADA = '5e6f7a8b-1111-4a2b-8c3d-4e5f6a7b8c9d';
 const CAMPER_BEN = '5e6f7a8b-2222-4a2b-8c3d-4e5f6a7b8c9d';
+const GUARDIAN_ADA = '5e6f7a8b-3333-4a2b-8c3d-4e5f6a7b8c9d';
+const GUARDIAN_BEN = '5e6f7a8b-4444-4a2b-8c3d-4e5f6a7b8c9d';
 // Two series of days. Art has a day on each of two days (one choice for the family, one anchor per day); Swim starts after Art's
 // first day but overlaps Art's second day.
 const SERIES_ART = 'dddddddd-0000-4000-8000-00000000000a';
@@ -106,9 +109,9 @@ const standard = {
   camperBirthDate: '2014-03-09',
   guardianName: 'Byron Lovelace',
   guardianPhone: '555-0100',
-  emergencyContactName: 'Mary Somerville',
-  emergencyContactPhone: '555-0111',
 };
+/** Ben's answers: the camper's name and date of birth are his own, read from his record. */
+const benStandard = { ...standard, camperFirstName: 'Ben', camperLastName: 'Carrow', camperBirthDate: '2013-05-01' };
 
 /** These tests have no camper in their registrations, so no badge may be issued. */
 function failNoBadges(): never {
@@ -126,7 +129,9 @@ function setup() {
     CLASSES,
   );
 
-  return { repo, service: createRegistrationService(repo, () => failNoBadges()) };
+  const people = registrantPeople([adaFixture(CAMPER_ADA, GUARDIAN_ADA), benFixture(CAMPER_BEN, GUARDIAN_BEN)]);
+
+  return { repo, service: createRegistrationService(repo, () => failNoBadges(), people) };
 }
 
 describe('registration service: permissions', () => {
@@ -261,6 +266,20 @@ describe('registration service: submissions', () => {
     expect((error as Error).message).toContain('Archery');
     expect((error as Error).message).toContain('Swimming');
     await expect(service.listSubmissions(as('staff'), formId)).resolves.toEqual([]);
+  });
+
+  it('does not accept a changed camper name or date of birth: those come from the person record', async () => {
+    const { service, formId } = await publishedForm();
+    const changed = {
+      ...submission(formId),
+      standard: { ...standard, camperFirstName: 'Grace', camperBirthDate: '2010-01-01' },
+    };
+    const error = await service.submit(as('staff'), formId, changed).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(RegistrationInvalidError);
+    expect(Object.keys((error as RegistrationInvalidError).fieldErrors).sort()).toEqual([
+      'standard.camperBirthDate',
+      'standard.camperFirstName',
+    ]);
   });
 
   it('allows two children to take overlapping classes, because each child is checked on their own', async () => {
@@ -413,7 +432,7 @@ describe('registration service: lifecycle (withdraw, archive, delete)', () => {
       service.submit(as('staff'), formId, {
         formId,
         selections: [{ camperId: CAMPER_BEN, classId: CLASS_A3 }],
-        standard,
+        standard: benStandard,
         custom: { swim: 'Beginner', photos: 'yes' },
       }),
     ).rejects.toMatchObject({ kind: 'registration-refused', reason: 'session_not_open' });
@@ -424,7 +443,7 @@ describe('registration service: lifecycle (withdraw, archive, delete)', () => {
       service.submit(as('staff'), formId, {
         formId,
         selections: [{ camperId: CAMPER_BEN, classId: CLASS_A3 }],
-        standard,
+        standard: benStandard,
         custom: { swim: 'Beginner', photos: 'yes' },
       }),
     ).resolves.toEqual(expect.any(String));

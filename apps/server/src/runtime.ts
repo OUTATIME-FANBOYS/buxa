@@ -152,10 +152,11 @@ export function createServices(
   gateDeps: GateDeps = defaultGateDeps(),
 ): Services {
   const { orgs, people, memberships, credentials, attendance, classes } = repositories;
+  const peopleService = createPeopleService({ people, memberships, credentials, attendance, classes, orgs, clock });
 
   return {
     orgs: createOrgService(orgs),
-    people: createPeopleService({ people, memberships, credentials, attendance, classes, orgs, clock }),
+    people: peopleService,
     memberships: createMembershipService({ memberships, people, classes, orgs, clock }),
     credentials: createCredentialService({
       credentials,
@@ -176,16 +177,19 @@ export function createServices(
       clock,
     }),
     ...createClassServices(repositories),
-    registration: createRegistrationService(repositories.registration, badges =>
-      createCredentialService({
-        credentials: badges,
-        people,
-        memberships,
-        attendance,
-        orgs,
-        clock,
-        cipher: badgeCipher,
-      }),
+    registration: createRegistrationService(
+      repositories.registration,
+      badges =>
+        createCredentialService({
+          credentials: badges,
+          people,
+          memberships,
+          attendance,
+          orgs,
+          clock,
+          cipher: badgeCipher,
+        }),
+      peopleService,
     ),
     calendar: createCalendarService({ repo: repositories.calendar }),
     publicSessions: createPublicSessionService({ repo: repositories.publicSessions }),
