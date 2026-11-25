@@ -193,6 +193,7 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0065_series_day_delete_guard.sql',
       '0066_series_reschedule.sql',
       '0067_class_location_overlap.sql',
+      '0068_camp_gate.sql',
     ]);
   });
 
@@ -409,6 +410,7 @@ describe.skipIf(!url)('migration 0050 copies session prices onto their classes',
       '0065_series_day_delete_guard.sql',
       '0066_series_reschedule.sql',
       '0067_class_location_overlap.sql',
+      '0068_camp_gate.sql',
     ]);
 
     const classes = await tempPool.query<{
@@ -610,8 +612,9 @@ describe.skipIf(!url)('migration 0051 links teachers to their people by email', 
       '0065_series_day_delete_guard.sql',
       '0066_series_reschedule.sql',
       '0067_class_location_overlap.sql',
+      '0068_camp_gate.sql',
     ]);
-    const linked =await tempPool.query<{ email: string; user_email: string }>(
+    const linked = await tempPool.query<{ email: string; user_email: string }>(
       `SELECT p.email, u.email AS user_email FROM people p JOIN users u ON u.id = p.user_id`,
     );
     expect(linked.rows).toHaveLength(1);
@@ -1609,6 +1612,89 @@ describe.skipIf(!url)('migration 0061 stops on data that would break a key', () 
       expect(message).toContain('overlap in time');
     } finally {
       await closeDatabase(dbName, handle);
+    }
+  });
+});
+
+// Migration 0068 (check-in with a family's email). It only adds tables, functions and a trigger, so it must apply on a database that
+// already holds camp data, and the new tables must be locked the same way as the rest of the camp's data.
+describe.skipIf(!url)('migration 0068 adds the camp gate tables to a database with camp data', () => {
+  const tag = randomBytes(4).toString('hex');
+  const tempDbName = `buxa_gate_upgrade_${tag}`;
+  let rootPool: pg.Pool;
+  let tempPool: pg.Pool | null = null;
+  let canCreateDb = true;
+
+  beforeAll(async () => {
+    rootPool = new pg.Pool(poolConfigFor(url ?? ''));
+    rootPool.on('error', () => {});
+    try {
+      await rootPool.query(`CREATE DATABASE "${tempDbName}"`);
+    } catch (err) {
+      console.warn(`Could not CREATE DATABASE for the 0068 test (insufficient privileges?): ${String(err)}`);
+      canCreateDb = false;
+
+      return;
+    }
+
+    const parsed = new URL(url ?? '');
+    parsed.pathname = `/${tempDbName}`;
+    tempPool = new pg.Pool(poolConfigFor(parsed.toString()));
+    tempPool.on('error', () => {});
+    // Apply everything before 0068, then seed a camp, so the new file runs over existing rows.
+    const client = await tempPool.connect();
+    try {
+      await client.query(
+        'CREATE TABLE IF NOT EXISTS schema_migrations (name text PRIMARY KEY, at timestamptz NOT NULL DEFAULT now())',
+      );
+      const earlier = readdirSync(DIR)
+        .filter(f => f.endsWith('.sql') && f.slice(0, 4) < '0068')
+        .sort();
+      for (const file of earlier) {
+        await client.query('BEGIN');
+        await client.query(readFileSync(join(DIR, file), 'utf8'));
+        await client.query('INSERT INTO schema_migrations(name) VALUES ($1)', [file]);
+        await client.query('COMMIT');
+      }
+      await client.query(`INSERT INTO orgs (name, slug) VALUES ('Camp Gate ${tag}', 'camp-gate-${tag}')`);
+    } finally {
+      client.release();
+    }
+  });
+
+  afterAll(async () => {
+    if (tempPool) {
+      await tempPool.end().catch(() => {});
+    }
+    if (canCreateDb && rootPool) {
+      try {
+        await rootPool.query(`DROP DATABASE IF EXISTS "${tempDbName}" WITH (FORCE)`);
+      } catch {
+        // Ignore drop errors during cleanup
+      }
+    }
+    if (rootPool) {
+      await rootPool.end().catch(() => {});
+    }
+  });
+
+  it('applies 0068 on top of the earlier files, and the new tables are forced under row-level security', async () => {
+    if (!canCreateDb || !tempPool) {
+      return;
+    }
+    await migrate(tempPool);
+    const applied = await tempPool.query<{ name: string }>(
+      `SELECT name FROM schema_migrations WHERE name = '0068_camp_gate.sql'`,
+    );
+    expect(applied.rows).toHaveLength(1);
+    const { rows } = await tempPool.query<{ relname: string; relrowsecurity: boolean; relforcerowsecurity: boolean }>(
+      `SELECT relname, relrowsecurity, relforcerowsecurity FROM pg_class
+        WHERE relname IN ('camp_gates', 'gate_verification_codes', 'device_tokens')`,
+    );
+    expect(rows).toHaveLength(3);
+    for (const row of rows) {
+      expect(row.relrowsecurity, row.relname).toBe(true);
+      expect(row.relforcerowsecurity, row.relname).toBe(true);
     }
   });
 });
