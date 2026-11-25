@@ -17,6 +17,8 @@ export interface DatePickerProps {
   maxValue?: string;
   error?: string | null;
   hint?: ReactNode;
+  /** The id of text that lives outside this field and describes it (for example a note set above the field). Joined to its own hint. */
+  describedBy?: string;
   isRequired?: boolean;
   isDisabled?: boolean;
   id?: string;
@@ -32,6 +34,7 @@ export function DatePicker({
   maxValue,
   error,
   hint,
+  describedBy,
   isRequired,
   isDisabled,
   id,
@@ -64,7 +67,7 @@ export function DatePicker({
         min={minValue}
         max={maxValue}
         aria-invalid={Boolean(error) || undefined}
-        aria-describedby={error || hint ? hintId : undefined}
+        aria-describedby={[describedBy, error || hint ? hintId : undefined].filter(Boolean).join(' ') || undefined}
         {...controlled}
         onChange={e => onChange?.(e.target.value === '' ? null : e.target.value)}
         className="select-field__input buxa:min-w-0 buxa:aria-[invalid=true]:border-[var(--crit)]"
