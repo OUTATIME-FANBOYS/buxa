@@ -84,7 +84,7 @@ export async function RegistrationList({ searchParams = {} }: { searchParams?: S
           title="No registration forms yet"
           body={
             canManage
-              ? 'Create a form for a season, choose its sessions and add any questions. Publish it to start taking registrations.'
+              ? 'Create a form for your sessions, choose its sessions and add any questions. Publish it to start taking registrations.'
               : 'Nobody has created a registration form yet.'
           }
           action={canManage ? actions : undefined}

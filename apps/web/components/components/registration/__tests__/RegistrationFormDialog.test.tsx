@@ -55,16 +55,26 @@ describe('RegistrationFormDialog: the pop-up for a new form (server render)', ()
     expect(html).not.toContain('Save draft');
     expect(html).not.toContain('Publish');
   });
+
+  it('has no Season field and no season hint', () => {
+    const html = renderToStaticMarkup(
+      <RegistrationFormDialog mode="create" sessions={SESSIONS} onClose={() => undefined} />,
+    );
+    expect(html).not.toContain('Season');
+    expect(html).not.toContain('name="season"');
+    expect(html).not.toContain('Only for your own reference');
+  });
 });
 
 describe('RegistrationFormDialog: edit opens prefilled (server render)', () => {
-  it('fills the name, season, sessions and questions from the form', () => {
+  it('fills the name, sessions and questions from the form, and has no Season field', () => {
     const html = renderToStaticMarkup(
       <RegistrationFormDialog mode="edit" form={form} sessions={SESSIONS} onClose={() => undefined} />,
     );
     expect(html).toContain('Edit registration form');
     expect(html).toContain('value="Season form"');
-    expect(html).toContain('value="2027"');
+    expect(html).not.toContain('name="season"');
+    expect(html).not.toContain('value="2027"');
     expect(html).toContain('Allergies');
     expect(html).toContain('Immunization.pdf');
   });

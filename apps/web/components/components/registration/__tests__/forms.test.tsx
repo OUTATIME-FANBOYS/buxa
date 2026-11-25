@@ -131,7 +131,7 @@ describe('FormEditor: the fields only, the pop-up footer holds the buttons', () 
         id="f-1"
         formId="f-1"
         sessions={SESSIONS}
-        initial={{ name: 'Reg Kids', season: null, sessionIds: [], fields: [], attachments: [] }}
+        initial={{ name: 'Reg Kids', sessionIds: [], fields: [], attachments: [] }}
       />,
     );
     expect(html).not.toContain('<fieldset');
@@ -149,7 +149,7 @@ describe('FormEditor: the fields only, the pop-up footer holds the buttons', () 
         id="f-1"
         formId="f-1"
         sessions={SESSIONS}
-        initial={{ name: 'Reg Kids', season: null, sessionIds: [], fields: [], attachments: [] }}
+        initial={{ name: 'Reg Kids', sessionIds: [], fields: [], attachments: [] }}
       />,
     );
     expect(edit).not.toContain('Save draft');
@@ -168,7 +168,7 @@ describe('FormEditor: the fields only, the pop-up footer holds the buttons', () 
         id="f-1"
         formId="f-1"
         sessions={SESSIONS}
-        initial={{ name: 'Reg Kids', season: null, sessionIds: [], fields: [], attachments: [] }}
+        initial={{ name: 'Reg Kids', sessionIds: [], fields: [], attachments: [] }}
       />,
     );
     expect(edit).not.toContain('name="dialog"');

@@ -70,11 +70,7 @@ export async function RegistrationFormView({ formId }: { formId: string }) {
 
   return (
     <div className="page">
-      <PageHeader
-        title={form.published?.name ?? form.name}
-        subtitle={form.published?.season ?? form.season ?? 'Registration form'}
-        actions={actions}
-      />
+      <PageHeader title={form.published?.name ?? form.name} subtitle="Registration form" actions={actions} />
       <p>
         {published ? (
           <Pill tone="ok">Published version {form.publishedVersion}</Pill>

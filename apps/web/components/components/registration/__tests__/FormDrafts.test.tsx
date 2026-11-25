@@ -64,13 +64,22 @@ const neverPublished: RegistrationForm = {
 };
 
 describe('the Registration table shows the published name and the unpublished note', () => {
-  it('names the form and its season as published, and shows the note when the draft differs', () => {
+  it('names the form as published, with no season, and shows the note when the draft differs', () => {
     const html = renderToStaticMarkup(<FormsTable forms={[drafted]} sessions={[]} canEdit={false} canSubmit={false} />);
     expect(html).toContain('Published name');
-    expect(html).toContain('Summer 2027');
+    expect(html).not.toContain('Summer 2027');
+    expect(html).not.toContain(' · ');
     expect(html).toContain('Published version 2');
     expect(html).toContain('Unpublished changes');
     expect(html).not.toContain('Draft name');
+  });
+
+  it('shows an old form that still has a season as its name only', () => {
+    const html = renderToStaticMarkup(
+      <FormsTable forms={[unchanged]} sessions={[]} canEdit={false} canSubmit={false} />,
+    );
+    expect(html).toContain('Published name');
+    expect(html).not.toContain('Summer 2027');
   });
 
   it('shows no note when the draft matches the published version', () => {
@@ -105,6 +114,7 @@ describe('the View pop-up shows the published values', () => {
     expect(html).toContain('Published name');
     expect(html).toContain('Photo consent');
     expect(html).toContain('Summer camp');
+    expect(html).not.toContain('Summer 2027');
     expect(html).not.toContain('Autumn camp');
     expect(html).not.toContain('Allergies');
     expect(html).not.toContain('Draft name');
@@ -126,12 +136,13 @@ describe('the View pop-up shows the published values', () => {
 });
 
 describe('the edit pop-up loads the draft values', () => {
-  it('fills the name, season, sessions and questions from the draft, not the published version', () => {
+  it('fills the name, sessions and questions from the draft, not the published version, with no Season field', () => {
     const html = renderToStaticMarkup(
       <RegistrationFormDialog mode="edit" form={drafted} sessions={[SUMMER, AUTUMN]} onClose={() => undefined} />,
     );
     expect(html).toContain('value="Draft name"');
-    expect(html).toContain('value="Summer 2028"');
+    expect(html).not.toContain('name="season"');
+    expect(html).not.toContain('Summer 2028');
     expect(html).toContain('Allergies');
     expect(html).not.toContain('value="Published name"');
     expect(html).not.toContain('Photo consent');
