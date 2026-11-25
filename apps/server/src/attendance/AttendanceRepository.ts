@@ -17,6 +17,12 @@ export interface CheckInRecord {
   sessionId: string | null;
   /** True when the camper had no active place in that session at check-in. */
   sessionUnassigned: boolean;
+  /** The session's name, or null for a camp-day visit. */
+  sessionName: string | null;
+  /** The class (series) id the camper is enrolled in for the session, or null. */
+  classId: string | null;
+  /** The class (series) name, or null. */
+  className: string | null;
 }
 
 export interface NewCheckIn {

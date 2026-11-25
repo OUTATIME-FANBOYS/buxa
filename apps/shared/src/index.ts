@@ -6,6 +6,7 @@ export * from './attendance/checkInState';
 export * from './attendance/checkOutInput';
 export * from './attendance/checkOutState';
 export * from './attendance/exportHeaders';
+export * from './attendance/fields';
 export * from './files/downloadHeaders';
 export * from './files/attachmentTypes';
 export * from './attendance/inputs';

@@ -26,6 +26,10 @@ const toRecord = (v: StoredCheckIn): CheckInRecord => ({
   note: v.note,
   sessionId: v.sessionId,
   sessionUnassigned: v.sessionUnassigned,
+  // The in-memory store keeps no session or class names (classes and series live in Postgres), so these read as none.
+  sessionName: null,
+  classId: null,
+  className: null,
 });
 
 /** In-memory adapter for check-ins: one open visit per person, the same errors, audit entries and ordering as Postgres. */

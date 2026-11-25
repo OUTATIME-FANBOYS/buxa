@@ -185,6 +185,8 @@ describe('AttendanceScreen', () => {
         collectedByName: null,
         overrideReason: 'Parent on the phone',
         note: null,
+        sessionName: 'Summer 1',
+        className: 'Swim Juniors',
       } satisfies AttendanceEntry,
     ]);
     const html = renderToStaticMarkup(
@@ -195,6 +197,8 @@ describe('AttendanceScreen', () => {
     expect(html).toContain('Badge');
     expect(html).toContain('Parent on the phone');
     expect(html).toContain('On site');
+    expect(html).toContain('Summer 1');
+    expect(html).toContain('Swim Juniors');
   });
 
   it('offers the CSV download to a role with attendance:export only', async () => {

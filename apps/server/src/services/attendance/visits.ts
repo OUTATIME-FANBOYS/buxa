@@ -37,6 +37,8 @@ export async function toEntries(
     collectedByName: r.collectedByPersonId === null ? null : (personNames.get(r.collectedByPersonId) ?? null),
     overrideReason: r.overrideReason,
     note: r.note,
+    sessionName: r.sessionName,
+    className: r.className,
   }));
 }
 
