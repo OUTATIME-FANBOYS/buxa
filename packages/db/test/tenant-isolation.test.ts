@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
-import { ROLES, settle } from '@buxa/domain';
+import { ORG_ACCESS_KEYS, settle } from '@buxa/domain';
 import { migrate, withOrg } from '../src';
 import type { Row } from '../types';
 
@@ -138,7 +138,7 @@ describe.skipIf(!url)('tenant isolation (row-level security)', () => {
 
   it('database roles match the permissions module (no drift)', async () => {
     const r = await pool.query<Row>(`SELECT unnest(enum_range(NULL::org_role))::text AS role`);
-    expect(r.rows.map(x => x.role).sort()).toEqual([...ROLES].sort());
+    expect(r.rows.map(x => x.role).sort()).toEqual([...ORG_ACCESS_KEYS].sort());
   });
 
   it('migrations are idempotent', async () => {

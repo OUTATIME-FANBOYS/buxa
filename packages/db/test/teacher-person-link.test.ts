@@ -39,10 +39,12 @@ describe.skipIf(!url)('teacher login linked to a roster person (row-level securi
     campB = await org('Camp B');
     teacherA = await user('teacher-a');
     teacherB = await user('teacher-b');
-    await pool.query<Row>(
-      `INSERT INTO org_members(org_id, user_id, role) VALUES ($1,$2,'teacher'), ($3,$4,'teacher')`,
-      [campA, teacherA, campB, teacherB],
-    );
+    await pool.query<Row>(`INSERT INTO org_members(org_id, user_id, role) VALUES ($1,$2,'viewer'), ($3,$4,'viewer')`, [
+      campA,
+      teacherA,
+      campB,
+      teacherB,
+    ]);
     personA = (
       await pool.query<{ id: string }>(
         `INSERT INTO people(org_id, given_name, family_name, email, user_id) VALUES ($1, 'Tina', 'Teacher', $2, $3) RETURNING id`,
@@ -133,7 +135,7 @@ describe.skipIf(!url)('teacher login linked to a roster person (row-level securi
     await pool.query(`DELETE FROM org_members WHERE org_id = $1 AND user_id = $2`, [campA, teacherA]);
     const link = await pool.query<{ user_id: string | null }>(`SELECT user_id FROM people WHERE id = $1`, [personA]);
     expect(link.rows).toEqual([{ user_id: null }]);
-    await pool.query(`INSERT INTO org_members(org_id, user_id, role) VALUES ($1, $2, 'teacher')`, [campA, teacherA]);
+    await pool.query(`INSERT INTO org_members(org_id, user_id, role) VALUES ($1, $2, 'viewer')`, [campA, teacherA]);
     await pool.query(`UPDATE people SET user_id = $2 WHERE id = $1`, [personA, teacherA]);
   });
 

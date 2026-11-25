@@ -193,6 +193,7 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0065_series_day_delete_guard.sql',
       '0066_series_reschedule.sql',
       '0067_class_location_overlap.sql',
+      '0069_retire_teacher_role.sql',
     ]);
   });
 
@@ -409,6 +410,7 @@ describe.skipIf(!url)('migration 0050 copies session prices onto their classes',
       '0065_series_day_delete_guard.sql',
       '0066_series_reschedule.sql',
       '0067_class_location_overlap.sql',
+      '0069_retire_teacher_role.sql',
     ]);
 
     const classes = await tempPool.query<{
@@ -610,8 +612,9 @@ describe.skipIf(!url)('migration 0051 links teachers to their people by email', 
       '0065_series_day_delete_guard.sql',
       '0066_series_reschedule.sql',
       '0067_class_location_overlap.sql',
+      '0069_retire_teacher_role.sql',
     ]);
-    const linked =await tempPool.query<{ email: string; user_email: string }>(
+    const linked = await tempPool.query<{ email: string; user_email: string }>(
       `SELECT p.email, u.email AS user_email FROM people p JOIN users u ON u.id = p.user_id`,
     );
     expect(linked.rows).toHaveLength(1);
