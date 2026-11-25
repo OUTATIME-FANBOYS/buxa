@@ -12,10 +12,7 @@ export function WorkspaceCalendar() {
           <p className="muted">Deadlines across every project in this workspace</p>
         </div>
       </header>
-      <CalendarView
-        tasks={wsTasks.filter(t => !t.archived)}
-        canCreate={!readOnly && projects.length > 0}
-      />
+      <CalendarView tasks={wsTasks.filter(t => !t.archived)} canCreate={!readOnly && projects.length > 0} />
     </div>
   );
 }

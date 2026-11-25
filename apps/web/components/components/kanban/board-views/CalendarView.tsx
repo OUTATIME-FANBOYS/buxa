@@ -138,7 +138,9 @@ export function CalendarView({
                     onClick={() =>
                       openTask(
                         'new',
-                        newTaskProjectId ? { due: day, projectId: newTaskProjectId } : { due: day, chooseProject: true },
+                        newTaskProjectId
+                          ? { due: day, projectId: newTaskProjectId }
+                          : { due: day, chooseProject: true },
                       )
                     }
                   />

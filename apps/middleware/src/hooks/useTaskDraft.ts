@@ -18,7 +18,11 @@ const PROJECT_REQUIRED = 'Choose a project for this task.';
  * Choosing a project resets the status to that project's first column.
  * Field values stay as independent state; only the validation messages are grouped.
  */
-export function useTaskDraft(task: Task | null, projects: readonly Project[], defaults?: { columnId?: string; due?: string }) {
+export function useTaskDraft(
+  task: Task | null,
+  projects: readonly Project[],
+  defaults?: { columnId?: string; due?: string },
+) {
   const { actions, me } = useStore();
   const { toast } = useUi();
   const { openTask } = useTaskDrawer();
@@ -27,9 +31,7 @@ export function useTaskDraft(task: Task | null, projects: readonly Project[], de
   const [desc, setDesc] = useState(task?.description ?? '');
   const [start, setStart] = useState(task?.start ?? '');
   const [due, setDue] = useState(task?.due ?? defaults?.due ?? '');
-  const [projectId, setProjectId] = useState(
-    task?.projectId ?? (projects.length === 1 ? projects[0].id : ''),
-  );
+  const [projectId, setProjectId] = useState(task?.projectId ?? (projects.length === 1 ? projects[0].id : ''));
   const project = projects.find(p => p.id === projectId) ?? null;
   const [columnId, setColumnId] = useState(task?.columnId ?? defaults?.columnId ?? project?.columns[0]?.id ?? '');
   const [priority, setPriority] = useState<Priority>(task?.priority ?? 'medium');

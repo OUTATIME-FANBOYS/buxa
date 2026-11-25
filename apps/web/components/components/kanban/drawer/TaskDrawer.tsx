@@ -20,9 +20,7 @@ export function TaskDrawer() {
       return null;
     }
 
-    return (
-      <TaskForm key={drawer.id} task={task} projects={[owner]} defaults={drawer.defaults} onClose={closeTask} />
-    );
+    return <TaskForm key={drawer.id} task={task} projects={[owner]} defaults={drawer.defaults} onClose={closeTask} />;
   }
   if (drawer.defaults?.chooseProject === true) {
     return (

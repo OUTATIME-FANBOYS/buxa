@@ -32,7 +32,13 @@ describe('TaskDrawerHeader', () => {
   });
   it('reads just “New task” until a project is chosen', () => {
     const html = renderToStaticMarkup(
-      <TaskDrawerHeader task={null} project={null} readOnly={false} onClose={() => undefined} onDelete={() => undefined} />,
+      <TaskDrawerHeader
+        task={null}
+        project={null}
+        readOnly={false}
+        onClose={() => undefined}
+        onDelete={() => undefined}
+      />,
     );
     expect(html).toContain('New task');
     expect(html).not.toContain(project.name);
