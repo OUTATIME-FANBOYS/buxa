@@ -118,3 +118,48 @@ describe('the Registration page', () => {
     expect(html).not.toContain('Ada');
   });
 });
+
+describe('the session filter on the Registration page', () => {
+  const session = (id: string, name: string, status: string) => ({
+    id,
+    name,
+    status,
+    description: '',
+    startsOn: null,
+    endsOn: null,
+    classCount: 1,
+    isPublic: false,
+    archivedAt: null,
+    createdAt: '2027-01-01T00:00:00.000Z',
+  });
+
+  it('shows only the registrations for the chosen session', async () => {
+    const html = render(await RegistrationList({ searchParams: { session: AUTUMN } }));
+    expect(html).toContain('Ben');
+    expect(html).not.toContain('Ada');
+    expect(html).not.toContain(`href="/camp/sessions/${SUMMER}?tab=registrations"`);
+  });
+
+  it('shows every session under All sessions (an empty session parameter)', async () => {
+    const html = render(await RegistrationList({ searchParams: { session: '' } }));
+    expect(html.split('Ben').length - 1).toBe(2);
+    expect(html.split('Ada').length - 1).toBe(1);
+  });
+
+  it('carries the choice in the URL: a GET form to the Registration address, with the choice selected', async () => {
+    const html = render(await RegistrationList({ searchParams: { session: AUTUMN } }));
+    expect(html).toContain('method="get"');
+    expect(html).toContain('action="/camp/registration"');
+    expect(html).toMatch(new RegExp(`<option value="${AUTUMN}"[^>]*selected`));
+  });
+
+  it('opens on the one live session when the URL names none', async () => {
+    services.classes.listSessions.mockResolvedValue({
+      ok: true,
+      value: [session(SUMMER, 'Summer camp', 'live'), session(AUTUMN, 'Autumn camp', 'draft')],
+    });
+    const html = render(await RegistrationList());
+    expect(html).toContain('Ada');
+    expect(html).not.toContain(`href="/camp/sessions/${AUTUMN}?tab=registrations"`);
+  });
+});
