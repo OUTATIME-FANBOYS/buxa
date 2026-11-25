@@ -403,6 +403,11 @@ form.class-form {
   padding-top: var(--s4);
   border-top: 1px solid var(--line);
 }
+/* A section that continues the one above it, with no divider line between them. */
+.form-section.form-section--flat {
+  padding-top: 0;
+  border-top: 0;
+}
 .form-section__title {
   font-size: var(--fs-b);
   font-weight: 700;

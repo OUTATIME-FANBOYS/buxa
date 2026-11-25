@@ -79,8 +79,11 @@ export function FormEditor({
         />
       </div>
 
-      <section className="form-section" aria-labelledby="registration-sessions">
-        <h3 id="registration-sessions" className="form-section__title">
+      <section className="form-section form-section--flat" aria-labelledby="registration-sessions">
+        <h3
+          id="registration-sessions"
+          className="form-section__title field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]"
+        >
           Sessions this form covers
           <span className="field-required" aria-hidden="true">
             {' *'}
