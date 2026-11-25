@@ -30,9 +30,10 @@ const PRIORITY_FIELD: Record<Priority, string> = {
  * Status, priority and assignee on one line, then the start and due dates. For a saved task each change is written straight
  * through.
  */
-export function TaskProperties({ task, project, d }: { task: Task | null; project: Project; d: TaskDraft }) {
+export function TaskProperties({ task, project, d }: { task: Task | null; project: Project | null; d: TaskDraft }) {
   const { actions, members } = useStore();
-  const currentColumn = project.columns.find(c => c.id === (task?.columnId ?? d.columnId));
+  const columns = project?.columns ?? [];
+  const currentColumn = columns.find(c => c.id === (task?.columnId ?? d.columnId));
   const currentMark = currentColumn ? statusMark(currentColumn) : undefined;
 
   return (
@@ -40,6 +41,7 @@ export function TaskProperties({ task, project, d }: { task: Task | null; projec
       <div className="buxa:grid buxa:grid-cols-[repeat(3,minmax(0,1fr))] buxa:gap-[var(--s4)]">
         <Select
           label="Status"
+          isDisabled={project === null}
           className={currentMark ? STATUS_FIELD[currentMark.colour] : undefined}
           value={task?.columnId ?? d.columnId}
           onChange={value => {
@@ -52,7 +54,7 @@ export function TaskProperties({ task, project, d }: { task: Task | null; projec
               d.setColumnId(value);
             }
           }}
-          options={project.columns.map(c => ({ value: c.id, label: c.name }))}
+          options={columns.map(c => ({ value: c.id, label: c.name }))}
         />
         <Select
           label="Priority"

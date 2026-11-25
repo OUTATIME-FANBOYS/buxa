@@ -2,7 +2,7 @@ import { useStore } from '@buxa/middleware/providers/providers';
 import { CalendarView } from '@/components/components/kanban/board-views';
 
 export function WorkspaceCalendar() {
-  const { wsTasks, readOnly, projects, project } = useStore();
+  const { wsTasks, readOnly, projects } = useStore();
 
   return (
     <div className="page">
@@ -15,7 +15,6 @@ export function WorkspaceCalendar() {
       <CalendarView
         tasks={wsTasks.filter(t => !t.archived)}
         canCreate={!readOnly && projects.length > 0}
-        projectId={project?.id}
       />
     </div>
   );

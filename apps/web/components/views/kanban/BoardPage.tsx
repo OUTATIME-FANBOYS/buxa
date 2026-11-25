@@ -139,7 +139,7 @@ export function BoardPage({ projectId }: { projectId?: string }) {
           <BoardView project={target} tasks={visible} readOnly={readOnly} manual={filter.sort === 'manual'} />
         )}
         {view === 'list' && <ListView tasks={visible} projects={s.projects} readOnly={readOnly} />}
-        {view === 'calendar' && <CalendarView tasks={visible} canCreate={!readOnly} projectId={target.id} />}
+        {view === 'calendar' && <CalendarView tasks={visible} canCreate={!readOnly} newTaskProjectId={target.id} />}
         {view === 'timeline' && <TimelineView tasks={visible} />}
       </div>
       {edit && <ProjectDialog project={target} onClose={() => setEdit(false)} />}

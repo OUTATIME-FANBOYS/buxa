@@ -30,6 +30,13 @@ describe('TaskDrawerHeader', () => {
     expect(html).toContain('aria-label="Close task"');
     expect(html).not.toContain('Task actions');
   });
+  it('reads just “New task” until a project is chosen', () => {
+    const html = renderToStaticMarkup(
+      <TaskDrawerHeader task={null} project={null} readOnly={false} onClose={() => undefined} onDelete={() => undefined} />,
+    );
+    expect(html).toContain('New task');
+    expect(html).not.toContain(project.name);
+  });
   it('shows the task’s column and the actions menu to editors, but not to read-only members', () => {
     const task = requirePresent(
       seed.tasks.find(t => t.projectId === project.id),
