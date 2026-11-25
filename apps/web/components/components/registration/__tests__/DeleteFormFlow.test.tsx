@@ -15,7 +15,7 @@ vi.mock('@/actions/registration', async () => {
     updateFormAction: vi.fn(),
     publishFormAction: vi.fn(),
     removeFormFileAction: vi.fn(),
-    deleteFormAction: async () => success('Form deleted.'),
+    deleteFormAction: () => Promise.resolve(success('Form deleted.')),
   };
 });
 vi.mock('@buxa/middleware/providers/UiProvider', () => ({ useUi: () => ({ toast }) }));
