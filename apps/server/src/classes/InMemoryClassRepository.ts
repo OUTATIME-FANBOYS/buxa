@@ -691,7 +691,12 @@ export class InMemoryClassRepository implements ClassRepository {
       if (!row) {
         throw new ClassNotFoundError();
       }
-      if ([...this.enrolments.values()].some(e => e.classId === classId)) {
+      // A day is part of its series (migration 0065): the series' enrolments and holds refuse the delete, as in Postgres.
+      const key = this.seriesKey(classId);
+      const placesOrHolds =
+        [...this.enrolments.values()].some(e => this.seriesKey(e.classId) === key) ||
+        this.seatHolds.some(h => this.seriesKey(h.classId) === key);
+      if (placesOrHolds) {
         throw new ClassHasEnrolmentsError();
       }
       this.classes.delete(classId);
