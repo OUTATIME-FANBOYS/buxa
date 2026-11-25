@@ -190,7 +190,7 @@ describe('import service: confirm', () => {
       className: 'Robotics',
       startsAt: '2027-07-05T03:30:00.000Z',
       endsAt: '2027-07-05T04:30:00.000Z',
-      location: 'Lab 9',
+      location: 'Lab 2',
       capacity: 2,
       seatsTaken: 0,
       externalKey: null,

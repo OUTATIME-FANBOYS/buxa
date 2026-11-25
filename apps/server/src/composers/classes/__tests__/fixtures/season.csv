@@ -1,6 +1,6 @@
 external_key,class_name,starts_at,ends_at,location,age_min,age_max,capacity,instructor_names,ratio_campers,ratio_instructors
 r-1,Robotics,2027-07-05T13:00,2027-07-05T15:00,Lab 2,8,12,2,Ana;Ben,8,1
-r-2,Robotics,2027-07-05T14:00,2027-07-05T16:00,Lab 3,8,12,2,Ana,,
+r-2,Robotics,2027-07-05T14:00,2027-07-05T16:00,Lab 2,8,12,2,Ana,,
 ,Ghost class,2027-07-05T10:00,2027-07-05T11:00,Hall,6,14,10,,,
 p-1,Painting,2027-07-05T10:00,2027-07-05T11:00,Art room,6,14,10,Cy,,
 r-3,Robotics,2027-07-06T09:00,2027-07-06T11:00,Lab 2,9,12,2,Ana,,
