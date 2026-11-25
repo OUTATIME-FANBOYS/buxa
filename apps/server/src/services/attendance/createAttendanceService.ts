@@ -86,7 +86,12 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
     const query: AttendanceQuery = {
       ...localDaysWindow(filter.from, filter.to, timeZone),
       personId: filter.personId,
-      onSiteOnly: filter.onSiteOnly,
+      sessionId: filter.sessionId,
+      classId: filter.classId,
+      method: filter.method,
+      checkedInBy: filter.checkedInBy,
+      onSiteOnly: filter.onSiteOnly === true || filter.status === 'on_site',
+      checkedOutOnly: filter.status === 'checked_out',
     };
 
     return attendance.log(actor.userId, actor.orgId, query);
@@ -297,6 +302,17 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       const records = inScope(scope, await recordsFor(actor, filter, await campZone(orgs, actor)));
 
       return entriesOf(actor, records);
+    },
+
+    async filterChoices(actor) {
+      const scope = await teacherScopeOf(classes, actor);
+      assertAllowed(actor, 'attendance:read', { assignedToClass: scope === null ? undefined : true });
+      const [options, members] = await Promise.all([
+        attendance.filterOptions(actor.userId, actor.orgId),
+        orgs.listMembers(actor.userId, actor.orgId),
+      ]);
+
+      return { ...options, staff: members.map(m => ({ id: m.id, name: m.name })) };
     },
 
     async history(actor, personId) {

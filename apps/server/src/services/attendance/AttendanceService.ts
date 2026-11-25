@@ -9,7 +9,13 @@ import type { OrgRepository } from '../../orgs/OrgRepository';
 import type { PeopleRepository } from '../../people/PeopleRepository';
 import type { Clock } from '../clock';
 
-import type { CheckInResult, CheckOutResult, OnSiteEntry, PickupOption } from '@buxa/shared/attendance/types';
+import type {
+  CheckInResult,
+  CheckOutResult,
+  LogFilterChoices,
+  OnSiteEntry,
+  PickupOption,
+} from '@buxa/shared/attendance/types';
 import type { CheckInSessionOption } from '@buxa/shared/attendance/checkInSessions';
 export type { CheckInResult, CheckInSessionOption, CheckOutResult, OnSiteEntry, PickupOption };
 
@@ -30,6 +36,8 @@ export interface AttendanceService {
   onSite(actor: Actor): Promise<OnSiteEntry[]>;
   /** The log for camp-local days `from` to `to` inclusive, newest first. */
   log(actor: Actor, filter: AttendanceFilter): Promise<AttendanceEntry[]>;
+  /** The choices the log's filter offers: sessions, classes (under their session) and staff. Needs attendance:read. */
+  filterChoices(actor: Actor): Promise<LogFilterChoices>;
   /** One person's visits, newest first (for the person page). */
   history(actor: Actor, personId: string): Promise<AttendanceEntry[]>;
   /** CSV text for the same filter. Spreadsheet formulas in names or notes are neutralised. Needs attendance:export. */

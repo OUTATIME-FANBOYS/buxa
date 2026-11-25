@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { AttendanceFilter } from '@buxa/contracts';
 import { createCamp, thrown, type Camp } from './support';
 
 const NOT_FOUND_ID = '00000000-0000-4000-8000-000000000000';
@@ -262,6 +263,24 @@ describe('AttendanceService on-site, log, history and export', () => {
     await camp.attendance.checkIn(staff, { personId: ids.ben, method: 'qr' });
     expect(await camp.attendance.log(staff, { from: '2027-07-11', to: '2027-07-11' })).toHaveLength(1);
     expect(await camp.attendance.log(staff, { from: '2027-07-10', to: '2027-07-10' })).toHaveLength(0);
+  });
+
+  it('filters the log by method, staff member and status, and the filters combine', async () => {
+    const { camp, admin, staff, ids } = await build();
+    await camp.attendance.checkIn(staff, { personId: ids.ben, method: 'qr' });
+    camp.at('2027-07-10T11:00:00Z');
+    await camp.attendance.checkIn(admin, { personId: ids.kim, method: 'manual' });
+    await camp.attendance.checkOut(staff, { personId: ids.ben });
+
+    const names = async (filter: Partial<AttendanceFilter>) =>
+      (await camp.attendance.log(staff, { ...FILTER, ...filter })).map(e => e.personName);
+
+    expect(await names({ method: 'manual' })).toEqual(['Kim Lee']);
+    expect(await names({ checkedInBy: admin.userId })).toEqual(['Kim Lee']);
+    expect(await names({ status: 'on_site' })).toEqual(['Kim Lee']);
+    expect(await names({ status: 'checked_out' })).toEqual(['Ben Stone']);
+    expect(await names({ method: 'qr', status: 'checked_out' })).toEqual(['Ben Stone']);
+    expect(await names({ method: 'manual', status: 'checked_out' })).toEqual([]);
   });
 
   it("returns one person's visits newest first, and 404 for an unknown person", async () => {

@@ -88,12 +88,25 @@ export const DEFAULT_ATTENDANCE_FIELDS: readonly AttendanceField[] = [
   'method',
 ];
 
+/** Whether a visit is still open (on site) or has been checked out. Absent means both. */
+export const ATTENDANCE_STATUSES = ['on_site', 'checked_out'] as const;
+export const AttendanceStatusSchema = z.enum(ATTENDANCE_STATUSES, { message: 'Choose a status from the list.' });
+
+/**
+ * The log's filter. Every part is optional except the days, and the parts combine (a visit must match all of them). `sessionId`
+ * and `classId` name rows of classes and class_series; `checkedInBy` is a staff member's user id.
+ */
 export const AttendanceFilterSchema = z
   .object({
     /** Camp-local days, inclusive. */
     from: LocalDateSchema,
     to: LocalDateSchema,
     personId: z.string().uuid().optional(),
+    sessionId: z.string().uuid({ message: 'Choose a session from the list.' }).optional(),
+    classId: z.string().uuid({ message: 'Choose a class from the list.' }).optional(),
+    method: CheckInMethodSchema.optional(),
+    checkedInBy: z.string().uuid({ message: 'Choose a staff member from the list.' }).optional(),
+    status: AttendanceStatusSchema.optional(),
     onSiteOnly: z.boolean().optional(),
   })
   .refine(v => v.to >= v.from, { message: 'The end date cannot be before the start date.', path: ['to'] });

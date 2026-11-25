@@ -11,6 +11,7 @@ export * from './files/downloadHeaders';
 export * from './files/attachmentTypes';
 export * from './attendance/inputs';
 export * from './attendance/labels';
+export * from './attendance/logChoices';
 export * from './attendance/logFilter';
 export * from './attendance/onSiteView';
 export * from './attendance/types';

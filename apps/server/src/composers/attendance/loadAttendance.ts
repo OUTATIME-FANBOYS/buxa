@@ -17,6 +17,9 @@ export const loadPeopleOptions = (actor: Actor) => getRuntime().services.people.
 export const loadLogEntries = (actor: Actor, filter: Parameters<AttendanceService['log']>[1]) =>
   getRuntime().services.attendance.log(actor, filter);
 
+/** The sessions, classes and staff the log's filter offers. */
+export const loadFilterChoices = (actor: Actor) => getRuntime().services.attendance.filterChoices(actor);
+
 /** One person's visits, for their page. */
 export const loadVisitHistory = (actor: Actor, personId: string) =>
   getRuntime().services.attendance.history(actor, personId);

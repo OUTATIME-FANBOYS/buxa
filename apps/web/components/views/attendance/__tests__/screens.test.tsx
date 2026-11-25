@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AttendanceEntry, PersonSummary } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
 import type { OnSiteEntry } from '@buxa/server/services/attendance/AttendanceService';
+import type { LogFilterChoices } from '@buxa/shared/attendance/types';
 import { settle } from '@buxa/domain';
 
 const notFound = vi.hoisted(() =>
@@ -20,6 +21,7 @@ const services = vi.hoisted(() => ({
     checkOut: vi.fn(),
     exportCsv: vi.fn(),
     checkInSessions: vi.fn(() => Promise.resolve([])),
+    filterChoices: vi.fn((): Promise<LogFilterChoices> => Promise.resolve({ sessions: [], classes: [], staff: [] })),
   },
   people: { list: vi.fn() },
   credentials: { scan: vi.fn() },
@@ -159,6 +161,50 @@ describe('AttendanceScreen', () => {
     const html = renderToStaticMarkup(await AttendanceScreen({ searchParams: {} }));
     expect(html).toContain('href="/camp/help#exports"');
     expect(html).toContain('>Help<');
+  });
+
+  it('passes the session, class, method, staff and status filters to the log, and shows the choices', async () => {
+    const session = '7a2d3c9f-0b4e-4d6f-9a81-2b3c4d5e6f70';
+    const cls = '8b3e4d0a-1c5f-4e70-8b92-3c4d5e6f7081';
+    const staff = '9c4f5e1b-2d60-4f81-9ca3-4d5e6f708192';
+    services.attendance.log.mockResolvedValue([]);
+    services.attendance.filterChoices.mockResolvedValue({
+      sessions: [{ id: session, name: 'Summer 1' }],
+      classes: [{ id: cls, name: 'Swim Juniors', sessionId: session }],
+      staff: [{ id: staff, name: 'Rosa Diaz' }],
+    });
+    const html = renderToStaticMarkup(
+      await AttendanceScreen({
+        searchParams: {
+          from: '2026-11-10',
+          to: '2026-11-12',
+          sessionId: session,
+          classId: cls,
+          method: 'manual',
+          checkedInBy: staff,
+          status: 'checked_out',
+        },
+      }),
+    );
+    expect(services.attendance.log).toHaveBeenCalledWith(expect.anything(), {
+      from: '2026-11-10',
+      to: '2026-11-12',
+      sessionId: session,
+      classId: cls,
+      method: 'manual',
+      checkedInBy: staff,
+      status: 'checked_out',
+    });
+    expect(html).toContain(`<option value="${session}" selected="">Summer 1</option>`);
+    expect(html).toContain(`<option value="${staff}" selected="">Rosa Diaz</option>`);
+  });
+
+  it('shows the dates problem and no rows when the range runs backwards', async () => {
+    const html = renderToStaticMarkup(
+      await AttendanceScreen({ searchParams: { from: '2026-11-12', to: '2026-11-10' } }),
+    );
+    expect(html).toContain('The end date cannot be before the start date.');
+    expect(services.attendance.log).not.toHaveBeenCalled();
   });
 
   it('defaults the dates to today in the camp zone, not the server zone', async () => {
