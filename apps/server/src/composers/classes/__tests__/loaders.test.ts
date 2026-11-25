@@ -7,7 +7,8 @@ const h = vi.hoisted(() => ({
   classes: {
     listSessions: vi.fn(),
     getSession: vi.fn(),
-    listClasses: vi.fn(),
+    listSeries: vi.fn(),
+    listSeriesOccurrences: vi.fn(),
     listEnrolments: vi.fn(),
   },
   people: { list: vi.fn() },
@@ -19,7 +20,6 @@ const { loadSessions, loadSessionPage, loadEnrolments, loadPeopleWithRole } = aw
 
 const actor = {} as Actor;
 const session = { id: 's1', name: 'Summer camp' } as never;
-const cls = { id: 'c1', name: 'Painting' } as never;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -57,14 +57,15 @@ describe('loadSessions', () => {
 describe('loadSessionPage', () => {
   it('returns the session with its classes', async () => {
     h.classes.getSession.mockResolvedValue({ ok: true, value: session });
-    h.classes.listClasses.mockResolvedValue({ ok: true, value: [cls] });
-    expect(await loadSessionPage(actor, 's1')).toEqual({ ok: true, value: { session, classes: [cls] } });
+    const series = { id: 'se1', name: 'Painting' };
+    h.classes.listSeries.mockResolvedValue({ ok: true, value: [series] });
+    expect(await loadSessionPage(actor, 's1')).toEqual({ ok: true, value: { session, series: [series] } });
   });
 
   it('reports not-found when the session is not in this camp', async () => {
     h.classes.getSession.mockResolvedValue({ ok: false, failure: { message: 'no session' } });
     expect(await loadSessionPage(actor, 's9')).toEqual({ ok: false, reason: 'not-found' });
-    expect(h.classes.listClasses).not.toHaveBeenCalled();
+    expect(h.classes.listSeries).not.toHaveBeenCalled();
   });
 });
 
