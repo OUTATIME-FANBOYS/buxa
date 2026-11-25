@@ -60,14 +60,28 @@ export async function RegistrationList({ searchParams = {} }: { searchParams?: S
   // A chosen session is read again through the service, which keeps only the forms and registrations that ask for it.
   const shown = chosen === ALL_SESSIONS ? loaded : await loadFormSubmissions(actor, chosen);
   const shownEntries = shown.ok ? shown.value : [];
+  // The session dropdown sits on the title line, before the New Form button, as on the Holds page.
+  const sessionFilter =
+    loaded.value.length > 0 && choices.length > 0 ? (
+      <SessionFilter action={ROUTES.registration} sessions={choices} value={chosen} />
+    ) : undefined;
+  const headerActions =
+    sessionFilter || actions ? (
+      <>
+        {sessionFilter}
+        {actions}
+      </>
+    ) : undefined;
 
   return (
     <div className="page">
-      <PageHeader
-        title="Registration"
-        subtitle="Forms families fill in to register campers for sessions. Nothing is charged in this phase."
-        actions={actions}
-      />
+      <div className="registration-head">
+        <PageHeader
+          title="Registration"
+          subtitle="Forms families fill in to register campers for sessions. Nothing is charged in this phase."
+          actions={headerActions}
+        />
+      </div>
       {loaded.value.length === 0 ? (
         <Empty
           icon="list"
@@ -81,7 +95,6 @@ export async function RegistrationList({ searchParams = {} }: { searchParams?: S
         />
       ) : (
         <>
-          {choices.length > 0 && <SessionFilter action={ROUTES.registration} sessions={choices} value={chosen} />}
           {shownEntries.length === 0 ? (
             <Empty icon="list" title="No forms cover this session" body="Choose another session, or All sessions." />
           ) : (
