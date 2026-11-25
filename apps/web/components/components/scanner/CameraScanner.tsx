@@ -1,13 +1,21 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { createScanDeduper } from '@buxa/shared';
 import { Button } from '@/components/elements';
 
-/** Reads a QR code with the phone camera and calls `onScan` once per distinct code. The camera starts only when asked. */
+/**
+ * Reads a QR code with the phone camera and calls `onScan` once per distinct code. The camera never starts on its own:
+ * the parent calls `start` from a tap handler, so the browser treats it as a user gesture. A scan stops the camera.
+ */
 interface CameraScannerProps {
   onScan: (raw: string) => void;
-  onClose: () => void;
+}
+
+/** What the parent can ask the scanner to do. `stop` also cancels a camera that is still starting. */
+export interface CameraScannerHandle {
+  start: () => void;
+  stop: () => void;
 }
 
 interface Detector {
@@ -24,23 +32,57 @@ const detectorCtor = (): DetectorCtor | null => {
   return typeof ctor === 'function' ? (ctor as DetectorCtor) : null;
 };
 
-export function CameraScanner({ onScan, onClose }: CameraScannerProps) {
+/** True when this browser can read QR codes and has a camera API. Checked after the page has loaded, never during render. */
+export function canReadQrWithCamera(): boolean {
+  return detectorCtor() !== null && !!navigator.mediaDevices?.getUserMedia;
+}
+
+export const CameraScanner = forwardRef<CameraScannerHandle, CameraScannerProps>(function CameraScanner(
+  { onScan },
+  handle,
+) {
   const video = useRef<HTMLVideoElement>(null);
   const stream = useRef<MediaStream | null>(null);
+  // Each start gets a number. A stop moves the number on, so a camera that finishes starting after a stop is switched off.
+  const attempt = useRef(0);
   const onScanRef = useRef(onScan);
   onScanRef.current = onScan;
   const [phase, setPhase] = useState<Phase>('idle');
-  const [supported, setSupported] = useState(true);
 
-  useEffect(() => {
-    setSupported(detectorCtor() !== null && !!navigator.mediaDevices?.getUserMedia);
-  }, []);
-
-  const stop = () => {
+  const stop = useCallback(() => {
+    attempt.current += 1;
     stream.current?.getTracks().forEach(t => t.stop());
     stream.current = null;
-  };
-  useEffect(() => stop, []);
+    setPhase('idle');
+  }, []);
+
+  const start = useCallback(() => {
+    attempt.current += 1;
+    const mine = attempt.current;
+    setPhase('starting');
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }).then(
+      found => {
+        if (mine !== attempt.current) {
+          found.getTracks().forEach(t => t.stop());
+
+          return;
+        }
+        stream.current = found;
+        setPhase('scanning');
+      },
+      (err: unknown) => {
+        if (mine !== attempt.current) {
+          return;
+        }
+        const name = err instanceof DOMException ? err.name : '';
+        setPhase(name === 'NotAllowedError' || name === 'SecurityError' ? 'denied' : 'failed');
+      },
+    );
+  }, []);
+
+  useImperativeHandle(handle, () => ({ start, stop }), [start, stop]);
+  // Leaving the page (the panel unmounts) switches the camera off.
+  useEffect(() => stop, [stop]);
 
   useEffect(() => {
     if (phase !== 'scanning') {
@@ -62,7 +104,11 @@ export function CameraScanner({ onScan, onClose }: CameraScannerProps) {
           const found = await detector.detect(el);
           const code = found[0]?.rawValue;
           if (code && dedupe.accept(code)) {
+            live = false;
+            stop();
             onScanRef.current(code);
+
+            return;
           }
         } catch {
           /* a frame that cannot be read is skipped */
@@ -75,66 +121,32 @@ export function CameraScanner({ onScan, onClose }: CameraScannerProps) {
     return () => {
       live = false;
     };
-  }, [phase]);
-
-  async function start() {
-    setPhase('starting');
-    try {
-      stream.current = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-        audio: false,
-      });
-      setPhase('scanning');
-    } catch (err) {
-      const name = err instanceof DOMException ? err.name : '';
-      setPhase(name === 'NotAllowedError' || name === 'SecurityError' ? 'denied' : 'failed');
-    }
-  }
-
-  function close() {
-    stop();
-    onClose();
-  }
+  }, [phase, stop]);
 
   return (
     <div className="camera-scanner">
-      {!supported ? (
-        <p role="status">Use the scanner field or type the name. This browser cannot read QR codes with the camera.</p>
-      ) : (
+      {phase === 'scanning' && (
+        <video ref={video} className="camera-video" playsInline muted aria-label="Camera view for scanning a badge" />
+      )}
+      {(phase === 'denied' || phase === 'failed') && (
         <>
-          {phase === 'scanning' && (
-            <video
-              ref={video}
-              className="camera-video"
-              playsInline
-              muted
-              aria-label="Camera view for scanning a badge"
-            />
-          )}
-          {(phase === 'idle' || phase === 'denied' || phase === 'failed') && (
-            <Button variant="primary" type="button" onClick={() => void start()}>
-              {phase === 'idle' ? 'Start camera' : 'Try the camera again'}
-            </Button>
-          )}
-          {(phase === 'denied' || phase === 'failed') && (
-            <p className="notice tone-crit" role="alert">
-              <strong>{phase === 'denied' ? 'Camera access is blocked.' : 'The camera could not start.'}</strong>
-              <span>
-                {phase === 'denied'
-                  ? 'Allow the camera for this site in your browser settings, then try again. You can still type the code or name above.'
-                  : 'Try again, or type the code or name above.'}
-              </span>
-            </p>
-          )}
-          <p role="status" aria-live="polite">
-            {phase === 'starting' && 'Starting the camera...'}
-            {phase === 'scanning' && 'Point the camera at the badge.'}
+          <p className="notice tone-crit" role="alert">
+            <strong>{phase === 'denied' ? 'Camera access is blocked.' : 'The camera could not start.'}</strong>
+            <span>
+              {phase === 'denied'
+                ? 'Allow the camera for this site in your browser settings, then try again. You can still type the code or name above.'
+                : 'Try again, or type the code or name above.'}
+            </span>
           </p>
+          <Button variant="primary" type="button" onClick={start}>
+            Try the camera again
+          </Button>
         </>
       )}
-      <Button type="button" icon="x" onClick={close}>
-        Close camera
-      </Button>
+      <p role="status" aria-live="polite">
+        {phase === 'starting' && 'Starting the camera...'}
+        {phase === 'scanning' && 'Point the camera at the badge.'}
+      </p>
     </div>
   );
-}
+});
