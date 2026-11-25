@@ -51,7 +51,7 @@ export function FormViewDialog({ form, canEdit, canSubmit, onEdit, onClose }: Fo
             {published === null ? (
               <Pill tone="neutral">Draft</Pill>
             ) : (
-              <Pill tone="ok">Published version {published.version}</Pill>
+              <Pill tone="ok">Published V{published.version}</Pill>
             )}
           </p>
           {published === null && (

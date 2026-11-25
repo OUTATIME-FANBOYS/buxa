@@ -73,7 +73,7 @@ export async function RegistrationFormView({ formId }: { formId: string }) {
       <PageHeader title={form.published?.name ?? form.name} subtitle="Registration form" actions={actions} />
       <p>
         {published ? (
-          <Pill tone="ok">Published version {form.publishedVersion}</Pill>
+          <Pill tone="ok">Published V{form.publishedVersion}</Pill>
         ) : (
           <Pill tone="neutral">Draft. Publish it before taking registrations.</Pill>
         )}

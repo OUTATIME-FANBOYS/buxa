@@ -55,7 +55,7 @@ export function FormsTable({
                     {form.publishedVersion === null ? (
                       <Pill tone="neutral">Draft</Pill>
                     ) : (
-                      <Pill tone="ok">Published, version {form.publishedVersion}</Pill>
+                      <Pill tone="ok">Published V{form.publishedVersion}</Pill>
                     )}
                     {form.hasUnpublishedChanges && <Pill tone="warn">Unpublished changes</Pill>}
                   </span>
