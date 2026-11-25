@@ -3,11 +3,12 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RegistrationSeries } from '@buxa/contracts';
-import { failure } from '@buxa/shared';
+import { failure, type CamperRecord } from '@buxa/shared';
 import { submitRegistrationAction } from '@/actions/registration';
 import { ROUTES } from '@/config/routes';
 import { CHILD_RESULT_LIMIT } from '../ChildPicker';
 import { RegisterForm, type RegisterSession } from '../RegisterForm';
+import { camper } from './camperFixture';
 
 vi.mock('@/actions/registration', () => ({
   submitRegistrationAction: vi.fn(),
@@ -44,21 +45,15 @@ const SERIES: RegistrationSeries = {
 };
 
 const SESSIONS: RegisterSession[] = [{ id: 's-1', name: 'Art', series: [SERIES] }];
-const CAMPERS = [
-  { id: 'c-ada', name: 'Ada Lovelace' },
-  { id: 'c-ben', name: 'Ben Carter' },
-];
+const CAMPERS = [camper('c-ada', 'Ada', 'Lovelace'), camper('c-ben', 'Ben', 'Carter')];
 // Eight children whose names all match "kid", so the six-match limit shows.
-const MANY_CAMPERS = Array.from({ length: 8 }, (_, i) => ({ id: `c-kid-${i + 1}`, name: `Kid ${i + 1}` }));
+const MANY_CAMPERS = Array.from({ length: 8 }, (_, i) => camper(`c-kid-${i + 1}`, 'Kid', `${i + 1}`));
 
 describe('RegisterForm: children as tags and search', () => {
   let root: Root;
   let host: HTMLDivElement;
 
-  const renderWith = (
-    campers: readonly { id: string; name: string }[],
-    sessions: readonly RegisterSession[] = SESSIONS,
-  ) => {
+  const renderWith = (campers: readonly CamperRecord[], sessions: readonly RegisterSession[] = SESSIONS) => {
     act(() => {
       root.render(
         <RegisterForm

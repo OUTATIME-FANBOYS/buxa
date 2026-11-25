@@ -30,6 +30,8 @@ export interface TextFieldProps {
   autoFocus?: boolean;
   isRequired?: boolean;
   isDisabled?: boolean;
+  /** Shows the value, which still submits with the form, but cannot be changed here (filled in from another record). */
+  isReadOnly?: boolean;
   id?: string;
   /** The underlying input element, for a parent that moves focus (a scanner field). */
   inputRef?: Ref<HTMLInputElement>;
@@ -61,6 +63,7 @@ export function TextField({
   autoFocus,
   isRequired,
   isDisabled,
+  isReadOnly,
   id,
   inputRef,
   onKeyDown,
@@ -101,6 +104,7 @@ export function TextField({
         required={isRequired}
         aria-required={isRequired || undefined}
         disabled={isDisabled}
+        readOnly={isReadOnly}
         spellCheck={spellCheck}
         autoCapitalize={autoCapitalize}
         enterKeyHint={enterKeyHint}

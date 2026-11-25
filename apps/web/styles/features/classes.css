@@ -388,6 +388,18 @@ form.class-form {
   justify-content: center;
 }
 
+/* Two fields side by side, each half the width, on a desktop. They stack on a phone (the same 720px breakpoint as the page). */
+.form-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--s4);
+}
+@media (max-width: 720px) {
+  .form-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* A form section (registration forms and their dialogs): a heading, a rule above every section after the first, then the fields.
  * No fieldset box. */
 .form-section {

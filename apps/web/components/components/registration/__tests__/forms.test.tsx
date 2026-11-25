@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { FormEditor } from '../FormEditor';
 import { RegisterForm } from '../RegisterForm';
+import { camper } from './camperFixture';
 
 vi.mock('@/actions/registration', () => ({
   createFormAction: vi.fn(),
@@ -16,7 +17,7 @@ const SESSIONS = [
   { id: 's-2', name: 'Robotics', series: [] },
 ];
 
-const CAMPERS = [{ id: 'c-1', name: 'Ada Lovelace' }];
+const CAMPERS = [camper('c-1', 'Ada', 'Lovelace')];
 
 describe('RegisterForm: sections, one asterisk, no fieldsets', () => {
   it('draws each group as a heading and a section, never a fieldset box', () => {
@@ -34,7 +35,8 @@ describe('RegisterForm: sections, one asterisk, no fieldsets', () => {
     expect(html).not.toContain('<fieldset');
     expect(html).not.toContain('<legend');
     expect(html).toContain('Parent or guardian');
-    expect(html).toContain('Emergency contact');
+    // The emergency contact is kept on the person's page only, never on a registration.
+    expect(html).not.toContain('Emergency contact');
   });
 
   it('asks each required question once: one asterisk, never a double one', () => {
