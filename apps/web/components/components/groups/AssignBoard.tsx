@@ -8,8 +8,9 @@ export interface BoardPerson {
 }
 
 /**
- * Each group with the people placed in it and their room, then the campers not placed yet. Read-only; the Place or move button on the
- * page is what changes it. A ratio override is shown under the person it applies to, with its reason.
+ * Each group as a table of the people placed in it: name, role and room, and (for staff) the Unassign icon at the right end of the
+ * row. Then the campers not placed yet, searchable. The Place or move button on the page is what adds people. A ratio override is
+ * shown under the person it applies to, with its reason.
  */
 export function AssignBoard({
   sessionId,
@@ -48,25 +49,47 @@ export function AssignBoard({
             {members.length === 0 ? (
               <p className="muted">No one placed here yet.</p>
             ) : (
-              <ul className="stack" aria-label={`People in ${group.name}`}>
-                {members.map(a => (
-                  <li key={a.id}>
-                    <strong>{a.personName}</strong>{' '}
-                    <span className="muted">
-                      {a.role === 'staff' ? 'Staff' : 'Camper'}, {roomName(a.roomId)}
-                    </span>
-                    {a.overrideReason && <p className="muted">Ratio overridden: {a.overrideReason}</p>}
-                    {canManage && (
-                      <UnassignButton
-                        sessionId={sessionId}
-                        personId={a.personId}
-                        personName={a.personName}
-                        groupName={group.name}
-                      />
-                    )}
-                  </li>
-                ))}
-              </ul>
+              <div className="table-wrap">
+                <table className="table assign-table">
+                  <caption className="sr-only">People in {group.name}</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Person</th>
+                      <th scope="col">Role and room</th>
+                      {canManage && (
+                        <th scope="col">
+                          <span className="sr-only">Actions</span>
+                        </th>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {members.map(a => (
+                      <tr key={a.id}>
+                        <th scope="row" className="assign-table__name">
+                          {a.personName}
+                          {a.overrideReason && <span className="muted">Ratio overridden: {a.overrideReason}</span>}
+                        </th>
+                        <td>
+                          {a.role === 'staff' ? 'Staff' : 'Camper'}, {roomName(a.roomId)}
+                        </td>
+                        {canManage && (
+                          <td className="classes-actions-cell">
+                            <div className="classes-row-actions">
+                              <UnassignButton
+                                sessionId={sessionId}
+                                personId={a.personId}
+                                personName={a.personName}
+                                groupName={group.name}
+                              />
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </section>
         );

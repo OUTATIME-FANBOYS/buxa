@@ -136,7 +136,7 @@ describe('the assign page', () => {
 
   it('shows the Unassign button on each member to staff only', async () => {
     const staffHtml = render(await AssignPage({ sessionId: SESSION_ID }));
-    expect(staffHtml).toContain('Unassign');
+    expect(staffHtml).toContain('aria-label="Unassign Ada Lovelace"');
 
     session.role = 'viewer';
     expect(render(await AssignPage({ sessionId: SESSION_ID }))).not.toContain('Unassign');
