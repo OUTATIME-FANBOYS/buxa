@@ -2,11 +2,11 @@ import Link from 'next/link';
 import type { RegistrationForm } from '@buxa/contracts';
 import { Pill } from '@/components/elements';
 import { registrationFormPath } from '@/config/routes';
-import { ViewFormButton } from './ViewFormButton';
+import { FormRowActions } from './FormRowActions';
 
 /**
- * The camp's registration forms: name and season, the sessions they cover, whether they are published, how many registrations, and a
- * View button that opens the form read only. The name opens the form's page, which lists its registrations.
+ * The camp's registration forms: name and season, the sessions they cover, whether they are published, how many registrations, and
+ * three icon buttons at the right end (View, Edit and Delete). The name opens the form's page, which lists its registrations.
  */
 export function FormsTable({
   forms,
@@ -56,7 +56,7 @@ export function FormsTable({
               </td>
               <td>{form.submissionCount}</td>
               <td>
-                <ViewFormButton form={form} sessions={sessions} canEdit={canEdit} canSubmit={canSubmit} />
+                <FormRowActions form={form} sessions={sessions} canEdit={canEdit} canSubmit={canSubmit} />
               </td>
             </tr>
           ))}
