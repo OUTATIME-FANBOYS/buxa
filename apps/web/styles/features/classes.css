@@ -428,6 +428,10 @@ form.class-form {
   padding: 0;
   list-style: none;
 }
+/* A covered session in the read-only View pop-up: the same tag, with no remove cross and no pointer. */
+.session-tag--static {
+  cursor: default;
+}
 .session-picker__input {
   flex: 1 1 10rem;
   min-width: 0;
@@ -530,6 +534,45 @@ form.class-form {
 .form-file__name {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+/* The read-only View pop-up: its sections stack like the edit form's, and each list is plain rows with a thin divider in the table-rule
+ * colour (--line), not boxes that look like inputs. A file row keeps its name on the left and its size and Download on the right. */
+.form-view {
+  display: grid;
+  gap: var(--s3);
+  min-width: 0;
+}
+.form-view__list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.form-view__row {
+  display: grid;
+  gap: var(--s1);
+  min-width: 0;
+  padding: var(--s2) 0;
+}
+.form-view__row + .form-view__row {
+  border-top: 1px solid var(--line);
+}
+.form-view__row--file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s1) var(--s3);
+}
+.form-view__name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+.form-view__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
 }
 .document-field {
   display: grid;

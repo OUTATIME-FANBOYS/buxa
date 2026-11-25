@@ -88,6 +88,25 @@ describe('the View pop-up, read only (server render)', () => {
     expect(html).toContain('Immunization.pdf');
     expect(html).not.toContain('/camp/registration/files/');
   });
+
+  it('shows covered sessions as tags with no remove control, and lists in plain rows', () => {
+    const html = renderToStaticMarkup(
+      <FormViewDialog form={form} canEdit canSubmit onEdit={() => undefined} onClose={() => undefined} />,
+    );
+    expect(html).toContain('session-tag session-tag--static');
+    expect(html).not.toContain('Remove Summer camp');
+    expect(html).toContain('form-view__row');
+    expect(html).not.toContain('form-file');
+  });
+
+  it('shows the empty states for sessions and files', () => {
+    const empty: RegistrationForm = { ...form, sessions: [], attachments: [] };
+    const html = renderToStaticMarkup(
+      <FormViewDialog form={empty} canEdit canSubmit onEdit={() => undefined} onClose={() => undefined} />,
+    );
+    expect(html).toContain('No sessions yet.');
+    expect(html).toContain('No files yet.');
+  });
 });
 
 describe('the Registration page pop-ups in the browser', () => {
