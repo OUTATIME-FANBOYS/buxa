@@ -13,3 +13,4 @@ export * from './prices';
 export * from './presence';
 export * from './settle';
 export * from './calendar';
+export * from './gate';

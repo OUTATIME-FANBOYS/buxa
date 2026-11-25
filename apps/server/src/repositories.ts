@@ -27,6 +27,8 @@ import { PgUserRepository } from './users/PgUserRepository';
 import type { MemberInviteRepository } from './invites/MemberInviteRepository';
 import { PgMemberInviteRepository } from './invites/PgMemberInviteRepository';
 import type { UserRepository } from './users/UserRepository';
+import type { GateRepository } from './gate/GateRepository';
+import { PgGateRepository } from './gate/PgGateRepository';
 
 /** Everything the services read and write. Swap an implementation here to change where data lives. */
 export interface Repositories {
@@ -52,6 +54,8 @@ export interface Repositories {
   publicSessions: PublicSessionRepository;
   /** Teacher invites: created, resent, listed, and accepted with the link. The Postgres adapter in production. */
   memberInvites: MemberInviteRepository;
+  /** Check-in with a family's email: codes, device tokens and the camp's link. The Postgres adapter in production. */
+  gate: GateRepository;
 }
 
 export const createPgRepositories = (pool: Pool): Repositories => ({
@@ -69,4 +73,5 @@ export const createPgRepositories = (pool: Pool): Repositories => ({
   calendar: new PgCalendarRepository(pool),
   publicSessions: new PgPublicSessionRepository(pool),
   memberInvites: new PgMemberInviteRepository(pool),
+  gate: new PgGateRepository(pool),
 });

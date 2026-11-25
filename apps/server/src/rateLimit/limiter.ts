@@ -29,6 +29,14 @@ export const RATE_RULES = {
   scanCode: { name: 'attendance.scan', limit: 120, windowSeconds: 60 },
   /** The readiness probe, per client address. It only counts when the cached check has expired (see app/ready/route.ts). */
   readyByAddress: { name: 'ready.address', limit: 30, windowSeconds: 60 },
+  /** Check-in codes asked for from one client address (the gate). */
+  gateCodeByAddress: { name: 'gate.code.address', limit: 20, windowSeconds: 600 },
+  /** Check-in codes asked for by one email, whether or not it is on file. Keyed by a peppered hash of the email. */
+  gateCodeByEmail: { name: 'gate.code.email', limit: 5, windowSeconds: 3600 },
+  /** Code entries from one client address. */
+  gateVerifyByAddress: { name: 'gate.verify.address', limit: 30, windowSeconds: 600 },
+  /** Code entries for one email, whether or not it is on file. */
+  gateVerifyByEmail: { name: 'gate.verify.email', limit: 20, windowSeconds: 600 },
 } as const satisfies Record<string, RateRule>;
 
 /** The table key: a hash, so no user id or address is stored in the clear. */

@@ -13,3 +13,4 @@ export * from './Toast';
 /** The app's error and not-found pages reach Button through this barrel: app may import components, not elements. */
 export { Button } from '@/components/elements';
 export * from './invites';
+export * from './gate';

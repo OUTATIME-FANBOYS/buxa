@@ -43,6 +43,20 @@ const NO_SIGNED_IN_USER: Record<string, string> = {
   rate_limit_hit: 'rate-limit counter: reads and writes only its own key, no tenant data',
   buxa_orgs_with_expired_holds:
     'seat-hold cleanup job (migration 0043): returns camp ids and one member id per camp, takes no argument, and is called only by the CRON_SECRET route',
+  buxa_gate_resolve_camp_v1:
+    'check-in gate (migration 0068): resolved by the gate link token hash, returns the camp name and time zone only, for a camp not archived',
+  buxa_gate_household_for_email_v1:
+    'check-in gate (migration 0068): the household of a guardian email in the camp set by withOrg (current_org), returns the household id only',
+  buxa_gate_issue_device_v1:
+    'check-in gate (migration 0068): a device token only for a code verified in the last five minutes, once, for the same camp and household',
+  buxa_gate_device_v1:
+    'check-in gate (migration 0068): the live device for a token hash (not revoked, not expired, camp not archived), returns its ids and expiry only',
+  buxa_booked_today:
+    'check-in gate (migration 0068): internal. The children booked today for one household of one camp; called only by the gate definers, not granted to the request role',
+  buxa_gate_children_v1:
+    'check-in gate (migration 0068): the booked children of the household of a live device, for today in camp time',
+  buxa_gate_check_in_v1:
+    "check-in gate (migration 0068): one child checked in by a live device for the child's own household, booked today; writes attendance.check_in in the same statement",
 };
 
 const USER_OR_ACTOR_ARGUMENT = /(user|actor|owner)_?ids?$/i;
