@@ -51,12 +51,7 @@ export function LogFilters({
   };
 
   return (
-    <Form
-      className="form-row log-filters buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-end buxa:[&>.select-field]:flex-[1_1_180px] buxa:[&>.select-field]:min-w-0 buxa:[&>.button]:flex-none buxa:[&>a.button]:flex-none"
-      action={ROUTES.attendance}
-      role="search"
-      aria-label="Filter the log"
-    >
+    <Form className="form-row log-filters" action={ROUTES.attendance} role="search" aria-label="Filter the log">
       <DatePicker label="From" name="from" defaultValue={values.from} isRequired />
       <DatePicker label="To" name="to" defaultValue={values.to} isRequired />
       <Select

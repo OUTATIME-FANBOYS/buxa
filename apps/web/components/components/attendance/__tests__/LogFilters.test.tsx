@@ -62,6 +62,15 @@ describe('LogFilters', () => {
     expect(html).toContain('<option value="on_site">Still on site</option>');
     expect(html).toContain('<option value="checked_out">Checked out</option>');
   });
+  it('renders every filter control in the one row: the dates, the person, then the rest, and Show', () => {
+    const html = renderToStaticMarkup(<LogFilters values={blank} people={people} choices={choices} />);
+    // The required dates carry their asterisk inside the label, so the match stops before either the mark or the closing tag.
+    for (const label of ['From', 'To', 'Person', 'Session', 'Class', 'Method', 'Checked in by', 'Status']) {
+      expect(html).toMatch(new RegExp(`>${label}(<span|</label>)`));
+    }
+    expect(html).toContain('type="submit"');
+    expect(html).toContain('>Show</button>');
+  });
   it('lists only the classes of a chosen session, and keeps the chosen values', () => {
     const html = renderToStaticMarkup(
       <LogFilters values={{ ...blank, sessionId: 's-2', classId: 'c-robot' }} people={people} choices={choices} />,

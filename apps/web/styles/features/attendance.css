@@ -127,6 +127,26 @@
   outline-offset: 4px;
   border-radius: var(--r-3);
 }
+/* The search sits at the right of the page, 320px wide and pill-shaped, with 16px of space above the cards. */
+.onsite-search {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--s4);
+  --control-h: var(--control-compact);
+}
+.onsite-search .search-field {
+  width: 320px;
+  max-width: 100%;
+}
+.onsite-search .search-field__input {
+  height: var(--control-h);
+  border-radius: 999px;
+}
+@media (pointer: coarse) {
+  .onsite-search {
+    --control-h: var(--control-touch);
+  }
+}
 .onsite-list {
   list-style: none;
   margin: 0;
@@ -277,8 +297,36 @@
     color: var(--text-2);
   }
 }
+/* The filters sit on one line on a desktop: each field takes an equal share and shrinks to its minimum, and the row wraps only when
+ * the minimums do not fit. Compact controls (36px, --fs-s text) with a mouse or keyboard; the touch height and 16px text on a touch screen. */
 .log-filters {
   margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--s2);
+  --control-h: var(--control-compact);
+}
+.log-filters .select-field {
+  flex: 1 1 0;
+  min-width: 120px;
+}
+.log-filters > .button {
+  flex: none;
+  font-size: var(--fs-s);
+}
+.log-filters input,
+.log-filters select {
+  font-size: var(--fs-s);
+}
+@media (pointer: coarse) {
+  .log-filters {
+    --control-h: var(--control-touch);
+  }
+  .log-filters input,
+  .log-filters select {
+    font-size: 16px;
+  }
 }
 .log-export {
   margin-left: auto;
