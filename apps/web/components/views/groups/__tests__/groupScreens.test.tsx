@@ -138,10 +138,20 @@ describe('the assign page', () => {
     expect(html).toContain('Grace Hopper');
   });
 
-  it('offers the Place or move button to staff', async () => {
+  it('offers one Place button, in the header of the campers not placed yet, to staff', async () => {
     const html = render(await AssignPage({ sessionId: SESSION_ID }));
 
-    expect(html).toContain('Place or move');
+    expect(html).toMatch(/class="unplaced-head"[\s\S]*?>Place<\//);
+    expect(html).not.toContain('Place or move');
+    expect(html).not.toContain('aria-label="Place Ada Lovelace"');
+  });
+
+  it('puts the groups and the campers not placed yet in the two-column layout', async () => {
+    const html = render(await AssignPage({ sessionId: SESSION_ID }));
+
+    expect(html).toContain('class="assign-layout"');
+    expect(html).toContain('assign-layout__groups');
+    expect(html).toContain('assign-layout__unplaced');
   });
 
   it('shows the Unassign button on each member to staff only', async () => {
@@ -161,6 +171,7 @@ describe('the assign page', () => {
 
     expect(html).toContain('Ada Lovelace');
     expect(html).not.toContain('Place or move');
+    expect(html).not.toMatch(/>Place</);
     expect(html).toContain('Only staff can place or move people.');
   });
 });

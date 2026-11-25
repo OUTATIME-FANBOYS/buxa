@@ -186,6 +186,33 @@ form.class-form {
   font-weight: 400;
 }
 
+/* The Assign page: the groups column takes three parts of the width and the campers not placed yet two (60/40), with a gap between.
+   Each column is left to grow with the page, so it scrolls with the page rather than inside a box. On a phone (720px and under) they stack. */
+.assign-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--s5);
+  align-items: start;
+}
+.assign-layout__groups,
+.assign-layout__unplaced {
+  min-width: 0;
+}
+@media (max-width: 720px) {
+  .assign-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The campers not placed yet: the heading on the left, the Place button on the right, on one line above the search. */
+.unplaced-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+}
+
 /* The campers not placed yet: one page of rows at a time. The pagination under the list is in components/pagination.css. */
 .unplaced-list {
   list-style: none;

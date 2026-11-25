@@ -1,13 +1,13 @@
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { Empty, PageHeader } from '@/components/components';
-import { AssignBoard, PlaceButton } from '@/components/components/groups';
+import { AssignBoard } from '@/components/components/groups';
 import { currentActor, loadSessionGroups } from '@buxa/server/composers/index.server';
 import { SessionNav } from './SessionNav';
 
 /**
  * A session's assign page: each group with the people in it and their room, and the campers not placed yet. Staff and above see the
- * Place or move button; a viewer sees the board only. Every rule (capacity, age, ratio, room use) runs on the server when a person is
+ * Place button in the campers not placed yet card; a viewer sees the board only. Every rule (capacity, age, ratio, room use) runs on the server when a person is
  * placed, and a refusal is shown under the form.
  */
 export async function AssignPage({ sessionId }: { sessionId: string }) {
@@ -38,15 +38,7 @@ export async function AssignPage({ sessionId }: { sessionId: string }) {
   return (
     <div className="page">
       <SessionNav sessionId={session.id} sessionName={session.name} current="assign" />
-      <PageHeader
-        title="Assign people"
-        subtitle={`${session.name}. Each camper has one place in this session.`}
-        actions={
-          canManage && (
-            <PlaceButton choices={choices} label="Place or move" icon="user-plus" variant="primary" size="sm" />
-          )
-        }
-      />
+      <PageHeader title="Assign people" subtitle={`${session.name}. Each camper has one place in this session.`} />
       {!canManage && <p className="muted">Only staff can place or move people.</p>}
       {needsGroupsAndRooms && canManage && (
         <p className="muted">Create at least one group and one room on the Groups and rooms page first.</p>
