@@ -7,6 +7,9 @@ export interface SeriesSource extends SeriesFields {
   id: string;
   sessionId: string;
   weekdays: number[];
+  /** The series' first and last allowed times, as instants (migration 0060). */
+  seriesStartsAt: string;
+  seriesEndsAt: string;
 }
 
 /** One day of a series, as the in-memory repository stores it. */
@@ -57,6 +60,8 @@ export function seriesView(
     endTime: first ? clock(first.endsAt, timeZone) : '',
     firstDay: first ? day(first.startsAt, timeZone) : '',
     lastDay: last ? day(last.startsAt, timeZone) : '',
+    startsLocal: localDateTime(source.seriesStartsAt, timeZone),
+    endsLocal: localDateTime(source.seriesEndsAt, timeZone),
     occurrenceCount: days.length,
     activeOccurrenceCount: days.filter(d => d.status === 'active').length,
     anchorClassId: active?.id ?? '',
@@ -89,6 +94,13 @@ const clock = (iso: string, timeZone: string): string => {
   const p = parts(iso, timeZone);
 
   return `${p.hour ?? ''}:${p.minute ?? ''}`;
+};
+
+/** An instant as the camp's clock reads it: YYYY-MM-DDTHH:MM, the form a datetime-local field uses. */
+const localDateTime = (iso: string, timeZone: string): string => {
+  const p = parts(iso, timeZone);
+
+  return `${p.year ?? ''}-${p.month ?? ''}-${p.day ?? ''}T${p.hour ?? ''}:${p.minute ?? ''}`;
 };
 
 const day = (iso: string, timeZone: string): string => {

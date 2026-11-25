@@ -18,6 +18,8 @@ export function seriesOf(classes: readonly Class[]): Series[] {
     endTime: '12:00',
     firstDay: c.startsAt.slice(0, 10),
     lastDay: c.startsAt.slice(0, 10),
+    startsLocal: `${c.startsAt.slice(0, 10)}T09:00`,
+    endsLocal: `${c.startsAt.slice(0, 10)}T12:00`,
     occurrenceCount: 1,
     activeOccurrenceCount: c.occurrenceStatus === 'active' ? 1 : 0,
     anchorClassId: c.id,

@@ -1,7 +1,7 @@
 import type { Actor } from '@buxa/domain';
 import { recordAudit } from '../audit/recordAudit';
 import { type Db } from '../people/pgRows';
-import type { ClassRecord, SeriesFields, SeriesRecord } from './ClassRepository';
+import type { ClassRecord, SeriesFields, SeriesRecord, SeriesSchedule } from './ClassRepository';
 import { ClassNotFoundError, SessionNotFoundError } from './errors';
 import { insertClass, requireInstructors } from './PgClassWrites';
 import { priceChangeAudit } from './priceAudit';
@@ -75,7 +75,13 @@ function dayRecord(fields: SeriesFields, day: { startsAt: string; endsAt: string
  * their own times and status. Audits `series.update`. A camp size below the places taken is refused by the capacity trigger
  * (migration 0061), which the caller translates.
  */
-export async function updateSeriesRow(db: Db, actor: Actor, seriesId: string, input: SeriesFields): Promise<void> {
+export async function updateSeriesRow(
+  db: Db,
+  actor: Actor,
+  seriesId: string,
+  input: SeriesFields,
+  schedule: SeriesSchedule | null,
+): Promise<void> {
   const { rows: current } = await db.query<PriceRow & { id: string }>(
     `SELECT id, price_minor, price_currency, early_bird_minor, to_char(early_bird_until, 'YYYY-MM-DD') AS early_bird_until
        FROM class_series WHERE id = $1 AND org_id = $2 FOR UPDATE`,
@@ -125,6 +131,9 @@ export async function updateSeriesRow(db: Db, actor: Actor, seriesId: string, in
       price?.earlyBirdUntil ?? null,
     ],
   );
+  if (schedule) {
+    await applySchedule(db, actor, seriesId, input, schedule);
+  }
   const { rows: days } = await db.query<{ id: string }>(
     'SELECT id FROM sessions WHERE series_id = $1 AND org_id = $2 ORDER BY starts_at, id',
     [seriesId, actor.orgId],
@@ -143,6 +152,54 @@ export async function updateSeriesRow(db: Db, actor: Actor, seriesId: string, in
       instructorIds: instructors,
       days: days.length,
       ...priceChangeAudit(before, price),
+    },
+  });
+}
+
+/**
+ * Applies a change to the days: the series' weekdays and first and last allowed times are written, the removed days are deleted
+ * through buxa_delete_occurrences_v1 (which refuses a day with a place), and each added day is written with the saved fields (its
+ * class.create audit is written by insertClass). Audits `series.reschedule`.
+ */
+async function applySchedule(
+  db: Db,
+  actor: Actor,
+  seriesId: string,
+  fields: SeriesFields,
+  schedule: SeriesSchedule,
+): Promise<void> {
+  const { rows } = await db.query<{ class_id: string }>(
+    'SELECT class_id FROM class_series WHERE id = $1 AND org_id = $2',
+    [seriesId, actor.orgId],
+  );
+  const sessionId = rows[0]?.class_id;
+  if (!sessionId) {
+    throw new ClassNotFoundError();
+  }
+  await db.query(
+    `UPDATE class_series SET weekdays = $3::smallint[], series_starts_at = $4::timestamptz, series_ends_at = $5::timestamptz
+      WHERE id = $1 AND org_id = $2`,
+    [seriesId, actor.orgId, schedule.weekdays, schedule.seriesStartsAt, schedule.seriesEndsAt],
+  );
+  if (schedule.removeIds.length > 0) {
+    await db.query('SELECT buxa_delete_occurrences_v1($1, $2, $3::uuid[])', [
+      actor.orgId,
+      seriesId,
+      schedule.removeIds,
+    ]);
+  }
+  for (const day of schedule.add) {
+    await insertClass(db, actor, sessionId, dayRecord(fields, day), seriesId);
+  }
+  await recordAudit(db, {
+    actor,
+    action: 'series.reschedule',
+    entity: 'series',
+    entityId: seriesId,
+    data: {
+      added: schedule.add.length,
+      removed: schedule.removeIds.length,
+      weekdays: schedule.weekdays.map(String),
     },
   });
 }

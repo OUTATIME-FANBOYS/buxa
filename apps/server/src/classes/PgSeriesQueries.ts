@@ -28,6 +28,8 @@ interface SeriesRow extends PriceRow {
   weekdays: number[];
   first_day: string;
   last_day: string;
+  starts_local: string;
+  ends_local: string;
   start_time: string;
   end_time: string;
   occurrence_count: number;
@@ -45,6 +47,8 @@ const SERIES_SELECT = `
          to_char(cs.early_bird_until, 'YYYY-MM-DD') AS early_bird_until,
          to_char(first_day.starts_at AT TIME ZONE o.timezone, 'YYYY-MM-DD') AS first_day,
          to_char(last_day.starts_at AT TIME ZONE o.timezone, 'YYYY-MM-DD') AS last_day,
+         to_char(cs.series_starts_at AT TIME ZONE o.timezone, 'YYYY-MM-DD"T"HH24:MI') AS starts_local,
+         to_char(cs.series_ends_at AT TIME ZONE o.timezone, 'YYYY-MM-DD"T"HH24:MI') AS ends_local,
          to_char(first_day.starts_at AT TIME ZONE o.timezone, 'HH24:MI') AS start_time,
          to_char(first_day.ends_at AT TIME ZONE o.timezone, 'HH24:MI') AS end_time,
          counts.occurrence_count, counts.active_count,
@@ -82,6 +86,8 @@ function toSeries(row: SeriesRow): Series {
     endTime: row.end_time,
     firstDay: row.first_day,
     lastDay: row.last_day,
+    startsLocal: row.starts_local,
+    endsLocal: row.ends_local,
     occurrenceCount: row.occurrence_count,
     activeOccurrenceCount: row.active_count,
     anchorClassId: row.anchor_id,
@@ -109,6 +115,36 @@ export async function getSeriesRow(db: Db, seriesId: string): Promise<Series | n
   const { rows } = await db.query<SeriesRow>(`${SERIES_SELECT} WHERE cs.id = $1`, [seriesId]);
 
   return rows[0] ? toSeries(rows[0]) : null;
+}
+
+/**
+ * The names of the people with an active place on a series: an enrolment that is not cancelled, a hold that is neither released nor
+ * expired (named for its household, which is what a hold records), and a registration that is not withdrawn. Each name once, in the
+ * order the places were taken. Read only; the edit refusal names them.
+ */
+export async function listSeriesHolderNames(db: Db, seriesId: string): Promise<string[]> {
+  const { rows } = await db.query<{ name: string }>(
+    `SELECT x.name FROM (
+       SELECT trim(p.given_name || ' ' || p.family_name) AS name, e.created_at AS at
+         FROM enrolments e JOIN people p ON p.id = e.person_id AND p.org_id = e.org_id
+        WHERE e.series_id = $1 AND e.status <> 'cancelled'
+       UNION ALL
+       SELECT hh.name, h.created_at
+         FROM seat_holds h JOIN households hh ON hh.id = h.household_id AND hh.org_id = h.org_id
+        WHERE h.series_id = $1 AND h.released_at IS NULL AND h.expires_at > now()
+       UNION ALL
+       SELECT trim(p.given_name || ' ' || p.family_name), rc.created_at
+         FROM registration_classes rc
+         JOIN registrations r ON r.id = rc.registration_id AND r.org_id = rc.org_id
+         JOIN people p ON p.id = rc.person_id AND p.org_id = rc.org_id
+        WHERE rc.series_id = $1 AND r.status <> 'withdrawn'
+     ) x
+     GROUP BY x.name
+     ORDER BY min(x.at), x.name`,
+    [seriesId],
+  );
+
+  return rows.map(r => r.name);
 }
 
 /** Every day of a series, in order, active and cancelled alike (the series page's list). */

@@ -33,6 +33,20 @@ export interface CampClassSpan {
   startsAt: string;
   endsAt: string;
   className: string;
+  /** The series the day belongs to, or null for a span that is not a series day (a candidate not yet saved). */
+  seriesId: string | null;
+}
+
+/**
+ * A change to the days of a series: the weekdays and first and last allowed times it now has, the days to add, and the active days
+ * to remove. The service has checked that no removed day has a place, hold or registration (see seriesHolders).
+ */
+export interface SeriesSchedule {
+  weekdays: number[];
+  seriesStartsAt: string;
+  seriesEndsAt: string;
+  add: { startsAt: string; endsAt: string }[];
+  removeIds: string[];
 }
 
 /** The fields every day of a series shares: the name, ages, camp size, location, instructors and price. */
@@ -126,10 +140,18 @@ export interface ClassRepository {
   /** Every day of a series, active and cancelled, in order. Read only. */
   listSeriesOccurrences(userId: string, orgId: string, seriesId: string): Promise<Class[]>;
   /**
-   * Saves a series' shared fields on every day of it, and replaces its instructors. Audits `series.update`. Throws
-   * ClassNotFoundError, InstructorNotFoundError, or CapacityBelowEnrolledError when the camp size is below the places taken.
+   * Saves a series' shared fields on every day of it, replaces its instructors, and applies the schedule when the days change: the
+   * weekdays and allowed times are written, the removed days are deleted and the added days are written (each with the saved
+   * fields). One transaction. Audits `series.update`, and `series.reschedule` when there is a schedule. Throws ClassNotFoundError,
+   * InstructorNotFoundError, CapacityBelowEnrolledError when the camp size is below the places taken, or ClassHasEnrolmentsError
+   * when a removed day has a place, hold or registration.
    */
-  updateSeries(actor: Actor, seriesId: string, input: SeriesFields): Promise<Series>;
+  updateSeries(actor: Actor, seriesId: string, input: SeriesFields, schedule: SeriesSchedule | null): Promise<Series>;
+  /**
+   * The people with an active place on a series: an enrolment that is not cancelled, a hold not released or expired, or a
+   * registration not withdrawn. Named for the message: a child's name, or a household's for a hold. Read only.
+   */
+  seriesHolders(userId: string, orgId: string, seriesId: string): Promise<string[]>;
   /**
    * Deletes a series and all its days. Audits `series.delete`. Throws ClassNotFoundError, or ClassHasEnrolmentsError when any
    * enrolment, hold or registration is on the series.

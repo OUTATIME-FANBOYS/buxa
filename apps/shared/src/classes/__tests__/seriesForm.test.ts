@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { planSeries } from '@buxa/domain';
-import { seriesForm } from '../parse';
+import { seriesForm, seriesNameForm } from '../parse';
 
 function form(values: Record<string, string | string[]>): FormData {
   const data = new FormData();
@@ -87,6 +87,38 @@ describe('seriesForm: one series from the New class form', () => {
       expect(parsed.state).toMatchObject({
         fieldErrors: { startsAt: 'That date or time does not exist. Choose another.' },
       });
+    }
+  });
+});
+
+describe('seriesNameForm: a teacher edits the name of a series, and the rest is kept as saved', () => {
+  const saved = {
+    name: 'Swimming',
+    ageRange: { minAge: 8, maxAge: 12 },
+    capacity: 20,
+    location: 'Pool',
+    instructorIds: [],
+    price: null,
+    weekdays: [1, 3],
+    startsAt: '2027-07-05T09:00',
+    endsAt: '2027-07-30T10:30',
+  };
+
+  it('takes the new name and keeps every other field as it is saved', () => {
+    const parsed = seriesNameForm(form({ name: 'Diving', detailsOnly: 'yes' }), saved);
+
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.data).toEqual({ ...saved, name: 'Diving' });
+    }
+  });
+
+  it('refuses a blank name, with the message the new-class name field shows', () => {
+    const parsed = seriesNameForm(form({ name: '  ' }), saved);
+
+    expect(parsed.ok).toBe(false);
+    if (!parsed.ok) {
+      expect(parsed.state).toMatchObject({ fieldErrors: { name: 'Enter a name.' } });
     }
   });
 });

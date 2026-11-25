@@ -272,9 +272,11 @@ export const NewSeriesInputSchema = z.object({
 });
 export type NewSeriesInput = z.infer<typeof NewSeriesInputSchema>;
 
-/** The fields a series edit changes. Its days keep their own times; the edit reaches every occurrence. */
-export const SeriesEditInputSchema = NewSeriesInputSchema.omit({ weekdays: true, startsAt: true, endsAt: true });
-export type SeriesEditInput = z.infer<typeof SeriesEditInputSchema>;
+/**
+ * A series edit is the same form as a new series, prefilled: the shared fields, the weekdays, and the Starts and Ends date-times. The
+ * server reads the days the edit plans and adds or removes the days that differ (see ClassService.updateSeries).
+ */
+export type SeriesEditInput = NewSeriesInput;
 
 /**
  * A class series as the Classes table and the series page show it: one row per series. Its times are the clock times of its first
@@ -296,6 +298,9 @@ export const SeriesSchema = z.object({
   /** The first and last day in camp time, YYYY-MM-DD. */
   firstDay: z.string(),
   lastDay: z.string(),
+  /** The series' first and last allowed times (the record's own, migration 0060), camp time, YYYY-MM-DDTHH:MM. The edit form shows them as Starts and Ends. */
+  startsLocal: z.string(),
+  endsLocal: z.string(),
   occurrenceCount: z.number().int(),
   activeOccurrenceCount: z.number().int(),
   anchorClassId: z.string(),
