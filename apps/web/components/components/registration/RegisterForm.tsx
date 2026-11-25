@@ -253,12 +253,12 @@ export function RegisterForm({
             </span>
           )}
           {chosenChildren.map(child => (
-            <fieldset key={child.id} className="form-section">
-              <legend className="form-section__title">{child.name}</legend>
+            <fieldset key={child.id} className="form-section" aria-label={child.name}>
+              {/* The child's name is for screen readers only: the choices under it are the child's, and the name is not shown. */}
+              <legend className="sr-only">{child.name}</legend>
               {sessions.map(session =>
                 session.series.length === 0 ? null : (
                   <div key={session.id} className="check-group">
-                    <p className="muted">{session.name}</p>
                     {session.series.map(series => {
                       const selected = picks.some(p => p.camperId === child.id && p.classId === series.anchorClassId);
                       const key = `${child.id}|${series.anchorClassId}`;
