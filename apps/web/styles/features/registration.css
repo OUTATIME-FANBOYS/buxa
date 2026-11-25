@@ -1,8 +1,0 @@
-/* The registration list header: the title block on the left, then the session dropdown and the New Form button on the right, centred on the title. The dropdown is 320px wide like the Holds one. Phones stack the controls under the title. */
-.registration-head .page-head {
-  align-items: center;
-}
-.registration-head .session-filter {
-  width: 320px;
-  max-width: 100%;
-}

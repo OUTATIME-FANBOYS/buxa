@@ -11,7 +11,7 @@ import {
 } from '@buxa/shared';
 import { ROUTES } from '@/config/routes';
 import { currentActor, loadFormSubmissions, loadSessions } from '@buxa/server/composers/index.server';
-import { Empty, PageHeader } from '@/components/components';
+import { Empty, PageHeader, PageHeaderRow } from '@/components/components';
 import { SessionFilter } from '@/components/components/filters';
 import {
   FormsTable,
@@ -75,13 +75,11 @@ export async function RegistrationList({ searchParams = {} }: { searchParams?: S
 
   return (
     <div className="page">
-      <div className="registration-head">
-        <PageHeader
-          title="Registration"
-          subtitle="Forms families fill in to register campers for sessions. Nothing is charged in this phase."
-          actions={headerActions}
-        />
-      </div>
+      <PageHeaderRow
+        title="Registration"
+        subtitle="Forms families fill in to register campers for sessions. Nothing is charged in this phase."
+        controls={headerActions}
+      />
       {loaded.value.length === 0 ? (
         <Empty
           icon="list"

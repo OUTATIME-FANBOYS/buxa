@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import type { OnSiteRowView } from '@buxa/shared';
 import { SearchField } from '@/components/atoms';
-import { PageHeader } from '@/components/components';
+import { PageHeaderRow } from '@/components/components';
 import { OnSiteRow, ON_SITE_LIST_ID } from './OnSiteRow';
 
 /** Lower case, accents removed and spaces trimmed, so "rene" finds "René" and a stray space does not hide everyone. */
@@ -38,10 +38,10 @@ export function OnSiteList({
 
   return (
     <div className="onsite-page">
-      <PageHeader
+      <PageHeaderRow
         title={title}
         subtitle={subtitle}
-        actions={
+        controls={
           <div className="onsite-search">
             <SearchField
               aria-label="Search people on site"

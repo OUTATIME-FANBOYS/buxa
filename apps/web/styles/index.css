@@ -57,6 +57,7 @@
 @import './features/kanban/timeline.css';
 @import './features/kanban/charts.css';
 @import './components/toasts.css';
+@import './components/page-head-row.css';
 @import './layout/auth.css';
 @import './responsive.css';
 @import './features/kanban/agents.css';
@@ -65,7 +66,6 @@
 @import './features/people.css';
 @import './features/classes.css';
 @import './features/holds.css';
-@import './features/registration.css';
 @import './features/help.css';
 @import './features/home.css';
 @import './features/badge-scanner.css';

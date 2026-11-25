@@ -1,0 +1,42 @@
+/*
+ * The page header row (PageHeaderRow): the title block on the left, the controls on the right, centred on the title block.
+ * On a phone the controls stack under the title. Used by the On site, Holds and Registration pages.
+ * Imported after layout/pages.css, so these rules win over the generic .page-head alignment.
+ */
+.page-head-row {
+  align-items: center;
+}
+.page-head-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s3);
+  min-width: 0;
+}
+/* Every control in the row is 320px wide (or the width of its column on a narrow screen). */
+.page-head-controls .search-field,
+.page-head-controls .session-filter {
+  width: 320px;
+  max-width: 100%;
+}
+/*
+ * A labelled select draws its label above the box. The same space is kept below the box, so the box itself, not the label and box
+ * together, sits on the title's centre line. The space is the label's line (12px text) plus its 8px gap.
+ */
+.page-head-controls .session-filter {
+  padding-block: calc(var(--fs-s) * 1.4 + var(--s2));
+}
+@media (max-width: 720px) {
+  .page-head-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .page-head-controls {
+    justify-content: flex-start;
+    width: 100%;
+  }
+  .page-head-controls .session-filter {
+    padding-bottom: 0;
+  }
+}
