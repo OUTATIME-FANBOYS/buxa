@@ -32,10 +32,10 @@ describe('the sidebar groups', () => {
     expect(byLabel('Registration')?.icon).toBe('list');
   });
 
-  it('keeps Registration and Holds under Sessions, with their camp-wide addresses', () => {
+  it('keeps Registration under Sessions, and has no separate Holds item (holds live on each session)', () => {
     const byLabel = (label: string) => CAMP_NAV.find(item => item.label === label);
     expect(byLabel('Registration')).toMatchObject({ href: ROUTES.registration, under: ROUTES.sessions });
-    expect(byLabel('Holds')).toMatchObject({ href: ROUTES.holds, under: ROUTES.sessions });
+    expect(byLabel('Holds')).toBeUndefined();
   });
 
   it('does not list Settings or Help in the sidebar: they live in the profile menu', () => {

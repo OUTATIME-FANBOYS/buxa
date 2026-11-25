@@ -33,8 +33,6 @@ export const ROUTES = {
   // registration:manage; taking a registration needs registration:submit.
   registration: '/camp/registration',
   newRegistrationForm: '/camp/registration/new',
-  // Holds: every place a family holds across the camp, and each class's waitlist beside it. Read only; needs registration:read.
-  holds: '/camp/holds',
   // Work: tasks kept in this browser (the kanban demo), shown in the same shell.
   tasks: '/camp/tasks',
   projects: '/camp/projects',
