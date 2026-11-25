@@ -1,52 +1,65 @@
-import type { Class } from '@buxa/contracts';
+import type { Series } from '@buxa/contracts';
 import { sessionPath } from '@/config/routes';
-import { formatCampDateTime, priceSummary } from '@buxa/shared';
-import type { ClockFormat } from '@buxa/domain';
+import { priceSummary, seriesDaysLabel } from '@buxa/shared';
 import { Button, Pill } from '@/components/elements';
-import { ClassStatus } from './ClassStatus';
-import { DeleteClassButton, EditClassButton, type InstructorChoice } from './forms';
+import { seatFor, seatsLeft } from '@buxa/domain';
+import { DeleteClassButton, EditSeriesButton, type InstructorChoice } from './forms';
 
-/** The class's instructors by name, comma separated. A class with none says so. */
-export const instructorNames = (cls: Pick<Class, 'instructors'>): string =>
-  cls.instructors.length === 0 ? 'None yet' : cls.instructors.map(i => i.name).join(', ');
+/** The series' instructors by name, comma separated. A series with none says so. */
+export const instructorNames = (series: Pick<Series, 'instructors'>): string =>
+  series.instructors.length === 0 ? 'None yet' : series.instructors.map(i => i.name).join(', ');
+
+/** Places left as a word: "3 left", or "Full" (with a waitlist when people wait). */
+export function placesLabel(series: Pick<Series, 'capacity' | 'seatsTaken' | 'waitlisted'>): {
+  label: string;
+  tone: 'ok' | 'warn';
+} {
+  if (seatFor(series.capacity, series.seatsTaken).kind === 'full') {
+    return { label: series.waitlisted > 0 ? 'Full, with a waitlist' : 'Full', tone: 'warn' };
+  }
+
+  return { label: `${seatsLeft(series.capacity, series.seatsTaken)} left`, tone: 'ok' };
+}
 
 /**
- * The classes of one session, with their ages, camp size, times, location, instructors and seat counts. Times are the camp's own
- * clock. The enrolments link opens that class's enrolments on the same page (a query parameter, so it works without JavaScript).
- * Staff also get Edit and Delete for each class.
+ * The class series of one session, one row each: name, ages, days, times, location, instructors, camp size, price, enrolled,
+ * waitlisted and places. The times are the first day's clock times in camp time. Days opens the series' own days (cancel and restore
+ * one day at a time); Enrolments opens the series' enrolments on the same page. Staff also get Edit and Delete for the series.
  */
 export function ClassesTable({
   sessionId,
   sessionName,
-  classes,
+  series,
   timeZone,
-  clockFormat,
   selectedId,
+  daysId,
   canManage,
   canEdit,
   instructors,
 }: {
   sessionId: string;
   sessionName: string;
-  classes: readonly Class[];
+  series: readonly Series[];
   timeZone: string;
-  clockFormat: ClockFormat;
+  /** The anchor occurrence of the series whose enrolments are open, if any. */
   selectedId: string | null;
+  /** The series whose days are open, if any. */
+  daysId: string | null;
   canManage: boolean;
-  /** Who may open a class's edit form: staff and above (all fields), or a teacher on its own class (the name only). */
+  /** Who may open a series' edit form: staff and above (all fields), or a teacher on the series (the name only). */
   canEdit: boolean;
   instructors: readonly InstructorChoice[];
 }) {
   return (
     <div className="table-wrap">
       <table className="table">
-        <caption className="sr-only">Classes in this session, in camp time</caption>
+        <caption className="sr-only">Classes in this session, one row per class series, in camp time</caption>
         <thead>
           <tr>
             <th scope="col">Class</th>
             <th scope="col">Ages</th>
-            <th scope="col">Starts</th>
-            <th scope="col">Ends</th>
+            <th scope="col">Days</th>
+            <th scope="col">Times</th>
             <th scope="col">Location</th>
             <th scope="col">Instructors</th>
             <th scope="col">Camp Size</th>
@@ -60,55 +73,59 @@ export function ClassesTable({
           </tr>
         </thead>
         <tbody>
-          {classes.map(cls => {
-            const selected = cls.id === selectedId;
+          {series.map(s => {
+            const enrolmentsOpen = s.anchorClassId === selectedId;
+            const daysOpen = s.id === daysId;
+            const places = placesLabel(s);
 
             return (
-              <tr key={cls.id}>
+              <tr key={s.id}>
+                <td>{s.name}</td>
                 <td>
-                  {cls.name}
-                  {cls.datesOutsideSession && (
-                    <>
-                      {' '}
-                      <Pill tone="warn">Dates outside session</Pill>
-                    </>
-                  )}
+                  {s.ageRange.minAge} to {s.ageRange.maxAge}
                 </td>
+                <td>{seriesDaysLabel(s.weekdays)}</td>
                 <td>
-                  {cls.ageRange.minAge} to {cls.ageRange.maxAge}
+                  {s.startTime} to {s.endTime}
                 </td>
-                <td>{formatCampDateTime(cls.startsAt, timeZone, clockFormat)}</td>
-                <td>{formatCampDateTime(cls.endsAt, timeZone, clockFormat)}</td>
-                <td>{cls.location}</td>
-                <td>{instructorNames(cls)}</td>
-                <td>{cls.capacity}</td>
-                <td>{priceSummary(cls.price, timeZone)}</td>
-                <td>{cls.seatsTaken}</td>
-                <td>{cls.waitlisted}</td>
+                <td>{s.location}</td>
+                <td>{instructorNames(s)}</td>
+                <td>{s.capacity}</td>
+                <td>{priceSummary(s.price, timeZone)}</td>
+                <td>{s.seatsTaken}</td>
+                <td>{s.waitlisted}</td>
                 <td>
-                  <ClassStatus cls={cls} />
+                  <Pill tone={places.tone}>{places.label}</Pill>
                 </td>
                 <td>
                   <div className="classes-row-actions">
                     <Button
                       variant="glass"
                       size="sm"
+                      aria-current={daysOpen ? 'true' : undefined}
+                      href={`${sessionPath(sessionId)}?days=${encodeURIComponent(s.id)}#days`}
+                    >
+                      Days
+                    </Button>
+                    <Button
+                      variant="glass"
+                      size="sm"
                       iconOnly
                       icon="users"
-                      aria-label={`Enrolments for ${cls.name}`}
-                      title={selected ? 'Showing enrolments' : 'Enrolments'}
-                      aria-current={selected ? 'true' : undefined}
-                      href={`${sessionPath(sessionId)}?class=${encodeURIComponent(cls.id)}#enrolments`}
+                      aria-label={`Enrolments for ${s.name}`}
+                      title={enrolmentsOpen ? 'Showing enrolments' : 'Enrolments'}
+                      aria-current={enrolmentsOpen ? 'true' : undefined}
+                      href={`${sessionPath(sessionId)}?class=${encodeURIComponent(s.anchorClassId)}#enrolments`}
                     />
                     {canEdit && (
-                      <EditClassButton
-                        cls={cls}
+                      <EditSeriesButton
+                        series={s}
                         sessionName={sessionName}
                         instructors={instructors}
                         detailsOnly={!canManage}
                       />
                     )}
-                    {canManage && <DeleteClassButton classId={cls.id} sessionId={sessionId} className={cls.name} />}
+                    {canManage && <DeleteClassButton seriesId={s.id} sessionId={sessionId} className={s.name} />}
                   </div>
                 </td>
               </tr>

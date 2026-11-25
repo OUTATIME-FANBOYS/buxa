@@ -61,7 +61,7 @@ describe.skipIf(!url)('teacher calendar feed on Postgres', () => {
   /** Makes a class in the camp (a sessions row, with its own name and hours) and returns its id. */
   const makeClass = async (actor: Actor, name: string, fromHour: number): Promise<string> => {
     const session = await makeSession(fx.repo, actor);
-    const [created] = await fx.repo.addClasses(actor, session.id, [sessionInput(fromHour, fromHour + 1, { name })]);
+    const created = await fx.repo.addClass(actor, session.id, sessionInput(fromHour, fromHour + 1, { name }));
 
     return created.id;
   };

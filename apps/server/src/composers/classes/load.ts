@@ -1,6 +1,6 @@
 import 'server-only';
 import type { Actor, CampRole } from '@buxa/domain';
-import type { Class, Enrolment, Session } from '@buxa/contracts';
+import type { Class, Enrolment, Series, Session } from '@buxa/contracts';
 import type { ActiveHold } from '../../holds/SeatHoldRepository';
 import { getRuntime } from '../../runtime';
 import { isHttpError, notFound } from '../../http/errors';
@@ -36,23 +36,35 @@ export async function loadSessions(actor: Actor): Promise<Loaded<Session[]>> {
   });
 }
 
-/** One session and its classes. Not found when the session is not in this camp. */
+/** One session and its class series (one row each). Not found when the session is not in this camp. */
 export async function loadSessionPage(
   actor: Actor,
   sessionId: string,
-): Promise<Loaded<{ session: Session; classes: Class[] }>> {
+): Promise<Loaded<{ session: Session; series: Series[] }>> {
   return guarded(async () => {
     const services = getRuntime().services.classes;
     const session = await services.getSession(actor, sessionId);
     if (!session.ok) {
       throw notFound(session.failure.message);
     }
-    const classes = await services.listClasses(actor, sessionId);
-    if (!classes.ok) {
-      throw notFound(classes.failure.message);
+    const series = await services.listSeries(actor, sessionId);
+    if (!series.ok) {
+      throw notFound(series.failure.message);
     }
 
-    return { session: session.value, classes: classes.value };
+    return { session: session.value, series: series.value };
+  });
+}
+
+/** Every day of one series, cancelled ones included, for its days panel. Not found when it is not in this camp (or not visible). */
+export async function loadSeriesDays(actor: Actor, seriesId: string): Promise<Loaded<Class[]>> {
+  return guarded(async () => {
+    const days = await getRuntime().services.classes.listSeriesOccurrences(actor, seriesId);
+    if (!days.ok) {
+      throw notFound(days.failure.message);
+    }
+
+    return days.value;
   });
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ClassInputSchema, ClassPriceSchema, NewSessionInputSchema, NewRecurringClassInputSchema } from './classes';
+import { ClassInputSchema, ClassPriceSchema, NewSessionInputSchema, NewSeriesInputSchema } from './classes';
 
 // A price belongs to a class. These tests pin the contract: a session input refuses a price, and a class input accepts and checks
 // one (the same checks as the database: the currency is three capital letters, the early bird is not above the price, and the early
@@ -69,16 +69,11 @@ describe('class input carries its own price', () => {
     expect(ClassPriceSchema.safeParse({ ...price, regularMinor: -1 }).success).toBe(false);
   });
 
-  it('a recurring series takes a price for every class it makes', () => {
-    const rule = {
+  it('a series takes one price for every day it makes', () => {
+    const series = NewSeriesInputSchema.safeParse({
       weekdays: [1],
-      firstDate: '2027-07-05',
-      startTime: '09:00',
-      endTime: '10:00',
-      end: { kind: 'until', date: '2027-07-12' },
-    };
-    const series = NewRecurringClassInputSchema.safeParse({
-      rule,
+      startsAt: '2027-07-05T09:00',
+      endsAt: '2027-07-12T10:00',
       name: 'Painting',
       ageRange: { minAge: 8, maxAge: 12 },
       capacity: 10,

@@ -143,37 +143,6 @@ export type SessionDeleteImpact = z.infer<typeof SessionDeleteImpactSchema>;
 export const SetSessionPublicInputSchema = z.object({ isPublic: z.boolean() });
 export type SetSessionPublicInput = z.infer<typeof SetSessionPublicInputSchema>;
 
-const CampDaySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a date in the format 2027-07-05.');
-const ClockTimeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Use a 24-hour time, such as 09:00.');
-
-/** When a series stops: on a date (inclusive). */
-export const RecurrenceEndSchema = z.object({ kind: z.literal('until'), date: CampDaySchema });
-
-/** A weekly rule in camp time. The server expands it into classes (see expandClassRule in @buxa/domain). */
-export const ClassRuleSchema = z.object({
-  weekdays: z.array(z.number().int().min(1).max(7)).min(1).max(7),
-  firstDate: CampDaySchema,
-  startTime: ClockTimeSchema,
-  endTime: ClockTimeSchema,
-  end: RecurrenceEndSchema,
-});
-export type ClassRuleInput = z.infer<typeof ClassRuleSchema>;
-
-/**
- * A recurring series under a session: the class's own fields, with a rule in place of one pair of times. Every generated class
- * is a normal class with its own enrolments.
- */
-export const NewRecurringClassInputSchema = z.object({
-  rule: ClassRuleSchema,
-  name: NameSchema,
-  ageRange: ClassAgeRangeInputSchema,
-  capacity: CampSizeSchema,
-  location: z.string().trim().min(1, 'Location missing.').max(200),
-  instructorIds: z.array(z.string().uuid()).max(MAX_CLASS_INSTRUCTORS).default([]),
-  price: ClassPriceSchema.nullable().default(null),
-});
-export type NewRecurringClassInput = z.infer<typeof NewRecurringClassInputSchema>;
-
 export const ClassSchema = z.object({
   id: z.string(),
   sessionId: z.string(),
@@ -192,6 +161,12 @@ export const ClassSchema = z.object({
   price: ClassPriceSchema.nullable(),
   /** True when the class falls outside its session's dates. It takes no places, and is not listed publicly, until its dates are fixed (migration 0059). */
   datesOutsideSession: z.boolean(),
+  /** The series this day belongs to (migration 0060). Enrolments, holds and places are counted per series. */
+  seriesId: z.string(),
+  /** A cancelled day takes no place on the calendar, in check-in, in My classes or on the public list (migration 0064). */
+  occurrenceStatus: z.enum(['active', 'cancelled']),
+  /** Why the day was cancelled, or null for an active day. */
+  cancelReason: z.string().nullable(),
 });
 export type Class = z.infer<typeof ClassSchema>;
 
@@ -275,3 +250,59 @@ export type CancelOccurrenceInput = z.infer<typeof CancelOccurrenceInputSchema>;
 
 export const RestoreOccurrenceInputSchema = z.object({ occurrenceId: z.string().uuid() });
 export type RestoreOccurrenceInput = z.infer<typeof RestoreOccurrenceInputSchema>;
+
+const LocalDateTimeSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, 'Use a real start and end date and time.');
+
+/**
+ * A class series, as the New class form sends it: the class's own fields, the weekdays ticked, and the Starts and Ends date-times in
+ * camp time. The series runs between them, on the chosen weekdays only, and each day is an occurrence (planSeries in @buxa/domain).
+ */
+export const NewSeriesInputSchema = z.object({
+  name: NameSchema,
+  ageRange: ClassAgeRangeInputSchema,
+  capacity: CampSizeSchema,
+  location: z.string().trim().min(1, 'Location missing.').max(200),
+  instructorIds: z.array(z.string().uuid()).max(MAX_CLASS_INSTRUCTORS).default([]),
+  price: ClassPriceSchema.nullable().default(null),
+  weekdays: SeriesWeekdaysSchema,
+  startsAt: LocalDateTimeSchema,
+  endsAt: LocalDateTimeSchema,
+});
+export type NewSeriesInput = z.infer<typeof NewSeriesInputSchema>;
+
+/** The fields a series edit changes. Its days keep their own times; the edit reaches every occurrence. */
+export const SeriesEditInputSchema = NewSeriesInputSchema.omit({ weekdays: true, startsAt: true, endsAt: true });
+export type SeriesEditInput = z.infer<typeof SeriesEditInputSchema>;
+
+/**
+ * A class series as the Classes table and the series page show it: one row per series. Its times are the clock times of its first
+ * day (camp time), its days are its weekdays, and its counts are per series. `anchorClassId` is the occurrence that enrolments, holds
+ * and registration picks are made against (the first active day, or the first day when all are cancelled).
+ */
+export const SeriesSchema = z.object({
+  id: z.string(),
+  sessionId: z.string(),
+  sessionName: z.string(),
+  name: z.string(),
+  ageRange: AgeRangeSchema,
+  capacity: z.number().int(),
+  location: z.string(),
+  weekdays: z.array(z.number().int().min(1).max(7)),
+  /** Clock times in camp time, HH:MM, from the first day. */
+  startTime: z.string(),
+  endTime: z.string(),
+  /** The first and last day in camp time, YYYY-MM-DD. */
+  firstDay: z.string(),
+  lastDay: z.string(),
+  occurrenceCount: z.number().int(),
+  activeOccurrenceCount: z.number().int(),
+  anchorClassId: z.string(),
+  instructorIds: z.array(z.string()),
+  instructors: z.array(ClassInstructorSchema).max(MAX_CLASS_INSTRUCTORS),
+  price: ClassPriceSchema.nullable(),
+  seatsTaken: z.number().int(),
+  waitlisted: z.number().int(),
+});
+export type Series = z.infer<typeof SeriesSchema>;

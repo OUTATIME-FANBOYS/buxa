@@ -41,6 +41,7 @@ export type FailureReason =
   | 'hold_exists'
   | 'teacher_not_found'
   | 'teacher_field_refused'
+  | 'already_enrolled'
   | Refusal['reason'];
 
 export interface Failure {
@@ -163,6 +164,9 @@ export async function attempt<T>(work: () => Promise<T>, timeZone: string): Prom
         ok: false,
         failure: { reason: 'hold_exists', message: 'This child already holds a place in this class.' },
       };
+    }
+    if (isClassError(e, 'already-enrolled')) {
+      return { ok: false, failure: { reason: 'already_enrolled', message: (e as Error).message } };
     }
     if (isEnrolmentRefusal(e)) {
       return {

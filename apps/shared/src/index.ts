@@ -85,6 +85,7 @@ export * from './classes/importState';
 export * from './classes/localTime';
 export * from './classes/parse';
 export * from './classes/priceSummary';
+export * from './classes/seriesDays';
 export * from './groups/parse';
 export * from './groups/searchPeople';
 export * from './classes/sessionDatesPreview';

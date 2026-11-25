@@ -1,4 +1,5 @@
 import {
+  AlreadyEnrolledError,
   CapacityBelowEnrolledError,
   ClassHasEnrolmentsError,
   ClassNotFoundError,
@@ -48,6 +49,15 @@ export function translateClassWriteError(error: unknown): unknown {
   }
   if (isPgError(error, 'P0002', null)) {
     return new ClassNotFoundError();
+  }
+
+  return error;
+}
+
+/** Turns the duplicate-place error of an enrolment (one active enrolment per child per series, migration 0061) into AlreadyEnrolledError. */
+export function translateEnrolmentWriteError(error: unknown): unknown {
+  if (isPgError(error, UNIQUE_VIOLATION, 'enrolments_one_active_series_idx')) {
+    return new AlreadyEnrolledError();
   }
 
   return error;

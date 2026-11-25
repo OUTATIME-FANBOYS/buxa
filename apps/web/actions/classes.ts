@@ -7,7 +7,13 @@ import { createSessionAction as createSessionActionImpl } from '@buxa/server/com
 import { addClassAction as addClassActionImpl } from '@buxa/server/composers/classes/addClassAction';
 import { updateClassAction as updateClassActionImpl } from '@buxa/server/composers/classes/updateClassAction';
 import { deleteClassAction as deleteClassActionImpl } from '@buxa/server/composers/classes/deleteClassAction';
-import { addRecurringClassesAction as addRecurringClassesActionImpl } from '@buxa/server/composers/classes/addRecurringClassesAction';
+import { addSeriesAction as addSeriesActionImpl } from '@buxa/server/composers/classes/addSeriesAction';
+import {
+  cancelOccurrenceAction as cancelOccurrenceActionImpl,
+  deleteSeriesAction as deleteSeriesActionImpl,
+  restoreOccurrenceAction as restoreOccurrenceActionImpl,
+  updateSeriesAction as updateSeriesActionImpl,
+} from '@buxa/server/composers/classes/seriesActions';
 import { updateSessionAction as updateSessionActionImpl } from '@buxa/server/composers/classes/updateSessionAction';
 import { previewSessionDatesAction as previewSessionDatesActionImpl } from '@buxa/server/composers/classes/previewSessionDatesAction';
 import { deleteSessionAction as deleteSessionActionImpl } from '@buxa/server/composers/classes/deleteSessionAction';
@@ -48,8 +54,8 @@ export async function deleteClassAction(...args: Parameters<typeof deleteClassAc
   return deleteClassActionImpl(...args);
 }
 
-export async function addRecurringClassesAction(...args: Parameters<typeof addRecurringClassesActionImpl>) {
-  return addRecurringClassesActionImpl(...args);
+export async function addSeriesAction(...args: Parameters<typeof addSeriesActionImpl>) {
+  return addSeriesActionImpl(...args);
 }
 
 export async function updateSessionAction(...args: Parameters<typeof updateSessionActionImpl>) {
@@ -86,4 +92,20 @@ export async function sessionDeleteImpactAction(...args: Parameters<typeof sessi
 
 export async function promoteWaitlistAction(...args: Parameters<typeof promoteWaitlistActionImpl>) {
   return promoteWaitlistActionImpl(...args);
+}
+
+export async function updateSeriesAction(...args: Parameters<typeof updateSeriesActionImpl>) {
+  return updateSeriesActionImpl(...args);
+}
+
+export async function deleteSeriesAction(...args: Parameters<typeof deleteSeriesActionImpl>) {
+  return deleteSeriesActionImpl(...args);
+}
+
+export async function cancelOccurrenceAction(...args: Parameters<typeof cancelOccurrenceActionImpl>) {
+  return cancelOccurrenceActionImpl(...args);
+}
+
+export async function restoreOccurrenceAction(...args: Parameters<typeof restoreOccurrenceActionImpl>) {
+  return restoreOccurrenceActionImpl(...args);
 }

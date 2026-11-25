@@ -2,9 +2,9 @@ import {
   can,
   classFieldsOutsideDetails,
   classWithinSession,
-  expandClassRule,
   findClash,
   formatClash,
+  planSeries,
   planSessionDates,
   type Actor,
   type NamedClass,
@@ -16,8 +16,10 @@ import {
   type ClassInput,
   type Enrolment,
   type EnrolInput,
-  type NewRecurringClassInput,
+  type NewSeriesInput,
   type NewSessionInput,
+  type Series,
+  type SeriesEditInput,
   type Session,
   type SessionDeleteImpact,
   type SessionEditInput,
@@ -112,10 +114,21 @@ export interface ClassService {
   /** Restores a cancelled day. Needs classes:manage. */
   restoreOccurrence(actor: Actor, occurrenceId: string): Promise<Outcome<void>>;
   /**
-   * A weekly series of classes under a session. Each class is checked against the session's dates and against every class in
-   * the camp (and the earlier classes of the series), then all are written, or none.
+   * Creates one series under a session, from the New class form: the weekdays ticked between Starts and Ends. Each day is checked
+   * against the session's dates and against every class in the camp (and the earlier days of the series), then the series and all its
+   * days are written in one transaction, or none. Needs classes:manage.
    */
-  addRecurringClasses(actor: Actor, sessionId: string, input: NewRecurringClassInput): Promise<Outcome<Class[]>>;
+  addSeries(actor: Actor, sessionId: string, input: NewSeriesInput): Promise<Outcome<Series>>;
+  /** The series of a session, one row each. A teacher sees the series it teaches. Read only. */
+  listSeries(actor: Actor, sessionId: string): Promise<Outcome<Series[]>>;
+  /** One series. A teacher sees only a series it teaches. Read only. */
+  getSeries(actor: Actor, seriesId: string): Promise<Outcome<Series>>;
+  /** Every day of a series, cancelled ones included, for the series page. Read only. */
+  listSeriesOccurrences(actor: Actor, seriesId: string): Promise<Outcome<Class[]>>;
+  /** Saves a series' shared fields (name, ages, camp size, location, instructors, price) on every day. Needs classes:manage. */
+  updateSeries(actor: Actor, seriesId: string, input: SeriesEditInput): Promise<Outcome<Series>>;
+  /** Deletes a series and its days. Needs classes:manage. A series with an enrolment, a hold or a registration is refused. */
+  deleteSeries(actor: Actor, seriesId: string): Promise<Outcome<null>>;
   listClasses(actor: Actor, sessionId: string): Promise<Outcome<Class[]>>;
   getClass(actor: Actor, classId: string): Promise<Outcome<Class>>;
   addClass(actor: Actor, sessionId: string, input: ClassInput): Promise<Outcome<Class>>;
@@ -222,7 +235,8 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
       return attempt(
         async () => {
           const found = await Promise.all([...scope.classIds].map(id => repo.getClass(actor.userId, actor.orgId, id)));
-          const classes = found.flatMap(c => (c ? [c] : []));
+          // A cancelled day is not a class on a teacher's plan (migration 0064).
+          const classes = found.flatMap(c => (c && c.occurrenceStatus === 'active' ? [c] : []));
           const sessionIds = [...new Set(classes.map(c => c.sessionId))];
           const sessions = await Promise.all(sessionIds.map(id => repo.getSession(actor.userId, actor.orgId, id)));
 
@@ -357,7 +371,7 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
 
       return attempt(() => repo.setOccurrenceStatus(actor, occurrenceId, { kind: 'restore' }), await timezoneOf(actor));
     },
-    async addRecurringClasses(actor, sessionId, input) {
+    async addSeries(actor, sessionId, input) {
       assertAllowed(actor, 'classes:manage');
       const timeZone = await timezoneOf(actor);
 
@@ -366,19 +380,23 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
         if (!session) {
           throw new SessionNotFoundError();
         }
-        const expanded = expandClassRule(input.rule, timeZone);
-        if (!expanded.ok) {
-          throw new RecurrenceRefusedError('recurrence_invalid', expanded.message);
+        // The days come from planSeries: each chosen weekday between Starts and Ends, at Starts' and Ends' clock times.
+        const plan = planSeries(
+          { weekdays: input.weekdays, startsLocal: input.startsAt, endsLocal: input.endsAt },
+          timeZone,
+        );
+        if (!plan.ok) {
+          throw new RecurrenceRefusedError('recurrence_invalid', plan.message);
         }
 
         const days =
           session.startsOn !== null && session.endsOn !== null
             ? { startsOn: session.startsOn, endsOn: session.endsOn }
             : null;
-        // Each class is checked against every class in the camp and against the earlier classes of this series, as an import is.
+        // Each day is checked against every class in the camp and against the earlier days of this series, as an import is.
         const existing: CampClassSpan[] = await repo.listCampClassSpans(actor.userId, actor.orgId);
         const accepted: CampClassSpan[] = [];
-        for (const occurrence of expanded.occurrences) {
+        for (const occurrence of plan.series.occurrences) {
           if (days && !classWithinSession(occurrence, days, timeZone)) {
             throw new ClassOutsideSessionError(days.startsOn, days.endsOn);
           }
@@ -386,25 +404,115 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
           if (clash) {
             throw new RecurrenceRefusedError(
               'class_clash',
-              `The class on ${occurrence.date} clashes with ${clash.className} (${formatClash(clash, timeZone)}). Choose other times or change the rule; nothing was saved.`,
+              `${input.name} on ${occurrence.date} clashes with ${clash.className} (${formatClash(clash, timeZone)}). Choose other times or days; nothing was saved.`,
             );
           }
           accepted.push({ startsAt: occurrence.startsAt, endsAt: occurrence.endsAt, className: input.name });
         }
 
-        const records: ClassRecord[] = expanded.occurrences.map(o => ({
+        return repo.addSeries(actor, sessionId, {
           name: input.name,
           ageRange: input.ageRange,
           capacity: input.capacity,
-          startsAt: o.startsAt,
-          endsAt: o.endsAt,
           location: input.location,
           instructorIds: input.instructorIds,
           price: input.price,
-        }));
-
-        return repo.addClasses(actor, sessionId, records);
+          weekdays: plan.series.weekdays,
+          seriesStartsAt: plan.series.seriesStartsAt,
+          seriesEndsAt: plan.series.seriesEndsAt,
+          occurrences: plan.series.occurrences.map(o => ({ startsAt: o.startsAt, endsAt: o.endsAt })),
+        });
       }, timeZone);
+    },
+
+    async listSeries(actor, sessionId) {
+      const scope = await teacherScopeOf(repo, actor);
+      assertAllowed(actor, 'events:read', { assignedToClass: scope === null ? undefined : true });
+
+      return attempt(
+        async () => {
+          const all = await repo.listSeries(actor.userId, actor.orgId, sessionId);
+          if (scope === null) {
+            return all;
+          }
+          const visible: Series[] = [];
+          for (const series of all) {
+            const days = await repo.listSeriesOccurrences(actor.userId, actor.orgId, series.id);
+            if (days.some(d => scope.classIds.has(d.id))) {
+              visible.push(series);
+            }
+          }
+
+          return visible;
+        },
+        await timezoneOf(actor),
+      );
+    },
+
+    async getSeries(actor, seriesId) {
+      const scope = await teacherScopeOf(repo, actor);
+      assertAllowed(actor, 'events:read', { assignedToClass: scope === null ? undefined : true });
+
+      return attempt(
+        async () => {
+          const found = await repo.getSeries(actor.userId, actor.orgId, seriesId);
+          if (!found) {
+            throw new ClassNotFoundError();
+          }
+          if (scope !== null) {
+            const days = await repo.listSeriesOccurrences(actor.userId, actor.orgId, seriesId);
+            if (!days.some(d => scope.classIds.has(d.id))) {
+              throw new ClassNotFoundError();
+            }
+          }
+
+          return found;
+        },
+        await timezoneOf(actor),
+      );
+    },
+
+    async listSeriesOccurrences(actor, seriesId) {
+      const scope = await teacherScopeOf(repo, actor);
+      assertAllowed(actor, 'events:read', { assignedToClass: scope === null ? undefined : true });
+
+      return attempt(
+        async () => {
+          const days = await repo.listSeriesOccurrences(actor.userId, actor.orgId, seriesId);
+
+          return scope === null ? days : days.filter(d => scope.classIds.has(d.id));
+        },
+        await timezoneOf(actor),
+      );
+    },
+
+    async updateSeries(actor, seriesId, input) {
+      assertAllowed(actor, 'classes:manage');
+
+      return attempt(
+        async () => {
+          const existing = await repo.getSeries(actor.userId, actor.orgId, seriesId);
+          if (!existing) {
+            throw new ClassNotFoundError();
+          }
+
+          return repo.updateSeries(actor, seriesId, input);
+        },
+        await timezoneOf(actor),
+      );
+    },
+
+    async deleteSeries(actor, seriesId) {
+      assertAllowed(actor, 'classes:manage');
+
+      return attempt(
+        async () => {
+          await repo.deleteSeries(actor, seriesId);
+
+          return null;
+        },
+        await timezoneOf(actor),
+      );
     },
 
     async updateSession(actor, sessionId, input) {

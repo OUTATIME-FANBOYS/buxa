@@ -3,7 +3,7 @@
 import { useActionState, useCallback, useEffect, useState } from 'react';
 import { Dialog } from '@/components/components/Dialog';
 import { Button } from '@/components/elements';
-import { deleteClassAction } from '@/actions/classes';
+import { deleteSeriesAction } from '@/actions/classes';
 import { idle } from '@buxa/shared';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { ActionMessage } from './ActionMessage';
@@ -13,17 +13,18 @@ import { ActionMessage } from './ActionMessage';
  * and nothing is removed. The dialog closes when the class is deleted.
  */
 export function DeleteClassButton({
-  classId,
+  seriesId,
   sessionId,
   className,
 }: {
-  classId: string;
+  /** The class series to delete: every day of it goes with it. */
+  seriesId: string;
   sessionId: string;
   className: string;
 }) {
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
-  const [state, formAction, pending] = useActionState(deleteClassAction, idle);
+  const [state, formAction, pending] = useActionState(deleteSeriesAction, idle);
 
   const { toast } = useUi();
   useEffect(() => {
@@ -49,11 +50,11 @@ export function DeleteClassButton({
       {open && (
         <Dialog title="Delete class?" onClose={close} className="class-dialog">
           <form action={formAction} className="class-form">
-            <input type="hidden" name="classId" value={classId} />
+            <input type="hidden" name="seriesId" value={seriesId} />
             <input type="hidden" name="sessionId" value={sessionId} />
             <p className="class-helper">
-              {className} will be removed from this session. A class with enrolments cannot be deleted: cancel them
-              first.
+              {className} and every one of its days will be removed from this session. A class with enrolments cannot be
+              deleted: cancel them first.
             </p>
             <ActionMessage state={state} />
             <div className="classes-actions">

@@ -189,6 +189,8 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0061_series_enrolment_keys.sql',
       '0062_registration_form_files.sql',
       '0063_registration_documents.sql',
+      '0064_series_occurrence_status.sql',
+      '0065_series_day_delete_guard.sql',
     ]);
   });
 
@@ -401,6 +403,8 @@ describe.skipIf(!url)('migration 0050 copies session prices onto their classes',
       '0061_series_enrolment_keys.sql',
       '0062_registration_form_files.sql',
       '0063_registration_documents.sql',
+      '0064_series_occurrence_status.sql',
+      '0065_series_day_delete_guard.sql',
     ]);
 
     const classes = await tempPool.query<{
@@ -598,6 +602,8 @@ describe.skipIf(!url)('migration 0051 links teachers to their people by email', 
       '0061_series_enrolment_keys.sql',
       '0062_registration_form_files.sql',
       '0063_registration_documents.sql',
+      '0064_series_occurrence_status.sql',
+      '0065_series_day_delete_guard.sql',
     ]);
     const linked = await tempPool.query<{ email: string; user_email: string }>(
       `SELECT p.email, u.email AS user_email FROM people p JOIN users u ON u.id = p.user_id`,

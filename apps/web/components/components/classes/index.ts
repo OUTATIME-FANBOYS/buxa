@@ -6,3 +6,4 @@ export * from './SessionsTable';
 export * from './PriceFact';
 export * from './DeletedSessionToast';
 export * from './SessionTabs';
+export * from './SeriesDaysPanel';

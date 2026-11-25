@@ -45,7 +45,7 @@ export async function ClassPage({
     );
   }
 
-  const { session, classes } = loaded.value;
+  const { session, series } = loaded.value;
   const canManage = can(actor, 'classes:manage');
   const instructors = canManage ? await loadPeopleWithRole(actor, 'instructor') : null;
   const instructorChoices = instructors?.ok ? instructors.value.map(i => ({ id: i.id, name: i.name })) : [];
@@ -60,10 +60,11 @@ export async function ClassPage({
         : await ClassesTab({
             actor,
             session,
-            classes,
+            series,
             canManage,
             instructorChoices,
             selectedId: pick(searchParams.class),
+            daysId: pick(searchParams.days),
           });
 
   return (

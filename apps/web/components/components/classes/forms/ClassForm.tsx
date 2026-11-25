@@ -6,7 +6,7 @@ import { DateTimeField, NumberField, TextField } from '@/components/atoms';
 import { sessionPath } from '@/config/routes';
 import { fieldError, idle, instantToLocalInput, localInputToInstant, NO_WEEKDAY } from '@buxa/shared';
 import { MAX_CAMP_SIZE, MAX_CLASS_AGE, MIN_CAMP_SIZE, MIN_CLASS_AGE } from '@buxa/domain';
-import { addClassAction, addRecurringClassesAction, updateClassAction } from '@/actions/classes';
+import { addClassAction, addSeriesAction, updateClassAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
 import { InstructorPicker } from './InstructorPicker';
 import { PriceFields } from './PriceFields';
@@ -76,7 +76,7 @@ export function ClassForm({
 }) {
   const editing = cls !== undefined;
   const [single, singleAction, singlePending] = useActionState(editing ? updateClassAction : addClassAction, idle);
-  const [series, seriesAction, seriesPending] = useActionState(addRecurringClassesAction, idle);
+  const [series, seriesAction, seriesPending] = useActionState(addSeriesAction, idle);
   const [noWeekday, setNoWeekday] = useState(false);
   const usesWeekdays = weekly && !editing;
   // The form's state is the one of the path it submitted to, so its messages and pending flag are the ones shown.
