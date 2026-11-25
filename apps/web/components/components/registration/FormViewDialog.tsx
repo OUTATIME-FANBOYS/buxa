@@ -80,10 +80,8 @@ export function FormViewDialog({ form, canEdit, canSubmit, onEdit, onClose }: Fo
             {form.fields.map(field => (
               <li key={field.key} className="form-file">
                 <span className="form-file__name">{field.label}</span>
-                <span className="muted">
-                  {KIND_LABEL[field.kind]} · {field.required ? 'Required' : 'Optional'}
-                </span>
-                {field.kind === 'choice' && <span className="muted">Options: {field.options.join(', ')}</span>}
+                <span className="muted">{`${KIND_LABEL[field.kind]} · ${field.required ? 'Required' : 'Optional'}`}</span>
+                {field.kind === 'choice' && <span className="muted">{`Options: ${field.options.join(', ')}`}</span>}
               </li>
             ))}
           </ul>
