@@ -123,11 +123,12 @@ describe('RegisterForm: sections, one asterisk, no fieldsets', () => {
   });
 });
 
-describe('FormEditor: sections, one asterisk, glass Cancel and Save draft', () => {
+describe('FormEditor: the fields only, the pop-up footer holds the buttons', () => {
   it('marks the form name and sessions once, and draws no fieldset', () => {
     const html = renderToStaticMarkup(
       <FormEditor
         mode="edit"
+        id="f-1"
         formId="f-1"
         sessions={SESSIONS}
         initial={{ name: 'Reg Kids', season: null, sessionIds: [], fields: [], attachments: [] }}
@@ -141,25 +142,35 @@ describe('FormEditor: sections, one asterisk, glass Cancel and Save draft', () =
     expect(html).toContain('<form noValidate=""');
   });
 
-  it('uses the glass variant for Save draft on the edit page, and the primary for Create form', () => {
+  it('has no buttons of its own: Save draft, Publish and Cancel belong to the pop-up footer', () => {
     const edit = renderToStaticMarkup(
       <FormEditor
         mode="edit"
+        id="f-1"
         formId="f-1"
         sessions={SESSIONS}
         initial={{ name: 'Reg Kids', season: null, sessionIds: [], fields: [], attachments: [] }}
       />,
     );
-    expect(edit).toContain('button--glass');
-    expect(edit).toContain('Save draft');
-    const create = renderToStaticMarkup(<FormEditor mode="create" sessions={SESSIONS} />);
-    expect(create).toContain('button--primary');
-    expect(create).toContain('Create form');
+    expect(edit).not.toContain('Save draft');
+    expect(edit).not.toContain('Cancel');
+    const create = renderToStaticMarkup(<FormEditor mode="create" id="new-form" sessions={SESSIONS} />);
+    expect(create).not.toContain('Create form');
+    expect(create).toContain('id="new-form"');
   });
 
-  it('leaves the buttons to the dialog footer in a dialog', () => {
-    const html = renderToStaticMarkup(<FormEditor mode="create" variant="dialog" id="new-form" sessions={SESSIONS} />);
-    expect(html).toContain('id="new-form"');
-    expect(html).not.toContain('Create form');
+  it('marks a create as a pop-up create, so the action returns instead of redirecting', () => {
+    const create = renderToStaticMarkup(<FormEditor mode="create" id="new-form" sessions={SESSIONS} />);
+    expect(create).toContain('name="dialog" value="1"');
+    const edit = renderToStaticMarkup(
+      <FormEditor
+        mode="edit"
+        id="f-1"
+        formId="f-1"
+        sessions={SESSIONS}
+        initial={{ name: 'Reg Kids', season: null, sessionIds: [], fields: [], attachments: [] }}
+      />,
+    );
+    expect(edit).not.toContain('name="dialog"');
   });
 });

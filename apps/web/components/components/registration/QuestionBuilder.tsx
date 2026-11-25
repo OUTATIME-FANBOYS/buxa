@@ -36,7 +36,8 @@ export function keyFromLabel(label: string, taken: readonly string[]): string {
   return key;
 }
 
-function describe(field: CustomField): string {
+/** One line about a question: its kind, whether it is required, and a choice's options. Shared by the builder and the read-only view. */
+export function describeQuestion(field: CustomField): string {
   const parts = [KIND_LABEL[field.kind], field.required ? 'Required' : 'Optional'];
   if (field.kind === 'choice') {
     parts.push(field.options.join(', '));
@@ -102,7 +103,7 @@ export function QuestionBuilder({ initial = [] }: { initial?: CustomField[] }) {
             <li key={field.key} className="question-list__item">
               <span className="question-list__text">
                 <strong>{field.label}</strong>
-                <span className="muted">{describe(field)}</span>
+                <span className="muted">{describeQuestion(field)}</span>
               </span>
               <Button
                 variant="ghost"

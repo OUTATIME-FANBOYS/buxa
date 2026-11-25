@@ -1,19 +1,21 @@
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { FORBIDDEN_REGISTRATION } from '@buxa/shared';
-import { campClock, currentActor, loadFormPage, loadRegisterPage } from '@buxa/server/composers/index.server';
-import { Empty, PageHeader } from '@/components/components';
 import {
-  FormEditor,
-  PublishButton,
-  SubmissionsBySession,
-  TakeRegistrationButton,
-} from '@/components/components/registration';
+  campClock,
+  currentActor,
+  loadFormPage,
+  loadRegisterPage,
+  loadSessions,
+} from '@buxa/server/composers/index.server';
+import { Empty, PageHeader } from '@/components/components';
+import { EditFormButton, SubmissionsBySession, TakeRegistrationButton } from '@/components/components/registration';
 import { Pill } from '@/components/elements';
 
 /**
- * One registration form: its draft (for managers), its publish step, and its registrations grouped by session. Staff who may
- * record registrations get the Take a registration button once the form is published.
+ * One registration form's page. It is the form's registrations, grouped by session: the questions are edited in the Edit form
+ * pop-up (registration:manage), not on the page. Staff who may record registrations get Take a registration once the form is
+ * published.
  */
 export async function RegistrationFormView({ formId }: { formId: string }) {
   const actor = await currentActor();
@@ -52,7 +54,19 @@ export async function RegistrationFormView({ formId }: { formId: string }) {
         attachments={register.value.form.attachments}
       />
     ) : undefined;
-  const actions = takeRegistration;
+  // The edit pop-up needs every session in the camp to offer, so it is shown only when the session list can be read.
+  const sessions = canManage ? await loadSessions(actor) : null;
+  const editForm =
+    sessions?.ok === true ? (
+      <EditFormButton form={form} sessions={sessions.value.map(s => ({ id: s.id, name: s.name }))} />
+    ) : undefined;
+  const actions =
+    takeRegistration || editForm ? (
+      <>
+        {editForm}
+        {takeRegistration}
+      </>
+    ) : undefined;
 
   return (
     <div className="page">
@@ -64,25 +78,6 @@ export async function RegistrationFormView({ formId }: { formId: string }) {
           <Pill tone="neutral">Draft. Publish it before taking registrations.</Pill>
         )}
       </p>
-
-      {canManage && (
-        <section className="registration-section" aria-labelledby="registration-form-heading">
-          <h2 id="registration-form-heading">Form</h2>
-          <FormEditor
-            mode="edit"
-            formId={form.id}
-            sessions={form.sessions}
-            initial={{
-              name: form.name,
-              season: form.season,
-              sessionIds: form.sessions.map(s => s.id),
-              fields: form.fields,
-              attachments: form.attachments,
-            }}
-          />
-          <PublishButton formId={form.id} publishedVersion={form.publishedVersion} />
-        </section>
-      )}
 
       <section className="registration-section" aria-labelledby="registration-submissions-heading">
         <h2 id="registration-submissions-heading">Registrations</h2>
