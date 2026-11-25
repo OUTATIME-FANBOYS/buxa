@@ -20,7 +20,14 @@ const project = seed.projects[0];
 let d: TaskDraft | undefined;
 
 function Probe({ task }: { task: (typeof seed.tasks)[number] | null }) {
-  d = useTaskDraft(task, project, { columnId: project.columns[1].id });
+  d = useTaskDraft(task, [project], { columnId: project.columns[1].id });
+
+  return null;
+}
+
+/** A new task that may go to any of the workspace's projects, as the Calendar opens it. */
+function PickerProbe() {
+  d = useTaskDraft(null, seed.projects);
 
   return null;
 }
@@ -90,5 +97,58 @@ describe('useTaskDraft', () => {
     expect((h.store.actions as { updateTask: ReturnType<typeof vi.fn> }).updateTask).toHaveBeenCalledWith(task.id, {
       title: 'A new title',
     });
+  });
+  it('has no project until one is chosen, when the workspace has more than one', () => {
+    act(() =>
+      root.render(
+        <UiProvider Dialog={StubDialog}>
+          <PickerProbe />
+        </UiProvider>,
+      ),
+    );
+    expect(requirePresent(d, 'd').project).toBeNull();
+    expect(requirePresent(d, 'd').columnId).toBe('');
+  });
+  it('resets the status to the first column of the chosen project', () => {
+    const other = seed.projects[1];
+    act(() =>
+      root.render(
+        <UiProvider Dialog={StubDialog}>
+          <PickerProbe />
+        </UiProvider>,
+      ),
+    );
+    act(() => requirePresent(d, 'd').chooseProject(other.id));
+    expect(requirePresent(d, 'd').project?.id).toBe(other.id);
+    expect(requirePresent(d, 'd').columnId).toBe(other.columns[0].id);
+  });
+  it('will not create a task until a project is chosen, and says so', () => {
+    act(() =>
+      root.render(
+        <UiProvider Dialog={StubDialog}>
+          <PickerProbe />
+        </UiProvider>,
+      ),
+    );
+    act(() => requirePresent(d, 'd').setTitle('Book the minibus'));
+    act(() => requirePresent(d, 'd').create());
+    expect(requirePresent(d, 'd').errs.project).toBeTruthy();
+    expect((h.store.actions as { createTask: ReturnType<typeof vi.fn> }).createTask).not.toHaveBeenCalled();
+  });
+  it('creates the task in the chosen project', () => {
+    const other = seed.projects[1];
+    act(() =>
+      root.render(
+        <UiProvider Dialog={StubDialog}>
+          <PickerProbe />
+        </UiProvider>,
+      ),
+    );
+    act(() => requirePresent(d, 'd').chooseProject(other.id));
+    act(() => requirePresent(d, 'd').setTitle('Book the minibus'));
+    act(() => requirePresent(d, 'd').create());
+    expect((h.store.actions as { createTask: ReturnType<typeof vi.fn> }).createTask).toHaveBeenCalledWith(
+      expect.objectContaining({ projectId: other.id, columnId: other.columns[0].id }),
+    );
   });
 });

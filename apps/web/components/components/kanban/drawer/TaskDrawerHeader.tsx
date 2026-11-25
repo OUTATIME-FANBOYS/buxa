@@ -12,14 +12,14 @@ export function TaskDrawerHeader({
   onDelete,
 }: {
   task: Task | null;
-  project: Project;
+  project: Project | null;
   readOnly: boolean;
   onClose: () => void;
   onDelete: () => void;
 }) {
   const { openTask } = useTaskDrawer();
   const cmd = useTaskCommands();
-  const col = project.columns.find(c => c.id === task?.columnId);
+  const col = project?.columns.find(c => c.id === task?.columnId);
 
   return (
     <div
@@ -27,7 +27,12 @@ export function TaskDrawerHeader({
       data-sheet-handle
     >
       <div className="muted small crumbs-mini buxa:flex buxa:items-center buxa:gap-[4px]">
-        {project.name} <Icon name="right" size={12} /> {task ? col?.name : 'New task'}
+        {project && (
+          <>
+            {project.name} <Icon name="right" size={12} />{' '}
+          </>
+        )}
+        {task ? col?.name : 'New task'}
       </div>
       <span className="grow" />
       {task && !readOnly && (

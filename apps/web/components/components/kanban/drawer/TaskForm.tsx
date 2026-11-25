@@ -2,6 +2,7 @@ import type { Project, Task } from '@buxa/shared';
 import { useStore } from '@buxa/middleware/providers/providers';
 import { Dialog } from '@/components/components';
 import { Field, Button, TAG } from '@/components/elements';
+import { Select } from '@/components/atoms';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { useTaskCommands } from '@buxa/middleware/hooks/hooks';
 import { useTaskDraft } from '@buxa/middleware/hooks/hooks';
@@ -16,17 +17,21 @@ import { TaskSections } from './TaskSections';
 
 interface TaskFormProps {
   task: Task | null;
-  project: Project;
+  /** The projects the task may go to. One for a saved task or a board; several when `chooseProject` is set. */
+  projects: readonly Project[];
   defaults?: { columnId?: string; due?: string };
+  /** A new task gets a PROJECT field, and the person picks the project (the Calendar). */
+  chooseProject?: boolean;
   onClose: () => void;
 }
 
 /** The task drawer's content: header, title, properties, description, then (for a saved task) subtasks, files and discussion. */
-export function TaskForm({ task, project, defaults, onClose }: TaskFormProps) {
+export function TaskForm({ task, projects, defaults, chooseProject = false, onClose }: TaskFormProps) {
   const { actions, readOnly: ro, members, userById } = useStore();
   const { confirm } = useUi();
   const cmd = useTaskCommands();
-  const d = useTaskDraft(task, project, defaults);
+  const d = useTaskDraft(task, projects, defaults);
+  const showProjectField = !task && chooseProject;
   const del = async () => {
     if (
       task &&
@@ -46,11 +51,26 @@ export function TaskForm({ task, project, defaults, onClose }: TaskFormProps) {
     <Dialog drawer onClose={onClose} labelledBy="drawer-title">
       {close => (
         <>
-          <TaskDrawerHeader task={task} project={project} readOnly={ro} onClose={close} onDelete={() => void del()} />
+          <TaskDrawerHeader task={task} project={d.project} readOnly={ro} onClose={close} onDelete={() => void del()} />
           <fieldset
             disabled={ro}
             className="plain buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]"
           >
+            {showProjectField && (
+              <Select
+                label="Project"
+                isRequired
+                placeholder="Choose a project"
+                value={d.projectId}
+                error={d.errs.project}
+                onChange={value => {
+                  if (value) {
+                    d.chooseProject(value);
+                  }
+                }}
+                options={projects.map(p => ({ value: p.id, label: p.name }))}
+              />
+            )}
             <div className="drawer-title buxa:grid buxa:gap-[var(--s1)]">
               <label className="sr-only" htmlFor="drawer-title">
                 Title
@@ -86,7 +106,7 @@ export function TaskForm({ task, project, defaults, onClose }: TaskFormProps) {
               )}
               {task?.archived && <span className={`tag ${TAG}`}>Archived</span>}
             </div>
-            <TaskProperties task={task} project={project} d={d} />
+            <TaskProperties task={task} project={d.project} d={d} />
             <Field label="Description">
               <textarea
                 rows={4}
@@ -106,7 +126,14 @@ export function TaskForm({ task, project, defaults, onClose }: TaskFormProps) {
           ) : (
             <div className="row-end sticky-foot buxa:sticky buxa:bottom-0 buxa:bg-[var(--surface)] buxa:pt-[var(--s3)]">
               <Button onClick={close}>Cancel</Button>
-              <Button variant="primary" icon="plus" onClick={d.create}>
+              {/* Stays visibly disabled until a project is chosen, but a press still runs create(), which says why. */}
+              <Button
+                variant="primary"
+                icon="plus"
+                aria-disabled={d.project ? undefined : true}
+                className={d.project ? undefined : 'buxa:opacity-50'}
+                onClick={d.create}
+              >
                 Create task
               </Button>
             </div>
