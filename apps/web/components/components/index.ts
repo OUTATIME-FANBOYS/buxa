@@ -1,4 +1,5 @@
 export * from './AppShellProviders';
+export * from './ConfirmDialog';
 export * from './Dialog';
 export * from './FormPopUp';
 export * from './Empty';

@@ -6,7 +6,7 @@ import { requirePresent, settle } from '@buxa/domain';
 import { CAMPER_NEEDS_HOUSEHOLD, failure, idle } from '@buxa/shared';
 import { AddPersonButton, PersonForm } from '@/components/components/people/forms';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
-import { Dialog as ConfirmDialog } from '@/components/components';
+import { ConfirmDialog } from '@/components/components';
 import { LEE, PERSON, formHelpers } from './personFormFixtures';
 
 const createPerson = vi.hoisted(() => vi.fn());

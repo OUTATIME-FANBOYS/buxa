@@ -5,7 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import type { Person, PersonSummary } from '@buxa/contracts';
 import { requirePresent, settle } from '@buxa/domain';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
-import { Dialog as ConfirmDialog } from '@/components/components';
+import { ConfirmDialog } from '@/components/components';
 import { PeopleTable } from '@/components/components/people';
 
 const loadPerson = vi.hoisted(() => vi.fn());

@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog } from '@/components/components';
+import { ConfirmDialog } from '@/components/components';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { deleteCamp, type CampActionResult } from '@/actions/camp';
-import { Button, TextField } from '@/components/elements';
+import { Button } from '@/components/elements';
 
 type Step = 'ask' | 'type';
 
@@ -53,7 +53,6 @@ export function DeleteCampDialog({
 }) {
   const { toast } = useUi();
   const [step, setStep] = useState<Step>('ask');
-  const [typed, setTyped] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -87,54 +86,35 @@ export function DeleteCampDialog({
 
   if (step === 'ask') {
     return (
-      <Dialog
+      <ConfirmDialog
         title="Delete camp"
-        onClose={close}
-        footer={
-          <>
-            <Button variant="glass" type="button" onClick={close}>
-              Cancel
-            </Button>
-            <Button variant="glass-danger" onClick={() => setStep('type')}>
-              Continue
-            </Button>
-          </>
-        }
-      >
-        <p>Are you sure you want to delete {campName}?</p>
-      </Dialog>
+        variant="danger"
+        confirmLabel="Continue"
+        onCancel={close}
+        onConfirm={() => setStep('type')}
+        body={<p>Are you sure you want to delete {campName}?</p>}
+      />
     );
   }
 
   return (
-    <Dialog
+    <ConfirmDialog
       title={`Delete ${campName}`}
-      onClose={close}
-      footer={
+      variant="danger"
+      confirmLabel="Delete camp"
+      pendingLabel="Deleting…"
+      pending={busy}
+      confirmText={campName}
+      onCancel={close}
+      onConfirm={() => void run(() => deleteCamp({ orgId: campId, confirmName: campName }))}
+      body={
         <>
-          <Button variant="glass" type="button" disabled={busy} onClick={close}>
-            Cancel
-          </Button>
-          <Button
-            variant="glass-danger"
-            disabled={busy || typed !== campName}
-            onClick={() => void run(() => deleteCamp({ orgId: campId, confirmName: typed }))}
-          >
-            {busy ? 'Deleting…' : 'Delete camp'}
-          </Button>
+          <p>
+            This removes {campName} and everything in it: people, tasks, attendance and records. It cannot be undone.
+          </p>
+          {errorLine}
         </>
       }
-    >
-      <p>This removes {campName} and everything in it: people, tasks, attendance and records. It cannot be undone.</p>
-      <TextField
-        label="Type the camp name to confirm"
-        name="confirmName"
-        value={typed}
-        onChange={setTyped}
-        maxLength={120}
-        autoFocus
-      />
-      {errorLine}
-    </Dialog>
+    />
   );
 }

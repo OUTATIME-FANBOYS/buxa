@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog } from '@/components/components/Dialog';
-import { Button } from '@/components/elements';
+import { ConfirmDialog } from '@/components/components/ConfirmDialog';
 import { deletePeopleAction, type PeopleDeletion } from '@/actions/people';
 
 export interface PersonRef {
@@ -41,31 +40,27 @@ export function DeletePeopleDialog({
   };
 
   return (
-    <Dialog
+    <ConfirmDialog
       title={count === 1 ? 'Delete person' : `Delete ${count} people`}
-      onClose={onClose}
-      footer={
-        <div className="buxa:flex buxa:w-full buxa:flex-wrap buxa:items-center buxa:justify-center buxa:gap-2">
-          <Button variant="glass" type="button" disabled={pending} onClick={onClose}>
-            Cancel
-          </Button>
-          <Button variant="glass-danger" type="button" icon="trash" disabled={pending} onClick={() => void run()}>
-            {pending ? 'Deleting…' : 'Delete'}
-          </Button>
-        </div>
-      }
-    >
-      <div className="buxa:grid buxa:gap-3 buxa:text-center">
-        <p className="buxa:m-0">{names}</p>
-        <p className="muted buxa:m-0">
-          This removes their details, memberships, check-ins, badges and household links. It cannot be undone.
-        </p>
-        {failed && (
-          <p role="alert" className="buxa:m-0 buxa:text-[var(--crit)]">
-            Could not delete. Try again.
+      variant="danger"
+      confirmLabel="Delete"
+      pendingLabel="Deleting…"
+      pending={pending}
+      onCancel={onClose}
+      onConfirm={() => void run()}
+      body={
+        <>
+          <p className="buxa:m-0 buxa:font-bold">{names}</p>
+          <p className="muted buxa:m-0">
+            This removes their details, memberships, check-ins, badges and household links. It cannot be undone.
           </p>
-        )}
-      </div>
-    </Dialog>
+          {failed && (
+            <p role="alert" className="buxa:m-0 buxa:text-[var(--crit)]">
+              Could not delete. Try again.
+            </p>
+          )}
+        </>
+      }
+    />
   );
 }

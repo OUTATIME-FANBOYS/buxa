@@ -7,7 +7,7 @@ import type { Assignment, Group, Room } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
 import { settle } from '@buxa/domain';
 import { UiProvider } from '@buxa/middleware/providers/providers';
-import { Dialog as ConfirmDialog } from '@/components/components';
+import { ConfirmDialog } from '@/components/components';
 import { FormRefusal, RatioOverridePopUp } from '@/components/components/groups/AssignDialog';
 
 // The groups and assign screens: they render for a staff member and a viewer, and a refusal shows as small polite text. Mocks follow
