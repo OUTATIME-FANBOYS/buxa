@@ -3,6 +3,7 @@ import { act, type ReactElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { UiProvider } from '@buxa/middleware/providers/providers';
+import { ConfirmDialog } from '@/components/components';
 import { PlaceButton } from '../PlaceButton';
 import type { AssignChoices } from '../AssignDialog';
 
@@ -28,7 +29,7 @@ function mount(element: ReactElement): HTMLElement {
   document.body.appendChild(container);
   const root = createRoot(container);
   act(() => {
-    root.render(<UiProvider>{element}</UiProvider>);
+    root.render(<UiProvider Dialog={ConfirmDialog}>{element}</UiProvider>);
   });
   mounted = { root, container };
 
