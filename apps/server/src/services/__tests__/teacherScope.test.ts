@@ -135,7 +135,12 @@ describe('teacher: attendance is limited to its classes', () => {
 
   it('is refused the export and overrides (no attendance:export or attendance:override)', async () => {
     const { camp, teacher } = await build();
-    expect((await thrown(() => camp.attendance.exportCsv(teacher, FILTER))).statusCode).toBe(403);
+    const request = {
+      filter: FILTER,
+      fields: ['person'] as const,
+      display: { timeZone: 'UTC', clockFormat: '24h' } as const,
+    };
+    expect((await thrown(() => camp.attendance.exportCsv(teacher, request))).statusCode).toBe(403);
   });
 });
 

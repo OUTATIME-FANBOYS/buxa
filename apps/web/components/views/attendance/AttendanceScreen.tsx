@@ -4,10 +4,9 @@ import { Empty } from '@/components/components';
 import { PageHeader } from '@/components/components';
 import { loadFilterChoices, loadLogEntries, loadPeopleOptions } from '@buxa/server/composers/index.server';
 import { Notice } from '@/components/components';
-import { LogFilters } from '@/components/components/attendance';
+import { AttendanceCsvDownload, LogFilters } from '@/components/components/attendance';
 import { LogTable } from '@/components/components/attendance';
 import { campActor, campClock } from '@buxa/server/composers/index.server';
-import { attendanceExportPath } from '@buxa/shared';
 import { parseLogFilter } from '@buxa/shared';
 import { HELP_LINK_LABEL, helpLink } from '@buxa/shared';
 import { Button } from '@/components/elements';
@@ -66,11 +65,7 @@ export async function AttendanceScreen({ searchParams }: { searchParams: SearchP
         actions={<Button href={helpLink('exports')}>{HELP_LINK_LABEL}</Button>}
       />
       <LogFilters values={values} people={people} choices={choices}>
-        {parsed.ok && canExport && (
-          <Button className="log-export" icon="download" href={attendanceExportPath(parsed.filter)} download>
-            Download CSV
-          </Button>
-        )}
+        {parsed.ok && canExport && <AttendanceCsvDownload filter={parsed.filter} />}
       </LogFilters>
       {!parsed.ok && <Notice tone="crit" title="Check the dates" body={parsed.message} />}
       {parsed.ok && entries.length === 0 && (

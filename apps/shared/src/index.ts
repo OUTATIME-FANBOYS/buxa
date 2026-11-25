@@ -5,6 +5,7 @@ export * from './attendance/checkInSessions';
 export * from './attendance/checkInState';
 export * from './attendance/checkOutInput';
 export * from './attendance/checkOutState';
+export * from './attendance/exportFields';
 export * from './attendance/exportHeaders';
 export * from './attendance/fields';
 export * from './files/downloadHeaders';

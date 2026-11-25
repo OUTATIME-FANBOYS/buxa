@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import type { AttendanceFilter } from '@buxa/contracts';
+import { DEFAULT_ATTENDANCE_FIELDS, type AttendanceFilter } from '@buxa/contracts';
 import { createCamp, thrown, type Camp } from './support';
 
 const NOT_FOUND_ID = '00000000-0000-4000-8000-000000000000';
 const FILTER = { from: '2027-07-10', to: '2027-07-10' } as const;
+const DISPLAY = { timeZone: 'UTC', clockFormat: '24h' } as const;
+const EXPORT = { filter: FILTER, fields: DEFAULT_ATTENDANCE_FIELDS, display: DISPLAY };
 
 /**
  * A camp with a family and two adults: Kim (camper, 12) in the Lee family household, whose guardian Ana may collect and whose
@@ -73,8 +75,8 @@ describe('AttendanceService permissions', () => {
     expect(
       (await thrown(() => camp.attendance.checkIn(viewer, { personId: ids.ben, method: 'manual' }))).statusCode,
     ).toBe(403);
-    expect((await thrown(() => camp.attendance.exportCsv(staff, FILTER))).statusCode).toBe(403);
-    expect((await thrown(() => camp.attendance.exportCsv(viewer, FILTER))).statusCode).toBe(403);
+    expect((await thrown(() => camp.attendance.exportCsv(staff, EXPORT))).statusCode).toBe(403);
+    expect((await thrown(() => camp.attendance.exportCsv(viewer, EXPORT))).statusCode).toBe(403);
   });
 
   it('refuses a viewer the attendance log, the on-site list and a person history (403), and lets staff read them', async () => {
@@ -89,7 +91,7 @@ describe('AttendanceService permissions', () => {
 
   it('refuses a viewer a CSV export of attendance (403)', async () => {
     const { camp, viewer } = await build();
-    expect((await thrown(() => camp.attendance.exportCsv(viewer, FILTER))).statusCode).toBe(403);
+    expect((await thrown(() => camp.attendance.exportCsv(viewer, EXPORT))).statusCode).toBe(403);
   });
 
   it('answers a staff override with not-valid (canOverride false), because only admins may override', async () => {
@@ -298,19 +300,60 @@ describe('AttendanceService on-site, log, history and export', () => {
 
   it('exports CSV with a header, CRLF rows, no byte-order mark, newest first, and neutralised formulas', async () => {
     const { camp, admin, staff, ids } = await build();
-    await camp.attendance.checkIn(staff, { personId: ids.ben, method: 'qr', note: '=1+1, "quoted"' });
+    const formula = await camp.people.create(admin, {
+      givenName: '=1+1, "quoted"',
+      familyName: 'Test',
+      roles: ['participant'],
+    });
+    await camp.memberships.add(admin, {
+      personId: formula.id,
+      plan: 'Summer',
+      startsOn: '2027-07-01',
+      endsOn: '2027-08-31',
+    });
+    await camp.attendance.checkIn(staff, { personId: formula.id, method: 'qr' });
     camp.at('2027-07-10T11:00:00Z');
     await camp.attendance.checkIn(staff, { personId: ids.kim, method: 'qr' });
 
-    const csv = await camp.attendance.exportCsv(admin, FILTER);
+    const csv = await camp.attendance.exportCsv(admin, EXPORT);
     expect(csv.startsWith('﻿')).toBe(false);
     const lines = csv.split('\r\n');
-    expect(lines[0]).toBe(
-      'Person,Checked in,Checked in by,Method,Checked out,Checked out by,Collected by,Override reason,Note',
-    );
-    expect(lines[1].startsWith('Kim Lee,')).toBe(true);
-    expect(lines[2].startsWith('Ben Stone,')).toBe(true);
-    expect(lines[2]).toContain('"\'=1+1, ""quoted"""');
+    expect(lines[0]).toBe('Person,Session,Class,In,Out,Method');
+    expect(lines[1].startsWith('Kim Lee,,,')).toBe(true);
+    expect(lines[1].endsWith('On site,Badge')).toBe(true);
+    expect(lines[2]).toContain('"\'=1+1, ""quoted"" Test"');
     expect(csv.endsWith('\r\n')).toBe(true);
+  });
+
+  it('exports only the chosen columns, in table order, and only the rows the filter shows', async () => {
+    const { camp, admin, staff, ids } = await build();
+    await camp.attendance.checkIn(staff, { personId: ids.ben, method: 'qr' });
+    camp.at('2027-07-11T09:00:00Z');
+    await camp.attendance.checkIn(staff, { personId: ids.kim, method: 'manual' });
+
+    const csv = await camp.attendance.exportCsv(admin, {
+      filter: FILTER,
+      fields: ['method', 'person'],
+      display: DISPLAY,
+    });
+    expect(csv.split('\r\n')).toEqual(['Person,Method', 'Ben Stone,Badge', '']);
+  });
+
+  it('shows the times as the table does: camp time, in the viewer’s clock', async () => {
+    const { camp, admin, staff, ids } = await build('Pacific/Auckland');
+    await camp.attendance.checkIn(staff, { personId: ids.ben, method: 'qr' });
+
+    const csv = await camp.attendance.exportCsv(admin, {
+      filter: FILTER,
+      fields: ['in'],
+      display: { timeZone: 'Pacific/Auckland', clockFormat: '12h' },
+    });
+    // 09:00 UTC is 21:00 on the 10th in Auckland (New Zealand standard time, UTC+12): the table's own 12-hour form.
+    expect(csv).toContain('"10 Jul, 9:00 PM"');
+  });
+
+  it('refuses an export with no columns', async () => {
+    const { camp, admin } = await build();
+    expect((await thrown(() => camp.attendance.exportCsv(admin, { ...EXPORT, fields: [] }))).statusCode).toBe(400);
   });
 });

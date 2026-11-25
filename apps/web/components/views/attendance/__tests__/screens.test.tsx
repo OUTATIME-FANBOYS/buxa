@@ -250,9 +250,10 @@ describe('AttendanceScreen', () => {
   it('offers the CSV download to a role with attendance:export only', async () => {
     services.attendance.log.mockResolvedValue([]);
     session.role = 'owner';
+    // The button opens the column picker; the file itself is built from the filter when Download is pressed.
     expect(
       renderToStaticMarkup(await AttendanceScreen({ searchParams: { from: '2026-11-10', to: '2026-11-12' } })),
-    ).toContain('/camp/attendance/export?from=2026-11-10&amp;to=2026-11-12');
+    ).toContain('>Download CSV</button>');
     session.role = 'staff';
     expect(
       renderToStaticMarkup(await AttendanceScreen({ searchParams: { from: '2026-11-10', to: '2026-11-12' } })),

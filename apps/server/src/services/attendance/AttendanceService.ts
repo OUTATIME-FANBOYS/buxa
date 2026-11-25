@@ -1,4 +1,5 @@
-import type { AttendanceEntry, AttendanceFilter, CheckInInput, CheckOutInput } from '@buxa/contracts';
+import type { AttendanceEntry, AttendanceField, AttendanceFilter, CheckInInput, CheckOutInput } from '@buxa/contracts';
+import type { FieldDisplay } from '@buxa/shared/attendance/fields';
 import type { Actor } from '@buxa/domain';
 import type { AttendanceRepository } from '../../attendance/AttendanceRepository';
 import type { ClassRepository } from '../../classes/ClassRepository';
@@ -40,8 +41,18 @@ export interface AttendanceService {
   filterChoices(actor: Actor): Promise<LogFilterChoices>;
   /** One person's visits, newest first (for the person page). */
   history(actor: Actor, personId: string): Promise<AttendanceEntry[]>;
-  /** CSV text for the same filter. Spreadsheet formulas in names or notes are neutralised. Needs attendance:export. */
-  exportCsv(actor: Actor, filter: AttendanceFilter): Promise<string>;
+  /**
+   * CSV text for the same filter: only the chosen columns, in table order, with the same display as the table (camp time, the
+   * viewer's clock). Spreadsheet formulas are neutralised. Needs attendance:read and attendance:export.
+   */
+  exportCsv(actor: Actor, request: AttendanceExportRequest): Promise<string>;
+}
+
+/** What the CSV holds: the filter's rows, the columns chosen, and how times are shown. */
+export interface AttendanceExportRequest {
+  filter: AttendanceFilter;
+  fields: readonly AttendanceField[];
+  display: FieldDisplay;
 }
 
 export interface AttendanceServiceDeps {

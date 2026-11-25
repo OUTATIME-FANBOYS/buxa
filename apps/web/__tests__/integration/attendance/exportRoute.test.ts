@@ -17,7 +17,7 @@ vi.mock('@buxa/server/runtime', () => ({
   }),
 }));
 vi.mock('@buxa/server/session/index', () => ({
-  requireSession: () => settle(() => ({})),
+  requireSession: () => settle(() => ({ user: {} })),
   getCurrentCamp: () => settle(() => ({})),
   toActor: () => mocks.actor,
 }));
@@ -26,17 +26,18 @@ const { GET } = await import('../../../app/(app)/camp/(operations)/attendance/ex
 
 const owner: Actor = { userId: 'u1', orgId: 'o1', role: 'owner' };
 const request = (query: string) => new Request(`https://camp.example.test/camp/attendance/export${query}`);
+const PERSON = '6f1c2b8e-9a3d-4c5e-8f70-1a2b3c4d5e6f';
 
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.actor = owner;
   mocks.timeZone = 'UTC';
-  mocks.exportCsv.mockResolvedValue('name,in\r\nAda,09:12\r\n');
+  mocks.exportCsv.mockResolvedValue('Person,In\r\nAda,09:12\r\n');
 });
 
 describe('GET /camp/attendance/export', () => {
   it('answers a CSV attachment named for the dates, never cached', async () => {
-    const response = await GET(request('?from=2026-11-10&to=2026-11-12&personId=6f1c2b8e-9a3d-4c5e-8f70-1a2b3c4d5e6f'));
+    const response = await GET(request(`?from=2026-11-10&to=2026-11-12&personId=${PERSON}`));
     expect(response.status).toBe(200);
     expect(response.headers.get('Content-Type')).toBe('text/csv; charset=utf-8');
     expect(response.headers.get('Content-Disposition')).toBe(
@@ -46,16 +47,33 @@ describe('GET /camp/attendance/export', () => {
     // Response.text() drops a byte-order mark, so read the bytes: EF BB BF, then the CSV.
     const bytes = new Uint8Array(await response.arrayBuffer());
     expect(Array.from(bytes.slice(0, 3))).toEqual([0xef, 0xbb, 0xbf]);
-    expect(new TextDecoder().decode(bytes.slice(3))).toBe('name,in\r\nAda,09:12\r\n');
+    expect(new TextDecoder().decode(bytes.slice(3))).toBe('Person,In\r\nAda,09:12\r\n');
   });
 
-  it('asks the service for the filter as the actor, and passes the person on', async () => {
-    await GET(request('?from=2026-11-10&to=2026-11-12&personId=6f1c2b8e-9a3d-4c5e-8f70-1a2b3c4d5e6f'));
+  it('asks the service for the filter, the chosen columns and the display, as the actor', async () => {
+    await GET(request(`?from=2026-11-10&to=2026-11-12&personId=${PERSON}&fields=in,person`));
     expect(mocks.exportCsv).toHaveBeenCalledWith(owner, {
-      from: '2026-11-10',
-      to: '2026-11-12',
-      personId: '6f1c2b8e-9a3d-4c5e-8f70-1a2b3c4d5e6f',
+      filter: { from: '2026-11-10', to: '2026-11-12', personId: PERSON },
+      fields: ['person', 'in'],
+      display: { timeZone: 'UTC', clockFormat: '24h' },
     });
+  });
+
+  it('passes the camp zone and the viewer’s clock for the times', async () => {
+    mocks.timeZone = 'Pacific/Auckland';
+    await GET(request('?from=2026-11-10&to=2026-11-12'));
+    expect(mocks.exportCsv).toHaveBeenCalledWith(
+      owner,
+      expect.objectContaining({ display: { timeZone: 'Pacific/Auckland', clockFormat: '24h' } }),
+    );
+  });
+
+  it('uses the default columns when no fields are given', async () => {
+    await GET(request('?from=2026-11-10&to=2026-11-12'));
+    expect(mocks.exportCsv).toHaveBeenCalledWith(
+      owner,
+      expect.objectContaining({ fields: ['person', 'session', 'class', 'in', 'out', 'method'] }),
+    );
   });
 
   it('defaults to today in the camp zone when no dates are given', async () => {
@@ -64,7 +82,10 @@ describe('GET /camp/attendance/export', () => {
     vi.setSystemTime(new Date('2026-11-13T12:30:00Z')); // 14 Nov in Auckland, 13 Nov in UTC
     try {
       await GET(request(''));
-      expect(mocks.exportCsv).toHaveBeenCalledWith(owner, { from: '2026-11-14', to: '2026-11-14' });
+      expect(mocks.exportCsv).toHaveBeenCalledWith(
+        owner,
+        expect.objectContaining({ filter: { from: '2026-11-14', to: '2026-11-14' } }),
+      );
     } finally {
       vi.useRealTimers();
     }
@@ -81,6 +102,15 @@ describe('GET /camp/attendance/export', () => {
   it('answers 400 for dates that do not make a range, without calling the service', async () => {
     const response = await GET(request('?from=2026-11-12&to=2026-11-10'));
     expect(response.status).toBe(400);
+    expect(mocks.exportCsv).not.toHaveBeenCalled();
+  });
+
+  it('answers 400 for a column that is not in the log, and for no columns at all', async () => {
+    const unknown = await GET(request('?from=2026-11-10&to=2026-11-12&fields=person,note'));
+    expect(unknown.status).toBe(400);
+    expect(await unknown.text()).toBe('Choose fields from the list.');
+    const none = await GET(request('?from=2026-11-10&to=2026-11-12&fields='));
+    expect(none.status).toBe(400);
     expect(mocks.exportCsv).not.toHaveBeenCalled();
   });
 

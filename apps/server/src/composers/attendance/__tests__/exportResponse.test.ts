@@ -3,8 +3,8 @@ import type { Actor } from '@buxa/domain';
 import { attendanceExportResponse } from '../exportResponse';
 import { HttpError, forbidden } from '../../../http/errors';
 
-const h = vi.hoisted(() => ({ campActor: vi.fn(), campZone: vi.fn(), exportCsv: vi.fn() }));
-vi.mock('../campActor', () => ({ campActor: h.campActor, campZone: h.campZone }));
+const h = vi.hoisted(() => ({ campActor: vi.fn(), campClock: vi.fn(), exportCsv: vi.fn() }));
+vi.mock('../campActor', () => ({ campActor: h.campActor, campClock: h.campClock }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: { attendance: { exportCsv: h.exportCsv } } }) }));
 
 const ACTOR = { userId: 'u-1' } as unknown as Actor;
@@ -13,7 +13,7 @@ const url = (query: string) => `https://camp.test/camp/attendance/export?${query
 describe('attendanceExportResponse', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    h.campZone.mockResolvedValue('Europe/London');
+    h.campClock.mockResolvedValue({ timeZone: 'Europe/London', clockFormat: '24h' });
   });
   it('answers 404 when no camp is selected', async () => {
     h.campActor.mockResolvedValueOnce(null);
@@ -39,7 +39,10 @@ describe('attendanceExportResponse', () => {
     const bytes = new Uint8Array(await res.arrayBuffer());
     expect([...bytes.slice(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
     expect(new TextDecoder().decode(bytes.slice(3))).toBe('name,time\nÁda,09:00\n');
-    expect(h.exportCsv).toHaveBeenCalledWith(ACTOR, expect.objectContaining({ from: '2027-07-01', to: '2027-07-03' }));
+    expect(h.exportCsv).toHaveBeenCalledWith(
+      ACTOR,
+      expect.objectContaining({ filter: { from: '2027-07-01', to: '2027-07-03' } }),
+    );
   });
   it('passes the service refusal through with its status', async () => {
     h.campActor.mockResolvedValueOnce(ACTOR);
