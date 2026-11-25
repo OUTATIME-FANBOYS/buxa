@@ -36,11 +36,9 @@ export async function RegistrationList({ searchParams = {} }: { searchParams?: S
   // One read gives the forms and their registrations; the filter's choices come from it and from the session list.
   const loaded = await loadFormSubmissions(actor);
   const sessions = await loadSessions(actor);
+  const sessionChoices = sessions.ok ? sessions.value.map(s => ({ id: s.id, name: s.name })) : [];
 
-  const actions =
-    canManage && sessions.ok ? (
-      <NewRegistrationFormButton sessions={sessions.value.map(s => ({ id: s.id, name: s.name }))} />
-    ) : undefined;
+  const actions = canManage && sessions.ok ? <NewRegistrationFormButton sessions={sessionChoices} /> : undefined;
 
   if (!loaded.ok) {
     return (
@@ -97,7 +95,12 @@ export async function RegistrationList({ searchParams = {} }: { searchParams?: S
             <Empty icon="list" title="No forms cover this session" body="Choose another session, or All sessions." />
           ) : (
             <>
-              <FormsTable forms={shownEntries.map(entry => entry.form)} />
+              <FormsTable
+                forms={shownEntries.map(entry => entry.form)}
+                sessions={sessionChoices}
+                canEdit={canManage && sessions.ok}
+                canSubmit={can(actor, 'registration:submit')}
+              />
               <section className="registration-section" aria-labelledby="registrations-list-heading">
                 <h2 id="registrations-list-heading" className="people-subheading">
                   Registrations

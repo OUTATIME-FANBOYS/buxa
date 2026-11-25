@@ -2,9 +2,26 @@ import Link from 'next/link';
 import type { RegistrationForm } from '@buxa/contracts';
 import { Pill } from '@/components/elements';
 import { registrationFormPath } from '@/config/routes';
+import { ViewFormButton } from './ViewFormButton';
 
-/** The camp's registration forms: name and season, the sessions they cover, whether they are published, and how many registrations. */
-export function FormsTable({ forms }: { forms: readonly RegistrationForm[] }) {
+/**
+ * The camp's registration forms: name and season, the sessions they cover, whether they are published, how many registrations, and a
+ * View button that opens the form read only. The name opens the form's page, which lists its registrations.
+ */
+export function FormsTable({
+  forms,
+  sessions,
+  canEdit,
+  canSubmit,
+}: {
+  forms: readonly RegistrationForm[];
+  /** The camp's sessions, for the edit pop-up's session picker. */
+  sessions: readonly { id: string; name: string }[];
+  /** Whether the viewer may open the edit pop-up (registration:manage and the session list read). */
+  canEdit: boolean;
+  /** Whether the viewer may take registrations, which decides who sees the file downloads. */
+  canSubmit: boolean;
+}) {
   return (
     <div className="table-wrap">
       <table className="table">
@@ -15,6 +32,9 @@ export function FormsTable({ forms }: { forms: readonly RegistrationForm[] }) {
             <th scope="col">Sessions</th>
             <th scope="col">Status</th>
             <th scope="col">Registrations</th>
+            <th scope="col">
+              <span className="sr-only">Actions</span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -35,6 +55,9 @@ export function FormsTable({ forms }: { forms: readonly RegistrationForm[] }) {
                 )}
               </td>
               <td>{form.submissionCount}</td>
+              <td>
+                <ViewFormButton form={form} sessions={sessions} canEdit={canEdit} canSubmit={canSubmit} />
+              </td>
             </tr>
           ))}
         </tbody>
