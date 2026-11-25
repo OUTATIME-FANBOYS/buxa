@@ -49,6 +49,7 @@ export async function RegistrationFormView({ formId }: { formId: string }) {
         timeZone={clock.timeZone}
         clockFormat={clock.clockFormat}
         fields={register.value.published.fields}
+        attachments={register.value.form.attachments}
       />
     ) : undefined;
   const actions = takeRegistration;
@@ -76,6 +77,7 @@ export async function RegistrationFormView({ formId }: { formId: string }) {
               season: form.season,
               sessionIds: form.sessions.map(s => s.id),
               fields: form.fields,
+              attachments: form.attachments,
             }}
           />
           <PublishButton formId={form.id} publishedVersion={form.publishedVersion} />
@@ -89,6 +91,7 @@ export async function RegistrationFormView({ formId }: { formId: string }) {
           sessions={form.sessions}
           fields={form.fields}
           submissions={submissions}
+          canDelete={can(actor, 'registration:delete')}
         />
       </section>
     </div>

@@ -4,18 +4,26 @@ import { useActionState, useEffect } from 'react';
 import { Dialog } from '@/components/components/Dialog';
 import { Button } from '@/components/elements';
 import { deleteSessionsAction } from '@/actions/classes';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
+import type { SessionStatus } from '@buxa/contracts';
 import { idleSessionDeletion, type SessionDeletionDone } from '@buxa/shared';
 import { ActionMessage } from './ActionMessage';
+import { SessionClassesDialog } from './SessionClassesDialog';
 
 export interface SessionRef {
   id: string;
   name: string;
+  /** Draft, live or archived. A draft is deleted with everything under it; the others are refused while anyone is enrolled. */
+  status?: SessionStatus;
+  /** How many classes the session holds. A session with classes is never deleted by a plain delete (see SessionClassesDialog). */
+  classCount: number;
 }
 
 /**
  * The confirmation for deleting one session (the row's trash) or the selection (Delete selected). It names the count. The server
  * refuses a session that holds classes and deletes the rest; when the request finishes, `onDone` gets the result and the dialog
  * closes, so the list can show what was deleted and what was refused. A failure for the whole request stays in the dialog.
+ * A single session that holds classes is not deleted here: the dialog offers archive, or delete its classes and the session.
  */
 export function DeleteSessionsDialog({
   sessions,
@@ -27,6 +35,7 @@ export function DeleteSessionsDialog({
   onClose: () => void;
 }) {
   const [state, formAction, pending] = useActionState(deleteSessionsAction, idleSessionDeletion);
+  const { toast } = useUi();
 
   useEffect(() => {
     if (state.status === 'done') {
@@ -37,10 +46,24 @@ export function DeleteSessionsDialog({
 
   const count = sessions.length;
   const single = count === 1 ? sessions[0] : undefined;
+
+  if (single && (single.classCount > 0 || single.status === 'draft')) {
+    return (
+      <SessionClassesDialog
+        session={single}
+        onArchived={message => {
+          toast(message);
+          onClose();
+        }}
+        onClose={onClose}
+      />
+    );
+  }
+
   const formId = 'delete-sessions-form';
   const title = count === 1 ? 'Delete session?' : `Delete ${count} sessions?`;
   const body = single
-    ? `${single.name} will be removed. A session with classes cannot be deleted.`
+    ? `${single.name} will be removed.`
     : `${count} sessions will be removed. A session with classes stays.`;
 
   return (

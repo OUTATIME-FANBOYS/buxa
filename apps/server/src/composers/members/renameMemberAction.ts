@@ -5,12 +5,14 @@ import { ProfileNameInputSchema } from '@buxa/contracts';
 import { authorize, isUuid } from '@buxa/domain';
 import { ROUTES } from '@buxa/shared/config/routes';
 import { failure, parseInput, success, type ActionState } from '@buxa/shared';
+import { isMemberHasNoPerson } from '../../users/UserRepository';
 import { getRuntime } from '../../runtime';
 import { currentActor } from '../people/camp';
 
 /**
  * Renames another person in the camp. Needs members:rename: an admin or owner, and only someone strictly below them.
- * Your own name is changed from your profile instead. The rank check runs here, before anything is written.
+ * It changes the camp's roster name (people), never the login's own name (users), so no other camp is touched. Your own name
+ * is changed from your profile instead. The rank check runs here, before anything is written.
  */
 export async function renameMemberAction(input: { userId: string; name: string }): Promise<ActionState> {
   const actor = await currentActor();
@@ -43,7 +45,11 @@ export async function renameMemberAction(input: { userId: string; name: string }
     if (!renamed) {
       return failure('That person is not in this camp.');
     }
-  } catch {
+  } catch (error) {
+    if (isMemberHasNoPerson(error)) {
+      return failure('This member is not on the camp roster yet. Add them to People first, then rename them.');
+    }
+
     return failure('Could not rename this person. Try again.');
   }
 

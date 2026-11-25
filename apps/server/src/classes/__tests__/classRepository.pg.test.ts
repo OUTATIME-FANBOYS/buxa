@@ -48,8 +48,8 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
     it('stores a session and reads back exactly what it created', async () => {
       const created = await makeSession(fx.repo, fx.actor);
       expect(await fx.repo.getSession(fx.actor.userId, fx.orgA, created.id)).toEqual(created);
+      expect(created.name).toMatch(/^Summer camp \d+$/);
       expect(created).toMatchObject({
-        name: 'Summer camp',
         startsOn: '2027-07-01',
         endsOn: '2027-07-31',
         classCount: 0,
@@ -69,7 +69,7 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
 
     it('writes session.create in the same transaction', async () => {
       await makeSession(fx.repo, fx.actor);
-      expect(await auditActions(pool, fx.orgA)).toEqual(['session.create']);
+      expect(await auditActions(pool, fx.orgA)).toEqual(['session.create', 'session.publish']);
     });
   });
 
@@ -80,7 +80,7 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
       expect(await fx.repo.getClass(fx.actor.userId, fx.orgA, cls.id)).toEqual(cls);
       expect(cls).toMatchObject({
         sessionId: session.id,
-        sessionName: 'Summer camp',
+        sessionName: session.name,
         name: 'Robotics',
         ageRange: { minAge: 8, maxAge: 12 },
         capacity: 7,
@@ -171,6 +171,7 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
         location: 'Lab 1',
         startsAt: '2027-07-05T03:00:00.000Z',
         instructorIds: [second],
+        price: null,
       });
       const links = await pool.query<{ person_id: string }>(
         'SELECT person_id FROM session_instructors WHERE session_id = $1',
@@ -260,7 +261,12 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
 
     it('writes enrolment.create on success', async () => {
       await fx.repo.enrol(fx.actor, { classId, camperId: camper }, enrolRule());
-      expect(await auditActions(pool, fx.orgA)).toEqual(['session.create', 'class.create', 'enrolment.create']);
+      expect(await auditActions(pool, fx.orgA)).toEqual([
+        'session.create',
+        'session.publish',
+        'class.create',
+        'enrolment.create',
+      ]);
     });
 
     it('refuses a camper outside the age range, and writes nothing', async () => {
@@ -302,7 +308,11 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
 
     it('refuses an overlap with the clashing class, and names it', async () => {
       const session = await makeSession(fx.repo, fx.actor);
-      const clash = await fx.repo.addClass(fx.actor, session.id, sessionInput(11, 13, { name: 'Painting' }));
+      const clash = await fx.repo.addClass(
+        fx.actor,
+        session.id,
+        sessionInput(11, 13, { name: 'Painting', location: 'Lab 2' }),
+      );
       await fx.repo.enrol(fx.actor, { classId: clash.id, camperId: camper }, enrolRule());
       const error: unknown = await fx.repo
         .enrol(fx.actor, { classId, camperId: camper }, enrolRule())
@@ -338,7 +348,11 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
 
     it('lets an admin override an overlap with a reason, recording the reason and the clash', async () => {
       const session = await makeSession(fx.repo, fx.actor);
-      const clash = await fx.repo.addClass(fx.actor, session.id, sessionInput(11, 13, { name: 'Painting' }));
+      const clash = await fx.repo.addClass(
+        fx.actor,
+        session.id,
+        sessionInput(11, 13, { name: 'Painting', location: 'Lab 2' }),
+      );
       await fx.repo.enrol(fx.actor, { classId: clash.id, camperId: camper }, enrolRule());
       const enrolment = await fx.repo.enrol(
         fx.actor,
@@ -353,7 +367,11 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
 
     it('refuses an override from someone who may not give one, and writes nothing', async () => {
       const session = await makeSession(fx.repo, fx.actor);
-      const clash = await fx.repo.addClass(fx.actor, session.id, sessionInput(11, 13, { name: 'Painting' }));
+      const clash = await fx.repo.addClass(
+        fx.actor,
+        session.id,
+        sessionInput(11, 13, { name: 'Painting', location: 'Lab 2' }),
+      );
       await fx.repo.enrol(fx.actor, { classId: clash.id, camperId: camper }, enrolRule());
       await expect(
         fx.repo.enrol(

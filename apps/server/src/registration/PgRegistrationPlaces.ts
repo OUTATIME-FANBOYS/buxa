@@ -1,4 +1,14 @@
-import { decideEnrolment, describeRefusal, holdExpiresAt, isUuid, toLocalDate, type Actor } from '@buxa/domain';
+import {
+  classDatesRefusal,
+  decideEnrolment,
+  describeRefusal,
+  holdExpiresAt,
+  isUuid,
+  shownPrice,
+  toLocalDate,
+  type Actor,
+  type ClassPrice,
+} from '@buxa/domain';
 import { recordAudit } from '../audit/recordAudit';
 import type { Db } from '../people/pgRows';
 import { activeFactsFor } from '../classes/PgClassQueries';
@@ -11,7 +21,7 @@ import type { ClassLookup, NewRegistration } from './RegistrationRepository';
 /*
  * The child-and-class places of a registration (decision: families register for classes). Each place is taken under the same locks
  * as an enrolment (the camper's row, then the class's row, see PgEnrolmentWrites), with the same rule (decideEnrolment). A place that
- * is free at submission is held for the household (seat_holds, 15 minutes). A full class puts the child on its waitlist: a waitlist
+ * is free at submission is held for the child, recorded with the household they belong to (seat_holds, 15 minutes). Siblings each hold their own place in the same class. A full class puts the child on its waitlist: a waitlist
  * enrolment, in the order they joined. Confirmation releases each hold as 'completed' and creates the enrolment.
  * Everything here runs inside the caller's transaction (withOrg), so a refused place leaves nothing behind.
  */
@@ -25,7 +35,10 @@ async function timeZoneInTx(db: Db, orgId: string): Promise<string> {
   return rows[0]?.timezone ?? 'UTC';
 }
 
-/** The household a child belongs to (a child with none cannot hold a place: the hold is for a household). */
+/**
+ * The household a child belongs to, recorded on the hold (a child with none cannot hold a place). The first by id when the child is in
+ * several. The hold is for the child, so the choice does not decide who may hold the class.
+ */
 async function householdOfInTx(db: Db, personId: string): Promise<string | null> {
   const { rows } = await db.query<{ household_id: string }>(
     'SELECT household_id FROM household_members WHERE person_id = $1 ORDER BY household_id LIMIT 1',
@@ -33,6 +46,37 @@ async function householdOfInTx(db: Db, personId: string): Promise<string | null>
   );
 
   return rows[0]?.household_id ?? null;
+}
+
+/** The price a family sees today for a class, to be kept on the registration place: the amount in force, its currency, and whether it is the early-bird amount. Null when the class has no price. */
+async function priceSnapshotInTx(
+  db: Db,
+  classId: string,
+  today: string,
+): Promise<{ minor: number; currency: string; earlyBird: boolean } | null> {
+  const { rows } = await db.query<{
+    price_minor: number | null;
+    price_currency: string | null;
+    early_bird_minor: number | null;
+    early_bird_until: string | null;
+  }>(
+    `SELECT price_minor, price_currency, early_bird_minor, to_char(early_bird_until, 'YYYY-MM-DD') AS early_bird_until
+       FROM sessions WHERE id = $1`,
+    [classId],
+  );
+  const row = rows[0];
+  if (!row || row.price_minor === null || row.price_currency === null) {
+    return null;
+  }
+  const price: ClassPrice = {
+    currency: row.price_currency,
+    regularMinor: row.price_minor,
+    earlyBirdMinor: row.early_bird_minor,
+    earlyBirdUntil: row.early_bird_until,
+  };
+  const shown = shownPrice(price, today);
+
+  return shown ? { minor: shown.amountMinor, currency: shown.currency, earlyBird: shown.earlyBird } : null;
 }
 
 /**
@@ -54,6 +98,10 @@ export async function takeClassPlaceInTx(
   const timeZone = await timeZoneInTx(db, actor.orgId);
   const dateOfBirth = await lockCamper(db, selection.camperId);
   const session = await lockClass(db, selection.classId);
+  const datesRefusal = classDatesRefusal(session.datesOutsideSession);
+  if (datesRefusal !== null) {
+    throw new RegistrationRefusedError('class_refused', datesRefusal);
+  }
   // Expired holds give their places back first (and the waitlist takes them), so the seat count below is current.
   await releaseExpiredHoldsInSession(db, session.facts.sessionId, actor);
   const camperActive = await activeFactsFor(db, selection.camperId);
@@ -91,6 +139,7 @@ export async function takeClassPlaceInTx(
         await placeHoldInTransaction(db, actor, {
           sessionId: selection.classId,
           householdId,
+          personId: selection.camperId,
           expiresAt: holdExpiresAt(new Date()),
         })
       ).id;
@@ -98,17 +147,29 @@ export async function takeClassPlaceInTx(
       if (isClassError(error, 'hold-exists')) {
         throw new RegistrationRefusedError(
           'class_refused',
-          'This household already holds a place in that class. Release that hold first.',
+          'This child already holds a place in that class. Release that hold first.',
         );
       }
       throw error;
     }
   }
 
+  const price = await priceSnapshotInTx(db, selection.classId, toLocalDate(new Date(), timeZone));
   const { rows } = await db.query<{ id: string }>(
-    `INSERT INTO registration_classes (org_id, registration_id, class_id, person_id, hold_id, enrolment_id)
-     VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-    [actor.orgId, registrationId, selection.classId, selection.camperId, holdId, enrolmentId],
+    `INSERT INTO registration_classes
+       (org_id, registration_id, class_id, person_id, hold_id, enrolment_id, price_minor, price_currency, early_bird_applied)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+    [
+      actor.orgId,
+      registrationId,
+      selection.classId,
+      selection.camperId,
+      holdId,
+      enrolmentId,
+      price?.minor ?? null,
+      price?.currency ?? null,
+      price === null ? null : price.earlyBird,
+    ],
   );
 
   return rows[0].id;

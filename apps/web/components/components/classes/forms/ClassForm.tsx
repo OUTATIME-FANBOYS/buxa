@@ -1,45 +1,30 @@
 'use client';
 
-import { useActionState, useEffect, useRef, useState } from 'react';
+import { useActionState, useEffect, useRef, useState, type FormEvent } from 'react';
 import { Button } from '@/components/elements';
 import { DateTimeField, NumberField, TextField } from '@/components/atoms';
 import { sessionPath } from '@/config/routes';
-import { fieldError, idle, instantToLocalInput, localInputToInstant } from '@buxa/shared';
+import { fieldError, idle, NO_WEEKDAY } from '@buxa/shared';
 import { MAX_CAMP_SIZE, MAX_CLASS_AGE, MIN_CAMP_SIZE, MIN_CLASS_AGE } from '@buxa/domain';
-import { addClassAction, updateClassAction } from '@/actions/classes';
+import type { Series } from '@buxa/contracts';
+import { addSeriesAction, updateSeriesAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
 import { InstructorPicker } from './InstructorPicker';
-import type { Class } from '@buxa/contracts';
+import { PriceFields } from './PriceFields';
+import { WeekdayField } from './WeekdayField';
 
 export interface InstructorChoice {
   id: string;
   name: string;
 }
 
-/** The zone the browser types in, read after mount so the server and the first client render agree. */
-function useBrowserZone(): string | null {
-  const [zone, setZone] = useState<string | null>(null);
-  useEffect(() => {
-    setZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
-  }, []);
-
-  return zone;
-}
-
-/** The times the form posts: each local time it shows becomes the instant it names. A time the clocks skipped is posted as typed,
- * so the server refuses it with a message rather than saving a different time. */
-function postInstants(data: FormData): void {
-  for (const name of ['startsAt', 'endsAt']) {
-    const local = data.get(name);
-    if (typeof local === 'string' && local !== '') {
-      data.set(name, localInputToInstant(local) ?? local);
-    }
-  }
-}
-
 /**
- * A class: its name, ages, camp size, its own time range, location and instructors. It adds a class to a session (`cls` is
- * left out) or edits one (`cls` is the class being edited). The fields, validation and action are the same for both.
+ * The class form. With no `series` it is a new class series: its name, ages, camp size, the days ticked (at least one), the Starts and
+ * Ends date-times, location, instructors and price. The server writes the series and one day per ticked weekday in one transaction.
+ * With `series` it is the edit of that series: the same form, prefilled from the series. Saving it changes the series' fields, and
+ * adds or removes days when the days or the Starts and Ends change (see ClassService.updateSeries). A teacher on the series
+ * (`detailsOnly`) sees the name only; the server keeps every other field as saved.
+ *
  * `variant` says where it renders: on its own page (a panel, with its own Cancel and save buttons) or in a dialog. A dialog's
  * buttons belong to the dialog's pinned footer, so the form is tied to them by `formId` and reports `pending` through
  * `onPendingChange`. When the save succeeds, `onSaved` runs with the server's message, so the dialog can close and toast it.
@@ -48,35 +33,49 @@ export function ClassForm({
   sessionId,
   sessionName,
   instructors,
-  cls,
   variant = 'page',
-  detailsOnly = false,
   formId,
+  series,
+  detailsOnly = false,
   onSaved,
   onPendingChange,
 }: {
   sessionId: string;
   sessionName: string;
   instructors: readonly InstructorChoice[];
-  cls?: Class;
   variant?: 'page' | 'dialog';
-  /** A teacher's edit: only the name is shown. The server keeps every other field as it is saved. */
-  detailsOnly?: boolean;
   /** The id the dialog footer's submit button names with its `form` attribute. */
   formId?: string;
+  /** The series being edited. Left out, the form adds a new class. */
+  series?: Series;
+  /** A teacher on the series: only the name is shown and posted. */
+  detailsOnly?: boolean;
   onSaved?: (message: string) => void;
   onPendingChange?: (pending: boolean) => void;
 }) {
-  const editing = cls !== undefined;
-  const [state, formAction, pending] = useActionState(editing ? updateClassAction : addClassAction, idle);
+  const saveAction = series ? updateSeriesAction : addSeriesAction;
+  const [state, seriesAction, pending] = useActionState(saveAction, idle);
+  const [noWeekday, setNoWeekday] = useState(false);
   const zone = useBrowserZone();
-  // The form posts the instants: the local times it shows are converted in the browser before the action runs.
+  // Starts and Ends are posted as typed; the server reads their dates and times in the camp's clock.
   const submit = (data: FormData) => {
-    postInstants(data);
-    formAction(data);
+    // A class needs at least one day. With none ticked, the form says so and sends nothing. A teacher posts no days.
+    const none = !detailsOnly && data.getAll('weekdays').length === 0;
+    setNoWeekday(none);
+    if (none) {
+      return;
+    }
+    seriesAction(data);
   };
   const formRef = useRef<HTMLFormElement>(null);
   const inDialog = variant === 'dialog';
+  const [discountProblem, setDiscountProblem] = useState(false);
+  // A discount that leaves no price is refused here, with its message on the field, before anything is sent.
+  const refuseIfDiscountInvalid = (event: FormEvent<HTMLFormElement>) => {
+    if (discountProblem) {
+      event.preventDefault();
+    }
+  };
 
   useEffect(() => {
     if (state.status === 'error' && state.fieldErrors) {
@@ -92,6 +91,8 @@ export function ClassForm({
   }, [pending, onPendingChange]);
 
   const err = (name: string) => fieldError(state, name);
+  const weekdayError = err('weekdays') ?? (noWeekday ? NO_WEEKDAY : undefined);
+  const saveLabel = series ? 'Save class' : 'Add class';
 
   return (
     <form
@@ -99,31 +100,26 @@ export function ClassForm({
       ref={formRef}
       action={submit}
       noValidate
+      onSubmit={refuseIfDiscountInvalid}
       className={`${inDialog ? '' : 'panel '}class-form class-form-time`}
       aria-describedby="class-form-help"
     >
-      {editing && <input type="hidden" name="classId" value={cls.id} />}
       <input type="hidden" name="sessionId" value={sessionId} />
-      {detailsOnly ? (
-        <p id="class-form-help" className="class-helper">
-          You can change the name of this class. Its times, ages, camp size, location and instructors are set by the
-          camp.
-        </p>
-      ) : (
-        <p id="class-form-help" className="class-helper">
-          {zone ? `Times are in your time zone (${zone}).` : 'Times are in your time zone.'} The class must fall on days
-          inside {sessionName}. Fields marked with an asterisk are required.
-        </p>
-      )}
+      {series && <input type="hidden" name="seriesId" value={series.id} />}
+      {detailsOnly && <input type="hidden" name="detailsOnly" value="yes" />}
+      <p id="class-form-help" className="class-helper">
+        {zone ? `Times are in your time zone (${zone}).` : 'Times are in your time zone.'} The class must fall on days
+        inside {sessionName}. Fields marked with an asterisk are required.
+      </p>
       <TextField
         label="Class name"
         isRequired
         name="name"
-        defaultValue={cls?.name ?? ''}
+        defaultValue={series?.name ?? ''}
         error={err('name')}
         maxLength={120}
         autoComplete="off"
-        autoFocus={!inDialog}
+        autoFocus={!inDialog || series !== undefined}
       />
       {!detailsOnly && (
         <>
@@ -135,7 +131,7 @@ export function ClassForm({
               name="minAge"
               minValue={MIN_CLASS_AGE}
               maxValue={MAX_CLASS_AGE}
-              defaultValue={cls?.ageRange.minAge}
+              defaultValue={series?.ageRange.minAge}
               error={err('minAge')}
             />
             <NumberField
@@ -144,7 +140,7 @@ export function ClassForm({
               name="maxAge"
               minValue={MIN_CLASS_AGE}
               maxValue={MAX_CLASS_AGE}
-              defaultValue={cls?.ageRange.maxAge}
+              defaultValue={series?.ageRange.maxAge}
               error={err('maxAge')}
             />
             <NumberField
@@ -153,7 +149,7 @@ export function ClassForm({
               name="capacity"
               minValue={MIN_CAMP_SIZE}
               maxValue={MAX_CAMP_SIZE}
-              defaultValue={cls?.capacity}
+              defaultValue={series?.capacity}
               error={err('capacity')}
             />
           </div>
@@ -163,27 +159,29 @@ export function ClassForm({
               label="Starts"
               isRequired
               name="startsAt"
-              defaultValue={cls ? instantToLocalInput(cls.startsAt) : null}
+              defaultValue={series?.startsLocal ?? null}
               error={err('startsAt')}
             />
             <DateTimeField
               label="Ends"
               isRequired
               name="endsAt"
-              defaultValue={cls ? instantToLocalInput(cls.endsAt) : null}
+              defaultValue={series?.endsLocal ?? null}
               error={err('endsAt')}
             />
           </div>
+          <WeekdayField error={weekdayError} initial={series?.weekdays.map(String)} />
           <TextField
             label="Location"
             isRequired
             name="location"
-            defaultValue={cls?.location ?? ''}
+            defaultValue={series?.location ?? ''}
             error={err('location')}
             maxLength={200}
             autoComplete="off"
           />
-          <InstructorPicker instructors={instructors} defaultIds={cls?.instructorIds ?? []} />
+          <InstructorPicker instructors={instructors} defaultIds={series?.instructorIds} />
+          <PriceFields price={series?.price ?? null} error={err} onDiscountProblem={setDiscountProblem} />
         </>
       )}
       <ActionMessage state={state} />
@@ -192,11 +190,27 @@ export function ClassForm({
           <Button variant="ghost" className="classes-target" href={sessionPath(sessionId)}>
             Cancel
           </Button>
-          <Button type="submit" variant="primary" icon="plus" className="classes-target" disabled={pending}>
-            {pending ? 'Saving...' : editing ? 'Save class' : 'Add class'}
+          <Button
+            type="submit"
+            variant="primary"
+            icon={series ? 'save' : 'plus'}
+            className="classes-target"
+            disabled={pending || discountProblem}
+          >
+            {pending ? 'Saving...' : saveLabel}
           </Button>
         </div>
       )}
     </form>
   );
+}
+
+/** The zone the browser types in, read after mount so the server and the first client render agree. */
+function useBrowserZone(): string | null {
+  const [zone, setZone] = useState<string | null>(null);
+  useEffect(() => {
+    setZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  }, []);
+
+  return zone;
 }

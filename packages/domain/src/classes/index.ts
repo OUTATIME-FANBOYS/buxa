@@ -9,3 +9,8 @@ export * from './refusals';
 export * from './import';
 export * from './recurrence';
 export * from './teacherClassDetails';
+export * from './sessionName';
+export * from './location';
+export * from './sessionDateFlags';
+export * from './series';
+export * from './teaching';

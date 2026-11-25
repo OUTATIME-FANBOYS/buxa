@@ -3,7 +3,7 @@ import type { Actor } from '@buxa/domain';
 import { createClassService } from '../../classes/ClassService';
 import type { InMemoryClassRepository } from '../../classes/InMemoryClassRepository';
 import { painting, robotics, JULY_SESSION } from '../../classes/__tests__/fixtures';
-import { createCamp, type Camp } from './support';
+import { createCamp, linkTeacher, type Camp } from './support';
 
 /*
  * "My classes": a teacher sees its own assigned classes, grouped by session, and nothing else. Camp: Robotics (July) and Coding
@@ -34,20 +34,24 @@ async function build() {
   if (!july.ok || !august.ok) {
     throw new Error('session');
   }
-  const addClass = async (cls: typeof robotics, sessionId: string, times: typeof ROBOTICS_TIMES) => {
-    const added = await classes.addClass(admin, sessionId, { ...cls, ...times });
+  const addClass = async (
+    cls: typeof robotics,
+    sessionId: string,
+    times: typeof ROBOTICS_TIMES,
+    instructorIds: string[] = [],
+  ) => {
+    const added = await classes.addClass(admin, sessionId, { ...cls, ...times, instructorIds });
     if (!added.ok) {
       throw new Error(added.failure.message);
     }
 
     return added.value.id;
   };
-  const roboticsId = await addClass(robotics, july.value.id, ROBOTICS_TIMES);
-  const codingId = await addClass({ ...robotics, name: 'Coding' }, august.value.id, CODING_TIMES);
-  const paintingId = await addClass(painting, july.value.id, PAINTING_TIMES);
-  expect((await classes.setTeachers(admin, roboticsId, [teacher.userId])).ok).toBe(true);
-  expect((await classes.setTeachers(admin, codingId, [teacher.userId])).ok).toBe(true);
-  expect((await classes.setTeachers(admin, paintingId, [otherTeacher.userId])).ok).toBe(true);
+  const teacherPersonId = await linkTeacher(camp, teacher.userId);
+  const otherTeacherPersonId = await linkTeacher(camp, otherTeacher.userId);
+  const roboticsId = await addClass(robotics, july.value.id, ROBOTICS_TIMES, [teacherPersonId]);
+  const codingId = await addClass({ ...robotics, name: 'Coding' }, august.value.id, CODING_TIMES, [teacherPersonId]);
+  const paintingId = await addClass(painting, july.value.id, PAINTING_TIMES, [otherTeacherPersonId]);
 
   return {
     classes,
@@ -105,6 +109,28 @@ describe('listMyClasses', () => {
   it('gives a non-teacher an empty list', async () => {
     const { classes, staff } = await build();
     expect(await classes.listMyClasses(staff)).toEqual({ ok: true, value: [] });
+  });
+
+  it('gives no classes to a teacher whose login is not linked to the instructor, even when the class names a person', async () => {
+    const unlinked = await createCamp('UTC', '2027-07-10T09:00:00Z');
+    const admin = unlinked.actor('admin');
+    const service = createClassService({ repo: unlinked.repos.classes, timezoneOf: () => Promise.resolve('UTC') });
+    const session = await service.createSession(admin, JULY_SESSION);
+    if (!session.ok) {
+      throw new Error('session');
+    }
+    const instructor = await linkTeacher(unlinked, 'someone-else');
+    const added = await service.addClass(admin, session.value.id, {
+      ...robotics,
+      ...ROBOTICS_TIMES,
+      instructorIds: [instructor],
+    });
+    expect(added.ok).toBe(true);
+    const store = unlinked.repos.classes as InMemoryClassRepository;
+    store.seedTeacher(unlinked.orgId, 'teacher-without-link');
+    expect(
+      await service.listMyClasses({ userId: 'teacher-without-link', orgId: unlinked.orgId, role: 'teacher' }),
+    ).toEqual({ ok: true, value: [] });
   });
 
   it('gives an empty list to a teacher with no assignments', async () => {

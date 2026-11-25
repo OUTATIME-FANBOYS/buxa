@@ -1,4 +1,11 @@
-import type { Refusal } from '@buxa/domain';
+import {
+  CLASS_DATES_FLAGGED_MESSAGE,
+  sessionDatesBlockedMessage,
+  sessionPublishBlockedMessage,
+  type Refusal,
+  occurrenceRefusalMessage,
+  type OccurrenceRefusal,
+} from '@buxa/domain';
 
 /*
  * Domain errors for classes and enrolment. Adapters throw these; services map them to outcomes.
@@ -52,6 +59,15 @@ export class CapacityBelowEnrolledError extends Error {
   }
 }
 
+/** The child already has an active place in this series: one active enrolment per child per series (migration 0061). */
+export class AlreadyEnrolledError extends Error {
+  readonly kind = 'already-enrolled';
+  constructor() {
+    super('This child is already enrolled in this class.');
+    this.name = 'AlreadyEnrolledError';
+  }
+}
+
 /** A class with any enrolment (cancelled ones included) cannot be deleted. */
 export class ClassHasEnrolmentsError extends Error {
   readonly kind = 'class-has-enrolments';
@@ -61,7 +77,20 @@ export class ClassHasEnrolmentsError extends Error {
   }
 }
 
-export const SESSION_HAS_CLASSES_MESSAGE = 'This session has classes. Delete them first.';
+/**
+ * An edit of a series' days would remove a day that a child (or household) has a place on. Thrown before anything is written. The
+ * message names the people and the days (see seriesDaysInUseMessage in @buxa/domain).
+ */
+export class SeriesDaysInUseError extends Error {
+  readonly kind = 'series-days-in-use';
+  constructor(message: string) {
+    super(message);
+    this.name = 'SeriesDaysInUseError';
+  }
+}
+
+export const SESSION_HAS_CLASSES_MESSAGE =
+  'This session has classes, so it cannot be deleted. Archive it, or delete its classes and the session.';
 
 /** A session (the parent) that still holds classes cannot be deleted. Migration 0035 refuses it at the database too. */
 export class SessionHasClassesError extends Error {
@@ -69,6 +98,62 @@ export class SessionHasClassesError extends Error {
   constructor() {
     super(SESSION_HAS_CLASSES_MESSAGE);
     this.name = 'SessionHasClassesError';
+  }
+}
+
+/** Another session in the camp already has this name, ignoring case and spaces (the unique index in migration 0052). */
+export class SessionNameTakenError extends Error {
+  readonly kind = 'session-name-taken';
+  constructor(readonly sessionName: string) {
+    super(`A session named ${sessionName} already exists.`);
+    this.name = 'SessionNameTakenError';
+  }
+}
+
+export const SESSION_HAS_ENROLMENTS_MESSAGE =
+  'This session has enrolments, holds or registrations. Unenrol every student first (refunds may be needed), clear the holds and registrations, then delete it. Or archive it instead.';
+
+/** A session with a class that has an enrolment, a hold, a registration, a check-in or a season pass cannot be deleted with its classes. */
+export class SessionHasEnrolmentsError extends Error {
+  readonly kind = 'session-has-enrolments';
+  constructor() {
+    super(SESSION_HAS_ENROLMENTS_MESSAGE);
+    this.name = 'SessionHasEnrolmentsError';
+  }
+}
+
+/** Registration and enrolment are accepted only while the session is live. A draft is not open yet, an archived one is closed. */
+export class SessionNotLiveError extends Error {
+  readonly kind = 'session-not-live';
+  constructor(readonly status: 'draft' | 'archived') {
+    super(
+      status === 'draft'
+        ? 'This session is a draft. Go live before taking registrations or enrolments.'
+        : 'This session is archived, so it takes no registrations or enrolments. Unarchive it first.',
+    );
+    this.name = 'SessionNotLiveError';
+  }
+}
+
+/** Only a draft session can go live, or be deleted together with everything under it. */
+export class SessionNotDraftError extends Error {
+  readonly kind = 'session-not-draft';
+  constructor(readonly status: 'live' | 'archived') {
+    super(
+      status === 'archived'
+        ? 'This session is archived. Unarchive it to open it again.'
+        : 'This session is already live. Only a draft can be deleted with everything under it.',
+    );
+    this.name = 'SessionNotDraftError';
+  }
+}
+
+/** The typed name for a delete with classes does not match the session's name exactly. */
+export class SessionNameConfirmationError extends Error {
+  readonly kind = 'session-name-confirmation';
+  constructor() {
+    super('Type the session name exactly as it is written to confirm.');
+    this.name = 'SessionNameConfirmationError';
   }
 }
 
@@ -157,6 +242,15 @@ export function refusalError(refusal: Refusal): EnrolmentRefusalError {
 }
 
 /** A seat hold names a household that is not in this camp (or a malformed id). */
+/** Cancelling a day that is already cancelled, or restoring one that is not. */
+export class OccurrenceRefusedError extends Error {
+  readonly kind = 'occurrence-refused';
+  constructor(readonly refusal: OccurrenceRefusal) {
+    super(occurrenceRefusalMessage(refusal));
+    this.name = 'OccurrenceRefusedError';
+  }
+}
+
 export class HouseholdNotFoundError extends Error {
   readonly kind = 'household-not-found';
   constructor() {
@@ -173,11 +267,11 @@ export class HoldNotFoundError extends Error {
   }
 }
 
-/** The household already holds a place in this session. One hold per household per session. */
+/** The child already holds a place in this class. One hold per child per class (siblings of one household each hold their own). */
 export class HoldExistsError extends Error {
   readonly kind = 'hold-exists';
   constructor() {
-    super('The household already holds a place in this session');
+    super('The child already holds a place in this class');
     this.name = 'HoldExistsError';
   }
 }
@@ -198,12 +292,19 @@ export class RecurrenceRefusedError extends Error {
 }
 
 export type ClassErrorKind =
+  | 'already-enrolled'
+  | 'occurrence-refused'
   | 'class-not-found'
   | 'session-not-found'
   | 'class-outside-session'
   | 'capacity-below-enrolled'
   | 'class-has-enrolments'
   | 'session-has-classes'
+  | 'session-name-taken'
+  | 'session-has-enrolments'
+  | 'session-name-confirmation'
+  | 'session-not-live'
+  | 'session-not-draft'
   | 'enrolment-not-found'
   | 'camper-not-found'
   | 'instructor-not-found'
@@ -212,6 +313,10 @@ export type ClassErrorKind =
   | 'hold-exists'
   | 'teacher-not-found'
   | 'teacher-field-refused'
+  | 'session-dates-blocked'
+  | 'session-publish-blocked'
+  | 'class-dates-flagged'
+  | 'series-days-in-use'
   | EnrolmentRefusalError['kind'];
 
 export const isClassError = (e: unknown, kind: ClassErrorKind): boolean =>
@@ -222,3 +327,30 @@ export const isEnrolmentRefusal = (e: unknown): e is EnrolmentRefusalError =>
   'kind' in e &&
   typeof e.kind === 'string' &&
   ['session-full', 'age-out-of-range', 'overlap', 'enrolment-refused'].includes(e.kind);
+
+/** A class whose dates fall outside its session's dates is flagged: it takes no place, hold or registration until fixed (migration 0059). */
+export class ClassDatesFlaggedError extends Error {
+  readonly kind = 'class-dates-flagged';
+  constructor() {
+    super(CLASS_DATES_FLAGGED_MESSAGE);
+    this.name = 'ClassDatesFlaggedError';
+  }
+}
+
+/** A session date change would flag a class that has people on it, so the whole change is refused. Names the classes. */
+export class SessionDatesBlockedError extends Error {
+  readonly kind = 'session-dates-blocked';
+  constructor(readonly classNames: readonly string[]) {
+    super(sessionDatesBlockedMessage(classNames));
+    this.name = 'SessionDatesBlockedError';
+  }
+}
+
+/** A session with a flagged class cannot go live. */
+export class SessionPublishBlockedError extends Error {
+  readonly kind = 'session-publish-blocked';
+  constructor(readonly classNames: readonly string[]) {
+    super(sessionPublishBlockedMessage(classNames));
+    this.name = 'SessionPublishBlockedError';
+  }
+}

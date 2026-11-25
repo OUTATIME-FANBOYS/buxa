@@ -35,10 +35,33 @@ describe.skipIf(!url)('teacher calendar feed on Postgres', () => {
     return { userId, orgId, role: 'teacher' };
   };
 
+  /**
+   * Makes the teacher's roster person (linked to its login, migration 0051) an instructor of the class. A teacher's feed holds the
+   * classes whose instructors include its linked person.
+   */
+  const teach = async (orgId: string, userId: string, classId: string): Promise<void> => {
+    const linked = await pool.query<{ id: string }>(`SELECT id FROM people WHERE org_id = $1 AND user_id = $2`, [
+      orgId,
+      userId,
+    ]);
+    const personId =
+      linked.rows[0]?.id ??
+      (
+        await pool.query<{ id: string }>(
+          `INSERT INTO people (org_id, given_name, family_name, user_id) VALUES ($1, 'Tess', 'Teacher', $2) RETURNING id`,
+          [orgId, userId],
+        )
+      ).rows[0].id;
+    await pool.query(
+      `INSERT INTO session_instructors (org_id, session_id, person_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
+      [orgId, classId, personId],
+    );
+  };
+
   /** Makes a class in the camp (a sessions row, with its own name and hours) and returns its id. */
   const makeClass = async (actor: Actor, name: string, fromHour: number): Promise<string> => {
     const session = await makeSession(fx.repo, actor);
-    const [created] = await fx.repo.addClasses(actor, session.id, [sessionInput(fromHour, fromHour + 1, { name })]);
+    const created = await fx.repo.addClass(actor, session.id, sessionInput(fromHour, fromHour + 1, { name }));
 
     return created.id;
   };
@@ -71,10 +94,11 @@ describe.skipIf(!url)('teacher calendar feed on Postgres', () => {
     const painting = await makeClass(fx.actor, 'Painting', 11);
     const pottery = await makeClass(fx.actor, 'Pottery', 13);
     const kayaking = await makeClass(fx.otherActor, 'Kayaking', 9);
-    await fx.repo.replaceTeachers(fx.actor, robotics, [teacherA.userId]);
-    await fx.repo.replaceTeachers(fx.actor, painting, [teacherA.userId, teacherA2.userId]);
-    await fx.repo.replaceTeachers(fx.actor, pottery, [teacherA2.userId]);
-    await fx.repo.replaceTeachers(fx.otherActor, kayaking, [teacherB.userId]);
+    await teach(fx.orgA, teacherA.userId, robotics);
+    await teach(fx.orgA, teacherA.userId, painting);
+    await teach(fx.orgA, teacherA2.userId, painting);
+    await teach(fx.orgA, teacherA2.userId, pottery);
+    await teach(fx.orgB, teacherB.userId, kayaking);
 
     hashA = tokenHash();
     hashA2 = tokenHash();

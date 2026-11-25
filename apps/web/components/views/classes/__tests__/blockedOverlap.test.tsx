@@ -11,6 +11,7 @@ import { ActionMessage } from '@/components/components/classes/forms/ActionMessa
 import { attempt } from '@buxa/server/classes/outcome';
 import { refusalError } from '@buxa/server/classes/errors';
 import { enrolAction } from '@buxa/server/composers/classes/enrolAction';
+import { seriesOf } from './seriesOf';
 
 // The blocked-overlap path end to end: the service refuses a clash, the outcome carries the clashing class, the composer hands its
 // message to the form, and the form shows it. The override field is offered to admins only.
@@ -18,11 +19,11 @@ const services = vi.hoisted(() => ({
   classes: {
     enrol: vi.fn(),
     getSession: vi.fn(),
-    listClasses: vi.fn(),
+    listSeries: vi.fn(),
+    listSeriesOccurrences: vi.fn(),
     getClass: vi.fn(),
     listSessions: vi.fn(),
     listEnrolments: vi.fn(),
-    listTeacherAssignments: vi.fn(),
   },
   people: { list: vi.fn() },
   orgs: { getCamp: vi.fn(), listMembers: vi.fn() },
@@ -67,8 +68,9 @@ const parent: Session = {
   endsOn: '2027-07-14',
   classCount: 2,
   isPublic: false,
+  status: 'live',
+  archivedAt: null,
   createdAt: '2027-07-01T00:00:00.000Z',
-  price: null,
 };
 const painting: Class = {
   id: PAINTING_CLASS,
@@ -84,6 +86,10 @@ const painting: Class = {
   instructors: [],
   seatsTaken: 0,
   waitlisted: 0,
+  datesOutsideSession: false,
+  seriesId: 'series-1',
+  occurrenceStatus: 'active',
+  cancelReason: null,
   price: null,
 };
 
@@ -105,11 +111,10 @@ beforeEach(() => {
     throw new Error('NEXT_NOT_FOUND');
   });
   services.orgs.getCamp.mockResolvedValue({ timezone: TIME_ZONE });
-  services.classes.listTeacherAssignments.mockResolvedValue({ ok: true, value: [] });
   services.orgs.listMembers.mockResolvedValue({ members: [] });
   services.classes.getSession.mockResolvedValue({ ok: true, value: parent });
   services.classes.getClass.mockResolvedValue({ ok: true, value: painting });
-  services.classes.listClasses.mockResolvedValue({ ok: true, value: [painting] });
+  services.classes.listSeries.mockResolvedValue({ ok: true, value: seriesOf([painting]) });
   services.classes.listSessions.mockResolvedValue({ ok: true, value: [parent] });
   services.classes.listEnrolments.mockResolvedValue({ ok: true, value: [] });
   // The service refuses the clash; `attempt` turns the refusal into the outcome the composer reads.

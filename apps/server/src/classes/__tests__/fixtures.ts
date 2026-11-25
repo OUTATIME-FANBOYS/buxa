@@ -30,6 +30,7 @@ export const robotics = {
   capacity: 2,
   location: 'Lab 1',
   instructorIds: [],
+  price: null,
 };
 export const painting = {
   name: 'Painting',
@@ -37,6 +38,7 @@ export const painting = {
   capacity: 10,
   location: 'Art room',
   instructorIds: [],
+  price: null,
 };
 
 /** Monday 5 July 2027, 09:00-12:00 in Sydney (UTC+10 in July). */
@@ -70,6 +72,8 @@ export function setup() {
   return { repo, service };
 }
 
+let classWithSessionCount = 0;
+
 /**
  * Creates a session (July) and one class under it, as an admin. `sessionId` and `classId` are both returned; the class is the
  * unit an enrolment is made into, so tests enrol with `classId`.
@@ -79,15 +83,26 @@ export async function classWithSession(
   cls: Omit<ClassInput, 'startsAt' | 'endsAt'> = robotics,
   times: { startsAt: string; endsAt: string; location?: string; instructorIds?: string[] } = monday9to12,
 ) {
-  const session = await service.createSession(as('admin'), JULY_SESSION);
+  // A test may make several of these in one camp, and session names are unique in a camp (migration 0052), so each is numbered.
+  classWithSessionCount += 1;
+  const session = await service.createSession(as('admin'), {
+    ...JULY_SESSION,
+    name: `${JULY_SESSION.name} ${classWithSessionCount}`,
+  });
   if (!session.ok) {
     throw new Error(session.failure.message);
+  }
+  // A new session is a draft and takes no enrolments. These helpers are for tests that enrol, so the session goes live.
+  const live = await service.publishSession(as('admin'), session.value.id);
+  if (!live.ok) {
+    throw new Error(live.failure.message);
   }
   const added = await service.addClass(as('admin'), session.value.id, {
     ...cls,
     ...times,
     location: times.location ?? cls.location,
     instructorIds: times.instructorIds ?? cls.instructorIds,
+    price: cls.price,
   });
   if (!added.ok) {
     throw new Error(added.failure.message);

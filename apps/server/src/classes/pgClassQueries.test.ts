@@ -21,16 +21,18 @@ const sessionRow = (over: Partial<SessionRow> = {}): SessionRow => ({
   ends_on: '2027-07-31',
   class_count: 2,
   is_public: false,
+  status: 'live',
+  archived_at: null,
   created_at: created,
-  price_minor: null,
-  price_currency: null,
-  early_bird_minor: null,
-  early_bird_until: null,
   ...over,
 });
 
 const classRow = (over: Partial<ClassRow> = {}): ClassRow => ({
   id: 'c1',
+  dates_outside_session: false,
+  series_id: 's1',
+  occurrence_status: 'active',
+  cancel_reason: null,
   session_id: 'p1',
   session_name: 'Summer camp',
   name: 'Robotics',
@@ -75,8 +77,15 @@ describe('toSession', () => {
       endsOn: '2027-07-31',
       classCount: 2,
       isPublic: false,
+      status: 'live',
+      archivedAt: null,
       createdAt: '2027-07-01T00:00:00.000Z',
-      price: null,
+    });
+  });
+
+  it('carries the archive time when the session is archived, and null while it is live', () => {
+    expect(toSession(sessionRow({ archived_at: new Date('2027-06-01T02:00:00Z') }))).toMatchObject({
+      archivedAt: '2027-06-01T02:00:00.000Z',
     });
   });
 
@@ -99,13 +108,17 @@ describe('toClass', () => {
       endsAt: '2027-07-05T02:00:00.000Z',
       location: 'Lab 1',
       instructorIds: ['i1', 'i2'],
+      price: null,
       instructors: [
         { id: 'i1', name: 'Ada Test' },
         { id: 'i2', name: 'Ben Test' },
       ],
       seatsTaken: 2,
       waitlisted: 1,
-      price: null,
+      datesOutsideSession: false,
+      seriesId: 's1',
+      occurrenceStatus: 'active',
+      cancelReason: null,
     });
     expect(mapped.instructors).not.toBe(classRow().instructors);
   });

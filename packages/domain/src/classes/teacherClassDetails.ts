@@ -1,9 +1,9 @@
 import { TEACHER_CLASS_FIELDS } from '../permissions';
+import type { ClassPrice } from '../prices';
 
 /**
- * A class's fields as a teacher's change is compared. A teacher may change only the name and description (TEACHER_CLASS_FIELDS);
- * every other field below needs classes:manage. The name is the only class text there is today: a class has no description of its
- * own (sessions do), so the description check is ready for when a class gets one.
+ * A class's fields as a teacher's change is compared. A teacher may change only the name (TEACHER_CLASS_FIELDS); every other field
+ * below needs classes:manage. A class has no description of its own.
  */
 export interface ClassDetails {
   ageRange: { minAge: number; maxAge: number };
@@ -12,6 +12,7 @@ export interface ClassDetails {
   endsAt: string;
   location: string;
   instructorIds: readonly string[];
+  price: ClassPrice | null;
 }
 
 /** The fields a teacher may not change, as the names the screens and refusals use. */
@@ -22,9 +23,18 @@ const LOCKED: readonly (keyof ClassDetails)[] = [
   'endsAt',
   'location',
   'instructorIds',
+  'price',
 ];
 
 const sameInstant = (a: string, b: string) => new Date(a).getTime() === new Date(b).getTime();
+
+const samePrice = (a: ClassPrice | null, b: ClassPrice | null): boolean =>
+  a === null || b === null
+    ? a === b
+    : a.currency === b.currency &&
+      a.regularMinor === b.regularMinor &&
+      a.earlyBirdMinor === b.earlyBirdMinor &&
+      a.earlyBirdUntil === b.earlyBirdUntil;
 
 /**
  * The locked fields (everything but the name and description) that differ between the saved class and the change. Empty when the
@@ -42,7 +52,9 @@ export function classFieldsOutsideDetails(before: ClassDetails, after: ClassDeta
             ? sameInstant(before.endsAt, after.endsAt)
             : field === 'instructorIds'
               ? [...before.instructorIds].sort().join() === [...after.instructorIds].sort().join()
-              : before[field] === after[field];
+              : field === 'price'
+                ? samePrice(before.price, after.price)
+                : before[field] === after[field];
     if (!same) {
       changed.push(field);
     }

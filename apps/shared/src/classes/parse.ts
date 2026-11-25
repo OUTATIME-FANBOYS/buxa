@@ -3,19 +3,18 @@ import {
   CancelEnrolmentInputSchema,
   ClassInputSchema,
   EnrolInputSchema,
-  NewRecurringClassInputSchema,
+  NewSeriesInputSchema,
   NewSessionInputSchema,
-  SessionPriceSchema,
   type CancelEnrolmentInput,
   type ClassInput,
   type EnrolInput,
-  type NewRecurringClassInput,
+  type NewSeriesInput,
   type NewSessionInput,
-  type SessionPriceInput,
+  type ClassPriceInput,
 } from '@buxa/contracts';
 import { failure, type FieldErrors } from '../actionState';
 import { field, fieldAll, parseWith, type PersonParsed } from '../people/parse';
-import { CHECK_FIELDS, WHOLE_NUMBER } from './copy';
+import { CHECK_FIELDS, NO_WEEKDAY, WHOLE_NUMBER } from './copy';
 
 /*
  * Turns posted form fields into the contract's inputs. Problems the form can name in plain words (a blank required number, a time
@@ -71,6 +70,9 @@ function withProblems<T>(
   return { ok: false, state: failure(CHECK_FIELDS, fieldErrors) };
 }
 
+const ENTER_DATE_TIME = 'Enter a date and time.';
+const NOT_A_DATE_TIME = 'That date or time does not exist. Choose another.';
+
 /** An instant as the browser posts it: an ISO date-time with a Z or an offset (the form converts the local time first). */
 const POSTED_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/;
 
@@ -78,12 +80,12 @@ const POSTED_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|
 function instantField(form: FormData, name: string, problems: FieldErrors): string | undefined {
   const raw = field(form, name).trim();
   if (raw === '') {
-    problems[name] = 'Enter a date and time.';
+    problems[name] = ENTER_DATE_TIME;
 
     return undefined;
   }
   if (!POSTED_INSTANT.test(raw)) {
-    problems[name] = 'That date or time does not exist. Choose another.';
+    problems[name] = NOT_A_DATE_TIME;
 
     return undefined;
   }
@@ -103,6 +105,7 @@ export function classForm(form: FormData): PersonParsed<ClassInput> {
   const capacity = numberField(form, 'capacity', problems, 'Enter the camp size.');
   const startsAt = instantField(form, 'startsAt', problems);
   const endsAt = instantField(form, 'endsAt', problems);
+  const price = priceFromForm(form, problems);
 
   // The contract reports the age-range refinement under `ageRange`; the form shows it on the oldest-age field.
   return withProblems(
@@ -116,16 +119,17 @@ export function classForm(form: FormData): PersonParsed<ClassInput> {
         endsAt,
         location: field(form, 'location'),
         instructorIds: fieldAll(form, 'instructorIds'),
+        price: price ?? null,
       }),
     { ageRange: 'maxAge' },
   );
 }
 
 /**
- * A recurring series: the class's own fields, a weekly rule (the weekdays ticked, the first date, the start and end times in the
- * camp's clock) and when it stops (a date, or a number of classes). The server expands the rule; this only reads the form.
+ * A class series, from the New class form: the class's own fields, the weekdays ticked, and the Starts and Ends date-times. The
+ * Starts and Ends date-times are read as typed, in the camp's clock. The server expands them (planSeries in @buxa/domain).
  */
-export function recurringClassForm(form: FormData): PersonParsed<NewRecurringClassInput> {
+export function seriesForm(form: FormData): PersonParsed<NewSeriesInput> {
   const problems: FieldErrors = {};
   const minAge = numberField(form, 'minAge', problems, 'Enter the youngest age.');
   const maxAge = numberField(form, 'maxAge', problems, 'Enter the oldest age.');
@@ -134,32 +138,61 @@ export function recurringClassForm(form: FormData): PersonParsed<NewRecurringCla
     .map(Number)
     .filter(n => Number.isInteger(n));
   if (weekdays.length === 0) {
-    problems.weekdays = 'Tick at least one day of the week.';
+    problems.weekdays = NO_WEEKDAY;
   }
-  const endKind = field(form, 'endKind') === 'count' ? 'count' : 'until';
-  // The count is asked for only when the series stops after a number of classes.
-  const count =
-    endKind === 'count' ? numberField(form, 'endCount', problems, 'Enter how many classes the series has.') : undefined;
+  const starts = localDateTime(form, 'startsAt', problems);
+  const ends = localDateTime(form, 'endsAt', problems);
+  const price = priceFromForm(form, problems);
 
   return withProblems(
     problems,
     () =>
-      parseWith<NewRecurringClassInput>(NewRecurringClassInputSchema, {
-        rule: {
-          weekdays,
-          firstDate: field(form, 'firstDate'),
-          startTime: field(form, 'startTime'),
-          endTime: field(form, 'endTime'),
-          end: endKind === 'count' ? { kind: 'count', count } : { kind: 'until', date: field(form, 'endDate') },
-        },
+      parseWith<NewSeriesInput>(NewSeriesInputSchema, {
         name: field(form, 'name'),
         ageRange: { minAge, maxAge },
         capacity,
         location: field(form, 'location'),
         instructorIds: fieldAll(form, 'instructorIds'),
+        price: price ?? null,
+        weekdays,
+        startsAt: starts ? `${starts.date}T${starts.time}` : '',
+        endsAt: ends ? `${ends.date}T${ends.time}` : '',
       }),
     { ageRange: 'maxAge' },
   );
+}
+
+/**
+ * A teacher's edit of a series: the form posts the name only, so the rest of the series is kept as it is saved (`saved`). The name is
+ * checked the same way a new series' name is. The service refuses any other change a teacher makes.
+ */
+export function seriesNameForm(form: FormData, saved: NewSeriesInput): PersonParsed<NewSeriesInput> {
+  return parseWith<NewSeriesInput>(NewSeriesInputSchema, { ...saved, name: field(form, 'name') });
+}
+
+/** A local date-time as a datetime-local field posts it: `2027-07-05T09:00`. The camp's clock is read as typed. */
+const LOCAL_DATE_TIME = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})$/;
+
+/** A datetime-local value, split into its date and its time. Blank or malformed text is reported against its field. */
+function localDateTime(
+  form: FormData,
+  name: string,
+  problems: FieldErrors,
+): { date: string; time: string } | undefined {
+  const raw = field(form, name).trim();
+  if (raw === '') {
+    problems[name] = ENTER_DATE_TIME;
+
+    return undefined;
+  }
+  const match = LOCAL_DATE_TIME.exec(raw);
+  if (!match?.[1] || !match[2]) {
+    problems[name] = NOT_A_DATE_TIME;
+
+    return undefined;
+  }
+
+  return { date: match[1], time: match[2] };
 }
 
 const MONEY_MESSAGES = {
@@ -169,11 +202,11 @@ const MONEY_MESSAGES = {
 } as const;
 
 /**
- * The price fields of a session form: `priceAmount`, `priceCurrency` (default USD), `earlyBirdAmount` and `earlyBirdUntil`.
+ * The price fields of a class form: `priceAmount`, `priceCurrency` (default USD), `earlyBirdAmount` and `earlyBirdUntil`.
  * A blank price means no price. Amounts become minor units with parseMoney, which refuses extra decimals rather than rounding.
  * Returns undefined when a problem was recorded in `problems`.
  */
-function priceFromForm(form: FormData, problems: FieldErrors): SessionPriceInput | null | undefined {
+function priceFromForm(form: FormData, problems: FieldErrors): ClassPriceInput | null | undefined {
   const currency = field(form, 'priceCurrency').trim().toUpperCase() || DEFAULT_CURRENCY;
   const amount = field(form, 'priceAmount').trim();
   const early = field(form, 'earlyBirdAmount').trim();
@@ -211,7 +244,10 @@ function priceFromForm(form: FormData, problems: FieldErrors): SessionPriceInput
   };
 }
 
-/** A session (the parent): its name, description, first and last day (calendar dates) and an optional price. */
+/**
+ * A session (the parent): its name, description, first and last day (calendar dates) and whether it is public. A session has no
+ * price; each of its classes carries its own.
+ */
 export function sessionForm(form: FormData): PersonParsed<NewSessionInput> {
   const problems: FieldErrors = {};
   const startsOn = field(form, 'startsOn');
@@ -222,7 +258,6 @@ export function sessionForm(form: FormData): PersonParsed<NewSessionInput> {
   if (endsOn === '') {
     problems.endsOn = 'Pick a last day.';
   }
-  const price = priceFromForm(form, problems);
 
   return withProblems(problems, () =>
     parseWith<NewSessionInput>(NewSessionInputSchema, {
@@ -230,49 +265,14 @@ export function sessionForm(form: FormData): PersonParsed<NewSessionInput> {
       description: field(form, 'description'),
       startsOn,
       endsOn,
-      price: price ?? null,
       // A ticked "Show this session on the public pages" box posts `isPublic=on`; left unticked, the session is not public.
       isPublic: form.get('isPublic') === 'on',
     }),
   );
 }
 
-/**
- * A session's details as edited (the Edit session dialog): the same fields as a new session, without the price. The session schema
- * checks them; the price is passed as none, so the schema's price rule does not apply.
- */
-export function sessionEditForm(form: FormData): PersonParsed<NewSessionInput> {
-  const problems: FieldErrors = {};
-  const startsOn = field(form, 'startsOn');
-  const endsOn = field(form, 'endsOn');
-  if (startsOn === '') {
-    problems.startsOn = 'Pick a first day.';
-  }
-  if (endsOn === '') {
-    problems.endsOn = 'Pick a last day.';
-  }
-
-  return withProblems(problems, () =>
-    parseWith<NewSessionInput>(NewSessionInputSchema, {
-      name: field(form, 'name'),
-      description: field(form, 'description'),
-      startsOn,
-      endsOn,
-      price: null,
-      isPublic: form.get('isPublic') === 'on',
-    }),
-  );
-}
-
-/** Sets or clears a session's price (the session's Price dialog). A blank amount clears it. */
-export function sessionPriceForm(form: FormData): PersonParsed<SessionPriceInput | null> {
-  const problems: FieldErrors = {};
-  const price = priceFromForm(form, problems);
-
-  return withProblems(problems, () =>
-    parseWith<SessionPriceInput | null>(SessionPriceSchema.nullable(), price ?? null),
-  );
-}
+/** A session's details as edited (the Edit session dialog): the same fields as a new session. */
+export const sessionEditForm = sessionForm;
 
 /** An enrolment. The button pressed decides the waitlist: "waitlist" puts a camper on the list when the session is full. */
 export function enrolForm(form: FormData): PersonParsed<EnrolInput> {

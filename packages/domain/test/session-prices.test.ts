@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { campToday, can, formatMoney, minorToInput, parseMoney, shownPrice, type SessionPrice } from '../src';
+import { campToday, can, formatMoney, minorToInput, parseMoney, shownPrice, type ClassPrice } from '../src';
 
 describe('parseMoney', () => {
   it('reads whole and decimal amounts as minor units, with no float error', () => {
@@ -77,7 +77,7 @@ describe('the permission for setting a price', () => {
 describe('early-bird switch', () => {
   const zone = 'America/Los_Angeles';
   // Camp day 5 July 2027 in Los Angeles is PDT (UTC-7). 2027-07-05T23:30 local is 2027-07-06 06:30 UTC.
-  const price: SessionPrice = {
+  const price: ClassPrice = {
     currency: 'USD',
     regularMinor: 45000,
     earlyBirdMinor: 39900,

@@ -9,10 +9,18 @@ import { UiProvider } from '@buxa/middleware/providers/providers';
 const NoDialog = () => null;
 const render = (node: ReactNode) => renderToStaticMarkup(<UiProvider Dialog={NoDialog}>{node}</UiProvider>);
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: () => undefined }),
+}));
+
 vi.mock('@/actions/classes', () => ({
   updateSessionAction: vi.fn(),
   deleteSessionAction: vi.fn(),
   deleteSessionsAction: vi.fn(),
+  setSessionArchivedAction: vi.fn(),
+  publishSessionAction: vi.fn(),
+  sessionDeleteImpactAction: vi.fn(),
+  deleteSessionWithClassesAction: vi.fn(),
 }));
 
 const session = (over: Partial<Session> = {}): Session => ({
@@ -23,8 +31,9 @@ const session = (over: Partial<Session> = {}): Session => ({
   endsOn: '2027-07-14',
   classCount: 4,
   isPublic: false,
+  status: 'live',
+  archivedAt: null,
   createdAt: '2027-07-01T00:00:00.000Z',
-  price: null,
   ...over,
 });
 
@@ -58,5 +67,21 @@ describe('SessionsTable', () => {
     expect(html).not.toContain('aria-label="Delete Summer camp"');
     expect(html).not.toContain('aria-label="Edit Summer camp"');
     expect(html).not.toContain('Select all sessions');
+  });
+
+  it('shows a Draft, Live or Archived pill beside each session name', () => {
+    const html = render(
+      <SessionsTable
+        sessions={[
+          session({ id: '1', name: 'New one', status: 'draft' }),
+          session({ id: '2', name: 'Open one', status: 'live' }),
+          session({ id: '3', name: 'Old one', status: 'archived', archivedAt: '2027-06-01T00:00:00.000Z' }),
+        ]}
+        canManage={false}
+      />,
+    );
+    expect(html).toContain('Draft');
+    expect(html).toContain('Live');
+    expect(html).toContain('Archived');
   });
 });

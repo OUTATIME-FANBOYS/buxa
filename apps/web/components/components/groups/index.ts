@@ -4,4 +4,6 @@ export * from './GroupDialog';
 export * from './GroupsTable';
 export * from './RoomDialog';
 export * from './RosterSheet';
+export * from './PersonPicker';
 export * from './UnassignButton';
+export * from './UnplacedCampers';

@@ -32,8 +32,9 @@ const SESSION: Session = {
   endsOn: '2027-07-17',
   classCount: 0,
   isPublic: false,
+  status: 'live',
+  archivedAt: null,
   createdAt: '2027-01-01T00:00:00.000Z',
-  price: null,
 };
 
 const ROSTER: Roster = {
@@ -96,17 +97,54 @@ describe('printable roster page', () => {
 
   it('hides the controls in print with the no-print class', async () => {
     const html = await render();
-    const actions = html.match(/<nav[^>]*roster-print-actions[^>]*>/);
+    const back = html.match(/<nav[^>]*roster-back[^>]*>/);
 
-    expect(actions?.[0]).toContain('no-print');
+    expect(back?.[0]).toContain('no-print');
     expect(html).toMatch(/class="[^"]*no-print[^"]*"[^>]*>\s*Print roster/);
+  });
+
+  it('puts the title block and the Print button on one row, with the back link above them', async () => {
+    const html = await render();
+    const head = html.match(/<header class="roster-sheet-head">([\s\S]*?)<\/header>/);
+
+    expect(head?.[1]).toContain('<h1>Roster: Summer 1</h1>');
+    expect(head?.[1]).toContain('class="muted">2027-07-05 to 2027-07-17');
+    expect(head?.[1]).toContain('Print roster');
+    expect(html.indexOf('Back to groups and rooms')).toBeLessThan(html.indexOf('<header class="roster-sheet-head">'));
+  });
+
+  it('draws each group as a heading with its room as a muted sub-line over a table of Name and Role', async () => {
+    const html = await render();
+
+    expect(html).toMatch(/<h2[^>]*>Hawks<\/h2>/);
+    expect(html).toMatch(/<p class="roster-room-name muted">Lodge 1<\/p>/);
+    expect(html).toMatch(/<table class="table roster-table">/);
+    expect(html).toContain('<th scope="col">Name</th>');
+    expect(html).toContain('<th scope="col">Role</th>');
+    expect(html).toContain('<td>Ada Lovelace</td>');
+    expect(html).toContain('<td>Staff</td>');
   });
 
   it('shows the empty message when no one is placed', async () => {
     h.loaded = { ok: true, value: { session: SESSION, roster: { groups: [] } } };
     const html = await render();
 
-    expect(html).toContain('No one is placed in this session yet.');
+    expect(html).toContain('<p class="muted">No one is placed in this session yet.</p>');
+  });
+
+  it('shows a muted line instead of a table for a group with no one placed', async () => {
+    h.loaded = {
+      ok: true,
+      value: {
+        session: SESSION,
+        roster: { groups: [{ id: 'g3', name: 'Owls', rooms: [] }] },
+      },
+    };
+    const html = await render();
+
+    expect(html).toContain('<h2 id="roster-group-g3">Owls</h2>');
+    expect(html).toContain('<p class="muted">No campers placed in this group yet</p>');
+    expect(html).not.toContain('<table');
   });
 
   it('shows a teacher the same notice as the Groups page', async () => {

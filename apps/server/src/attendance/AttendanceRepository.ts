@@ -17,6 +17,12 @@ export interface CheckInRecord {
   sessionId: string | null;
   /** True when the camper had no active place in that session at check-in. */
   sessionUnassigned: boolean;
+  /** The session's name, or null for a camp-day visit. */
+  sessionName: string | null;
+  /** The class (series) id the camper is enrolled in for the session, or null. */
+  classId: string | null;
+  /** The class (series) name, or null. */
+  className: string | null;
 }
 
 export interface NewCheckIn {
@@ -35,12 +41,23 @@ export interface NewCheckOut {
   overrideReason: string | null;
   note: string | null;
 }
-/** `from` and `to` are instants (the service converts the camp's local days). `from` inclusive, `to` exclusive. */
+/** `from` and `to` are instants (the service converts the camp's local days). `from` inclusive, `to` exclusive. Every other part is optional and they combine. */
 export interface AttendanceQuery {
   from: string;
   to: string;
   personId?: string;
   onSiteOnly?: boolean;
+  checkedOutOnly?: boolean;
+  sessionId?: string;
+  classId?: string;
+  method?: CheckInMethod;
+  checkedInBy?: string;
+}
+
+/** The choices the log's filter offers: sessions, classes (a series, under its session) and staff. */
+export interface AttendanceFilterOptions {
+  sessions: { id: string; name: string }[];
+  classes: { id: string; name: string; sessionId: string }[];
 }
 
 export class AlreadyCheckedInError extends Error {
@@ -77,4 +94,6 @@ export interface AttendanceRepository {
   checkOut(actor: Actor, input: NewCheckOut): Promise<CheckInRecord>;
   /** Newest first, at most MAX_LOG_ROWS. */
   log(userId: string, orgId: string, query: AttendanceQuery): Promise<CheckInRecord[]>;
+  /** The sessions and classes the log's filter can name, for the camp. */
+  filterOptions(userId: string, orgId: string): Promise<AttendanceFilterOptions>;
 }

@@ -3,9 +3,28 @@
  * against the form version it was answered against; the browser is never trusted.
  */
 import { z } from 'zod';
+import {
+  ATTACHMENT_MAX_BYTES,
+  DOCUMENT_REVIEW_STATUSES,
+  DOCUMENT_STATUSES,
+  sniffAttachmentType,
+  type AttachmentContentType,
+} from '@buxa/domain';
 
-export const FIELD_KINDS = ['text', 'choice', 'date', 'yes_no'] as const;
+export const FIELD_KINDS = ['text', 'choice', 'date', 'yes_no', 'document'] as const;
 export type FieldKind = (typeof FIELD_KINDS)[number];
+
+/** A document's review, from the domain's one list. Staff set it; a submitted document starts as pending. */
+export const DocumentReviewStatusSchema = z.enum(DOCUMENT_REVIEW_STATUSES);
+export const DocumentStatusSchema = z.enum(DOCUMENT_STATUSES);
+export type DocumentReviewStatusValue = z.infer<typeof DocumentReviewStatusSchema>;
+
+/** What a document answer stores: the id of the uploaded file and its review. The bytes live in registration_files. */
+export const DocumentAnswerSchema = z.object({
+  fileId: z.string().uuid(),
+  status: DocumentReviewStatusSchema,
+});
+export type DocumentAnswer = z.infer<typeof DocumentAnswerSchema>;
 
 /** A custom field's key. Lowercase, so it can never collide with the camelCase standard fields. */
 export const FieldKeySchema = z
@@ -32,8 +51,71 @@ export const CustomFieldSchema = z.discriminatedUnion('kind', [
   }),
   FieldBaseSchema.extend({ kind: z.literal('date') }),
   FieldBaseSchema.extend({ kind: z.literal('yes_no') }),
+  // A file the family uploads (an immunization record, say). Required means "expected": a missing one is shown as Not received
+  // to staff, and does not stop the registration (see documentStatusOf in @buxa/domain).
+  FieldBaseSchema.extend({ kind: z.literal('document') }),
 ]);
 export type CustomField = z.infer<typeof CustomFieldSchema>;
+/** A custom question that is answered with a value in the submission (every kind except a document, whose answer is a file). */
+export type ValueField = Exclude<CustomField, { kind: 'document' }>;
+export const isValueField = (field: CustomField): field is ValueField => field.kind !== 'document';
+
+/** The checks a stored file must pass. Pure: the type comes from the file's first bytes, never from its name or the browser. */
+export type UploadProblem = string;
+
+export interface CheckedUpload {
+  name: string;
+  bytes: Uint8Array;
+  contentType: AttachmentContentType;
+}
+
+/** Checks one uploaded file: a name, not empty, not over the limit, and a PDF or image by its bytes. */
+export function checkUpload(
+  name: string,
+  bytes: Uint8Array,
+): { ok: true; value: CheckedUpload } | { ok: false; message: UploadProblem } {
+  const trimmed = name.trim();
+  if (trimmed === '') {
+    return { ok: false, message: 'The file needs a name.' };
+  }
+  if (trimmed.length > 255) {
+    return { ok: false, message: 'Keep the file name to 255 characters.' };
+  }
+  if (bytes.byteLength === 0) {
+    return { ok: false, message: 'That file is empty. Choose another file.' };
+  }
+  if (bytes.byteLength > ATTACHMENT_MAX_BYTES) {
+    return {
+      ok: false,
+      message: `That file is over ${ATTACHMENT_MAX_BYTES / (1024 * 1024)} MB. Choose a smaller file.`,
+    };
+  }
+  const contentType = sniffAttachmentType(bytes);
+  if (contentType === null) {
+    return { ok: false, message: 'That file is not a PDF, JPEG, PNG or WebP image.' };
+  }
+
+  return { ok: true, value: { name: trimmed, bytes, contentType } };
+}
+
+/** A file a family or staff member attached to a form, as the page shows it (no bytes). */
+export const FormAttachmentSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  contentType: z.string(),
+  sizeBytes: z.number().int(),
+});
+export type FormAttachment = z.infer<typeof FormAttachmentSchema>;
+
+/** A document question's status on one registration, as staff see it. `fileId` and `fileName` are null when nothing was sent. */
+export const RegistrationDocumentSchema = z.object({
+  fieldKey: z.string(),
+  label: z.string(),
+  fileId: z.string().nullable(),
+  fileName: z.string().nullable(),
+  status: DocumentStatusSchema,
+});
+export type RegistrationDocument = z.infer<typeof RegistrationDocumentSchema>;
 
 export const MAX_CUSTOM_FIELDS = 40;
 
@@ -113,7 +195,7 @@ export const MAX_CLASS_SELECTIONS = 200;
 const YesNo = z.union([z.boolean(), z.enum(['yes', 'no'])]).transform(v => (typeof v === 'boolean' ? v : v === 'yes'));
 
 /** The schema for one custom answer, built from its definition. Optional answers that are blank are left out. */
-function answerSchema(field: CustomField): z.ZodType<string | boolean | undefined> {
+function answerSchema(field: ValueField): z.ZodType<string | boolean | undefined> {
   let base: z.ZodType<string | boolean>;
   switch (field.kind) {
     case 'text':
@@ -159,7 +241,8 @@ export function buildSubmissionSchema(fields: readonly CustomField[]) {
       return [f.key, z.preprocess(blankAsMissing, required)];
     }),
   );
-  const customShape = Object.fromEntries(fields.map(f => [f.key, answerSchema(f)]));
+  // Document answers are files, checked by checkUpload; they are not in this value shape.
+  const customShape = Object.fromEntries(fields.filter(isValueField).map(f => [f.key, answerSchema(f)]));
 
   return z.object({
     formId: z.string().uuid(),
@@ -196,6 +279,8 @@ export const RegistrationClassSchema = z.object({
   status: z.enum(REGISTRATION_CLASS_STATUSES),
   paymentStatus: z.enum(['unpaid', 'paid']),
   paymentNote: z.string().nullable(),
+  /** The price the family saw at submission (the early-bird amount when it applied), or null for an old place or a class with no price. */
+  price: z.object({ amountMinor: z.number().int(), currency: z.string(), earlyBird: z.boolean() }).nullable(),
 });
 export type RegistrationClass = z.infer<typeof RegistrationClassSchema>;
 
@@ -204,10 +289,16 @@ export const RegistrationRowSchema = z.object({
   formVersion: z.number().int(),
   submittedAt: z.string(),
   /** Recorded as pending; a staff member confirms it (decision 3). */
-  status: z.enum(['pending', 'confirmed']),
+  status: z.enum(['pending', 'confirmed', 'withdrawn']),
   confirmedAt: z.string().nullable(),
+  /** When the registration was withdrawn (holds released, enrolments cancelled, record kept), or null. */
+  withdrawnAt: z.string().nullable(),
+  /** When the registration was archived (hidden from lists, kept), or null. */
+  archivedAt: z.string().nullable(),
   standard: z.record(z.string(), z.string().optional()),
-  custom: z.record(z.string(), z.union([z.string(), z.boolean()]).optional()),
+  custom: z.record(z.string(), z.union([z.string(), z.boolean(), DocumentAnswerSchema]).optional()),
+  /** Each document question of the form version, with its file and review (Not received when a required one is missing). */
+  documents: z.array(RegistrationDocumentSchema),
   sessions: z.array(RegistrationSessionSchema),
   classes: z.array(RegistrationClassSchema),
 });
@@ -220,6 +311,8 @@ export const RegistrationFormSchema = z.object({
   /** The sessions the form covers, by id and name, in name order. */
   sessions: z.array(z.object({ id: z.string(), name: z.string() })),
   fields: z.array(CustomFieldSchema),
+  /** Files staff attached for families to download (a blank immunization form, say). */
+  attachments: z.array(FormAttachmentSchema),
   publishedVersion: z.number().int().nullable(),
   submissionCount: z.number().int(),
   updatedAt: z.string(),

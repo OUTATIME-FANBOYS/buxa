@@ -1,13 +1,16 @@
 import { z } from 'zod';
 import {
   CustomFieldSchema,
+  DocumentAnswerSchema,
   type CustomField,
+  type FormAttachment,
   type RegistrationClass,
   type RegistrationForm,
   type RegistrationRow,
 } from '@buxa/contracts';
 import type { Db } from '../people/pgRows';
 import { RegistrationFormNotFoundError } from './errors';
+import { documentRowsFor } from './documentRows';
 
 /*
  * Reads for registration forms and submissions. Rows are parsed with zod where they leave the database, so the rest of the server
@@ -21,7 +24,11 @@ const FORM_SELECT = `
                      FROM registration_form_sessions s
                      JOIN classes c ON c.id = s.session_id AND c.org_id = s.org_id
                     WHERE s.form_id = f.id), '[]') AS sessions,
-         (SELECT count(*)::int FROM registrations r WHERE r.form_id = f.id) AS submission_count
+         (SELECT count(*)::int FROM registrations r WHERE r.form_id = f.id) AS submission_count,
+         COALESCE((SELECT json_agg(json_build_object('id', a.id, 'name', a.name, 'contentType', a.content_type,
+                                                     'sizeBytes', a.size_bytes) ORDER BY a.name, a.id)
+                     FROM registration_form_files a
+                    WHERE a.form_id = f.id), '[]') AS attachments
     FROM registration_forms f`;
 
 interface FormRow {
@@ -33,14 +40,19 @@ interface FormRow {
   updated_at: Date;
   sessions: { id: string; name: string }[];
   submission_count: number;
+  attachments: { id: string; name: string; contentType: string; sizeBytes: number }[];
 }
 
 const StoredAnswersSchema = z.object({
   standard: z.record(z.string(), z.string()),
-  custom: z.record(z.string(), z.union([z.string(), z.boolean()])),
+  custom: z.record(z.string(), z.union([z.string(), z.boolean(), DocumentAnswerSchema])),
 });
 
 const FieldsSchema = z.array(CustomFieldSchema);
+
+function toAttachment(a: FormRow['attachments'][number]): FormAttachment {
+  return { id: a.id, name: a.name, contentType: a.contentType, sizeBytes: a.sizeBytes };
+}
 
 function toForm(row: FormRow): RegistrationForm {
   return {
@@ -49,6 +61,7 @@ function toForm(row: FormRow): RegistrationForm {
     season: row.season,
     sessions: row.sessions,
     fields: FieldsSchema.parse(row.fields),
+    attachments: row.attachments.map(toAttachment),
     publishedVersion: row.published_version,
     submissionCount: row.submission_count,
     updatedAt: row.updated_at.toISOString(),
@@ -101,22 +114,27 @@ export async function listSubmissionRows(db: Db, formId: string): Promise<Regist
     form_version: number;
     created_at: Date;
     answers: unknown;
-    status: 'pending' | 'confirmed';
+    status: 'pending' | 'confirmed' | 'withdrawn';
     confirmed_at: Date | null;
+    withdrawn_at: Date | null;
+    archived_at: Date | null;
   }>(
-    `SELECT r.id, r.form_version, r.created_at, r.answers, r.status, r.confirmed_at
+    `SELECT r.id, r.form_version, r.created_at, r.answers, r.status, r.confirmed_at, r.withdrawn_at, r.archived_at
        FROM registrations r WHERE r.form_id = $1 ORDER BY r.created_at, r.id`,
     [formId],
   );
   if (rows.length === 0) {
     return [];
   }
-  const sessions = await db.query<{ registration_id: string; session_id: string; status: 'submitted'; name: string }>(
-    `SELECT rs.registration_id, rs.session_id, rs.status, c.name
-       FROM registration_sessions rs
-       JOIN classes c ON c.id = rs.session_id AND c.org_id = rs.org_id
-      WHERE rs.registration_id = ANY($1::uuid[])
-      ORDER BY c.name, rs.session_id`,
+  // A registration's sessions are derived from its places: registration_classes to sessions (the classes) to classes (the sessions).
+  // registration_sessions is no longer read.
+  const sessions = await db.query<{ registration_id: string; session_id: string; name: string }>(
+    `SELECT DISTINCT rc.registration_id, p.id AS session_id, p.name
+       FROM registration_classes rc
+       JOIN sessions c ON c.id = rc.class_id AND c.org_id = rc.org_id
+       JOIN classes p ON p.id = c.class_id AND p.org_id = c.org_id
+      WHERE rc.registration_id = ANY($1::uuid[])
+      ORDER BY p.name, p.id`,
     [rows.map(r => r.id)],
   );
 
@@ -124,9 +142,26 @@ export async function listSubmissionRows(db: Db, formId: string): Promise<Regist
     db,
     rows.map(r => r.id),
   );
+  // The document questions of each registration come from its form version, and the names of its stored files.
+  const ids = rows.map(r => r.id);
+  const versions = await db.query<{ registration_id: string; fields: unknown }>(
+    `SELECT r.id AS registration_id, v.fields
+       FROM registrations r
+       JOIN registration_form_versions v ON v.org_id = r.org_id AND v.form_id = r.form_id AND v.version = r.form_version
+      WHERE r.id = ANY($1::uuid[])`,
+    [ids],
+  );
+  const files = await db.query<{ id: string; registration_id: string; name: string }>(
+    'SELECT id, registration_id, name FROM registration_files WHERE registration_id = ANY($1::uuid[])',
+    [ids],
+  );
+  const fieldsByRegistration = new Map(
+    versions.rows.map(v => [v.registration_id, FieldsSchema.parse(v.fields)] as const),
+  );
 
   return rows.map(r => {
     const answers = StoredAnswersSchema.parse(r.answers);
+    const fileNames = new Map(files.rows.filter(f => f.registration_id === r.id).map(f => [f.id, f.name] as const));
 
     return {
       id: r.id,
@@ -134,11 +169,14 @@ export async function listSubmissionRows(db: Db, formId: string): Promise<Regist
       submittedAt: r.created_at.toISOString(),
       status: r.status,
       confirmedAt: r.confirmed_at ? r.confirmed_at.toISOString() : null,
+      withdrawnAt: r.withdrawn_at ? r.withdrawn_at.toISOString() : null,
+      archivedAt: r.archived_at ? r.archived_at.toISOString() : null,
       standard: answers.standard,
       custom: answers.custom,
+      documents: documentRowsFor(fieldsByRegistration.get(r.id) ?? [], answers.custom, fileNames),
       sessions: sessions.rows
         .filter(s => s.registration_id === r.id)
-        .map(s => ({ sessionId: s.session_id, sessionName: s.name, status: s.status })),
+        .map(s => ({ sessionId: s.session_id, sessionName: s.name, status: 'submitted' as const })),
       classes: places.filter(p => p.registrationId === r.id).map(p => p.row),
     };
   });
@@ -159,6 +197,9 @@ interface PlaceRow {
   payment_status: 'unpaid' | 'paid';
   payment_note: string | null;
   hold_id: string | null;
+  price_minor: number | null;
+  price_currency: string | null;
+  early_bird_applied: boolean | null;
 }
 
 /**
@@ -194,7 +235,8 @@ async function listClassRows(
     `SELECT rc.id, rc.registration_id, rc.class_id, c.name AS class_name, c.class_id AS session_id, s.name AS session_name,
             rc.person_id, (p.given_name || ' ' || p.family_name) AS camper_name,
             rc.hold_id, h.expires_at AS hold_expires_at, h.released_at AS hold_released_at,
-            e.status AS enrolment_status, rc.payment_status, rc.payment_note
+            e.status AS enrolment_status, rc.payment_status, rc.payment_note,
+            rc.price_minor, rc.price_currency, rc.early_bird_applied
        FROM registration_classes rc
        JOIN sessions c ON c.id = rc.class_id AND c.org_id = rc.org_id
        JOIN classes s ON s.id = c.class_id AND s.org_id = c.org_id
@@ -220,6 +262,10 @@ async function listClassRows(
       status: placeStatus(r, now),
       paymentStatus: r.payment_status,
       paymentNote: r.payment_note,
+      price:
+        r.price_minor === null || r.price_currency === null
+          ? null
+          : { amountMinor: r.price_minor, currency: r.price_currency, earlyBird: r.early_bird_applied === true },
     },
   }));
 }

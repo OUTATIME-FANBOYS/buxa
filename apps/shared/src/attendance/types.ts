@@ -37,3 +37,10 @@ export interface OnSiteEntry {
 
 /** The outcome of reading a code. `unknown` is the single neutral answer for unreadable, unknown and revoked codes alike. */
 export type ScanResult = { kind: 'unknown' } | { kind: 'person'; person: PersonSummary };
+
+/** The log filter's choices: the camp's sessions, its classes (a series, under its session) and its staff. */
+export interface LogFilterChoices {
+  sessions: { id: string; name: string }[];
+  classes: { id: string; name: string; sessionId: string }[];
+  staff: { id: string; name: string }[];
+}

@@ -1,5 +1,13 @@
 import { describeRefusal, type Refusal } from '@buxa/domain';
-import { ClassOutsideSessionError, isClassError, isEnrolmentRefusal, SESSION_HAS_CLASSES_MESSAGE } from './errors';
+import {
+  ClassOutsideSessionError,
+  isClassError,
+  isEnrolmentRefusal,
+  SESSION_HAS_CLASSES_MESSAGE,
+  SessionHasEnrolmentsError,
+  SessionNameConfirmationError,
+  SessionNameTakenError,
+} from './errors';
 
 const isOutsideSession = (e: unknown): e is ClassOutsideSessionError => isClassError(e, 'class-outside-session');
 
@@ -7,6 +15,7 @@ const isOutsideSession = (e: unknown): e is ClassOutsideSessionError => isClassE
 export type Outcome<T> = { ok: true; value: T } | { ok: false; failure: Failure };
 
 export type FailureReason =
+  | 'occurrence_refused'
   | 'class_not_found'
   | 'session_not_found'
   | 'class_outside_session'
@@ -15,6 +24,14 @@ export type FailureReason =
   | 'capacity_below_enrolled'
   | 'class_has_enrolments'
   | 'session_has_classes'
+  | 'session_name_taken'
+  | 'session_has_enrolments'
+  | 'session_name_confirmation'
+  | 'session_not_live'
+  | 'session_not_draft'
+  | 'session_dates_blocked'
+  | 'session_publish_blocked'
+  | 'class_dates_flagged'
   | 'session_invalid'
   | 'enrolment_not_found'
   | 'camper_not_found'
@@ -24,6 +41,8 @@ export type FailureReason =
   | 'hold_exists'
   | 'teacher_not_found'
   | 'teacher_field_refused'
+  | 'series_days_in_use'
+  | 'already_enrolled'
   | Refusal['reason'];
 
 export interface Failure {
@@ -82,15 +101,19 @@ export async function attempt<T>(work: () => Promise<T>, timeZone: string): Prom
       return { ok: false, failure: { reason: refused.reason, message: refused.message } };
     }
     if (isOutsideSession(e)) {
-      const { startsOn, endsOn } = e;
-
       return {
         ok: false,
         failure: {
           reason: 'class_outside_session',
-          message: `The class must fall on days between ${startsOn} and ${endsOn}, the session's first and last day.`,
+          message: 'The class falls outside the session dates. Change the session dates first.',
         },
       };
+    }
+    if (isClassError(e, 'occurrence-refused')) {
+      return { ok: false, failure: { reason: 'occurrence_refused', message: (e as Error).message } };
+    }
+    if (e instanceof Error && (e as { kind?: unknown }).kind === 'series-days-in-use') {
+      return { ok: false, failure: { reason: 'series_days_in_use', message: e.message } };
     }
     if (isClassError(e, 'teacher-field-refused')) {
       return { ok: false, failure: { reason: 'teacher_field_refused', message: (e as Error).message } };
@@ -116,11 +139,38 @@ export async function attempt<T>(work: () => Promise<T>, timeZone: string): Prom
     if (isClassError(e, 'session-has-classes')) {
       return { ok: false, failure: { reason: 'session_has_classes', message: SESSION_HAS_CLASSES_MESSAGE } };
     }
+    if (e instanceof SessionNameTakenError) {
+      return { ok: false, failure: { reason: 'session_name_taken', message: e.message } };
+    }
+    if (e instanceof SessionHasEnrolmentsError) {
+      return { ok: false, failure: { reason: 'session_has_enrolments', message: e.message } };
+    }
+    if (isClassError(e, 'session-not-live')) {
+      return { ok: false, failure: { reason: 'session_not_live', message: (e as Error).message } };
+    }
+    if (isClassError(e, 'session-dates-blocked')) {
+      return { ok: false, failure: { reason: 'session_dates_blocked', message: (e as Error).message } };
+    }
+    if (isClassError(e, 'session-publish-blocked')) {
+      return { ok: false, failure: { reason: 'session_publish_blocked', message: (e as Error).message } };
+    }
+    if (isClassError(e, 'class-dates-flagged')) {
+      return { ok: false, failure: { reason: 'class_dates_flagged', message: (e as Error).message } };
+    }
+    if (isClassError(e, 'session-not-draft')) {
+      return { ok: false, failure: { reason: 'session_not_draft', message: (e as Error).message } };
+    }
+    if (e instanceof SessionNameConfirmationError) {
+      return { ok: false, failure: { reason: 'session_name_confirmation', message: e.message } };
+    }
     if (isClassError(e, 'hold-exists')) {
       return {
         ok: false,
-        failure: { reason: 'hold_exists', message: 'This family already holds a place in this session.' },
+        failure: { reason: 'hold_exists', message: 'This child already holds a place in this class.' },
       };
+    }
+    if (isClassError(e, 'already-enrolled')) {
+      return { ok: false, failure: { reason: 'already_enrolled', message: (e as Error).message } };
     }
     if (isEnrolmentRefusal(e)) {
       return {

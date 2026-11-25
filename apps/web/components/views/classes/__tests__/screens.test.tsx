@@ -7,6 +7,7 @@ import type { Role } from '@buxa/domain';
 import { UiProvider } from '@buxa/middleware/providers/providers';
 import { forbidden } from '@buxa/server/http/errors';
 import { settle } from '@buxa/domain';
+import { seriesOf } from './seriesOf';
 
 const notFound = vi.hoisted(() =>
   vi.fn(() => {
@@ -19,10 +20,10 @@ const services = vi.hoisted(() => ({
   classes: {
     listSessions: vi.fn(),
     getSession: vi.fn(),
-    listClasses: vi.fn(),
+    listSeries: vi.fn(),
+    listSeriesOccurrences: vi.fn(),
     getClass: vi.fn(),
     listEnrolments: vi.fn(),
-    listTeacherAssignments: vi.fn(),
   },
   people: { list: vi.fn() },
   orgs: { getCamp: vi.fn(), listMembers: vi.fn() },
@@ -39,16 +40,21 @@ vi.mock('@buxa/server/composers/people/camp', () => ({
 }));
 vi.mock('@/actions/classes', () => ({
   createSessionAction: vi.fn(),
-  addClassAction: vi.fn(),
-  updateClassAction: vi.fn(),
+  updateSeriesAction: vi.fn(),
+  deleteSeriesAction: vi.fn(),
+  cancelOccurrenceAction: vi.fn(),
+  restoreOccurrenceAction: vi.fn(),
   deleteClassAction: vi.fn(),
   updateSessionAction: vi.fn(),
   deleteSessionAction: vi.fn(),
+  deleteSessionWithClassesAction: vi.fn(),
+  setSessionArchivedAction: vi.fn(),
+  publishSessionAction: vi.fn(),
+  sessionDeleteImpactAction: vi.fn(),
   enrolAction: vi.fn(),
   promoteWaitlistAction: vi.fn(),
   cancelEnrolmentAction: vi.fn(),
-  addRecurringClassesAction: vi.fn(),
-  setTeachersAction: vi.fn(),
+  addSeriesAction: vi.fn(),
   importClassesAction: vi.fn(),
 }));
 
@@ -71,8 +77,9 @@ const parent: Session = {
   endsOn: '2027-07-14',
   classCount: 1,
   isPublic: false,
+  status: 'live',
+  archivedAt: null,
   createdAt: '2027-07-01T00:00:00.000Z',
-  price: null,
 };
 // Full: two places, both taken, and one on the waitlist. Monday 5 July 2027, 09:00 to 12:00 in Sydney.
 const full: Class = {
@@ -89,6 +96,10 @@ const full: Class = {
   instructors: [{ id: INSTRUCTOR_ID, name: 'Ivy Chen' }],
   seatsTaken: 2,
   waitlisted: 1,
+  datesOutsideSession: false,
+  seriesId: 'series-1',
+  occurrenceStatus: 'active',
+  cancelReason: null,
   price: null,
 };
 const enrolment: Enrolment = {
@@ -114,11 +125,10 @@ beforeEach(() => {
   });
   asRole('staff');
   services.orgs.getCamp.mockResolvedValue({ timezone: 'Australia/Sydney' });
-  services.classes.listTeacherAssignments.mockResolvedValue({ ok: true, value: [] });
   services.orgs.listMembers.mockResolvedValue({ members: [] });
   services.classes.listSessions.mockResolvedValue({ ok: true, value: [parent] });
   services.classes.getSession.mockResolvedValue({ ok: true, value: parent });
-  services.classes.listClasses.mockResolvedValue({ ok: true, value: [full] });
+  services.classes.listSeries.mockResolvedValue({ ok: true, value: seriesOf([full]) });
   services.classes.getClass.mockResolvedValue({ ok: true, value: full });
   services.classes.listEnrolments.mockResolvedValue({ ok: true, value: [enrolment] });
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Kept: the compiler needs this assertion to type the value; removing it fails typecheck.
@@ -162,6 +172,12 @@ describe('ClassPage (one session and its classes)', () => {
     expect(html).toContain('2027-07-01 to 2027-07-14');
     expect(html).toContain('Robotics');
     expect(html).toContain('Full, with a waitlist');
+    expect(html).toContain('>New class</button>');
+  });
+
+  it('has no Add a weekly series button: New class sets the days of the week itself', async () => {
+    const html = render(await ClassPage({ classId: SESSION_ID, searchParams: {} }));
+    expect(html).not.toContain('Add a weekly series');
     expect(html).toContain('>New class</button>');
   });
 
@@ -221,6 +237,29 @@ describe('ClassPage (one session and its classes)', () => {
     const html = render(await ClassPage({ classId: SESSION_ID, searchParams: { class: CLASS_ID } }));
     expect(html).toContain('aria-label="Class details"');
     expect(html).toContain('<dt>Instructors</dt><dd>Ivy Chen</dd>');
+  });
+
+  it('shows the instructor names in the Instructors column, and None yet for a class with none', async () => {
+    const unstaffed: Class = {
+      ...full,
+      id: '77777777-7777-4777-8777-777777777777',
+      name: 'Painting',
+      instructorIds: [],
+      instructors: [],
+    };
+    services.classes.listSeries.mockResolvedValue({ ok: true, value: seriesOf([full, unstaffed]) });
+    const html = render(await ClassPage({ classId: SESSION_ID, searchParams: {} }));
+    expect(html).toContain('<td>Ivy Chen</td>');
+    expect(html).toContain('<td>None yet</td>');
+  });
+
+  it('has no Teachers section, for staff or an admin', async () => {
+    for (const role of ['staff', 'admin'] as const) {
+      asRole(role);
+      const html = render(await ClassPage({ classId: SESSION_ID, searchParams: {} }));
+      expect(html).not.toContain('Teachers');
+      expect(html).not.toContain('teachers-heading');
+    }
   });
 });
 

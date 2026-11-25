@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto';
-import type { Actor, RegistrationStatus } from '@buxa/domain';
+import type { Actor, DocumentReviewStatus, RegistrationStatus } from '@buxa/domain';
+import type { FormAttachment } from '@buxa/contracts';
+import { documentRowsFor } from './documentRows';
 import type {
   CustomField,
   RegistrationClass,
@@ -9,6 +11,7 @@ import type {
 } from '@buxa/contracts';
 import {
   RegistrationClassNotFoundError,
+  RegistrationFileNotFoundError,
   RegistrationFormNotFoundError,
   RegistrationNotFoundError,
   RegistrationRefusedError,
@@ -19,10 +22,15 @@ import type {
   ClassLookup,
   ConfirmationRule,
   ConfirmationWork,
+  ErasureRule,
+  FileDownload,
+  NewDocument,
   NewRegistration,
   PublishedVersion,
+  StoredFileInput,
   RegistrationRepository,
   RegistrationRule,
+  WithdrawalRule,
 } from './RegistrationRepository';
 
 /** A child's place in a class, as the in-memory store keeps it. Holds and seats are not modelled here (see the Postgres tests). */
@@ -35,6 +43,7 @@ interface StoredPlace {
   status: RegistrationClass['status'];
   paymentStatus: 'unpaid' | 'paid';
   paymentNote: string | null;
+  price: RegistrationClass['price'];
 }
 
 interface StoredForm {
@@ -46,6 +55,7 @@ interface StoredForm {
   sessionIds: string[];
   versions: PublishedVersion[];
   updatedAt: string;
+  attachments: (StoredFileInput & { formId: string })[];
 }
 
 interface StoredRegistration {
@@ -58,7 +68,10 @@ interface StoredRegistration {
   createdAt: string;
   status: RegistrationStatus;
   confirmedAt: string | null;
+  withdrawnAt: string | null;
+  archivedAt: string | null;
   places: StoredPlace[];
+  documents: NewDocument[];
 }
 
 /** Runs the work now and settles the promise with its result, or rejects it with what it throws. Same contract as the adapter. */
@@ -72,6 +85,9 @@ const later = <T>(work: () => T): Promise<T> => new Promise<T>(resolve => resolv
 export class InMemoryRegistrationRepository implements RegistrationRepository {
   private readonly forms = new Map<string, StoredForm>();
   private readonly registrations = new Map<string, StoredRegistration>();
+
+  /** Test setup: the sessions that are a draft or archived. A submission that names one is refused (session_not_open). */
+  readonly closedSessionIds = new Set<string>();
 
   /**
    * `campersOf` finds the camper people for a registration's answers (the Postgres query in production). `credentials` is the badge
@@ -136,6 +152,7 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
       season: form.season,
       sessions: [...form.sessionIds].sort().map(id => ({ id, name: id })),
       fields: form.draft,
+      attachments: form.attachments.map(toAttachment),
       publishedVersion: form.versions.at(-1)?.version ?? null,
       submissionCount,
       updatedAt: form.updatedAt,
@@ -165,7 +182,7 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
     });
   }
 
-  createForm(actor: Actor, input: RegistrationFormInput): Promise<RegistrationForm> {
+  createForm(actor: Actor, input: RegistrationFormInput, files: readonly StoredFileInput[]): Promise<RegistrationForm> {
     return later(() => {
       this.requireSessions(actor.orgId, input.sessionIds);
       const form: StoredForm = {
@@ -177,14 +194,21 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
         sessionIds: input.sessionIds,
         versions: [],
         updatedAt: new Date().toISOString(),
+        attachments: [],
       };
+      form.attachments.push(...files.map(f => ({ ...f, formId: form.id })));
       this.forms.set(form.id, form);
 
       return this.view(form);
     });
   }
 
-  updateForm(actor: Actor, formId: string, input: RegistrationFormInput): Promise<RegistrationForm> {
+  updateForm(
+    actor: Actor,
+    formId: string,
+    input: RegistrationFormInput,
+    files: readonly StoredFileInput[],
+  ): Promise<RegistrationForm> {
     return later(() => {
       const form = this.ownForm(actor.orgId, formId);
       this.requireSessions(actor.orgId, input.sessionIds);
@@ -195,8 +219,61 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
         sessionIds: input.sessionIds,
         updatedAt: new Date().toISOString(),
       });
+      form.attachments.push(...files.map(f => ({ ...f, formId })));
 
       return this.view(form);
+    });
+  }
+
+  removeFormFile(actor: Actor, formId: string, fileId: string): Promise<void> {
+    return later(() => {
+      const form = this.ownForm(actor.orgId, formId);
+      const before = form.attachments.length;
+      form.attachments = form.attachments.filter(a => a.id !== fileId);
+      if (form.attachments.length === before) {
+        throw new RegistrationFileNotFoundError();
+      }
+    });
+  }
+
+  formFileDownload(userId: string, orgId: string, fileId: string, sessionId: string): Promise<FileDownload | null> {
+    return later(() => {
+      for (const form of this.forms.values()) {
+        const file = form.orgId === orgId ? form.attachments.find(a => a.id === fileId) : undefined;
+        if (file && form.sessionIds.includes(sessionId)) {
+          return { id: file.id, name: file.name, contentType: file.contentType, bytes: file.bytes };
+        }
+      }
+
+      return null;
+    });
+  }
+
+  documentDownload(userId: string, orgId: string, fileId: string): Promise<FileDownload | null> {
+    return later(() => {
+      for (const registration of this.registrations.values()) {
+        const document = registration.orgId === orgId ? registration.documents.find(d => d.id === fileId) : undefined;
+        if (document) {
+          return { id: document.id, name: document.name, contentType: document.contentType, bytes: document.bytes };
+        }
+      }
+
+      return null;
+    });
+  }
+
+  setDocumentReview(actor: Actor, fileId: string, status: DocumentReviewStatus): Promise<void> {
+    return later(() => {
+      for (const registration of this.registrations.values()) {
+        const document =
+          registration.orgId === actor.orgId ? registration.documents.find(d => d.id === fileId) : undefined;
+        if (document) {
+          registration.answers.custom[document.fieldKey] = { fileId, status };
+
+          return;
+        }
+      }
+      throw new RegistrationFileNotFoundError();
     });
   }
 
@@ -212,7 +289,7 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
 
   listSubmissions(userId: string, orgId: string, formId: string): Promise<RegistrationRow[]> {
     return later(() => {
-      this.ownForm(orgId, formId);
+      const form = this.ownForm(orgId, formId);
 
       return [...this.registrations.values()]
         .filter(r => r.formId === formId && r.orgId === orgId)
@@ -222,8 +299,15 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
           submittedAt: r.createdAt,
           status: r.status,
           confirmedAt: r.confirmedAt,
+          withdrawnAt: r.withdrawnAt,
+          archivedAt: r.archivedAt,
           standard: r.answers.standard,
           custom: r.answers.custom,
+          documents: documentRowsFor(
+            form.versions.find(v => v.version === r.version)?.fields ?? [],
+            r.answers.custom,
+            new Map(r.documents.map(d => [d.id, d.name] as const)),
+          ),
           sessions: r.sessionIds.map(sessionId => ({
             sessionId,
             sessionName: sessionId,
@@ -240,6 +324,7 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
             status: p.status,
             paymentStatus: p.paymentStatus,
             paymentNote: p.paymentNote,
+            price: p.price,
           })),
         }));
     });
@@ -251,6 +336,7 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
       const decision = rule({
         publishedVersion: form.versions.at(-1)?.version ?? null,
         formSessionIds: form.sessionIds,
+        closedSessionIds: form.sessionIds.filter(id => this.closedSessionIds.has(id)),
       });
       if (!decision.allow) {
         throw new RegistrationRefusedError(decision.reason);
@@ -269,6 +355,7 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
           status: 'held',
           paymentStatus: 'unpaid',
           paymentNote: null,
+          price: null,
         };
       });
       this.registrations.set(id, {
@@ -281,7 +368,10 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
         createdAt: new Date().toISOString(),
         status: 'pending',
         confirmedAt: null,
+        withdrawnAt: null,
+        archivedAt: null,
         places,
+        documents: registration.documents,
       });
 
       return id;
@@ -332,4 +422,53 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
       throw error;
     }
   }
+
+  withdraw(actor: Actor, registrationId: string, rule: WithdrawalRule): Promise<void> {
+    return later(() => {
+      const found = this.ownRegistration(actor.orgId, registrationId);
+      const decision = rule(found.status);
+      if (!decision.allow) {
+        throw new RegistrationRefusedError(decision.reason);
+      }
+      found.status = 'withdrawn';
+      found.withdrawnAt = new Date().toISOString();
+      for (const place of found.places) {
+        place.status = place.status === 'held' ? 'expired' : 'cancelled';
+      }
+    });
+  }
+
+  setArchived(actor: Actor, registrationId: string, archived: boolean): Promise<void> {
+    return later(() => {
+      const found = this.ownRegistration(actor.orgId, registrationId);
+      found.archivedAt = archived ? (found.archivedAt ?? new Date().toISOString()) : null;
+    });
+  }
+
+  erase(actor: Actor, registrationId: string, rule: ErasureRule): Promise<void> {
+    return later(() => {
+      const found = this.ownRegistration(actor.orgId, registrationId);
+      const decision = rule({
+        status: found.status,
+        activeEnrolments: found.places.filter(p => p.status === 'enrolled' || p.status === 'waitlisted').length,
+      });
+      if (!decision.allow) {
+        throw new RegistrationRefusedError(decision.reason);
+      }
+      this.registrations.delete(found.id);
+    });
+  }
+
+  private ownRegistration(orgId: string, registrationId: string): StoredRegistration {
+    const found = this.registrations.get(registrationId);
+    if (!found || found.orgId !== orgId) {
+      throw new RegistrationNotFoundError();
+    }
+
+    return found;
+  }
+}
+
+function toAttachment(file: StoredFileInput & { formId: string }): FormAttachment {
+  return { id: file.id, name: file.name, contentType: file.contentType, sizeBytes: file.bytes.byteLength };
 }

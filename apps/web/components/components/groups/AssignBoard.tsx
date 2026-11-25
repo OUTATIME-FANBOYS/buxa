@@ -1,6 +1,8 @@
 import type { Assignment, Group, Room } from '@buxa/contracts';
 import { ratioText } from './GroupsTable';
 import { UnassignButton } from './UnassignButton';
+import type { AssignChoices } from './AssignDialog';
+import { UnplacedCampers } from './UnplacedCampers';
 
 export interface BoardPerson {
   id: string;
@@ -8,8 +10,9 @@ export interface BoardPerson {
 }
 
 /**
- * Each group with the people placed in it and their room, then the campers not placed yet. Read-only; the Place or move button on the
- * page is what changes it. A ratio override is shown under the person it applies to, with its reason.
+ * Each group as a table of the people placed in it: name, role and room, and (for staff) the Unassign icon at the right end of the
+ * row. Then the campers not placed yet, searchable. The Place or move button on the page is what adds people. A ratio override is
+ * shown under the person it applies to, with its reason.
  */
 export function AssignBoard({
   sessionId,
@@ -18,6 +21,7 @@ export function AssignBoard({
   rooms,
   assignments,
   unplaced,
+  choices,
 }: {
   sessionId: string;
   /** True when the viewer may place or move people (classes:manage). Only then is each member's Unassign button shown. */
@@ -26,6 +30,8 @@ export function AssignBoard({
   rooms: readonly Room[];
   assignments: readonly Assignment[];
   unplaced: readonly BoardPerson[];
+  /** Given only to people who may place: it turns on each unplaced camper's Place button. */
+  choices?: AssignChoices;
 }) {
   const roomName = (id: string): string => rooms.find(r => r.id === id)?.name ?? 'Unknown room';
 
@@ -48,43 +54,52 @@ export function AssignBoard({
             {members.length === 0 ? (
               <p className="muted">No one placed here yet.</p>
             ) : (
-              <ul className="stack" aria-label={`People in ${group.name}`}>
-                {members.map(a => (
-                  <li key={a.id}>
-                    <strong>{a.personName}</strong>{' '}
-                    <span className="muted">
-                      {a.role === 'staff' ? 'Staff' : 'Camper'}, {roomName(a.roomId)}
-                    </span>
-                    {a.overrideReason && <p className="muted">Ratio overridden: {a.overrideReason}</p>}
-                    {canManage && (
-                      <UnassignButton
-                        sessionId={sessionId}
-                        personId={a.personId}
-                        personName={a.personName}
-                        groupName={group.name}
-                      />
-                    )}
-                  </li>
-                ))}
-              </ul>
+              <div className="table-wrap">
+                <table className="table assign-table">
+                  <caption className="sr-only">People in {group.name}</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Person</th>
+                      <th scope="col">Role and room</th>
+                      {canManage && (
+                        <th scope="col">
+                          <span className="sr-only">Actions</span>
+                        </th>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {members.map(a => (
+                      <tr key={a.id}>
+                        <th scope="row" className="assign-table__name">
+                          {a.personName}
+                          {a.overrideReason && <span className="muted">Ratio overridden: {a.overrideReason}</span>}
+                        </th>
+                        <td>
+                          {a.role === 'staff' ? 'Staff' : 'Camper'}, {roomName(a.roomId)}
+                        </td>
+                        {canManage && (
+                          <td className="classes-actions-cell">
+                            <div className="classes-row-actions">
+                              <UnassignButton
+                                sessionId={sessionId}
+                                personId={a.personId}
+                                personName={a.personName}
+                                groupName={group.name}
+                              />
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </section>
         );
       })}
-      <section className="panel stack" aria-labelledby="unplaced-heading">
-        <h2 id="unplaced-heading" className="people-subheading">
-          Campers not placed yet
-        </h2>
-        {unplaced.length === 0 ? (
-          <p className="muted">Every camper is placed.</p>
-        ) : (
-          <ul className="stack">
-            {unplaced.map(p => (
-              <li key={p.id}>{p.name}</li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <UnplacedCampers people={unplaced} choices={choices} />
     </div>
   );
 }

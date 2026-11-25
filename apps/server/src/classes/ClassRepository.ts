@@ -1,9 +1,22 @@
-import type { Actor, EnrolmentDecision, EnrolmentFacts } from '@buxa/domain';
-import type { Class, Enrolment, NewSessionInput, Session, SessionEditInput, SessionPriceInput } from '@buxa/contracts';
+import type { Actor, DatesPlanClass, EnrolmentDecision, EnrolmentFacts } from '@buxa/domain';
+import type { OccurrenceCommand } from '@buxa/domain';
+import type {
+  Class,
+  ClassPriceInput,
+  Enrolment,
+  NewSessionInput,
+  Series,
+  Session,
+  SessionDeleteImpact,
+  SessionEditInput,
+} from '@buxa/contracts';
 
 export type { Class, Session, Enrolment } from '@buxa/contracts';
 
-/** A class as stored: its time range, ages and camp size. `capacity` is always given (the form requires it). */
+/**
+ * A class as stored: its time range, ages, camp size and its own price (null when none is set). `capacity` is always given (the
+ * form requires it).
+ */
 export interface ClassRecord {
   name: string;
   ageRange: { minAge: number; maxAge: number };
@@ -12,13 +25,50 @@ export interface ClassRecord {
   endsAt: string;
   location: string;
   instructorIds: string[];
+  price: ClassPriceInput | null;
 }
 
-/** A class's times and name, for every class in the camp: what a new class must not clash with. */
+/**
+ * An active class day's times, name, location and series, for every class in the camp: what a new class must not overlap in its
+ * location (locationClash.ts). Cancelled days are left out; they take no place.
+ */
 export interface CampClassSpan {
   startsAt: string;
   endsAt: string;
   className: string;
+  location: string;
+  /** The series the day belongs to, or null for a span that is not a series day (a candidate not yet saved). */
+  seriesId: string | null;
+}
+
+/**
+ * A change to the days of a series: the weekdays and first and last allowed times it now has, the days to add, and the active days
+ * to remove. The service has checked that no removed day has a place, hold or registration (see seriesHolders).
+ */
+export interface SeriesSchedule {
+  weekdays: number[];
+  seriesStartsAt: string;
+  seriesEndsAt: string;
+  add: { startsAt: string; endsAt: string }[];
+  removeIds: string[];
+}
+
+/** The fields every day of a series shares: the name, ages, camp size, location, instructors and price. */
+export interface SeriesFields {
+  name: string;
+  ageRange: { minAge: number; maxAge: number };
+  capacity: number;
+  location: string;
+  instructorIds: string[];
+  price: ClassPriceInput | null;
+}
+
+/** A new series: its shared fields, its weekdays, its first and last allowed times, and one occurrence per day (see planSeries). */
+export interface SeriesRecord extends SeriesFields {
+  weekdays: number[];
+  seriesStartsAt: string;
+  seriesEndsAt: string;
+  occurrences: { startsAt: string; endsAt: string }[];
 }
 
 export interface EnrolRequest {
@@ -43,26 +93,78 @@ export type EnrolmentRule = (facts: GatheredEnrolmentFacts) => EnrolmentDecision
 export interface ClassRepository {
   listSessions(userId: string, orgId: string): Promise<Session[]>;
   getSession(userId: string, orgId: string, sessionId: string): Promise<Session | null>;
-  /** Audits `session.create`, and `session.price_change` when the session is created with a price. */
+  /** Audits `session.create`. */
   createSession(actor: Actor, input: NewSessionInput): Promise<Session>;
   /**
-   * Saves a session's name, description, dates and public flag (not its price). Audits `session.update` with the old and new values,
-   * and writes nothing when no value changed. Throws SessionNotFoundError.
+   * Saves a session's name, description, dates and public flag, and flags the classes that fall outside the new dates, in one
+   * transaction. Audits `session.update` with the old and new values, and `class.dates_flagged` for each newly flagged class. A shrink
+   * that would flag a class with people on it is refused (SessionDatesBlockedError) and nothing is written. Throws SessionNotFoundError.
    */
   updateSession(actor: Actor, sessionId: string, input: SessionEditInput): Promise<Session>;
+  /** The classes of a session with what a date change needs (times, flag, people), read only. Throws SessionNotFoundError. */
+  sessionDatesPlanRows(userId: string, orgId: string, sessionId: string): Promise<DatesPlanClass[]>;
   /** Audits `session.delete`. Throws SessionNotFoundError, or SessionHasClassesError when the session holds any class. */
   deleteSession(actor: Actor, sessionId: string): Promise<void>;
-  /** Sets or clears a session's price. Audits `session.price_change` with the old and new price. Throws SessionNotFoundError. */
-  setSessionPrice(actor: Actor, sessionId: string, price: SessionPriceInput | null): Promise<Session>;
+  /**
+   * Deletes a session's classes and then the session, in one transaction, for an admin or the owner. Audits `class.delete` for each
+   * class and `session.delete`. Throws SessionNotFoundError, or SessionHasEnrolmentsError when any class has an enrolment, hold,
+   * registration, check-in or season pass.
+   */
+  deleteSessionWithClasses(actor: Actor, sessionId: string): Promise<void>;
+  /** Takes a draft live. Audits `session.publish`. A live session is returned unchanged. Throws SessionNotFoundError, or SessionNotDraftError for an archived one. */
+  publishSession(actor: Actor, sessionId: string): Promise<Session>;
+  /** What deleting a draft would remove (counts). Throws SessionNotFoundError. */
+  sessionDeleteImpact(userId: string, orgId: string, sessionId: string): Promise<SessionDeleteImpact>;
+  /**
+   * Deletes a draft session with everything under it (classes, groups, rooms, assignments, instructors, form links) in one
+   * transaction. Audits `class.delete` for each class and `session.delete` with the counts. Throws SessionNotFoundError, or
+   * SessionNotDraftError when the session is not a draft.
+   */
+  deleteDraftSession(actor: Actor, sessionId: string): Promise<void>;
+  /** Archives (`archived` true) or unarchives a session. Audits `session.archive` or `session.unarchive`. Throws SessionNotFoundError. */
+  setSessionArchived(actor: Actor, sessionId: string, archived: boolean): Promise<Session>;
+  /** The name of another session in the camp with the same name in the normalised form (see sessionNameKey), or null. `exceptId` is the session being edited. */
+  sessionNameTaken(userId: string, orgId: string, name: string, exceptId: string | null): Promise<string | null>;
   /** Audits `session.update`. Throws SessionNotFoundError. */
   setSessionPublic(actor: Actor, sessionId: string, isPublic: boolean): Promise<Session>;
   /**
-   * Writes every class of a series in one transaction, or none. Audits `class.create` for each. Throws SessionNotFoundError,
-   * or InstructorNotFoundError.
+   * Cancels one day of a series (with a reason) or restores it. The series is not changed. Audits "occurrence.cancel" or
+   * "occurrence.restore" in the same transaction. Throws ClassNotFoundError and OccurrenceRefusedError.
    */
-  addClasses(actor: Actor, sessionId: string, inputs: ClassRecord[]): Promise<Class[]>;
+  setOccurrenceStatus(actor: Actor, occurrenceId: string, command: OccurrenceCommand): Promise<void>;
+  /**
+   * Writes a series and every one of its days in one transaction, or none: the series row, then one occurrence per day, each linked
+   * to the series. Audits `series.create` and `class.create` for each day. Throws SessionNotFoundError, or InstructorNotFoundError.
+   */
+  addSeries(actor: Actor, sessionId: string, input: SeriesRecord): Promise<Series>;
+  /** The series of a session, one per series, in the order their first days start. Read only. Throws SessionNotFoundError. */
+  listSeries(userId: string, orgId: string, sessionId: string): Promise<Series[]>;
+  /** One series, or null when it is not in the camp. */
+  getSeries(userId: string, orgId: string, seriesId: string): Promise<Series | null>;
+  /** Every day of a series, active and cancelled, in order. Read only. */
+  listSeriesOccurrences(userId: string, orgId: string, seriesId: string): Promise<Class[]>;
+  /**
+   * Saves a series' shared fields on every day of it, replaces its instructors, and applies the schedule when the days change: the
+   * weekdays and allowed times are written, the removed days are deleted and the added days are written (each with the saved
+   * fields). One transaction. Audits `series.update`, and `series.reschedule` when there is a schedule. Throws ClassNotFoundError,
+   * InstructorNotFoundError, CapacityBelowEnrolledError when the camp size is below the places taken, or ClassHasEnrolmentsError
+   * when a removed day has a place, hold or registration.
+   */
+  updateSeries(actor: Actor, seriesId: string, input: SeriesFields, schedule: SeriesSchedule | null): Promise<Series>;
+  /**
+   * The people with an active place on a series: an enrolment that is not cancelled, a hold not released or expired, or a
+   * registration not withdrawn. Named for the message: a child's name, or a household's for a hold. Read only.
+   */
+  seriesHolders(userId: string, orgId: string, seriesId: string): Promise<string[]>;
+  /**
+   * Deletes a series and all its days. Audits `series.delete`. Throws ClassNotFoundError, or ClassHasEnrolmentsError when any
+   * enrolment, hold or registration is on the series.
+   */
+  deleteSeries(actor: Actor, seriesId: string): Promise<void>;
   /** Times and names of every class in the camp, for the clash check. */
   listCampClassSpans(userId: string, orgId: string): Promise<CampClassSpan[]>;
+  /** The camper's display name, or null when the camper is not in the camp. Read only. */
+  camperNameOf(userId: string, orgId: string, camperId: string): Promise<string | null>;
   /** Throws SessionNotFoundError. */
   listClasses(userId: string, orgId: string, sessionId: string): Promise<Class[]>;
   getClass(userId: string, orgId: string, classId: string): Promise<Class | null>;
@@ -86,19 +188,13 @@ export interface ClassRepository {
   /** Frees the seat and the time. Audits `enrolment.cancel`. Throws EnrolmentNotFoundError (also when already cancelled). */
   cancelEnrolment(actor: Actor, enrolmentId: string, note: string | null): Promise<Enrolment>;
   /**
-   * The classes a teacher is assigned to in this camp. Only members with the teacher role count, so a person who stopped being a
-   * teacher has no classes even before their assignments are cleared. Used by the assigned-classes scope (teacherScope.ts).
+   * The classes a teacher is assigned to in this camp: the classes whose instructors include the person linked to the teacher's
+   * login (people.user_id). Only members with the teacher role count. A teacher with no linked person has no classes. Used by the
+   * assigned-classes scope (teacherScope.ts).
    */
   assignedClassIds(userId: string, orgId: string, teacherId: string): Promise<string[]>;
   /** The people with an enrolled (not waitlisted or cancelled) place in any of the classes. */
   camperIdsIn(userId: string, orgId: string, classIds: readonly string[]): Promise<string[]>;
-  /**
-   * Replaces a class's teachers (staff and admins, classes:manage). Audits `class.update`. Throws ClassNotFoundError, or
-   * TeacherNotFoundError for a user who is not a teacher in this camp.
-   */
-  replaceTeachers(actor: Actor, classId: string, userIds: readonly string[]): Promise<void>;
-  /** Which teachers each class of a session has, for the session page. Row-level security applies. */
-  teacherAssignments(userId: string, orgId: string, sessionId: string): Promise<TeacherAssignment[]>;
   /**
    * Every seat hold in the camp that holds a place now (unreleased and not yet expired), in one read, ordered by expiry. Read only.
    * Callers check the permission (SeatHoldService.listCampActiveHolds).
@@ -138,10 +234,4 @@ export interface CampWaitlistEntry {
   householdName: string | null;
   camperName: string;
   joinedAt: string;
-}
-
-/** A teacher assigned to one class (the class's id, and the teacher's user id). */
-export interface TeacherAssignment {
-  classId: string;
-  userId: string;
 }

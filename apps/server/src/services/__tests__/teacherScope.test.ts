@@ -4,7 +4,7 @@ import { createClassService } from '../../classes/ClassService';
 import type { InMemoryClassRepository } from '../../classes/InMemoryClassRepository';
 import type { InMemoryGroupRepository } from '../../groups/InMemoryGroupRepository';
 import { painting, robotics, JULY_SESSION } from '../../classes/__tests__/fixtures';
-import { createCamp, thrown, type Camp } from './support';
+import { createCamp, linkTeacher, thrown, type Camp } from './support';
 
 // A teacher checks campers in only with the per-person option an admin turns on (MEMBER_OPTIONS). These tests are about what a
 // teacher may see once it can check in, so the option is on here; without it check-in is refused (teacherScope.test.ts).
@@ -43,6 +43,7 @@ async function build() {
   if (!session.ok) {
     throw new Error('session');
   }
+  await classes.publishSession(admin, session.value.id);
   // Check-in reads a session's assignments from the group store, which keeps its own copy of sessions.
   (camp.repos.groups as InMemoryGroupRepository).seedSession({
     id: session.value.id,
@@ -51,15 +52,16 @@ async function build() {
     startsOn: JULY_SESSION.startsOn,
     endsOn: JULY_SESSION.endsOn,
   });
-  const addClass = async (cls: typeof robotics, times: typeof ROBOTICS_TIMES) => {
-    const added = await classes.addClass(admin, session.value.id, { ...cls, ...times });
+  const addClass = async (cls: typeof robotics, times: typeof ROBOTICS_TIMES, instructorIds: string[] = []) => {
+    const added = await classes.addClass(admin, session.value.id, { ...cls, ...times, instructorIds });
     if (!added.ok) {
       throw new Error(added.failure.message);
     }
 
     return added.value.id;
   };
-  const roboticsId = await addClass(robotics, ROBOTICS_TIMES);
+  const teacherPersonId = await linkTeacher(camp, teacher.userId);
+  const roboticsId = await addClass(robotics, ROBOTICS_TIMES, [teacherPersonId]);
   const paintingId = await addClass(painting, PAINTING_TIMES);
   for (const [classId, camperId] of [
     [roboticsId, kim.id],
@@ -71,7 +73,6 @@ async function build() {
       throw new Error(r.failure.message);
     }
   }
-  expect((await classes.setTeachers(admin, roboticsId, [teacher.userId])).ok).toBe(true);
 
   return {
     camp,
@@ -134,7 +135,12 @@ describe('teacher: attendance is limited to its classes', () => {
 
   it('is refused the export and overrides (no attendance:export or attendance:override)', async () => {
     const { camp, teacher } = await build();
-    expect((await thrown(() => camp.attendance.exportCsv(teacher, FILTER))).statusCode).toBe(403);
+    const request = {
+      filter: FILTER,
+      fields: ['person'] as const,
+      display: { timeZone: 'UTC', clockFormat: '24h' } as const,
+    };
+    expect((await thrown(() => camp.attendance.exportCsv(teacher, request))).statusCode).toBe(403);
   });
 });
 
@@ -165,15 +171,18 @@ describe('teacher: people and classes are limited to its classes, read-only', ()
     expect(roster.ok && roster.value.map(e => e.camperId).sort()).toEqual([kim.id, lia.id].sort());
   });
 
-  it('is refused every class change and cannot assign teachers', async () => {
+  it('is refused every class change', async () => {
     const { classes, teacher, roboticsId } = await build();
-    expect((await thrown(() => classes.setTeachers(teacher, roboticsId, [teacher.userId]))).statusCode).toBe(403);
+    const changed = await classes.updateClass(teacher, roboticsId, { ...robotics, ...ROBOTICS_TIMES, capacity: 9 });
+    expect(changed).toMatchObject({ ok: false, failure: { reason: 'teacher_field_refused' } });
     expect((await thrown(() => classes.deleteClass(teacher, roboticsId))).statusCode).toBe(403);
   });
 
-  it('loses its scope when its assignment is removed', async () => {
+  it('loses its scope when the class no longer names its linked person as an instructor', async () => {
     const { classes, admin, teacher, sessionId, roboticsId, camp, kim } = await build();
-    expect((await classes.setTeachers(admin, roboticsId, [])).ok).toBe(true);
+    expect(
+      (await classes.updateClass(admin, roboticsId, { ...robotics, ...ROBOTICS_TIMES, instructorIds: [] })).ok,
+    ).toBe(true);
     const mine = await classes.listClasses(teacher, sessionId);
     expect(mine.ok && mine.value).toEqual([]);
     expect(
@@ -182,21 +191,7 @@ describe('teacher: people and classes are limited to its classes, read-only', ()
   });
 });
 
-describe('teacher: assignment rules', () => {
-  it('a class is assigned only to members with the teacher role', async () => {
-    const { classes, admin, staff, roboticsId } = await build();
-    const r = await classes.setTeachers(admin, roboticsId, [staff.userId]);
-    expect(r).toMatchObject({ ok: false, failure: { reason: 'teacher_not_found' } });
-  });
-
-  it('staff may assign teachers, and a teacher of another camp cannot be assigned here', async () => {
-    const { classes, staff, roboticsId, admin } = await build();
-    expect((await classes.setTeachers(staff, roboticsId, [])).ok).toBe(true);
-    const other = await createCamp('UTC', '2027-07-10T09:00:00Z');
-    const r = await classes.setTeachers(admin, roboticsId, [other.actor('teacher').userId]);
-    expect(r).toMatchObject({ ok: false, failure: { reason: 'teacher_not_found' } });
-  });
-
+describe('teacher: other camps', () => {
   it("a teacher of another camp is refused this camp's classes (no assignment here, so 403)", async () => {
     const { classes, roboticsId } = await build();
     const other = await createCamp('UTC', '2027-07-10T09:00:00Z');

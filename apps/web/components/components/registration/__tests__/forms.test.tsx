@@ -6,6 +6,8 @@ import { RegisterForm } from '../RegisterForm';
 vi.mock('@/actions/registration', () => ({
   createFormAction: vi.fn(),
   updateFormAction: vi.fn(),
+  removeFormFileAction: vi.fn(),
+  reviewDocumentAction: vi.fn(),
   submitRegistrationAction: vi.fn(),
 }));
 
@@ -128,7 +130,7 @@ describe('FormEditor: sections, one asterisk, glass Cancel and Save draft', () =
         mode="edit"
         formId="f-1"
         sessions={SESSIONS}
-        initial={{ name: 'Reg Kids', season: null, sessionIds: [], fields: [] }}
+        initial={{ name: 'Reg Kids', season: null, sessionIds: [], fields: [], attachments: [] }}
       />,
     );
     expect(html).not.toContain('<fieldset');
@@ -145,7 +147,7 @@ describe('FormEditor: sections, one asterisk, glass Cancel and Save draft', () =
         mode="edit"
         formId="f-1"
         sessions={SESSIONS}
-        initial={{ name: 'Reg Kids', season: null, sessionIds: [], fields: [] }}
+        initial={{ name: 'Reg Kids', season: null, sessionIds: [], fields: [], attachments: [] }}
       />,
     );
     expect(edit).toContain('button--glass');

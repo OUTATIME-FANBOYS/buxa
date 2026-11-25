@@ -136,7 +136,7 @@ describe('the assign page', () => {
 
   it('shows the Unassign button on each member to staff only', async () => {
     const staffHtml = render(await AssignPage({ sessionId: SESSION_ID }));
-    expect(staffHtml).toContain('Unassign');
+    expect(staffHtml).toContain('aria-label="Unassign Ada Lovelace"');
 
     session.role = 'viewer';
     expect(render(await AssignPage({ sessionId: SESSION_ID }))).not.toContain('Unassign');
@@ -187,7 +187,8 @@ describe('refusals and the ratio override', () => {
       root.render(
         <UiProvider Dialog={ConfirmDialog}>
           <RatioOverridePopUp
-            selection={{ role: 'camper', personId: ADA, groupId: HAWKS, roomId: LODGE }}
+            selection={{ role: 'camper', personIds: [ADA], groupId: HAWKS, roomId: LODGE }}
+            personIds={[ADA]}
             sessionId={SESSION_ID}
             message="This group would have 5 campers for 1 staff."
             onCancel={() => undefined}

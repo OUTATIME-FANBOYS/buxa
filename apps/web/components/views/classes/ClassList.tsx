@@ -48,7 +48,12 @@ export async function ClassList({ deletedName = null }: { deletedName?: string |
           action={canManage && <NewSessionButton />}
         />
       ) : (
-        <SessionsTable sessions={loaded.value} canManage={canManage} />
+        <SessionsTable
+          sessions={loaded.value}
+          canManage={canManage}
+          canUnarchive={can(actor, 'org:update')}
+          canPublish={can(actor, 'classes:publish')}
+        />
       )}
       {deletedName && <DeletedSessionToast name={deletedName} />}
     </div>

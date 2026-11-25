@@ -39,7 +39,7 @@ describe.skipIf(!url)('public session pages on Postgres', () => {
     await fx.repo.setSessionPublic(fx.actor, session.id, true);
     expect(await repo.findPublicSession(slugA, session.id)).toMatchObject({
       campName: 'Class test camp',
-      sessionName: 'Summer camp',
+      sessionName: session.name,
       startsOn: '2027-07-01',
       endsOn: '2027-07-31',
     });
@@ -49,9 +49,11 @@ describe.skipIf(!url)('public session pages on Postgres', () => {
     const session = await makeSession(fx.repo, fx.actor);
     await fx.repo.setSessionPublic(fx.actor, session.id, true);
     const instructor = await fx.addPerson(fx.orgA, '1980-01-01', 'Secret');
-    await fx.repo.addClasses(fx.actor, session.id, [
+    await fx.repo.addClass(
+      fx.actor,
+      session.id,
       sessionInput(9, 12, { name: 'Robotics', instructorIds: [instructor], capacity: 3 }),
-    ]);
+    );
 
     const service = createPublicSessionService({ repo });
     const page = await service.getPage(slugA, session.id, now);
@@ -62,6 +64,7 @@ describe.skipIf(!url)('public session pages on Postgres', () => {
         location: 'Lab 1',
         startsAt: '2027-07-04T23:00:00.000Z',
         endsAt: '2027-07-05T02:00:00.000Z',
+        price: null,
       },
     ]);
 
@@ -69,6 +72,21 @@ describe.skipIf(!url)('public session pages on Postgres', () => {
     const text = JSON.stringify(page);
     expect(text).not.toContain('Secret');
     expect(text).not.toMatch(/capacity|seats|enrol|waitlist/i);
+  });
+
+  it('shows each class its own price, read from the class row through the public function', async () => {
+    const session = await makeSession(fx.repo, fx.actor);
+    await fx.repo.setSessionPublic(fx.actor, session.id, true);
+    await fx.repo.addClass(fx.actor, session.id, {
+      ...sessionInput(9, 12, { name: 'Painting' }),
+      price: { currency: 'AUD', regularMinor: 45000, earlyBirdMinor: 39900, earlyBirdUntil: '2027-07-05' },
+    });
+
+    const service = createPublicSessionService({ repo });
+    const page = await service.getPage(slugA, session.id, now);
+    expect(page?.classes.map(c => c.price)).toEqual([
+      { currency: 'AUD', regularMinor: 45000, earlyBirdMinor: 39900, earlyBirdUntil: '2027-07-05' },
+    ]);
   });
 
   it('hides a public session once its camp is archived', async () => {

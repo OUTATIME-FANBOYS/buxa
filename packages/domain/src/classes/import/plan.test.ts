@@ -184,6 +184,45 @@ describe('planImport: a class carries its own ages and camp size', () => {
   });
 });
 
+describe('planImport: the location rule (classes may overlap in other locations)', () => {
+  const artAm = existing({
+    id: 's-art',
+    classId: 'cls-art',
+    className: 'Art',
+    startsAt: '2027-07-05T10:00:00+10:00',
+    endsAt: '2027-07-05T12:00:00+10:00',
+    location: 'Lab 1',
+  });
+
+  it('allows an overlapping row in a different location', () => {
+    const p = plan([row({ starts_at: '2027-07-05T11:00', ends_at: '2027-07-05T13:00', location: 'Pool' }, 2)], [artAm]);
+    expect(p.results[0]).toMatchObject({ status: 'create' });
+  });
+
+  it('refuses an overlapping row in the same location (case and spacing ignored), naming the class and location', () => {
+    const p = plan(
+      [row({ starts_at: '2027-07-05T11:00', ends_at: '2027-07-05T13:00', location: ' lab 1 ' }, 2)],
+      [artAm],
+    );
+    expect(p.results[0]).toMatchObject({ status: 'refused' });
+    expect(p.results[0]?.problems[0]?.message).toContain('Clashes with Art at Lab 1');
+  });
+
+  it('refuses two overlapping rows of the file in the same location, and allows them in different ones', () => {
+    const same = plan([
+      row({}, 2),
+      row({ class_name: 'Art', starts_at: '2027-07-05T13:30', ends_at: '2027-07-05T14:30', location: 'Lab 2' }, 3),
+    ]);
+    expect(same.results.map(r => r.status)).toEqual(['create', 'refused']);
+
+    const apart = plan([
+      row({}, 2),
+      row({ class_name: 'Art', starts_at: '2027-07-05T13:30', ends_at: '2027-07-05T14:30', location: 'Pool' }, 3),
+    ]);
+    expect(apart.results.map(r => r.status)).toEqual(['create', 'create']);
+  });
+});
+
 describe('planImport: clashes within the file', () => {
   it('refuses the later of two overlapping rows and names the earlier row', () => {
     const p = plan([
@@ -285,7 +324,10 @@ describe('planImport: clashes with sessions already in the camp', () => {
       startsAt: '2027-07-05T10:00:00+10:00',
       endsAt: '2027-07-05T12:00:00+10:00',
     });
-    const p = plan([row({ starts_at: '2027-07-05T11:00', ends_at: '2027-07-05T13:00' }, 2)], [artAm]);
+    const p = plan(
+      [row({ starts_at: '2027-07-05T11:00', ends_at: '2027-07-05T13:00', location: 'Lab 1' }, 2)],
+      [artAm],
+    );
     expect(p.results[0]).toMatchObject({ status: 'refused' });
     expect(p.results[0]?.problems).toHaveLength(1);
     expect(p.results[0]?.problems[0]).toMatchObject({ field: 'starts_at' });
@@ -311,7 +353,10 @@ describe('planImport: clashes with sessions already in the camp', () => {
       startsAt: '2027-07-05T23:00:00+10:00',
       endsAt: '2027-07-06T01:00:00+10:00',
     });
-    const p = plan([row({ starts_at: '2027-07-06T00:00', ends_at: '2027-07-06T00:30' }, 2)], [night]);
+    const p = plan(
+      [row({ starts_at: '2027-07-06T00:00', ends_at: '2027-07-06T00:30', location: 'Lab 1' }, 2)],
+      [night],
+    );
     expect(p.results[0]?.status).toBe('refused');
   });
 });
@@ -336,13 +381,13 @@ describe('planImport: duplicates (rows without an external key)', () => {
     expect(p.results[0]?.status).toBe('refused');
   });
 
-  it('is not a duplicate when the location differs', () => {
+  it('is not a duplicate when the location differs, and a class in another location may overlap it', () => {
     const p = plan(
       [row({ starts_at: '2027-07-05T09:00', ends_at: '2027-07-05T12:00', location: 'Lab 2' }, 2)],
       [SYDNEY_0900_1200],
     );
-    expect(p.results[0]?.status).toBe('refused');
-    expect(p.results[0]?.problems[0]?.message).toContain('Clashes');
+    expect(p.results[0]?.status).toBe('create');
+    expect(p.results[0]?.problems).toEqual([]);
   });
 
   it('refuses the second of two identical rows in one file, naming the first', () => {
@@ -382,7 +427,7 @@ describe('planImport: external keys (re-upload updates, never duplicates)', () =
       endsAt: '2027-07-05T15:00:00+10:00',
     });
     const p = plan(
-      [keyed('ROB-AM', { starts_at: '2027-07-05T14:00', ends_at: '2027-07-05T16:00' }, 2)],
+      [keyed('ROB-AM', { starts_at: '2027-07-05T14:00', ends_at: '2027-07-05T16:00', location: 'Lab 1' }, 2)],
       [withKey, artAm],
     );
     expect(p.results[0]).toMatchObject({ status: 'refused' });

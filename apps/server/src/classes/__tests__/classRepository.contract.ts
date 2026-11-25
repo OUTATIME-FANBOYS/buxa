@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { decideEnrolment, type Actor } from '@buxa/domain';
 import type { ClassRecord, ClassRepository, EnrolmentRule } from '../ClassRepository';
-import { CapacityBelowEnrolledError, SessionFullError } from '../errors';
+import { CapacityBelowEnrolledError, ClassNotFoundError, OccurrenceRefusedError, SessionFullError } from '../errors';
 
 /** What a class contract test runs against: a repository, an owner of the camp under test, and ways to add people and holds. */
 export interface ClassContractFixture {
@@ -42,6 +42,7 @@ const ROBOTICS: Omit<ClassRecord, 'capacity'> = {
   startsAt: `${CLASS_DAY}T09:00:00+10:00`,
   endsAt: `${CLASS_DAY}T12:00:00+10:00`,
   instructorIds: [],
+  price: null,
 };
 
 /** The domain's enrolment rule, with no override and no waitlist unless asked for. */
@@ -64,10 +65,43 @@ export function classRepositoryContract(factory: ClassContractFactory): void {
       await fx.close();
     });
 
+    describe('one day of a series', () => {
+      it('cancels a day once, refuses a second cancel, and restores it once', async () => {
+        const classId = await classOf(5);
+        await fx.repo.setOccurrenceStatus(fx.actor, classId, { kind: 'cancel', reason: 'Public holiday' });
+        await expect(
+          fx.repo.setOccurrenceStatus(fx.actor, classId, { kind: 'cancel', reason: 'Again' }),
+        ).rejects.toBeInstanceOf(OccurrenceRefusedError);
+        await fx.repo.setOccurrenceStatus(fx.actor, classId, { kind: 'restore' });
+        await expect(fx.repo.setOccurrenceStatus(fx.actor, classId, { kind: 'restore' })).rejects.toBeInstanceOf(
+          OccurrenceRefusedError,
+        );
+      });
+
+      it('refuses a day that is not in the camp', async () => {
+        await expect(
+          fx.repo.setOccurrenceStatus(fx.actor, '00000000-0000-4000-8000-000000000000', {
+            kind: 'cancel',
+            reason: 'Holiday',
+          }),
+        ).rejects.toBeInstanceOf(ClassNotFoundError);
+      });
+    });
+
+    let sessionNumber = 0;
+
     /** A session with one class of the given camp size. Returns the class id, which is what enrolments and holds name. */
     const classOf = async (capacity: number): Promise<string> => {
-      const session = await fx.repo.createSession(fx.actor, SESSION);
-      const cls = await fx.repo.addClass(fx.actor, session.id, { ...ROBOTICS, capacity });
+      // Each session gets its own name: session names are unique per camp (migration 0052), and the tests share one camp.
+      sessionNumber += 1;
+      const session = await fx.repo.createSession(fx.actor, { ...SESSION, name: `${SESSION.name} ${sessionNumber}` });
+      await fx.repo.publishSession(fx.actor, session.id);
+      // Each class has its own location: classes in one location may not overlap (migration 0066), and these days overlap.
+      const cls = await fx.repo.addClass(fx.actor, session.id, {
+        ...ROBOTICS,
+        capacity,
+        location: `Lab ${sessionNumber}`,
+      });
 
       return cls.id;
     };
@@ -206,7 +240,8 @@ export function classRepositoryContract(factory: ClassContractFactory): void {
       const holds = await fx.repo.listCampActiveHolds(fx.actor.userId, fx.actor.orgId);
 
       expect(holds.map(h => h.householdName)).toEqual(['Lee family', 'Okafor family']);
-      expect(holds[0]).toMatchObject({ classId: second, className: 'Robotics', sessionName: 'Summer camp' });
+      expect(holds[0]).toMatchObject({ classId: second, className: 'Robotics' });
+      expect(holds[0]?.sessionName).toMatch(/^Summer camp \d+$/);
       expect(holds[1]).toMatchObject({ classId: first, expiresAt: '2999-01-02T00:00:00.000Z' });
     });
 
@@ -221,7 +256,8 @@ export function classRepositoryContract(factory: ClassContractFactory): void {
       );
 
       expect(waitlist.map(entry => entry.householdName)).toEqual(['Ito family', 'Mensah family']);
-      expect(waitlist[0]).toMatchObject({ className: 'Robotics', sessionName: 'Summer camp' });
+      expect(waitlist[0]).toMatchObject({ className: 'Robotics' });
+      expect(waitlist[0]?.sessionName).toMatch(/^Summer camp \d+$/);
       expect(waitlist[0]?.camperName).not.toBe('');
     });
 

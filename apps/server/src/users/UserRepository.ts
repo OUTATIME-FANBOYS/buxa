@@ -15,6 +15,19 @@ export class EmailInUseError extends Error {
 export const isEmailInUse = (error: unknown): error is EmailInUseError =>
   error instanceof Error && 'kind' in error && error.kind === 'email-in-use';
 
+/** Raised when a rename finds no roster person (people row) linked to the member in this camp, so there is no camp name to change. */
+export class MemberHasNoPersonError extends Error {
+  readonly kind = 'member-has-no-person';
+  constructor() {
+    super('This member has no person on the camp roster, so there is no camp name to change.');
+    this.name = 'MemberHasNoPersonError';
+  }
+}
+
+/** True for a MemberHasNoPersonError from any copy of this module (see isHttpError for why not `instanceof`). */
+export const isMemberHasNoPerson = (error: unknown): error is MemberHasNoPersonError =>
+  error instanceof Error && 'kind' in error && error.kind === 'member-has-no-person';
+
 export interface UserRepository {
   /** Finds our user for a verified identity, creating it on first sign-in. Linked by the provider's id, never by email. */
   upsertFromIdentity(identity: Identity): Promise<User>;
@@ -28,7 +41,12 @@ export interface UserRepository {
   setClockFormat(userId: string, clockFormat: ClockFormat): Promise<User>;
   /** The role `userId` holds in the camp, or null if they are not in it. Read inside that camp's row-level security. */
   roleIn(userId: string, orgId: string, memberId: string): Promise<Membership['role'] | null>;
-  /** Renames a member of the camp, for an admin or owner, and audits it in the same transaction. Refuses (null) anyone not in the camp, and writes no audit row then. The caller checks the rank. */
+  /**
+   * Renames a member in this camp only: the roster name on the camp's person linked to the member (people.given_name and
+   * family_name). The login's own name (users) is never written, so no other camp changes. Audits it in the same transaction.
+   * Refuses (null) anyone not in the camp, and writes no audit row then. Throws MemberHasNoPersonError when the member has no
+   * person here. The returned name is the new roster name. The caller checks the rank.
+   */
   renameMember(actor: Actor, userId: string, name: string): Promise<Pick<User, 'id' | 'email' | 'name'> | null>;
   /** The options that are on for `userId` in the camp (read inside that camp's row-level security). */
   memberOptionsOf(viewerId: string, orgId: string, memberId: string): Promise<MemberOption[]>;

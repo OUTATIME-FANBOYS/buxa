@@ -23,7 +23,6 @@ export async function SessionHolds({ actor, sessionId }: { actor: Actor; session
       waitlist={waitlist.value.filter(row => row.sessionId === sessionId).map(toWaitRow)}
       timeZone={timeZone}
       clockFormat={clockFormat}
-      showSessionFilter={false}
     />
   );
 }

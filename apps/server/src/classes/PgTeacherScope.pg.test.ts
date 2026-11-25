@@ -2,10 +2,10 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 import { migrate } from '@buxa/db';
 import { PgClassRepository } from './PgClassRepository';
-import { TeacherNotFoundError } from './errors';
 import { teacherScopeOf } from './teacherScope';
 
-// The assigned-classes scope against real Postgres, as the request role: a teacher in camp A sees only its camp A classes.
+// The assigned-classes scope against real Postgres, as the request role. A teacher sees a class when its linked person (people.user_id)
+// is one of the class's instructors (session_instructors, migration 0051). Camp A: the teacher's linked person instructs sessionA.
 const url = process.env.DATABASE_URL;
 describe.skipIf(!url)('teacher scope on Postgres (row-level security)', () => {
   const pool = new pg.Pool({ connectionString: url });
@@ -13,11 +13,9 @@ describe.skipIf(!url)('teacher scope on Postgres (row-level security)', () => {
   const tag = Math.random().toString(36).slice(2, 8);
   let orgA = '';
   let orgB = '';
-  let adminA = '';
   let teacherA = '';
   let teacherB = '';
   let sessionA = '';
-  let parentA = '';
   let personA = '';
 
   beforeAll(async () => {
@@ -37,14 +35,15 @@ describe.skipIf(!url)('teacher scope on Postgres (row-level security)', () => {
       ).rows[0].id;
     orgA = await org('Camp A');
     orgB = await org('Camp B');
-    adminA = await user('admin-a');
     teacherA = await user('teacher-a');
     teacherB = await user('teacher-b');
-    await pool.query(
-      `INSERT INTO org_members(org_id, user_id, role) VALUES ($1,$2,'admin'), ($1,$3,'teacher'), ($4,$5,'teacher')`,
-      [orgA, adminA, teacherA, orgB, teacherB],
-    );
-    parentA = (
+    await pool.query(`INSERT INTO org_members(org_id, user_id, role) VALUES ($1,$2,'teacher'), ($3,$4,'teacher')`, [
+      orgA,
+      teacherA,
+      orgB,
+      teacherB,
+    ]);
+    const parentA = (
       await pool.query<{ id: string }>(
         `INSERT INTO classes (org_id, name, default_capacity) VALUES ($1, $2, 5) RETURNING id`,
         [orgA, `A ${tag}`],
@@ -57,12 +56,23 @@ describe.skipIf(!url)('teacher scope on Postgres (row-level security)', () => {
         [orgA, parentA],
       )
     ).rows[0].id;
+    const teacherPersonA = (
+      await pool.query<{ id: string }>(
+        `INSERT INTO people (org_id, given_name, family_name, user_id) VALUES ($1, 'Tess', 'Teacher', $2) RETURNING id`,
+        [orgA, teacherA],
+      )
+    ).rows[0].id;
     personA = (
       await pool.query<{ id: string }>(
         `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Kim', 'Camp') RETURNING id`,
         [orgA],
       )
     ).rows[0].id;
+    await pool.query(`INSERT INTO session_instructors (org_id, session_id, person_id) VALUES ($1, $2, $3)`, [
+      orgA,
+      sessionA,
+      teacherPersonA,
+    ]);
     await pool.query(`INSERT INTO enrolments (org_id, session_id, person_id, status) VALUES ($1, $2, $3, 'enrolled')`, [
       orgA,
       sessionA,
@@ -72,15 +82,20 @@ describe.skipIf(!url)('teacher scope on Postgres (row-level security)', () => {
 
   afterAll(async () => {
     await pool.query('DELETE FROM orgs WHERE id = ANY($1)', [[orgA, orgB]]).catch(() => {});
-    await pool.query('DELETE FROM users WHERE id = ANY($1)', [[adminA, teacherA, teacherB]]).catch(() => {});
+    await pool.query('DELETE FROM users WHERE id = ANY($1)', [[teacherA, teacherB]]).catch(() => {});
     await pool.end();
   });
 
-  it('a teacher is assigned its class by the camp admin, and sees its campers', async () => {
-    await repo.replaceTeachers({ userId: adminA, orgId: orgA, role: 'admin' }, sessionA, [teacherA]);
+  it('a teacher sees the class its linked person instructs, and the campers in it', async () => {
     const scope = await teacherScopeOf(repo, { userId: teacherA, orgId: orgA, role: 'teacher' });
     expect([...(scope?.classIds ?? [])]).toEqual([sessionA]);
     expect([...(scope?.camperIds ?? [])]).toEqual([personA]);
+  });
+
+  it('a teacher with no linked person sees no classes', async () => {
+    expect(await repo.assignedClassIds(teacherB, orgB, teacherB)).toEqual([]);
+    const scope = await teacherScopeOf(repo, { userId: teacherB, orgId: orgB, role: 'teacher' });
+    expect([...(scope?.classIds ?? [])]).toEqual([]);
   });
 
   it("a teacher in camp B has no classes in camp A, and camp A's classes are invisible to it", async () => {
@@ -88,24 +103,5 @@ describe.skipIf(!url)('teacher scope on Postgres (row-level security)', () => {
     expect(await repo.assignedClassIds(teacherB, orgA, teacherB)).toEqual([]);
     expect(await repo.camperIdsIn(teacherA, orgB, [sessionA])).toEqual([]);
     expect(await repo.getClass(teacherA, orgB, sessionA)).toBeNull();
-  });
-
-  it('refuses to assign a user who is not a teacher in this camp, or a class from another camp', async () => {
-    await expect(
-      repo.replaceTeachers({ userId: adminA, orgId: orgA, role: 'admin' }, sessionA, [teacherB]),
-    ).rejects.toBeInstanceOf(TeacherNotFoundError);
-    // adminA is not a member of camp B, so the database refuses before it looks for the class.
-    await expect(
-      repo.replaceTeachers({ userId: adminA, orgId: orgB, role: 'admin' }, sessionA, [teacherB]),
-    ).rejects.toThrow(/Not allowed to manage classes/);
-  });
-
-  it('lists the class teachers for the session page, only inside the camp that owns them', async () => {
-    await repo.replaceTeachers({ userId: adminA, orgId: orgA, role: 'admin' }, sessionA, [teacherA]);
-
-    const own = await repo.teacherAssignments(adminA, orgA, parentA);
-    expect(own).toEqual([{ classId: sessionA, userId: teacherA }]);
-
-    expect(await repo.teacherAssignments(teacherB, orgB, parentA)).toEqual([]);
   });
 });

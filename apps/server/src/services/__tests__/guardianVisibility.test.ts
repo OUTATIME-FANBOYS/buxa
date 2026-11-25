@@ -4,7 +4,7 @@ import { createClassService } from '../../classes/ClassService';
 import type { InMemoryClassRepository } from '../../classes/InMemoryClassRepository';
 import type { InMemoryGroupRepository } from '../../groups/InMemoryGroupRepository';
 import { JULY_SESSION, robotics } from '../../classes/__tests__/fixtures';
-import { createCamp, type Camp } from './support';
+import { createCamp, linkTeacher, type Camp } from './support';
 
 // A teacher checks campers in only with the per-person option an admin turns on (MEMBER_OPTIONS). These tests are about what a
 // teacher may see once it can check in, so the option is on here; without it check-in is refused (teacherScope.test.ts).
@@ -64,6 +64,7 @@ async function build() {
   if (!session.ok) {
     throw new Error('session');
   }
+  await classes.publishSession(admin, session.value.id);
   // Check-in reads a session's assignments from the group store, which keeps its own copy of sessions.
   (camp.repos.groups as InMemoryGroupRepository).seedSession({
     id: session.value.id,
@@ -72,10 +73,12 @@ async function build() {
     startsOn: JULY_SESSION.startsOn,
     endsOn: JULY_SESSION.endsOn,
   });
+  const teacherPersonId = await linkTeacher(camp, teacher.userId);
   const added = await classes.addClass(admin, session.value.id, {
     ...robotics,
     startsAt: '2027-07-10T09:00:00Z',
     endsAt: '2027-07-10T12:00:00Z',
+    instructorIds: [teacherPersonId],
   });
   if (!added.ok) {
     throw new Error(added.failure.message);
@@ -83,7 +86,6 @@ async function build() {
   if (!(await classes.enrol(admin, { classId: added.value.id, camperId: kim.id, waitlistIfFull: false })).ok) {
     throw new Error('enrol');
   }
-  expect((await classes.setTeachers(admin, added.value.id, [teacher.userId])).ok).toBe(true);
 
   return { camp, teacher, staff, kim, ana, gus, householdId, sessionId: session.value.id };
 }

@@ -59,6 +59,9 @@ export function attendanceRepositoryContract(factory: RepositoryFactory): void {
         note: null,
         sessionId: null,
         sessionUnassigned: false,
+        sessionName: null,
+        classId: null,
+        className: null,
       });
       expect(visit.checkedInAt).toMatch(ISO_INSTANT);
       expect(await fx.repos.attendance.openFor(fx.actor.userId, fx.actor.orgId, personId)).toEqual(visit);

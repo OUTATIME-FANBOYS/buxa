@@ -198,7 +198,7 @@ describe.skipIf(!url)('phase 2 schema: isolation, constraints and grants', () =>
             a.person,
           ]),
         ),
-      ).rejects.toMatchObject({ code: '23505', constraint: 'enrolments_one_active_idx' });
+      ).rejects.toMatchObject({ code: '23505', constraint: 'enrolments_one_active_series_idx' });
     });
 
     it('a cancelled enrolment does not block a new one for the same session', async () => {

@@ -22,8 +22,9 @@ const SUMMER: Session = {
   endsOn: '2027-08-30',
   classCount: 2,
   isPublic: false,
+  status: 'live',
+  archivedAt: null,
   createdAt: '2027-01-01T00:00:00.000Z',
-  price: null,
 };
 const UNDATED: Session = {
   ...SUMMER,

@@ -1,4 +1,4 @@
-import type { Actor } from '@buxa/domain';
+import { teachingScopeOf, type Actor, type TeachingScope } from '@buxa/domain';
 import type { ClassRepository } from './ClassRepository';
 
 /*
@@ -8,12 +8,14 @@ import type { ClassRepository } from './ClassRepository';
  */
 
 /** The part of the class storage the scope needs. */
-export type TeacherScopeSource = Pick<ClassRepository, 'assignedClassIds' | 'camperIdsIn'>;
+export type TeacherScopeSource = Pick<ClassRepository, 'assignedClassIds' | 'camperIdsIn' | 'getClass'>;
 
 export interface TeacherScope {
   readonly classIds: ReadonlySet<string>;
   /** The people with an enrolled place in one of the teacher's classes. */
   readonly camperIds: ReadonlySet<string>;
+  /** The sessions and classes (series) the teacher teaches, by the teaching rule in @buxa/domain (My classes uses the same rule). */
+  readonly teaching: TeachingScope;
 }
 
 /** The scope for this actor, or null when the actor is not a teacher. */
@@ -23,8 +25,10 @@ export async function teacherScopeOf(source: TeacherScopeSource, actor: Actor): 
   }
   const classIds = await source.assignedClassIds(actor.userId, actor.orgId, actor.userId);
   const camperIds = await source.camperIdsIn(actor.userId, actor.orgId, classIds);
+  const days = await Promise.all(classIds.map(id => source.getClass(actor.userId, actor.orgId, id)));
+  const teaching = teachingScopeOf(days.flatMap(day => (day ? [day] : [])));
 
-  return { classIds: new Set(classIds), camperIds: new Set(camperIds) };
+  return { classIds: new Set(classIds), camperIds: new Set(camperIds), teaching };
 }
 
 /** For authorize()'s `assignedToClass`: whether the person is one of the teacher's campers. Undefined when no scope applies. */

@@ -45,7 +45,7 @@ describe.skipIf(!url)('PgImportRepository', () => {
       repo: new PgImportRepository(pool),
       classes: fx.repo,
       actor: fx.actor,
-      close: fx.close,
+      close: () => fx.close(),
     };
   });
 

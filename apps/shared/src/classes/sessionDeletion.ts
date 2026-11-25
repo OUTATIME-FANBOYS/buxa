@@ -21,9 +21,10 @@ export type SessionDeletion = { status: 'idle' } | SessionDeletionDone | { statu
 
 export const idleSessionDeletion: SessionDeletion = { status: 'idle' };
 
-/** The short reason shown after a session's name in "Not deleted: Art (has classes)." */
+/** The short reason shown after a session's name in "Not deleted: Art (has classes; archive it instead)." */
 const SHORT_REASON: Partial<Record<string, string>> = {
-  session_has_classes: 'has classes',
+  session_has_classes: 'has classes; archive it instead',
+  session_has_enrolments: 'has enrolments; unenrol everyone first',
   session_not_found: 'already gone',
 };
 const NAMED_LIMIT = 3;
@@ -33,7 +34,7 @@ export function deletedMessage(count: number): string {
   return `Deleted ${count} ${count === 1 ? 'session' : 'sessions'}.`;
 }
 
-/** "Not deleted: Art (has classes), Music (has classes) and 2 more." Null when nothing was refused. */
+/** "Not deleted: Art (has classes; archive it instead), Music (has classes; archive it instead) and 2 more." Null when nothing was refused. */
 export function notDeletedMessage(refused: readonly RefusedSession[]): string | null {
   if (refused.length === 0) {
     return null;

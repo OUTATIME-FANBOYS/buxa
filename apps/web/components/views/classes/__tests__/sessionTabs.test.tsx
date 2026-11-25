@@ -6,6 +6,7 @@ import type { Role } from '@buxa/domain';
 import { UiProvider } from '@buxa/middleware/providers/providers';
 import { settle } from '@buxa/domain';
 import { Dialog as ConfirmDialog } from '@/components/components';
+import { seriesOf } from './seriesOf';
 
 const notFound = vi.hoisted(() =>
   vi.fn(() => {
@@ -16,9 +17,9 @@ const session = vi.hoisted((): { role: Role | null } => ({ role: 'staff' }));
 const services = vi.hoisted(() => ({
   classes: {
     getSession: vi.fn(),
-    listClasses: vi.fn(),
+    listSeries: vi.fn(),
+    listSeriesOccurrences: vi.fn(),
     listEnrolments: vi.fn(),
-    listTeacherAssignments: vi.fn(),
     listCampWaitlists: vi.fn(),
   },
   people: { list: vi.fn() },
@@ -52,8 +53,9 @@ const summer: Session = {
   endsOn: '2027-07-14',
   classCount: 1,
   isPublic: false,
+  status: 'live',
+  archivedAt: null,
   createdAt: '2027-07-01T00:00:00.000Z',
-  price: null,
 };
 const autumn: Session = { ...summer, id: AUTUMN, name: 'Autumn camp', description: 'Autumn weeks.' };
 
@@ -71,6 +73,10 @@ const robotics: Class = {
   instructors: [],
   seatsTaken: 0,
   waitlisted: 0,
+  datesOutsideSession: false,
+  seriesId: 'series-1',
+  occurrenceStatus: 'active',
+  cancelReason: null,
   price: null,
 };
 
@@ -82,6 +88,7 @@ const submission = (id: string, first: string, last: string, sessionId: string, 
   confirmedAt: null,
   standard: { camperFirstName: first, camperLastName: last, guardianPhone: '0400 000 000' },
   custom: {},
+  documents: [],
   sessions: [{ sessionId, sessionName, status: 'submitted' as const }],
   classes: [
     {
@@ -140,11 +147,10 @@ beforeEach(() => {
   asRole('staff');
   services.orgs.getCamp.mockResolvedValue({ timezone: 'Australia/Sydney' });
   services.orgs.listMembers.mockResolvedValue({ members: [] });
-  services.classes.listTeacherAssignments.mockResolvedValue({ ok: true, value: [] });
   services.classes.getSession.mockImplementation((_actor: unknown, id: string) =>
     Promise.resolve({ ok: true, value: id === AUTUMN ? autumn : summer }),
   );
-  services.classes.listClasses.mockResolvedValue({ ok: true, value: [robotics] });
+  services.classes.listSeries.mockResolvedValue({ ok: true, value: seriesOf([robotics]) });
   services.classes.listEnrolments.mockResolvedValue({ ok: true, value: [] });
   services.people.list.mockResolvedValue([]);
   services.seatHolds.listActiveHolds.mockResolvedValue([]);

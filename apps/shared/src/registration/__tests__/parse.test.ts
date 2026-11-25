@@ -44,7 +44,9 @@ describe('registrationFormForm', () => {
     const parsed = registrationFormForm(formOf({ name: 'Summer', fields: '[]' }));
     expect(parsed.ok).toBe(false);
     if (!parsed.ok) {
-      expect(parsed.state.status === 'error' && parsed.state.fieldErrors?.sessionIds).toBeTruthy();
+      expect(parsed.state.status === 'error' && parsed.state.fieldErrors?.sessionIds).toBe(
+        'Choose at least one session.',
+      );
     }
   });
 });

@@ -120,3 +120,20 @@ export async function thrown(work: () => Promise<unknown>): Promise<{ statusCode
   }
   throw new Error('expected an error, none was thrown');
 }
+
+/**
+ * Test setup for the teacher link (migration 0051): a roster person for the teacher's login, linked to that login. The returned
+ * person id goes in a class's instructorIds, and a teacher sees the classes that name its linked person as an instructor.
+ */
+export async function linkTeacher(camp: Camp, teacherUserId: string): Promise<string> {
+  const person = await camp.people.create(camp.actor('admin'), {
+    givenName: 'Tess',
+    familyName: 'Teacher',
+    roles: ['instructor'],
+  });
+  const store = camp.repos.classes as InMemoryClassRepository;
+  store.seedCamper(camp.orgId, person.id, 'Tess Teacher', null);
+  store.linkPersonToLogin(person.id, teacherUserId);
+
+  return person.id;
+}

@@ -6,7 +6,7 @@ import { Empty, PageHeader } from '@/components/components';
 import { currentActor, loadPeopleWithRole, loadSessionPage } from '@buxa/server/composers/index.server';
 import { FORBIDDEN_READ, resolveSessionTab, visibleSessionTabs } from '@buxa/shared';
 import { SessionTabs } from '@/components/components/classes';
-import { EditSessionButton, NewClassButton, RecurringSeriesButton } from '@/components/components/classes/forms';
+import { EditSessionButton, NewClassButton } from '@/components/components/classes/forms';
 import { Button } from '@/components/elements';
 import { ClassesTab } from './ClassesTab';
 import { SessionHolds } from './SessionHolds';
@@ -45,7 +45,7 @@ export async function ClassPage({
     );
   }
 
-  const { session, classes } = loaded.value;
+  const { session, series } = loaded.value;
   const canManage = can(actor, 'classes:manage');
   const instructors = canManage ? await loadPeopleWithRole(actor, 'instructor') : null;
   const instructorChoices = instructors?.ok ? instructors.value.map(i => ({ id: i.id, name: i.name })) : [];
@@ -60,10 +60,11 @@ export async function ClassPage({
         : await ClassesTab({
             actor,
             session,
-            classes,
+            series,
             canManage,
             instructorChoices,
             selectedId: pick(searchParams.class),
+            daysId: pick(searchParams.days),
           });
 
   return (
@@ -80,14 +81,17 @@ export async function ClassPage({
         actions={
           canManage && (
             <>
-              <EditSessionButton session={session} />
+              <EditSessionButton
+                session={session}
+                canUnarchive={can(actor, 'org:update')}
+                canPublish={can(actor, 'classes:publish')}
+              />
               <Button variant="glass" size="sm" href={groupsPath(session.id)} icon="users">
                 Groups and rooms
               </Button>
               <Button variant="glass" size="sm" href={assignPath(session.id)} icon="user-plus">
                 Assign people
               </Button>
-              <RecurringSeriesButton sessionId={session.id} />
               <NewClassButton sessionId={session.id} sessionName={session.name} instructors={instructorChoices} />
             </>
           )

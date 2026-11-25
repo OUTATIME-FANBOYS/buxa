@@ -9,7 +9,7 @@ const base: ClassRule = {
   firstDate: '2027-07-05', // a Monday
   startTime: '09:00',
   endTime: '12:00',
-  end: { kind: 'count', count: 3 },
+  end: { kind: 'until', date: '2027-07-19' },
 };
 
 const expanded = (rule: ClassRule, zone = SYDNEY) => {
@@ -43,18 +43,12 @@ describe('expandClassRule', () => {
   });
 
   it('combines several weekdays and keeps them in order within a week', () => {
-    const out = expanded({ ...base, weekdays: [5, 1], end: { kind: 'count', count: 4 } });
+    const out = expanded({ ...base, weekdays: [5, 1], end: { kind: 'until', date: '2027-07-16' } });
 
     expect(out.map(o => o.date)).toEqual(['2027-07-05', '2027-07-09', '2027-07-12', '2027-07-16']);
   });
 
-  it('counts classes, not weeks: a count of 1 is one class even when the first day is not chosen', () => {
-    const out = expanded({ ...base, firstDate: '2027-07-06', weekdays: [1], end: { kind: 'count', count: 1 } });
-
-    expect(out.map(o => o.date)).toEqual(['2027-07-12']);
-  });
-
-  it('stops at an until date and includes it when it is a chosen day', () => {
+  it('includes the until date when it is a chosen day', () => {
     const out = expanded({ ...base, end: { kind: 'until', date: '2027-07-19' } });
 
     expect(out.map(o => o.date)).toEqual(['2027-07-05', '2027-07-12', '2027-07-19']);
@@ -72,14 +66,14 @@ describe('expandClassRule', () => {
       firstDate: '2028-02-23',
       startTime: '10:00',
       endTime: '11:00',
-      end: { kind: 'count', count: 3 },
+      end: { kind: 'until', date: '2028-03-08' },
     });
 
     expect(out.map(o => o.date)).toEqual(['2028-02-23', '2028-03-01', '2028-03-08']);
   });
 
   it('a class whose end is at or before its start runs into the next day', () => {
-    const out = expanded({ ...base, startTime: '22:00', endTime: '01:00', end: { kind: 'count', count: 1 } });
+    const out = expanded({ ...base, startTime: '22:00', endTime: '01:00', end: { kind: 'until', date: '2027-07-05' } });
 
     expect(out[0].startsAt).toBe('2027-07-05T12:00:00.000Z');
     expect(out[0].endsAt).toBe('2027-07-05T15:00:00.000Z');
@@ -93,7 +87,7 @@ describe('expandClassRule', () => {
         firstDate: '2027-03-07',
         startTime: '09:00',
         endTime: '10:00',
-        end: { kind: 'count', count: 2 },
+        end: { kind: 'until', date: '2027-03-14' },
       },
       NEW_YORK,
     );
@@ -108,7 +102,7 @@ describe('expandClassRule', () => {
         firstDate: '2027-10-31',
         startTime: '09:00',
         endTime: '10:00',
-        end: { kind: 'count', count: 2 },
+        end: { kind: 'until', date: '2027-11-07' },
       },
       NEW_YORK,
     );
@@ -136,14 +130,8 @@ describe('expandClassRule', () => {
     expect(refusal({ ...base, end: { kind: 'until', date: '2027-02-31' } })).toMatch(/real end date/);
   });
 
-  it('refuses a count out of range', () => {
-    expect(refusal({ ...base, end: { kind: 'count', count: 0 } })).toMatch(/between 1 and/);
-    expect(refusal({ ...base, end: { kind: 'count', count: MAX_RECURRING_CLASSES + 1 } })).toMatch(/between 1 and/);
-    expect(refusal({ ...base, end: { kind: 'count', count: 2.5 } })).toMatch(/between 1 and/);
-  });
-
-  it('caps an until series at the maximum number of classes, with a message to shorten it', () => {
-    // Daily from 2027-01-01 to 2028-09-30 is well over 100 days but within the two-year window: the cap, not the window, stops it.
+  it('caps a series at the maximum number of classes, with a message to shorten it', () => {
+    // Daily from 2027-01-01 to 2027-12-31 is more than 100 classes but within the two-year window: the cap stops it.
     const message = refusal({
       weekdays: [1, 2, 3, 4, 5, 6, 7],
       firstDate: '2027-01-01',
@@ -155,20 +143,21 @@ describe('expandClassRule', () => {
     expect(message).toMatch(/at most 100 classes/);
   });
 
-  it('a count reaches the cap exactly and is not refused', () => {
+  it('a series that reaches the cap exactly is not refused', () => {
+    // 2027-01-01 plus 99 days is the 100th day.
     const out = expanded({
       weekdays: [1, 2, 3, 4, 5, 6, 7],
       firstDate: '2027-01-01',
       startTime: '09:00',
       endTime: '10:00',
-      end: { kind: 'count', count: MAX_RECURRING_CLASSES },
+      end: { kind: 'until', date: '2027-04-10' },
     });
 
     expect(out).toHaveLength(MAX_RECURRING_CLASSES);
   });
 
-  it('a weekly count at the cap fits the two-year window (100 weeks is 700 days)', () => {
-    const out = expanded({ ...base, weekdays: [1], end: { kind: 'count', count: MAX_RECURRING_CLASSES } });
+  it('a weekly series of the cap fits the two-year window (100 weeks is 700 days)', () => {
+    const out = expanded({ ...base, end: { kind: 'until', date: '2029-05-28' } });
 
     expect(out).toHaveLength(MAX_RECURRING_CLASSES);
     expect(out[out.length - 1].date).toBe('2029-05-28');

@@ -1,6 +1,7 @@
 import { isClassAge, isValidAgeRange, MAX_CLASS_AGE, MIN_CLASS_AGE, type AgeRange } from '../ageRange';
 import { capacityCovers } from '../capacity';
-import { findClash, isValidSpan } from '../interval';
+import { isValidSpan } from '../interval';
+import { findLocationClash } from '../location';
 import { formatClash } from '../refusals';
 import { parseCampLocal } from './campTime';
 import type { ImportColumn } from './columns';
@@ -277,7 +278,6 @@ export function planImport({ rows, classes, sessions, timeZone }: PlanInput): Im
     }
     const target = key === null ? undefined : sessions.find(s => s.externalKey === key);
     const others = sessions.filter(s => !claimed.has(s.id) && s.id !== target?.id);
-    const span = { startsAt, endsAt };
 
     const fileProblem = ((): RowProblem | null => {
       if (!target) {
@@ -303,18 +303,20 @@ export function planImport({ rows, classes, sessions, timeZone }: PlanInput): Im
           `${target.seatsTaken} campers are enrolled in this session, so the capacity cannot go below that.`,
         );
       }
-      const clashing = findClash(span, others);
+      // Classes overlap in time freely; only two in the same location clash (location.ts).
+      const placed = { startsAt, endsAt, location };
+      const clashing = findLocationClash(placed, others);
       if (clashing) {
         return problem(
           'starts_at',
-          `Clashes with ${clashing.className}, ${formatClash(clashing, timeZone)}, which is already in the camp. Choose other times, or change that session.`,
+          `Clashes with ${clashing.className} at ${clashing.location}, ${formatClash(clashing, timeZone)}, which is already in the camp. Choose other times, or change that session.`,
         );
       }
-      const clashRow = findClash(span, accepted);
+      const clashRow = findLocationClash(placed, accepted);
       if (clashRow) {
         return problem(
           'starts_at',
-          `Clashes with row ${clashRow.rowNumber} of this file (${clashRow.className}, ${formatClash(clashRow, timeZone)}).`,
+          `Clashes with row ${clashRow.rowNumber} of this file (${clashRow.className} at ${clashRow.location}, ${formatClash(clashRow, timeZone)}).`,
         );
       }
 

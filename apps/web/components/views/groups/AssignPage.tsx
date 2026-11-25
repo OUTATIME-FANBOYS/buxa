@@ -33,6 +33,7 @@ export async function AssignPage({ sessionId }: { sessionId: string }) {
   const placed = new Set(assignments.map(a => a.personId));
   const unplaced = campers.filter(c => !placed.has(c.id));
   const needsGroupsAndRooms = groups.length === 0 || rooms.length === 0;
+  const choices = { sessionId: session.id, campers, staff, groups, rooms };
 
   return (
     <div className="page">
@@ -40,7 +41,7 @@ export async function AssignPage({ sessionId }: { sessionId: string }) {
       <PageHeader
         title="Assign people"
         subtitle={`${session.name}. Each camper has one place in this session.`}
-        actions={canManage && <AssignDialog choices={{ sessionId: session.id, campers, staff, groups, rooms }} />}
+        actions={canManage && <AssignDialog choices={choices} />}
       />
       {!canManage && <p className="muted">Only staff can place or move people.</p>}
       {needsGroupsAndRooms && canManage && (
@@ -53,6 +54,7 @@ export async function AssignPage({ sessionId }: { sessionId: string }) {
         rooms={rooms}
         assignments={assignments}
         unplaced={unplaced}
+        choices={canManage ? choices : undefined}
       />
     </div>
   );

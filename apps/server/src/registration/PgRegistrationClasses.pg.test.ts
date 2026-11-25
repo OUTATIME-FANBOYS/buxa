@@ -18,6 +18,7 @@ import { createClassService, type ClassService } from '../classes/ClassService';
 import { PgClassRepository } from '../classes/PgClassRepository';
 import { createSeatHoldService, type SeatHoldService } from '../holds/SeatHoldService';
 import { PgSeatHoldRepository } from '../holds/PgSeatHoldRepository';
+import { backdateHolds } from '../holds/__tests__/holdFixture';
 
 /** A fixed test key (32 bytes, base64). Never a real key. */
 const TEST_KEY = Buffer.alloc(32, 3).toString('base64');
@@ -186,9 +187,7 @@ describe.skipIf(!url)('registration by class in Postgres', () => {
   it('the expiry job still frees a hold that ran out before confirmation, and the place shows as expired', async () => {
     const { fx, formId, staff } = await campWithForm();
     await submit(formId, staff, [pick(fx.children.ada, fx.classes.archery)]);
-    await withOrg(pool, fx.userId, fx.orgId, db =>
-      db.query(`UPDATE seat_holds SET expires_at = now() - interval '1 minute'`),
-    );
+    await backdateHolds(pool, 'org_id = $1', [fx.orgId]);
 
     const sweep = await seats.releaseExpiredHoldsEverywhere();
     expect(sweep.released).toBeGreaterThanOrEqual(1);
@@ -253,5 +252,79 @@ describe.skipIf(!url)('registration by class in Postgres', () => {
       db.query<{ n: number }>(`SELECT count(*)::int AS n FROM registration_classes`),
     );
     expect(count.rows[0].n).toBe(0);
+  });
+  it('two siblings each hold a place in the same class, and one child cannot take it twice', async () => {
+    const { fx, formId, staff } = await campWithForm();
+    const sibling = await withOrg(pool, fx.userId, fx.orgId, async db => {
+      const person = await db.query<{ id: string }>(
+        `INSERT INTO people (org_id, given_name, family_name, date_of_birth) VALUES ($1, 'Cleo', 'Sibling', '2014-06-01') RETURNING id`,
+        [fx.orgId],
+      );
+      await db.query(`INSERT INTO person_roles (org_id, person_id, role) VALUES ($1, $2, 'camper')`, [
+        fx.orgId,
+        person.rows[0].id,
+      ]);
+      await db.query(
+        `INSERT INTO household_members (org_id, household_id, person_id, relationship)
+         SELECT org_id, household_id, $2, 'Child' FROM household_members WHERE person_id = $1`,
+        [fx.children.ada, person.rows[0].id],
+      );
+
+      return person.rows[0].id;
+    });
+    await submit(formId, staff, [pick(fx.children.ada, fx.classes.climbing), pick(sibling, fx.classes.climbing)]);
+    const [row] = await rowsOf(staff, formId);
+    expect(row.classes.map(c => c.status)).toEqual(['held', 'held']);
+    await expect(submit(formId, staff, [pick(sibling, fx.classes.climbing)])).rejects.toThrow();
+  });
+
+  it('records the price at submission: the early-bird amount while it applies, nothing for a class with no price', async () => {
+    const { fx, formId, staff } = await campWithForm();
+    await pool.query(
+      `UPDATE sessions SET price_minor = 5000, price_currency = 'USD', early_bird_minor = 4000, early_bird_until = DATE '2999-01-01' WHERE id = $1`,
+      [fx.classes.archery],
+    );
+    await submit(formId, staff, [
+      pick(fx.children.ada, fx.classes.archery),
+      pick(fx.children.ada, fx.classes.painting),
+    ]);
+    const [row] = await rowsOf(staff, formId);
+    const byName = Object.fromEntries(row.classes.map(c => [c.className, c.price]));
+    expect(byName.Archery).toEqual({ amountMinor: 4000, currency: 'USD', earlyBird: true });
+    expect(byName.Painting).toBeNull();
+    // A later price change does not touch what was recorded.
+    await pool.query(
+      `UPDATE sessions SET price_minor = 9000, early_bird_minor = NULL, early_bird_until = NULL WHERE id = $1`,
+      [fx.classes.archery],
+    );
+    const [again] = await rowsOf(staff, formId);
+    expect(again.classes.find(c => c.className === 'Archery')?.price).toEqual({
+      amountMinor: 4000,
+      currency: 'USD',
+      earlyBird: true,
+    });
+  });
+
+  it('a class flagged for its dates takes no place: the registration is refused with the owner-approved message, and nothing is written', async () => {
+    const { fx, formId, staff, admin } = await campWithForm();
+    // Shrink the session to days none of its classes fall on. Nobody is on a class yet, so the change is allowed and flags them all.
+    const session = await classes.getSession(admin, fx.sessionId);
+    if (!session.ok) {
+      throw new Error(session.failure.message);
+    }
+    const shrunk = await classes.updateSession(admin, fx.sessionId, {
+      name: session.value.name,
+      description: session.value.description,
+      startsOn: '2027-07-01',
+      endsOn: '2027-07-05',
+      isPublic: session.value.isPublic,
+    });
+    expect(shrunk.ok).toBe(true);
+
+    const attempt = submit(formId, staff, [pick(fx.children.ada, fx.classes.painting)]);
+
+    await expect(attempt).rejects.toBeInstanceOf(RegistrationRefusedError);
+    await expect(attempt).rejects.toThrow("This class falls outside its session's dates. Fix its dates first.");
+    expect(await rowsOf(staff, formId)).toEqual([]);
   });
 });

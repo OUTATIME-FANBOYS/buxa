@@ -25,10 +25,20 @@ export function SessionNav({
         / {current === 'groups' ? 'Groups and rooms' : 'Assign people'}
       </nav>
       <nav aria-label="Session pages" className="classes-actions">
-        <Button variant={current === 'groups' ? 'secondary' : 'ghost'} size="sm" href={groupsPath(sessionId)}>
+        <Button
+          variant={current === 'groups' ? 'primary' : 'glass'}
+          size="sm"
+          href={groupsPath(sessionId)}
+          aria-current={current === 'groups' ? 'page' : undefined}
+        >
           Groups and rooms
         </Button>
-        <Button variant={current === 'assign' ? 'secondary' : 'ghost'} size="sm" href={assignPath(sessionId)}>
+        <Button
+          variant={current === 'assign' ? 'primary' : 'glass'}
+          size="sm"
+          href={assignPath(sessionId)}
+          aria-current={current === 'assign' ? 'page' : undefined}
+        >
           Assign people
         </Button>
       </nav>

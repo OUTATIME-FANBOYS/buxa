@@ -1,15 +1,27 @@
 import { randomUUID } from 'node:crypto';
-import type { Actor, ActiveEnrolmentFacts, AuditAction, LocalDate } from '@buxa/domain';
-import { capacityCovers, seatsLeft } from '@buxa/domain';
+import type {
+  Actor,
+  ActiveEnrolmentFacts,
+  AuditAction,
+  DatesPlanClass,
+  LocalDate,
+  SessionDatesPlan,
+} from '@buxa/domain';
+import { capacityCovers, classDatesRefusal, planSessionDates, seatsLeft, sessionNameKey } from '@buxa/domain';
 import type {
   Class,
   Enrolment,
   EnrolmentStatus,
   NewSessionInput,
+  Series,
   Session,
+  SessionDeleteImpact,
   SessionEditInput,
-  SessionPriceInput,
+  SessionStatus,
 } from '@buxa/contracts';
+import { decideCancel, decideRestore, type OccurrenceCommand, type OccurrenceStatus } from '@buxa/domain';
+import { OccurrenceRefusedError } from './errors';
+import { seriesView } from './seriesView';
 import { priceChangeAudit, samePrice } from './priceAudit';
 import { sameSessionDetails, sessionEditAudit, type SessionDetails } from './sessionEditAudit';
 import { systemClock, type Clock } from '../services/clock';
@@ -17,6 +29,9 @@ import type { AuditRecord } from '../people/InMemoryDatabase';
 import type { AuditData } from '../audit/types';
 import type {
   CampActiveHold,
+  SeriesFields,
+  SeriesRecord,
+  SeriesSchedule,
   CampClassSpan,
   CampWaitlistEntry,
   ClassRecord,
@@ -24,18 +39,22 @@ import type {
   EnrolRequest,
   EnrolmentRule,
   GatheredEnrolmentFacts,
-  TeacherAssignment,
 } from './ClassRepository';
 import {
   CamperNotFoundError,
   CapacityBelowEnrolledError,
+  ClassDatesFlaggedError,
   ClassHasEnrolmentsError,
   ClassNotFoundError,
   EnrolmentNotFoundError,
   InstructorNotFoundError,
+  SessionDatesBlockedError,
   SessionHasClassesError,
+  SessionHasEnrolmentsError,
+  SessionNotDraftError,
   SessionNotFoundError,
-  TeacherNotFoundError,
+  SessionNotLiveError,
+  SessionPublishBlockedError,
   refusalError,
 } from './errors';
 import { settle } from '@buxa/domain';
@@ -49,8 +68,9 @@ interface StoredSession {
   startsOn: LocalDate | null;
   endsOn: LocalDate | null;
   isPublic: boolean;
+  status: SessionStatus;
+  archivedAt: string | null;
   createdAt: string;
-  price: SessionPriceInput | null;
 }
 
 /** A class: a time range under a session, with its own name, ages, camp size and location. */
@@ -58,6 +78,23 @@ interface StoredClass extends ClassRecord {
   id: string;
   orgId: string;
   sessionId: string;
+  /** The dates flag (migration 0059): the class falls outside its session's dates. */
+  datesOutsideSession: boolean;
+  /** The series this day belongs to (migration 0060). */
+  seriesId: string;
+  /** Cancelled days keep their row and their reason (migration 0060). */
+  status: OccurrenceStatus;
+  cancelReason: string | null;
+}
+
+/** A series: the shared fields its days were written with, and its weekdays (migration 0060). */
+interface StoredSeries extends SeriesFields {
+  id: string;
+  orgId: string;
+  sessionId: string;
+  weekdays: number[];
+  seriesStartsAt: string;
+  seriesEndsAt: string;
 }
 
 interface StoredEnrolment {
@@ -108,17 +145,27 @@ export class InMemoryClassRepository implements ClassRepository {
   /** Person id to the name of the household the person belongs to (Postgres: household_members). */
   private readonly householdOf = new Map<string, string>();
   private readonly seatHolds: StoredSeatHold[] = [];
+  private readonly series = new Map<string, StoredSeries>();
   /** Camp id to the user ids that hold the teacher role there. */
   private readonly teacherUsers = new Map<string, Set<string>>();
-  /** Class id to the teacher user ids assigned to it. */
-  private readonly teachersOf = new Map<string, Set<string>>();
+  /** Person id to the login (user id) linked to that person (people.user_id, migration 0051). */
+  private readonly loginOf = new Map<string, string>();
   private readonly locks = new Map<string, Promise<void>>();
 
-  constructor(private readonly now: Clock = systemClock) {}
+  /** `timeZone` is the camp's zone for the dates check (Postgres reads it from the camp). */
+  constructor(
+    private readonly now: Clock = systemClock,
+    private readonly timeZone: string = 'Australia/Sydney',
+  ) {}
 
   /** Test setup: a person who can be enrolled (or named as an instructor). */
   seedCamper(orgId: string, id: string, name: string, dateOfBirth: LocalDate | null): void {
     this.campers.set(id, { id, orgId, name, dateOfBirth });
+  }
+
+  /** Test setup: the person is the login's roster person (as the invite accept links them). A teacher sees the classes it instructs. */
+  linkPersonToLogin(personId: string, userId: string): void {
+    this.loginOf.set(personId, userId);
   }
 
   /** Test setup: a person's household, as household_members would link them. Used for the waitlist's family name. */
@@ -184,14 +231,12 @@ export class InMemoryClassRepository implements ClassRepository {
         startsOn: input.startsOn,
         endsOn: input.endsOn,
         isPublic: input.isPublic ?? false,
+        status: 'draft',
+        archivedAt: null,
         createdAt: this.now().toISOString(),
-        price: input.price ?? null,
       };
       this.sessions.set(row.id, row);
       this.record(actor, 'session.create', 'session', row.id, { name: row.name });
-      if (row.price) {
-        this.record(actor, 'session.price_change', 'session', row.id, priceChangeAudit(null, row.price));
-      }
 
       return this.toSession(row);
     });
@@ -218,6 +263,20 @@ export class InMemoryClassRepository implements ClassRepository {
         isPublic: input.isPublic ?? false,
       };
       if (!sameSessionDetails(before, after)) {
+        const datesChanged = before.startsOn !== after.startsOn || before.endsOn !== after.endsOn;
+        const plan = datesChanged
+          ? planSessionDates(
+              this.datesPlanRowsOf(actor.orgId, sessionId),
+              { startsOn: input.startsOn, endsOn: input.endsOn },
+              this.timeZone,
+            )
+          : null;
+        if (plan && plan.blocked.length > 0) {
+          throw new SessionDatesBlockedError(plan.blocked.map(c => c.name));
+        }
+        if (plan) {
+          this.applyDatesPlan(actor, sessionId, input, plan);
+        }
         this.record(actor, 'session.update', 'session', sessionId, sessionEditAudit(before, after));
         Object.assign(row, after);
       }
@@ -240,18 +299,120 @@ export class InMemoryClassRepository implements ClassRepository {
     });
   }
 
-  setSessionPrice(actor: Actor, sessionId: string, price: SessionPriceInput | null): Promise<Session> {
+  deleteSessionWithClasses(actor: Actor, sessionId: string): Promise<void> {
     return settle(() => {
       const row = this.sessionIn(actor.orgId, sessionId);
       if (!row) {
         throw new SessionNotFoundError();
       }
-      if (!samePrice(row.price, price)) {
-        this.record(actor, 'session.price_change', 'session', sessionId, priceChangeAudit(row.price, price));
-        row.price = price;
+      const children = [...this.classes.values()].filter(c => c.sessionId === sessionId);
+      const enrolled = [...this.enrolments.values()].some(e => children.some(c => c.id === e.classId));
+      if (enrolled) {
+        throw new SessionHasEnrolmentsError();
+      }
+      for (const child of children) {
+        this.classes.delete(child.id);
+        this.record(actor, 'class.delete', 'class', child.id, { name: child.name, session: row.name });
+      }
+      this.sessions.delete(sessionId);
+      this.record(actor, 'session.delete', 'session', sessionId, { name: row.name, classes: children.length });
+    });
+  }
+
+  setSessionArchived(actor: Actor, sessionId: string, archived: boolean): Promise<Session> {
+    return settle(() => {
+      const row = this.sessionIn(actor.orgId, sessionId);
+      if (!row) {
+        throw new SessionNotFoundError();
+      }
+      const from = row.status;
+      if (archived) {
+        row.status = 'archived';
+        row.archivedAt = row.archivedAt ?? this.now().toISOString();
+      } else if (row.status === 'archived') {
+        row.status = 'live';
+        row.archivedAt = null;
+      } else {
+        return this.toSession(row);
+      }
+      this.record(actor, archived ? 'session.archive' : 'session.unarchive', 'session', sessionId, { from });
+
+      return this.toSession(row);
+    });
+  }
+
+  publishSession(actor: Actor, sessionId: string): Promise<Session> {
+    return settle(() => {
+      const row = this.sessionIn(actor.orgId, sessionId);
+      if (!row) {
+        throw new SessionNotFoundError();
+      }
+      if (row.status === 'archived') {
+        throw new SessionNotDraftError('archived');
+      }
+      if (row.status === 'draft') {
+        const flagged = this.flaggedNamesOf(actor.orgId, sessionId);
+        if (flagged.length > 0) {
+          throw new SessionPublishBlockedError(flagged);
+        }
+        row.status = 'live';
+        this.record(actor, 'session.publish', 'session', sessionId, {});
       }
 
       return this.toSession(row);
+    });
+  }
+
+  sessionDeleteImpact(userId: string, orgId: string, sessionId: string): Promise<SessionDeleteImpact> {
+    return settle(() => {
+      if (!this.sessionIn(orgId, sessionId)) {
+        throw new SessionNotFoundError();
+      }
+      const classes = [...this.classes.values()].filter(c => c.sessionId === sessionId);
+
+      // Groups, rooms and assignments live in the group repository; a session here has none of them.
+      return {
+        classes: classes.length,
+        groups: 0,
+        rooms: 0,
+        assignments: 0,
+        instructors: classes.reduce((n, c) => n + c.instructorIds.length, 0),
+        formLinks: 0,
+      };
+    });
+  }
+
+  deleteDraftSession(actor: Actor, sessionId: string): Promise<void> {
+    return settle(() => {
+      const row = this.sessionIn(actor.orgId, sessionId);
+      if (!row) {
+        throw new SessionNotFoundError();
+      }
+      if (row.status !== 'draft') {
+        throw new SessionNotDraftError(row.status);
+      }
+      const children = [...this.classes.values()].filter(c => c.sessionId === sessionId);
+      for (const child of children) {
+        this.classes.delete(child.id);
+        this.record(actor, 'class.delete', 'class', child.id, { name: child.name, session: row.name });
+      }
+      this.sessions.delete(sessionId);
+      this.record(actor, 'session.delete', 'session', sessionId, {
+        name: row.name,
+        status: 'draft',
+        classes: children.length,
+      });
+    });
+  }
+
+  sessionNameTaken(_userId: string, orgId: string, name: string, exceptId: string | null): Promise<string | null> {
+    return settle(() => {
+      const key = sessionNameKey(name);
+      const same = [...this.sessions.values()].find(
+        s => s.orgId === orgId && s.id !== exceptId && sessionNameKey(s.name) === key,
+      );
+
+      return same?.name ?? null;
     });
   }
 
@@ -268,38 +429,237 @@ export class InMemoryClassRepository implements ClassRepository {
     });
   }
 
-  addClasses(actor: Actor, sessionId: string, inputs: ClassRecord[]): Promise<Class[]> {
+  setOccurrenceStatus(actor: Actor, occurrenceId: string, command: OccurrenceCommand): Promise<void> {
+    return settle(() => {
+      const row = this.classIn(actor.orgId, occurrenceId);
+      if (!row) {
+        throw new ClassNotFoundError();
+      }
+      if (command.kind === 'cancel') {
+        if (decideCancel(row).kind === 'refuse') {
+          throw new OccurrenceRefusedError('already_cancelled');
+        }
+        row.status = 'cancelled';
+        row.cancelReason = command.reason;
+        this.record(actor, 'occurrence.cancel', 'occurrence', occurrenceId, {
+          classId: row.sessionId,
+          reason: command.reason,
+        });
+
+        return;
+      }
+      if (decideRestore(row).kind === 'refuse') {
+        throw new OccurrenceRefusedError('not_cancelled');
+      }
+      row.status = 'active';
+      row.cancelReason = null;
+      this.record(actor, 'occurrence.restore', 'occurrence', occurrenceId, { classId: row.sessionId });
+    });
+  }
+
+  addSeries(actor: Actor, sessionId: string, input: SeriesRecord): Promise<Series> {
     return settle(() => {
       if (!this.sessionIn(actor.orgId, sessionId)) {
         throw new SessionNotFoundError();
       }
       // Check everything before writing anything, so a failure part-way leaves the camp unchanged (as the transaction does).
-      for (const input of inputs) {
-        this.requireInstructorsInCamp(actor.orgId, input.instructorIds);
+      this.requireInstructorsInCamp(actor.orgId, input.instructorIds);
+      const seriesId = randomUUID();
+      const stored: StoredSeries = {
+        id: seriesId,
+        orgId: actor.orgId,
+        sessionId,
+        name: input.name,
+        ageRange: input.ageRange,
+        capacity: input.capacity,
+        location: input.location,
+        instructorIds: [...new Set(input.instructorIds)],
+        price: input.price,
+        weekdays: [...input.weekdays],
+        seriesStartsAt: input.seriesStartsAt,
+        seriesEndsAt: input.seriesEndsAt,
+      };
+      this.series.set(seriesId, stored);
+      for (const day of input.occurrences) {
+        const dayInput: ClassRecord = { ...input, startsAt: day.startsAt, endsAt: day.endsAt };
+        const row = this.storeDay(actor, sessionId, seriesId, dayInput);
+        this.recordCreate(actor, row, dayInput);
+      }
+      this.record(actor, 'series.create', 'series', seriesId, {
+        sessionId,
+        name: input.name,
+        weekdays: input.weekdays.map(String),
+        days: input.occurrences.length,
+      });
+
+      return this.toSeries(stored);
+    });
+  }
+
+  listSeries(userId: string, orgId: string, sessionId: string): Promise<Series[]> {
+    return settle(() => {
+      if (!this.sessionIn(orgId, sessionId)) {
+        throw new SessionNotFoundError();
       }
 
-      return inputs.map(input => {
-        const row: StoredClass = { ...input, id: randomUUID(), orgId: actor.orgId, sessionId };
-        this.classes.set(row.id, row);
-        this.record(actor, 'class.create', 'class', row.id, {
-          sessionId,
-          startsAt: row.startsAt,
-          endsAt: row.endsAt,
-          instructorIds: [...new Set(input.instructorIds)],
-        });
-
-        return this.toClass(row);
-      });
+      return [...this.series.values()]
+        .filter(sr => sr.orgId === orgId && sr.sessionId === sessionId)
+        .sort((a, b) => a.seriesStartsAt.localeCompare(b.seriesStartsAt) || a.id.localeCompare(b.id))
+        .map(sr => this.toSeries(sr));
     });
+  }
+
+  getSeries(userId: string, orgId: string, seriesId: string): Promise<Series | null> {
+    return settle(() => {
+      const found = this.seriesIn(orgId, seriesId);
+
+      return found ? this.toSeries(found) : null;
+    });
+  }
+
+  listSeriesOccurrences(userId: string, orgId: string, seriesId: string): Promise<Class[]> {
+    return settle(() =>
+      this.daysOf(seriesId)
+        .filter(c => c.orgId === orgId)
+        .map(c => this.toClass(c)),
+    );
+  }
+
+  updateSeries(actor: Actor, seriesId: string, input: SeriesFields, schedule: SeriesSchedule | null): Promise<Series> {
+    return settle(() => {
+      const row = this.seriesIn(actor.orgId, seriesId);
+      if (!row) {
+        throw new ClassNotFoundError();
+      }
+      this.requireInstructorsInCamp(actor.orgId, input.instructorIds);
+      const days = this.daysOf(seriesId);
+      // As in Postgres: the camp size cannot go below the seats the series has taken (enrolled campers and live holds).
+      const first = days[0];
+      if (first && !capacityCovers(input.capacity, this.takenPlaces(first.id))) {
+        throw new CapacityBelowEnrolledError();
+      }
+      // As in Postgres (buxa_delete_occurrences_v1): a removed day is refused while the series has a place, hold or registration.
+      if (schedule && schedule.removeIds.length > 0 && this.activePlaceNames(actor.orgId, seriesId).length > 0) {
+        throw new ClassHasEnrolmentsError();
+      }
+      const priceBefore = row.price;
+      const instructorIds = [...new Set(input.instructorIds)];
+      Object.assign(row, input, { instructorIds });
+      for (const day of days) {
+        Object.assign(day, input, { instructorIds });
+      }
+      this.record(actor, 'series.update', 'series', seriesId, {
+        name: row.name,
+        capacity: row.capacity,
+        instructorIds,
+        days: days.length,
+      });
+      if (!samePrice(priceBefore, input.price)) {
+        this.record(actor, 'series.update', 'series', seriesId, priceChangeAudit(priceBefore, input.price));
+      }
+      if (schedule) {
+        row.weekdays = [...schedule.weekdays];
+        row.seriesStartsAt = schedule.seriesStartsAt;
+        row.seriesEndsAt = schedule.seriesEndsAt;
+        for (const id of schedule.removeIds) {
+          this.classes.delete(id);
+        }
+        for (const day of schedule.add) {
+          const dayInput: ClassRecord = { ...input, instructorIds, startsAt: day.startsAt, endsAt: day.endsAt };
+          const created = this.storeDay(actor, row.sessionId, seriesId, dayInput);
+          this.recordCreate(actor, created, dayInput);
+        }
+        this.record(actor, 'series.reschedule', 'series', seriesId, {
+          added: schedule.add.length,
+          removed: schedule.removeIds.length,
+          weekdays: schedule.weekdays.map(String),
+        });
+      }
+
+      return this.toSeries(row);
+    });
+  }
+
+  seriesHolders(_userId: string, orgId: string, seriesId: string): Promise<string[]> {
+    return settle(() => this.activePlaceNames(orgId, seriesId));
+  }
+
+  /** The names of the people with an active place on a series: a child enrolled (not cancelled), or a live hold (child or household). */
+  private activePlaceNames(orgId: string, seriesId: string): string[] {
+    const now = this.now().getTime();
+    const names: string[] = [];
+    for (const e of this.enrolments.values()) {
+      if (e.orgId === orgId && e.status !== 'cancelled' && this.seriesKey(e.classId) === seriesId) {
+        names.push(this.campers.get(e.camperId)?.name ?? 'A child');
+      }
+    }
+    for (const h of this.seatHolds) {
+      if (!h.released && Date.parse(h.expiresAt) > now && this.seriesKey(h.classId) === seriesId) {
+        names.push(h.childName ?? h.householdName);
+      }
+    }
+
+    return names;
+  }
+
+  deleteSeries(actor: Actor, seriesId: string): Promise<void> {
+    return settle(() => {
+      const row = this.seriesIn(actor.orgId, seriesId);
+      if (!row) {
+        throw new ClassNotFoundError();
+      }
+      const holdsOrEnrolments =
+        [...this.enrolments.values()].some(e => this.seriesKey(e.classId) === seriesId) ||
+        this.seatHolds.some(h => this.seriesKey(h.classId) === seriesId);
+      if (holdsOrEnrolments) {
+        throw new ClassHasEnrolmentsError();
+      }
+      for (const day of this.daysOf(seriesId)) {
+        this.classes.delete(day.id);
+      }
+      this.series.delete(seriesId);
+      this.record(actor, 'series.delete', 'series', seriesId, { name: row.name });
+    });
+  }
+
+  /** Writes one day of a series and returns it. The caller audits it. */
+  private storeDay(actor: Actor, sessionId: string, seriesId: string, input: ClassRecord): StoredClass {
+    const row: StoredClass = {
+      ...input,
+      id: randomUUID(),
+      orgId: actor.orgId,
+      sessionId,
+      datesOutsideSession: false,
+      seriesId,
+      status: 'active',
+      cancelReason: null,
+    };
+    this.classes.set(row.id, row);
+
+    return row;
   }
 
   listCampClassSpans(userId: string, orgId: string): Promise<CampClassSpan[]> {
     return settle(() =>
       [...this.classes.values()]
-        .filter(c => c.orgId === orgId)
-        .map(c => ({ startsAt: c.startsAt, endsAt: c.endsAt, className: c.name }))
+        .filter(c => c.orgId === orgId && c.status === 'active')
+        .map(c => ({
+          startsAt: c.startsAt,
+          endsAt: c.endsAt,
+          className: c.name,
+          location: c.location,
+          seriesId: c.seriesId,
+        }))
         .sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
     );
+  }
+
+  camperNameOf(_userId: string, orgId: string, camperId: string): Promise<string | null> {
+    return settle(() => {
+      const camper = this.camperIn(orgId, camperId);
+
+      return camper ? camper.name : null;
+    });
   }
 
   listClasses(userId: string, orgId: string, sessionId: string): Promise<Class[]> {
@@ -329,14 +689,19 @@ export class InMemoryClassRepository implements ClassRepository {
         throw new SessionNotFoundError();
       }
       this.requireInstructorsInCamp(actor.orgId, input.instructorIds);
-      const row: StoredClass = { ...input, id: randomUUID(), orgId: actor.orgId, sessionId };
-      this.classes.set(row.id, row);
-      this.record(actor, 'class.create', 'class', row.id, {
+      // A day written on its own gets a series of its own, as the database trigger does (migration 0060).
+      const seriesId = randomUUID();
+      this.series.set(seriesId, {
+        id: seriesId,
+        orgId: actor.orgId,
         sessionId,
-        startsAt: row.startsAt,
-        endsAt: row.endsAt,
-        instructorIds: [...new Set(input.instructorIds)],
+        ...input,
+        weekdays: [],
+        seriesStartsAt: input.startsAt,
+        seriesEndsAt: input.endsAt,
       });
+      const row = this.storeDay(actor, sessionId, seriesId, input);
+      this.recordCreate(actor, row, input);
 
       return this.toClass(row);
     });
@@ -353,13 +718,19 @@ export class InMemoryClassRepository implements ClassRepository {
       if (!capacityCovers(input.capacity, this.takenPlaces(classId))) {
         throw new CapacityBelowEnrolledError();
       }
+      const priceBefore = row.price;
       Object.assign(row, input, { instructorIds: [...new Set(input.instructorIds)] });
+      // The service refused a class outside its session's dates, so a saved class is inside them: its flag is cleared (migration 0059).
+      row.datesOutsideSession = false;
       this.record(actor, 'class.update', 'class', classId, {
         startsAt: row.startsAt,
         endsAt: row.endsAt,
         capacity: row.capacity,
         instructorIds: row.instructorIds,
       });
+      if (!samePrice(priceBefore, input.price)) {
+        this.record(actor, 'class.price_change', 'class', classId, priceChangeAudit(priceBefore, input.price));
+      }
 
       return this.toClass(row);
     });
@@ -371,7 +742,12 @@ export class InMemoryClassRepository implements ClassRepository {
       if (!row) {
         throw new ClassNotFoundError();
       }
-      if ([...this.enrolments.values()].some(e => e.classId === classId)) {
+      // A day is part of its series (migration 0065): the series' enrolments and holds refuse the delete, as in Postgres.
+      const key = this.seriesKey(classId);
+      const placesOrHolds =
+        [...this.enrolments.values()].some(e => this.seriesKey(e.classId) === key) ||
+        this.seatHolds.some(h => this.seriesKey(h.classId) === key);
+      if (placesOrHolds) {
         throw new ClassHasEnrolmentsError();
       }
       this.classes.delete(classId);
@@ -444,7 +820,7 @@ export class InMemoryClassRepository implements ClassRepository {
       }
 
       return [...this.enrolments.values()]
-        .filter(e => e.orgId === orgId && e.classId === classId)
+        .filter(e => e.orgId === orgId && this.seriesKey(e.classId) === this.seriesKey(classId))
         .sort((a, b) => a.enrolledAt.localeCompare(b.enrolledAt)) // stable: ties keep the order they were written in
         .map(e => this.toEnrolment(e));
     });
@@ -459,6 +835,14 @@ export class InMemoryClassRepository implements ClassRepository {
       const camper = this.camperIn(actor.orgId, request.camperId);
       if (!camper) {
         throw new CamperNotFoundError();
+      }
+      const parent = this.sessions.get(cls.sessionId);
+      if (parent && parent.status !== 'live') {
+        throw new SessionNotLiveError(parent.status);
+      }
+      const datesRefusal = classDatesRefusal(cls.datesOutsideSession);
+      if (datesRefusal !== null) {
+        throw new ClassDatesFlaggedError();
       }
       // As in Postgres: expired holds give their places back and the waitlist takes them, before the seat count is read.
       const undoSweep = this.sweepExpiredHolds(cls.id, actor);
@@ -548,26 +932,13 @@ export class InMemoryClassRepository implements ClassRepository {
     this.teacherUsers.set(orgId, set);
   }
 
-  teacherAssignments(userId: string, orgId: string, sessionId: string): Promise<TeacherAssignment[]> {
-    const rows: TeacherAssignment[] = [];
-    for (const c of this.classes.values()) {
-      if (c.orgId !== orgId || c.sessionId !== sessionId) {
-        continue;
-      }
-      for (const userId of this.teachersOf.get(c.id) ?? []) {
-        rows.push({ classId: c.id, userId });
-      }
-    }
-
-    return Promise.resolve(rows);
-  }
-
   assignedClassIds(userId: string, orgId: string, teacherId: string): Promise<string[]> {
     if (!this.teacherUsers.get(orgId)?.has(teacherId)) {
       return Promise.resolve([]);
     }
+    // As in Postgres: a class is the teacher's when one of its instructors is the person linked to the teacher's login.
     const ids = [...this.classes.values()]
-      .filter(c => c.orgId === orgId && this.teachersOf.get(c.id)?.has(teacherId))
+      .filter(c => c.orgId === orgId && c.instructorIds.some(personId => this.loginOf.get(personId) === teacherId))
       .map(c => c.id);
 
     return Promise.resolve(ids);
@@ -583,21 +954,6 @@ export class InMemoryClassRepository implements ClassRepository {
     }
 
     return Promise.resolve([...ids]);
-  }
-
-  replaceTeachers(actor: Actor, classId: string, userIds: readonly string[]): Promise<void> {
-    if (!this.classIn(actor.orgId, classId)) {
-      return Promise.reject(new ClassNotFoundError());
-    }
-    const unique = [...new Set(userIds)];
-    const members = this.teacherUsers.get(actor.orgId) ?? new Set<string>();
-    if (unique.some(id => !members.has(id))) {
-      return Promise.reject(new TeacherNotFoundError());
-    }
-    this.teachersOf.set(classId, new Set(unique));
-    this.record(actor, 'class.update', 'class', classId, { teacherIds: unique });
-
-    return Promise.resolve();
   }
 
   private async exclusive<T>(key: string, work: () => Promise<T>): Promise<T> {
@@ -616,6 +972,60 @@ export class InMemoryClassRepository implements ClassRepository {
 
   private record(actor: Actor, action: AuditAction, entity: string, entityId: string, data: AuditData): void {
     this.audit.push({ orgId: actor.orgId, actorId: actor.userId, action, entity, entityId, data });
+  }
+
+  /** The classes of a session with what a date change needs (as readDatesPlanRows does in Postgres). */
+  private datesPlanRowsOf(orgId: string, sessionId: string): DatesPlanClass[] {
+    return [...this.classes.values()]
+      .filter(c => c.orgId === orgId && c.sessionId === sessionId)
+      .sort((a, b) => a.startsAt.localeCompare(b.startsAt) || a.id.localeCompare(b.id))
+      .map(c => ({
+        id: c.id,
+        name: c.name,
+        startsAt: c.startsAt,
+        endsAt: c.endsAt,
+        datesOutsideSession: c.datesOutsideSession,
+        hasPeople:
+          [...this.enrolments.values()].some(e => e.classId === c.id) || this.seatHolds.some(h => h.classId === c.id),
+      }));
+  }
+
+  private flaggedNamesOf(orgId: string, sessionId: string): string[] {
+    return this.datesPlanRowsOf(orgId, sessionId)
+      .filter(c => c.datesOutsideSession)
+      .map(c => c.name);
+  }
+
+  /** Sets the flags of a plan on the session's classes, then audits each newly flagged class (as applyDatesPlan does in Postgres). */
+  private applyDatesPlan(
+    actor: Actor,
+    sessionId: string,
+    input: { name: string; startsOn: string; endsOn: string },
+    plan: SessionDatesPlan,
+  ): void {
+    for (const c of this.classes.values()) {
+      if (c.orgId === actor.orgId && c.sessionId === sessionId) {
+        c.datesOutsideSession = plan.outside.some(o => o.id === c.id);
+      }
+    }
+    for (const cls of plan.newlyFlagged) {
+      this.record(actor, 'class.dates_flagged', 'class', cls.id, {
+        name: cls.name,
+        session: input.name,
+        startsOn: input.startsOn,
+        endsOn: input.endsOn,
+      });
+    }
+  }
+
+  sessionDatesPlanRows(_userId: string, orgId: string, sessionId: string): Promise<DatesPlanClass[]> {
+    return settle(() => {
+      if (!this.sessionIn(orgId, sessionId)) {
+        throw new SessionNotFoundError();
+      }
+
+      return this.datesPlanRowsOf(orgId, sessionId);
+    });
   }
 
   private sessionIn(orgId: string, id: string): StoredSession | undefined {
@@ -644,14 +1054,17 @@ export class InMemoryClassRepository implements ClassRepository {
   }
 
   private countWhere(classId: string, status: EnrolmentStatus): number {
-    return [...this.enrolments.values()].filter(e => e.classId === classId && e.status === status).length;
+    const key = this.seriesKey(classId);
+
+    return [...this.enrolments.values()].filter(e => this.seriesKey(e.classId) === key && e.status === status).length;
   }
 
   /** Places taken: enrolled campers plus live holds (as `session_seats_taken` counts them in Postgres). Waitlisted campers hold none. */
   private takenPlaces(classId: string): number {
     const now = this.now().getTime();
+    const key = this.seriesKey(classId);
     const holds = this.seatHolds.filter(
-      h => h.classId === classId && !h.released && Date.parse(h.expiresAt) > now,
+      h => this.seriesKey(h.classId) === key && !h.released && Date.parse(h.expiresAt) > now,
     ).length;
 
     return this.countWhere(classId, 'enrolled') + holds;
@@ -725,10 +1138,11 @@ export class InMemoryClassRepository implements ClassRepository {
       description: s.description,
       startsOn: s.startsOn,
       endsOn: s.endsOn,
-      classCount: [...this.classes.values()].filter(c => c.sessionId === s.id).length,
+      classCount: [...this.series.values()].filter(sr => sr.sessionId === s.id).length,
       isPublic: s.isPublic,
+      status: s.status,
+      archivedAt: s.archivedAt,
       createdAt: s.createdAt,
-      price: s.price ? { ...s.price } : null,
     };
   }
 
@@ -749,8 +1163,50 @@ export class InMemoryClassRepository implements ClassRepository {
       instructors: c.instructorIds.map(id => ({ id, name: this.campers.get(id)?.name ?? '' })),
       seatsTaken: this.takenPlaces(c.id),
       waitlisted: this.countWhere(c.id, 'waitlisted'),
-      price: session?.price ? { ...session.price } : null,
+      price: c.price ? { ...c.price } : null,
+      datesOutsideSession: c.datesOutsideSession,
+      seriesId: c.seriesId,
+      occurrenceStatus: c.status,
+      cancelReason: c.cancelReason,
     };
+  }
+
+  private toSeries(sr: StoredSeries): Series {
+    return seriesView(sr, this.daysOf(sr.id), this.sessions.get(sr.sessionId)?.name ?? '', this.timeZone, {
+      seatsTaken: (classId: string) => this.takenPlaces(classId),
+      waitlisted: (classId: string) => this.countWhere(classId, 'waitlisted'),
+      instructorName: (id: string) => this.campers.get(id)?.name ?? '',
+    });
+  }
+
+  private daysOf(seriesId: string): StoredClass[] {
+    return [...this.classes.values()]
+      .filter(c => c.seriesId === seriesId)
+      .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+  }
+
+  /** The key a place is counted under: the series of the day the row points at (migration 0061). */
+  private seriesKey(classId: string): string {
+    return this.classes.get(classId)?.seriesId ?? classId;
+  }
+
+  private seriesIn(orgId: string, id: string): StoredSeries | undefined {
+    const found = this.series.get(id);
+
+    return found && found.orgId === orgId ? found : undefined;
+  }
+
+  /** Audits a new class, and `class.price_change` when it is created with a price (as Postgres does). */
+  private recordCreate(actor: Actor, row: StoredClass, input: ClassRecord): void {
+    this.record(actor, 'class.create', 'class', row.id, {
+      sessionId: row.sessionId,
+      startsAt: row.startsAt,
+      endsAt: row.endsAt,
+      instructorIds: [...new Set(input.instructorIds)],
+    });
+    if (input.price) {
+      this.record(actor, 'class.price_change', 'class', row.id, priceChangeAudit(null, input.price));
+    }
   }
 
   private toEnrolment(e: StoredEnrolment): Enrolment {

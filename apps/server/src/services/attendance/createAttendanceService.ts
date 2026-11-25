@@ -1,15 +1,22 @@
-import type { AttendanceEntry, AttendanceFilter, CheckInInput, CheckOutInput } from '@buxa/contracts';
+import {
+  ATTENDANCE_FIELD_LABELS,
+  type AttendanceEntry,
+  type AttendanceFilter,
+  type CheckInInput,
+  type CheckOutInput,
+} from '@buxa/contracts';
 import {
   can,
   decideCheckIn,
   decideCheckOut,
   isMinor,
   personAccess,
+  teachesVisit,
   toLocalDate,
   type Actor,
   type LocalDate,
 } from '@buxa/domain';
-import { encodeCsv, sessionsOpenOn, type CsvCell } from '@buxa/shared';
+import { attendanceFieldValue, encodeCsv, orderFields, sessionsOpenOn } from '@buxa/shared';
 import { assertAllowed } from '../../auth/authorize';
 import { badRequest, notFound } from '../../http/errors';
 import {
@@ -34,18 +41,6 @@ import type {
 /** Wide enough to hold every visit a person can have. */
 const EARLIEST = '1900-01-01T00:00:00.000Z';
 const LATEST = '9999-12-31T23:59:59.999Z';
-
-const EXPORT_HEADER: CsvCell[] = [
-  'Person',
-  'Checked in',
-  'Checked in by',
-  'Method',
-  'Checked out',
-  'Checked out by',
-  'Collected by',
-  'Override reason',
-  'Note',
-];
 
 export function createAttendanceService(deps: AttendanceServiceDeps): AttendanceService {
   const { attendance, classes, groups, people, memberships, orgs, clock } = deps;
@@ -86,7 +81,12 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
     const query: AttendanceQuery = {
       ...localDaysWindow(filter.from, filter.to, timeZone),
       personId: filter.personId,
-      onSiteOnly: filter.onSiteOnly,
+      sessionId: filter.sessionId,
+      classId: filter.classId,
+      method: filter.method,
+      checkedInBy: filter.checkedInBy,
+      onSiteOnly: filter.onSiteOnly === true || filter.status === 'on_site',
+      checkedOutOnly: filter.status === 'checked_out',
     };
 
     return attendance.log(actor.userId, actor.orgId, query);
@@ -102,9 +102,12 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
     return can(actor, 'people:read_contact') ? entries : entries.map(e => ({ ...e, collectedByName: null }));
   }
 
-  /** Keeps only the records of the teacher's campers. Null scope (not a teacher) keeps everything. */
+  /**
+   * Keeps only the records a teacher may see: its campers' visits to a session and a class it teaches (teachesVisit, the same
+   * teaching rule as My classes). Null scope (not a teacher) keeps everything.
+   */
   const inScope = (scope: TeacherScope | null, records: CheckInRecord[]): CheckInRecord[] =>
-    scope === null ? records : records.filter(r => scope.camperIds.has(r.personId));
+    scope === null ? records : records.filter(r => scope.camperIds.has(r.personId) && teachesVisit(scope.teaching, r));
 
   return {
     async checkInSessions(actor) {
@@ -299,6 +302,24 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       return entriesOf(actor, records);
     },
 
+    async filterChoices(actor) {
+      const scope = await teacherScopeOf(classes, actor);
+      assertAllowed(actor, 'attendance:read', { assignedToClass: scope === null ? undefined : true });
+      const options = await attendance.filterOptions(actor.userId, actor.orgId);
+      if (scope !== null) {
+        // A teacher chooses only from the sessions and classes it teaches. The staff list is empty: it would name staff who
+        // checked in people outside those classes, and a teacher has no use for it.
+        return {
+          sessions: options.sessions.filter(s => scope.teaching.sessionIds.has(s.id)),
+          classes: options.classes.filter(c => scope.teaching.seriesIds.has(c.id)),
+          staff: [],
+        };
+      }
+      const members = await orgs.listMembers(actor.userId, actor.orgId);
+
+      return { ...options, staff: members.map(m => ({ id: m.id, name: m.name })) };
+    },
+
     async history(actor, personId) {
       const scope = await teacherScopeOf(classes, actor);
       assertAllowed(actor, 'attendance:read', { assignedToClass: assignedTo(scope, personId) });
@@ -306,35 +327,31 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       if (!(await people.get(actor.userId, orgId, personId))) {
         throw notFound('Person not found');
       }
-      const records = await attendance.log(actor.userId, orgId, { from: EARLIEST, to: LATEST, personId });
+      const records = inScope(
+        scope,
+        await attendance.log(actor.userId, orgId, { from: EARLIEST, to: LATEST, personId }),
+      );
 
       return entriesOf(actor, records);
     },
 
-    async exportCsv(actor, filter) {
+    async exportCsv(actor, request) {
+      // Reading the log and exporting it are both needed: the export is for the people who may read the log, and only staff may take a file.
+      assertAllowed(actor, 'attendance:read');
       assertAllowed(actor, 'attendance:export');
-      const records = await recordsFor(actor, filter, await campZone(orgs, actor));
+      const fields = orderFields(request.fields);
+      if (fields.length === 0) {
+        throw badRequest('Choose at least one field to download.');
+      }
+      const records = await recordsFor(actor, request.filter, await campZone(orgs, actor));
       if (records.length >= MAX_LOG_ROWS) {
         throw badRequest('That is too many visits to export at once. Choose a shorter date range.');
       }
+      // Names the actor may not see are already blanked by entriesOf, so the CSV never carries a name the page would hide.
       const entries = await entriesOf(actor, records);
+      const rows = entries.map(entry => fields.map(field => attendanceFieldValue(entry, field, request.display)));
 
-      return encodeCsv([EXPORT_HEADER, ...entries.map(exportRow)]);
+      return encodeCsv([fields.map(field => ATTENDANCE_FIELD_LABELS[field]), ...rows]);
     },
   };
-}
-
-/** One visit as CSV cells. The times are instants (ISO), so a spreadsheet and a reader agree on them. */
-function exportRow(e: AttendanceEntry): CsvCell[] {
-  return [
-    e.personName,
-    e.checkedInAt,
-    e.checkedInByName,
-    e.method,
-    e.checkedOutAt,
-    e.checkedOutByName,
-    e.collectedByName,
-    e.overrideReason,
-    e.note,
-  ];
 }

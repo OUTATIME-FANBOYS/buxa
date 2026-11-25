@@ -48,6 +48,8 @@ export const ACTIONS = [
   'events:update_details',
   'events:delete',
   'classes:manage',
+  'classes:delete_with_classes',
+  'classes:publish',
   'holds:manage',
   'tasks:read',
   'tasks:create',
@@ -60,6 +62,7 @@ export const ACTIONS = [
   'registration:submit',
   'registration:manage',
   'registration:confirm',
+  'registration:delete',
 ] as const;
 export type Action = (typeof ACTIONS)[number];
 
@@ -88,6 +91,8 @@ const STAFF: Action[] = [
 ];
 const ADMIN: Action[] = [
   ...STAFF,
+  'classes:delete_with_classes',
+  'classes:publish',
   'org:update',
   'org:archive',
   'org:unarchive',
@@ -112,6 +117,7 @@ const ADMIN: Action[] = [
   'tasks:delete',
   'tasks:manage_board',
   'registration:manage',
+  'registration:delete',
 ];
 const OWNER: Action[] = [...ADMIN, 'org:delete', 'org:transfer_ownership', 'data:erase'];
 const TEACHER: Action[] = [

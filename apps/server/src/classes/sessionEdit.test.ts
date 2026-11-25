@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import type { SessionPriceInput } from '@buxa/contracts';
 import { isHttpError } from '../http/errors';
 import { CAMPER_ADA, JULY_SESSION, as, classWithSession, setup } from './__tests__/fixtures';
 
-const PRICE: SessionPriceInput = { currency: 'AUD', regularMinor: 45000, earlyBirdMinor: null, earlyBirdUntil: null };
 const EDIT = {
   name: 'Winter camp',
   description: 'Three weeks in July.',
@@ -40,12 +38,11 @@ describe('edit session', () => {
     }
   });
 
-  it('leaves the price alone: the price has its own dialog', async () => {
+  it('a session carries no price: its read has no price field, and an edit writes none', async () => {
     const { service, sessionId } = await sessionSetup();
-    await service.setSessionPrice(as('admin'), sessionId, PRICE);
     await service.updateSession(as('admin'), sessionId, EDIT);
     const session = await service.getSession(as('admin'), sessionId);
-    expect(session.ok && session.value.price).toEqual(PRICE);
+    expect(session.ok && 'price' in session.value).toBe(false);
   });
 
   it('refuses a last day before the first day, and changes nothing', async () => {
@@ -63,22 +60,23 @@ describe('edit session', () => {
     expect(repo.audit.some(a => a.action === 'session.update')).toBe(false);
   });
 
-  it('refuses a new date range that leaves a class outside it', async () => {
+  it('a new date range that leaves a class outside it saves, and flags that class with its times kept', async () => {
     const { service, sessionId } = await sessionSetup();
-    await service.addClass(as('admin'), sessionId, {
+    const added = await service.addClass(as('admin'), sessionId, {
       name: 'Robotics',
       ageRange: { minAge: 8, maxAge: 12 },
       capacity: 12,
       location: 'Lab 1',
       instructorIds: [],
+      price: null,
       startsAt: '2027-07-05T09:00:00+10:00',
       endsAt: '2027-07-05T12:00:00+10:00',
     });
     const outcome = await service.updateSession(as('admin'), sessionId, { ...EDIT, startsOn: '2027-07-06' });
-    expect(outcome.ok).toBe(false);
-    if (!outcome.ok) {
-      expect(outcome.failure.reason).toBe('class_outside_session');
-    }
+    expect(outcome.ok).toBe(true);
+    const classes = await service.listClasses(as('admin'), sessionId);
+    const flagged = classes.ok ? classes.value.find(c => c.id === (added.ok ? added.value.id : '')) : undefined;
+    expect(flagged).toMatchObject({ datesOutsideSession: true, startsAt: '2027-07-05T09:00:00+10:00' });
   });
 
   it('refuses a viewer, a teacher and anyone without classes:manage', async () => {
@@ -141,7 +139,9 @@ describe('delete session', () => {
     expect(outcome.ok).toBe(false);
     if (!outcome.ok) {
       expect(outcome.failure.reason).toBe('session_has_classes');
-      expect(outcome.failure.message).toBe('This session has classes. Delete them first.');
+      expect(outcome.failure.message).toBe(
+        'This session has classes, so it cannot be deleted. Archive it, or delete its classes and the session.',
+      );
     }
     expect((await service.getSession(as('admin'), sessionId)).ok).toBe(true);
   });
@@ -154,7 +154,9 @@ describe('delete session', () => {
     const outcome = await service.deleteSession(as('admin'), sessionId);
     expect(outcome.ok).toBe(false);
     if (!outcome.ok) {
-      expect(outcome.failure.message).toBe('This session has classes. Delete them first.');
+      expect(outcome.failure.message).toBe(
+        'This session has classes, so it cannot be deleted. Archive it, or delete its classes and the session.',
+      );
     }
     const kept = await service.listEnrolments(as('admin'), classId);
     expect(kept.ok && kept.value).toHaveLength(1);

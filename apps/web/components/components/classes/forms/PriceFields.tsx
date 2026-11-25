@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { DatePicker, TextField } from '@/components/atoms';
 import { Segmented } from '@/components/elements';
 import {
@@ -11,11 +11,11 @@ import {
   parseMoney,
   type DiscountKind,
   type EarlyBirdResult,
-  type SessionPrice,
+  type ClassPrice,
 } from '@buxa/domain';
 
 /*
- * The price block of a session: the regular price and its currency (one row, two equal columns), then the discount (a percentage
+ * The price block of a class: the regular price and its currency (one row, two equal columns), then the discount (a percentage
  * or an amount off, and the value, one row) and the day it ends. The contract stores only the early-bird price and its last day,
  * so the discount is worked out here: earlyBirdFromDiscount turns it into the early-bird amount, which goes in a hidden field
  * named earlyBirdAmount. Blank means no price. Nothing here is charged; the hint says so.
@@ -34,7 +34,7 @@ const REASON_MESSAGE: Record<'format' | 'precision' | 'range' | 'not-positive', 
 };
 
 /** A saved early-bird price shows as the amount off it, so the form starts with the same discount. */
-function startingDiscount(price: SessionPrice | null | undefined): { kind: DiscountKind; value: string } {
+function startingDiscount(price: ClassPrice | null | undefined): { kind: DiscountKind; value: string } {
   if (!price || price.earlyBirdMinor === null) {
     return { kind: 'percent', value: '' };
   }
@@ -47,7 +47,7 @@ export function PriceFields({
   error,
   onDiscountProblem,
 }: {
-  price?: SessionPrice | null;
+  price?: ClassPrice | null;
   error: (name: string) => string | undefined;
   /** Tells the form whether the discount leaves no price, so it can refuse to submit. */
   onDiscountProblem?: (problem: boolean) => void;
@@ -55,6 +55,7 @@ export function PriceFields({
   const [amount, setAmount] = useState(price ? minorToInput(price.regularMinor, price.currency) : '');
   const [currency, setCurrency] = useState(price?.currency ?? DEFAULT_CURRENCY);
   const [discount, setDiscount] = useState(() => startingDiscount(price));
+  const discountHintId = useId();
 
   const code = currency.trim().toUpperCase() || DEFAULT_CURRENCY;
   const regular = amount.trim() === '' ? null : parseMoney(amount, code);
@@ -96,8 +97,9 @@ export function PriceFields({
           error={error('priceCurrency')}
         />
       </div>
-      <div className="buxa:grid buxa:grid-cols-2 buxa:gap-[var(--s3)] buxa:items-start">
-        <div className="buxa:grid buxa:min-w-0 buxa:gap-[var(--s2)]">
+      {/* The discount row: three equal columns (the type, the value, the day it ends), stacked on a phone (see classes.css). */}
+      <div className="price-discount-row">
+        <div className="price-discount-kind">
           <span className="field-label">Discount</span>
           <Segmented
             className="price-discount"
@@ -117,15 +119,19 @@ export function PriceFields({
           error={discountMessage ?? error('earlyBirdAmount')}
           hint={earlyMinor === null ? undefined : `Early-bird price: ${formatMoney(earlyMinor, code)}`}
         />
+        <DatePicker
+          label="Discount applies until"
+          name="earlyBirdUntil"
+          defaultValue={price?.earlyBirdUntil ?? null}
+          error={error('earlyBirdUntil')}
+          describedBy={discountHintId}
+        />
+        {/* Spans the whole row, under the Discount label, so it reads from the left edge rather than under the date. */}
+        <p id={discountHintId} className="price-discount-hint field-hint">
+          The discounted price applies on this day, in the camp&apos;s time zone.
+        </p>
       </div>
       <input type="hidden" name="earlyBirdAmount" value={earlyMinor === null ? '' : minorToInput(earlyMinor, code)} />
-      <DatePicker
-        label="Discount applies until"
-        name="earlyBirdUntil"
-        defaultValue={price?.earlyBirdUntil ?? null}
-        error={error('earlyBirdUntil')}
-        hint="The discounted price applies on this day, in the camp's time zone."
-      />
     </div>
   );
 }

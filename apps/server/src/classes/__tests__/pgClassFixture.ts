@@ -94,18 +94,32 @@ export async function createClassFixture(pool: Pool): Promise<ClassFixture> {
   };
 }
 
+let sessionSeq = 0;
+
+/**
+ * A session name no other session in the same camp has. Session names are unique per camp (migration 0052), and the tests share one
+ * camp, so the default name is numbered.
+ */
+export function uniqueSessionName(base: string): string {
+  sessionSeq += 1;
+
+  return `${base} ${sessionSeq}`;
+}
+
 /** A session (the parent) covering July 2027. */
 export function makeSession(
   repo: PgClassRepository,
   actor: Actor,
   overrides: { name?: string; startsOn?: LocalDate; endsOn?: LocalDate } = {},
 ) {
-  return repo.createSession(actor, {
-    name: overrides.name ?? 'Summer camp',
-    description: 'Two weeks in July.',
-    startsOn: overrides.startsOn ?? '2027-07-01',
-    endsOn: overrides.endsOn ?? '2027-07-31',
-  });
+  return repo
+    .createSession(actor, {
+      name: overrides.name ?? uniqueSessionName('Summer camp'),
+      description: 'Two weeks in July.',
+      startsOn: overrides.startsOn ?? '2027-07-01',
+      endsOn: overrides.endsOn ?? '2027-07-31',
+    })
+    .then(draft => repo.publishSession(actor, draft.id)); // a new session is a draft and takes no enrolments, so it goes live here
 }
 
 /**
@@ -120,6 +134,8 @@ export function sessionInput(
     capacity?: number;
     ageRange?: { minAge: number; maxAge: number };
     instructorIds?: string[];
+    /** Lab 1 by default. Two classes that overlap in time must be in different locations (migration 0066). */
+    location?: string;
   } = {},
 ) {
   const at = (h: number) => `2027-07-05T${String(h).padStart(2, '0')}:00:00+10:00`;
@@ -130,8 +146,9 @@ export function sessionInput(
     capacity: extra.capacity ?? 5,
     startsAt: at(fromHour),
     endsAt: at(toHour),
-    location: 'Lab 1',
+    location: extra.location ?? 'Lab 1',
     instructorIds: extra.instructorIds ?? [],
+    price: null,
   };
 }
 

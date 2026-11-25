@@ -1,10 +1,14 @@
-import { isUuid, type Actor } from '@buxa/domain';
+import { classDatesRefusal, isUuid, type Actor } from '@buxa/domain';
 import { recordAudit, type AuditActor } from '../audit/recordAudit';
 import { toIso, type Db } from '../people/pgRows';
 import { lockSession, promoteWaitlist } from '../classes/PgSeats';
+import { classAcceptanceOf } from '../classes/PgClassQueries';
 import {
+  CamperNotFoundError,
+  ClassDatesFlaggedError,
   ClassNotFoundError,
   HoldExistsError,
+  SessionNotLiveError,
   HoldNotFoundError,
   HouseholdNotFoundError,
   SessionFullError,
@@ -16,16 +20,17 @@ import type { ActiveHold, PlaceHoldRequest, SeatHold } from './SeatHoldRepositor
  * under the session lock; this file takes the same lock first, frees expired holds, and then writes.
  */
 
-const HOLD_COLUMNS = `id, session_id, household_id, created_at, expires_at, released_at, release_reason`;
+const HOLD_COLUMNS = `id, session_id, household_id, person_id, created_at, expires_at, released_at, release_reason`;
 
 interface HoldRow {
   id: string;
   session_id: string;
   household_id: string;
+  person_id: string | null;
   created_at: Date;
   expires_at: Date;
   released_at: Date | null;
-  release_reason: 'cancelled' | 'expired' | null;
+  release_reason: 'cancelled' | 'expired' | 'completed' | null;
 }
 
 async function readHold(db: Db, holdId: string): Promise<SeatHold> {
@@ -39,6 +44,7 @@ async function readHold(db: Db, holdId: string): Promise<SeatHold> {
     id: row.id,
     sessionId: row.session_id,
     householdId: row.household_id,
+    personId: row.person_id,
     createdAt: toIso(row.created_at),
     expiresAt: toIso(row.expires_at),
     releasedAt: row.released_at === null ? null : toIso(row.released_at),
@@ -87,9 +93,9 @@ export async function releaseExpiredHolds(db: Db, actor: AuditActor): Promise<nu
 }
 
 /**
- * Takes one place for a household. Frees the session's expired holds first (so the place they hold is free and the
- * household's own expired hold does not block it), then writes the hold. A full session refuses with SessionFullError from the
- * trigger; a second active hold by the same household refuses with HoldExistsError.
+ * Takes one place for a child of a household. Frees the session's expired holds first (so the place they hold is free and the
+ * child's own expired hold does not block it), then writes the hold. A full session refuses with SessionFullError from the
+ * trigger; a second active hold for the same child and class refuses with HoldExistsError. Siblings each hold their own place.
  */
 export async function placeHoldInTransaction(db: Db, actor: Actor, request: PlaceHoldRequest): Promise<SeatHold> {
   if (!isUuid(request.sessionId)) {
@@ -98,7 +104,18 @@ export async function placeHoldInTransaction(db: Db, actor: Actor, request: Plac
   if (!isUuid(request.householdId)) {
     throw new HouseholdNotFoundError();
   }
+  if (!isUuid(request.personId)) {
+    throw new CamperNotFoundError();
+  }
   const capacity = await lockSession(db, request.sessionId);
+  const acceptance = await classAcceptanceOf(db, request.sessionId);
+  if (acceptance !== null && acceptance.status !== 'live') {
+    throw new SessionNotLiveError(acceptance.status);
+  }
+  // A flagged class (its dates are outside its session's) takes no hold until its dates are fixed (migration 0059).
+  if (acceptance !== null && classDatesRefusal(acceptance.datesOutsideSession) !== null) {
+    throw new ClassDatesFlaggedError();
+  }
   await releaseExpiredHoldsInSession(db, request.sessionId, actor);
 
   const household = await db.query(`SELECT 1 FROM households WHERE id = $1`, [request.householdId]);
@@ -106,12 +123,20 @@ export async function placeHoldInTransaction(db: Db, actor: Actor, request: Plac
     throw new HouseholdNotFoundError();
   }
 
+  const member = await db.query(`SELECT 1 FROM household_members WHERE household_id = $1 AND person_id = $2`, [
+    request.householdId,
+    request.personId,
+  ]);
+  if (member.rows.length === 0) {
+    throw new CamperNotFoundError();
+  }
+
   let id: string;
   try {
     const { rows } = await db.query<{ id: string }>(
-      `INSERT INTO seat_holds (org_id, session_id, household_id, expires_at)
-       VALUES ($1, $2, $3, $4) RETURNING id`,
-      [actor.orgId, request.sessionId, request.householdId, request.expiresAt],
+      `INSERT INTO seat_holds (org_id, session_id, household_id, person_id, expires_at)
+       VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+      [actor.orgId, request.sessionId, request.householdId, request.personId, request.expiresAt],
     );
     id = rows[0].id;
   } catch (error) {
@@ -125,6 +150,7 @@ export async function placeHoldInTransaction(db: Db, actor: Actor, request: Plac
     data: {
       sessionId: request.sessionId,
       householdId: request.householdId,
+      personId: request.personId,
       expiresAt: request.expiresAt.toISOString(),
     },
   });
@@ -173,7 +199,7 @@ export async function releaseHoldInTransaction(db: Db, actor: Actor, holdId: str
   return readHold(db, holdId);
 }
 
-/** Turns the hold trigger's error into SessionFullError, and a second active hold into HoldExistsError. Other errors pass through. */
+/** Turns the hold trigger's error into SessionFullError, and a second active hold for the same child into HoldExistsError. Other errors pass through. */
 function translateHoldError(error: unknown, capacity: number): unknown {
   if (typeof error !== 'object' || error === null || !('code' in error)) {
     return error;
@@ -181,7 +207,11 @@ function translateHoldError(error: unknown, capacity: number): unknown {
   if (error.code === '23514' && 'constraint' in error && error.constraint === 'seat_holds_capacity') {
     return new SessionFullError({ kind: 'refuse', reason: 'session_full', capacity });
   }
-  if (error.code === '23505' && 'constraint' in error && error.constraint === 'seat_holds_one_active_idx') {
+  if (
+    error.code === '23505' &&
+    'constraint' in error &&
+    error.constraint === 'seat_holds_one_active_series_person_idx'
+  ) {
     return new HoldExistsError();
   }
 

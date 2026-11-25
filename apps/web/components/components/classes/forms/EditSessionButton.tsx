@@ -1,41 +1,71 @@
 'use client';
 
-import { useActionState, useCallback, useState } from 'react';
+import { useActionState, useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { FormPopUp } from '@/components/components';
 import { Button } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
-import { deleteSessionAction } from '@/actions/classes';
+import { publishSessionAction, setSessionArchivedAction } from '@/actions/classes';
 import type { Session } from '@buxa/contracts';
-import { idle } from '@buxa/shared';
+import { fixClassesLabel, idle } from '@buxa/shared';
+import { sessionTabPath } from '@buxa/shared/config/routes';
 import { ActionMessage } from './ActionMessage';
+import { SESSION_STATUS } from '../sessionStatus';
 import { EditSessionForm } from './EditSessionForm';
 
 /**
- * The session page's pencil button. It opens the Edit session dialog. Delete session is in the dialog's footer: the first click asks
- * for confirmation by naming the session, and a second click on Confirm delete deletes it. The server refuses a session that holds
- * classes, and the refusal is shown in the dialog. On success the server sends the user to the sessions list.
+ * The session page's pencil button. It opens the Edit session dialog. Deleting a session is not offered here: the sessions table's
+ * trash icon owns it, with its prompt that lists what goes with the session. The dialog's footer holds Unarchive on the left (an admin
+ * or the owner, `canUnarchive`, for an archived session), and Cancel and Save on the right. A draft session is taken live from the body
+ * by an admin or the owner (`canPublish`). On a successful unarchive or publish, the dialog closes and a toast shows the server's message.
  */
-export function EditSessionButton({ session }: { session: Session }) {
+export function EditSessionButton({
+  session,
+  canUnarchive = false,
+  canPublish = false,
+}: {
+  session: Session;
+  canUnarchive?: boolean;
+  /** Admin and owner (classes:publish) see Go live on a draft session. */
+  canPublish?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
-  const [confirming, setConfirming] = useState(false);
-  const [deleteState, deleteFormAction, deleting] = useActionState(deleteSessionAction, idle);
-  const close = useCallback(() => {
-    setOpen(false);
-    setConfirming(false);
-  }, []);
+  const [unarchiveState, unarchiveAction, unarchiving] = useActionState(setSessionArchivedAction, idle);
+  const [publishState, publishAction, publishing] = useActionState(publishSessionAction, idle);
+  const close = useCallback(() => setOpen(false), []);
   const { toast } = useUi();
-  // A saved session closes the pop-up and toasts the server's message.
+  const router = useRouter();
+  // A saved session closes the pop-up and toasts the server's message. When the save flagged classes, the toast offers to fix them
+  // on the session's Classes tab.
   const saved = useCallback(
-    (message: string) => {
-      toast(message);
+    (message: string, flaggedCount = 0) => {
+      if (flaggedCount > 0) {
+        toast(message, {
+          action: {
+            label: fixClassesLabel(flaggedCount),
+            run: () => router.push(sessionTabPath(session.id, 'classes')),
+          },
+        });
+      } else {
+        toast(message);
+      }
       close();
     },
-    [toast, close],
+    [toast, close, router, session.id],
   );
+  useEffect(() => {
+    if (unarchiveState.status === 'success') {
+      saved(unarchiveState.message ?? 'Session unarchived.');
+    }
+  }, [unarchiveState, saved]);
+  useEffect(() => {
+    if (publishState.status === 'success') {
+      saved(publishState.message ?? 'Session is live.');
+    }
+  }, [publishState, saved]);
   const onPendingChange = useCallback((value: boolean) => setPending(value), []);
   const formId = `edit-session-${session.id}`;
-  const deleteFormId = `delete-session-${session.id}`;
 
   return (
     <>
@@ -57,31 +87,33 @@ export function EditSessionButton({ session }: { session: Session }) {
           submitLabel="Save session"
           pendingLabel="Saving..."
           submitIcon="save"
-          pending={pending || deleting}
+          pending={pending || unarchiving || publishing}
           onCancel={close}
           leading={
-            <Button
-              type={confirming ? 'submit' : 'button'}
-              form={confirming ? deleteFormId : undefined}
-              variant="glass-danger"
-              icon="trash"
-              disabled={pending || deleting}
-              onClick={confirming ? undefined : () => setConfirming(true)}
-            >
-              {deleting ? 'Deleting...' : confirming ? 'Confirm delete' : 'Delete session'}
-            </Button>
+            session.status === 'archived' && canUnarchive ? (
+              <form action={unarchiveAction} className="class-form">
+                <input type="hidden" name="sessionId" value={session.id} />
+                <input type="hidden" name="archived" value="0" />
+                <Button type="submit" variant="glass" disabled={unarchiving}>
+                  {unarchiving ? 'Unarchiving...' : 'Unarchive session'}
+                </Button>
+              </form>
+            ) : session.status === 'draft' && canPublish ? (
+              <form action={publishAction} className="class-form">
+                <input type="hidden" name="sessionId" value={session.id} />
+                <Button type="submit" variant="glass" icon="check" disabled={publishing}>
+                  {publishing ? 'Going live...' : 'Go live'}
+                </Button>
+              </form>
+            ) : undefined
           }
         >
-          {confirming && (
-            <p className="class-helper" role="alert">
-              Delete &ldquo;{session.name}&rdquo;? This cannot be undone. A session with classes cannot be deleted.
-            </p>
-          )}
+          <p className="class-helper" data-testid="session-status-note">
+            {SESSION_STATUS[session.status].note}
+          </p>
           <EditSessionForm session={session} formId={formId} onPendingChange={onPendingChange} onSaved={saved} />
-          <form id={deleteFormId} action={deleteFormAction} className="class-form">
-            <input type="hidden" name="sessionId" value={session.id} />
-          </form>
-          <ActionMessage state={deleteState} />
+          <ActionMessage state={unarchiveState} />
+          <ActionMessage state={publishState} />
         </FormPopUp>
       )}
     </>

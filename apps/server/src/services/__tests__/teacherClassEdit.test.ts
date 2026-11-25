@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createClassService } from '../../classes/ClassService';
 import { painting, robotics, JULY_SESSION } from '../../classes/__tests__/fixtures';
-import { createCamp, thrown } from './support';
+import { createCamp, linkTeacher, thrown } from './support';
 
 // A teacher may change only the name (and description, once a class has one) of a class it is assigned to. Anything else needs
 // classes:manage; the service refuses such a change with teacher_field_refused, and never writes it.
@@ -17,7 +17,12 @@ async function build() {
   if (!session.ok) {
     throw new Error('session');
   }
-  const added = await classes.addClass(admin, session.value.id, { ...robotics, ...TIMES });
+  const teacherPersonId = await linkTeacher(camp, teacher.userId);
+  const added = await classes.addClass(admin, session.value.id, {
+    ...robotics,
+    ...TIMES,
+    instructorIds: [teacherPersonId],
+  });
   if (!added.ok) {
     throw new Error(added.failure.message);
   }
@@ -29,24 +34,33 @@ async function build() {
   if (!other.ok) {
     throw new Error(other.failure.message);
   }
-  expect((await classes.setTeachers(admin, added.value.id, [teacher.userId])).ok).toBe(true);
 
-  return { classes, admin, teacher, staff: camp.actor('staff'), classId: added.value.id, otherId: other.value.id };
+  return {
+    classes,
+    admin,
+    teacher,
+    staff: camp.actor('staff'),
+    classId: added.value.id,
+    otherId: other.value.id,
+    instructorIds: [teacherPersonId],
+  };
 }
 
-const saved = {
+/** The class as the edit form saves it: the teacher's linked person stays its instructor (a teacher may not change instructors). */
+const savedWith = (instructorIds: readonly string[]) => ({
   name: robotics.name,
   ageRange: robotics.ageRange,
   capacity: robotics.capacity,
   location: robotics.location,
-  instructorIds: [],
+  instructorIds: [...instructorIds],
+  price: null,
   ...TIMES,
-};
+});
 
 describe('a teacher edits its own class: the name only', () => {
   it('may rename a class it is assigned to', async () => {
-    const { classes, teacher, classId } = await build();
-    const out = await classes.updateClass(teacher, classId, { ...saved, name: 'Robotics Lab' });
+    const { classes, teacher, classId, instructorIds } = await build();
+    const out = await classes.updateClass(teacher, classId, { ...savedWith(instructorIds), name: 'Robotics Lab' });
     expect(out.ok).toBe(true);
     if (out.ok) {
       expect(out.value.name).toBe('Robotics Lab');
@@ -54,8 +68,8 @@ describe('a teacher edits its own class: the name only', () => {
   });
 
   it('is refused a change to the location, and the class keeps its location', async () => {
-    const { classes, teacher, classId } = await build();
-    const out = await classes.updateClass(teacher, classId, { ...saved, location: 'Gym' });
+    const { classes, teacher, classId, instructorIds } = await build();
+    const out = await classes.updateClass(teacher, classId, { ...savedWith(instructorIds), location: 'Gym' });
     expect(out.ok).toBe(false);
     if (!out.ok) {
       expect(out.failure.reason).toBe('teacher_field_refused');
@@ -66,14 +80,15 @@ describe('a teacher edits its own class: the name only', () => {
   });
 
   it('is refused a change to the camp size, the ages, the times or the instructors', async () => {
-    const { classes, teacher, classId } = await build();
+    const { classes, teacher, classId, instructorIds } = await build();
     for (const change of [
       { capacity: 9 },
       { ageRange: { minAge: 7, maxAge: 13 } },
       { endsAt: '2027-07-10T13:00:00Z' },
       { instructorIds: ['00000000-0000-4000-8000-000000000001'] },
+      { price: { currency: 'USD', regularMinor: 1000, earlyBirdMinor: null, earlyBirdUntil: null } },
     ]) {
-      const out = await classes.updateClass(teacher, classId, { ...saved, ...change });
+      const out = await classes.updateClass(teacher, classId, { ...savedWith(instructorIds), ...change });
       expect(out.ok, JSON.stringify(change)).toBe(false);
       if (!out.ok) {
         expect(out.failure.reason).toBe('teacher_field_refused');
@@ -85,7 +100,7 @@ describe('a teacher edits its own class: the name only', () => {
     const { classes, teacher, otherId } = await build();
     const error = await thrown(() =>
       classes.updateClass(teacher, otherId, {
-        ...saved,
+        ...savedWith([]),
         name: 'Painting',
         startsAt: '2027-07-10T13:00:00Z',
         endsAt: '2027-07-10T15:00:00Z',
@@ -97,14 +112,14 @@ describe('a teacher edits its own class: the name only', () => {
 
 describe('staff and admin keep every field', () => {
   it('an admin may change the location', async () => {
-    const { classes, admin, classId } = await build();
-    const out = await classes.updateClass(admin, classId, { ...saved, location: 'Gym' });
+    const { classes, admin, classId, instructorIds } = await build();
+    const out = await classes.updateClass(admin, classId, { ...savedWith(instructorIds), location: 'Gym' });
     expect(out.ok).toBe(true);
   });
 
   it('staff may change the camp size', async () => {
-    const { classes, staff, classId } = await build();
-    const out = await classes.updateClass(staff, classId, { ...saved, capacity: 9 });
+    const { classes, staff, classId, instructorIds } = await build();
+    const out = await classes.updateClass(staff, classId, { ...savedWith(instructorIds), capacity: 9 });
     expect(out.ok).toBe(true);
   });
 });

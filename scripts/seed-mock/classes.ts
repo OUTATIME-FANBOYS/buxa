@@ -1,4 +1,5 @@
 import type pg from 'pg';
+import type { ClassInput, ClassPriceInput } from '@buxa/contracts';
 import type { Actor } from '@buxa/domain';
 import type { Outcome } from '@buxa/server/classes/outcome';
 import type { Repositories } from '@buxa/server/repositories';
@@ -35,7 +36,10 @@ export interface CamperRef {
   familyName: string;
 }
 
-/** A class is a time range inside a session, with its own name, ages, camp size and location. Times are UTC instants. */
+/**
+ * A class is a time range inside a session, with its own name, ages, camp size, location and price (null for none). Times are UTC
+ * instants. Prices are on classes, never on sessions: each class carries its own price, and a family pays per class.
+ */
 export interface ClassPlan {
   session: (typeof SESSION_PLAN)[number]['name'];
   name: string;
@@ -45,6 +49,7 @@ export interface ClassPlan {
   location: string;
   startsAt: string;
   endsAt: string;
+  price: ClassPriceInput | null;
   /** Campers enrolled, in order. A camper past the capacity is waitlisted. */
   campers: CamperRef[];
   /** The class has the teacher assigned. */
@@ -62,6 +67,7 @@ export const CLASS_PLAN: readonly ClassPlan[] = [
     location: 'Lake Pier',
     startsAt: '2027-07-05T09:00:00Z',
     endsAt: '2027-07-05T10:30:00Z',
+    price: { currency: 'USD', regularMinor: 45000, earlyBirdMinor: 39900, earlyBirdUntil: '2027-06-30' },
     campers: [
       { givenName: 'Owen', familyName: 'Adeyemi' },
       { givenName: 'Mila', familyName: 'Adeyemi' },
@@ -78,6 +84,7 @@ export const CLASS_PLAN: readonly ClassPlan[] = [
     location: 'Forest Trail',
     startsAt: '2027-07-06T13:00:00Z',
     endsAt: '2027-07-06T15:00:00Z',
+    price: { currency: 'USD', regularMinor: 45000, earlyBirdMinor: null, earlyBirdUntil: null },
     campers: [
       { givenName: 'Ada', familyName: 'Castillo' },
       { givenName: 'Sana', familyName: 'Gupta' },
@@ -94,6 +101,7 @@ export const CLASS_PLAN: readonly ClassPlan[] = [
     location: 'Studio 2',
     startsAt: '2026-11-21T10:00:00Z',
     endsAt: '2026-11-21T12:00:00Z',
+    price: null,
     campers: [
       { givenName: 'Eli', familyName: 'Gupta' },
       { givenName: 'Tara', familyName: 'Ibarra' },
@@ -210,6 +218,44 @@ async function campersNamed(pool: pg.Pool, orgId: string, camper: CamperRef): Pr
   return rows[0].id;
 }
 
+/** A class's fields as the plan gives them, for the service (the teacher and campers are added by their own steps). */
+function classInputOf(plan: ClassPlan): ClassInput {
+  return {
+    name: plan.name,
+    ageRange: { minAge: plan.minAge, maxAge: plan.maxAge },
+    capacity: plan.capacity,
+    startsAt: plan.startsAt,
+    endsAt: plan.endsAt,
+    location: plan.location,
+    instructorIds: [],
+    price: plan.price,
+  };
+}
+
+function samePlanPrice(a: ClassPriceInput | null, b: ClassPriceInput | null): boolean {
+  if (a === null || b === null) {
+    return a === b;
+  }
+
+  return (
+    a.currency === b.currency &&
+    a.regularMinor === b.regularMinor &&
+    a.earlyBirdMinor === b.earlyBirdMinor &&
+    a.earlyBirdUntil === b.earlyBirdUntil
+  );
+}
+
+/** Saves the plan's price on a class that already exists. Returns true when it wrote a change, false when the price already matches. */
+async function syncClassPrice(services: Services, owner: Actor, classId: string, plan: ClassPlan): Promise<boolean> {
+  const current = unwrap(await services.classes.getClass(owner, classId), `Class ${plan.name}`);
+  if (samePlanPrice(current.price, plan.price)) {
+    return false;
+  }
+  unwrap(await services.classes.updateClass(owner, classId, classInputOf(plan)), `Price for ${plan.name}`);
+
+  return true;
+}
+
 /** Totals for the seeded rows, so the report reads the same whether the run created them or found them. */
 async function totalsOf(pool: pg.Pool, orgId: string): Promise<ClassCounts> {
   const sessionNames = SESSION_PLAN.map(s => s.name);
@@ -227,9 +273,12 @@ async function totalsOf(pool: pg.Pool, orgId: string): Promise<ClassCounts> {
       WHERE m.org_id = $1 AND m.role = 'teacher' AND u.email = $2`,
     [orgId, TEACHER_PLAN.email],
   );
+  // A class's teachers are its instructors whose person is linked to the teacher's login (migration 0051).
   const assignments = await pool.query<{ n: number }>(
-    `SELECT count(*)::int AS n FROM class_teachers ct JOIN sessions s ON s.id = ct.session_id AND s.org_id = ct.org_id
-      WHERE ct.org_id = $1 AND s.name = ANY($2)`,
+    `SELECT count(*)::int AS n FROM session_instructors si
+       JOIN people p ON p.org_id = si.org_id AND p.id = si.person_id AND p.user_id IS NOT NULL
+       JOIN sessions s ON s.id = si.session_id AND s.org_id = si.org_id
+      WHERE si.org_id = $1 AND s.name = ANY($2)`,
     [orgId, classNames],
   );
   const enrolments = await pool.query<{ status: string; n: number }>(
@@ -317,20 +366,13 @@ export async function seedClasses(
     );
     if (rows[0]) {
       classIds.set(plan.name, rows[0].id);
+      // A class made by an earlier run may predate its price: bring it to the plan (a no-op when it already matches).
+      if (await syncClassPrice(services, owner, rows[0].id, plan)) {
+        created++;
+      }
       continue;
     }
-    const cls = unwrap(
-      await services.classes.addClass(owner, sessionId, {
-        name: plan.name,
-        ageRange: { minAge: plan.minAge, maxAge: plan.maxAge },
-        capacity: plan.capacity,
-        startsAt: plan.startsAt,
-        endsAt: plan.endsAt,
-        location: plan.location,
-        instructorIds: [],
-      }),
-      `Class ${plan.name}`,
-    );
+    const cls = unwrap(await services.classes.addClass(owner, sessionId, classInputOf(plan)), `Class ${plan.name}`);
     classIds.set(plan.name, cls.id);
     created++;
   }
@@ -349,19 +391,29 @@ export async function seedClasses(
     await pool.query(`INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'teacher')`, [orgId, teacher.id]);
     created++;
   }
+  // The teacher's roster person, linked to its login, is the class's instructor (the one source for a class's teachers).
+  let teacherPersonId = (
+    await pool.query<{ id: string }>('SELECT id FROM people WHERE org_id = $1 AND user_id = $2', [orgId, teacher.id])
+  ).rows[0]?.id;
+  if (!teacherPersonId) {
+    teacherPersonId = (
+      await pool.query<{ id: string }>(
+        `INSERT INTO people (org_id, given_name, family_name, email, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+        [orgId, TEACHER_PLAN.givenName, TEACHER_PLAN.familyName, TEACHER_PLAN.email, teacher.id],
+      )
+    ).rows[0].id;
+    created++;
+  }
   for (const plan of CLASS_PLAN.filter(c => c.hasTeacher)) {
     const classId = classIds.get(plan.name);
     if (!classId) {
       throw new Error(`No class ${plan.name} to assign the teacher to.`);
     }
-    const assigned = await pool.query('SELECT 1 FROM class_teachers WHERE session_id = $1 AND user_id = $2', [
-      classId,
-      teacher.id,
-    ]);
-    if (assigned.rowCount === 0) {
-      unwrap(await services.classes.setTeachers(owner, classId, [teacher.id]), `Teacher for ${plan.name}`);
-      created++;
-    }
+    const linked = await pool.query(
+      'INSERT INTO session_instructors (org_id, session_id, person_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
+      [orgId, classId, teacherPersonId],
+    );
+    created += linked.rowCount ?? 0;
   }
 
   // Enrolments. A class is filled in order; the camper past its capacity is waitlisted.

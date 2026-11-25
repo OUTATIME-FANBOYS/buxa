@@ -74,6 +74,8 @@ const SPEC: Record<PermissionCategory, Record<Role, Action[]>> = {
     admin: [
       'events:read',
       'classes:manage',
+      'classes:delete_with_classes',
+      'classes:publish',
       'events:create',
       'events:update',
       'events:update_details',
@@ -82,6 +84,8 @@ const SPEC: Record<PermissionCategory, Record<Role, Action[]>> = {
     owner: [
       'events:read',
       'classes:manage',
+      'classes:delete_with_classes',
+      'classes:publish',
       'events:create',
       'events:update',
       'events:update_details',
@@ -93,8 +97,22 @@ const SPEC: Record<PermissionCategory, Record<Role, Action[]>> = {
   Registration: {
     viewer: [],
     staff: ['registration:read', 'registration:submit', 'registration:confirm', 'holds:manage'],
-    admin: ['registration:read', 'registration:submit', 'registration:confirm', 'registration:manage', 'holds:manage'],
-    owner: ['registration:read', 'registration:submit', 'registration:confirm', 'registration:manage', 'holds:manage'],
+    admin: [
+      'registration:read',
+      'registration:submit',
+      'registration:confirm',
+      'registration:manage',
+      'registration:delete',
+      'holds:manage',
+    ],
+    owner: [
+      'registration:read',
+      'registration:submit',
+      'registration:confirm',
+      'registration:manage',
+      'registration:delete',
+      'holds:manage',
+    ],
     teacher: [],
   },
   Team: {

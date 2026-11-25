@@ -58,6 +58,8 @@ describe('class service: permissions (role x method)', () => {
     if (!session.ok) {
       return;
     }
+    // Staff cannot take a session live (classes:publish is admin and owner), so an admin does.
+    await service.publishSession(as('admin'), session.value.id);
     const added = await service.addClass(staff, session.value.id, classAt(robotics, monday9to12));
     expect(added.ok).toBe(true);
     if (!added.ok) {
@@ -114,11 +116,12 @@ describe('class service: sessions and classes', () => {
     const { service } = setup();
     const { sessionId, classId } = await classWithSession(service);
     const cls = await service.getClass(as('viewer'), classId);
+    const session = await service.getSession(as('viewer'), sessionId);
     expect(cls).toMatchObject({
       ok: true,
       value: {
         sessionId,
-        sessionName: 'Summer camp',
+        sessionName: session.ok ? session.value.name : '',
         name: 'Robotics',
         ageRange: { minAge: 8, maxAge: 12 },
         capacity: 2,
@@ -168,6 +171,7 @@ describe('class service: sessions and classes', () => {
     const added = await service.addClass(as('admin'), session.value.id, {
       ...classAt(robotics, monday9to12),
       instructorIds: [CAMPER_ADA],
+      price: null,
     });
     expect(added).toMatchObject({
       ok: true,
@@ -228,6 +232,7 @@ describe('class service: editing and deleting a class', () => {
     const edited = await service.updateClass(as('admin'), classId, {
       ...classAt(painting, { startsAt: '2027-07-06T13:00:00+10:00', endsAt: '2027-07-06T15:00:00+10:00' }),
       instructorIds: [CAMPER_ADA],
+      price: null,
     });
     expect(edited).toMatchObject({
       ok: true,
@@ -310,7 +315,7 @@ describe('class service: audit', () => {
   it('records session, class and enrolment writes, and nothing for reads or refusals', async () => {
     const { service, repo } = setup();
     const { classId } = await classWithSession(service);
-    expect(repo.audit.map(a => a.action)).toEqual(['session.create', 'class.create']);
+    expect(repo.audit.map(a => a.action)).toEqual(['session.create', 'session.publish', 'class.create']);
     await service.enrol(as('staff'), { classId, camperId: CAMPER_ADA, waitlistIfFull: false });
     const enrolment = repo.audit.find(a => a.action === 'enrolment.create');
     expect(enrolment).toMatchObject({ orgId: ORG, actorId: 'user-staff', entity: 'enrolment' });

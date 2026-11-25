@@ -21,6 +21,7 @@ const classInput = {
   endsAt: '2027-07-05T12:00:00+10:00',
   location: 'Lab 1',
   instructorIds: [],
+  price: null,
 };
 
 describe('requireInstructors', () => {
@@ -70,7 +71,7 @@ describe('insertSession (the date range)', () => {
       'session.create',
       'session',
       sessionId,
-      { name: 'Summer camp' },
+      { name: 'Summer camp', status: 'draft' },
     ]);
   });
 });
@@ -87,7 +88,7 @@ describe('insertClass (the time range)', () => {
   it('skips the instructor link when there are no instructors, and audits the class', async () => {
     const { client, seen } = fakeDb(sql => (sql.includes('INSERT INTO sessions') ? [{ id: classId }] : undefined));
     await insertClass(client, actor, sessionId, classInput);
-    expect(seen.some(s => s.sql.includes('session_instructors'))).toBe(false);
+    expect(seen.some(s => s.sql.includes('INSERT INTO session_instructors'))).toBe(false);
     const audit = seen.find(s => s.sql.includes('audit_log'));
     expect(audit?.params).toContain('class.create');
   });
@@ -104,6 +105,11 @@ describe('updateClassRow', () => {
     const { client, seen } = fakeDb(sql => {
       if (sql.startsWith('UPDATE sessions')) {
         return [{ id: classId }];
+      }
+      if (sql.includes('FOR UPDATE') && sql.includes('FROM sessions')) {
+        return [
+          { id: classId, price_minor: null, price_currency: null, early_bird_minor: null, early_bird_until: null },
+        ];
       }
 
       return sql.includes('FROM people') ? [{ id: personA }] : undefined;

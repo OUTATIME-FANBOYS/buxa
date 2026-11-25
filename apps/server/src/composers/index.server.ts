@@ -41,6 +41,7 @@ export * from './classes/errorReportResponse';
 export * from './groups/loadGroupsPage';
 export * from './classes/templateResponse';
 export * from './registration/loadRegistration';
+export * from './registration/downloads';
 export * from './registration/loadFormSubmissions';
 export * from './invites/loadInvitePage';
 export * from './invites/loadOutbox';

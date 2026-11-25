@@ -1,9 +1,9 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { NewSessionForm, PriceFields } from '@/components/components/classes/forms';
-import type { SessionPrice } from '@buxa/domain';
+import type { ClassPrice } from '@buxa/domain';
 
-vi.mock('@/actions/classes', () => ({ createSessionAction: vi.fn(), setSessionPriceAction: vi.fn() }));
+vi.mock('@/actions/classes', () => ({ createSessionAction: vi.fn() }));
 
 const noErrors = () => undefined;
 
@@ -32,6 +32,15 @@ describe('NewSessionForm: a session is a date range', () => {
     expect(html).not.toContain('Instructor ratio');
     expect(html).not.toContain('Camp Size');
     expect(html).not.toContain('Location');
+  });
+
+  it('has no price field: a session has no price, its classes do', () => {
+    const html = renderToStaticMarkup(<NewSessionForm variant="page" />);
+    expect(html).not.toContain('name="priceAmount"');
+    expect(html).not.toContain('name="priceCurrency"');
+    expect(html).not.toContain('name="earlyBirdAmount"');
+    expect(html).not.toContain('price-block');
+    expect(html).not.toContain('Discount');
   });
 
   it('marks the three required fields once each, with aria-required, and draws no fieldset', () => {
@@ -76,7 +85,7 @@ describe('PriceFields: the price, then the discount, with no fieldset box', () =
   });
 
   it('shows the discounted price under the value, computed from the saved early-bird price', () => {
-    const price: SessionPrice = {
+    const price: ClassPrice = {
       currency: 'USD',
       regularMinor: 4500,
       earlyBirdMinor: 4000,

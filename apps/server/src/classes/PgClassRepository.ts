@@ -1,8 +1,15 @@
 import type { Pool } from 'pg';
 import { withOrg } from '@buxa/db';
-import { isUuid, type Actor } from '@buxa/domain';
-import type { Class, Enrolment, NewSessionInput, Session, SessionEditInput, SessionPriceInput } from '@buxa/contracts';
-import { recordAudit } from '../audit/recordAudit';
+import { isUuid, type Actor, type DatesPlanClass } from '@buxa/domain';
+import type {
+  Class,
+  Enrolment,
+  NewSessionInput,
+  Series,
+  Session,
+  SessionDeleteImpact,
+  SessionEditInput,
+} from '@buxa/contracts';
 import type {
   CampActiveHold,
   CampClassSpan,
@@ -11,13 +18,20 @@ import type {
   ClassRepository,
   EnrolRequest,
   EnrolmentRule,
-  TeacherAssignment,
+  SeriesFields,
+  SeriesRecord,
+  SeriesSchedule,
 } from './ClassRepository';
-import { TeacherNotFoundError } from './errors';
+import { deleteSeriesRow, insertSeries, updateSeriesRow } from './PgSeriesWrites';
+import { getSeriesRow, listSeriesDayRows, listSeriesHolderNames, listSeriesRows } from './PgSeriesQueries';
+import { ClassNotFoundError } from './errors';
 import { cancelInTransaction, enrolInTransaction } from './PgEnrolmentWrites';
+import { readDatesPlanRows } from './PgSessionDates';
+import { lockLocationAndCheck } from './PgLocationRule';
 import {
   getClass,
   getSession,
+  getSessionDeleteImpact,
   listClassRows,
   listEnrolmentRows,
   listSessionRows,
@@ -28,15 +42,25 @@ import {
 } from './PgClassQueries';
 import {
   deleteClassRow,
+  deleteDraftSessionRow,
   deleteSessionRow,
+  deleteSessionWithClassesRow,
   insertClass,
   insertSession,
-  setSessionPriceRow,
+  publishSessionRow,
+  setSessionArchivedRow,
   setSessionPublicRow,
+  setOccurrenceStatusRow,
   updateClassRow,
   updateSessionRow,
 } from './PgClassWrites';
-import { translateClassWriteError, translateSessionDeleteError } from './pgClassErrors';
+import type { OccurrenceCommand } from '@buxa/domain';
+import {
+  translateClassWriteError,
+  translateEnrolmentWriteError,
+  translateSessionDeleteError,
+  translateSessionNameError,
+} from './pgClassErrors';
 import { listCampActiveHoldRows, listCampWaitlistRows } from './PgCampQueries';
 import { toIso } from '../people/pgRows';
 
@@ -56,20 +80,88 @@ export class PgClassRepository implements ClassRepository {
     return withOrg(this.pool, userId, orgId, db => getSession(db, sessionId));
   }
 
-  createSession(actor: Actor, input: NewSessionInput): Promise<Session> {
-    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
-      const id = await insertSession(db, actor, input);
+  async createSession(actor: Actor, input: NewSessionInput): Promise<Session> {
+    try {
+      return await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        const id = await insertSession(db, actor, input);
 
-      return requireSession(db, id);
+        return requireSession(db, id);
+      });
+    } catch (error) {
+      throw translateSessionNameError(error, input.name);
+    }
+  }
+
+  async updateSession(actor: Actor, sessionId: string, input: SessionEditInput): Promise<Session> {
+    try {
+      return await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        await updateSessionRow(db, actor, sessionId, input);
+
+        return requireSession(db, sessionId);
+      });
+    } catch (error) {
+      throw translateSessionNameError(error, input.name);
+    }
+  }
+
+  sessionDatesPlanRows(userId: string, orgId: string, sessionId: string): Promise<DatesPlanClass[]> {
+    return withOrg(this.pool, userId, orgId, db => readDatesPlanRows(db, orgId, sessionId));
+  }
+
+  sessionNameTaken(userId: string, orgId: string, name: string, exceptId: string | null): Promise<string | null> {
+    return withOrg(this.pool, userId, orgId, async db => {
+      const { rows } = await db.query<{ name: string }>(
+        `SELECT name FROM classes
+          WHERE buxa_name_key(name) = buxa_name_key($1) AND ($2::uuid IS NULL OR id <> $2::uuid)
+          LIMIT 1`,
+        [name, exceptId],
+      );
+
+      return rows[0]?.name ?? null;
     });
   }
 
-  updateSession(actor: Actor, sessionId: string, input: SessionEditInput): Promise<Session> {
+  setSessionArchived(actor: Actor, sessionId: string, archived: boolean): Promise<Session> {
     return withOrg(this.pool, actor.userId, actor.orgId, async db => {
-      await updateSessionRow(db, actor, sessionId, input);
+      await setSessionArchivedRow(db, actor, sessionId, archived);
 
       return requireSession(db, sessionId);
     });
+  }
+
+  publishSession(actor: Actor, sessionId: string): Promise<Session> {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
+      await publishSessionRow(db, actor, sessionId);
+
+      return requireSession(db, sessionId);
+    });
+  }
+
+  sessionDeleteImpact(userId: string, orgId: string, sessionId: string): Promise<SessionDeleteImpact> {
+    return withOrg(this.pool, userId, orgId, db => getSessionDeleteImpact(db, sessionId));
+  }
+
+  async deleteDraftSession(actor: Actor, sessionId: string): Promise<void> {
+    try {
+      await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        const existing = await requireSession(db, sessionId);
+        const impact = await getSessionDeleteImpact(db, sessionId);
+        await deleteDraftSessionRow(db, actor, sessionId, existing.name, impact);
+      });
+    } catch (error) {
+      throw translateSessionDeleteError(error);
+    }
+  }
+
+  async deleteSessionWithClasses(actor: Actor, sessionId: string): Promise<void> {
+    try {
+      await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        const existing = await requireSession(db, sessionId);
+        await deleteSessionWithClassesRow(db, actor, sessionId, existing.name);
+      });
+    } catch (error) {
+      throw translateSessionDeleteError(error);
+    }
   }
 
   async deleteSession(actor: Actor, sessionId: string): Promise<void> {
@@ -83,14 +175,6 @@ export class PgClassRepository implements ClassRepository {
     }
   }
 
-  setSessionPrice(actor: Actor, sessionId: string, price: SessionPriceInput | null): Promise<Session> {
-    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
-      await setSessionPriceRow(db, actor, sessionId, price);
-
-      return requireSession(db, sessionId);
-    });
-  }
-
   setSessionPublic(actor: Actor, sessionId: string, isPublic: boolean): Promise<Session> {
     return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       await setSessionPublicRow(db, actor, sessionId, isPublic);
@@ -99,25 +183,108 @@ export class PgClassRepository implements ClassRepository {
     });
   }
 
-  addClasses(actor: Actor, sessionId: string, inputs: ClassRecord[]): Promise<Class[]> {
-    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
-      await requireSessionExists(db, sessionId);
-      const written: Class[] = [];
-      for (const input of inputs) {
-        written.push(await requireClass(db, await insertClass(db, actor, sessionId, input)));
-      }
+  async setOccurrenceStatus(actor: Actor, occurrenceId: string, command: OccurrenceCommand): Promise<void> {
+    try {
+      await withOrg(this.pool, actor.userId, actor.orgId, db =>
+        setOccurrenceStatusRow(db, actor, occurrenceId, command),
+      );
+    } catch (error) {
+      throw translateClassWriteError(error);
+    }
+  }
 
-      return written;
+  async addSeries(actor: Actor, sessionId: string, input: SeriesRecord): Promise<Series> {
+    try {
+      return await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        await requireSessionExists(db, sessionId);
+        const seriesId = await insertSeries(db, actor, sessionId, input);
+        const made = await getSeriesRow(db, seriesId);
+        if (!made) {
+          throw new ClassNotFoundError();
+        }
+
+        return made;
+      });
+    } catch (error) {
+      throw translateClassWriteError(error);
+    }
+  }
+
+  listSeries(userId: string, orgId: string, sessionId: string): Promise<Series[]> {
+    return withOrg(this.pool, userId, orgId, async db => {
+      await requireSessionExists(db, sessionId);
+
+      return listSeriesRows(db, sessionId);
     });
+  }
+
+  getSeries(userId: string, orgId: string, seriesId: string): Promise<Series | null> {
+    return withOrg(this.pool, userId, orgId, db => getSeriesRow(db, seriesId));
+  }
+
+  listSeriesOccurrences(userId: string, orgId: string, seriesId: string): Promise<Class[]> {
+    return withOrg(this.pool, userId, orgId, db => listSeriesDayRows(db, seriesId));
+  }
+
+  seriesHolders(userId: string, orgId: string, seriesId: string): Promise<string[]> {
+    return withOrg(this.pool, userId, orgId, db => listSeriesHolderNames(db, seriesId));
+  }
+
+  async updateSeries(
+    actor: Actor,
+    seriesId: string,
+    input: SeriesFields,
+    schedule: SeriesSchedule | null,
+  ): Promise<Series> {
+    try {
+      return await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        await updateSeriesRow(db, actor, seriesId, input, schedule);
+        const updated = await getSeriesRow(db, seriesId);
+        if (!updated) {
+          throw new ClassNotFoundError();
+        }
+
+        return updated;
+      });
+    } catch (error) {
+      throw translateClassWriteError(error);
+    }
+  }
+
+  async deleteSeries(actor: Actor, seriesId: string): Promise<void> {
+    try {
+      await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        const existing = await getSeriesRow(db, seriesId);
+        if (!existing) {
+          throw new ClassNotFoundError();
+        }
+        await deleteSeriesRow(db, actor, seriesId, existing.name);
+      });
+    } catch (error) {
+      throw translateClassWriteError(error);
+    }
   }
 
   listCampClassSpans(userId: string, orgId: string): Promise<CampClassSpan[]> {
     return withOrg(this.pool, userId, orgId, async db => {
-      const { rows } = await db.query<{ starts_at: Date; ends_at: Date; class_name: string }>(
-        'SELECT s.starts_at, s.ends_at, s.name AS class_name FROM sessions s ORDER BY s.starts_at',
+      const { rows } = await db.query<{
+        starts_at: Date;
+        ends_at: Date;
+        class_name: string;
+        location: string;
+        series_id: string | null;
+      }>(
+        `SELECT s.starts_at, s.ends_at, s.name AS class_name, s.location, s.series_id
+           FROM sessions s WHERE s.status = 'active' ORDER BY s.starts_at`,
       );
 
-      return rows.map(r => ({ startsAt: toIso(r.starts_at), endsAt: toIso(r.ends_at), className: r.class_name }));
+      return rows.map(r => ({
+        startsAt: toIso(r.starts_at),
+        endsAt: toIso(r.ends_at),
+        className: r.class_name,
+        location: r.location,
+        seriesId: r.series_id,
+      }));
     });
   }
 
@@ -133,19 +300,35 @@ export class PgClassRepository implements ClassRepository {
     return withOrg(this.pool, userId, orgId, db => getClass(db, classId));
   }
 
-  addClass(actor: Actor, sessionId: string, input: ClassRecord): Promise<Class> {
-    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
-      await requireSessionExists(db, sessionId);
-      const id = await insertClass(db, actor, sessionId, input);
+  async addClass(actor: Actor, sessionId: string, input: ClassRecord): Promise<Class> {
+    try {
+      return await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        await requireSessionExists(db, sessionId);
+        await lockLocationAndCheck(db, actor.orgId, { name: input.name, location: input.location }, [input], null);
+        const id = await insertClass(db, actor, sessionId, input);
 
-      return requireClass(db, id);
-    });
+        return requireClass(db, id);
+      });
+    } catch (error) {
+      throw translateClassWriteError(error);
+    }
   }
 
   async updateClass(actor: Actor, classId: string, input: ClassRecord): Promise<Class> {
     try {
       return await withOrg(this.pool, actor.userId, actor.orgId, async db => {
         await requireClassExists(db, classId);
+        const { rows: own } = await db.query<{ series_id: string }>(
+          'SELECT series_id FROM sessions WHERE id = $1 AND org_id = $2',
+          [classId, actor.orgId],
+        );
+        await lockLocationAndCheck(
+          db,
+          actor.orgId,
+          { name: input.name, location: input.location },
+          [input],
+          own[0]?.series_id ?? null,
+        );
         await updateClassRow(db, actor, classId, input);
 
         return requireClass(db, classId);
@@ -182,8 +365,23 @@ export class PgClassRepository implements ClassRepository {
     return withOrg(this.pool, userId, orgId, listCampWaitlistRows);
   }
 
-  enrol(actor: Actor, request: EnrolRequest, rule: EnrolmentRule): Promise<Enrolment> {
-    return withOrg(this.pool, actor.userId, actor.orgId, db => enrolInTransaction(db, actor, request, rule));
+  async enrol(actor: Actor, request: EnrolRequest, rule: EnrolmentRule): Promise<Enrolment> {
+    try {
+      return await withOrg(this.pool, actor.userId, actor.orgId, db => enrolInTransaction(db, actor, request, rule));
+    } catch (error) {
+      throw translateEnrolmentWriteError(error);
+    }
+  }
+
+  camperNameOf(userId: string, orgId: string, camperId: string): Promise<string | null> {
+    return withOrg(this.pool, userId, orgId, async db => {
+      const { rows } = await db.query<{ name: string }>(
+        "SELECT trim(given_name || ' ' || family_name) AS name FROM people WHERE id = $1",
+        [camperId],
+      );
+
+      return rows[0] ? rows[0].name : null;
+    });
   }
 
   cancelEnrolment(actor: Actor, enrolmentId: string, note: string | null): Promise<Enrolment> {
@@ -195,34 +393,18 @@ export class PgClassRepository implements ClassRepository {
       if (!isUuid(teacherId)) {
         return [];
       }
-      // The join checks the role now, so a person who stopped being a teacher has no classes even before the trigger clears them.
+      // A teacher's classes are the classes its linked person (people.user_id) is an instructor of (migration 0051). The join
+      // checks the role too, so a person who stopped being a teacher has no classes.
       const { rows } = await db.query<{ session_id: string }>(
-        `SELECT ct.session_id
-           FROM class_teachers ct
-           JOIN org_members m ON m.org_id = ct.org_id AND m.user_id = ct.user_id
-          WHERE ct.user_id = $1 AND m.role = 'teacher'`,
+        `SELECT si.session_id
+           FROM people p
+           JOIN org_members m ON m.org_id = p.org_id AND m.user_id = p.user_id AND m.role = 'teacher'
+           JOIN session_instructors si ON si.org_id = p.org_id AND si.person_id = p.id
+          WHERE p.user_id = $1`,
         [teacherId],
       );
 
       return rows.map(r => r.session_id);
-    });
-  }
-
-  teacherAssignments(userId: string, orgId: string, sessionId: string): Promise<TeacherAssignment[]> {
-    return withOrg(this.pool, userId, orgId, async db => {
-      if (!isUuid(sessionId)) {
-        return [];
-      }
-      // class_teachers.session_id holds the class's id (the sessions table row), and sessions.class_id the parent session.
-      const { rows } = await db.query<TeacherAssignment>(
-        `SELECT ct.session_id AS "classId", ct.user_id AS "userId"
-           FROM class_teachers ct
-           JOIN sessions s ON s.id = ct.session_id
-          WHERE ct.org_id = $1 AND s.class_id = $2`,
-        [orgId, sessionId],
-      );
-
-      return rows;
     });
   }
 
@@ -241,30 +423,4 @@ export class PgClassRepository implements ClassRepository {
       return rows.map(r => r.person_id);
     });
   }
-
-  async replaceTeachers(actor: Actor, classId: string, userIds: readonly string[]): Promise<void> {
-    const unique = [...new Set(userIds)];
-    try {
-      await withOrg(this.pool, actor.userId, actor.orgId, async db => {
-        await db.query('SELECT buxa_replace_class_teachers_v2($1, $2, $3)', [actor.orgId, classId, unique]);
-        await recordAudit(db, {
-          actor,
-          action: 'class.update',
-          entity: 'class',
-          entityId: classId,
-          data: { teacherIds: unique },
-        });
-      });
-    } catch (error) {
-      // The function raises P0002 for a missing class and for a user who is not a teacher here; the message tells them apart.
-      if (isPgError(error) && error.message.includes('Teacher not found')) {
-        throw new TeacherNotFoundError();
-      }
-      throw translateClassWriteError(error);
-    }
-  }
-}
-
-function isPgError(error: unknown): error is Error & { code: string } {
-  return error instanceof Error && 'code' in error && error.code === 'P0002';
 }

@@ -1,5 +1,13 @@
 import { isUuid, MAX_AGE_LIMIT, type ActiveEnrolmentFacts } from '@buxa/domain';
-import type { Class, Enrolment, EnrolmentStatus, Session, SessionPriceInput } from '@buxa/contracts';
+import type {
+  Class,
+  ClassPriceInput,
+  Enrolment,
+  EnrolmentStatus,
+  Session,
+  SessionDeleteImpact,
+  SessionStatus,
+} from '@buxa/contracts';
 import { toIso, type Db } from '../people/pgRows';
 import { ClassNotFoundError, EnrolmentNotFoundError, SessionNotFoundError } from './errors';
 
@@ -20,14 +28,12 @@ export interface SessionRow {
   ends_on: string | null;
   class_count: number;
   is_public: boolean;
+  status: SessionStatus;
+  archived_at: Date | null;
   created_at: Date;
-  price_minor: number | null;
-  price_currency: string | null;
-  early_bird_minor: number | null;
-  early_bird_until: string | null;
 }
 
-/** The price columns of a session row (see SESSION_COLUMNS and CLASS_COLUMNS). All NULL when no price is set. */
+/** The price columns of a class row (the `sessions` table; see CLASS_COLUMNS). All NULL when no price is set. */
 export interface PriceRow {
   price_minor: number | null;
   price_currency: string | null;
@@ -36,7 +42,7 @@ export interface PriceRow {
 }
 
 /** A session's stored price from its row, or null when it has none. */
-export function toPrice(row: PriceRow): SessionPriceInput | null {
+export function toPrice(row: PriceRow): ClassPriceInput | null {
   if (row.price_minor === null || row.price_currency === null) {
     return null;
   }
@@ -69,6 +75,10 @@ export interface ClassRow {
   price_currency: string | null;
   early_bird_minor: number | null;
   early_bird_until: string | null;
+  dates_outside_session: boolean;
+  series_id: string;
+  occurrence_status: 'active' | 'cancelled';
+  cancel_reason: string | null;
 }
 
 export interface EnrolmentRow {
@@ -97,8 +107,9 @@ export function toSession(row: SessionRow): Session {
     endsOn: row.ends_on,
     classCount: row.class_count,
     isPublic: row.is_public,
+    status: row.status,
+    archivedAt: row.archived_at ? toIso(row.archived_at) : null,
     createdAt: toIso(row.created_at),
-    price: toPrice(row),
   };
 }
 
@@ -118,6 +129,10 @@ export function toClass(row: ClassRow): Class {
     seatsTaken: row.seats_taken,
     waitlisted: row.waitlisted,
     price: toPrice(row),
+    datesOutsideSession: row.dates_outside_session,
+    seriesId: row.series_id,
+    occurrenceStatus: row.occurrence_status,
+    cancelReason: row.cancel_reason,
   };
 }
 
@@ -150,16 +165,16 @@ export function toActiveFacts(row: {
 }
 
 const SESSION_COLUMNS = `p.id, p.name, p.description, to_char(p.starts_on, 'YYYY-MM-DD') AS starts_on,
-  to_char(p.ends_on, 'YYYY-MM-DD') AS ends_on, p.is_public, p.created_at,
-  (SELECT count(*)::int FROM sessions s WHERE s.class_id = p.id) AS class_count,
-  p.price_minor, p.price_currency, p.early_bird_minor, to_char(p.early_bird_until, 'YYYY-MM-DD') AS early_bird_until`;
+  to_char(p.ends_on, 'YYYY-MM-DD') AS ends_on, p.is_public, p.status, p.archived_at, p.created_at,
+  (SELECT count(*)::int FROM class_series cs WHERE cs.class_id = p.id) AS class_count`;
 
 /** Seats and instructors are counted in the same statement, so a class read is one consistent snapshot. */
-const CLASS_COLUMNS = `s.id, s.class_id AS session_id, p.name AS session_name, s.name, s.age_min, s.age_max, s.capacity,
+export const CLASS_COLUMNS = `s.id, s.class_id AS session_id, p.name AS session_name, s.name, s.age_min, s.age_max, s.capacity,
   s.starts_at, s.ends_at, s.location,
-  p.price_minor, p.price_currency, p.early_bird_minor, to_char(p.early_bird_until, 'YYYY-MM-DD') AS early_bird_until,
+  s.price_minor, s.price_currency, s.early_bird_minor, to_char(s.early_bird_until, 'YYYY-MM-DD') AS early_bird_until,
+  s.dates_outside_session, s.series_id, s.status AS occurrence_status, s.cancel_reason,
   session_seats_taken(s.id) AS seats_taken,
-  (SELECT count(*)::int FROM enrolments e WHERE e.session_id = s.id AND e.status = 'waitlisted') AS waitlisted,
+  (SELECT count(*)::int FROM enrolments e WHERE e.series_id = s.series_id AND e.status = 'waitlisted') AS waitlisted,
   COALESCE((SELECT json_agg(json_build_object('id', i.id::text, 'name', trim(i.given_name || ' ' || i.family_name))
                              ORDER BY i.family_name, i.given_name, i.id)
               FROM session_instructors si JOIN people i ON i.id = si.person_id
@@ -172,7 +187,7 @@ const ENROLMENT_FROM = `FROM enrolments e
   JOIN sessions s ON s.id = e.session_id
   JOIN people p ON p.id = e.person_id`;
 
-const CLASS_FROM = 'FROM sessions s JOIN classes p ON p.id = s.class_id';
+export const CLASS_FROM = 'FROM sessions s JOIN classes p ON p.id = s.class_id';
 
 export async function listSessionRows(db: Db): Promise<Session[]> {
   const { rows } = await db.query<SessionRow>(
@@ -249,7 +264,9 @@ export async function requireClassExists(db: Db, id: string): Promise<void> {
 
 export async function listEnrolmentRows(db: Db, classId: string): Promise<Enrolment[]> {
   const { rows } = await db.query<EnrolmentRow>(
-    `SELECT ${ENROLMENT_COLUMNS} ${ENROLMENT_FROM} WHERE e.session_id = $1 ORDER BY e.created_at, e.id`,
+    `SELECT ${ENROLMENT_COLUMNS} ${ENROLMENT_FROM}
+      WHERE e.series_id = (SELECT x.series_id FROM sessions x WHERE x.id = $1)
+      ORDER BY e.created_at, e.id`,
     [classId],
   );
 
@@ -277,4 +294,48 @@ export async function activeFactsFor(db: Db, camperId: string): Promise<ActiveEn
   );
 
   return rows.map(toActiveFacts);
+}
+
+/**
+ * What deleting a draft session removes, counted in one statement: its classes, groups, rooms, assignments, instructor links and
+ * registration-form links. The screen lists these before the person types the session's name.
+ */
+export async function getSessionDeleteImpact(db: Db, sessionId: string): Promise<SessionDeleteImpact> {
+  if (!isUuid(sessionId)) {
+    throw new SessionNotFoundError();
+  }
+  const { rows } = await db.query<SessionDeleteImpact>(
+    `SELECT (SELECT count(*)::int FROM sessions s WHERE s.class_id = p.id) AS classes,
+            (SELECT count(*)::int FROM groups g WHERE g.session_id = p.id) AS groups,
+            (SELECT count(*)::int FROM rooms r WHERE r.session_id = p.id) AS rooms,
+            (SELECT count(*)::int FROM assignments a WHERE a.session_id = p.id) AS assignments,
+            (SELECT count(*)::int FROM session_instructors si JOIN sessions s ON s.id = si.session_id
+              WHERE s.class_id = p.id) AS instructors,
+            (SELECT count(*)::int FROM registration_form_sessions f WHERE f.session_id = p.id) AS "formLinks"
+       FROM classes p WHERE p.id = $1`,
+    [sessionId],
+  );
+  if (rows.length === 0) {
+    throw new SessionNotFoundError();
+  }
+
+  return rows[0];
+}
+
+/** A class's session status, or null when the class is not in the camp. The enrolment and hold writes use it to refuse a closed session. */
+/** The session status and the dates flag of a class (null when the class is not in the camp). Read with the hold and enrolment checks. */
+export async function classAcceptanceOf(
+  db: Db,
+  classId: string,
+): Promise<{ status: SessionStatus; datesOutsideSession: boolean } | null> {
+  const { rows } = await db.query<{ status: SessionStatus; dates_outside_session: boolean }>(
+    `SELECT p.status, s.dates_outside_session FROM sessions s JOIN classes p ON p.id = s.class_id AND p.org_id = s.org_id WHERE s.id = $1`,
+    [classId],
+  );
+  const row = rows[0];
+  if (!row) {
+    return null;
+  }
+
+  return { status: row.status, datesOutsideSession: row.dates_outside_session };
 }

@@ -47,6 +47,33 @@ describe('the class plan', () => {
   });
 });
 
+describe('the prices in the plan', () => {
+  it('are on classes only: no session in the plan carries a price', () => {
+    for (const session of SESSION_PLAN) {
+      expect('price' in session).toBe(false);
+    }
+  });
+
+  it('are valid class prices: a three-letter currency, and an early bird no higher than the regular price', () => {
+    for (const cls of CLASS_PLAN) {
+      if (cls.price === null) {
+        continue;
+      }
+      expect(cls.price.currency).toMatch(/^[A-Z]{3}$/);
+      expect(cls.price.regularMinor).toBeGreaterThanOrEqual(0);
+      if (cls.price.earlyBirdMinor !== null) {
+        expect(cls.price.earlyBirdMinor).toBeLessThanOrEqual(cls.price.regularMinor);
+        expect(cls.price.earlyBirdUntil).not.toBeNull();
+      }
+    }
+  });
+
+  it('give at least one class a price and leave one without, so both states show', () => {
+    expect(CLASS_PLAN.some(c => c.price !== null)).toBe(true);
+    expect(CLASS_PLAN.some(c => c.price === null)).toBe(true);
+  });
+});
+
 describe('pickDeveloperOwner', () => {
   it('picks the one real account, ignoring the fictional staff', () => {
     expect(pickDeveloperOwner(['adam.admin@example.com', 'teacher.demo@example.test', 'me@studio.dev'])).toEqual({
