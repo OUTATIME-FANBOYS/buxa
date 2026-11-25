@@ -18,8 +18,9 @@ vi.mock('next/navigation', () => ({ redirect: h.redirect }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: { people: h.people } }) }));
 vi.mock('../camp', () => ({ currentActor: () => settle(() => h.actor) }));
 
-const adult = { givenName: 'Anna', familyName: 'Lee', roles: 'guardian' };
-const camper = { givenName: 'Ben', familyName: 'Lee', roles: 'camper' };
+// A family member needs a phone, and a camper also needs a date of birth (both are required when a person is added).
+const adult = { givenName: 'Anna', familyName: 'Lee', roles: 'guardian', phone: '555-0100' };
+const camper = { givenName: 'Ben', familyName: 'Lee', roles: 'camper', dateOfBirth: '2014-03-09', phone: '555-0101' };
 
 describe('createPersonAction', () => {
   beforeEach(() => {
@@ -57,6 +58,18 @@ describe('createPersonAction', () => {
       expect(h.people.create).not.toHaveBeenCalled();
     },
   );
+
+  it('requires a date of birth for a camper and a phone number for a family member, and creates nothing', async () => {
+    const noBirthDate = await createPersonAction(
+      idle,
+      formOf({ ...camper, householdId: IDS.household, dateOfBirth: '' }),
+    );
+    expect(noBirthDate).toMatchObject({ status: 'error', fieldErrors: { dateOfBirth: 'Enter the date of birth.' } });
+
+    const noPhone = await createPersonAction(idle, formOf({ ...adult, phone: '' }));
+    expect(noPhone).toMatchObject({ status: 'error', fieldErrors: { phone: 'Enter a phone number.' } });
+    expect(h.people.create).not.toHaveBeenCalled();
+  });
 
   it('refuses a child with no household, and says what to do instead', async () => {
     const state = await createPersonAction(idle, formOf(camper));
