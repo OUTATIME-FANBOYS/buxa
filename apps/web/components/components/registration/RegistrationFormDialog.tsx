@@ -100,11 +100,7 @@ export function RegistrationFormDialog({ mode, form, sessions, onClose }: Regist
         onPendingChange={setSaving}
         onSaved={done}
       />
-      <section className="form-section" aria-labelledby={`${publishId}-title`}>
-        <h3 id={`${publishId}-title`} className="form-section__title">
-          Publish
-        </h3>
-        <p className="muted">Families register on the published version. Publishing uses the last saved draft.</p>
+      <section className="form-section" aria-label="Publish">
         <form id={publishId} action={publishAction} className="registration-publish">
           <input type="hidden" name="formId" value={form.id} />
           <ActionMessage state={publishState} />
