@@ -3,7 +3,7 @@ import { authorize } from '@buxa/domain';
 import { Empty } from '@/components/components';
 import { PageHeader } from '@/components/components';
 import { loadOnSiteEntries } from '@buxa/server/composers/index.server';
-import { ON_SITE_LIST_ID, OnSiteRow } from '@/components/components/attendance';
+import { OnSiteList } from '@/components/components/attendance';
 import { campActor, campClock } from '@buxa/server/composers/index.server';
 import { onSiteSummary, toOnSiteRow } from '@buxa/shared';
 
@@ -32,13 +32,7 @@ export async function OnSiteScreen() {
       {rows.length === 0 ? (
         <Empty icon="clock" title="No one is on site" body="People appear here when they are checked in." />
       ) : (
-        <div id={ON_SITE_LIST_ID} tabIndex={-1} className="onsite-wrap">
-          <ul className="onsite-list" aria-label="People on site">
-            {rows.map(row => (
-              <OnSiteRow key={row.personId} row={row} canRecord={canRecord} canOverride={canOverride} />
-            ))}
-          </ul>
-        </div>
+        <OnSiteList rows={rows} canRecord={canRecord} canOverride={canOverride} />
       )}
     </div>
   );
