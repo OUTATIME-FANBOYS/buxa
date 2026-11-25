@@ -2,6 +2,8 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
+import { UiProvider } from '@buxa/middleware/providers/providers';
+import { ConfirmDialog } from '@/components/components';
 import { UnplacedCampers, type UnplacedPerson } from '../UnplacedCampers';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -145,24 +147,58 @@ describe('the campers not placed yet', () => {
     expect(container.querySelector('input[type="search"]')).toBeNull();
   });
 
-  it('gives each row a Place button named for its camper, when the viewer may place', () => {
+  it('has no Place button on any row, even for a viewer who may place', () => {
     const container = mountWithChoices(people);
-    const names = [...container.querySelectorAll<HTMLButtonElement>('ul.unplaced-list button')].map(button =>
-      button.getAttribute('aria-label'),
-    );
-
-    expect(names).toEqual(['Place Ada Lovelace', 'Place Grace Hopper', 'Place José Álvarez']);
-    expect([...container.querySelectorAll('ul.unplaced-list button')].map(b => b.textContent)).toEqual([
-      'Place',
-      'Place',
-      'Place',
-    ]);
-  });
-
-  it('has no Place button for a viewer (no choices are passed)', () => {
-    const container = mount(people);
 
     expect(container.querySelector('ul.unplaced-list button')).toBeNull();
+    expect(container.querySelectorAll('ul.unplaced-list li')).toHaveLength(3);
+  });
+
+  it('has no Place button in the card for a viewer (no choices are passed)', () => {
+    const container = mount(people);
+
+    expect(container.querySelector('.unplaced-head button')).toBeNull();
+  });
+
+  it('shows one Place button in the card header, beside the title and above the search', () => {
+    const container = mountWithChoices(people);
+    const header = container.querySelector('.unplaced-head');
+    if (!header) {
+      throw new Error('no header line');
+    }
+
+    expect(container.querySelectorAll('.unplaced-head button')).toHaveLength(1);
+    expect(header.querySelector('button')?.textContent).toBe('Place');
+    expect(header.querySelector('h2')?.textContent).toBe('Campers not placed yet');
+    expect(header.compareDocumentPosition(searchBox(container)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('opens the Place pop-up with nobody chosen from the header button', () => {
+    const container = mountWithChoices(people);
+
+    act(() => {
+      container.querySelector<HTMLButtonElement>('.unplaced-head button')?.click();
+    });
+
+    expect(document.body.textContent).toContain('Place or move a person');
+    expect(document.body.querySelectorAll('.session-tag')).toHaveLength(0);
+  });
+
+  it('keeps the search and the paging working with the Place button shown', () => {
+    const many = Array.from({ length: 23 }, (_, index) => ({
+      id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
+      name: `Camper ${index + 1}`,
+    }));
+    const container = mountWithChoices(many);
+
+    expect(shownNames(container)).toHaveLength(10);
+    act(() => {
+      container.querySelector<HTMLButtonElement>('button[aria-label="Next page"]')?.click();
+    });
+    type(searchBox(container), 'camper 2');
+
+    expect(shownNames(container)).toEqual(['Camper 2', 'Camper 20', 'Camper 21', 'Camper 22', 'Camper 23']);
+    expect(container.querySelectorAll('.unplaced-head button')).toHaveLength(1);
   });
 });
 
@@ -172,7 +208,11 @@ function mountWithChoices(list: readonly UnplacedPerson[]): HTMLElement {
   const root = createRoot(container);
   const choices = { sessionId: 'session-1', campers: list, staff: [], groups: [], rooms: [] };
   act(() => {
-    root.render(<UnplacedCampers people={list} choices={choices} />);
+    root.render(
+      <UiProvider Dialog={ConfirmDialog}>
+        <UnplacedCampers people={list} choices={choices} />
+      </UiProvider>,
+    );
   });
   mounted = { root, container };
 

@@ -12,11 +12,11 @@ export interface UnplacedPerson {
 }
 
 /**
- * The campers not placed yet: a search box above the list, shown ten to a page with Previous and Next under it. The search filters
- * the whole list by name as the user types (ignoring case and accents), then the matches are paged. Typing a new search returns to
- * page 1. Clearing the search shows everyone again.
- * With `choices` (only for people who may place), each row has a Place button that opens the Place or move pop-up with that camper
- * already chosen. The placement runs through the same action and rules as the page button.
+ * The campers not placed yet: a header line with the Place button, then a search box above the list, shown ten to a page with
+ * Previous and Next under it. The search filters the whole list by name as the user types (ignoring case and accents), then the
+ * matches are paged. Typing a new search returns to page 1. Clearing the search shows everyone again.
+ * With `choices` (only for people who may place), the header's Place button opens the Place or move pop-up with nobody chosen. The
+ * rows carry no buttons: every placement goes through that one pop-up, the same action and rules as before.
  */
 export function UnplacedCampers({ people, choices }: { people: readonly UnplacedPerson[]; choices?: AssignChoices }) {
   const [query, setQuery] = useState('');
@@ -24,9 +24,12 @@ export function UnplacedCampers({ people, choices }: { people: readonly Unplaced
 
   return (
     <section className="panel stack" aria-labelledby="unplaced-heading">
-      <h2 id="unplaced-heading" className="people-subheading">
-        Campers not placed yet
-      </h2>
+      <div className="unplaced-head">
+        <h2 id="unplaced-heading" className="people-subheading">
+          Campers not placed yet
+        </h2>
+        {choices && <PlaceButton choices={choices} label="Place" icon="user-plus" variant="primary" size="sm" />}
+      </div>
       {people.length === 0 ? (
         <p className="muted">Every camper is placed.</p>
       ) : (
@@ -44,19 +47,8 @@ export function UnplacedCampers({ people, choices }: { people: readonly Unplaced
               {pageItems => (
                 <ul className="unplaced-list" aria-label="Campers not placed yet">
                   {pageItems.map(person => (
-                    <li
-                      key={person.id}
-                      className="unplaced-list__row buxa:flex buxa:items-center buxa:justify-between buxa:gap-[var(--s3)]"
-                    >
+                    <li key={person.id} className="unplaced-list__row">
                       <span>{person.name}</span>
-                      {choices && (
-                        <PlaceButton
-                          personId={person.id}
-                          choices={choices}
-                          accessibleName={`Place ${person.name}`}
-                          size="sm"
-                        />
-                      )}
                     </li>
                   ))}
                 </ul>
