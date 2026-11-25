@@ -1,6 +1,7 @@
 import type { Assignment, Group, Room } from '@buxa/contracts';
 import { ratioText } from './GroupsTable';
 import { UnassignButton } from './UnassignButton';
+import type { AssignChoices } from './AssignDialog';
 import { UnplacedCampers } from './UnplacedCampers';
 
 export interface BoardPerson {
@@ -20,6 +21,7 @@ export function AssignBoard({
   rooms,
   assignments,
   unplaced,
+  choices,
 }: {
   sessionId: string;
   /** True when the viewer may place or move people (classes:manage). Only then is each member's Unassign button shown. */
@@ -28,6 +30,8 @@ export function AssignBoard({
   rooms: readonly Room[];
   assignments: readonly Assignment[];
   unplaced: readonly BoardPerson[];
+  /** Given only to people who may place: it turns on each unplaced camper's Place button. */
+  choices?: AssignChoices;
 }) {
   const roomName = (id: string): string => rooms.find(r => r.id === id)?.name ?? 'Unknown room';
 
@@ -95,7 +99,7 @@ export function AssignBoard({
           </section>
         );
       })}
-      <UnplacedCampers people={unplaced} />
+      <UnplacedCampers people={unplaced} choices={choices} />
     </div>
   );
 }

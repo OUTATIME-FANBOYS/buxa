@@ -1,8 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { matchesPersonName } from '@buxa/shared';
+import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { SearchField } from '@/components/atoms';
+import { Button } from '@/components/elements';
+import { AssignPopUp, type AssignChoices } from './AssignDialog';
 
 export interface UnplacedPerson {
   id: string;
@@ -12,10 +15,14 @@ export interface UnplacedPerson {
 /**
  * The campers not placed yet: a search box above a list that scrolls inside its card (a fixed height), so a long camp does not grow the
  * page. The list filters by name as the user types, ignoring case and accents. Clearing the search shows everyone again.
+ * With `choices` (only for people who may place), each row has a Place button that opens the Place or move pop-up with that camper
+ * already chosen. The placement runs through the same action and rules as the page button.
  */
-export function UnplacedCampers({ people }: { people: readonly UnplacedPerson[] }) {
+export function UnplacedCampers({ people, choices }: { people: readonly UnplacedPerson[]; choices?: AssignChoices }) {
   const [query, setQuery] = useState('');
+  const [placingId, setPlacingId] = useState<string | null>(null);
   const shown = people.filter(person => matchesPersonName(person.name, query));
+  const close = useCallback(() => setPlacingId(null), []);
 
   return (
     <section className="panel stack" aria-labelledby="unplaced-heading">
@@ -37,14 +44,43 @@ export function UnplacedCampers({ people }: { people: readonly UnplacedPerson[] 
           ) : (
             <ul className="unplaced-list" aria-label="Campers not placed yet">
               {shown.map(person => (
-                <li key={person.id} className="unplaced-list__row">
-                  {person.name}
+                <li
+                  key={person.id}
+                  className="unplaced-list__row buxa:flex buxa:items-center buxa:justify-between buxa:gap-[var(--s3)]"
+                >
+                  <span>{person.name}</span>
+                  {choices && (
+                    <Button
+                      variant="glass"
+                      size="sm"
+                      type="button"
+                      aria-label={`Place ${person.name}`}
+                      onClick={() => setPlacingId(person.id)}
+                    >
+                      Place
+                    </Button>
+                  )}
                 </li>
               ))}
             </ul>
           )}
         </>
       )}
+      {choices && placingId !== null && <PlacePopUp choices={choices} personId={placingId} onClose={close} />}
     </section>
   );
+}
+
+/** The Place or move pop-up with one camper already chosen. Success shows a toast, then the pop-up closes. */
+function PlacePopUp({ choices, personId, onClose }: { choices: AssignChoices; personId: string; onClose: () => void }) {
+  const { toast } = useUi();
+  const done = useCallback(
+    (message: string) => {
+      toast(message);
+      onClose();
+    },
+    [toast, onClose],
+  );
+
+  return <AssignPopUp choices={choices} presetPersonId={personId} onCancel={onClose} onDone={done} />;
 }

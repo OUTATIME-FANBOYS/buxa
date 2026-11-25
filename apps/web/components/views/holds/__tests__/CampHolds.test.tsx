@@ -15,7 +15,7 @@ const notFound = vi.hoisted(() =>
 const session = vi.hoisted((): { role: Role | null } => ({ role: 'staff' }));
 const services = vi.hoisted(() => ({
   seatHolds: { listCampActiveHolds: vi.fn() },
-  classes: { listCampWaitlists: vi.fn() },
+  classes: { listCampWaitlists: vi.fn(), listSessions: vi.fn() },
   orgs: { getCamp: vi.fn() },
 }));
 
@@ -67,6 +67,7 @@ beforeEach(() => {
   services.orgs.getCamp.mockResolvedValue({ timezone: 'Australia/Sydney' });
   services.seatHolds.listCampActiveHolds.mockResolvedValue([]);
   services.classes.listCampWaitlists.mockResolvedValue([]);
+  services.classes.listSessions.mockResolvedValue({ ok: true, value: [] });
 });
 
 describe('the camp-wide holds screen', () => {
@@ -106,5 +107,86 @@ describe('the camp-wide holds screen', () => {
     const html = render(await CampHolds());
     expect(html).toContain('You cannot see holds');
     expect(html).not.toContain(EMPTY);
+  });
+});
+
+describe('the session filter on the camp-wide holds screen', () => {
+  const SUMMER = 'session-1';
+  const WINTER = 'session-2';
+  const winterHold = {
+    ...hold,
+    id: 'hold-2',
+    sessionId: WINTER,
+    sessionName: 'Winter camp',
+    householdName: 'Diaz family',
+  };
+  const winterWait = {
+    ...waiting,
+    enrolmentId: 'enrol-2',
+    sessionId: WINTER,
+    sessionName: 'Winter camp',
+    camperName: 'Eve Diaz',
+  };
+  const session = (id: string, name: string, status: string) => ({
+    id,
+    name,
+    status,
+    description: '',
+    startsOn: null,
+    endsOn: null,
+    classCount: 1,
+    isPublic: false,
+    archivedAt: null,
+    createdAt: '2027-01-01T00:00:00.000Z',
+  });
+
+  beforeEach(() => {
+    services.seatHolds.listCampActiveHolds.mockResolvedValue([hold, winterHold]);
+    services.classes.listCampWaitlists.mockResolvedValue([waiting, winterWait]);
+    services.classes.listSessions.mockResolvedValue({
+      ok: true,
+      value: [session(SUMMER, 'Summer camp', 'live'), session(WINTER, 'Winter camp', 'draft')],
+    });
+  });
+
+  it('narrows both lists to the chosen session', async () => {
+    const html = render(await CampHolds({ searchParams: { session: WINTER } }));
+    expect(html).toContain('Diaz family');
+    expect(html).toContain('Eve Diaz');
+    expect(html).not.toContain('Okafor family');
+    expect(html).not.toContain('Ben Ito');
+  });
+
+  it('shows every session under All sessions (an empty session parameter)', async () => {
+    const html = render(await CampHolds({ searchParams: { session: '' } }));
+    expect(html).toContain('Okafor family');
+    expect(html).toContain('Diaz family');
+    expect(html).toContain('Ben Ito');
+    expect(html).toContain('Eve Diaz');
+  });
+
+  it('carries the choice in the URL: a GET form to the holds address with a session field that has the choice selected', async () => {
+    const html = render(await CampHolds({ searchParams: { session: WINTER } }));
+    expect(html).toContain('method="get"');
+    expect(html).toContain('action="/camp/holds"');
+    expect(html).toContain('name="session"');
+    expect(html).toMatch(new RegExp(`<option value="${WINTER}"[^>]*selected`));
+  });
+
+  it('lists All sessions first, then each session by name', async () => {
+    const html = render(await CampHolds({ searchParams: {} }));
+    const all = html.indexOf('All sessions');
+    const summer = html.indexOf('Summer camp</option>');
+    const winter = html.indexOf('Winter camp</option>');
+    expect(all).toBeGreaterThanOrEqual(0);
+    expect(all).toBeLessThan(summer);
+    expect(summer).toBeLessThan(winter);
+  });
+
+  it('opens on the one live session when the URL names none', async () => {
+    const html = render(await CampHolds({ searchParams: {} }));
+    expect(html).toContain('Okafor family');
+    expect(html).not.toContain('Diaz family');
+    expect(html).toMatch(new RegExp(`<option value="${SUMMER}"[^>]*selected`));
   });
 });

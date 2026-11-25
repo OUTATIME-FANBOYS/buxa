@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { DatePicker, TextField } from '@/components/atoms';
 import { Segmented } from '@/components/elements';
 import {
@@ -55,6 +55,7 @@ export function PriceFields({
   const [amount, setAmount] = useState(price ? minorToInput(price.regularMinor, price.currency) : '');
   const [currency, setCurrency] = useState(price?.currency ?? DEFAULT_CURRENCY);
   const [discount, setDiscount] = useState(() => startingDiscount(price));
+  const discountHintId = useId();
 
   const code = currency.trim().toUpperCase() || DEFAULT_CURRENCY;
   const regular = amount.trim() === '' ? null : parseMoney(amount, code);
@@ -123,9 +124,10 @@ export function PriceFields({
           name="earlyBirdUntil"
           defaultValue={price?.earlyBirdUntil ?? null}
           error={error('earlyBirdUntil')}
+          describedBy={discountHintId}
         />
         {/* Spans the whole row, under the Discount label, so it reads from the left edge rather than under the date. */}
-        <p className="price-discount-hint field-hint">
+        <p id={discountHintId} className="price-discount-hint field-hint">
           The discounted price applies on this day, in the camp&apos;s time zone.
         </p>
       </div>

@@ -44,4 +44,14 @@ describe('PriceFields: the discount row', () => {
   it('still posts the early-bird amount as a hidden field', () => {
     expect(render()).toContain('name="earlyBirdAmount"');
   });
+
+  it('describes the date input with the helper text, so its accessible description is that hint', () => {
+    const html = render();
+    const dateTag = html.match(/<input[^>]*name="earlyBirdUntil"[^>]*>/)?.[0] ?? '';
+    const describedBy = dateTag.match(/aria-describedby="([^"]+)"/)?.[1] ?? '';
+    const hintParagraph = html.match(new RegExp(`<p id="${describedBy}"[^>]*>([^<]*)</p>`));
+
+    expect(describedBy).not.toBe('');
+    expect(hintParagraph?.[1]).toContain('The discounted price applies on this day');
+  });
 });
