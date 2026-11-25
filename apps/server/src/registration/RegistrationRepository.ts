@@ -16,6 +16,12 @@ import type {
 } from '@buxa/contracts';
 import type { CredentialRepository } from '../credentials/CredentialRepository';
 
+/**
+ * What a repository writes for a form's draft: the contract's input plus its season. The camp no longer enters a season, so the
+ * service writes null; forms written before that keep their stored season, which is still read.
+ */
+export type RegistrationFormWrite = RegistrationFormInput & { season: string | null };
+
 /** A file the service has checked and is about to store: its id (made by the service), name, type and bytes. */
 export interface StoredFileInput {
   id: string;
@@ -109,7 +115,7 @@ export interface RegistrationRepository {
   getPublishedVersion(userId: string, orgId: string, formId: string): Promise<PublishedVersion | null>;
   /** Audits `registration_form.create`. Throws RegistrationSessionNotFoundError for a session outside the camp. */
   /** Files in `files` are attached to the new form in the same transaction. Audits `registration_form.file_add` for each. */
-  createForm(actor: Actor, input: RegistrationFormInput, files: readonly StoredFileInput[]): Promise<RegistrationForm>;
+  createForm(actor: Actor, input: RegistrationFormWrite, files: readonly StoredFileInput[]): Promise<RegistrationForm>;
   /** Removes an attachment of a form. Audits `registration_form.file_remove`. Throws RegistrationFileNotFoundError. */
   removeFormFile(actor: Actor, formId: string, fileId: string): Promise<void>;
   /**
@@ -134,7 +140,7 @@ export interface RegistrationRepository {
   updateForm(
     actor: Actor,
     formId: string,
-    input: RegistrationFormInput,
+    input: RegistrationFormWrite,
     files: readonly StoredFileInput[],
   ): Promise<RegistrationForm>;
   /** Freezes the draft as the next version. Audits `registration_form.publish`. Throws RegistrationFormNotFoundError. */

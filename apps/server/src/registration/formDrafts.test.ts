@@ -23,7 +23,6 @@ const extra = { kind: 'text', key: 'allergies', label: 'Allergies', required: fa
 
 const input = {
   name: 'Summer 2027',
-  season: 'Summer',
   sessionIds: [SESSION_LIVE],
   fields: [question],
 };
@@ -83,7 +82,6 @@ describe('registration form drafts: save and publish', () => {
 
     await service.updateForm(admin, form.id, {
       name: 'Summer 2028',
-      season: 'Summer 2028',
       sessionIds: [SESSION_LIVE, SESSION_NEW],
       fields: [question, extra],
     });
@@ -91,7 +89,7 @@ describe('registration form drafts: save and publish', () => {
     const saved = await service.getForm(admin, form.id);
     // The draft: what the edit pop-up loads.
     expect(saved.name).toBe('Summer 2028');
-    expect(saved.season).toBe('Summer 2028');
+    expect(saved.season).toBeNull();
     expect(saved.sessions.map(s => s.id).sort()).toEqual([SESSION_LIVE, SESSION_NEW].sort());
     expect(saved.fields.map(f => f.key)).toEqual(['photos', 'allergies']);
     // The published version: unchanged, and the Registration page can say the draft differs.
@@ -99,21 +97,20 @@ describe('registration form drafts: save and publish', () => {
     expect(saved.published).toMatchObject({
       version: 1,
       name: 'Summer 2027',
-      season: 'Summer',
+      season: null,
       sessions: [{ id: SESSION_LIVE, name: SESSION_LIVE }],
     });
     expect(saved.published?.fields.map(f => f.key)).toEqual(['photos']);
     expect(saved.hasUnpublishedChanges).toBe(true);
   });
 
-  it('publishing copies the draft into the published version: name, season, sessions and questions', async () => {
+  it('publishing copies the draft into the published version: name, sessions and questions', async () => {
     const { service } = setup();
     const admin = as('admin');
     const form = await service.createForm(admin, input);
     await service.publishForm(admin, form.id);
     await service.updateForm(admin, form.id, {
       name: 'Summer 2028',
-      season: 'Summer 2028',
       sessionIds: [SESSION_LIVE, SESSION_NEW],
       fields: [question, extra],
     });
@@ -124,7 +121,7 @@ describe('registration form drafts: save and publish', () => {
     expect(published.published).toMatchObject({
       version: 2,
       name: 'Summer 2028',
-      season: 'Summer 2028',
+      season: null,
     });
     expect(published.published?.sessions.map(s => s.id).sort()).toEqual([SESSION_LIVE, SESSION_NEW].sort());
     expect(published.published?.fields.map(f => f.key)).toEqual(['photos', 'allergies']);
@@ -138,7 +135,6 @@ describe('registration form drafts: save and publish', () => {
     await service.publishForm(admin, form.id);
     await service.updateForm(admin, form.id, {
       name: 'Summer 2027',
-      season: 'Summer',
       sessionIds: [SESSION_LIVE, SESSION_NEW],
       fields: [question],
     });
@@ -165,7 +161,6 @@ describe('registration form drafts: save and publish', () => {
     await service.publishForm(admin, form.id);
     await service.updateForm(admin, form.id, {
       name: 'Summer 2027',
-      season: 'Summer',
       sessionIds: [SESSION_LIVE, SESSION_NEW],
       fields: [question],
     });
@@ -186,7 +181,7 @@ describe('registration form drafts: save and publish', () => {
     const form = await service.createForm(admin, input);
     // The service validates a draft (at least one session) before it saves; the repository is called directly to model a draft
     // that has lost its sessions.
-    await repo.updateForm(admin, form.id, { ...input, sessionIds: [] }, []);
+    await repo.updateForm(admin, form.id, { ...input, season: null, sessionIds: [] }, []);
 
     await expect(service.publishForm(admin, form.id)).rejects.toBeInstanceOf(RegistrationFormNoSessionsError);
     const after = await service.getForm(admin, form.id);
@@ -212,5 +207,40 @@ describe('registration form drafts: save and publish', () => {
     await expect(
       service.submit(as('staff'), form.id, { formId: form.id, selections: [], standard, custom: {} }),
     ).rejects.toBeInstanceOf(RegistrationRefusedError);
+  });
+});
+
+describe('registration form season: no longer entered', () => {
+  it('a new form stores a null season, even when a season is sent with it', async () => {
+    const { service } = setup();
+    const admin = as('admin');
+    const withSeason = { ...input, season: 'Summer 2027' };
+
+    const form = await service.createForm(admin, withSeason);
+
+    expect(form.season).toBeNull();
+  });
+
+  it('a draft save writes a null season', async () => {
+    const { service } = setup();
+    const admin = as('admin');
+    const form = await service.createForm(admin, input);
+    const withSeason = { name: 'Summer 2028', sessionIds: [SESSION_LIVE], fields: [question], season: 'Autumn' };
+
+    await service.updateForm(admin, form.id, withSeason);
+
+    expect((await service.getForm(admin, form.id)).season).toBeNull();
+  });
+
+  it('a form stored with an old season still reads it, and publishing keeps it', async () => {
+    const { repo, service } = setup();
+    const admin = as('admin');
+    const old = await repo.createForm(admin, { ...input, season: 'Summer 2027' }, []);
+
+    const read = await service.getForm(admin, old.id);
+    expect(read.season).toBe('Summer 2027');
+
+    const published = await service.publishForm(admin, old.id);
+    expect(published.published?.season).toBe('Summer 2027');
   });
 });

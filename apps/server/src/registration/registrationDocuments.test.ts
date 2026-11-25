@@ -44,7 +44,7 @@ const FIELDS: CustomField[] = [
   { kind: 'yes_no', key: 'photos', label: 'Photo consent', required: true },
 ];
 
-const formInput = { name: 'Summer 2027', season: 'Summer', sessionIds: [SESSION_A], fields: FIELDS };
+const formInput = { name: 'Summer 2027', sessionIds: [SESSION_A], fields: FIELDS };
 
 const standard = {
   camperFirstName: 'Ada',

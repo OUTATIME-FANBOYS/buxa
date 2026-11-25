@@ -79,7 +79,6 @@ describe.skipIf(!url)('registration files in Postgres', () => {
 
   const formInput = (sessionId: string) => ({
     name: 'Summer 2027',
-    season: 'Summer',
     sessionIds: [sessionId],
     fields: FIELDS,
   });

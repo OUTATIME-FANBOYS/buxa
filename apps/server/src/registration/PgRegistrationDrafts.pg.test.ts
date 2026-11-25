@@ -13,7 +13,7 @@ const url = process.env.DATABASE_URL;
 
 /*
  * Drafts and the publish copy in Postgres (migration 0071). Saving a draft writes the draft columns only; publishing copies the draft
- * into the live row and writes an immutable version with the name, season and sessions it was published with. Needs DATABASE_URL.
+ * into the live row and writes an immutable version with the name and sessions it was published with (no season: the camp no longer enters one). Needs DATABASE_URL.
  */
 describe.skipIf(!url)('registration form drafts in Postgres', () => {
   const pool = new pg.Pool({ connectionString: url });
@@ -50,7 +50,6 @@ describe.skipIf(!url)('registration form drafts in Postgres', () => {
     const staff = fx.actor('staff');
     const form = await registration.createForm(admin, {
       name: 'Summer',
-      season: 'Summer 2027',
       sessionIds: [fx.sessionId],
       fields: [],
     });
@@ -89,26 +88,24 @@ describe.skipIf(!url)('registration form drafts in Postgres', () => {
 
     await registration.updateForm(admin, formId, {
       name: 'Draft name',
-      season: 'Draft season',
       sessionIds: [fx.sessionId, second],
       fields: [{ kind: 'text', key: 'allergies', label: 'Allergies', required: false }],
     });
 
     const after = await live(fx, formId);
-    expect(after.form).toEqual({ name: 'Summer', season: 'Summer 2027', published_version: 1 });
+    expect(after.form).toEqual({ name: 'Summer', season: null, published_version: 1 });
     expect(after.sessions).toEqual([fx.sessionId]);
     const drafted = await draft(fx, formId);
     expect(drafted.draft_name).toBe('Draft name');
-    expect(drafted.draft_season).toBe('Draft season');
+    expect(drafted.draft_season).toBeNull();
     expect(drafted.draft_session_ids).toEqual([fx.sessionId, second].sort());
   });
 
-  it('publishing copies the draft to the live row and writes a version with its name, season and sessions', async () => {
+  it('publishing copies the draft to the live row and writes a version with its name and sessions', async () => {
     const { fx, formId, admin } = await formWithPublish();
     const second = await addSession(fx, `Second ${tag}`);
     await registration.updateForm(admin, formId, {
       name: 'Draft name',
-      season: 'Draft season',
       sessionIds: [second],
       fields: [],
     });
@@ -117,7 +114,7 @@ describe.skipIf(!url)('registration form drafts in Postgres', () => {
 
     expect(published.publishedVersion).toBe(2);
     const after = await live(fx, formId);
-    expect(after.form).toEqual({ name: 'Draft name', season: 'Draft season', published_version: 2 });
+    expect(after.form).toEqual({ name: 'Draft name', season: null, published_version: 2 });
     expect(after.sessions).toEqual([second]);
     const version = await withOrg(pool, fx.userId, fx.orgId, db =>
       db.query<{ name: string; season: string | null; session_ids: string[] }>(
@@ -126,7 +123,7 @@ describe.skipIf(!url)('registration form drafts in Postgres', () => {
         [formId],
       ),
     );
-    expect(version.rows).toEqual([{ name: 'Draft name', season: 'Draft season', session_ids: [second] }]);
+    expect(version.rows).toEqual([{ name: 'Draft name', season: null, session_ids: [second] }]);
   });
 
   it('the first version keeps the name and sessions it was published with after a later draft', async () => {
@@ -134,7 +131,6 @@ describe.skipIf(!url)('registration form drafts in Postgres', () => {
     const second = await addSession(fx, `Second ${tag}`);
     await registration.updateForm(admin, formId, {
       name: 'Later',
-      season: '',
       sessionIds: [second],
       fields: [],
     });
@@ -179,7 +175,6 @@ describe.skipIf(!url)('registration form drafts in Postgres', () => {
     const second = await addSession(fx, `Second ${tag}`);
     await registration.updateForm(admin, formId, {
       name: 'Summer',
-      season: 'Summer 2027',
       sessionIds: [fx.sessionId, second],
       fields: [],
     });

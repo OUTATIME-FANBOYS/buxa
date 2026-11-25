@@ -69,7 +69,6 @@ describe.skipIf(!url)('session and registration lifecycle in Postgres', () => {
     const staff = fx.actor('staff');
     const form = await registration.createForm(admin, {
       name: 'Summer',
-      season: 'Summer 2027',
       sessionIds: [fx.sessionId],
       fields: [],
     });

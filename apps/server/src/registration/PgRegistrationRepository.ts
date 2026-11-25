@@ -2,7 +2,7 @@ import type { Pool } from 'pg';
 import { withOrg } from '@buxa/db';
 import { PgCredentialRepository, transactionScope } from '../credentials/PgCredentialRepository';
 import type { Actor, DocumentReviewStatus } from '@buxa/domain';
-import type { RegistrationForm, RegistrationFormInput, RegistrationRow } from '@buxa/contracts';
+import type { RegistrationForm, RegistrationRow } from '@buxa/contracts';
 import {
   documentInTx,
   formFileInTx,
@@ -43,6 +43,7 @@ import type {
   StoredFileInput,
   PublishedVersion,
   RegistrationRepository,
+  RegistrationFormWrite,
   RegistrationRule,
   WithdrawalRule,
 } from './RegistrationRepository';
@@ -66,7 +67,7 @@ export class PgRegistrationRepository implements RegistrationRepository {
     return withOrg(this.pool, userId, orgId, db => publishedVersionRow(db, formId));
   }
 
-  createForm(actor: Actor, input: RegistrationFormInput, files: readonly StoredFileInput[]): Promise<RegistrationForm> {
+  createForm(actor: Actor, input: RegistrationFormWrite, files: readonly StoredFileInput[]): Promise<RegistrationForm> {
     return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       const id = await insertForm(db, actor, input);
       await insertFormFilesInTx(db, actor, id, files);
@@ -78,7 +79,7 @@ export class PgRegistrationRepository implements RegistrationRepository {
   updateForm(
     actor: Actor,
     formId: string,
-    input: RegistrationFormInput,
+    input: RegistrationFormWrite,
     files: readonly StoredFileInput[],
   ): Promise<RegistrationForm> {
     return withOrg(this.pool, actor.userId, actor.orgId, async db => {
