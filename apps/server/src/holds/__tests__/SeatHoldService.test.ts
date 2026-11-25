@@ -4,7 +4,11 @@ import { createSeatHoldService } from '../SeatHoldService';
 import type { PlaceHoldRequest, SeatHold, SeatHoldRepository } from '../SeatHoldRepository';
 
 const ORG = '22222222-2222-4222-8222-222222222222';
-const as = (role: Actor['role']): Actor => ({ userId: '11111111-1111-4111-8111-111111111111', orgId: ORG, role });
+/** `teacher` is a viewer whose person is an instructor (migration 0069): the teaching view. */
+const as = (role: Actor['role'] | 'teacher'): Actor =>
+  role === 'teacher'
+    ? { userId: '11111111-1111-4111-8111-111111111111', orgId: ORG, role: 'viewer', instructor: true }
+    : { userId: '11111111-1111-4111-8111-111111111111', orgId: ORG, role };
 const NOW = new Date('2027-07-05T09:00:00Z');
 
 /** A repository that records what the service asked for and returns a fixed hold. */

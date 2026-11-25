@@ -37,7 +37,7 @@ describe.skipIf(!url)('teacher scope on Postgres (row-level security)', () => {
     orgB = await org('Camp B');
     teacherA = await user('teacher-a');
     teacherB = await user('teacher-b');
-    await pool.query(`INSERT INTO org_members(org_id, user_id, role) VALUES ($1,$2,'teacher'), ($3,$4,'teacher')`, [
+    await pool.query(`INSERT INTO org_members(org_id, user_id, role) VALUES ($1,$2,'viewer'), ($3,$4,'viewer')`, [
       orgA,
       teacherA,
       orgB,
@@ -62,6 +62,11 @@ describe.skipIf(!url)('teacher scope on Postgres (row-level security)', () => {
         [orgA, teacherA],
       )
     ).rows[0].id;
+    // The instructor person role (migration 0069): the teaching view reads the person's classes through it.
+    await pool.query(`INSERT INTO person_roles (org_id, person_id, role) VALUES ($1, $2, 'instructor')`, [
+      orgA,
+      teacherPersonA,
+    ]);
     personA = (
       await pool.query<{ id: string }>(
         `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Kim', 'Camp') RETURNING id`,
@@ -87,14 +92,14 @@ describe.skipIf(!url)('teacher scope on Postgres (row-level security)', () => {
   });
 
   it('a teacher sees the class its linked person instructs, and the campers in it', async () => {
-    const scope = await teacherScopeOf(repo, { userId: teacherA, orgId: orgA, role: 'teacher' });
+    const scope = await teacherScopeOf(repo, { userId: teacherA, orgId: orgA, role: 'viewer', instructor: true });
     expect([...(scope?.classIds ?? [])]).toEqual([sessionA]);
     expect([...(scope?.camperIds ?? [])]).toEqual([personA]);
   });
 
   it('a teacher with no linked person sees no classes', async () => {
     expect(await repo.assignedClassIds(teacherB, orgB, teacherB)).toEqual([]);
-    const scope = await teacherScopeOf(repo, { userId: teacherB, orgId: orgB, role: 'teacher' });
+    const scope = await teacherScopeOf(repo, { userId: teacherB, orgId: orgB, role: 'viewer', instructor: true });
     expect([...(scope?.classIds ?? [])]).toEqual([]);
   });
 

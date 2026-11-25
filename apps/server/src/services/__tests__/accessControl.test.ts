@@ -180,7 +180,7 @@ describe('staff email addresses (S-08)', () => {
     const asStaff = await orgs.listMembers(camp.actor('staff'));
     expect(asViewer.members.every(m => m.email === null)).toBe(true);
     expect(asStaff.members.every(m => m.email === null)).toBe(true);
-    expect(asViewer.members.map(m => m.role).sort()).toEqual(['admin', 'owner', 'staff', 'teacher', 'viewer']);
+    expect(asViewer.members.map(m => m.role).sort()).toEqual(['admin', 'owner', 'staff', 'viewer', 'viewer']);
     const asAdmin = await orgs.listMembers(camp.actor('admin'));
     expect(asAdmin.members.find(m => m.role === 'staff')?.email).toBe('staff@example.org');
   });

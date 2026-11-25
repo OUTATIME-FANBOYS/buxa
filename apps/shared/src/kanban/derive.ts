@@ -11,8 +11,6 @@ export const KANBAN_ROLE_FOR_CAMP: Record<CampRole, Role> = {
   admin: 'admin',
   staff: 'member',
   viewer: 'viewer',
-  // A teacher has no task rights (no tasks:read), so the board role is the least one.
-  teacher: 'viewer',
 };
 
 /**

@@ -8,14 +8,14 @@ import {
   DEFAULT_TIMEZONE,
   HOLD_MINUTES_MAX,
   HOLD_MINUTES_MIN,
-  ROLES,
+  ORG_ACCESS_KEYS,
   SEAT_HOLD_MINUTES,
   SLUG_HINT,
   isSlug,
   isTimeZone,
 } from '@buxa/domain';
 
-export const RoleSchema = z.enum(ROLES);
+export const RoleSchema = z.enum(ORG_ACCESS_KEYS);
 export const ClockFormatSchema = z.enum(CLOCK_FORMATS);
 export type ClockFormat = z.infer<typeof ClockFormatSchema>;
 
@@ -63,6 +63,8 @@ export const MemberSchema = z.object({
   name: z.string(),
   email: z.string().nullable(),
   role: RoleSchema,
+  /** True when this member's person holds the instructor role (the teaching view, with viewer access). */
+  instructor: z.boolean(),
   /** When the team access ends (an ISO instant), or null for no expiry. */
   expiresAt: z.string().nullable(),
 });
@@ -186,7 +188,7 @@ export * from './gate';
 /** A role change from Team access (Manage access). The role is one of the camp's permission roles. */
 export const ChangeMemberRoleInputSchema = z.object({
   userId: z.string().uuid('Choose a person.'),
-  role: z.enum(ROLES, { message: 'Choose a role.' }),
+  role: z.enum(ORG_ACCESS_KEYS, { message: 'Choose a role.' }),
 });
 export type ChangeMemberRoleInput = z.infer<typeof ChangeMemberRoleInputSchema>;
 

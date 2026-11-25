@@ -4,12 +4,13 @@
  * Rules fail closed: an unknown role, a missing context or another organisation is always a denial.
  */
 
-/** `teacher` runs its own classes. It sits outside the viewer-to-owner ladder: it holds some grants a viewer lacks and no tasks. */
-export const ROLES = ['viewer', 'staff', 'admin', 'owner', 'teacher'] as const;
-export type Role = (typeof ROLES)[number];
+import { isOrgAccess, ORG_ACCESS_KEYS, orgAccessPriority, type OrgAccess } from './roles/roles';
 
-const RANK: Record<Role, number> = { viewer: 0, staff: 1, admin: 2, owner: 3, teacher: 0 };
-export const rank = (r: Role) => RANK[r];
+/** Organization access (the keys and order are in ./roles/roles.ts). There is no teacher access level: teaching is an instructor person role. */
+export type Role = OrgAccess;
+
+/** How far up the ladder a role is: viewer 0, staff 1, admin 2, owner 3. Higher may do more to people below them. */
+export const rank = (r: Role): number => ORG_ACCESS_KEYS.length - 1 - orgAccessPriority(r);
 
 /** `resource:verb`. Add actions here first; the compiler then forces a decision for each role. */
 export const ACTIONS = [
@@ -86,7 +87,7 @@ const STAFF: Action[] = [
   'registration:read',
   'registration:submit',
   'registration:confirm',
-  // Staff may invite teachers (the invite is for the teacher role only, enforced in the service and the database).
+  // Staff may invite people to the camp. An invite is always for viewer access plus the instructor role (see docs/ROLES.md).
   'members:invite',
 ];
 const ADMIN: Action[] = [
@@ -120,7 +121,12 @@ const ADMIN: Action[] = [
   'registration:delete',
 ];
 const OWNER: Action[] = [...ADMIN, 'org:delete', 'org:transfer_ownership', 'data:erase'];
-const TEACHER: Action[] = [
+/**
+ * The restricted view of a viewer whose person holds the instructor role (the teaching view). It is the grant set of the retired
+ * teacher level, unchanged, so a teacher-era login keeps exactly what it had. It is narrower than viewer, and it never includes a
+ * staff or admin right: teaching gives no more power than this list.
+ */
+const INSTRUCTOR_VIEW: Action[] = [
   'org:read',
   'members:leave',
   'events:read',
@@ -129,19 +135,18 @@ const TEACHER: Action[] = [
   'attendance:read',
 ];
 
-/** What each role may attempt. Rules below can still deny an action the role has. */
+/** What each organization access level may attempt. Rules below can still deny an action the role has. */
 export const GRANTS: Record<Role, ReadonlySet<Action>> = {
   viewer: new Set(VIEWER),
   staff: new Set(STAFF),
   admin: new Set(ADMIN),
   owner: new Set(OWNER),
-  teacher: new Set(TEACHER),
 };
 
 /**
- * Assigned-classes scope. A teacher may use these actions only on a class it is assigned to. The caller works out whether the
- * class (or the person's class, or the sessions in a list) is one of the teacher's and passes `assignedToClass: true`; without it
- * a teacher is refused with `not_assigned`. Other roles are not affected.
+ * Assigned-classes scope. In the teaching view (a viewer who is an instructor) these actions apply only to a class the person is
+ * assigned to. The caller works out whether the class (or the person's class, or the sessions in a list) is one of theirs and passes
+ * `assignedToClass: true`; without it the person is refused with `not_assigned`. Other access levels are not affected.
  */
 const ASSIGNED_CLASSES_ONLY: ReadonlySet<Action> = new Set([
   'events:read',
@@ -153,8 +158,9 @@ const ASSIGNED_CLASSES_ONLY: ReadonlySet<Action> = new Set([
 ]);
 
 /**
- * Per-person options an admin turns on for a teacher (off by default). An option grants only the one action it names, and only to
- * a teacher; it is still inside the assigned-classes scope above. Stored per person in `member_options` (migration 0030).
+ * Per-person options an admin turns on for an instructor in the teaching view (off by default). An option grants only the one action
+ * it names; it is still inside the assigned-classes scope above. Stored per person in `member_options` (migration 0030). The stored
+ * key keeps its old name, so existing rows still match.
  */
 export const MEMBER_OPTIONS = ['teacher.check_in_out'] as const;
 export type MemberOption = (typeof MEMBER_OPTIONS)[number];
@@ -167,11 +173,25 @@ export interface Actor {
   userId: string;
   orgId: string;
   role: Role;
+  /** True when this user's person holds the instructor role. With viewer access that gives the teaching view (see `isTeachingView`). */
+  instructor?: boolean;
   /** True for an archived camp. Such a camp is read-only: only reads and the owner's delete are allowed. */
   archived?: boolean;
-  /** Options turned on for this person in this camp. Only a teacher's options count (see `MEMBER_OPTIONS`). */
+  /** Options turned on for this person in this camp. Only the teaching view's options count (see `MEMBER_OPTIONS`). */
   options?: readonly MemberOption[];
 }
+
+/**
+ * The teaching view: a viewer whose person is an instructor. It sees only the classes it is assigned to, and holds the grants in
+ * INSTRUCTOR_VIEW. Staff and admin instructors are not in this view: they keep their staff or admin grants in full.
+ */
+export const isTeachingView = (actor: Pick<Actor, 'role' | 'instructor'>): boolean =>
+  actor.role === 'viewer' && actor.instructor === true;
+
+/** The grants an actor holds: the teaching view's list for an instructor viewer, otherwise the access level's own list. */
+const INSTRUCTOR_VIEW_GRANTS: ReadonlySet<Action> = new Set(INSTRUCTOR_VIEW);
+export const grantsOf = (actor: Pick<Actor, 'role' | 'instructor'>): ReadonlySet<Action> =>
+  isTeachingView(actor) ? INSTRUCTOR_VIEW_GRANTS : GRANTS[actor.role];
 
 /** What may still be done in an archived camp: reading it, and the owner deleting it or unarchiving it. Everything else is refused. */
 const readOnlyWhileArchived = (action: Action): boolean =>
@@ -184,7 +204,7 @@ const readOnlyWhileArchived = (action: Action): boolean =>
 /** Context for the action. Member actions need `target`; role changes and invites need `newRole`. */
 export interface Resource {
   orgId?: string;
-  target?: { userId: string; role: Role };
+  target?: { userId: string; role: Role; instructor?: boolean };
   newRole?: Role;
   /** Owners in the org right now, including the actor if they are one. */
   ownerCount?: number;
@@ -211,7 +231,7 @@ const ok: Decision = { allow: true };
 const no = (reason: Reason): Decision => ({ allow: false, reason });
 
 export function authorize(actor: Actor, action: Action, res: Resource = {}): Decision {
-  if (!(actor.role in RANK)) {
+  if (!isOrgAccess(actor.role)) {
     return no('unknown_role');
   }
   if (res.orgId !== undefined && res.orgId !== actor.orgId) {
@@ -220,12 +240,13 @@ export function authorize(actor: Actor, action: Action, res: Resource = {}): Dec
   if (actor.archived && !readOnlyWhileArchived(action)) {
     return no('archived_camp');
   }
-  // An option adds exactly the action it names, and only for a teacher. It never widens any other role.
-  const viaOption = actor.role === 'teacher' && (actor.options ?? []).some(o => OPTION_ACTION[o] === action);
-  if (!GRANTS[actor.role].has(action) && !viaOption) {
+  // An option adds exactly the action it names, and only in the teaching view. It never widens any other access level.
+  const teaching = isTeachingView(actor);
+  const viaOption = teaching && (actor.options ?? []).some(o => OPTION_ACTION[o] === action);
+  if (!grantsOf(actor).has(action) && !viaOption) {
     return no('role_not_allowed');
   }
-  if (actor.role === 'teacher' && ASSIGNED_CLASSES_ONLY.has(action) && res.assignedToClass !== true) {
+  if (teaching && ASSIGNED_CLASSES_ONLY.has(action) && res.assignedToClass !== true) {
     return no('not_assigned');
   }
 
@@ -281,7 +302,7 @@ export function authorize(actor: Actor, action: Action, res: Resource = {}): Dec
       if (res.target.userId === actor.userId) {
         return no('self_change');
       }
-      if (res.target.role !== 'teacher') {
+      if (res.target.role !== 'viewer' || res.target.instructor !== true) {
         return no('option_not_for_role');
       }
 

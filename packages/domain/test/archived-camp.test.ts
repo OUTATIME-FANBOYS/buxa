@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ACTIONS, authorize, can, ROLES, type Action, type Actor, type Role } from '../src';
+import { ACTIONS, authorize, can, ORG_ACCESS_KEYS, type Action, type Actor, type Role } from '../src';
 
 const ORG = 'org-1';
 const archived = (role: Role): Actor => ({ userId: 'me', orgId: ORG, role, archived: true });
@@ -7,7 +7,7 @@ const READ_ONLY = (action: Action) =>
   action.endsWith(':read') || action.endsWith(':read_contact') || action === 'attendance:export';
 
 describe('archived camps (read-only)', () => {
-  it.each(ROLES)('a %s may read an archived camp, for every read action', role => {
+  it.each(ORG_ACCESS_KEYS)('a %s may read an archived camp, for every read action', role => {
     for (const action of ACTIONS.filter(READ_ONLY)) {
       const decision = authorize(archived(role), action);
       // Some reads are not granted to every role; the archive rule must never be the reason for a refusal.
@@ -17,7 +17,7 @@ describe('archived camps (read-only)', () => {
     expect(can(archived('owner'), 'attendance:read')).toBe(true);
   });
 
-  it.each(ROLES)('a %s is refused every write in an archived camp, with the archived reason', role => {
+  it.each(ORG_ACCESS_KEYS)('a %s is refused every write in an archived camp, with the archived reason', role => {
     for (const action of ACTIONS.filter(a => !READ_ONLY(a) && a !== 'org:delete' && a !== 'org:unarchive')) {
       expect(authorize(archived(role), action)).toEqual({ allow: false, reason: 'archived_camp' });
     }

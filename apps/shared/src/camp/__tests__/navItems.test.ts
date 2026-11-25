@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { ROLES } from '@buxa/domain';
+import { ORG_ACCESS_KEYS, type Role } from '@buxa/domain';
 import { ROUTES } from '../../config/routes';
 import { CAMP_NAV, CAMP_NAV_GROUPS, isActive, navFor, navGroupsFor, type NavGroup } from '../navItems';
 import { roleAllows } from '../abilities';
 
-const hrefs = (role: Parameters<typeof navFor>[0]) => navFor(role).map(item => item.href);
+/** The sidebar viewer for an access level (no teaching view unless asked). */
+const viewer = (role: Role, teaching = false) => ({ role, teaching });
+const hrefs = (role: Role) => navFor(viewer(role)).map(item => item.href);
 const groupLabels = (groups: readonly NavGroup[]) => groups.map(group => group.label);
 
 describe('the sidebar groups', () => {
@@ -72,11 +74,11 @@ describe('the sidebar groups', () => {
 
 describe('navFor', () => {
   it('shows every item to staff and above that holds its permission; a viewer sees no attendance items (check-in, on site, attendance)', () => {
-    // Teachers have their own short sidebar (see teacherNav.test.ts), and My classes is theirs alone, so neither is in this list.
+    // The teaching view has its own short sidebar (see teacherNav.test.ts), and My classes is theirs alone, so neither is in this list.
     // Reports needs audit:read, which only admin and owner hold, so staff see every other item.
-    for (const role of ROLES.filter(r => r !== 'viewer' && r !== 'teacher')) {
+    for (const role of ORG_ACCESS_KEYS.filter(r => r !== 'viewer')) {
       const expected = CAMP_NAV.filter(
-        item => !item.onlyFor && (!item.requires || roleAllows(role, item.requires)),
+        item => !item.teachingOnly && (!item.requires || roleAllows(role, item.requires)),
       ).map(item => item.href);
       expect(hrefs(role)).toEqual(expected);
     }
@@ -87,13 +89,15 @@ describe('navFor', () => {
     expect(hrefs('viewer')).toEqual(
       CAMP_NAV.filter(
         item =>
-          !item.onlyFor && (!item.requires || roleAllows('viewer', item.requires)) && !attendance.includes(item.href),
+          !item.teachingOnly &&
+          (!item.requires || roleAllows('viewer', item.requires)) &&
+          !attendance.includes(item.href),
       ).map(item => item.href),
     );
   });
 
   it('shows only items needing no permission when there is no camp yet', () => {
-    expect(hrefs(null)).toEqual([
+    expect(navFor(null).map(item => item.href)).toEqual([
       ROUTES.camp,
       ROUTES.tasks,
       ROUTES.projects,
@@ -109,7 +113,7 @@ describe('navFor', () => {
       { href: ROUTES.help, label: 'Help', icon: 'help' },
     ] as const;
     expect(navFor(null, items).map(i => i.label)).toEqual(['Help']);
-    expect(navFor('viewer', items).map(i => i.label)).toEqual(['People', 'Help']);
+    expect(navFor(viewer('viewer'), items).map(i => i.label)).toEqual(['People', 'Help']);
   });
 
   it('works on any item list, so another layout can bring its own', () => {
@@ -121,7 +125,7 @@ describe('navFor', () => {
 describe('navGroupsFor', () => {
   it('keeps the group order and drops a group with nothing left to show', () => {
     expect(groupLabels(navGroupsFor(null))).toEqual(['', 'Work']);
-    expect(groupLabels(navGroupsFor('owner'))).toEqual(['', 'Operations', 'Work', 'Admin']);
+    expect(groupLabels(navGroupsFor(viewer('owner')))).toEqual(['', 'Operations', 'Work', 'Admin']);
     const onlyPermitted = [
       { label: 'Gated', items: [{ href: ROUTES.people, label: 'People', icon: 'users', requires: 'people:read' }] },
       { label: 'Open', items: [{ href: ROUTES.help, label: 'Help', icon: 'help' }] },

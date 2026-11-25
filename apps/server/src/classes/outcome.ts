@@ -68,7 +68,10 @@ const NOT_FOUND: Record<
 > = {
   'household-not-found': { reason: 'household_not_found', message: 'That household does not exist in this camp.' },
   'hold-not-found': { reason: 'hold_not_found', message: 'That hold no longer exists, or it has been released.' },
-  'teacher-not-found': { reason: 'teacher_not_found', message: 'One of the teachers is not a teacher in this camp.' },
+  'teacher-not-found': {
+    reason: 'teacher_not_found',
+    message: 'One of the instructors is not an instructor in this camp.',
+  },
   'class-not-found': { reason: 'class_not_found', message: 'That class no longer exists.' },
   'session-not-found': { reason: 'session_not_found', message: 'That session no longer exists.' },
   'enrolment-not-found': {

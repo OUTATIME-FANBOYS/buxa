@@ -13,7 +13,7 @@ const notFound = vi.hoisted(() =>
     throw new Error('NEXT_NOT_FOUND');
   }),
 );
-const session = vi.hoisted((): { role: Role | null } => ({ role: 'staff' }));
+const session = vi.hoisted((): { role: Role | 'teacher' | null } => ({ role: 'staff' }));
 const services = vi.hoisted(() => ({
   classes: {
     getSession: vi.fn(),
@@ -34,7 +34,17 @@ vi.mock('@buxa/server/session/index', () => ({
   requireSession: () => Promise.resolve({ user: { clockFormat: null } }),
 }));
 vi.mock('@buxa/server/composers/people/camp', () => ({
-  currentActor: () => settle(() => (session.role ? { userId: 'u1', orgId: 'o1', role: session.role } : null)),
+  currentActor: () =>
+    settle(() =>
+      session.role
+        ? {
+            userId: 'u1',
+            orgId: 'o1',
+            role: session.role === 'teacher' ? 'viewer' : session.role,
+            instructor: session.role === 'teacher',
+          }
+        : null,
+    ),
 }));
 
 const { ClassPage } = await import('@/components/views/classes');
@@ -120,7 +130,7 @@ const hold = (id: string, sessionId: string, sessionName: string, household: str
 });
 
 const render = (node: ReactNode) => renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}>{node}</UiProvider>);
-const asRole = (role: Role | null) => {
+const asRole = (role: Role | 'teacher' | null) => {
   session.role = role;
 };
 

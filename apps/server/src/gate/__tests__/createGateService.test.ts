@@ -376,9 +376,9 @@ describe('the desk', () => {
     }
   });
 
-  it('gives a teacher no desk, even with attendance:record through a class', async () => {
+  it('gives a viewer no desk, even with attendance:record through a class', async () => {
     const h = setup();
-    expect(await statusOf(h.service.requestDeskCode(staff('teacher'), { email: 'ann@example.test' }))).toBe(403);
+    expect(await statusOf(h.service.requestDeskCode(staff('viewer'), { email: 'ann@example.test' }))).toBe(403);
   });
 });
 

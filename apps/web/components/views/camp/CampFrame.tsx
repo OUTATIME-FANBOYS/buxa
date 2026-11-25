@@ -20,6 +20,8 @@ interface Props {
   archivedCamps?: readonly ArchivedCamp[];
   /** The person's notifications from the server (newest first) and how many are unread. */
   notifications?: { items: readonly NotificationItem[]; unread: number };
+  /** True in the teaching view (an instructor with viewer access): the sidebar shows its own class screens only. */
+  teaching?: boolean;
   children: ReactNode;
 }
 
@@ -33,11 +35,12 @@ export function CampFrame({
   current,
   archivedCamps = [],
   notifications = { items: [], unread: 0 },
+  teaching = false,
   children,
 }: Props): CampFrameElement {
   return (
     <Shell
-      nav={navGroupsFor(current?.role ?? null)}
+      nav={navGroupsFor(current ? { role: current.role, teaching } : null)}
       brandHref={ROUTES.camp}
       topBarStart={<CampSwitcher camps={camps} current={current} archivedCamps={archivedCamps} />}
       topBarEnd={

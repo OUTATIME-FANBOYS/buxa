@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from 'react';
 import type { Member } from '@buxa/contracts';
-import { ROLES } from '@buxa/domain';
+import { ORG_ACCESS } from '@buxa/domain';
 import { ROLE_LABEL, expiryDay, idle, type ActionState } from '@buxa/shared';
 import { changeMemberRoleAction, setMemberExpiryAction } from '@/actions/camp';
 import { Button } from '@/components/elements';
@@ -10,7 +10,7 @@ import { DatePicker, Select } from '@/components/atoms';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { firstNameOf } from '@buxa/shared/names';
 
-const ROLE_OPTIONS = ROLES.map(role => ({ value: role, label: ROLE_LABEL[role] }));
+const ROLE_OPTIONS = ORG_ACCESS.map(role => ({ value: role.key, label: ROLE_LABEL[role.key] }));
 
 /**
  * Manage access: one row per member, with the role they hold now, a Save for a new one, and the day their access ends (optional).

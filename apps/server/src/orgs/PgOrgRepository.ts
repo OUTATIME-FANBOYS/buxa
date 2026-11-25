@@ -117,8 +117,18 @@ export class PgOrgRepository implements OrgRepository {
 
   listMembers(userId: string, orgId: string): Promise<Member[]> {
     return withOrg(this.pool, userId, orgId, async db => {
-      const { rows } = await db.query<{ id: string; name: string; email: string; role: Role; expires_at: Date | null }>(
-        `SELECT u.id, u.name, u.email, m.role, m.expires_at FROM org_members m JOIN users u ON u.id = m.user_id ORDER BY u.name`,
+      const { rows } = await db.query<{
+        id: string;
+        name: string;
+        email: string;
+        role: Role;
+        expires_at: Date | null;
+        instructor: boolean;
+      }>(
+        `SELECT u.id, u.name, u.email, m.role, m.expires_at,
+                EXISTS (SELECT 1 FROM people p JOIN person_roles r ON r.org_id = p.org_id AND r.person_id = p.id
+                         WHERE p.org_id = m.org_id AND p.user_id = m.user_id AND r.role = 'instructor') AS instructor
+           FROM org_members m JOIN users u ON u.id = m.user_id ORDER BY u.name`,
       );
 
       return rows.map(r => ({
@@ -126,6 +136,7 @@ export class PgOrgRepository implements OrgRepository {
         name: r.name,
         email: r.email,
         role: r.role,
+        instructor: r.instructor,
         expiresAt: nullableIso(r.expires_at),
       }));
     });

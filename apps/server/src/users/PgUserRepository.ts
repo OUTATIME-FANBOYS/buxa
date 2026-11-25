@@ -113,6 +113,20 @@ export class PgUserRepository implements UserRepository {
     });
   }
 
+  isInstructorIn(viewerId: string, orgId: string, memberId: string): Promise<boolean> {
+    return withOrg(this.pool, viewerId, orgId, async db => {
+      const { rows } = await db.query<{ instructor: boolean }>(
+        `SELECT EXISTS (
+           SELECT 1 FROM people p JOIN person_roles r ON r.org_id = p.org_id AND r.person_id = p.id
+            WHERE p.user_id = $1 AND r.role = 'instructor'
+         ) AS instructor`,
+        [memberId],
+      );
+
+      return rows[0]?.instructor === true;
+    });
+  }
+
   memberOptionsIn(viewerId: string, orgId: string): Promise<{ userId: string; option: MemberOption }[]> {
     return withOrg(this.pool, viewerId, orgId, async db => {
       const { rows } = await db.query<{ user_id: string; option_key: MemberOption }>(

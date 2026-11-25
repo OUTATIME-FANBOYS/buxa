@@ -154,6 +154,11 @@ export class InMemoryStore implements UserRepository, OrgRepository {
 
     return Promise.resolve({ id: user.id, email: user.email, name });
   }
+  /** People whose person holds the instructor role, as `${orgId}:${userId}` (a test seed for the Postgres join). */
+  readonly instructors = new Set<string>();
+  isInstructorIn(_viewerId: string, orgId: string, memberId: string): Promise<boolean> {
+    return Promise.resolve(this.instructors.has(`${orgId}:${memberId}`));
+  }
   /** Options that are on, as `${orgId}:${userId}:${option}`. */
   readonly memberOptions = new Set<string>();
   memberOptionsOf(_viewerId: string, orgId: string, userId: string): Promise<MemberOption[]> {
@@ -172,8 +177,8 @@ export class InMemoryStore implements UserRepository, OrgRepository {
   }
   setMemberOption(actor: Actor, userId: string, option: MemberOption, enabled: boolean): Promise<void> {
     const role = this.members.find(m => m.orgId === actor.orgId && m.userId === userId)?.role;
-    if (role !== 'teacher') {
-      return Promise.reject(new Error('Teacher not found'));
+    if (role !== 'viewer' || !this.instructors.has(`${actor.orgId}:${userId}`)) {
+      return Promise.reject(new Error('Instructor not found'));
     }
     const key = `${actor.orgId}:${userId}:${option}`;
     if (enabled) {
@@ -366,7 +371,14 @@ export class InMemoryStore implements UserRepository, OrgRepository {
       if (!u) {
         return Promise.reject(new Error(`member ${m.userId} has no user record`));
       }
-      rows.push({ id: u.id, name: u.name, email: u.email, role: m.role, expiresAt: m.expiresAt ?? null });
+      rows.push({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        role: m.role,
+        instructor: this.instructors.has(`${orgId}:${u.id}`),
+        expiresAt: m.expiresAt ?? null,
+      });
     }
 
     return Promise.resolve(rows);

@@ -5,8 +5,8 @@ import { setMemberOptionAction } from '../setMemberOptionAction';
 const TEACHER = '6f1d2c3e-4b5a-4c6d-8e7f-9a0b1c2d3e4f';
 
 const h = vi.hoisted(() => ({
-  actor: null as null | { userId: string; orgId: string; role: 'owner' | 'admin' | 'staff' | 'viewer' | 'teacher' },
-  users: { roleIn: vi.fn(), setMemberOption: vi.fn() },
+  actor: null as null | { userId: string; orgId: string; role: 'owner' | 'admin' | 'staff' | 'viewer' },
+  users: { roleIn: vi.fn(), isInstructorIn: vi.fn(), setMemberOption: vi.fn() },
   revalidatePath: vi.fn(),
 }));
 vi.mock('next/cache', () => ({ revalidatePath: h.revalidatePath }));
@@ -17,11 +17,12 @@ describe('setMemberOptionAction', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     h.actor = { userId: 'u1', orgId: 'o1', role: 'admin' };
-    h.users.roleIn.mockResolvedValue('teacher');
+    h.users.roleIn.mockResolvedValue('viewer');
+    h.users.isInstructorIn.mockResolvedValue(true);
     h.users.setMemberOption.mockResolvedValue(undefined);
   });
 
-  it('an admin turns check-in and check-out on for a teacher, and the write is audited against the admin', async () => {
+  it('an admin turns check-in and check-out on for an instructor, and the write is audited against the admin', async () => {
     const state = await setMemberOptionAction({ userId: TEACHER, option: 'teacher.check_in_out', enabled: true });
     expect(state).toEqual({ status: 'success', message: 'Saved' });
     expect(h.users.setMemberOption).toHaveBeenCalledWith(h.actor, TEACHER, 'teacher.check_in_out', true);
@@ -42,10 +43,13 @@ describe('setMemberOptionAction', () => {
     expect(h.users.setMemberOption).not.toHaveBeenCalled();
   });
 
-  it('an option can be set only on a teacher', async () => {
-    h.users.roleIn.mockResolvedValueOnce('staff');
+  it('an option can be set only on an instructor with viewer access', async () => {
+    h.users.isInstructorIn.mockResolvedValueOnce(false);
     const state = await setMemberOptionAction({ userId: TEACHER, option: 'teacher.check_in_out', enabled: true });
-    expect(state).toMatchObject({ status: 'error', message: 'Only a teacher can have this option.' });
+    expect(state).toMatchObject({
+      status: 'error',
+      message: 'Only an instructor with viewer access can have this option.',
+    });
     expect(h.users.setMemberOption).not.toHaveBeenCalled();
   });
 

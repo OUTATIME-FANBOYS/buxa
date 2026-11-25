@@ -27,7 +27,7 @@ export class InMemoryMemberInviteRepository implements MemberInviteRepository {
   /** The profile saved for each person, by user id. A join writes only the signed-in person's entry. */
   readonly profiles = new Map<string, JoinProfile>();
   /** The memberships created by joining, as (camp, person, role). */
-  readonly joins: { orgId: string; userId: string; role: 'teacher' }[] = [];
+  readonly joins: { orgId: string; userId: string; role: 'viewer' }[] = [];
 
   constructor(
     private readonly camps: ReadonlyMap<string, string>,
@@ -53,7 +53,7 @@ export class InMemoryMemberInviteRepository implements MemberInviteRepository {
       orgId: actor.orgId,
       actorId: actor.userId,
       entityId: stored.id,
-      data: { role: 'teacher' },
+      data: { role: 'viewer' },
     });
 
     return Promise.resolve(toRecord(stored));
@@ -71,7 +71,7 @@ export class InMemoryMemberInviteRepository implements MemberInviteRepository {
       orgId: actor.orgId,
       actorId: actor.userId,
       entityId: invite.id,
-      data: { role: 'teacher' },
+      data: { role: 'viewer' },
     });
 
     return Promise.resolve(toRecord(invite));
@@ -114,14 +114,14 @@ export class InMemoryMemberInviteRepository implements MemberInviteRepository {
     }
     // Only now is anything written: the profile of the signed-in person, the membership, and the accepted mark.
     this.profiles.set(person.userId, profile);
-    this.joins.push({ orgId: invite.orgId, userId: person.userId, role: 'teacher' });
+    this.joins.push({ orgId: invite.orgId, userId: person.userId, role: 'viewer' });
     invite.acceptedAt = this.now().toISOString();
     this.audit.push({
       action: 'member.invite_accept',
       orgId: invite.orgId,
       actorId: person.userId,
       entityId: person.userId,
-      data: { role: 'teacher' },
+      data: { role: 'viewer' },
     });
 
     return Promise.resolve({ orgId: invite.orgId, orgName: this.camps.get(invite.orgId) ?? '' });

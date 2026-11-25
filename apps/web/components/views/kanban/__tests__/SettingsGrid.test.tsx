@@ -47,7 +47,7 @@ const OWNER_CAMP = {
   canArchive: true,
   canDelete: true,
   canManageFeed: false,
-  isTeacher: false,
+  isInstructor: false,
   archived: false,
 };
 /** An admin: may rename and archive (org:update, org:archive), but not delete (org:delete is the owner's). */

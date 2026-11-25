@@ -22,6 +22,7 @@ describe('MembersTable', () => {
       name: `Person ${role}`,
       email: `${role}@example.com`,
       role,
+      instructor: false,
       expiresAt: null,
     }));
     const html = renderToStaticMarkup(<MembersTable members={rows} showEmail={false} />);
@@ -36,13 +37,12 @@ describe('MembersTable', () => {
       admin: 'role-admin',
       staff: 'role-staff',
       viewer: 'role-viewer',
-      teacher: 'role-teacher',
     });
   });
   it('shows a check-in switch only for the teachers the reader may change, and no column without them', () => {
     const rows = [
-      { id: 'm-t', name: 'Ana Ruiz', email: 'ana@example.com', role: 'teacher' },
-      { id: 'm-s', name: 'Sam Lee', email: 'sam@example.com', role: 'staff' },
+      { id: 'm-t', name: 'Ana Ruiz', email: 'ana@example.com', role: 'viewer', instructor: true },
+      { id: 'm-s', name: 'Sam Lee', email: 'sam@example.com', role: 'staff', instructor: false },
     ] as unknown as Member[];
     const none = renderToStaticMarkup(<MembersTable members={rows} showEmail={false} />);
     expect(none).not.toContain('Check-in and check-out');

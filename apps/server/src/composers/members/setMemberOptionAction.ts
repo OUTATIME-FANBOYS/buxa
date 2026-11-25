@@ -33,15 +33,16 @@ export async function setMemberOptionAction(input: {
   if (!role) {
     return failure('That person is not in this camp.');
   }
+  const instructor = await repos.isInstructorIn(actor.userId, actor.orgId, input.userId);
   const decision = authorize(actor, 'members:set_options', {
     orgId: actor.orgId,
-    target: { userId: input.userId, role },
+    target: { userId: input.userId, role, instructor },
     option,
   });
   if (!decision.allow) {
     return failure(
       decision.reason === 'option_not_for_role'
-        ? 'Only a teacher can have this option.'
+        ? 'Only an instructor with viewer access can have this option.'
         : 'You cannot change this person’s options.',
     );
   }

@@ -1,5 +1,10 @@
 import type { Actor, Role } from '@buxa/domain';
 import type { Clock } from '../clock';
+
+/** A test's role: an access level, or `teacher`, which is a viewer whose person is an instructor (the teaching view). */
+export type TestRole = Role | 'teacher';
+/** The access level a test role is stored with. `teacher` is a viewer (migration 0069); the instructor flag is set separately. */
+export const accessOf = (role: TestRole): Role => (role === 'teacher' ? 'viewer' : role);
 import { InMemoryStore } from '../../__tests__/fakes';
 import type { Repositories } from '../../repositories';
 import { createAttendanceService } from '../attendance/createAttendanceService';
@@ -27,7 +32,7 @@ export interface Camp {
   /** Moves the clock to `iso`. */
   at(iso: string): void;
   /** A signed-in actor with the given role, already a member of this camp. */
-  actor(role: Role): Actor;
+  actor(role: TestRole): Actor;
   /** The audit log, oldest first. */
   audit(): InMemoryStore['audit'];
 }
@@ -40,17 +45,19 @@ export async function createCamp(timeZone = 'UTC', start = '2027-07-10T12:00:00Z
 
   const owner = await store.upsertFromIdentity({ authId: 'owner', email: 'owner@example.org', name: 'Olive Owner' });
   const org = await store.createWithOwner({ name: 'Summer Camp', slug: 'summer-camp', timezone: timeZone }, owner.id);
-  const users = new Map<Role, string>([['owner', owner.id]]);
+  const users = new Map<TestRole, string>([['owner', owner.id]]);
   for (const role of ['admin', 'staff', 'viewer', 'teacher'] as const) {
     const user = await store.upsertFromIdentity({
       authId: `${role}-user`,
       email: `${role}@example.org`,
       name: `${role[0].toUpperCase()}${role.slice(1)} User`,
     });
-    store.members.push({ orgId: org.id, userId: user.id, role });
+    store.members.push({ orgId: org.id, userId: user.id, role: accessOf(role) });
     users.set(role, user.id);
     if (role === 'teacher') {
-      // The in-memory class store keeps the teacher role for the scope check (Postgres reads org_members).
+      // An instructor: viewer access plus the instructor person role (migration 0069). The in-memory class store keeps the
+      // teacher for the scope check (Postgres reads the person's classes).
+      store.instructors.add(`${org.id}:${user.id}`);
       (repos.classes as InMemoryClassRepository).seedTeacher(org.id, user.id);
     }
   }
@@ -102,7 +109,9 @@ export async function createCamp(timeZone = 'UTC', start = '2027-07-10T12:00:00Z
         throw new Error(`no ${role} user`);
       }
 
-      return { userId, orgId: org.id, role };
+      return role === 'teacher'
+        ? { userId, orgId: org.id, role: 'viewer', instructor: true }
+        : { userId, orgId: org.id, role: accessOf(role) };
     },
     audit: () => store.audit,
   };
