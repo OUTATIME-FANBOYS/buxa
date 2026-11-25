@@ -33,6 +33,8 @@ const form: RegistrationForm = {
   fields: [],
   attachments: [],
   publishedVersion: null,
+  published: null,
+  hasUnpublishedChanges: false,
   submissionCount: 0,
   updatedAt: '2027-06-01T00:00:00.000Z',
 };

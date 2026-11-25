@@ -61,18 +61,16 @@ export async function removeFormFileInTx(db: Db, actor: Actor, formId: string, f
 }
 
 /**
- * A form attachment for a session. The join is the check: the file's form must cover the session. A file of another form, or a
- * session the form does not cover, reads as no row.
+ * A form attachment for a session. The file's form must cover the session in its published version (migration 0071: a family
+ * registers on that version, so a session only in the draft gives no file). A file of another form, or a session the published
+ * version does not cover, reads as no row.
  */
 export async function formFileInTx(db: Db, fileId: string, sessionId: string): Promise<FileDownload | null> {
   const { rows } = await db.query<{ id: string; name: string; content_type: string; bytes: Buffer }>(
     `SELECT f.id, f.name, f.content_type, f.bytes
        FROM registration_form_files f
       WHERE f.id = $1
-        AND EXISTS (
-          SELECT 1 FROM registration_form_sessions s
-           WHERE s.form_id = f.form_id AND s.org_id = f.org_id AND s.session_id = $2
-        )`,
+        AND $2::uuid = ANY(buxa_form_published_session_ids(f.org_id, f.form_id))`,
     [fileId, sessionId],
   );
 

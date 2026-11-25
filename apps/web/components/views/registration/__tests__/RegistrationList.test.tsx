@@ -45,6 +45,17 @@ const form: RegistrationForm = {
   fields: [],
   attachments: [],
   publishedVersion: 1,
+  published: {
+    version: 1,
+    name: 'Season form',
+    season: '2027',
+    sessions: [
+      { id: SUMMER, name: 'Summer camp' },
+      { id: AUTUMN, name: 'Autumn camp' },
+    ],
+    fields: [],
+  },
+  hasUnpublishedChanges: false,
   submissionCount: 1,
   updatedAt: '2027-06-01T00:00:00.000Z',
 };

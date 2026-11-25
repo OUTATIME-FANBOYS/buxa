@@ -49,7 +49,7 @@ export async function RegisterFamilyView({ formId }: { formId: string }) {
     <div className="page">
       <PageHeader
         title="Take a registration"
-        subtitle={`${form.name}, version ${published.version}. Choose the children, then their classes.`}
+        subtitle={`${published.name}, version ${published.version}. Choose the children, then their classes.`}
       />
       <RegisterForm
         formId={form.id}

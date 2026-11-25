@@ -73,7 +73,7 @@ export async function updateFormAction(_previous: ActionState, form: FormData): 
   revalidatePath(registrationFormPath(formId));
   revalidatePath(ROUTES.registration);
 
-  return success('Saved. Publish the form to use these questions for registrations.');
+  return success('Draft saved. Families still see the published version until you publish a new one.');
 }
 
 /** Publishes the draft as the next version. Registrations after this are checked against it. */

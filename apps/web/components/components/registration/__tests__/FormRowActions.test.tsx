@@ -29,6 +29,14 @@ const form: RegistrationForm = {
   ],
   attachments: [{ id: 'file-1', name: 'Immunization.pdf', contentType: 'application/pdf', sizeBytes: 2048 }],
   publishedVersion: 2,
+  published: {
+    version: 2,
+    name: 'Season form',
+    season: 'Summer 2027',
+    sessions: [SUMMER],
+    fields: [{ key: 'allergies', label: 'Allergies', kind: 'text', required: false }],
+  },
+  hasUnpublishedChanges: false,
   submissionCount: 0,
   updatedAt: '2027-06-01T00:00:00.000Z',
 };

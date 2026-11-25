@@ -304,16 +304,34 @@ export const RegistrationRowSchema = z.object({
 });
 export type RegistrationRow = z.infer<typeof RegistrationRowSchema>;
 
+/** The published version of a form: what families register on, and what each registration was checked against (migration 0071). */
+export const PublishedFormSchema = z.object({
+  version: z.number().int().positive(),
+  name: z.string(),
+  season: z.string().nullable(),
+  /** The sessions the version covers, by id and name, in name order. Families may register only for these. */
+  sessions: z.array(z.object({ id: z.string(), name: z.string() })),
+  fields: z.array(CustomFieldSchema),
+});
+export type PublishedForm = z.infer<typeof PublishedFormSchema>;
+
+/**
+ * A form as staff see it. The top-level name, season, sessions and fields are the DRAFT (what the edit pop-up loads and Save draft
+ * writes). `published` is the version families register on (null until the first publish), and `hasUnpublishedChanges` is true when
+ * the draft differs from it.
+ */
 export const RegistrationFormSchema = z.object({
   id: z.string(),
   name: z.string(),
   season: z.string().nullable(),
-  /** The sessions the form covers, by id and name, in name order. */
+  /** The draft's sessions, by id and name, in name order. */
   sessions: z.array(z.object({ id: z.string(), name: z.string() })),
   fields: z.array(CustomFieldSchema),
   /** Files staff attached for families to download (a blank immunization form, say). */
   attachments: z.array(FormAttachmentSchema),
   publishedVersion: z.number().int().nullable(),
+  published: PublishedFormSchema.nullable(),
+  hasUnpublishedChanges: z.boolean(),
   submissionCount: z.number().int(),
   updatedAt: z.string(),
 });

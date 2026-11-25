@@ -70,20 +70,25 @@ export async function RegistrationFormView({ formId }: { formId: string }) {
 
   return (
     <div className="page">
-      <PageHeader title={form.name} subtitle={form.season ?? 'Registration form'} actions={actions} />
+      <PageHeader
+        title={form.published?.name ?? form.name}
+        subtitle={form.published?.season ?? form.season ?? 'Registration form'}
+        actions={actions}
+      />
       <p>
         {published ? (
-          <Pill tone="ok">Published, version {form.publishedVersion}</Pill>
+          <Pill tone="ok">Published version {form.publishedVersion}</Pill>
         ) : (
           <Pill tone="neutral">Draft. Publish it before taking registrations.</Pill>
         )}
+        {form.hasUnpublishedChanges && <span className="muted"> Unpublished changes</span>}
       </p>
 
       <section className="registration-section" aria-labelledby="registration-submissions-heading">
         <h2 id="registration-submissions-heading">Registrations</h2>
         <SubmissionsBySession
           formId={form.id}
-          sessions={form.sessions}
+          sessions={form.published?.sessions ?? []}
           fields={form.fields}
           submissions={submissions}
           canDelete={can(actor, 'registration:delete')}

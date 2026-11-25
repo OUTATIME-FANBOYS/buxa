@@ -8,8 +8,8 @@ import type {
   RegistrationStatus,
 } from '@buxa/domain';
 import type {
-  CustomField,
   DocumentAnswer,
+  PublishedForm,
   RegistrationForm,
   RegistrationFormInput,
   RegistrationRow,
@@ -38,10 +38,8 @@ export interface FileDownload {
 }
 
 /** The published definitions a submission is checked against. */
-export interface PublishedVersion {
-  version: number;
-  fields: CustomField[];
-}
+/** The published version a family registers on: its name, season, sessions and questions (see PublishedForm in contracts). */
+export type PublishedVersion = PublishedForm;
 
 /** A class of the camp as a registration reads it: its parent session, its name and its times. */
 export interface ClassLookup {

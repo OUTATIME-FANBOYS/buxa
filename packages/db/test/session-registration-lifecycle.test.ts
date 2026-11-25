@@ -164,7 +164,7 @@ describe.skipIf(!url)('session status and registration erasure (migrations 0053 
       );
       const form = (
         await pool.query<{ id: string }>(
-          `INSERT INTO registration_forms (org_id, name) VALUES ($1, 'Form') RETURNING id`,
+          `INSERT INTO registration_forms (org_id, name, draft_name) VALUES ($1, 'Form', 'Form') RETURNING id`,
           [org],
         )
       ).rows[0].id;
@@ -235,7 +235,7 @@ describe.skipIf(!url)('session status and registration erasure (migrations 0053 
     beforeAll(async () => {
       formId = (
         await pool.query<{ id: string }>(
-          `INSERT INTO registration_forms (org_id, name) VALUES ($1, 'Erase form') RETURNING id`,
+          `INSERT INTO registration_forms (org_id, name, draft_name) VALUES ($1, 'Erase form', 'Erase form') RETURNING id`,
           [org],
         )
       ).rows[0].id;
