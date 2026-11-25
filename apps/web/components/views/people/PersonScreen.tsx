@@ -10,6 +10,7 @@ import { ArchivePersonButton, EditPersonButton } from '@/components/components/p
 import { AttendanceHistory } from '@/components/components/people';
 import { PersonAvatar } from '@/components/elements/PersonAvatar';
 import { BadgePanel } from '@/components/components/people';
+import { EmergencyContactPanel } from '@/components/components/people';
 import { HouseholdPanel } from '@/components/components/people';
 import { isFamilyRole } from '@/components/components/people/forms/roleGroups';
 import { MembershipsPanel } from '@/components/components/people';
@@ -119,6 +120,7 @@ export async function PersonScreen({
             linkable={linkable}
           />
         )}
+        <EmergencyContactPanel person={person} />
         {person.hasActiveBadge !== null && (
           <BadgePanel
             personId={person.id}

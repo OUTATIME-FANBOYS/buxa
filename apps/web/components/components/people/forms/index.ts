@@ -4,6 +4,7 @@ export * from './AddPersonButton';
 export * from './ArchivePersonButton';
 export * from './BadgeActions';
 export * from './EditPersonButton';
+export * from './EmergencyContactForm';
 export * from './FormMessage';
 export * from './LinkHouseholdForm';
 export * from './PersonFinder';
