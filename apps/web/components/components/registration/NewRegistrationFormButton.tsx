@@ -29,7 +29,7 @@ export function NewRegistrationFormButton({ sessions }: { sessions: readonly { i
   return (
     <>
       <Button variant="primary" icon="plus" aria-haspopup="dialog" onClick={() => setOpen(true)}>
-        New registration form
+        New Form
       </Button>
       {open && (
         <FormPopUp
