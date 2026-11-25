@@ -26,14 +26,24 @@ export async function OnSiteScreen() {
   const canRecord = authorize(actor, 'attendance:record').allow;
   const canOverride = authorize(actor, 'attendance:override').allow;
 
+  if (rows.length === 0) {
+    return (
+      <div className="page">
+        <PageHeader title="On site" subtitle={onSiteSummary(rows.length)} />
+        <Empty icon="clock" title="No one is on site" body="People appear here when they are checked in." />
+      </div>
+    );
+  }
+
   return (
     <div className="page">
-      <PageHeader title="On site" subtitle={onSiteSummary(rows.length)} />
-      {rows.length === 0 ? (
-        <Empty icon="clock" title="No one is on site" body="People appear here when they are checked in." />
-      ) : (
-        <OnSiteList rows={rows} canRecord={canRecord} canOverride={canOverride} />
-      )}
+      <OnSiteList
+        title="On site"
+        subtitle={onSiteSummary(rows.length)}
+        rows={rows}
+        canRecord={canRecord}
+        canOverride={canOverride}
+      />
     </div>
   );
 }

@@ -127,12 +127,17 @@
   outline-offset: 4px;
   border-radius: var(--r-3);
 }
-/* The search sits at the right of the page, 320px wide and pill-shaped, with 16px of space above the cards. */
+/* The title, its count and the search share one line; the search is 320px wide and pill-shaped, centred on the title block. The cards sit 16px below the line. */
+.onsite-page .page-head {
+  align-items: center;
+}
 .onsite-search {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: var(--s4);
   --control-h: var(--control-compact);
+}
+.onsite-wrap {
+  margin-top: var(--s4);
 }
 .onsite-search .search-field {
   width: 320px;
