@@ -16,6 +16,7 @@ import {
 import { applyDatesPlan, flaggedClassNames, planDatesChange } from './PgSessionDates';
 import { toPrice, type PriceRow } from './PgClassQueries';
 import { priceChangeAudit, samePrice } from './priceAudit';
+import { lockLocationAndCheck } from './PgLocationRule';
 import { sameSessionDetails, sessionEditAudit, type SessionDetails } from './sessionEditAudit';
 
 /*
@@ -296,8 +297,16 @@ export async function setOccurrenceStatusRow(
   occurrenceId: string,
   command: OccurrenceCommand,
 ): Promise<void> {
-  const { rows } = await db.query<{ class_id: string; series_id: string; status: OccurrenceStatus }>(
-    'SELECT class_id, series_id, status FROM sessions WHERE id = $1 AND org_id = $2 FOR UPDATE',
+  const { rows } = await db.query<{
+    class_id: string;
+    series_id: string;
+    status: OccurrenceStatus;
+    name: string;
+    location: string;
+    starts_at: Date;
+    ends_at: Date;
+  }>(
+    'SELECT class_id, series_id, status, name, location, starts_at, ends_at FROM sessions WHERE id = $1 AND org_id = $2 FOR UPDATE',
     [occurrenceId, actor.orgId],
   );
   if (rows.length === 0) {
@@ -325,6 +334,14 @@ export async function setOccurrenceStatusRow(
   if (decideRestore(current).kind === 'refuse') {
     throw new OccurrenceRefusedError('not_cancelled');
   }
+  // A restored day takes its place again, so it must not overlap a class in its location.
+  await lockLocationAndCheck(
+    db,
+    actor.orgId,
+    { name: current.name, location: current.location },
+    [{ startsAt: current.starts_at.toISOString(), endsAt: current.ends_at.toISOString() }],
+    current.series_id,
+  );
   await db.query(
     "UPDATE sessions SET status = 'active', cancelled_at = NULL, cancel_reason = NULL WHERE id = $1 AND org_id = $2",
     [occurrenceId, actor.orgId],

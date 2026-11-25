@@ -5,6 +5,7 @@ import type { ClassRecord, SeriesFields, SeriesRecord } from './ClassRepository'
 import { ClassNotFoundError, SessionNotFoundError } from './errors';
 import { insertClass, requireInstructors } from './PgClassWrites';
 import { priceChangeAudit } from './priceAudit';
+import { lockLocationAndCheck } from './PgLocationRule';
 import { toPrice, type PriceRow } from './PgClassQueries';
 
 /**
@@ -14,6 +15,7 @@ import { toPrice, type PriceRow } from './PgClassQueries';
  */
 export async function insertSeries(db: Db, actor: Actor, sessionId: string, input: SeriesRecord): Promise<string> {
   await requireInstructors(db, input.instructorIds);
+  await lockLocationAndCheck(db, actor.orgId, { name: input.name, location: input.location }, input.occurrences, null);
   const price = input.price;
   const { rows } = await db.query<{ id: string }>(
     `INSERT INTO class_series (org_id, class_id, name, age_min, age_max, capacity, location, weekdays,
@@ -87,6 +89,17 @@ export async function updateSeriesRow(db: Db, actor: Actor, seriesId: string, in
   const before = toPrice(current[0]);
   const price = input.price;
   const instructors = await requireInstructors(db, input.instructorIds);
+  const { rows: active } = await db.query<{ starts_at: Date; ends_at: Date }>(
+    `SELECT starts_at, ends_at FROM sessions WHERE series_id = $1 AND org_id = $2 AND status = 'active'`,
+    [seriesId, actor.orgId],
+  );
+  await lockLocationAndCheck(
+    db,
+    actor.orgId,
+    { name: input.name, location: input.location },
+    active.map(d => ({ startsAt: d.starts_at.toISOString(), endsAt: d.ends_at.toISOString() })),
+    seriesId,
+  );
   await db.query(
     `UPDATE class_series
         SET name = $3, age_min = $4, age_max = $5, capacity = $6, location = $7,

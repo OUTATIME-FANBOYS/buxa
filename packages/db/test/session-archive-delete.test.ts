@@ -32,7 +32,7 @@ describe.skipIf(!url)('sessions: archive, unique names and delete with classes (
     (
       await pool.query<{ id: string }>(
         `INSERT INTO sessions (org_id, class_id, name, age_min, age_max, starts_at, ends_at, location, capacity)
-         VALUES ($1, $2, $3, 8, 12, '2027-07-05T09:00:00+10:00', '2027-07-05T12:00:00+10:00', 'Lab 1', 12)
+         VALUES ($1, $2, $3, 8, 12, '2027-07-05T09:00:00+10:00', '2027-07-05T12:00:00+10:00', 'Lab ' || gen_random_uuid(), 12)
          RETURNING id`,
         [orgId, sessionId, label],
       )

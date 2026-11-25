@@ -110,7 +110,7 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       await client.query(
         `
         INSERT INTO sessions (org_id, class_id, starts_at, ends_at, location, capacity, ratio_campers, ratio_instructors)
-        VALUES ($1, $2, now() + interval '1 day', now() + interval '1 day 2 hours', 'Lake', 10, 5, 1)
+        VALUES ($1, $2, now() + interval '1 day', now() + interval '1 day 2 hours', 'Lake ' || gen_random_uuid(), 10, 5, 1)
       `,
         [orgId, classId],
       );
@@ -191,6 +191,7 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0063_registration_documents.sql',
       '0064_series_occurrence_status.sql',
       '0065_series_day_delete_guard.sql',
+      '0066_class_location_overlap.sql',
     ]);
   });
 
@@ -362,7 +363,7 @@ describe.skipIf(!url)('migration 0050 copies session prices onto their classes',
       ] as const) {
         await client.query(
           `INSERT INTO sessions (org_id, class_id, name, starts_at, ends_at, location, capacity, ratio_campers, ratio_instructors)
-           VALUES ($1, $2, $3, now(), now() + interval '1 hour', 'Lake', 10, 5, 1)`,
+           VALUES ($1, $2, $3, now(), now() + interval '1 hour', 'Lake ' || gen_random_uuid(), 10, 5, 1)`,
           [orgId, parent, label],
         );
       }
@@ -405,6 +406,7 @@ describe.skipIf(!url)('migration 0050 copies session prices onto their classes',
       '0063_registration_documents.sql',
       '0064_series_occurrence_status.sql',
       '0065_series_day_delete_guard.sql',
+      '0066_class_location_overlap.sql',
     ]);
 
     const classes = await tempPool.query<{
@@ -521,7 +523,7 @@ async function migrateTeacherDb(
     );
     const sessions = await client.query<{ id: string; name: string }>(
       `INSERT INTO sessions (org_id, class_id, name, starts_at, ends_at, location, capacity, ratio_campers, ratio_instructors)
-       SELECT c.org_id, c.id, c.name, now(), now() + interval '1 hour', 'Lake', 10, 5, 1
+       SELECT c.org_id, c.id, c.name, now(), now() + interval '1 hour', 'Lake ' || gen_random_uuid(), 10, 5, 1
          FROM classes c WHERE c.org_id = $1
        RETURNING id, name`,
       [orgId],
@@ -604,6 +606,7 @@ describe.skipIf(!url)('migration 0051 links teachers to their people by email', 
       '0063_registration_documents.sql',
       '0064_series_occurrence_status.sql',
       '0065_series_day_delete_guard.sql',
+      '0066_class_location_overlap.sql',
     ]);
     const linked = await tempPool.query<{ email: string; user_email: string }>(
       `SELECT p.email, u.email AS user_email FROM people p JOIN users u ON u.id = p.user_id`,
@@ -1049,6 +1052,206 @@ describe.skipIf(!url)('migration 0060 stops on an ambiguous group and changes no
       `SELECT count(*) AS n FROM schema_migrations WHERE name = '0060_class_series.sql'`,
     );
     expect(recorded.rows[0].n).toBe('0');
+  });
+});
+
+// Migration 0066 (class location rule). A database with every file before 0066 applied, seeded with the rows the rule must check.
+const LOCATION_FILE = '0066_class_location_overlap.sql';
+
+async function databaseBefore0066(dbName: string): Promise<{
+  root: pg.Pool;
+  pool: pg.Pool;
+  client: pg.PoolClient;
+  orgId: string;
+  classId: string;
+}> {
+  const root = new pg.Pool(poolConfigFor(url ?? ''));
+  root.on('error', () => {});
+  await root.query(`CREATE DATABASE "${dbName}"`);
+  const parsed = new URL(url ?? '');
+  parsed.pathname = `/${dbName}`;
+  const pool = new pg.Pool(poolConfigFor(parsed.toString()));
+  pool.on('error', () => {});
+  const client = await pool.connect();
+  await client.query(
+    'CREATE TABLE IF NOT EXISTS schema_migrations (name text PRIMARY KEY, at timestamptz NOT NULL DEFAULT now())',
+  );
+  for (const file of readdirSync(DIR)
+    .filter(f => f.endsWith('.sql') && f.slice(0, 4) < '0066')
+    .sort()) {
+    await applyMigrationFile(client, file);
+  }
+  const org = await client.query<{ id: string }>(
+    `INSERT INTO orgs (name, slug) VALUES ('Location rule', $1) RETURNING id`,
+    [dbName.replace(/[^a-z0-9]/g, '').slice(0, 40)],
+  );
+  const cls = await client.query<{ id: string }>(
+    `INSERT INTO classes (org_id, name, starts_on, ends_on) VALUES ($1, 'Summer 2027', '2027-07-01', '2027-07-31') RETURNING id`,
+    [org.rows[0].id],
+  );
+
+  return { root, pool, client, orgId: org.rows[0].id, classId: cls.rows[0].id };
+}
+
+/** One active day: a row of sessions written without a series, which the legacy insert trigger gives its own series. */
+async function addDay(
+  pool: pg.Pool,
+  orgId: string,
+  classId: string,
+  name: string,
+  location: string,
+  startsAt: string,
+  endsAt: string,
+): Promise<void> {
+  await pool.query(
+    `INSERT INTO sessions (org_id, class_id, name, capacity, location, starts_at, ends_at) VALUES ($1, $2, $3, 10, $4, $5, $6)`,
+    [orgId, classId, name, location, startsAt, endsAt],
+  );
+}
+
+describe.skipIf(!url)('migration 0066 stops on same-location overlaps and changes nothing', () => {
+  const tag = randomBytes(4).toString('hex');
+  const dbName = `buxa_location_stop_${tag}`;
+  let handle: Awaited<ReturnType<typeof databaseBefore0066>> | null = null;
+
+  beforeAll(async () => {
+    if (!url) {
+      return;
+    }
+    handle = await databaseBefore0066(dbName);
+    await addDay(
+      handle.pool,
+      handle.orgId,
+      handle.classId,
+      'Pottery',
+      'Studio',
+      '2027-07-05T23:00:00Z',
+      '2027-07-06T02:00:00Z',
+    );
+    await addDay(
+      handle.pool,
+      handle.orgId,
+      handle.classId,
+      'Choir',
+      '  studio ',
+      '2027-07-06T00:00:00Z',
+      '2027-07-06T01:00:00Z',
+    );
+  });
+
+  afterAll(async () => {
+    if (handle) {
+      await closeDatabase(dbName, handle);
+    }
+  });
+
+  it('stops, names both classes and their location, and leaves the schema as it was', async () => {
+    if (!handle) {
+      return;
+    }
+    await handle.client.query('BEGIN');
+    const failure = await handle.client.query(readFileSync(join(DIR, LOCATION_FILE), 'utf8')).then(
+      () => null,
+      (error: unknown) => (error instanceof Error ? error.message : String(error)),
+    );
+    await handle.client.query('ROLLBACK');
+
+    expect(failure).toContain('Class location migration 0066 stopped');
+    expect(failure).toContain('Pottery');
+    expect(failure).toContain('Choir');
+    const constraint = await handle.pool.query(
+      `SELECT 1 FROM pg_constraint WHERE conname = 'sessions_location_overlap'`,
+    );
+    expect(constraint.rowCount).toBe(0);
+    const column = await handle.pool.query(
+      `SELECT 1 FROM information_schema.columns WHERE table_name = 'sessions' AND column_name = 'location_key'`,
+    );
+    expect(column.rowCount).toBe(0);
+  });
+});
+
+describe.skipIf(!url)('migration 0066 refuses a same-location overlap in the database', () => {
+  const tag = randomBytes(4).toString('hex');
+  const dbName = `buxa_location_rule_${tag}`;
+  let handle: Awaited<ReturnType<typeof databaseBefore0066>> | null = null;
+
+  beforeAll(async () => {
+    if (!url) {
+      return;
+    }
+    handle = await databaseBefore0066(dbName);
+    // Overlapping in time, but in different locations: allowed, and kept by the migration.
+    await addDay(
+      handle.pool,
+      handle.orgId,
+      handle.classId,
+      'Pottery',
+      'Studio',
+      '2027-07-05T23:00:00Z',
+      '2027-07-06T02:00:00Z',
+    );
+    await addDay(
+      handle.pool,
+      handle.orgId,
+      handle.classId,
+      'Swim',
+      'Pool',
+      '2027-07-06T00:00:00Z',
+      '2027-07-06T03:00:00Z',
+    );
+    await handle.client.query(readFileSync(join(DIR, LOCATION_FILE), 'utf8'));
+    await handle.client.query('INSERT INTO schema_migrations(name) VALUES ($1)', [LOCATION_FILE]);
+  });
+
+  afterAll(async () => {
+    if (handle) {
+      await closeDatabase(dbName, handle);
+    }
+  });
+
+  it('applies on a camp with no same-location overlap, and keeps the overlapping pair in two locations', async () => {
+    if (!handle) {
+      return;
+    }
+    const rows = await handle.pool.query<{ n: string }>(`SELECT count(*) AS n FROM sessions WHERE status = 'active'`);
+    expect(rows.rows[0].n).toBe('2');
+  });
+
+  it('refuses a new day in the same location, even with different case and spacing, and names the constraint', async () => {
+    if (!handle) {
+      return;
+    }
+    await expect(
+      addDay(
+        handle.pool,
+        handle.orgId,
+        handle.classId,
+        'Choir',
+        ' STUDIO ',
+        '2027-07-06T00:30:00Z',
+        '2027-07-06T01:30:00Z',
+      ),
+    ).rejects.toMatchObject({ code: '23P01', constraint: 'sessions_location_overlap' });
+  });
+
+  it('allows a cancelled day to overlap, and a day that only touches', async () => {
+    if (!handle) {
+      return;
+    }
+    await handle.pool.query(
+      `INSERT INTO sessions (org_id, class_id, name, capacity, location, starts_at, ends_at, status, cancel_reason, cancelled_at)
+       VALUES ($1, $2, 'Choir', 10, 'Studio', '2027-07-06T00:30:00Z', '2027-07-06T01:30:00Z', 'cancelled', 'Holiday', now())`,
+      [handle.orgId, handle.classId],
+    );
+    await addDay(
+      handle.pool,
+      handle.orgId,
+      handle.classId,
+      'Yoga',
+      'Studio',
+      '2027-07-06T02:00:00Z',
+      '2027-07-06T03:00:00Z',
+    );
   });
 });
 
