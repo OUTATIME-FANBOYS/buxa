@@ -51,12 +51,14 @@ export function FormsTable({
                 </td>
                 <td>{shown.sessions.length}</td>
                 <td>
-                  {form.publishedVersion === null ? (
-                    <Pill tone="neutral">Draft</Pill>
-                  ) : (
-                    <Pill tone="ok">Published, version {form.publishedVersion}</Pill>
-                  )}
-                  {form.hasUnpublishedChanges && <Pill tone="warn">Unpublished changes</Pill>}
+                  <span className="buxa:inline-flex buxa:flex-wrap buxa:items-center buxa:gap-[8px]">
+                    {form.publishedVersion === null ? (
+                      <Pill tone="neutral">Draft</Pill>
+                    ) : (
+                      <Pill tone="ok">Published, version {form.publishedVersion}</Pill>
+                    )}
+                    {form.hasUnpublishedChanges && <Pill tone="warn">Unpublished changes</Pill>}
+                  </span>
                 </td>
                 <td>{form.submissionCount}</td>
                 <td>
