@@ -89,18 +89,64 @@ export function roomForm(form: FormData): PersonParsed<RoomInput> {
   );
 }
 
-/** An assignment: the session, person, role, group and room, with an optional ratio override reason. */
-export function assignForm(form: FormData): PersonParsed<AssignInput> {
-  const reason = field(form, 'overrideReason').trim();
+/** The field key a refusal for one person is reported under: `refused:<personId>`, with the reason as its message. */
+export const REFUSED_KEY_PREFIX = 'refused:';
+/** The field key a ratio refusal for one person is reported under: `ratio:<personId>`. The override pop-up posts those people again. */
+export const RATIO_KEY_PREFIX = 'ratio:';
 
-  return parseWith<AssignInput>(AssignInputSchema, {
-    sessionId: field(form, 'sessionId'),
-    personId: field(form, 'personId'),
-    role: field(form, 'role'),
-    groupId: field(form, 'groupId'),
-    roomId: field(form, 'roomId'),
-    ...(reason ? { override: { reason } } : {}),
-  });
+export const refusedKey = (personId: string): string => `${REFUSED_KEY_PREFIX}${personId}`;
+export const ratioKey = (personId: string): string => `${RATIO_KEY_PREFIX}${personId}`;
+
+/** The people a failed placement refused, from its field errors. */
+export function refusedPersonIds(fieldErrors: FieldErrors | undefined): string[] {
+  return personIdsWithPrefix(fieldErrors, REFUSED_KEY_PREFIX);
+}
+
+/** The people a failed placement refused for the staff ratio: the ones an admin can place with an override. */
+export function ratioPersonIds(fieldErrors: FieldErrors | undefined): string[] {
+  return personIdsWithPrefix(fieldErrors, RATIO_KEY_PREFIX);
+}
+
+function personIdsWithPrefix(fieldErrors: FieldErrors | undefined, prefix: string): string[] {
+  return Object.keys(fieldErrors ?? {})
+    .filter(key => key.startsWith(prefix))
+    .map(key => key.slice(prefix.length));
+}
+
+/**
+ * The placements a form asks for: one per chosen person (the `personId` fields), all in the same group and room, with the same role
+ * and the optional ratio override reason. Each one is checked on its own by the service. A repeated person counts once.
+ */
+export function assignInputsForm(form: FormData): PersonParsed<AssignInput[]> {
+  const reason = field(form, 'overrideReason').trim();
+  const personIds = [
+    ...new Set(
+      form
+        .getAll('personId')
+        .flatMap(value => (typeof value === 'string' && value.trim() !== '' ? [value.trim()] : [])),
+    ),
+  ];
+  if (personIds.length === 0) {
+    return { ok: false, state: failure('Choose a person.', { personId: 'Choose a person.' }) };
+  }
+
+  const inputs: AssignInput[] = [];
+  for (const personId of personIds) {
+    const parsed = parseWith<AssignInput>(AssignInputSchema, {
+      sessionId: field(form, 'sessionId'),
+      personId,
+      role: field(form, 'role'),
+      groupId: field(form, 'groupId'),
+      roomId: field(form, 'roomId'),
+      ...(reason ? { override: { reason } } : {}),
+    });
+    if (!parsed.ok) {
+      return parsed;
+    }
+    inputs.push(parsed.data);
+  }
+
+  return { ok: true, data: inputs };
 }
 
 /** An unassign: the session and the person. The group and room come from the person's placement. */

@@ -187,7 +187,8 @@ describe('refusals and the ratio override', () => {
       root.render(
         <UiProvider Dialog={ConfirmDialog}>
           <RatioOverridePopUp
-            selection={{ role: 'camper', personId: ADA, groupId: HAWKS, roomId: LODGE }}
+            selection={{ role: 'camper', personIds: [ADA], groupId: HAWKS, roomId: LODGE }}
+            personIds={[ADA]}
             sessionId={SESSION_ID}
             message="This group would have 5 campers for 1 staff."
             onCancel={() => undefined}
