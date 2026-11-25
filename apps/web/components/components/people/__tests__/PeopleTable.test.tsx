@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import type { PersonSummary } from '@buxa/contracts';
 import { PeopleTable } from '@/components/components/people';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
-import { Dialog as ConfirmDialog } from '@/components/components';
+import { ConfirmDialog } from '@/components/components';
 
 const withUi = (node: React.ReactElement) => <UiProvider Dialog={ConfirmDialog}>{node}</UiProvider>;
 

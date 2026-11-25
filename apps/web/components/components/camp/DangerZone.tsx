@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Dialog } from '@/components/components';
+import { ConfirmDialog } from '@/components/components';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { archiveCamp, type CampActionResult } from '@/actions/camp';
 import { Button } from '@/components/elements';
@@ -89,30 +89,24 @@ export function DangerZone({
       </div>
 
       {canArchive && archiving && (
-        <Dialog
+        <ConfirmDialog
           title="Archive camp?"
-          onClose={close}
-          footer={
+          variant="neutral"
+          confirmLabel="Archive camp"
+          pendingLabel="Archiving…"
+          pending={busy}
+          onCancel={close}
+          onConfirm={() => void run(() => archiveCamp({ orgId: campId }), 'Camp archived')}
+          body={
             <>
-              <Button variant="glass" type="button" disabled={busy} onClick={close}>
-                Cancel
-              </Button>
-              <Button
-                variant="glass"
-                disabled={busy}
-                onClick={() => void run(() => archiveCamp({ orgId: campId }), 'Camp archived')}
-              >
-                {busy ? 'Archiving…' : 'Archive camp'}
-              </Button>
+              <p>
+                Archiving hides {campName} from your camp list. Its people, tasks, attendance and records are kept. You
+                can still open it read-only from the camp switcher, under Show archived.
+              </p>
+              {errorLine}
             </>
           }
-        >
-          <p>
-            Archiving hides {campName} from your camp list. Its people, tasks, attendance and records are kept. You can
-            still open it read-only from the camp switcher, under Show archived.
-          </p>
-          {errorLine}
-        </Dialog>
+        />
       )}
     </section>
   );

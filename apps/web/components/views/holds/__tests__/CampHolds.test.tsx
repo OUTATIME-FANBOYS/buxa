@@ -5,7 +5,7 @@ import type { Role } from '@buxa/domain';
 import { UiProvider } from '@buxa/middleware/providers/providers';
 import { forbidden } from '@buxa/server/http/errors';
 import { settle } from '@buxa/domain';
-import { Dialog as ConfirmDialog } from '@/components/components';
+import { ConfirmDialog } from '@/components/components';
 
 const notFound = vi.hoisted(() =>
   vi.fn(() => {

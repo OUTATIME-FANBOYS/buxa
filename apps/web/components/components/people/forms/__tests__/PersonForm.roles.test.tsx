@@ -6,7 +6,7 @@ import { CAMP_ROLES, settle, type CampRole } from '@buxa/domain';
 import { idle, type HouseholdChoice } from '@buxa/shared';
 import { PersonForm, type EditablePerson } from '@/components/components/people/forms';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
-import { Dialog as ConfirmDialog } from '@/components/components';
+import { ConfirmDialog } from '@/components/components';
 import { LEE, PERSON, formHelpers } from './personFormFixtures';
 
 vi.mock('@buxa/server/composers/people/createPersonAction', () => ({

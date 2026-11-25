@@ -5,7 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import type { ReactNode } from 'react';
 import { UiProvider } from '@buxa/middleware/providers/providers';
 import { sessionDeleteImpactAction } from '@/actions/classes';
-import { classesPrompt, SessionClassesChoice } from '../SessionClassesDialog';
+import { classesPrompt, SessionClassesDialog } from '../SessionClassesDialog';
 
 vi.mock('@/actions/classes', () => ({
   setSessionArchivedAction: vi.fn(),
@@ -35,7 +35,7 @@ describe('classesPrompt', () => {
   });
 });
 
-describe('SessionClassesChoice', () => {
+describe('SessionClassesDialog', () => {
   let root: Root;
   beforeEach(() => {
     root = createRoot(document.body.appendChild(document.createElement('div')));
@@ -46,7 +46,7 @@ describe('SessionClassesChoice', () => {
   });
 
   it('offers archive and delete-both, and does not ask for a plain delete', () => {
-    act(() => root.render(withUi(<SessionClassesChoice session={SESSION} onArchived={() => {}} />)));
+    act(() => root.render(withUi(<SessionClassesDialog session={SESSION} onArchived={() => {}} onClose={() => {}} />)));
     expect(document.body.textContent).toContain(
       'Summer 2027 has 2 classes. Archive the session, or delete its classes and the session.',
     );
@@ -56,7 +56,7 @@ describe('SessionClassesChoice', () => {
   });
 
   it('keeps the delete-both button off until the session name is typed exactly', () => {
-    act(() => root.render(withUi(<SessionClassesChoice session={SESSION} onArchived={() => {}} />)));
+    act(() => root.render(withUi(<SessionClassesDialog session={SESSION} onArchived={() => {}} onClose={() => {}} />)));
     act(() => buttonWith('Delete classes and session')?.click());
 
     const input = document.querySelector<HTMLInputElement>('input[name="confirmName"]');
@@ -79,7 +79,7 @@ describe('SessionClassesChoice', () => {
   });
 
   it('a Back button returns to the two choices without deleting', () => {
-    act(() => root.render(withUi(<SessionClassesChoice session={SESSION} onArchived={() => {}} />)));
+    act(() => root.render(withUi(<SessionClassesDialog session={SESSION} onArchived={() => {}} onClose={() => {}} />)));
     act(() => buttonWith('Delete classes and session')?.click());
     act(() => buttonWith('Back')?.click());
     expect(document.querySelector('input[name="confirmName"]')).toBeNull();
@@ -87,7 +87,7 @@ describe('SessionClassesChoice', () => {
   });
 });
 
-describe('SessionClassesChoice for a draft', () => {
+describe('SessionClassesDialog for a draft', () => {
   let root: Root;
   const DRAFT = { ...SESSION, status: 'draft' as const };
   beforeEach(() => {
@@ -109,7 +109,7 @@ describe('SessionClassesChoice for a draft', () => {
   });
 
   it('lists what will be removed before the name is typed, and only then enables the delete', async () => {
-    act(() => root.render(withUi(<SessionClassesChoice session={DRAFT} onArchived={() => {}} />)));
+    act(() => root.render(withUi(<SessionClassesDialog session={DRAFT} onArchived={() => {}} onClose={() => {}} />)));
     act(() => buttonWith('Delete classes and session')?.click());
     await act(async () => {
       await Promise.resolve();
@@ -137,7 +137,11 @@ describe('SessionClassesChoice for a draft', () => {
 
   it('a live session shows no list, and tells the person to unenrol first', () => {
     act(() =>
-      root.render(withUi(<SessionClassesChoice session={{ ...SESSION, status: 'live' }} onArchived={() => {}} />)),
+      root.render(
+        withUi(
+          <SessionClassesDialog session={{ ...SESSION, status: 'live' }} onArchived={() => {}} onClose={() => {}} />,
+        ),
+      ),
     );
     act(() => buttonWith('Delete classes and session')?.click());
     expect(sessionDeleteImpactAction).not.toHaveBeenCalled();

@@ -5,7 +5,7 @@ import type { Class, Session } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
 import { settle } from '@buxa/domain';
 import { UiProvider } from '@buxa/middleware/providers/providers';
-import { Dialog as ConfirmDialog } from '@/components/components';
+import { ConfirmDialog } from '@/components/components';
 import { idle } from '@buxa/shared';
 import { ActionMessage } from '@/components/components/classes/forms/ActionMessage';
 import { attempt } from '@buxa/server/classes/outcome';
