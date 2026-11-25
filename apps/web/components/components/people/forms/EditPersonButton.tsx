@@ -93,7 +93,6 @@ export function EditPersonButton({
         <Button
           variant={variant}
           type="button"
-          size="sm"
           iconOnly
           icon="edit"
           aria-label={accessibleName ?? label}
