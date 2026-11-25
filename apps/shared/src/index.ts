@@ -86,6 +86,7 @@ export * from './classes/localTime';
 export * from './classes/parse';
 export * from './classes/priceSummary';
 export * from './groups/parse';
+export * from './groups/searchPeople';
 export * from './classes/sessionDatesPreview';
 export * from './classes/sessionDeletion';
 export * from './notifications/notifications';

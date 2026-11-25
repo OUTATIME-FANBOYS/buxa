@@ -1,6 +1,7 @@
 import type { Assignment, Group, Room } from '@buxa/contracts';
 import { ratioText } from './GroupsTable';
 import { UnassignButton } from './UnassignButton';
+import { UnplacedCampers } from './UnplacedCampers';
 
 export interface BoardPerson {
   id: string;
@@ -94,20 +95,7 @@ export function AssignBoard({
           </section>
         );
       })}
-      <section className="panel stack" aria-labelledby="unplaced-heading">
-        <h2 id="unplaced-heading" className="people-subheading">
-          Campers not placed yet
-        </h2>
-        {unplaced.length === 0 ? (
-          <p className="muted">Every camper is placed.</p>
-        ) : (
-          <ul className="stack">
-            {unplaced.map(p => (
-              <li key={p.id}>{p.name}</li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <UnplacedCampers people={unplaced} />
     </div>
   );
 }

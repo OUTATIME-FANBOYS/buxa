@@ -186,6 +186,17 @@ form.class-form {
   font-weight: 400;
 }
 
+/* The campers not placed yet: the list keeps a fixed height and scrolls inside its card, so a long camp does not grow the page. */
+.unplaced-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  display: grid;
+  gap: var(--s2);
+}
+
 /* A dialog's footer (Back and the main action, or Archive and Delete): right-aligned at the bottom, evenly spaced. */
 .class-form-actions {
   display: flex;
