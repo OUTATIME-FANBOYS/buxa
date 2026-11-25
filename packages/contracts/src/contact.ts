@@ -40,7 +40,7 @@ export function isPlausiblePhone(value: string): boolean {
 }
 
 const EMAIL_MESSAGE = 'Use a valid email address, for example name@example.com.';
-const PHONE_MESSAGE = 'Use a valid phone number with 7 to 15 digits.';
+export const PHONE_MESSAGE = 'Use a valid phone number with 7 to 15 digits.';
 
 /** Optional on create: an empty value means "none" and becomes undefined. */
 export const OptionalEmailSchema = z

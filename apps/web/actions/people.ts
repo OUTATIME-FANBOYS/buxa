@@ -14,6 +14,7 @@ import { loadPersonAction as loadPersonActionImpl } from '@buxa/server/composers
 import { revokeMembershipAction as revokeMembershipActionImpl } from '@buxa/server/composers/people/revokeMembershipAction';
 import { unlinkHouseholdAction as unlinkHouseholdActionImpl } from '@buxa/server/composers/people/unlinkHouseholdAction';
 import { deletePeopleAction as deletePeopleActionImpl } from '@buxa/server/composers/people/deletePeopleAction';
+import { updateEmergencyContactAction as updateEmergencyContactActionImpl } from '@buxa/server/composers/people/updateEmergencyContactAction';
 
 // Server action wrappers for the people screens. Client components import this module, never @buxa/server. Next.js allows only
 // async functions to be exported from a 'use server' file, so each action is wrapped rather than re-exported.
@@ -68,6 +69,10 @@ export async function unlinkHouseholdAction(...args: Parameters<typeof unlinkHou
 
 export async function deletePeopleAction(...args: Parameters<typeof deletePeopleActionImpl>) {
   return deletePeopleActionImpl(...args);
+}
+
+export async function updateEmergencyContactAction(...args: Parameters<typeof updateEmergencyContactActionImpl>) {
+  return updateEmergencyContactActionImpl(...args);
 }
 
 /** What deleting people returns (the ids deleted and the ids refused). */

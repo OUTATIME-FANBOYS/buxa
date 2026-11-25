@@ -1,4 +1,4 @@
-import type { NewPersonRecord, PersonPatchRecord } from './PeopleRepository';
+import type { EmergencyContactRecord, NewPersonRecord, PersonPatchRecord } from './PeopleRepository';
 import type { Db, SqlParam } from './pgRows';
 
 async function insertRoles(db: Db, orgId: string, personId: string, roles: readonly string[]): Promise<void> {
@@ -13,15 +13,36 @@ async function insertRoles(db: Db, orgId: string, personId: string, roles: reado
 }
 
 export async function insertPerson(db: Db, orgId: string, input: NewPersonRecord): Promise<string> {
+  const contact = input.emergencyContact;
   const { rows } = await db.query<{ id: string }>(
-    `INSERT INTO people (org_id, given_name, family_name, date_of_birth, email, phone)
-     VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-    [orgId, input.givenName, input.familyName, input.dateOfBirth, input.email, input.phone],
+    `INSERT INTO people (org_id, given_name, family_name, date_of_birth, email, phone,
+                         emergency_contact_name, emergency_contact_phone, emergency_contact_relationship)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+    [
+      orgId,
+      input.givenName,
+      input.familyName,
+      input.dateOfBirth,
+      input.email,
+      input.phone,
+      contact?.name ?? null,
+      contact?.phone ?? null,
+      contact?.relationship ?? null,
+    ],
   );
   const id = rows[0].id;
   await insertRoles(db, orgId, id, input.roles);
 
   return id;
+}
+
+/** Replaces the emergency contact on one person. `null` clears all three columns. */
+export async function writeEmergencyContact(db: Db, id: string, contact: EmergencyContactRecord | null): Promise<void> {
+  await db.query(
+    `UPDATE people SET emergency_contact_name = $2, emergency_contact_phone = $3, emergency_contact_relationship = $4
+      WHERE id = $1`,
+    [id, contact?.name ?? null, contact?.phone ?? null, contact?.relationship ?? null],
+  );
 }
 
 /** Changes only the fields present in the patch. Returns their names in a fixed order (the audit entry lists them). */

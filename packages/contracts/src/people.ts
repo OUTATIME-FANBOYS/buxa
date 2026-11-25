@@ -1,7 +1,14 @@
 /** People, households, memberships and badges: what the camp's screens and services exchange. */
 import { z } from 'zod';
 import { CAMP_ROLES, PEOPLE_PAGE_SIZE_MAX, isAllowedRoleSet, isLocalDate, type PageSpan } from '@buxa/domain';
-import { OptionalEmailSchema, OptionalPhoneSchema, PatchEmailSchema, PatchPhoneSchema } from './contact';
+import {
+  OptionalEmailSchema,
+  OptionalPhoneSchema,
+  PHONE_MESSAGE,
+  PatchEmailSchema,
+  PatchPhoneSchema,
+  isPlausiblePhone,
+} from './contact';
 
 export const CampRoleSchema = z.enum(CAMP_ROLES);
 /** The roles a person holds together must be one of the allowed sets (see isAllowedRoleSet in @buxa/domain). */
@@ -66,8 +73,45 @@ export const HouseholdSchema = z.object({ id: z.string(), name: z.string(), memb
 export type Household = z.infer<typeof HouseholdSchema>;
 
 /**
+ * The emergency contact as a viewer may see it: staff, and the family's guardian for their child. `name` and `phone` are null when
+ * none is recorded. The whole value is null when the viewer may not see it (the page then says who can).
+ */
+export const EmergencyContactSchema = z.object({
+  name: z.string().nullable(),
+  phone: z.string().nullable(),
+  relationship: z.string().nullable(),
+});
+export type EmergencyContact = z.infer<typeof EmergencyContactSchema>;
+
+/**
+ * An emergency contact as a form posts it. Name and phone go together: both blank means "no contact" (it clears one). The relationship
+ * is optional and is kept only with a name.
+ */
+export const EmergencyContactInputSchema = z
+  .object({
+    name: z.string().trim().max(120),
+    phone: z.string().trim().max(32),
+    relationship: z.string().trim().max(40),
+  })
+  .superRefine((value, ctx) => {
+    if (value.name === '' && value.phone === '') {
+      return;
+    }
+    if (value.name === '') {
+      ctx.addIssue({ code: 'custom', path: ['name'], message: 'Enter a name, or leave the emergency contact blank.' });
+    }
+    if (value.phone === '') {
+      ctx.addIssue({ code: 'custom', path: ['phone'], message: 'Enter a phone number.' });
+    } else if (!isPlausiblePhone(value.phone)) {
+      ctx.addIssue({ code: 'custom', path: ['phone'], message: PHONE_MESSAGE });
+    }
+  });
+export type EmergencyContactInput = z.infer<typeof EmergencyContactInputSchema>;
+
+/**
  * The full record. `dateOfBirth`, `email`, `phone` and `isMinor` are null for roles without people:read_contact. `memberships`,
  * `hasActiveBadge` and the custody fields in `households` are null or empty for viewers, as are `status` and `onSite` (see the summary).
+ * `emergencyContact` is null for a viewer who may not see it; `canEditEmergencyContact` is what this viewer may change.
  */
 export const PersonSchema = PersonSummarySchema.extend({
   dateOfBirth: LocalDateSchema.nullable(),
@@ -79,6 +123,8 @@ export const PersonSchema = PersonSummarySchema.extend({
   households: z.array(HouseholdSchema),
   /** Whether a badge is currently active. Null for viewers. The token itself is never readable after issue. */
   hasActiveBadge: z.boolean().nullable(),
+  emergencyContact: EmergencyContactSchema.nullable(),
+  canEditEmergencyContact: z.boolean(),
 });
 export type Person = z.infer<typeof PersonSchema>;
 
@@ -95,6 +141,8 @@ export const NewPersonInputSchema = z.object({
   newHouseholdName: Optional(120),
   /** Required when the person joins a household. */
   relationship: Optional(40),
+  /** Optional at creation. Blank name and phone mean no contact. */
+  emergencyContact: EmergencyContactInputSchema.optional(),
 });
 export type NewPersonInput = z.infer<typeof NewPersonInputSchema>;
 

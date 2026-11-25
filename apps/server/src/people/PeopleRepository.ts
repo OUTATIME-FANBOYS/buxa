@@ -1,5 +1,12 @@
 import type { Actor, CampRole, LocalDate } from '@buxa/domain';
 
+/** An emergency contact that is set. A person has either one of these or none (`null`). */
+export interface EmergencyContactRecord {
+  name: string;
+  phone: string;
+  relationship: string | null;
+}
+
 /** Dates are `YYYY-MM-DD` strings and instants are ISO strings in every record, in every adapter (Postgres must not return Date objects). */
 export interface PersonRecord {
   id: string;
@@ -9,6 +16,7 @@ export interface PersonRecord {
   email: string | null;
   phone: string | null;
   roles: CampRole[];
+  emergencyContact: EmergencyContactRecord | null;
   archivedAt: string | null;
   createdAt: string;
 }
@@ -20,6 +28,7 @@ export interface NewPersonRecord {
   email: string | null;
   phone: string | null;
   roles: CampRole[];
+  emergencyContact: EmergencyContactRecord | null;
 }
 
 /** Only the fields present change. `roles`, when present, replaces the whole set. */
@@ -101,6 +110,8 @@ export interface PeopleRepository {
   create(actor: Actor, input: NewPersonRecord, household?: PersonHouseholdLink): Promise<PersonRecord>;
   /** Audits `person.update`. Throws PersonNotFoundError. */
   update(actor: Actor, id: string, patch: PersonPatchRecord): Promise<PersonRecord>;
+  /** Replaces the emergency contact (null clears it). Audits `person.emergency_contact.update` with no personal data. Throws PersonNotFoundError. */
+  setEmergencyContact(actor: Actor, id: string, contact: EmergencyContactRecord | null): Promise<PersonRecord>;
   /** Sets `archivedAt` (idempotent). Audits `person.archive`. Throws PersonNotFoundError. */
   archive(actor: Actor, id: string, at: string): Promise<PersonRecord>;
   /** Deletes the person; the linked rows (memberships, enrolments, check-ins, badges, household links) go with it. Owner only. Audits `person.delete`. Throws PersonNotFoundError. */

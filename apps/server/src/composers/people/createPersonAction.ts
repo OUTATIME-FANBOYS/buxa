@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { NewPersonInputSchema, NewHouseholdInputSchema } from '@buxa/contracts';
+import { EmergencyContactInputSchema, NewPersonInputSchema, NewHouseholdInputSchema } from '@buxa/contracts';
 import { ROUTES, personPath } from '@buxa/shared/config/routes';
 import { failure, success, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../runtime';
@@ -19,8 +19,23 @@ import { dropBlank, field, fieldAll, parseWith } from '@buxa/shared';
 const OPTIONAL = ['dateOfBirth', 'email', 'phone', 'householdId', 'relationship'] as const;
 
 /**
+ * The emergency contact's form fields are named apart from the person's own (`phone` is the person's). The schema reports its
+ * problems under its own keys, so they are renamed back to the form's names here.
+ */
+const EMERGENCY_FORM_NAMES: Readonly<Record<string, string>> = {
+  name: 'emergencyContactName',
+  phone: 'emergencyContactPhone',
+  relationship: 'emergencyContactRelationship',
+};
+
+/** The emergency contact section is posted only when it is on the form (a camper role), so absent fields mean no contact. */
+const emergencyContactPosted = (form: FormData): boolean =>
+  form.has('emergencyContactName') || form.has('emergencyContactPhone') || form.has('emergencyContactRelationship');
+
+/**
  * Add a person. A child needs a household that already has a guardian: either an existing one (`householdId`, usually from the
  * guardian's page) or a new one, which is only useful for a guardian, since it has no guardian yet.
+ * The optional emergency contact is saved with the person (blank name and phone mean none).
  * Success opens the new person's page; expected problems come back as form state.
  */
 export async function createPersonAction(_previous: ActionState, form: FormData): Promise<ActionState> {
@@ -63,11 +78,26 @@ export async function createPersonAction(_previous: ActionState, form: FormData)
     return failure('Check the highlighted fields.', { newHouseholdName: HOUSEHOLD_NAME_NEEDED });
   }
 
+  const emergency = emergencyContactPosted(form)
+    ? parseWith(EmergencyContactInputSchema, {
+        name: field(form, 'emergencyContactName'),
+        phone: field(form, 'emergencyContactPhone'),
+        relationship: field(form, 'emergencyContactRelationship'),
+      })
+    : null;
+  if (emergency && !emergency.ok) {
+    return renameEmergencyErrors(emergency.state);
+  }
+
   let person;
   try {
     // A new household is created in the same transaction as the person, so a refused person leaves no empty household behind.
     const newHousehold = input.householdId === undefined && newHouseholdName !== '' ? newHouseholdName : undefined;
-    person = await getRuntime().services.people.create(actor, { ...input, newHouseholdName: newHousehold });
+    person = await getRuntime().services.people.create(actor, {
+      ...input,
+      newHouseholdName: newHousehold,
+      emergencyContact: emergency?.ok ? emergency.data : undefined,
+    });
   } catch (error) {
     return expectedFailure(error, 'Could not add the person.');
   }
@@ -78,4 +108,19 @@ export async function createPersonAction(_previous: ActionState, form: FormData)
     return success('Person added.');
   }
   redirect(personPath(person.id)); // throws; kept outside the try
+}
+
+/** Names the emergency contact's errors under the form's field names. */
+function renameEmergencyErrors(state: ActionState): ActionState {
+  if (state.status !== 'error' || !state.fieldErrors) {
+    return state;
+  }
+  const fieldErrors: Record<string, string> = {};
+  for (const [key, message] of Object.entries(state.fieldErrors)) {
+    if (message !== undefined) {
+      fieldErrors[EMERGENCY_FORM_NAMES[key] ?? key] = message;
+    }
+  }
+
+  return failure(state.message, fieldErrors);
 }

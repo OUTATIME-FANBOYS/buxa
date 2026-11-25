@@ -32,6 +32,7 @@ export function samplePerson(overrides: Partial<NewPersonRecord> = {}): NewPerso
     email: null,
     phone: null,
     roles: ['participant'],
+    emergencyContact: null,
     ...overrides,
   };
 }
