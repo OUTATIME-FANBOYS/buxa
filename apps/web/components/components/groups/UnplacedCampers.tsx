@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react';
 import { matchesPersonName } from '@buxa/shared';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
-import { SearchField } from '@/components/atoms';
+import { Pagination, SearchField } from '@/components/atoms';
 import { Button } from '@/components/elements';
 import { AssignPopUp, type AssignChoices } from './AssignDialog';
 
@@ -13,8 +13,9 @@ export interface UnplacedPerson {
 }
 
 /**
- * The campers not placed yet: a search box above a list that scrolls inside its card (a fixed height), so a long camp does not grow the
- * page. The list filters by name as the user types, ignoring case and accents. Clearing the search shows everyone again.
+ * The campers not placed yet: a search box above the list, shown ten to a page with Previous and Next under it. The search filters
+ * the whole list by name as the user types (ignoring case and accents), then the matches are paged. Typing a new search returns to
+ * page 1. Clearing the search shows everyone again.
  * With `choices` (only for people who may place), each row has a Place button that opens the Place or move pop-up with that camper
  * already chosen. The placement runs through the same action and rules as the page button.
  */
@@ -42,27 +43,31 @@ export function UnplacedCampers({ people, choices }: { people: readonly Unplaced
           {shown.length === 0 ? (
             <p className="muted">No campers match.</p>
           ) : (
-            <ul className="unplaced-list" aria-label="Campers not placed yet">
-              {shown.map(person => (
-                <li
-                  key={person.id}
-                  className="unplaced-list__row buxa:flex buxa:items-center buxa:justify-between buxa:gap-[var(--s3)]"
-                >
-                  <span>{person.name}</span>
-                  {choices && (
-                    <Button
-                      variant="glass"
-                      size="sm"
-                      type="button"
-                      aria-label={`Place ${person.name}`}
-                      onClick={() => setPlacingId(person.id)}
+            <Pagination items={shown} resetKey={query} label="Pages of campers not placed yet">
+              {pageItems => (
+                <ul className="unplaced-list" aria-label="Campers not placed yet">
+                  {pageItems.map(person => (
+                    <li
+                      key={person.id}
+                      className="unplaced-list__row buxa:flex buxa:items-center buxa:justify-between buxa:gap-[var(--s3)]"
                     >
-                      Place
-                    </Button>
-                  )}
-                </li>
-              ))}
-            </ul>
+                      <span>{person.name}</span>
+                      {choices && (
+                        <Button
+                          variant="glass"
+                          size="sm"
+                          type="button"
+                          aria-label={`Place ${person.name}`}
+                          onClick={() => setPlacingId(person.id)}
+                        >
+                          Place
+                        </Button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Pagination>
           )}
         </>
       )}

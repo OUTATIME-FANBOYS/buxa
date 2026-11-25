@@ -186,13 +186,11 @@ form.class-form {
   font-weight: 400;
 }
 
-/* The campers not placed yet: the list keeps a fixed height and scrolls inside its card, so a long camp does not grow the page. */
+/* The campers not placed yet: one page of rows at a time. The pagination under the list is in components/pagination.css. */
 .unplaced-list {
   list-style: none;
   margin: 0;
   padding: 0;
-  max-height: 320px;
-  overflow-y: auto;
   display: grid;
   gap: var(--s2);
 }

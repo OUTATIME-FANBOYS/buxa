@@ -6,6 +6,7 @@ export * from './FileField';
 export * from './HiddenField';
 export * from './Icon';
 export * from './NumberField';
+export * from './Pagination';
 export * from './SearchField';
 export * from './RadioGroup';
 export * from './Select';
