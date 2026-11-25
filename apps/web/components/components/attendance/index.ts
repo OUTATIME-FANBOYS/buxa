@@ -1,5 +1,6 @@
 export * from './AttendanceCsvDownload';
 export * from './CheckInConsole';
+export * from './CheckInTabs';
 export * from './CheckOutPanel';
 export * from './LogFilters';
 export * from './LogTable';

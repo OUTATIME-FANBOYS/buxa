@@ -3,6 +3,7 @@ export * from './attendance/announce';
 export * from './attendance/card';
 export * from './attendance/checkInSessions';
 export * from './attendance/checkInState';
+export * from './attendance/checkInTabs';
 export * from './attendance/checkOutInput';
 export * from './attendance/checkOutState';
 export * from './attendance/exportFields';

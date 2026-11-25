@@ -1,5 +1,6 @@
 export { DeskFamilyCheckIn } from './DeskFamilyCheckIn';
 export { FamilyCodeForm } from './FamilyCodeForm';
 export { GateChildLines } from './GateChildLines';
-export { GateLinkPanel, type DeviceLine } from './GateLinkPanel';
+export { GateLinkPanel } from './GateLinkPanel';
+export { PhonesVerifiedPanel, type DeviceLine } from './PhonesVerifiedPanel';
 export { GateScreen, type GatePhoneState } from './GateScreen';
