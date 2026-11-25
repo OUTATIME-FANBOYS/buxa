@@ -98,6 +98,7 @@ export class RegistrationInvalidError extends Error {
 
 export type RegistrationErrorKind =
   | 'registration-form-not-found'
+  | 'registration-form-no-sessions'
   | 'registration-session-not-found'
   | 'registration-not-found'
   | 'registration-refused'
@@ -111,3 +112,12 @@ export const isRegistrationError = (e: unknown, kind: RegistrationErrorKind): bo
 /** Narrows to the invalid-answers error, whose field errors the form shows. */
 export const isRegistrationInvalid = (e: unknown): e is RegistrationInvalidError =>
   isRegistrationError(e, 'registration-invalid');
+
+/** A form with no sessions cannot take registrations, so it is not published. */
+export class RegistrationFormNoSessionsError extends Error {
+  readonly kind = 'registration-form-no-sessions';
+  constructor() {
+    super('Choose at least one session this form covers before publishing it.');
+    this.name = 'RegistrationFormNoSessionsError';
+  }
+}

@@ -6,6 +6,7 @@ import type { Db } from '../people/pgRows';
 import { settleClassesInTx, takeClassPlaceInTx } from './PgRegistrationPlaces';
 import { insertDocumentsInTx } from './PgRegistrationFiles';
 import {
+  RegistrationFormNoSessionsError,
   RegistrationFormNotFoundError,
   RegistrationNotFoundError,
   RegistrationSessionNotFoundError,
@@ -95,6 +96,13 @@ export async function publishFormRow(db: Db, actor: Actor, formId: string): Prom
   const draft = rows[0];
   if (!draft) {
     throw new RegistrationFormNotFoundError();
+  }
+  const covered = await db.query<{ n: string }>(
+    'SELECT count(*) AS n FROM registration_form_sessions WHERE form_id = $1',
+    [formId],
+  );
+  if (Number(covered.rows[0]?.n ?? 0) === 0) {
+    throw new RegistrationFormNoSessionsError();
   }
   await db.query(
     `INSERT INTO registration_form_versions (org_id, form_id, version, fields, published_by)

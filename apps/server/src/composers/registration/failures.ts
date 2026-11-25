@@ -14,6 +14,7 @@ export function registrationFailure(error: unknown, fallback: string): ActionSta
     error instanceof Error &&
     (isRegistrationError(error, 'registration-refused') ||
       isRegistrationError(error, 'registration-form-not-found') ||
+      isRegistrationError(error, 'registration-form-no-sessions') ||
       isRegistrationError(error, 'registration-not-found') ||
       isRegistrationError(error, 'registration-session-not-found') ||
       isRegistrationError(error, 'registration-file-not-found'))
