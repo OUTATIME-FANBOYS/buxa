@@ -32,6 +32,7 @@ export function SessionFilter({
     >
       <Select
         label="Session"
+        hideLabel
         name={SESSION_PARAM}
         defaultValue={value}
         options={sessionFilterOptions(sessions)}
