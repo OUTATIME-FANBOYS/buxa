@@ -33,6 +33,14 @@ const form: RegistrationForm = {
   fields: [{ key: 'allergies', label: 'Allergies', kind: 'text', required: false }],
   attachments: [{ id: 'file-1', name: 'Immunization.pdf', contentType: 'application/pdf', sizeBytes: 1000 }],
   publishedVersion: 1,
+  published: {
+    version: 1,
+    name: 'Season form',
+    season: '2027',
+    sessions: [SUMMER],
+    fields: [{ key: 'allergies', label: 'Allergies', kind: 'text', required: false }],
+  },
+  hasUnpublishedChanges: false,
   submissionCount: 0,
   updatedAt: '2027-06-01T00:00:00.000Z',
 };

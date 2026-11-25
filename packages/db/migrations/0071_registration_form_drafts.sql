@@ -59,15 +59,18 @@ ALTER TABLE registration_form_versions
   ADD CONSTRAINT registration_form_versions_sessions_present CHECK (session_ids IS NULL OR cardinality(session_ids) > 0);
 
 -- The session set families register on: the published version's session ids. A version published before this migration has no
--- snapshot, so its live rows stand in (the live rows are the published set until the next publish, which is how it was). An
--- unpublished form has no version and no live sessions (creation writes none), so it reads as an empty set.
+-- snapshot, so its live rows stand in (the live rows are the published set until the next publish, which is how it was). A form
+-- that was never published has no published set, so it reads as empty, whatever its live rows hold.
 CREATE FUNCTION buxa_form_published_session_ids(p_org_id uuid, p_form_id uuid) RETURNS uuid[]
 LANGUAGE sql STABLE SET search_path = pg_catalog, public
 AS $$
-  SELECT COALESCE(
-           v.session_ids,
-           ARRAY(SELECT s.session_id FROM registration_form_sessions s WHERE s.org_id = f.org_id AND s.form_id = f.id)
-         )
+  SELECT CASE
+           WHEN f.published_version IS NULL THEN '{}'::uuid[]
+           ELSE COALESCE(
+                  v.session_ids,
+                  ARRAY(SELECT s.session_id FROM registration_form_sessions s WHERE s.org_id = f.org_id AND s.form_id = f.id)
+                )
+         END
     FROM registration_forms f
     LEFT JOIN registration_form_versions v
       ON v.org_id = f.org_id AND v.form_id = f.id AND v.version = f.published_version
