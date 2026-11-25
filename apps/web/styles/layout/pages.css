@@ -38,6 +38,21 @@
   min-width: 0;
   max-width: 720px;
 }
+.page-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s1);
+  min-width: 0;
+}
+.button.project-switch {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  flex: none;
+}
+.button.project-switch:hover {
+  background: var(--hover);
+}
 .page-actions {
   display: flex;
   gap: var(--s3);
