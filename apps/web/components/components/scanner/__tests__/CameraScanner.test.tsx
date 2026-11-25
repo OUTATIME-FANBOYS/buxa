@@ -3,10 +3,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { CameraScanner } from '@/components/components/scanner';
 
 describe('CameraScanner', () => {
-  it('offers to start the camera and to close it, before the camera has been asked for', () => {
-    const html = renderToStaticMarkup(<CameraScanner onScan={() => undefined} onClose={() => undefined} />);
-    expect(html).toContain('>Start camera</button>');
-    expect(html).toContain('>Close camera</button>');
+  it('renders no buttons of its own before the camera is started: the parent owns open and close', () => {
+    const html = renderToStaticMarkup(<CameraScanner onScan={() => undefined} />);
+    expect(html).not.toContain('<button');
+    expect(html).not.toContain('Start camera');
+    expect(html).not.toContain('Close camera');
     expect(html).not.toContain('<video');
   });
 });

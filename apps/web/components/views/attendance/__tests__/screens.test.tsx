@@ -46,6 +46,7 @@ vi.mock('@/components/components/scanner/ScanField', () => ({
 }));
 vi.mock('@/components/components/scanner/CameraScanner', () => ({
   CameraScanner: () => 'CAMERA',
+  canReadQrWithCamera: () => true,
 }));
 vi.mock('@buxa/server/composers/attendance/searchPeople', () => ({
   searchPeopleAction: () => settle(() => ({ kind: 'ok', value: [] })),
