@@ -22,8 +22,8 @@ export const DEFAULT_WEEKDAYS: readonly string[] = ['1', '2', '3', '4', '5'];
  * all seven days, or clears them when all seven are already selected; each day chip toggles on its own. The chosen days are posted
  * as hidden `weekdays` fields. The form checks there is at least one before it submits (see ClassForm).
  */
-export function WeekdayField({ error }: { error?: string }) {
-  const [selected, setSelected] = useState<readonly string[]>(DEFAULT_WEEKDAYS);
+export function WeekdayField({ error, initial = DEFAULT_WEEKDAYS }: { error?: string; initial?: readonly string[] }) {
+  const [selected, setSelected] = useState<readonly string[]>(initial);
   const allSelected = WEEKDAYS.every(day => selected.includes(day.value));
 
   const toggleDay = (value: string) => {

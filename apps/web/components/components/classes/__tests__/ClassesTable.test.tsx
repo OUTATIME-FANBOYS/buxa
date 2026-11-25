@@ -28,6 +28,8 @@ const series = (over: Partial<Series> = {}): Series => ({
   endTime: '12:00',
   firstDay: '2027-07-05',
   lastDay: '2027-07-09',
+  startsLocal: '2027-07-05T09:00',
+  endsLocal: '2027-07-09T12:00',
   occurrenceCount: 5,
   activeOccurrenceCount: 5,
   anchorClassId: ANCHOR,

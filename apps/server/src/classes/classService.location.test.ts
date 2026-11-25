@@ -160,14 +160,7 @@ describe('the location rule: classes in the same location may not overlap', () =
       throw new Error(made.failure.message);
     }
 
-    const refused = await service.updateSeries(as('admin'), made.value.id, {
-      name: 'Painting',
-      ageRange: { minAge: 8, maxAge: 12 },
-      capacity: 5,
-      location: 'Lab 1',
-      instructorIds: [],
-      price: null,
-    });
+    const refused = await service.updateSeries(as('admin'), made.value.id, series({ location: 'Lab 1' }));
 
     expect(refused.ok).toBe(false);
     if (refused.ok) {

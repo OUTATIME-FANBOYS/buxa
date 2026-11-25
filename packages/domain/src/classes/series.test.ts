@@ -4,12 +4,14 @@ import {
   cancelReasonOf,
   decideCancel,
   decideRestore,
+  diffSeriesDays,
   findSeriesClash,
   MAX_CANCEL_REASON_LENGTH,
   MONDAY_TO_FRIDAY,
   normaliseWeekdays,
   occurrenceRefusalMessage,
   planSeries,
+  seriesFieldsOutsideDetails,
 } from './series';
 
 const ms = (iso: string): number => Date.parse(iso);
@@ -169,5 +171,72 @@ describe('overlap across series', () => {
 
   it('finds no clash when the child is in no other series', () => {
     expect(findSeriesClash([{ startsAt: '2027-04-05T10:00:00Z', endsAt: '2027-04-05T11:00:00Z' }], [])).toBeNull();
+  });
+});
+
+describe('diffSeriesDays: what an edit of the days adds and removes', () => {
+  const day = (id: string, startsAt: string, status: 'active' | 'cancelled' = 'active') => ({
+    id,
+    startsAt,
+    endsAt: '2027-07-05T02:00:00.000Z',
+    status,
+  });
+  const existing = [
+    day('mon-5', '2027-07-04T23:00:00.000Z'),
+    day('mon-12', '2027-07-11T23:00:00.000Z'),
+    day('mon-19', '2027-07-18T23:00:00.000Z'),
+  ];
+  const at = (startsAt: string, endsAt = '2027-07-05T02:00:00.000Z') => ({ startsAt, endsAt });
+
+  it('keeps the days that still match, adds the new ones and removes the active days that drop out', () => {
+    const planned = [at('2027-07-11T23:00:00.000Z'), at('2027-07-18T23:00:00.000Z'), at('2027-07-19T23:00:00.000Z')];
+
+    const diff = diffSeriesDays(existing, planned);
+
+    expect(diff.remove).toEqual(['mon-5']);
+    expect(diff.add.map(d => d.startsAt)).toEqual(['2027-07-19T23:00:00.000Z']);
+    expect(diff.removed.map(d => d.id)).toEqual(['mon-5']);
+  });
+
+  it('leaves a cancelled day alone, even when the new days do not include it', () => {
+    const withCancelled = [...existing.slice(0, 2), day('tue-6', '2027-07-05T23:00:00.000Z', 'cancelled')];
+
+    const diff = diffSeriesDays(withCancelled, [at('2027-07-11T23:00:00.000Z')]);
+
+    expect(diff.remove).toEqual(['mon-5']);
+    expect(diff.add).toEqual([]);
+  });
+
+  it('matches a day by its instant, so an equal time written another way is kept', () => {
+    const same = [day('d', '2027-07-04T23:00:00.000Z')];
+
+    expect(diffSeriesDays(same, [at('2027-07-05T09:00:00+10:00', '2027-07-05T12:00:00+10:00')])).toEqual({
+      add: [],
+      remove: [],
+      removed: [],
+    });
+  });
+});
+
+describe('seriesFieldsOutsideDetails: what a teacher may not change on a series', () => {
+  const saved = {
+    ageRange: { minAge: 8, maxAge: 12 },
+    capacity: 10,
+    location: 'Pool',
+    instructorIds: ['p1'],
+    price: null,
+    weekdays: [1, 3],
+    startsLocal: '2027-07-05T09:00',
+    endsLocal: '2027-07-19T12:00',
+  };
+
+  it('is empty when nothing a teacher may not change would change', () => {
+    expect(seriesFieldsOutsideDetails(saved, { ...saved })).toEqual([]);
+  });
+
+  it('names each locked field that differs', () => {
+    expect(
+      seriesFieldsOutsideDetails(saved, { ...saved, capacity: 12, weekdays: [1], endsLocal: '2027-07-26T12:00' }),
+    ).toEqual(['capacity', 'weekdays', 'endsLocal']);
   });
 });

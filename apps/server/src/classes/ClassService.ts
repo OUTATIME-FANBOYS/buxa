@@ -1,6 +1,7 @@
 import {
   can,
   classFieldsOutsideDetails,
+  seriesFieldsOutsideDetails,
   classWithinSession,
   teachingDays,
   planSeries,
@@ -26,6 +27,7 @@ import {
 import { assertAllowed } from '../auth/authorize';
 import type { CampWaitlistEntry, ClassRecord, ClassRepository } from './ClassRepository';
 import { activeDays, assertNoLocationClash, dayOf, otherPlaces } from './locationClash';
+import { detailsOfInput, detailsOfSeries, fieldsOf, scheduleOfSeries } from './seriesSchedule';
 import { teacherScopeOf, type TeacherScope } from './teacherScope';
 import {
   ClassNotFoundError,
@@ -494,7 +496,17 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
     },
 
     async updateSeries(actor, seriesId, input) {
-      assertAllowed(actor, 'classes:manage');
+      const scope = await teacherScopeOf(repo, actor);
+      const detailsOnly = !can(actor, 'classes:manage');
+      if (detailsOnly) {
+        // A teacher may change the name of a series it teaches, and nothing else (as for a class: see updateClass).
+        const days = scope === null ? [] : await repo.listSeriesOccurrences(actor.userId, actor.orgId, seriesId);
+        assertAllowed(actor, 'events:update_details', {
+          assignedToClass: scope === null ? undefined : days.some(d => scope.classIds.has(d.id)),
+        });
+      } else {
+        assertAllowed(actor, 'classes:manage');
+      }
       const timeZone = await timezoneOf(actor);
 
       return attempt(async () => {
@@ -502,17 +514,28 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
         if (!existing) {
           throw new ClassNotFoundError();
         }
-        // The series may move to another location: its active days must not overlap a class there.
-        const days = await repo.listSeriesOccurrences(actor.userId, actor.orgId, seriesId);
-        const others = otherPlaces(await repo.listCampClassSpans(actor.userId, actor.orgId), seriesId);
-        assertNoLocationClash(
-          { name: input.name, location: input.location },
-          activeDays(days, timeZone),
-          others,
+        if (detailsOnly) {
+          const locked = seriesFieldsOutsideDetails(detailsOfSeries(existing), detailsOfInput(input));
+          if (locked.length > 0) {
+            throw new TeacherFieldRefusedError(locked);
+          }
+        }
+        // The schedule is null when the weekdays and times are as saved (a teacher's edit never changes them).
+        const stored = await repo.listSeriesOccurrences(actor.userId, actor.orgId, seriesId);
+        const schedule = detailsOnly ? null : await scheduleOfSeries(repo, actor, existing, stored, input, timeZone);
+
+        // The series may move to another location, or gain days: its kept active days and its added days must not overlap a class in
+        // their location. Removed days take no place, so they are left out.
+        const removed = new Set(schedule?.removeIds ?? []);
+        const kept = activeDays(
+          stored.filter(d => !removed.has(d.id)),
           timeZone,
         );
+        const added = (schedule?.add ?? []).map(o => dayOf(o, timeZone));
+        const others = otherPlaces(await repo.listCampClassSpans(actor.userId, actor.orgId), seriesId);
+        assertNoLocationClash({ name: input.name, location: input.location }, [...kept, ...added], others, timeZone);
 
-        return repo.updateSeries(actor, seriesId, input);
+        return repo.updateSeries(actor, seriesId, fieldsOf(input), schedule);
       }, timeZone);
     },
 

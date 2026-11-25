@@ -77,6 +77,18 @@ export class ClassHasEnrolmentsError extends Error {
   }
 }
 
+/**
+ * An edit of a series' days would remove a day that a child (or household) has a place on. Thrown before anything is written. The
+ * message names the people and the days (see seriesDaysInUseMessage in @buxa/domain).
+ */
+export class SeriesDaysInUseError extends Error {
+  readonly kind = 'series-days-in-use';
+  constructor(message: string) {
+    super(message);
+    this.name = 'SeriesDaysInUseError';
+  }
+}
+
 export const SESSION_HAS_CLASSES_MESSAGE =
   'This session has classes, so it cannot be deleted. Archive it, or delete its classes and the session.';
 
@@ -304,6 +316,7 @@ export type ClassErrorKind =
   | 'session-dates-blocked'
   | 'session-publish-blocked'
   | 'class-dates-flagged'
+  | 'series-days-in-use'
   | EnrolmentRefusalError['kind'];
 
 export const isClassError = (e: unknown, kind: ClassErrorKind): boolean =>

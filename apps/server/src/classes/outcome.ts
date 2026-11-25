@@ -41,6 +41,7 @@ export type FailureReason =
   | 'hold_exists'
   | 'teacher_not_found'
   | 'teacher_field_refused'
+  | 'series_days_in_use'
   | 'already_enrolled'
   | Refusal['reason'];
 
@@ -110,6 +111,9 @@ export async function attempt<T>(work: () => Promise<T>, timeZone: string): Prom
     }
     if (isClassError(e, 'occurrence-refused')) {
       return { ok: false, failure: { reason: 'occurrence_refused', message: (e as Error).message } };
+    }
+    if (e instanceof Error && (e as { kind?: unknown }).kind === 'series-days-in-use') {
+      return { ok: false, failure: { reason: 'series_days_in_use', message: e.message } };
     }
     if (isClassError(e, 'teacher-field-refused')) {
       return { ok: false, failure: { reason: 'teacher_field_refused', message: (e as Error).message } };

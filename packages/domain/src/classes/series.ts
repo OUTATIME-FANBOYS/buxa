@@ -10,6 +10,7 @@
 import { expandClassRule, type Occurrence } from './recurrence';
 import { overlaps, type Span } from './interval';
 import { parseCampLocal } from './import/campTime';
+import type { ClassPrice } from '../prices';
 
 export const OCCURRENCE_STATUSES = ['active', 'cancelled'] as const;
 export type OccurrenceStatus = (typeof OCCURRENCE_STATUSES)[number];
@@ -193,4 +194,118 @@ export function findSeriesClash(candidate: readonly Span[], others: readonly Ser
   }
 
   return found;
+}
+
+/** A day of a series as it is stored: its id, its instants and its status. */
+export interface StoredDay {
+  id: string;
+  startsAt: string;
+  endsAt: string;
+  status: OccurrenceStatus;
+}
+
+/**
+ * What an edit of a series' days changes. `add` are planned days no stored day matches (by instant). `removed` are the stored
+ * ACTIVE days no planned day matches; `remove` is their ids. A cancelled day that no plan matches stays as it is: it is neither
+ * removed nor re-timed by an edit of the days.
+ */
+export interface SeriesDayDiff<P extends PlannedSpan> {
+  /** The planned days no stored day matches, as planned (each keeps its own fields, such as its date). */
+  add: P[];
+  remove: string[];
+  removed: StoredDay[];
+}
+
+/** A planned day: its instants. Other fields (such as its date) pass through untouched. */
+export interface PlannedSpan {
+  startsAt: string;
+  endsAt: string;
+}
+
+const sameInstant = (a: string, b: string): boolean => Date.parse(a) === Date.parse(b);
+
+/** Compares a series' stored days with the days its new weekdays and times plan. Pure. */
+export function diffSeriesDays<P extends PlannedSpan>(
+  stored: readonly StoredDay[],
+  planned: readonly P[],
+): SeriesDayDiff<P> {
+  const matches = (day: PlannedSpan, other: StoredDay) =>
+    sameInstant(day.startsAt, other.startsAt) && sameInstant(day.endsAt, other.endsAt);
+  const add = planned.filter(day => !stored.some(other => matches(day, other)));
+  const removed = stored.filter(other => other.status === 'active' && !planned.some(day => matches(day, other)));
+
+  return { add, remove: removed.map(d => d.id), removed };
+}
+
+/** A day's label in the camp's zone, for a message: "Mon 12 Jul". */
+export function dayLabel(instant: string, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-GB', { timeZone, weekday: 'short', day: 'numeric', month: 'short' }).format(
+    new Date(instant),
+  );
+}
+
+/**
+ * Why an edit of a series' days is refused: a child (or household) has a place on a day the edit removes. Names the people and the
+ * days, and says to unenrol them first, so the staff member knows the next step.
+ */
+export function seriesDaysInUseMessage(seriesName: string, people: readonly string[], days: readonly string[]): string {
+  const names = people.length === 1 ? people[0] : `${people.slice(0, -1).join(', ')} and ${people[people.length - 1]}`;
+  const verb = people.length === 1 ? 'is' : 'are';
+
+  return `${names} ${verb} in ${seriesName} on ${days.join(', ')}, which this change removes. Unenrol them first, then save again.`;
+}
+
+/** The fields of a series a teacher may not change (the name is the only field a teacher may change). */
+export interface SeriesDetails {
+  ageRange: { minAge: number; maxAge: number };
+  capacity: number;
+  location: string;
+  instructorIds: readonly string[];
+  price: ClassPrice | null;
+  weekdays: readonly number[];
+  /** The first and last allowed times, camp-local, as YYYY-MM-DDTHH:MM. */
+  startsLocal: string;
+  endsLocal: string;
+}
+
+const samePriceFields = (a: ClassPrice | null, b: ClassPrice | null): boolean =>
+  a === null || b === null
+    ? a === b
+    : a.currency === b.currency &&
+      a.regularMinor === b.regularMinor &&
+      a.earlyBirdMinor === b.earlyBirdMinor &&
+      a.earlyBirdUntil === b.earlyBirdUntil;
+
+/**
+ * The locked fields that differ between the saved series and the change. Empty when only the name (or nothing) would change: a
+ * teacher on the series may change its name and nothing else.
+ */
+export function seriesFieldsOutsideDetails(before: SeriesDetails, after: SeriesDetails): string[] {
+  const changed: string[] = [];
+  if (before.ageRange.minAge !== after.ageRange.minAge || before.ageRange.maxAge !== after.ageRange.maxAge) {
+    changed.push('ageRange');
+  }
+  if (before.capacity !== after.capacity) {
+    changed.push('capacity');
+  }
+  if (before.location !== after.location) {
+    changed.push('location');
+  }
+  if ([...before.instructorIds].sort().join() !== [...after.instructorIds].sort().join()) {
+    changed.push('instructorIds');
+  }
+  if (!samePriceFields(before.price, after.price)) {
+    changed.push('price');
+  }
+  if ([...before.weekdays].sort().join() !== [...after.weekdays].sort().join()) {
+    changed.push('weekdays');
+  }
+  if (before.startsLocal !== after.startsLocal) {
+    changed.push('startsLocal');
+  }
+  if (before.endsLocal !== after.endsLocal) {
+    changed.push('endsLocal');
+  }
+
+  return changed;
 }

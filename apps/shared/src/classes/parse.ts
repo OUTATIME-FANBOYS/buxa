@@ -4,8 +4,6 @@ import {
   ClassInputSchema,
   EnrolInputSchema,
   NewSeriesInputSchema,
-  SeriesEditInputSchema,
-  type SeriesEditInput,
   NewSessionInputSchema,
   type CancelEnrolmentInput,
   type ClassInput,
@@ -165,29 +163,11 @@ export function seriesForm(form: FormData): PersonParsed<NewSeriesInput> {
 }
 
 /**
- * A series' shared fields, from the edit form: name, ages, camp size, location, instructors and price. The days keep their own
- * times, so the form has no Starts, Ends or weekdays.
+ * A teacher's edit of a series: the form posts the name only, so the rest of the series is kept as it is saved (`saved`). The name is
+ * checked the same way a new series' name is. The service refuses any other change a teacher makes.
  */
-export function seriesEditForm(form: FormData): PersonParsed<SeriesEditInput> {
-  const problems: FieldErrors = {};
-  const minAge = numberField(form, 'minAge', problems, 'Enter the youngest age.');
-  const maxAge = numberField(form, 'maxAge', problems, 'Enter the oldest age.');
-  const capacity = numberField(form, 'capacity', problems, 'Enter the camp size.');
-  const price = priceFromForm(form, problems);
-
-  return withProblems(
-    problems,
-    () =>
-      parseWith<SeriesEditInput>(SeriesEditInputSchema, {
-        name: field(form, 'name'),
-        ageRange: { minAge, maxAge },
-        capacity,
-        location: field(form, 'location'),
-        instructorIds: fieldAll(form, 'instructorIds'),
-        price: price ?? null,
-      }),
-    { ageRange: 'maxAge' },
-  );
+export function seriesNameForm(form: FormData, saved: NewSeriesInput): PersonParsed<NewSeriesInput> {
+  return parseWith<NewSeriesInput>(NewSeriesInputSchema, { ...saved, name: field(form, 'name') });
 }
 
 /** A local date-time as a datetime-local field posts it: `2027-07-05T09:00`. The camp's clock is read as typed. */
