@@ -118,3 +118,28 @@ export async function removeFormFileAction(_previous: ActionState, form: FormDat
 
   return success('File removed.');
 }
+
+/**
+ * Deletes a form that has no registrations. The service checks registration:manage and the no-registrations rule on the server; a
+ * form with registrations is refused with its message and nothing is removed.
+ */
+export async function deleteFormAction(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const actor = await currentActor();
+  if (!actor) {
+    return failure(NO_CAMP);
+  }
+  const formId = field(form, 'formId');
+  if (!isUuid(formId)) {
+    return failure('That form no longer exists.');
+  }
+
+  try {
+    await getRuntime().services.registration.deleteForm(actor, formId);
+  } catch (error) {
+    return registrationFailure(error, 'Could not delete the form.');
+  }
+
+  revalidatePath(ROUTES.registration);
+
+  return success('Form deleted.');
+}

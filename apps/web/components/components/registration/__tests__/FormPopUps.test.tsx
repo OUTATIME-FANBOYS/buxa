@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RegistrationForm } from '@buxa/contracts';
 import { FormViewDialog } from '../FormViewDialog';
 import { NewRegistrationFormButton } from '../NewRegistrationFormButton';
-import { ViewFormButton } from '../ViewFormButton';
+import { FormRowActions } from '../FormRowActions';
 
 vi.mock('@/actions/registration', () => ({
   createFormAction: vi.fn(),
@@ -110,7 +110,7 @@ describe('the Registration page pop-ups in the browser', () => {
 
   it('View form opens the read-only pop-up with the questions and files', () => {
     act(() => {
-      root.render(<ViewFormButton form={form} sessions={SESSIONS} canEdit canSubmit />);
+      root.render(<FormRowActions form={form} sessions={SESSIONS} canEdit canSubmit />);
     });
     act(() => {
       viewButton()?.click();
@@ -123,7 +123,7 @@ describe('the Registration page pop-ups in the browser', () => {
 
   it('Edit from View opens the edit pop-up for a manager, and closes the view', async () => {
     act(() => {
-      root.render(<ViewFormButton form={form} sessions={SESSIONS} canEdit canSubmit />);
+      root.render(<FormRowActions form={form} sessions={SESSIONS} canEdit canSubmit />);
     });
     act(() => {
       viewButton()?.click();
@@ -141,7 +141,7 @@ describe('the Registration page pop-ups in the browser', () => {
 
   it('a viewer who may not manage forms has no Edit form button, so no edit pop-up can open', () => {
     act(() => {
-      root.render(<ViewFormButton form={form} sessions={SESSIONS} canEdit={false} canSubmit={false} />);
+      root.render(<FormRowActions form={form} sessions={SESSIONS} canEdit={false} canSubmit={false} />);
     });
     act(() => {
       viewButton()?.click();

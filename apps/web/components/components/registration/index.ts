@@ -10,4 +10,5 @@ export * from './RegistrationSearch';
 export * from './registrationSearchRows';
 export * from './SubmissionsBySession';
 export * from './TakeRegistrationButton';
-export * from './ViewFormButton';
+export * from './FormRowActions';
+export * from './DeleteFormDialog';

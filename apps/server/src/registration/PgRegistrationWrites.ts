@@ -14,6 +14,7 @@ import {
 } from './errors';
 import type {
   ConfirmationRule,
+  FormDeletionRule,
   NewRegistration,
   RegistrationFactsInTx,
   RegistrationRule,
@@ -122,6 +123,53 @@ export async function publishFormRow(db: Db, actor: Actor, formId: string): Prom
   });
 
   return draft.version;
+}
+
+/**
+ * Deletes a form that no registration names. The count and the row lock are taken in this transaction, so a registration cannot be
+ * added between the check and the delete. The database function (migration 0070) refuses the same case as a backstop; its refusal
+ * is translated here, so the caller sees the same error either way.
+ */
+export async function deleteFormInTx(db: Db, actor: Actor, formId: string, rule: FormDeletionRule): Promise<void> {
+  const { rows } = await db.query<{ name: string; registration_count: number }>(
+    `SELECT f.name, (SELECT count(*)::int FROM registrations r WHERE r.form_id = f.id) AS registration_count
+       FROM registration_forms f WHERE f.id = $1 FOR UPDATE`,
+    [formId],
+  );
+  const form = rows[0];
+  if (!form) {
+    throw new RegistrationFormNotFoundError();
+  }
+  const decision = rule({ registrationCount: form.registration_count });
+  if (!decision.allow) {
+    throw new RegistrationRefusedError(decision.reason);
+  }
+  try {
+    await db.query('SELECT buxa_delete_registration_form_v1($1, $2)', [actor.orgId, formId]);
+  } catch (error) {
+    throw translateFormDeleteError(error);
+  }
+  await recordAudit(db, {
+    actor,
+    action: 'registration_form.delete',
+    entity: 'registration_form',
+    entityId: formId,
+    data: { name: form.name },
+  });
+}
+
+function translateFormDeleteError(error: unknown): unknown {
+  const code = typeof error === 'object' && error !== null && 'code' in error ? error.code : undefined;
+  const constraint =
+    typeof error === 'object' && error !== null && 'constraint' in error ? error.constraint : undefined;
+  if (constraint === 'registration_form_has_registrations') {
+    return new RegistrationRefusedError('form_has_registrations');
+  }
+  if (code === 'P0002') {
+    return new RegistrationFormNotFoundError();
+  }
+
+  return error;
 }
 
 /**

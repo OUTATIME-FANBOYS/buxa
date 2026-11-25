@@ -57,6 +57,7 @@ export const AUDIT_ACTIONS = [
   'registration_form.publish',
   'registration_form.file_add',
   'registration_form.file_remove',
+  'registration_form.delete',
   'registration.submit',
   'registration.document_review',
   'registration.confirm',

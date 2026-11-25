@@ -9,7 +9,8 @@ import { Button, Checkbox, Select, TextField } from '@/components/elements';
  * in the hidden `fields` input; the server checks it with the contract, so nothing here is trusted.
  */
 
-const KIND_LABEL: Record<FieldKind, string> = {
+/** The name of each kind of question, as the form shows it. Exported so the read-only view names a question the same way. */
+export const KIND_LABEL: Record<FieldKind, string> = {
   text: 'Text',
   choice: 'Choice',
   date: 'Date',
