@@ -247,6 +247,15 @@ form.person-form {
 .person-form .button {
   font-size: var(--fs-b);
 }
+/* The button row of a small edit form (the emergency contact panel): buttons on the right, with a gap, and a divider above. */
+.person-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--s2);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--line);
+}
 .person-form .person-actions {
   display: flex;
   flex-wrap: wrap;
