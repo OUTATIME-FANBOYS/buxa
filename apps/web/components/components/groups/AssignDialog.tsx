@@ -1,12 +1,10 @@
 'use client';
 
-import { useActionState, useCallback, useEffect, useRef, useState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import type { Group, Room } from '@buxa/contracts';
 import { fieldError, idle, RATIO_REFUSAL_KEY, ratioPersonIds, refusedPersonIds, type ActionState } from '@buxa/shared';
-import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { assignAction } from '@/actions/groups';
 import { FormPopUp } from '@/components/components';
-import { Button } from '@/components/elements';
 import { HiddenField, Select, TextField } from '@/components/atoms';
 import { PersonPicker } from './PersonPicker';
 
@@ -44,39 +42,10 @@ interface OverrideRequest {
 }
 
 /**
- * The Place or move button. It opens the placement form: one or more people, their role, a group and a room. A refusal shows as small
+ * The Place or move pop-up. It opens the placement form: one or more people, their role, a group and a room. A refusal shows as small
  * polite text under the form, and names each person refused. A ratio refusal opens a second pop-up that asks an admin for a reason,
- * and only then places those people.
+ * and only then places those people. PlaceButton opens it.
  */
-export function AssignDialog({ choices }: { choices: AssignChoices }) {
-  const [open, setOpen] = useState(false);
-  const { toast } = useUi();
-  const close = useCallback(() => setOpen(false), []);
-  const done = useCallback(
-    (message: string) => {
-      toast(message);
-      setOpen(false);
-    },
-    [toast],
-  );
-
-  return (
-    <>
-      <Button
-        variant="primary"
-        size="sm"
-        type="button"
-        icon="user-plus"
-        aria-haspopup="dialog"
-        onClick={() => setOpen(true)}
-      >
-        Place or move
-      </Button>
-      {open && <AssignPopUp choices={choices} onCancel={close} onDone={done} />}
-    </>
-  );
-}
-
 export function AssignPopUp({
   choices,
   presetPersonId,

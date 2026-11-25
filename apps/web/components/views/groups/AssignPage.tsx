@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { can } from '@buxa/domain';
 import { Empty, PageHeader } from '@/components/components';
-import { AssignBoard, AssignDialog } from '@/components/components/groups';
+import { AssignBoard, PlaceButton } from '@/components/components/groups';
 import { currentActor, loadSessionGroups } from '@buxa/server/composers/index.server';
 import { SessionNav } from './SessionNav';
 
@@ -41,7 +41,11 @@ export async function AssignPage({ sessionId }: { sessionId: string }) {
       <PageHeader
         title="Assign people"
         subtitle={`${session.name}. Each camper has one place in this session.`}
-        actions={canManage && <AssignDialog choices={choices} />}
+        actions={
+          canManage && (
+            <PlaceButton choices={choices} label="Place or move" icon="user-plus" variant="primary" size="sm" />
+          )
+        }
       />
       {!canManage && <p className="muted">Only staff can place or move people.</p>}
       {needsGroupsAndRooms && canManage && (
