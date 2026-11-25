@@ -12,9 +12,7 @@ const NO_WEEKDAY = 'Tick at least one day of the week.';
 
 const actions = vi.hoisted(() => ({
   createSessionAction: vi.fn(),
-  addClassAction: vi.fn(),
   addSeriesAction: vi.fn(),
-  updateClassAction: vi.fn(),
   deleteClassAction: vi.fn(),
 }));
 vi.mock('@/actions/classes', () => actions);
@@ -36,7 +34,6 @@ let root: Root;
 
 beforeEach(() => {
   vi.clearAllMocks();
-  actions.addClassAction.mockResolvedValue({ status: 'success', message: 'Class added.' });
   actions.addSeriesAction.mockResolvedValue({ status: 'success', message: 'Added 3 classes.' });
   host = document.createElement('div');
   document.body.appendChild(host);
@@ -205,11 +202,10 @@ describe('the New class dialog: every class is set on weekdays', () => {
     await submit();
 
     expect(actions.addSeriesAction).not.toHaveBeenCalled();
-    expect(actions.addClassAction).not.toHaveBeenCalled();
     expect(document.querySelector('.weekday-row')?.parentElement?.textContent).toContain(NO_WEEKDAY);
   });
 
-  it('submits the recurring request with the chosen days and the Starts and Ends date-times', async () => {
+  it('submits the chosen days, and Starts and Ends as the camp local times typed (not converted to an instant in the browser zone)', async () => {
     openDialog();
     clickChip('Tuesday');
     clickChip('Thursday');
@@ -218,7 +214,6 @@ describe('the New class dialog: every class is set on weekdays', () => {
 
     await submit();
 
-    expect(actions.addClassAction).not.toHaveBeenCalled();
     expect(actions.addSeriesAction).toHaveBeenCalledTimes(1);
     const data = postedTo(actions.addSeriesAction);
     expect(data.getAll('weekdays')).toEqual(['1', '3', '5']);

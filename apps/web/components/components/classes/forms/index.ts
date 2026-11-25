@@ -4,7 +4,6 @@ export * from './CancelDayButton';
 export * from './ClassForm';
 export * from './DeleteClassButton';
 export * from './DeleteSessionsDialog';
-export * from './EditClassButton';
 export * from './EditSeriesButton';
 export * from './EditSessionButton';
 export * from './EditSessionForm';
