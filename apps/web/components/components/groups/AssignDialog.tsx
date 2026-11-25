@@ -69,7 +69,7 @@ export function AssignDialog({ choices }: { choices: AssignChoices }) {
   );
 }
 
-function AssignPopUp({
+export function AssignPopUp({
   choices,
   onCancel,
   onDone,
@@ -124,6 +124,7 @@ function AssignPopUp({
           <Select
             label="Role"
             name="role"
+            isRequired
             value={selection.role}
             options={[
               { value: 'camper', label: 'Camper' },
@@ -134,8 +135,9 @@ function AssignPopUp({
             }
           />
           <Select
-            label="Person *"
+            label="Person"
             name="personId"
+            isRequired
             value={selection.personId}
             error={fieldError(state, 'personId')}
             placeholder={noPeople ? 'No one with this role yet' : 'Choose a person'}
@@ -144,8 +146,9 @@ function AssignPopUp({
             onChange={personId => setSelection({ ...selection, personId })}
           />
           <Select
-            label="Group *"
+            label="Group"
             name="groupId"
+            isRequired
             value={selection.groupId}
             error={fieldError(state, 'groupId')}
             placeholder={noGroups ? 'No groups yet' : 'Choose a group'}
@@ -157,8 +160,9 @@ function AssignPopUp({
             onChange={groupId => setSelection({ ...selection, groupId })}
           />
           <Select
-            label="Room *"
+            label="Room"
             name="roomId"
+            isRequired
             value={selection.roomId}
             error={fieldError(state, 'roomId')}
             placeholder={noRooms ? 'No rooms yet' : 'Choose a room'}
