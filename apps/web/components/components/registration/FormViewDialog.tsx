@@ -16,7 +16,7 @@ export interface FormViewDialogProps {
 }
 
 /**
- * A registration form, read only, in a pop-up: its name and season, the sessions it covers, the camp's own questions (name, type,
+ * A registration form, read only, in a pop-up: its name, the sessions it covers, the camp's own questions (name, type,
  * required or optional, options) and the files families download (name and size). Nothing here is a field, so nothing can be changed
  * from it; Edit form opens the edit pop-up for those who can. The sections share the edit form's rhythm (a heading, a muted line, the
  * content), and the lists are plain rows with a thin divider, not boxes that look like inputs.
@@ -48,7 +48,6 @@ export function FormViewDialog({ form, canEdit, canSubmit, onEdit, onClose }: Fo
       <div className="form-view">
         <div className="form-section">
           <p>
-            {published?.season && <span className="muted">{published.season} · </span>}
             {published === null ? (
               <Pill tone="neutral">Draft</Pill>
             ) : (

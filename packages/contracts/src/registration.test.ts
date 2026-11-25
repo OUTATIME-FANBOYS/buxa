@@ -29,7 +29,6 @@ const answers = { swim: 'Beginner', start: '2027-06-14', photos: 'yes' };
 describe('registration form input', () => {
   const valid = {
     name: 'Summer 2027',
-    season: 'Summer',
     sessionIds: [SESSION],
     fields: [{ kind: 'choice', key: 'swim', label: 'Swim level', required: true, options: ['A', 'B'] }],
   };
@@ -39,8 +38,8 @@ describe('registration form input', () => {
     expect(parsed.name).toBe('Summer 2027');
   });
 
-  it('turns a blank season into null', () => {
-    expect(RegistrationFormInputSchema.parse({ ...valid, season: '  ' }).season).toBeNull();
+  it('takes no season: a season sent with the form is dropped', () => {
+    expect(RegistrationFormInputSchema.parse(valid)).not.toHaveProperty('season');
   });
 
   it('needs at least one session', () => {

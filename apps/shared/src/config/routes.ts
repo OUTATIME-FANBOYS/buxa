@@ -29,7 +29,7 @@ export const ROUTES = {
   sessionImport: '/camp/sessions/import',
   sessionImportTemplate: '/camp/sessions/import/template',
   sessionImportErrorReport: '/camp/sessions/import/error-report',
-  // Registration: forms per season that cover sessions. Reading submissions needs registration:read; building a form needs
+  // Registration: forms that cover sessions. Reading submissions needs registration:read; building a form needs
   // registration:manage; taking a registration needs registration:submit.
   registration: '/camp/registration',
   newRegistrationForm: '/camp/registration/new',

@@ -20,14 +20,13 @@ describe('registrationFormForm', () => {
     const parsed = registrationFormForm(
       formOf({
         name: 'Summer 2027',
-        season: '',
         sessionIds: [SESSION],
         fields: JSON.stringify([{ kind: 'yes_no', key: 'photos', label: 'Photo consent', required: true }]),
       }),
     );
     expect(parsed.ok).toBe(true);
     if (parsed.ok) {
-      expect(parsed.data.season).toBeNull();
+      expect(parsed.data).not.toHaveProperty('season');
       expect(parsed.data.fields).toHaveLength(1);
     }
   });

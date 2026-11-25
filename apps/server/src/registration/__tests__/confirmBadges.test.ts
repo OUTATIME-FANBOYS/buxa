@@ -63,7 +63,6 @@ async function pendingRegistration(camp: Camp, service: RegistrationService) {
   });
   const form = await service.createForm(admin, {
     name: 'Summer 2027',
-    season: 'Summer',
     sessionIds: [SESSION],
     fields: [],
   });

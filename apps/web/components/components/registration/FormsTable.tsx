@@ -5,7 +5,7 @@ import { registrationFormPath } from '@/config/routes';
 import { FormRowActions } from './FormRowActions';
 
 /**
- * The camp's registration forms: name and season, the sessions they cover, whether they are published, how many registrations, and
+ * The camp's registration forms: name, the sessions they cover, whether they are published, how many registrations, and
  * three icon buttons at the right end (View, Edit and Delete). The name opens the form's page, which lists its registrations.
  */
 export function FormsTable({
@@ -39,8 +39,8 @@ export function FormsTable({
         </thead>
         <tbody>
           {forms.map(form => {
-            // The table shows what families see: the published name, season and sessions. A form never published shows its draft.
-            const shown = form.published ?? { name: form.name, season: form.season, sessions: form.sessions };
+            // The table shows what families see: the published name and sessions. A form never published shows its draft.
+            const shown = form.published ?? { name: form.name, sessions: form.sessions };
 
             return (
               <tr key={form.id}>
@@ -48,7 +48,6 @@ export function FormsTable({
                   <Link className="row-title classes-target" href={registrationFormPath(form.id)}>
                     {shown.name}
                   </Link>
-                  {shown.season && <span className="muted"> · {shown.season}</span>}
                 </td>
                 <td>{shown.sessions.length}</td>
                 <td>

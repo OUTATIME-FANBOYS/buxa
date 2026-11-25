@@ -52,7 +52,6 @@ const as = (role: Role | 'teacher', orgId = CAMP_A): Actor =>
 
 const formInput = {
   name: 'Summer 2027',
-  season: 'Summer',
   sessionIds: [SESSION_A],
   fields: [
     { kind: 'choice', key: 'swim', label: 'Swim level', required: true, options: ['None', 'Beginner'] },

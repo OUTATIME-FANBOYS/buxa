@@ -7,7 +7,7 @@ import { field, fieldAll, parseWith, type PersonParsed } from '../people/parse';
  * this file only reads the posted values. The custom questions travel as one JSON field, written by the form builder.
  */
 
-/** A registration form (name, season, its sessions and its questions). The questions arrive as JSON from the form builder. */
+/** A registration form (name, its sessions and its questions). The questions arrive as JSON from the form builder. */
 export function registrationFormForm(form: FormData): PersonParsed<RegistrationFormInput> {
   let fields: unknown = [];
   const raw = field(form, 'fields');
@@ -24,7 +24,6 @@ export function registrationFormForm(form: FormData): PersonParsed<RegistrationF
 
   return parseWith<RegistrationFormInput>(RegistrationFormInputSchema, {
     name: field(form, 'name'),
-    season: field(form, 'season'),
     sessionIds: fieldAll(form, 'sessionIds'),
     fields,
   });

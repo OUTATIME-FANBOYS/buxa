@@ -92,7 +92,6 @@ export function RegistrationFormDialog({ mode, form, sessions, onClose }: Regist
         sessions={sessions}
         initial={{
           name: form.name,
-          season: form.season,
           sessionIds: form.sessions.map(s => s.id),
           fields: form.fields,
           attachments: form.attachments,

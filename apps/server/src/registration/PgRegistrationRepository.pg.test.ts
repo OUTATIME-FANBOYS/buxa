@@ -66,7 +66,6 @@ describe.skipIf(!url)('registration in Postgres: camps are isolated', () => {
 
   const formInput = (sessionId: string) => ({
     name: 'Summer 2027',
-    season: 'Summer',
     sessionIds: [sessionId],
     fields: [{ kind: 'yes_no' as const, key: 'photos', label: 'Photo consent', required: true }],
   });

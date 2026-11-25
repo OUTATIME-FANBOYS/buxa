@@ -31,7 +31,6 @@ const as = (role: Role): Actor => ({ userId: `user-${role}`, orgId: CAMP_A, role
 
 const formInput = {
   name: 'Summer 2027',
-  season: 'Summer',
   sessionIds: [SESSION_A],
   fields: [{ kind: 'yes_no', key: 'photos', label: 'Photo consent', required: true }],
 };

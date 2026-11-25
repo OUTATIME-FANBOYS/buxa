@@ -2,13 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { formDraftDiffers, type Actor, type DocumentReviewStatus, type RegistrationStatus } from '@buxa/domain';
 import type { FormAttachment } from '@buxa/contracts';
 import { documentRowsFor } from './documentRows';
-import type {
-  CustomField,
-  RegistrationClass,
-  RegistrationForm,
-  RegistrationFormInput,
-  RegistrationRow,
-} from '@buxa/contracts';
+import type { CustomField, RegistrationClass, RegistrationForm, RegistrationRow } from '@buxa/contracts';
 import {
   RegistrationClassNotFoundError,
   RegistrationFileNotFoundError,
@@ -31,6 +25,7 @@ import type {
   PublishedVersion,
   StoredFileInput,
   RegistrationRepository,
+  RegistrationFormWrite,
   RegistrationRule,
   WithdrawalRule,
 } from './RegistrationRepository';
@@ -210,7 +205,7 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
     });
   }
 
-  createForm(actor: Actor, input: RegistrationFormInput, files: readonly StoredFileInput[]): Promise<RegistrationForm> {
+  createForm(actor: Actor, input: RegistrationFormWrite, files: readonly StoredFileInput[]): Promise<RegistrationForm> {
     return later(() => {
       this.requireSessions(actor.orgId, input.sessionIds);
       const form: StoredForm = {
@@ -231,7 +226,7 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
   updateForm(
     actor: Actor,
     formId: string,
-    input: RegistrationFormInput,
+    input: RegistrationFormWrite,
     files: readonly StoredFileInput[],
   ): Promise<RegistrationForm> {
     return later(() => {

@@ -247,14 +247,14 @@ export function createRegistrationService(
       assertAllowed(actor, 'registration:manage');
       const parsed = parseFormInput(input);
 
-      return repo.createForm(actor, parsed, storeFormFiles(files));
+      return repo.createForm(actor, { ...parsed, season: null }, storeFormFiles(files));
     },
 
     async updateForm(actor, formId, input, files = []) {
       assertAllowed(actor, 'registration:manage');
       const parsed = parseFormInput(input);
 
-      return repo.updateForm(actor, formId, parsed, storeFormFiles(files));
+      return repo.updateForm(actor, formId, { ...parsed, season: null }, storeFormFiles(files));
     },
 
     async deleteForm(actor, formId) {

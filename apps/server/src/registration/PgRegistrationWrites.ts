@@ -1,5 +1,4 @@
 import { decideSelections, type Actor } from '@buxa/domain';
-import type { RegistrationFormInput } from '@buxa/contracts';
 import type { RegistrationStatus } from '@buxa/domain';
 import { recordAudit } from '../audit/recordAudit';
 import type { Db } from '../people/pgRows';
@@ -17,6 +16,7 @@ import type {
   FormDeletionRule,
   NewRegistration,
   RegistrationFactsInTx,
+  RegistrationFormWrite,
   RegistrationRule,
 } from './RegistrationRepository';
 
@@ -61,10 +61,9 @@ async function requireSessionsInCamp(db: Db, sessionIds: readonly string[]): Pro
 }
 
 /**
- * Creates a form. Its draft holds the values; nothing is published yet, so the live name and season (which NOT NULL needs) are the
- * same as the draft, and no live session rows are written. Families cannot see a form until it is published.
+ * Creates a form. Its draft holds the values; nothing is published yet, so the live name and season are the same as the draft, and no live session rows are written. Families cannot see a form until it is published.
  */
-export async function insertForm(db: Db, actor: Actor, input: RegistrationFormInput): Promise<string> {
+export async function insertForm(db: Db, actor: Actor, input: RegistrationFormWrite): Promise<string> {
   await requireSessionsInCamp(db, input.sessionIds);
   const { rows } = await db.query<{ id: string }>(
     `INSERT INTO registration_forms (org_id, name, season, draft_name, draft_season, draft_session_ids, draft_fields)
@@ -87,7 +86,7 @@ export async function insertForm(db: Db, actor: Actor, input: RegistrationFormIn
  * Saves the draft: name, season, sessions and questions. The live name, season and sessions, and the published version, are not
  * touched; only a publish changes them (families register on the published version). Audited with the name only.
  */
-export async function updateFormRow(db: Db, actor: Actor, formId: string, input: RegistrationFormInput): Promise<void> {
+export async function updateFormRow(db: Db, actor: Actor, formId: string, input: RegistrationFormWrite): Promise<void> {
   await requireSessionsInCamp(db, input.sessionIds);
   const { rowCount } = await db.query(
     `UPDATE registration_forms

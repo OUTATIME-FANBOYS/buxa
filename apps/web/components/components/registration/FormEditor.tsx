@@ -10,14 +10,13 @@ import { QuestionBuilder } from './QuestionBuilder';
 import { SessionPicker } from './SessionPicker';
 
 /*
- * A registration form's name, season, sessions and own questions, in a pop-up. The same fields create a form and edit its draft: the
+ * A registration form's name, sessions and own questions, in a pop-up. The same fields create a form and edit its draft: the
  * create mode posts to createFormAction and the edit mode to updateFormAction (with the form id). Saving a draft does not publish
  * it. The buttons are not here: RegistrationFormDialog puts them in the pop-up's pinned footer, tied to this form by `id`.
  */
 
 export interface FormEditorInitial {
   name: string;
-  season: string | null;
   sessionIds: string[];
   fields: CustomField[];
   attachments: FormAttachment[];
@@ -76,15 +75,6 @@ export function FormEditor({
           defaultValue={initial?.name ?? ''}
           error={err('name')}
           maxLength={120}
-          autoComplete="off"
-        />
-        <TextField
-          label="Season"
-          name="season"
-          defaultValue={initial?.season ?? ''}
-          error={err('season')}
-          maxLength={60}
-          hint="For example Summer 2027. Only for your own reference."
           autoComplete="off"
         />
       </div>

@@ -54,7 +54,7 @@ const form: RegistrationForm = {
 const settle = (ms = 250) => act(() => new Promise<void>(resolve => setTimeout(resolve, ms)));
 
 describe('the View pop-up, read only (server render)', () => {
-  it('shows the name, season, sessions, questions and files families download', () => {
+  it('shows the name, sessions, questions and files families download', () => {
     const html = renderToStaticMarkup(
       <FormViewDialog form={form} canEdit canSubmit onEdit={() => undefined} onClose={() => undefined} />,
     );
