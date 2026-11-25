@@ -81,7 +81,7 @@ export async function RegistrationFormView({ formId }: { formId: string }) {
         ) : (
           <Pill tone="neutral">Draft. Publish it before taking registrations.</Pill>
         )}
-        {form.hasUnpublishedChanges && <span className="muted"> Unpublished changes</span>}
+        {form.hasUnpublishedChanges && <Pill tone="warn">Unpublished changes</Pill>}
       </p>
 
       <section className="registration-section" aria-labelledby="registration-submissions-heading">

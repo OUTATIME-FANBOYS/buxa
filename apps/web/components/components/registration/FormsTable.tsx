@@ -57,7 +57,7 @@ export function FormsTable({
                   ) : (
                     <Pill tone="ok">Published, version {form.publishedVersion}</Pill>
                   )}
-                  {form.hasUnpublishedChanges && <span className="muted"> Unpublished changes</span>}
+                  {form.hasUnpublishedChanges && <Pill tone="warn">Unpublished changes</Pill>}
                 </td>
                 <td>{form.submissionCount}</td>
                 <td>
