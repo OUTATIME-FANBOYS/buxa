@@ -2,12 +2,11 @@ import { notFound } from 'next/navigation';
 import { authorize, toLocalDate } from '@buxa/domain';
 import { Empty } from '@/components/components';
 import { PageHeader } from '@/components/components';
-import { loadLogEntries, loadPeopleOptions } from '@buxa/server/composers/index.server';
+import { loadFilterChoices, loadLogEntries, loadPeopleOptions } from '@buxa/server/composers/index.server';
 import { Notice } from '@/components/components';
-import { LogFilters } from '@/components/components/attendance';
+import { AttendanceCsvDownload, LogFilters } from '@/components/components/attendance';
 import { LogTable } from '@/components/components/attendance';
 import { campActor, campClock } from '@buxa/server/composers/index.server';
-import { attendanceExportPath } from '@buxa/shared';
 import { parseLogFilter } from '@buxa/shared';
 import { HELP_LINK_LABEL, helpLink } from '@buxa/shared';
 import { Button } from '@/components/elements';
@@ -30,17 +29,32 @@ export async function AttendanceScreen({ searchParams }: { searchParams: SearchP
   }
   const { timeZone, clockFormat } = await campClock(actor);
   const parsed = parseLogFilter(searchParams, toLocalDate(new Date(), timeZone));
-  const [people, entries] = await Promise.all([
+  const [people, entries, choices] = await Promise.all([
     loadPeopleOptions(actor),
     parsed.ok ? loadLogEntries(actor, parsed.filter) : Promise.resolve([]),
+    loadFilterChoices(actor),
   ]);
   const canExport = authorize(actor, 'attendance:export').allow;
   const values = parsed.ok
-    ? { from: parsed.filter.from, to: parsed.filter.to, personId: parsed.filter.personId ?? '' }
+    ? {
+        from: parsed.filter.from,
+        to: parsed.filter.to,
+        personId: parsed.filter.personId ?? '',
+        sessionId: parsed.filter.sessionId ?? '',
+        classId: parsed.filter.classId ?? '',
+        method: parsed.filter.method ?? '',
+        checkedInBy: parsed.filter.checkedInBy ?? '',
+        status: parsed.filter.status ?? '',
+      }
     : {
         from: readValue(searchParams, 'from'),
         to: readValue(searchParams, 'to'),
         personId: readValue(searchParams, 'personId'),
+        sessionId: readValue(searchParams, 'sessionId'),
+        classId: readValue(searchParams, 'classId'),
+        method: readValue(searchParams, 'method'),
+        checkedInBy: readValue(searchParams, 'checkedInBy'),
+        status: readValue(searchParams, 'status'),
       };
 
   return (
@@ -50,12 +64,8 @@ export async function AttendanceScreen({ searchParams }: { searchParams: SearchP
         subtitle="Who came in and out, in camp time."
         actions={<Button href={helpLink('exports')}>{HELP_LINK_LABEL}</Button>}
       />
-      <LogFilters values={values} people={people}>
-        {parsed.ok && canExport && (
-          <Button className="log-export" icon="download" href={attendanceExportPath(parsed.filter)} download>
-            Download CSV
-          </Button>
-        )}
+      <LogFilters values={values} people={people} choices={choices}>
+        {parsed.ok && canExport && <AttendanceCsvDownload filter={parsed.filter} />}
       </LogFilters>
       {!parsed.ok && <Notice tone="crit" title="Check the dates" body={parsed.message} />}
       {parsed.ok && entries.length === 0 && (

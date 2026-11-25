@@ -1,4 +1,10 @@
-import type { AttendanceEntry, AttendanceFilter, CheckInInput, CheckOutInput } from '@buxa/contracts';
+import {
+  ATTENDANCE_FIELD_LABELS,
+  type AttendanceEntry,
+  type AttendanceFilter,
+  type CheckInInput,
+  type CheckOutInput,
+} from '@buxa/contracts';
 import {
   can,
   decideCheckIn,
@@ -9,7 +15,7 @@ import {
   type Actor,
   type LocalDate,
 } from '@buxa/domain';
-import { encodeCsv, sessionsOpenOn, type CsvCell } from '@buxa/shared';
+import { attendanceFieldValue, encodeCsv, orderFields, sessionsOpenOn } from '@buxa/shared';
 import { assertAllowed } from '../../auth/authorize';
 import { badRequest, notFound } from '../../http/errors';
 import {
@@ -34,18 +40,6 @@ import type {
 /** Wide enough to hold every visit a person can have. */
 const EARLIEST = '1900-01-01T00:00:00.000Z';
 const LATEST = '9999-12-31T23:59:59.999Z';
-
-const EXPORT_HEADER: CsvCell[] = [
-  'Person',
-  'Checked in',
-  'Checked in by',
-  'Method',
-  'Checked out',
-  'Checked out by',
-  'Collected by',
-  'Override reason',
-  'Note',
-];
 
 export function createAttendanceService(deps: AttendanceServiceDeps): AttendanceService {
   const { attendance, classes, groups, people, memberships, orgs, clock } = deps;
@@ -86,7 +80,12 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
     const query: AttendanceQuery = {
       ...localDaysWindow(filter.from, filter.to, timeZone),
       personId: filter.personId,
-      onSiteOnly: filter.onSiteOnly,
+      sessionId: filter.sessionId,
+      classId: filter.classId,
+      method: filter.method,
+      checkedInBy: filter.checkedInBy,
+      onSiteOnly: filter.onSiteOnly === true || filter.status === 'on_site',
+      checkedOutOnly: filter.status === 'checked_out',
     };
 
     return attendance.log(actor.userId, actor.orgId, query);
@@ -299,6 +298,17 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       return entriesOf(actor, records);
     },
 
+    async filterChoices(actor) {
+      const scope = await teacherScopeOf(classes, actor);
+      assertAllowed(actor, 'attendance:read', { assignedToClass: scope === null ? undefined : true });
+      const [options, members] = await Promise.all([
+        attendance.filterOptions(actor.userId, actor.orgId),
+        orgs.listMembers(actor.userId, actor.orgId),
+      ]);
+
+      return { ...options, staff: members.map(m => ({ id: m.id, name: m.name })) };
+    },
+
     async history(actor, personId) {
       const scope = await teacherScopeOf(classes, actor);
       assertAllowed(actor, 'attendance:read', { assignedToClass: assignedTo(scope, personId) });
@@ -311,30 +321,23 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       return entriesOf(actor, records);
     },
 
-    async exportCsv(actor, filter) {
+    async exportCsv(actor, request) {
+      // Reading the log and exporting it are both needed: the export is for the people who may read the log, and only staff may take a file.
+      assertAllowed(actor, 'attendance:read');
       assertAllowed(actor, 'attendance:export');
-      const records = await recordsFor(actor, filter, await campZone(orgs, actor));
+      const fields = orderFields(request.fields);
+      if (fields.length === 0) {
+        throw badRequest('Choose at least one field to download.');
+      }
+      const records = await recordsFor(actor, request.filter, await campZone(orgs, actor));
       if (records.length >= MAX_LOG_ROWS) {
         throw badRequest('That is too many visits to export at once. Choose a shorter date range.');
       }
+      // Names the actor may not see are already blanked by entriesOf, so the CSV never carries a name the page would hide.
       const entries = await entriesOf(actor, records);
+      const rows = entries.map(entry => fields.map(field => attendanceFieldValue(entry, field, request.display)));
 
-      return encodeCsv([EXPORT_HEADER, ...entries.map(exportRow)]);
+      return encodeCsv([fields.map(field => ATTENDANCE_FIELD_LABELS[field]), ...rows]);
     },
   };
-}
-
-/** One visit as CSV cells. The times are instants (ISO), so a spreadsheet and a reader agree on them. */
-function exportRow(e: AttendanceEntry): CsvCell[] {
-  return [
-    e.personName,
-    e.checkedInAt,
-    e.checkedInByName,
-    e.method,
-    e.checkedOutAt,
-    e.checkedOutByName,
-    e.collectedByName,
-    e.overrideReason,
-    e.note,
-  ];
 }

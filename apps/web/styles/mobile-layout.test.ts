@@ -40,9 +40,8 @@ describe('phone layout for check-in, on site and the log', () => {
     expect(phoneBlock).toContain('.log-table thead { display: none; }');
     expect(phoneBlock).toContain('content: attr(data-label);');
     const log = tsx('attendance/LogTable.tsx');
-    for (const label of ['In', 'Out', 'Checked in by', 'Checked out by', 'Collected by', 'Method', 'Override reason']) {
-      expect(log).toContain(`data-label="${label}"`);
-    }
+    // Each column's label comes from the shared field list, so the phone stack reads the same words as the header.
+    expect(log).toContain('data-label={ATTENDANCE_FIELD_LABELS[field]}');
   });
 
   it('the result comes right after the scan field on a phone, with the name search last', () => {

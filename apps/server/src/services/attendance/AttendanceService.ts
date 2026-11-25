@@ -1,4 +1,5 @@
-import type { AttendanceEntry, AttendanceFilter, CheckInInput, CheckOutInput } from '@buxa/contracts';
+import type { AttendanceEntry, AttendanceField, AttendanceFilter, CheckInInput, CheckOutInput } from '@buxa/contracts';
+import type { FieldDisplay } from '@buxa/shared/attendance/fields';
 import type { Actor } from '@buxa/domain';
 import type { AttendanceRepository } from '../../attendance/AttendanceRepository';
 import type { ClassRepository } from '../../classes/ClassRepository';
@@ -9,7 +10,13 @@ import type { OrgRepository } from '../../orgs/OrgRepository';
 import type { PeopleRepository } from '../../people/PeopleRepository';
 import type { Clock } from '../clock';
 
-import type { CheckInResult, CheckOutResult, OnSiteEntry, PickupOption } from '@buxa/shared/attendance/types';
+import type {
+  CheckInResult,
+  CheckOutResult,
+  LogFilterChoices,
+  OnSiteEntry,
+  PickupOption,
+} from '@buxa/shared/attendance/types';
 import type { CheckInSessionOption } from '@buxa/shared/attendance/checkInSessions';
 export type { CheckInResult, CheckInSessionOption, CheckOutResult, OnSiteEntry, PickupOption };
 
@@ -30,10 +37,22 @@ export interface AttendanceService {
   onSite(actor: Actor): Promise<OnSiteEntry[]>;
   /** The log for camp-local days `from` to `to` inclusive, newest first. */
   log(actor: Actor, filter: AttendanceFilter): Promise<AttendanceEntry[]>;
+  /** The choices the log's filter offers: sessions, classes (under their session) and staff. Needs attendance:read. */
+  filterChoices(actor: Actor): Promise<LogFilterChoices>;
   /** One person's visits, newest first (for the person page). */
   history(actor: Actor, personId: string): Promise<AttendanceEntry[]>;
-  /** CSV text for the same filter. Spreadsheet formulas in names or notes are neutralised. Needs attendance:export. */
-  exportCsv(actor: Actor, filter: AttendanceFilter): Promise<string>;
+  /**
+   * CSV text for the same filter: only the chosen columns, in table order, with the same display as the table (camp time, the
+   * viewer's clock). Spreadsheet formulas are neutralised. Needs attendance:read and attendance:export.
+   */
+  exportCsv(actor: Actor, request: AttendanceExportRequest): Promise<string>;
+}
+
+/** What the CSV holds: the filter's rows, the columns chosen, and how times are shown. */
+export interface AttendanceExportRequest {
+  filter: AttendanceFilter;
+  fields: readonly AttendanceField[];
+  display: FieldDisplay;
 }
 
 export interface AttendanceServiceDeps {

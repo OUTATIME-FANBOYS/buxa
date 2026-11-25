@@ -1,49 +1,60 @@
-import type { AttendanceEntry } from '@buxa/contracts';
-import { METHOD_LABEL } from '@buxa/shared';
-import { formatCampDateTime } from '@buxa/shared';
+import type { AttendanceEntry, AttendanceField } from '@buxa/contracts';
+import { ATTENDANCE_FIELD_IDS, ATTENDANCE_FIELD_LABELS } from '@buxa/contracts';
+import { attendanceFieldValue } from '@buxa/shared';
 import type { ClockFormat } from '@buxa/domain';
 
 interface Props {
   entries: readonly AttendanceEntry[];
   timeZone: string;
   clockFormat: ClockFormat;
+  /** The columns to show, in table order. Defaults to every column. */
+  fields?: readonly AttendanceField[];
 }
 
-const dash = (value: string | null) => value ?? '—';
+/** The times are the only columns that read as numbers. */
+const NUMERIC: ReadonlySet<AttendanceField> = new Set(['in', 'out']);
 
-/** The attendance log: one row per visit, times in camp time, staff by name. Newest first, as the service returns them. */
-export function LogTable({ entries, timeZone, clockFormat }: Props) {
+/**
+ * The attendance log: one row per visit, times in camp time, staff by name. Newest first, as the service returns them. The columns
+ * and their cell text come from the shared field list, the same one the CSV uses. An empty cell is a muted dash.
+ */
+export function LogTable({ entries, timeZone, clockFormat, fields = ATTENDANCE_FIELD_IDS }: Props) {
+  const display = { timeZone, clockFormat };
+
   return (
     <div className="table-wrap">
       <table className="table log-table">
         <caption className="sr-only">Check-ins and check-outs for the chosen days</caption>
         <thead>
           <tr>
-            <th scope="col">Person</th>
-            <th scope="col">In</th>
-            <th scope="col">Out</th>
-            <th scope="col">Checked in by</th>
-            <th scope="col">Checked out by</th>
-            <th scope="col">Collected by</th>
-            <th scope="col">Method</th>
-            <th scope="col">Override reason</th>
+            {fields.map(field => (
+              <th key={field} scope="col">
+                {ATTENDANCE_FIELD_LABELS[field]}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
           {entries.map(entry => (
             <tr key={entry.id}>
-              <th scope="row">{entry.personName}</th>
-              <td className="num" data-label="In">
-                {formatCampDateTime(entry.checkedInAt, timeZone, clockFormat)}
-              </td>
-              <td className="num" data-label="Out">
-                {entry.checkedOutAt ? formatCampDateTime(entry.checkedOutAt, timeZone, clockFormat) : 'On site'}
-              </td>
-              <td data-label="Checked in by">{dash(entry.checkedInByName)}</td>
-              <td data-label="Checked out by">{dash(entry.checkedOutByName)}</td>
-              <td data-label="Collected by">{dash(entry.collectedByName)}</td>
-              <td data-label="Method">{METHOD_LABEL[entry.method]}</td>
-              <td data-label="Override reason">{dash(entry.overrideReason)}</td>
+              {fields.map(field => {
+                const value = attendanceFieldValue(entry, field, display);
+                const cell = value ?? <span className="muted">—</span>;
+
+                return field === 'person' ? (
+                  <th key={field} scope="row">
+                    {cell}
+                  </th>
+                ) : (
+                  <td
+                    key={field}
+                    className={NUMERIC.has(field) ? 'num' : undefined}
+                    data-label={ATTENDANCE_FIELD_LABELS[field]}
+                  >
+                    {cell}
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>

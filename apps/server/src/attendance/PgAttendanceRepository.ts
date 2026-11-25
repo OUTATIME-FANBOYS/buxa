@@ -9,6 +9,7 @@ import {
   AlreadyCheckedInError,
   MAX_LOG_ROWS,
   NotOnSiteError,
+  type AttendanceFilterOptions,
   type AttendanceQuery,
   type AttendanceRepository,
   type CheckInRecord,
@@ -61,7 +62,8 @@ export class PgAttendanceRepository implements AttendanceRepository {
   }
 
   log(userId: string, orgId: string, query: AttendanceQuery): Promise<CheckInRecord[]> {
-    if (query.personId !== undefined && !isUuid(query.personId)) {
+    const ids = [query.personId, query.sessionId, query.classId, query.checkedInBy];
+    if (ids.some(id => id !== undefined && !isUuid(id))) {
       return Promise.resolve([]);
     }
 
@@ -70,11 +72,42 @@ export class PgAttendanceRepository implements AttendanceRepository {
         db,
         `WHERE checked_in_at >= $1::timestamptz AND checked_in_at < $2::timestamptz
          AND ($3::uuid IS NULL OR person_id = $3::uuid)
-         AND (NOT $4::boolean OR checked_out_at IS NULL)`,
-        [query.from, query.to, query.personId ?? null, query.onSiteOnly === true],
+         AND (NOT $4::boolean OR checked_out_at IS NULL)
+         AND ($5::uuid IS NULL OR session_id = $5::uuid)
+         AND ($6::uuid IS NULL OR class_id = $6::uuid)
+         AND ($7::text IS NULL OR method = $7::text)
+         AND ($8::uuid IS NULL OR checked_in_by = $8::uuid)
+         AND (NOT $9::boolean OR checked_out_at IS NOT NULL)`,
+        [
+          query.from,
+          query.to,
+          query.personId ?? null,
+          query.onSiteOnly === true,
+          query.sessionId ?? null,
+          query.classId ?? null,
+          query.method ?? null,
+          query.checkedInBy ?? null,
+          query.checkedOutOnly === true,
+        ],
         'ORDER BY checked_in_at DESC, id DESC',
         MAX_LOG_ROWS,
       ),
     );
+  }
+
+  filterOptions(userId: string, orgId: string): Promise<AttendanceFilterOptions> {
+    return withOrg(this.pool, userId, orgId, async db => {
+      const [sessions, classes] = await Promise.all([
+        db.query<{ id: string; name: string }>('SELECT id, name FROM classes ORDER BY name, id'),
+        db.query<{ id: string; name: string; session_id: string }>(
+          'SELECT id, name, class_id AS session_id FROM class_series ORDER BY name, id',
+        ),
+      ]);
+
+      return {
+        sessions: sessions.rows,
+        classes: classes.rows.map(row => ({ id: row.id, name: row.name, sessionId: row.session_id })),
+      };
+    });
   }
 }

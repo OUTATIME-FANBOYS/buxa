@@ -5,6 +5,7 @@ import {
   AlreadyCheckedInError,
   MAX_LOG_ROWS,
   NotOnSiteError,
+  type AttendanceFilterOptions,
   type AttendanceQuery,
   type AttendanceRepository,
   type CheckInRecord,
@@ -26,6 +27,10 @@ const toRecord = (v: StoredCheckIn): CheckInRecord => ({
   note: v.note,
   sessionId: v.sessionId,
   sessionUnassigned: v.sessionUnassigned,
+  // The in-memory store keeps no session or class names (classes and series live in Postgres), so these read as none.
+  sessionName: null,
+  classId: null,
+  className: null,
 });
 
 /** In-memory adapter for check-ins: one open visit per person, the same errors, audit entries and ordering as Postgres. */
@@ -140,12 +145,21 @@ export class InMemoryAttendanceRepository implements AttendanceRepository {
             v.checkedInAt >= from &&
             v.checkedInAt < to &&
             (query.personId === undefined || v.personId === query.personId) &&
-            (query.onSiteOnly !== true || v.checkedOutAt === null),
+            (query.sessionId === undefined || v.sessionId === query.sessionId) &&
+            (query.method === undefined || v.method === query.method) &&
+            (query.checkedInBy === undefined || v.checkedInBy === query.checkedInBy) &&
+            (query.onSiteOnly !== true || v.checkedOutAt === null) &&
+            (query.checkedOutOnly !== true || v.checkedOutAt !== null),
         )
         .sort((a, b) => compareText(b.checkedInAt, a.checkedInAt) || compareText(b.id, a.id))
         .slice(0, MAX_LOG_ROWS)
         .map(toRecord);
     });
+  }
+
+  /** The in-memory store keeps no sessions or classes, so there is nothing to offer. */
+  filterOptions(): Promise<AttendanceFilterOptions> {
+    return Promise.resolve({ sessions: [], classes: [] });
   }
 
   private openVisit(orgId: string, personId: string): StoredCheckIn | undefined {
