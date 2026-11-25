@@ -9,6 +9,7 @@ import { DatePicker, HiddenField, TextField } from '@/components/atoms';
 import { ROUTES, personPath } from '@/config/routes';
 import { fieldError, idle, toHouseholdChoices, type HouseholdChoice } from '@buxa/shared';
 import { createPersonAction, updatePersonAction } from '@/actions/people';
+import { EmergencyContactFields } from './EmergencyContactFields';
 import { FormMessage } from './FormMessage';
 import { ComingSoonInvite, PersonInvite, personInviteDetails } from './PersonInvite';
 import { PersonHouseholdFields, type HouseholdTarget } from './PersonHouseholdFields';
@@ -48,8 +49,12 @@ interface PersonFormCommon {
  * The one person form, in two modes. `create` adds a person: with `household` (from the guardian's page) the person joins that
  * household, otherwise the form offers the camp's households or a new one. `edit` changes a person's details, pre-filled from
  * `person`, including the person's household: the household select starts on it, and saving moves, creates or leaves it.
- * Roles are checkboxes in both modes, and every checked role is saved. Which email fields show depends on the roles: a family role
- * shows Household email (and no Email); a staff or participant role shows Email; both show both.
+ * Roles are checkboxes in both modes, and every checked role is saved.
+ *
+ * The sections follow the roles. Camper details (first name, last name, date of birth) are headed as such for a camper. A family role
+ * (a camper or a parent or guardian) shows the Parent or guardian section: the household email, phone and household. A camper, when
+ * adding, also shows an optional Emergency contact section, saved with the person. Staff-only roles keep Email and Phone in the
+ * person's own details.
  */
 export type PersonFormProps = PersonFormCommon &
   ({ mode: 'create'; household: HouseholdTarget | null } | { mode: 'edit'; person: EditablePerson });
@@ -102,8 +107,11 @@ export function PersonForm(props: PersonFormProps) {
 
   const err = (name: string) => fieldError(state, name);
   const selectedRoles = [...roles];
+  const camper = roles.has('camper');
   const hasFamilyRole = selectedRoles.some(isFamilyRole);
-  const showHousehold = hasFamilyRole;
+  const showParent = hasFamilyRole;
+  // The emergency contact is entered when a camper is added. Editing leaves it to the person's page.
+  const showEmergency = !isEdit && camper;
   // One email for the person. A family role names it Household email; the label is the only difference.
   const emailLabel = hasFamilyRole ? 'Household email' : 'Email';
   // Editing a saved set that is not allowed (legacy data) blocks the save until the roles are changed to an allowed set.
@@ -121,6 +129,46 @@ export function PersonForm(props: PersonFormProps) {
   const defaultRelationship =
     person?.households[0]?.members.find(m => m.personId === person.id)?.relationship ?? undefined;
 
+  const emailRow = (
+    <div className="buxa:flex buxa:flex-wrap buxa:items-end buxa:gap-2">
+      <div className="buxa:min-w-[14rem] buxa:flex-1">
+        <TextField
+          label={emailLabel}
+          type="email"
+          name="email"
+          value={email}
+          onChange={setEmail}
+          error={err('email')}
+          autoComplete="off"
+          maxLength={254}
+        />
+      </div>
+      {inviteAvailable ? (
+        <PersonInvite
+          key={savedTeacher ? 'sent' : 'send'}
+          label={inviteLabel}
+          readDetails={() => personInviteDetails(formRef.current)}
+          autoSend={savedTeacher}
+          disabled={!inviteEnabled}
+        />
+      ) : (
+        <ComingSoonInvite label={inviteLabel} />
+      )}
+    </div>
+  );
+
+  const phoneField = (
+    <TextField
+      label="Phone"
+      type="tel"
+      name="phone"
+      defaultValue={person?.phone ?? undefined}
+      error={err('phone')}
+      autoComplete="off"
+      maxLength={32}
+    />
+  );
+
   return (
     <form
       ref={formRef}
@@ -135,29 +183,30 @@ export function PersonForm(props: PersonFormProps) {
       className={`${inDialog ? '' : 'panel '}people-form person-form`}
     >
       {person && <HiddenField name="id" value={person.id} />}
-      <div className="people-form-grid">
-        <TextField
-          label="First name"
-          isRequired
-          name="givenName"
-          defaultValue={person?.givenName}
-          error={err('givenName')}
-          autoComplete="off"
-          maxLength={80}
-          autoFocus={!inDialog}
-        />
-        <TextField
-          label="Last name"
-          isRequired={isEdit}
-          name="familyName"
-          defaultValue={person?.familyName}
-          error={err('familyName')}
-          autoComplete="off"
-          maxLength={80}
-        />
-      </div>
 
-      <div className="people-form-half">
+      <fieldset className="plain person-section buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
+        <legend className="person-legend">{camper ? 'Camper details' : 'Person details'}</legend>
+        <div className="people-form-grid">
+          <TextField
+            label="First name"
+            isRequired
+            name="givenName"
+            defaultValue={person?.givenName}
+            error={err('givenName')}
+            autoComplete="off"
+            maxLength={80}
+            autoFocus={!inDialog}
+          />
+          <TextField
+            label="Last name"
+            isRequired={isEdit}
+            name="familyName"
+            defaultValue={person?.familyName}
+            error={err('familyName')}
+            autoComplete="off"
+            maxLength={80}
+          />
+        </div>
         <DatePicker
           label="Date of birth"
           name="dateOfBirth"
@@ -169,16 +218,8 @@ export function PersonForm(props: PersonFormProps) {
               : 'Only used to tell whether someone is under 18.'
           }
         />
-        <TextField
-          label="Phone"
-          type="tel"
-          name="phone"
-          defaultValue={person?.phone ?? undefined}
-          error={err('phone')}
-          autoComplete="off"
-          maxLength={32}
-        />
-      </div>
+        {!showParent && phoneField}
+      </fieldset>
 
       <PersonRoles
         selected={roles}
@@ -187,43 +228,30 @@ export function PersonForm(props: PersonFormProps) {
         notice={blockSave ? "This person's roles don't match the rules. Change them to save." : undefined}
       />
 
-      <div className="buxa:flex buxa:flex-wrap buxa:items-end buxa:gap-2">
-        <div className="buxa:min-w-[14rem] buxa:flex-1">
-          <TextField
-            label={emailLabel}
-            type="email"
-            name="email"
-            value={email}
-            onChange={setEmail}
-            error={err('email')}
-            autoComplete="off"
-            maxLength={254}
-          />
-        </div>
-        {inviteAvailable ? (
-          <PersonInvite
-            key={savedTeacher ? 'sent' : 'send'}
-            label={inviteLabel}
-            readDetails={() => personInviteDetails(formRef.current)}
-            autoSend={savedTeacher}
-            disabled={!inviteEnabled}
-          />
-        ) : (
-          <ComingSoonInvite label={inviteLabel} />
-        )}
-      </div>
+      {!showParent && emailRow}
 
-      {showHousehold && (
-        <PersonHouseholdFields
-          household={household}
-          choices={choices}
-          defaultHouseholdId={defaultHouseholdId}
-          // Editing always shows it: a move to another household needs one, and it is pre-filled with the current one.
-          showRelationship={isEdit || roles.has('camper')}
-          defaultRelationship={defaultRelationship}
-          err={err}
-        />
+      {showParent && (
+        <fieldset className="plain person-section buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
+          <legend className="person-legend">Parent or guardian</legend>
+          <p className="person-helper">
+            The family&apos;s parent or guardian. For a parent or guardian, the name above is their own. A camper joins
+            a household that already has one.
+          </p>
+          {emailRow}
+          {phoneField}
+          <PersonHouseholdFields
+            household={household}
+            choices={choices}
+            defaultHouseholdId={defaultHouseholdId}
+            // Editing always shows it: a move to another household needs one, and it is pre-filled with the current one.
+            showRelationship={isEdit || camper}
+            defaultRelationship={defaultRelationship}
+            err={err}
+          />
+        </fieldset>
       )}
+
+      {showEmergency && <EmergencyContactFields err={err} />}
 
       {/* A pop-up's save posts dialog=1, so the action returns a success instead of redirecting to the person. */}
       {inDialog && <input type="hidden" name="dialog" value="1" />}

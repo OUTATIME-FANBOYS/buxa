@@ -7,3 +7,4 @@ export * from './search';
 export * from './credential';
 export * from './paging';
 export * from './roleCombinations';
+export * from './emergencyContact';

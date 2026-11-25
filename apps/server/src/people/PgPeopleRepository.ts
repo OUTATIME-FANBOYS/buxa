@@ -5,6 +5,7 @@ import { recordAudit } from '../audit/recordAudit';
 import { PersonNotFoundError } from './PeopleRepository';
 import { forbidden } from '../http/errors';
 import type {
+  EmergencyContactRecord,
   HouseholdLinkRecord,
   HouseholdRecord,
   NewPersonRecord,
@@ -34,7 +35,7 @@ import {
   requirePerson,
   searchPeople,
 } from './PgPersonQueries';
-import { insertPerson, updatePerson } from './PgPersonWrites';
+import { insertPerson, updatePerson, writeEmergencyContact } from './PgPersonWrites';
 
 /** Postgres adapter. Each call runs in withOrg (row-level security) and writes its audit entry in the same transaction. */
 export class PgPeopleRepository implements PeopleRepository {
@@ -77,6 +78,17 @@ export class PgPeopleRepository implements PeopleRepository {
       await requirePerson(db, id);
       const fields = await updatePerson(db, actor.orgId, id, patch);
       await recordAudit(db, { actor, action: 'person.update', entity: 'person', entityId: id, data: { fields } });
+
+      return requirePerson(db, id);
+    });
+  }
+
+  setEmergencyContact(actor: Actor, id: string, contact: EmergencyContactRecord | null): Promise<PersonRecord> {
+    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
+      await requirePerson(db, id);
+      await writeEmergencyContact(db, id, contact);
+      // The audit entry names the person only: no name, phone or relationship.
+      await recordAudit(db, { actor, action: 'person.emergency_contact.update', entity: 'person', entityId: id });
 
       return requirePerson(db, id);
     });

@@ -1,4 +1,6 @@
 import type {
+  EmergencyContact,
+  EmergencyContactInput,
   HouseholdLinkInput,
   NewPersonInput,
   Person,
@@ -13,6 +15,7 @@ import { assignedTo, teacherScopeOf } from '../../classes/teacherScope';
 import { badRequest, conflict, notFound } from '../../http/errors';
 import type { MembershipRecord } from '../../memberships/MembershipRepository';
 import type {
+  EmergencyContactRecord,
   HouseholdRecord,
   PersonHouseholdLink,
   PersonPatchRecord,
@@ -21,6 +24,7 @@ import type {
 import { campToday } from '../shared/campDay';
 import { guard } from '../shared/errors';
 import { campZone, toHouseholds, toPersonMembership, toSummary, onSiteByPerson } from '../shared/views';
+import { childIdsOf } from '../credentials/badgeAccess';
 import type { PeopleService, PeopleServiceDeps } from './PeopleService';
 import { personPageFilter } from './personPageFilter';
 import {
@@ -64,6 +68,19 @@ function toPatchRecord(patch: PersonPatchInput): PersonPatchRecord {
 
   return out;
 }
+
+/** The stored contact for a posted one. A blank name means none (the input schema keeps name and phone blank together). */
+const contactRecordOf = (input: EmergencyContactInput | undefined): EmergencyContactRecord | null =>
+  input === undefined || input.name === ''
+    ? null
+    : { name: input.name, phone: input.phone, relationship: blankToNull(input.relationship) };
+
+/** What a viewer is shown for the contact: blanks where none is recorded. The caller decides whether to show it at all. */
+const emergencyView = (contact: EmergencyContactRecord | null): EmergencyContact => ({
+  name: contact?.name ?? null,
+  phone: contact?.phone ?? null,
+  relationship: contact?.relationship ?? null,
+});
 
 const requireRelationship = (relationship: string | undefined): string => {
   if (relationship === undefined || relationship.trim() === '') {
@@ -134,16 +151,49 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
    * The full record as this actor may see it. Contact details and the minor flag are withheld from anyone without people:read_contact.
    * Memberships, pick-up flags and badge status are withheld from the same roles (see seesCustody).
    */
-  async function personView(actor: Actor, record: PersonRecord, today: LocalDate): Promise<Person> {
+  /**
+   * Whether the signed-in user (recognised by email, as the badge rules do) is a guardian of a household this person is a child in.
+   * Only the family's own guardian counts: a guardian of another household is refused.
+   */
+  async function isGuardianOf(
+    actor: Pick<Actor, 'userId' | 'orgId'>,
+    personId: string,
+    viewerEmail: string | undefined,
+  ): Promise<boolean> {
+    if (viewerEmail === undefined) {
+      return false;
+    }
+    const selves = await people.byEmail(actor.userId, actor.orgId, viewerEmail);
+    for (const self of selves) {
+      const households = await people.householdsOf(actor.userId, actor.orgId, self.id);
+      if (childIdsOf(self.id, households).includes(personId)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  async function personView(
+    actor: Actor,
+    record: PersonRecord,
+    today: LocalDate,
+    viewerEmail?: string,
+  ): Promise<Person> {
     const orgId = actor.orgId;
-    const [ms, households, open, badge] = await Promise.all([
+    const [ms, households, open, badge, guardian] = await Promise.all([
       memberships.forPerson(actor.userId, orgId, record.id),
       people.householdsOf(actor.userId, orgId, record.id),
       attendance.openFor(actor.userId, orgId, record.id),
       credentials.activeFor(actor.userId, orgId, record.id),
+      isGuardianOf(actor, record.id, viewerEmail),
     ]);
     const seeContact = can(actor, 'people:read_contact');
     const custody = seesCustody(actor);
+    // The emergency contact: staff see it, and so does the family's guardian. Editing is staff (people:update) or that guardian, with
+    // read access to the camp, and never in an archived camp.
+    const seeEmergency = seeContact || guardian;
+    const editEmergency = !actor.archived && (can(actor, 'people:update') || (guardian && can(actor, 'people:read')));
 
     return {
       ...toSummary(record, ms, open !== null, today, custody),
@@ -155,6 +205,8 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       // A teacher sees no households: their members are guardians and other families, by name.
       households: isTeachingView(actor) ? [] : await toHouseholds(people, actor, households, custody),
       hasActiveBadge: custody ? badge !== null : null,
+      emergencyContact: seeEmergency ? emergencyView(record.emergencyContact) : null,
+      canEditEmergencyContact: editEmergency,
     };
   }
 
@@ -275,7 +327,7 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       };
     },
 
-    async get(actor, id) {
+    async get(actor, id, viewerEmail) {
       const scope = await teacherScopeOf(classes, actor);
       assertAllowed(actor, 'people:read', { assignedToClass: assignedTo(scope, id) });
       const record = await people.get(actor.userId, actor.orgId, id);
@@ -283,7 +335,20 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
         throw notFound('Person not found');
       }
 
-      return personView(actor, record, await todayFor(actor));
+      return personView(actor, record, await todayFor(actor), viewerEmail);
+    },
+
+    async updateEmergencyContact(actor, id, input, viewerEmail) {
+      // A guardian of the household may edit (with read access and not in an archived camp). Anyone else needs people:update, which
+      // is checked first, so a refusal does not reveal whether the person exists.
+      const guardian = await isGuardianOf(actor, id, viewerEmail);
+      if (!(guardian && !actor.archived && can(actor, 'people:read'))) {
+        assertAllowed(actor, 'people:update');
+      }
+      if (!(await people.get(actor.userId, actor.orgId, id))) {
+        throw notFound('Person not found');
+      }
+      await guard(() => people.setEmergencyContact(actor, id, contactRecordOf(input)));
     },
 
     async create(actor, input) {
@@ -305,6 +370,7 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
             email: emailOrNull(input.email ?? null),
             phone: blankToNull(input.phone ?? null),
             roles: input.roles,
+            emergencyContact: contactRecordOf(input.emergencyContact),
           },
           link,
         ),

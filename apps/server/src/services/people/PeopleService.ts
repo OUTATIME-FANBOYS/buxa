@@ -1,4 +1,5 @@
 import type {
+  EmergencyContactInput,
   Household,
   HouseholdLinkInput,
   NewHouseholdInput,
@@ -35,8 +36,18 @@ export interface PeopleService {
    * the total is the number of matches across all pages. Page size defaults to 25 and is capped at 100. Needs people:read.
    */
   listPage(actor: Actor, query?: PersonPageQuery): Promise<PersonPage>;
-  /** Needs people:read. 404 if the id is not in this camp. Archived people still resolve by id. */
-  get(actor: Actor, id: string): Promise<Person>;
+  /**
+   * Needs people:read. 404 if the id is not in this camp. Archived people still resolve by id. `viewerEmail` is the signed-in user's
+   * email (from the session): it is how a guardian is recognised, so the family's guardian sees and may edit the child's emergency
+   * contact. Without it only staff see the contact.
+   */
+  get(actor: Actor, id: string, viewerEmail?: string): Promise<Person>;
+  /**
+   * Replaces the person's emergency contact (blank name and phone clear it). Allowed for people:update (staff), and for a guardian of
+   * the person's household (a guardian recognised by `viewerEmail`, with people:read and not in an archived camp). Audited as
+   * person.emergency_contact.update, with no personal data in the entry. 403 otherwise, 404 for an unknown id.
+   */
+  updateEmergencyContact(actor: Actor, id: string, input: EmergencyContactInput, viewerEmail: string): Promise<void>;
   /** Needs people:create. */
   create(actor: Actor, input: NewPersonInput): Promise<Person>;
   /** Needs people:update. */

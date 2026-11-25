@@ -23,6 +23,7 @@ export interface StoredPerson {
   email: string | null;
   phone: string | null;
   roles: CampRole[];
+  emergencyContact: { name: string; phone: string; relationship: string | null } | null;
   archivedAt: string | null;
   createdAt: string;
 }

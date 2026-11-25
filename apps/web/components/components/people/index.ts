@@ -2,6 +2,7 @@ export * from './AccessPill';
 export * from './AttendanceHistory';
 export * from './BadgePanel';
 export * from './ContactDetails';
+export * from './EmergencyContactPanel';
 export * from './HouseholdMemberRow';
 export * from './HouseholdPanel';
 export * from './MembershipRow';

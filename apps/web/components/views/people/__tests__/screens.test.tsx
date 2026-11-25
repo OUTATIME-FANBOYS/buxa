@@ -118,6 +118,8 @@ const person = (over: Partial<Person> = {}): Person => ({
   ],
   households: [household],
   hasActiveBadge: true,
+  emergencyContact: null,
+  canEditEmergencyContact: false,
   ...over,
 });
 
@@ -388,6 +390,39 @@ describe('PersonScreen', () => {
     expect(html).not.toContain('1 Jul, 14:30');
 
     expect(render(await PersonScreen({ id: ID.ben }))).toContain('No check-ins yet.');
+  });
+
+  it('shows the emergency contact panel on every person, to staff and to a viewer alike', async () => {
+    as('staff');
+    expect(render(await PersonScreen({ id: ID.ben }))).toContain('id="emergency-contact-heading"');
+    as('viewer');
+    const viewer = render(await PersonScreen({ id: ID.ben }));
+    expect(viewer).toContain('id="emergency-contact-heading"');
+    expect(viewer).toContain('Shown to staff and the family&#x27;s guardian only.');
+  });
+
+  it('offers the emergency contact Edit action to staff, when the server allows it', async () => {
+    as('staff');
+    services.people.get.mockResolvedValueOnce(
+      person({
+        emergencyContact: { name: 'Mara Lee', phone: '+1 555 0100', relationship: 'Mother' },
+        canEditEmergencyContact: true,
+      }),
+    );
+    const html = render(await PersonScreen({ id: ID.ben }));
+    expect(html).toContain('Mara Lee');
+    expect(html).toContain('>Edit</button>');
+  });
+
+  it('shows the missing-contact note for a camper with no contact', async () => {
+    as('staff');
+    services.people.get.mockResolvedValueOnce(
+      person({
+        emergencyContact: { name: null, phone: null, relationship: null },
+        canEditEmergencyContact: true,
+      }),
+    );
+    expect(render(await PersonScreen({ id: ID.ben }))).toContain('Emergency contact is missing');
   });
 
   it('renders the four tiles in order: Membership, Household, Badge, Attendance', async () => {
