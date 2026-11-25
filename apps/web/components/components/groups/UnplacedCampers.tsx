@@ -56,13 +56,12 @@ export function UnplacedCampers({ people, choices }: { people: readonly Unplaced
                         <Button
                           variant="glass"
                           size="sm"
-                          iconOnly
-                          icon="plus"
                           type="button"
                           aria-label={`Place ${person.name}`}
-                          title={`Place ${person.name}`}
                           onClick={() => setPlacingId(person.id)}
-                        />
+                        >
+                          Place
+                        </Button>
                       )}
                     </li>
                   ))}
