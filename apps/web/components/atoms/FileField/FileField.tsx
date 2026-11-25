@@ -1,11 +1,12 @@
 'use client';
 
-import type { Ref } from 'react';
+import { useRef, useState, type Ref } from 'react';
+import { Button } from '../Button';
 
 /*
- * A file chooser. Without a `label` the native input stays hidden and the app opens it from a Button through
- * `inputRef.current.click()`. With a `label` it is a visible, labelled field, with its error announced like the other
- * fields. `onChange` receives the chosen files as they are picked.
+ * A file chooser. The native input is always hidden: the app opens it from its own glass "Choose files" button, so the field
+ * looks like the rest of the app. With a `label` it is a labelled field, with its error announced like the other fields and the
+ * chosen file names listed under the button. `onChange` receives the chosen files as they are picked.
  */
 export interface FileFieldProps {
   label?: string;
@@ -28,35 +29,58 @@ export function FileField({
   inputRef,
   onChange,
 }: FileFieldProps) {
+  const own = useRef<HTMLInputElement | null>(null);
+  const [chosen, setChosen] = useState<string[]>([]);
+
+  const setRef = (node: HTMLInputElement | null) => {
+    own.current = node;
+    if (typeof inputRef === 'function') {
+      inputRef(node);
+    } else if (inputRef) {
+      (inputRef as { current: HTMLInputElement | null }).current = node;
+    }
+  };
+
   const input = (
     <input
-      ref={inputRef}
+      ref={setRef}
       type="file"
       name={name}
       multiple={multiple}
       accept={accept}
       required={required}
-      hidden={!label}
+      hidden
       aria-invalid={error ? true : undefined}
-      onChange={event => onChange?.(event.target.files)}
+      aria-label={label ? undefined : 'Choose files'}
+      onChange={event => {
+        const files = event.target.files;
+        setChosen(files ? Array.from(files, file => file.name) : []);
+        onChange?.(files);
+      }}
     />
   );
 
-  if (!label) {
-    return input;
-  }
-
   return (
-    <label className="field buxa:grid buxa:gap-[6px] buxa:content-start">
-      <span className="field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]">
-        {label}
-      </span>
+    <div className="field buxa:grid buxa:gap-[8px] buxa:content-start">
+      {label ? (
+        <span className="field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]">
+          {label}
+        </span>
+      ) : null}
       {input}
+      <div className="buxa:flex buxa:flex-wrap buxa:items-center buxa:gap-[12px]">
+        <Button variant="secondary" type="button" onClick={() => own.current?.click()}>
+          {multiple ? 'Choose files' : 'Choose file'}
+        </Button>
+        <span className="muted buxa:text-[length:var(--fs-s)]">
+          {chosen.length === 0 ? 'No file chosen' : chosen.join(', ')}
+        </span>
+      </div>
       {error ? (
         <span className="field-error buxa:text-[length:var(--fs-s)] buxa:text-[var(--crit)]" role="alert">
           {error}
         </span>
       ) : null}
-    </label>
+    </div>
   );
 }
