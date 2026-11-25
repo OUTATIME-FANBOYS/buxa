@@ -31,6 +31,7 @@ import type {
   CampActiveHold,
   SeriesFields,
   SeriesRecord,
+  SeriesSchedule,
   CampClassSpan,
   CampWaitlistEntry,
   ClassRecord,
@@ -524,7 +525,7 @@ export class InMemoryClassRepository implements ClassRepository {
     );
   }
 
-  updateSeries(actor: Actor, seriesId: string, input: SeriesFields): Promise<Series> {
+  updateSeries(actor: Actor, seriesId: string, input: SeriesFields, schedule: SeriesSchedule | null): Promise<Series> {
     return settle(() => {
       const row = this.seriesIn(actor.orgId, seriesId);
       if (!row) {
@@ -536,6 +537,10 @@ export class InMemoryClassRepository implements ClassRepository {
       const first = days[0];
       if (first && !capacityCovers(input.capacity, this.takenPlaces(first.id))) {
         throw new CapacityBelowEnrolledError();
+      }
+      // As in Postgres (buxa_delete_occurrences_v1): a removed day is refused while the series has a place, hold or registration.
+      if (schedule && schedule.removeIds.length > 0 && this.activePlaceNames(actor.orgId, seriesId).length > 0) {
+        throw new ClassHasEnrolmentsError();
       }
       const priceBefore = row.price;
       const instructorIds = [...new Set(input.instructorIds)];
@@ -552,9 +557,49 @@ export class InMemoryClassRepository implements ClassRepository {
       if (!samePrice(priceBefore, input.price)) {
         this.record(actor, 'series.update', 'series', seriesId, priceChangeAudit(priceBefore, input.price));
       }
+      if (schedule) {
+        row.weekdays = [...schedule.weekdays];
+        row.seriesStartsAt = schedule.seriesStartsAt;
+        row.seriesEndsAt = schedule.seriesEndsAt;
+        for (const id of schedule.removeIds) {
+          this.classes.delete(id);
+        }
+        for (const day of schedule.add) {
+          const dayInput: ClassRecord = { ...input, instructorIds, startsAt: day.startsAt, endsAt: day.endsAt };
+          const created = this.storeDay(actor, row.sessionId, seriesId, dayInput);
+          this.recordCreate(actor, created, dayInput);
+        }
+        this.record(actor, 'series.reschedule', 'series', seriesId, {
+          added: schedule.add.length,
+          removed: schedule.removeIds.length,
+          weekdays: schedule.weekdays.map(String),
+        });
+      }
 
       return this.toSeries(row);
     });
+  }
+
+  seriesHolders(_userId: string, orgId: string, seriesId: string): Promise<string[]> {
+    return settle(() => this.activePlaceNames(orgId, seriesId));
+  }
+
+  /** The names of the people with an active place on a series: a child enrolled (not cancelled), or a live hold (child or household). */
+  private activePlaceNames(orgId: string, seriesId: string): string[] {
+    const now = this.now().getTime();
+    const names: string[] = [];
+    for (const e of this.enrolments.values()) {
+      if (e.orgId === orgId && e.status !== 'cancelled' && this.seriesKey(e.classId) === seriesId) {
+        names.push(this.campers.get(e.camperId)?.name ?? 'A child');
+      }
+    }
+    for (const h of this.seatHolds) {
+      if (!h.released && Date.parse(h.expiresAt) > now && this.seriesKey(h.classId) === seriesId) {
+        names.push(h.childName ?? h.householdName);
+      }
+    }
+
+    return names;
   }
 
   deleteSeries(actor: Actor, seriesId: string): Promise<void> {
@@ -598,7 +643,7 @@ export class InMemoryClassRepository implements ClassRepository {
     return settle(() =>
       [...this.classes.values()]
         .filter(c => c.orgId === orgId)
-        .map(c => ({ startsAt: c.startsAt, endsAt: c.endsAt, className: c.name }))
+        .map(c => ({ startsAt: c.startsAt, endsAt: c.endsAt, className: c.name, seriesId: c.seriesId }))
         .sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
     );
   }

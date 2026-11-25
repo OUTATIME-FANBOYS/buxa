@@ -6,7 +6,8 @@ import { DateTimeField, NumberField, TextField } from '@/components/atoms';
 import { sessionPath } from '@/config/routes';
 import { fieldError, idle, NO_WEEKDAY } from '@buxa/shared';
 import { MAX_CAMP_SIZE, MAX_CLASS_AGE, MIN_CAMP_SIZE, MIN_CLASS_AGE } from '@buxa/domain';
-import { addSeriesAction } from '@/actions/classes';
+import type { Series } from '@buxa/contracts';
+import { addSeriesAction, updateSeriesAction } from '@/actions/classes';
 import { ActionMessage } from './ActionMessage';
 import { InstructorPicker } from './InstructorPicker';
 import { PriceFields } from './PriceFields';
@@ -18,10 +19,14 @@ export interface InstructorChoice {
 }
 
 /**
- * A new class series: its name, ages, camp size, the days ticked (at least one), the Starts and Ends date-times, location and
- * instructors. The server writes the series and one day per ticked weekday in one transaction. Editing is the series' own form
- * (EditSeriesButton). `variant` says where it renders: on its own page (a panel, with its own Cancel and save buttons) or in a dialog.
- * A dialog's buttons belong to the dialog's pinned footer, so the form is tied to them by `formId` and reports `pending` through
+ * The class form. With no `series` it is a new class series: its name, ages, camp size, the days ticked (at least one), the Starts and
+ * Ends date-times, location, instructors and price. The server writes the series and one day per ticked weekday in one transaction.
+ * With `series` it is the edit of that series: the same form, prefilled from the series. Saving it changes the series' fields, and
+ * adds or removes days when the days or the Starts and Ends change (see ClassService.updateSeries). A teacher on the series
+ * (`detailsOnly`) sees the name only; the server keeps every other field as saved.
+ *
+ * `variant` says where it renders: on its own page (a panel, with its own Cancel and save buttons) or in a dialog. A dialog's
+ * buttons belong to the dialog's pinned footer, so the form is tied to them by `formId` and reports `pending` through
  * `onPendingChange`. When the save succeeds, `onSaved` runs with the server's message, so the dialog can close and toast it.
  */
 export function ClassForm({
@@ -30,6 +35,8 @@ export function ClassForm({
   instructors,
   variant = 'page',
   formId,
+  series,
+  detailsOnly = false,
   onSaved,
   onPendingChange,
 }: {
@@ -39,16 +46,21 @@ export function ClassForm({
   variant?: 'page' | 'dialog';
   /** The id the dialog footer's submit button names with its `form` attribute. */
   formId?: string;
+  /** The series being edited. Left out, the form adds a new class. */
+  series?: Series;
+  /** A teacher on the series: only the name is shown and posted. */
+  detailsOnly?: boolean;
   onSaved?: (message: string) => void;
   onPendingChange?: (pending: boolean) => void;
 }) {
-  const [state, seriesAction, pending] = useActionState(addSeriesAction, idle);
+  const saveAction = series ? updateSeriesAction : addSeriesAction;
+  const [state, seriesAction, pending] = useActionState(saveAction, idle);
   const [noWeekday, setNoWeekday] = useState(false);
   const zone = useBrowserZone();
   // Starts and Ends are posted as typed; the server reads their dates and times in the camp's clock.
   const submit = (data: FormData) => {
-    // A class needs at least one day. With none ticked, the form says so and sends nothing.
-    const none = data.getAll('weekdays').length === 0;
+    // A class needs at least one day. With none ticked, the form says so and sends nothing. A teacher posts no days.
+    const none = !detailsOnly && data.getAll('weekdays').length === 0;
     setNoWeekday(none);
     if (none) {
       return;
@@ -80,6 +92,7 @@ export function ClassForm({
 
   const err = (name: string) => fieldError(state, name);
   const weekdayError = err('weekdays') ?? (noWeekday ? NO_WEEKDAY : undefined);
+  const saveLabel = series ? 'Save class' : 'Add class';
 
   return (
     <form
@@ -92,6 +105,8 @@ export function ClassForm({
       aria-describedby="class-form-help"
     >
       <input type="hidden" name="sessionId" value={sessionId} />
+      {series && <input type="hidden" name="seriesId" value={series.id} />}
+      {detailsOnly && <input type="hidden" name="detailsOnly" value="yes" />}
       <p id="class-form-help" className="class-helper">
         {zone ? `Times are in your time zone (${zone}).` : 'Times are in your time zone.'} The class must fall on days
         inside {sessionName}. Fields marked with an asterisk are required.
@@ -100,56 +115,75 @@ export function ClassForm({
         label="Class name"
         isRequired
         name="name"
-        defaultValue=""
+        defaultValue={series?.name ?? ''}
         error={err('name')}
         maxLength={120}
         autoComplete="off"
-        autoFocus={!inDialog}
+        autoFocus={!inDialog || series !== undefined}
       />
-      {/* Three equal columns (33%) on one row; the labels and inputs start on the same line. */}
-      <div className="buxa:grid buxa:grid-cols-3 buxa:gap-[var(--s3)] buxa:items-start">
-        <NumberField
-          label="Youngest age"
-          isRequired
-          name="minAge"
-          minValue={MIN_CLASS_AGE}
-          maxValue={MAX_CLASS_AGE}
-          error={err('minAge')}
-        />
-        <NumberField
-          label="Oldest age"
-          isRequired
-          name="maxAge"
-          minValue={MIN_CLASS_AGE}
-          maxValue={MAX_CLASS_AGE}
-          error={err('maxAge')}
-        />
-        <NumberField
-          label="Camp Size"
-          isRequired
-          name="capacity"
-          minValue={MIN_CAMP_SIZE}
-          maxValue={MAX_CAMP_SIZE}
-          error={err('capacity')}
-        />
-      </div>
-      {/* Starts and Ends: two equal columns (50%), side by side. */}
-      <div className="buxa:grid buxa:grid-cols-2 buxa:gap-[var(--s3)] buxa:items-end">
-        <DateTimeField label="Starts" isRequired name="startsAt" defaultValue={null} error={err('startsAt')} />
-        <DateTimeField label="Ends" isRequired name="endsAt" defaultValue={null} error={err('endsAt')} />
-      </div>
-      <WeekdayField error={weekdayError} />
-      <TextField
-        label="Location"
-        isRequired
-        name="location"
-        defaultValue=""
-        error={err('location')}
-        maxLength={200}
-        autoComplete="off"
-      />
-      <InstructorPicker instructors={instructors} />
-      <PriceFields error={err} onDiscountProblem={setDiscountProblem} />
+      {!detailsOnly && (
+        <>
+          {/* Three equal columns (33%) on one row; the labels and inputs start on the same line. */}
+          <div className="buxa:grid buxa:grid-cols-3 buxa:gap-[var(--s3)] buxa:items-start">
+            <NumberField
+              label="Youngest age"
+              isRequired
+              name="minAge"
+              minValue={MIN_CLASS_AGE}
+              maxValue={MAX_CLASS_AGE}
+              defaultValue={series?.ageRange.minAge}
+              error={err('minAge')}
+            />
+            <NumberField
+              label="Oldest age"
+              isRequired
+              name="maxAge"
+              minValue={MIN_CLASS_AGE}
+              maxValue={MAX_CLASS_AGE}
+              defaultValue={series?.ageRange.maxAge}
+              error={err('maxAge')}
+            />
+            <NumberField
+              label="Camp Size"
+              isRequired
+              name="capacity"
+              minValue={MIN_CAMP_SIZE}
+              maxValue={MAX_CAMP_SIZE}
+              defaultValue={series?.capacity}
+              error={err('capacity')}
+            />
+          </div>
+          {/* Starts and Ends: two equal columns (50%), side by side. */}
+          <div className="buxa:grid buxa:grid-cols-2 buxa:gap-[var(--s3)] buxa:items-end">
+            <DateTimeField
+              label="Starts"
+              isRequired
+              name="startsAt"
+              defaultValue={series?.startsLocal ?? null}
+              error={err('startsAt')}
+            />
+            <DateTimeField
+              label="Ends"
+              isRequired
+              name="endsAt"
+              defaultValue={series?.endsLocal ?? null}
+              error={err('endsAt')}
+            />
+          </div>
+          <WeekdayField error={weekdayError} initial={series?.weekdays.map(String)} />
+          <TextField
+            label="Location"
+            isRequired
+            name="location"
+            defaultValue={series?.location ?? ''}
+            error={err('location')}
+            maxLength={200}
+            autoComplete="off"
+          />
+          <InstructorPicker instructors={instructors} defaultIds={series?.instructorIds} />
+          <PriceFields price={series?.price ?? null} error={err} onDiscountProblem={setDiscountProblem} />
+        </>
+      )}
       <ActionMessage state={state} />
       {!inDialog && (
         <div className="classes-actions">
@@ -159,11 +193,11 @@ export function ClassForm({
           <Button
             type="submit"
             variant="primary"
-            icon="plus"
+            icon={series ? 'save' : 'plus'}
             className="classes-target"
             disabled={pending || discountProblem}
           >
-            {pending ? 'Saving...' : 'Add class'}
+            {pending ? 'Saving...' : saveLabel}
           </Button>
         </div>
       )}

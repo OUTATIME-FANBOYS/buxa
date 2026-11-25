@@ -44,6 +44,7 @@ export const AUDIT_ACTIONS = [
   'occurrence.restore',
   'series.create',
   'series.update',
+  'series.reschedule',
   'series.delete',
   'calendar.token_rotate',
   'calendar.rotate_self',

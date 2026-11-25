@@ -1,6 +1,7 @@
 import {
   can,
   classFieldsOutsideDetails,
+  seriesFieldsOutsideDetails,
   classWithinSession,
   findClash,
   formatClash,
@@ -27,6 +28,7 @@ import {
 } from '@buxa/contracts';
 import { assertAllowed } from '../auth/authorize';
 import type { CampClassSpan, CampWaitlistEntry, ClassRecord, ClassRepository } from './ClassRepository';
+import { detailsOfInput, detailsOfSeries, fieldsOf, scheduleOfSeries } from './seriesSchedule';
 import { teacherScopeOf, type TeacherScope } from './teacherScope';
 import {
   ClassNotFoundError,
@@ -408,7 +410,12 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
               `${input.name} on ${occurrence.date} clashes with ${clash.className} (${formatClash(clash, timeZone)}). Choose other times or days; nothing was saved.`,
             );
           }
-          accepted.push({ startsAt: occurrence.startsAt, endsAt: occurrence.endsAt, className: input.name });
+          accepted.push({
+            startsAt: occurrence.startsAt,
+            endsAt: occurrence.endsAt,
+            className: input.name,
+            seriesId: null,
+          });
         }
 
         return repo.addSeries(actor, sessionId, {
@@ -488,19 +495,37 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
     },
 
     async updateSeries(actor, seriesId, input) {
-      assertAllowed(actor, 'classes:manage');
+      const scope = await teacherScopeOf(repo, actor);
+      const detailsOnly = !can(actor, 'classes:manage');
+      if (detailsOnly) {
+        // A teacher may change the name of a series it teaches, and nothing else (as for a class: see updateClass).
+        const days = scope === null ? [] : await repo.listSeriesOccurrences(actor.userId, actor.orgId, seriesId);
+        assertAllowed(actor, 'events:update_details', {
+          assignedToClass: scope === null ? undefined : days.some(d => scope.classIds.has(d.id)),
+        });
+      } else {
+        assertAllowed(actor, 'classes:manage');
+      }
+      const timeZone = await timezoneOf(actor);
 
-      return attempt(
-        async () => {
-          const existing = await repo.getSeries(actor.userId, actor.orgId, seriesId);
-          if (!existing) {
-            throw new ClassNotFoundError();
+      return attempt(async () => {
+        const existing = await repo.getSeries(actor.userId, actor.orgId, seriesId);
+        if (!existing) {
+          throw new ClassNotFoundError();
+        }
+        if (detailsOnly) {
+          const locked = seriesFieldsOutsideDetails(detailsOfSeries(existing), detailsOfInput(input));
+          if (locked.length > 0) {
+            throw new TeacherFieldRefusedError(locked);
           }
 
-          return repo.updateSeries(actor, seriesId, input);
-        },
-        await timezoneOf(actor),
-      );
+          return repo.updateSeries(actor, seriesId, fieldsOf(input), null);
+        }
+        const stored = await repo.listSeriesOccurrences(actor.userId, actor.orgId, seriesId);
+        const schedule = await scheduleOfSeries(repo, actor, existing, stored, input, timeZone);
+
+        return repo.updateSeries(actor, seriesId, fieldsOf(input), schedule);
+      }, timeZone);
     },
 
     async deleteSeries(actor, seriesId) {

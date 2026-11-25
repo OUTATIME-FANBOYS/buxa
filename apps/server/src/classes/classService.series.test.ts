@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { NewSeriesInput } from '@buxa/contracts';
 import { isHttpError } from '../http/errors';
-import { CAMPER_ADA, JULY_SESSION, as, monday9to12, robotics, setup } from './__tests__/fixtures';
+import { CAMPER_ADA, JULY_SESSION, ORG, as, monday9to12, robotics, setup } from './__tests__/fixtures';
 
 const expect403 = async (p: Promise<unknown>) => {
   const err = await p.then(
@@ -179,5 +179,225 @@ describe('class series: cancelling one day', () => {
     }
     expect(updated.value.activeOccurrenceCount).toBe(2);
     expect(updated.value.occurrenceCount).toBe(3);
+  });
+});
+
+const TEACHER_PERSON = '00000000-0000-4000-8000-0000000000d4';
+const TEACHER_USER = 'user-teacher-tara';
+
+/** The series' days as start instants, in order, so a test can read which days exist. */
+async function dayStarts(service: ReturnType<typeof setup>['service'], seriesId: string): Promise<string[]> {
+  const days = await service.listSeriesOccurrences(as('admin'), seriesId);
+  if (!days.ok) {
+    throw new Error(days.failure.message);
+  }
+
+  return days.value.map(d => d.startsAt).sort();
+}
+
+describe('class series: the edit is the New class form, saved against the days', () => {
+  it('a change to the name alone updates the series and keeps its days', async () => {
+    const { service } = setup();
+    const sessionId = await newSession(service);
+    const made = await service.addSeries(as('admin'), sessionId, series());
+    if (!made.ok) {
+      throw new Error(made.failure.message);
+    }
+    const before = await dayStarts(service, made.value.id);
+
+    const saved = await service.updateSeries(as('admin'), made.value.id, series({ name: 'Sketching' }));
+
+    expect(saved.ok && saved.value.name).toBe('Sketching');
+    expect(await dayStarts(service, made.value.id)).toEqual(before);
+  });
+
+  it('adds the days a change plans and removes the active days no one is on', async () => {
+    const { service } = setup();
+    const sessionId = await newSession(service);
+    const made = await service.addSeries(as('admin'), sessionId, series());
+    if (!made.ok) {
+      throw new Error(made.failure.message);
+    }
+
+    // Mondays and Wednesdays from Monday 12 July: 12 (kept), 14 (new), 19 (kept). Monday 5 (no one is on it) is removed.
+    const saved = await service.updateSeries(
+      as('admin'),
+      made.value.id,
+      series({ weekdays: [1, 3], startsAt: '2027-07-12T09:00', endsAt: '2027-07-19T12:00' }),
+    );
+
+    expect(saved.ok).toBe(true);
+    expect(await dayStarts(service, made.value.id)).toEqual([
+      '2027-07-11T23:00:00.000Z',
+      '2027-07-13T23:00:00.000Z',
+      '2027-07-18T23:00:00.000Z',
+    ]);
+    expect(saved.ok && saved.value.weekdays).toEqual([1, 3]);
+  });
+
+  it('refuses a change that removes a day a child is enrolled on, names the child, and changes nothing', async () => {
+    const { service } = setup();
+    const sessionId = await newSession(service);
+    const made = await service.addSeries(as('admin'), sessionId, series());
+    if (!made.ok) {
+      throw new Error(made.failure.message);
+    }
+    const enrolled = await service.enrol(as('admin'), {
+      classId: made.value.anchorClassId,
+      camperId: CAMPER_ADA,
+      waitlistIfFull: false,
+    });
+    expect(enrolled.ok).toBe(true);
+    const before = await dayStarts(service, made.value.id);
+
+    const refused = await service.updateSeries(
+      as('admin'),
+      made.value.id,
+      series({ startsAt: '2027-07-12T09:00', name: 'Sketching' }),
+    );
+
+    expect(refused.ok).toBe(false);
+    if (refused.ok) {
+      return;
+    }
+    expect(refused.failure.reason).toBe('series_days_in_use');
+    expect(refused.failure.message).toMatch(/Ada Lovelace/);
+    expect(refused.failure.message).toMatch(/Unenrol them first/);
+    expect(await dayStarts(service, made.value.id)).toEqual(before);
+    const listed = await service.getSeries(as('admin'), made.value.id);
+    expect(listed.ok && listed.value.name).toBe('Painting');
+  });
+
+  it('a change that only adds days goes through while a child is enrolled', async () => {
+    const { service } = setup();
+    const sessionId = await newSession(service);
+    const made = await service.addSeries(as('admin'), sessionId, series());
+    if (!made.ok) {
+      throw new Error(made.failure.message);
+    }
+    await service.enrol(as('admin'), {
+      classId: made.value.anchorClassId,
+      camperId: CAMPER_ADA,
+      waitlistIfFull: false,
+    });
+
+    const saved = await service.updateSeries(
+      as('admin'),
+      made.value.id,
+      series({ weekdays: [1, 3], startsAt: '2027-07-05T09:00', endsAt: '2027-07-19T12:00' }),
+    );
+
+    // Mondays 5, 12 and 19 stay; Wednesdays 7 and 14 are added.
+    expect(saved.ok && saved.value.occurrenceCount).toBe(5);
+  });
+
+  it('a change to camp size or location is saved while a child is enrolled, and the days are kept', async () => {
+    const { service } = setup();
+    const sessionId = await newSession(service);
+    const made = await service.addSeries(as('admin'), sessionId, series());
+    if (!made.ok) {
+      throw new Error(made.failure.message);
+    }
+    await service.enrol(as('admin'), {
+      classId: made.value.anchorClassId,
+      camperId: CAMPER_ADA,
+      waitlistIfFull: false,
+    });
+    const before = await dayStarts(service, made.value.id);
+
+    const saved = await service.updateSeries(as('admin'), made.value.id, series({ capacity: 8, location: 'Hall' }));
+
+    expect(saved.ok && saved.value).toMatchObject({ capacity: 8, location: 'Hall' });
+    expect(await dayStarts(service, made.value.id)).toEqual(before);
+  });
+
+  it('refuses a day outside the session dates, with the existing message, and changes nothing', async () => {
+    const { service } = setup();
+    const sessionId = await newSession(service);
+    const made = await service.addSeries(as('admin'), sessionId, series());
+    if (!made.ok) {
+      throw new Error(made.failure.message);
+    }
+    const before = await dayStarts(service, made.value.id);
+
+    const refused = await service.updateSeries(as('admin'), made.value.id, series({ endsAt: '2027-08-30T12:00' }));
+
+    expect(refused.ok).toBe(false);
+    if (refused.ok) {
+      return;
+    }
+    expect(refused.failure.reason).toBe('class_outside_session');
+    expect(refused.failure.message).toBe('The class falls outside the session dates. Change the session dates first.');
+    expect(await dayStarts(service, made.value.id)).toEqual(before);
+  });
+
+  it('writes a series.reschedule audit entry when the days change', async () => {
+    const { service, repo } = setup();
+    const sessionId = await newSession(service);
+    const made = await service.addSeries(as('admin'), sessionId, series());
+    if (!made.ok) {
+      throw new Error(made.failure.message);
+    }
+
+    await service.updateSeries(
+      as('admin'),
+      made.value.id,
+      series({ weekdays: [1, 3], startsAt: '2027-07-12T09:00', endsAt: '2027-07-19T12:00' }),
+    );
+
+    const entries = repo.audit.filter(a => a.action === 'series.reschedule');
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({ entityId: made.value.id, data: { added: 1, removed: 1 } });
+  });
+});
+
+describe('class series: a teacher on the series changes its name only', () => {
+  async function taughtSeries() {
+    const { service, repo } = setup();
+    const sessionId = await newSession(service);
+    repo.seedCamper(ORG, TEACHER_PERSON, 'Tara Teacher', null);
+    repo.linkPersonToLogin(TEACHER_PERSON, TEACHER_USER);
+    repo.seedTeacher(ORG, TEACHER_USER);
+    const made = await service.addSeries(as('admin'), sessionId, series({ instructorIds: [TEACHER_PERSON] }));
+    if (!made.ok) {
+      throw new Error(made.failure.message);
+    }
+
+    return { service, seriesId: made.value.id, teacher: as('teacher', ORG, TEACHER_USER) };
+  }
+
+  it('can rename the series it teaches', async () => {
+    const { service, seriesId, teacher } = await taughtSeries();
+
+    const saved = await service.updateSeries(
+      teacher,
+      seriesId,
+      series({ name: 'Sketching', instructorIds: [TEACHER_PERSON] }),
+    );
+
+    expect(saved.ok && saved.value.name).toBe('Sketching');
+  });
+
+  it('is refused a change to any other field, and nothing changes', async () => {
+    const { service, seriesId, teacher } = await taughtSeries();
+
+    await expect(
+      service.updateSeries(teacher, seriesId, series({ capacity: 9, instructorIds: [TEACHER_PERSON] })),
+    ).resolves.toMatchObject({ ok: false, failure: { reason: 'teacher_field_refused' } });
+    const after = await service.getSeries(teacher, seriesId);
+    expect(after.ok && after.value.capacity).toBe(5);
+  });
+
+  it('is refused a change to the days', async () => {
+    const { service, seriesId, teacher } = await taughtSeries();
+
+    const refused = await service.updateSeries(
+      teacher,
+      seriesId,
+      series({ weekdays: [1, 2], instructorIds: [TEACHER_PERSON] }),
+    );
+
+    expect(refused.ok).toBe(false);
+    expect(refused.ok === false && refused.failure.reason).toBe('teacher_field_refused');
   });
 });

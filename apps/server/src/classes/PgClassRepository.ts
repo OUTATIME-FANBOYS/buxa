@@ -20,9 +20,10 @@ import type {
   EnrolmentRule,
   SeriesFields,
   SeriesRecord,
+  SeriesSchedule,
 } from './ClassRepository';
 import { deleteSeriesRow, insertSeries, updateSeriesRow } from './PgSeriesWrites';
-import { getSeriesRow, listSeriesDayRows, listSeriesRows } from './PgSeriesQueries';
+import { getSeriesRow, listSeriesDayRows, listSeriesHolderNames, listSeriesRows } from './PgSeriesQueries';
 import { ClassNotFoundError } from './errors';
 import { cancelInTransaction, enrolInTransaction } from './PgEnrolmentWrites';
 import { readDatesPlanRows } from './PgSessionDates';
@@ -220,10 +221,19 @@ export class PgClassRepository implements ClassRepository {
     return withOrg(this.pool, userId, orgId, db => listSeriesDayRows(db, seriesId));
   }
 
-  async updateSeries(actor: Actor, seriesId: string, input: SeriesFields): Promise<Series> {
+  seriesHolders(userId: string, orgId: string, seriesId: string): Promise<string[]> {
+    return withOrg(this.pool, userId, orgId, db => listSeriesHolderNames(db, seriesId));
+  }
+
+  async updateSeries(
+    actor: Actor,
+    seriesId: string,
+    input: SeriesFields,
+    schedule: SeriesSchedule | null,
+  ): Promise<Series> {
     try {
       return await withOrg(this.pool, actor.userId, actor.orgId, async db => {
-        await updateSeriesRow(db, actor, seriesId, input);
+        await updateSeriesRow(db, actor, seriesId, input, schedule);
         const updated = await getSeriesRow(db, seriesId);
         if (!updated) {
           throw new ClassNotFoundError();
@@ -252,11 +262,16 @@ export class PgClassRepository implements ClassRepository {
 
   listCampClassSpans(userId: string, orgId: string): Promise<CampClassSpan[]> {
     return withOrg(this.pool, userId, orgId, async db => {
-      const { rows } = await db.query<{ starts_at: Date; ends_at: Date; class_name: string }>(
-        'SELECT s.starts_at, s.ends_at, s.name AS class_name FROM sessions s ORDER BY s.starts_at',
+      const { rows } = await db.query<{ starts_at: Date; ends_at: Date; class_name: string; series_id: string | null }>(
+        'SELECT s.starts_at, s.ends_at, s.name AS class_name, s.series_id FROM sessions s ORDER BY s.starts_at',
       );
 
-      return rows.map(r => ({ startsAt: toIso(r.starts_at), endsAt: toIso(r.ends_at), className: r.class_name }));
+      return rows.map(r => ({
+        startsAt: toIso(r.starts_at),
+        endsAt: toIso(r.ends_at),
+        className: r.class_name,
+        seriesId: r.series_id,
+      }));
     });
   }
 
