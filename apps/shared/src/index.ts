@@ -101,3 +101,6 @@ export * from './registration/parse';
 export * from './invites/invitePath';
 export * from './invites/inviteEmail';
 export * from './groups/rosterCsv';
+export * from './gate/gatePath';
+export * from './gate/entryFlow';
+export * from './gate/gateTypes';
