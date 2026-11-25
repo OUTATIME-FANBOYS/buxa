@@ -252,11 +252,24 @@ export class PgClassRepository implements ClassRepository {
 
   listCampClassSpans(userId: string, orgId: string): Promise<CampClassSpan[]> {
     return withOrg(this.pool, userId, orgId, async db => {
-      const { rows } = await db.query<{ starts_at: Date; ends_at: Date; class_name: string }>(
-        'SELECT s.starts_at, s.ends_at, s.name AS class_name FROM sessions s ORDER BY s.starts_at',
+      const { rows } = await db.query<{
+        starts_at: Date;
+        ends_at: Date;
+        class_name: string;
+        location: string;
+        series_id: string;
+      }>(
+        `SELECT s.starts_at, s.ends_at, s.name AS class_name, s.location, s.series_id
+           FROM sessions s WHERE s.status = 'active' ORDER BY s.starts_at`,
       );
 
-      return rows.map(r => ({ startsAt: toIso(r.starts_at), endsAt: toIso(r.ends_at), className: r.class_name }));
+      return rows.map(r => ({
+        startsAt: toIso(r.starts_at),
+        endsAt: toIso(r.ends_at),
+        className: r.class_name,
+        location: r.location,
+        seriesId: r.series_id,
+      }));
     });
   }
 

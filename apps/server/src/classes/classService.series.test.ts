@@ -99,7 +99,7 @@ describe('class series: writing one series', () => {
     expect(again.ok).toBe(false);
   });
 
-  it('refuses a series whose day clashes with a class already in the camp, and writes nothing', async () => {
+  it('refuses a series whose day clashes with a class in the same location, and writes nothing', async () => {
     const { service } = setup();
     const sessionId = await newSession(service);
     await service.addClass(as('admin'), sessionId, { ...robotics, ...monday9to12 });
@@ -107,7 +107,7 @@ describe('class series: writing one series', () => {
     const refused = await service.addSeries(
       as('admin'),
       sessionId,
-      series({ startsAt: '2027-07-05T09:00', endsAt: '2027-07-05T12:00' }),
+      series({ location: 'Lab 1', startsAt: '2027-07-05T09:00', endsAt: '2027-07-05T12:00' }),
     );
 
     expect(refused.ok).toBe(false);
@@ -115,7 +115,7 @@ describe('class series: writing one series', () => {
       return;
     }
     expect(refused.failure.reason).toBe('class_clash');
-    expect(refused.failure.message).toMatch(/clashes with Robotics/);
+    expect(refused.failure.message).toMatch(/clashes with Robotics at Lab 1/);
     const listed = await service.listSeries(as('admin'), sessionId);
     expect(listed.ok && listed.value.map(s => s.name)).toEqual(['Robotics']);
   });

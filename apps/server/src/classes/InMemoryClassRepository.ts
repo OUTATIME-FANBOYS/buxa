@@ -597,8 +597,14 @@ export class InMemoryClassRepository implements ClassRepository {
   listCampClassSpans(userId: string, orgId: string): Promise<CampClassSpan[]> {
     return settle(() =>
       [...this.classes.values()]
-        .filter(c => c.orgId === orgId)
-        .map(c => ({ startsAt: c.startsAt, endsAt: c.endsAt, className: c.name }))
+        .filter(c => c.orgId === orgId && c.status === 'active')
+        .map(c => ({
+          startsAt: c.startsAt,
+          endsAt: c.endsAt,
+          className: c.name,
+          location: c.location,
+          seriesId: c.seriesId,
+        }))
         .sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
     );
   }

@@ -2,8 +2,6 @@ import {
   can,
   classFieldsOutsideDetails,
   classWithinSession,
-  findClash,
-  formatClash,
   teachingDays,
   planSeries,
   planSessionDates,
@@ -26,7 +24,8 @@ import {
   type SessionEditInput,
 } from '@buxa/contracts';
 import { assertAllowed } from '../auth/authorize';
-import type { CampClassSpan, CampWaitlistEntry, ClassRecord, ClassRepository } from './ClassRepository';
+import type { CampWaitlistEntry, ClassRecord, ClassRepository } from './ClassRepository';
+import { activeDays, assertNoLocationClash, dayOf, otherPlaces } from './locationClash';
 import { teacherScopeOf, type TeacherScope } from './teacherScope';
 import {
   ClassNotFoundError,
@@ -369,8 +368,18 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
 
     async restoreOccurrence(actor, occurrenceId) {
       assertAllowed(actor, 'classes:manage');
+      const timeZone = await timezoneOf(actor);
 
-      return attempt(() => repo.setOccurrenceStatus(actor, occurrenceId, { kind: 'restore' }), await timezoneOf(actor));
+      return attempt(async () => {
+        // A restored day takes its place again, so it must not overlap a class in its location.
+        const day = await repo.getClass(actor.userId, actor.orgId, occurrenceId);
+        if (day) {
+          const others = otherPlaces(await repo.listCampClassSpans(actor.userId, actor.orgId), day.seriesId);
+          assertNoLocationClash({ name: day.name, location: day.location }, [dayOf(day, timeZone)], others, timeZone);
+        }
+
+        return repo.setOccurrenceStatus(actor, occurrenceId, { kind: 'restore' });
+      }, timeZone);
     },
     async addSeries(actor, sessionId, input) {
       assertAllowed(actor, 'classes:manage');
@@ -394,22 +403,19 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
           session.startsOn !== null && session.endsOn !== null
             ? { startsOn: session.startsOn, endsOn: session.endsOn }
             : null;
-        // Each day is checked against every class in the camp and against the earlier days of this series, as an import is.
-        const existing: CampClassSpan[] = await repo.listCampClassSpans(actor.userId, actor.orgId);
-        const accepted: CampClassSpan[] = [];
         for (const occurrence of plan.series.occurrences) {
           if (days && !classWithinSession(occurrence, days, timeZone)) {
             throw new ClassOutsideSessionError(days.startsOn, days.endsOn);
           }
-          const clash = findClash(occurrence, [...existing, ...accepted]);
-          if (clash) {
-            throw new RecurrenceRefusedError(
-              'class_clash',
-              `${input.name} on ${occurrence.date} clashes with ${clash.className} (${formatClash(clash, timeZone)}). Choose other times or days; nothing was saved.`,
-            );
-          }
-          accepted.push({ startsAt: occurrence.startsAt, endsAt: occurrence.endsAt, className: input.name });
         }
+        // Each day is checked against the active classes in the same location, and against the earlier days of this series.
+        const existing = otherPlaces(await repo.listCampClassSpans(actor.userId, actor.orgId), null);
+        assertNoLocationClash(
+          { name: input.name, location: input.location },
+          plan.series.occurrences.map(o => ({ date: o.date, startsAt: o.startsAt, endsAt: o.endsAt })),
+          existing,
+          timeZone,
+        );
 
         return repo.addSeries(actor, sessionId, {
           name: input.name,
@@ -489,18 +495,25 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
 
     async updateSeries(actor, seriesId, input) {
       assertAllowed(actor, 'classes:manage');
+      const timeZone = await timezoneOf(actor);
 
-      return attempt(
-        async () => {
-          const existing = await repo.getSeries(actor.userId, actor.orgId, seriesId);
-          if (!existing) {
-            throw new ClassNotFoundError();
-          }
+      return attempt(async () => {
+        const existing = await repo.getSeries(actor.userId, actor.orgId, seriesId);
+        if (!existing) {
+          throw new ClassNotFoundError();
+        }
+        // The series may move to another location: its active days must not overlap a class there.
+        const days = await repo.listSeriesOccurrences(actor.userId, actor.orgId, seriesId);
+        const others = otherPlaces(await repo.listCampClassSpans(actor.userId, actor.orgId), seriesId);
+        assertNoLocationClash(
+          { name: input.name, location: input.location },
+          activeDays(days, timeZone),
+          others,
+          timeZone,
+        );
 
-          return repo.updateSeries(actor, seriesId, input);
-        },
-        await timezoneOf(actor),
-      );
+        return repo.updateSeries(actor, seriesId, input);
+      }, timeZone);
     },
 
     async deleteSeries(actor, seriesId) {
@@ -611,6 +624,13 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
 
       return attempt(async () => {
         await requireWithinSession(repo, actor, sessionId, input, timeZone);
+        const others = otherPlaces(await repo.listCampClassSpans(actor.userId, actor.orgId), null);
+        assertNoLocationClash(
+          { name: input.name, location: input.location },
+          [dayOf(input, timeZone)],
+          others,
+          timeZone,
+        );
 
         return repo.addClass(actor, sessionId, toRecord(input));
       }, timeZone);
@@ -639,6 +659,13 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
             throw new TeacherFieldRefusedError(locked);
           }
         }
+        const others = otherPlaces(await repo.listCampClassSpans(actor.userId, actor.orgId), existing.seriesId);
+        assertNoLocationClash(
+          { name: input.name, location: input.location },
+          [dayOf(input, timeZone)],
+          others,
+          timeZone,
+        );
         await requireWithinSession(repo, actor, existing.sessionId, input, timeZone);
 
         return repo.updateClass(actor, classId, toRecord(input));
