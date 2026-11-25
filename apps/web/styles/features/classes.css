@@ -491,6 +491,12 @@ form.class-form {
   border: 1px solid var(--line);
   border-radius: var(--r-2);
 }
+/* The Required checkbox sits level with the answer type box (not its label): the box is one control high. */
+.question-add__required {
+  display: flex;
+  align-items: center;
+  height: var(--control-h);
+}
 .question-add__row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

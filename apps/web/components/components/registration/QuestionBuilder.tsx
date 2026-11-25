@@ -139,9 +139,11 @@ export function QuestionBuilder({ initial = [] }: { initial?: CustomField[] }) {
               value={kind}
               onChange={value => setKind((value ?? 'text') as FieldKind)}
             />
-            <Checkbox isSelected={required} onChange={setRequired}>
-              Required
-            </Checkbox>
+            <div className="question-add__required">
+              <Checkbox isSelected={required} onChange={setRequired}>
+                Required
+              </Checkbox>
+            </div>
           </div>
           {kind === 'choice' && (
             <TextField
