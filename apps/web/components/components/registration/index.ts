@@ -1,6 +1,7 @@
-export * from './FormEditor';
 export * from './EditFormButton';
+export * from './FormEditor';
 export * from './FormsTable';
+export * from './FormViewDialog';
 export * from './NewRegistrationFormButton';
 export * from './QuestionBuilder';
 export * from './RegisterForm';
@@ -9,3 +10,4 @@ export * from './RegistrationSearch';
 export * from './registrationSearchRows';
 export * from './SubmissionsBySession';
 export * from './TakeRegistrationButton';
+export * from './ViewFormButton';

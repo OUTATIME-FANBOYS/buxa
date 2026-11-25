@@ -163,3 +163,34 @@ describe('the session filter on the Registration page', () => {
     expect(html).not.toContain(`href="/camp/sessions/${AUTUMN}?tab=registrations"`);
   });
 });
+
+describe('the forms table on the Registration page', () => {
+  it('shows each form in the table with a View button named for it', async () => {
+    const html = render(await RegistrationList());
+    expect(html).toContain('Season form');
+    expect(html).toContain('aria-label="View Season form"');
+  });
+
+  it('shows no question editor on the page: the questions are read in the View pop-up', async () => {
+    const html = render(await RegistrationList());
+    expect(html).not.toContain('Your questions');
+    expect(html).not.toContain('Save draft');
+    expect(html).not.toContain('Publish a new version');
+    expect(html).not.toContain('Files for families');
+  });
+
+  it('keeps the registrations list and its search on the page for a viewer, without New Form', async () => {
+    asRole('viewer');
+    const html = render(await RegistrationList());
+    expect(html).toContain('Season form');
+    expect(html).toContain('aria-label="Search registrations"');
+    expect(html).not.toContain('New Form');
+  });
+
+  it('shows New Form to an admin, who may manage forms, and not to staff', async () => {
+    asRole('admin');
+    expect(render(await RegistrationList())).toContain('New Form');
+    asRole('staff');
+    expect(render(await RegistrationList())).not.toContain('New Form');
+  });
+});
