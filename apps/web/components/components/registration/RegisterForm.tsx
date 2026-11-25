@@ -8,7 +8,7 @@ import { Button, Checkbox, DatePicker, FileField, RadioGroup, Select, TextField 
 import { registrationFormFilePath, registrationFormPath } from '@/config/routes';
 import { submitRegistrationAction } from '@/actions/registration';
 import { ActionMessage } from '@/components/components/classes/forms';
-import { PersonPicker } from '@/components/components/groups';
+import { ChildPicker } from './ChildPicker';
 
 /*
  * Records one family's registration on a published form. The family's children are chosen first (from People), then the classes
@@ -217,12 +217,11 @@ export function RegisterForm({
             </p>
           </>
         ) : (
-          <PersonPicker
+          <ChildPicker
             label="Children"
             people={campers}
             chosen={childIds}
             onChange={setChildren}
-            search
             error={chosenChildren.length === 0 ? err('selections') : undefined}
           />
         )}
