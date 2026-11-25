@@ -77,5 +77,10 @@ export const AUDIT_ACTIONS = [
   'assignment.move',
   'assignment.override',
   'assignment.unassign',
+  'gate.rotate',
+  'gate.code_request',
+  'gate.verify',
+  'gate.device_issue',
+  'gate.device_revoke',
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
