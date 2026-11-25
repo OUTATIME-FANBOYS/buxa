@@ -44,8 +44,6 @@ vi.mock('@/actions/classes', () => ({
   deleteSeriesAction: vi.fn(),
   cancelOccurrenceAction: vi.fn(),
   restoreOccurrenceAction: vi.fn(),
-  addClassAction: vi.fn(),
-  updateClassAction: vi.fn(),
   deleteClassAction: vi.fn(),
   updateSessionAction: vi.fn(),
   deleteSessionAction: vi.fn(),

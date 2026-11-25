@@ -3,39 +3,14 @@ import { describe, expect, it, vi } from 'vitest';
 
 // The form shows and converts times in the browser's zone. Tests run in Sydney so the saved instants read as the times below.
 process.env.TZ = 'Australia/Sydney';
-import type { Class } from '@buxa/contracts';
 import { ClassForm } from '@/components/components/classes/forms';
 
 vi.mock('@/actions/classes', () => ({
-  addClassAction: vi.fn(),
   addSeriesAction: vi.fn(),
-  updateClassAction: vi.fn(),
 }));
 
 const SESSION = '11111111-1111-4111-8111-111111111111';
-const CLASS = '22222222-2222-4222-8222-222222222222';
 const INSTRUCTOR = '33333333-3333-4333-8333-333333333333';
-
-const cls: Class = {
-  id: CLASS,
-  sessionId: SESSION,
-  sessionName: 'Summer camp',
-  name: 'Robotics',
-  ageRange: { minAge: 8, maxAge: 12 },
-  capacity: 12,
-  startsAt: '2027-07-04T23:00:00.000Z',
-  endsAt: '2027-07-05T02:00:00.000Z',
-  location: 'Lab 1',
-  instructorIds: [],
-  instructors: [],
-  seatsTaken: 0,
-  waitlisted: 0,
-  datesOutsideSession: false,
-  seriesId: 'series-1',
-  occurrenceStatus: 'active',
-  cancelReason: null,
-  price: null,
-};
 
 const render = (props: Partial<Parameters<typeof ClassForm>[0]> = {}) =>
   renderToStaticMarkup(<ClassForm sessionId={SESSION} sessionName="Summer camp" instructors={[]} {...props} />);
@@ -88,19 +63,6 @@ describe('ClassForm: the fields of a class', () => {
     expect(html).toContain('Add an instructor');
     expect(html).not.toContain('type="checkbox"');
   });
-
-  it('starts the chosen instructors as tags, and posts each one as an instructorIds field', () => {
-    const html = render({
-      instructors: [
-        { id: INSTRUCTOR, name: 'Ana Ruiz' },
-        { id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', name: 'Ben Cole' },
-      ],
-      cls: { ...cls, instructorIds: [INSTRUCTOR], instructors: [{ id: INSTRUCTOR, name: 'Ana Ruiz' }] },
-    });
-    expect(html).toContain('aria-label="Remove Ana Ruiz"');
-    expect(html).toContain(`name="instructorIds" value="${INSTRUCTOR}"`);
-    expect(html).not.toContain('name="instructorIds" value="bbbbbbbb');
-  });
 });
 
 describe('ClassForm: the price of a class', () => {
@@ -111,37 +73,17 @@ describe('ClassForm: the price of a class', () => {
     expect(html).toContain('name="earlyBirdUntil"');
     expect(html).toContain('For information only. Nothing is charged.');
   });
-
-  it('starts from the saved price of the class', () => {
-    const priced: Class = {
-      ...cls,
-      price: { currency: 'AUD', regularMinor: 45000, earlyBirdMinor: null, earlyBirdUntil: null },
-    };
-    const html = renderToStaticMarkup(
-      <ClassForm sessionId={SESSION} sessionName="Summer camp" instructors={[]} cls={priced} />,
-    );
-    expect(html).toMatch(/name="priceAmount"[^>]*value="450\.00"/);
-    expect(html).toMatch(/name="priceCurrency"[^>]*value="AUD"/);
-  });
-
-  it('a teacher editing the name only has no price field to send', () => {
-    const html = renderToStaticMarkup(
-      <ClassForm sessionId={SESSION} sessionName="Summer camp" instructors={[]} cls={cls} detailsOnly />,
-    );
-    expect(html).not.toContain('name="priceAmount"');
-  });
 });
 
 describe('ClassForm: adding and editing', () => {
-  it('shows the weekday row only in the New class dialog, not on the page or in an edit', () => {
-    expect(render({ variant: 'dialog', weekly: true })).toContain('Days of the week');
-    expect(render({ variant: 'dialog' })).not.toContain('Days of the week');
-    expect(render({ cls, variant: 'dialog', weekly: true })).not.toContain('Days of the week');
-    expect(render({ variant: 'dialog', weekly: true })).not.toContain('Specific days');
+  it('shows the weekday row on the page and in the dialog, and no specific-days picker', () => {
+    expect(render({ variant: 'dialog' })).toContain('Days of the week');
+    expect(render()).toContain('Days of the week');
+    expect(render({ variant: 'dialog' })).not.toContain('Specific days');
   });
 
   it('lists the fields in the order Class name, ages, Camp Size, Starts, Ends, days, Location, Instructors, Price', () => {
-    const html = render({ variant: 'dialog', weekly: true });
+    const html = render({ variant: 'dialog' });
     const order = [
       'Class name',
       'Youngest age',
@@ -161,22 +103,6 @@ describe('ClassForm: adding and editing', () => {
     expect([...positions].sort((a, b) => a - b)).toEqual(positions);
   });
 
-  it('adds a class to the session when no class is given', () => {
-    const html = render();
-    expect(html).toContain('Add class');
-    expect(html).toContain(`name="sessionId" value="${SESSION}"`);
-    expect(html).not.toContain('name="classId"');
-  });
-
-  it('edits a class: it carries the class id and starts with the saved values, in camp time', () => {
-    const html = render({ cls });
-    expect(html).toContain('Save class');
-    expect(html).toContain(`name="classId" value="${CLASS}"`);
-    expect(html).toContain('value="Robotics"');
-    expect(html).toContain('value="8"');
-    expect(html).toContain('value="2027-07-05T09:00"');
-  });
-
   it('a dialog leaves its buttons to the dialog footer (tied by form id); a page has a Cancel link back to the session', () => {
     const dialog = render({ variant: 'dialog', formId: 'edit-form' });
     expect(dialog).toContain('id="edit-form"');
@@ -190,31 +116,5 @@ describe('ClassForm: adding and editing', () => {
     expect(html).not.toContain('Class name *');
     expect(html).toContain('field-required');
     expect(html).toContain('aria-required="true"');
-  });
-});
-
-describe('ClassForm: a teacher edits the name only', () => {
-  it('with detailsOnly, shows the name and nothing else the camp sets', () => {
-    const html = render({ cls, detailsOnly: true });
-    expect(html).toContain('Class name');
-    expect(html).toContain('name="name"');
-    for (const hidden of [
-      'name="minAge"',
-      'name="maxAge"',
-      'name="capacity"',
-      'name="startsAt"',
-      'name="endsAt"',
-      'name="location"',
-    ]) {
-      expect(html, hidden).not.toContain(hidden);
-    }
-    expect(html).not.toContain('Youngest age');
-    expect(html).not.toContain('Location');
-  });
-
-  it('without detailsOnly, the camp manager sees every field', () => {
-    const html = render({ cls });
-    expect(html).toContain('name="location"');
-    expect(html).toContain('name="capacity"');
   });
 });

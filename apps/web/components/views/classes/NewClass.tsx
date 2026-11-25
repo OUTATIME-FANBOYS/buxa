@@ -45,7 +45,6 @@ export async function NewClass({ sessionId }: { sessionId: string }) {
         sessionId={session.id}
         sessionName={session.name}
         instructors={instructors.ok ? instructors.value.map(i => ({ id: i.id, name: i.name })) : []}
-        weekly
       />
     </div>
   );

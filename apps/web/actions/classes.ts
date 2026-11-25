@@ -4,8 +4,6 @@ import { enrolAction as enrolActionImpl } from '@buxa/server/composers/classes/e
 import { promoteWaitlistAction as promoteWaitlistActionImpl } from '@buxa/server/composers/classes/promoteWaitlistAction';
 import { importClassesAction as importClassesActionImpl } from '@buxa/server/composers/classes/importClassesAction';
 import { createSessionAction as createSessionActionImpl } from '@buxa/server/composers/classes/createSessionAction';
-import { addClassAction as addClassActionImpl } from '@buxa/server/composers/classes/addClassAction';
-import { updateClassAction as updateClassActionImpl } from '@buxa/server/composers/classes/updateClassAction';
 import { deleteClassAction as deleteClassActionImpl } from '@buxa/server/composers/classes/deleteClassAction';
 import { addSeriesAction as addSeriesActionImpl } from '@buxa/server/composers/classes/addSeriesAction';
 import {
@@ -40,14 +38,6 @@ export async function importClassesAction(...args: Parameters<typeof importClass
 
 export async function createSessionAction(...args: Parameters<typeof createSessionActionImpl>) {
   return createSessionActionImpl(...args);
-}
-
-export async function addClassAction(...args: Parameters<typeof addClassActionImpl>) {
-  return addClassActionImpl(...args);
-}
-
-export async function updateClassAction(...args: Parameters<typeof updateClassActionImpl>) {
-  return updateClassActionImpl(...args);
 }
 
 export async function deleteClassAction(...args: Parameters<typeof deleteClassActionImpl>) {
