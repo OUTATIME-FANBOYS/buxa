@@ -52,6 +52,8 @@ export interface UserRepository {
   memberOptionsOf(viewerId: string, orgId: string, memberId: string): Promise<MemberOption[]>;
   /** Every option that is on, for each person in the camp. Read inside that camp's row-level security. */
   memberOptionsIn(viewerId: string, orgId: string): Promise<{ userId: string; option: MemberOption }[]>;
+  /** Whether the person linked to `memberId` in the camp holds the instructor role (read inside that camp's row-level security). */
+  isInstructorIn(viewerId: string, orgId: string, memberId: string): Promise<boolean>;
   /**
    * Turns one option on or off for a teacher of the camp, and audits it in the same transaction. The database refuses anyone
    * who is not a teacher there. The caller checks members:set_options and the target first.

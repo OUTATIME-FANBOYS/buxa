@@ -17,7 +17,7 @@ const services = vi.hoisted(() => ({
   groups: { listGroups: vi.fn(), listRooms: vi.fn(), listAssignments: vi.fn(), assign: vi.fn() },
   people: { list: vi.fn() },
 }));
-const session = vi.hoisted<{ role: Role | null }>(() => ({ role: 'staff' }));
+const session = vi.hoisted<{ role: Role | 'teacher' | null }>(() => ({ role: 'staff' }));
 const notFound = vi.hoisted(() =>
   vi.fn(() => {
     throw new Error('NEXT_NOT_FOUND');
@@ -27,7 +27,17 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('next/navigation', () => ({ notFound, redirect: vi.fn() }));
 vi.mock('@buxa/server/runtime', () => ({ getRuntime: () => ({ services }) }));
 vi.mock('@buxa/server/composers/people/camp', () => ({
-  currentActor: () => settle(() => (session.role ? { userId: 'u1', orgId: 'o1', role: session.role } : null)),
+  currentActor: () =>
+    settle(() =>
+      session.role
+        ? {
+            userId: 'u1',
+            orgId: 'o1',
+            role: session.role === 'teacher' ? 'viewer' : session.role,
+            instructor: session.role === 'teacher',
+          }
+        : null,
+    ),
 }));
 const { GroupsPage } = await import('@/components/views/groups/GroupsPage');
 const { AssignPage } = await import('@/components/views/groups/AssignPage');

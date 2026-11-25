@@ -7,7 +7,7 @@ import type {
   PersonPatchInput,
   PersonSummary,
 } from '@buxa/contracts';
-import { can, isMinor, MAX_SEARCH_RESULTS, pageSpan, type Actor, type LocalDate } from '@buxa/domain';
+import { can, isMinor, isTeachingView, MAX_SEARCH_RESULTS, pageSpan, type Actor, type LocalDate } from '@buxa/domain';
 import { assertAllowed } from '../../auth/authorize';
 import { assignedTo, teacherScopeOf } from '../../classes/teacherScope';
 import { badRequest, conflict, notFound } from '../../http/errors';
@@ -153,7 +153,7 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       isMinor: seeContact ? isMinor(record, today) : null,
       memberships: custody ? ms.map(m => toPersonMembership(m, today)) : null,
       // A teacher sees no households: their members are guardians and other families, by name.
-      households: actor.role === 'teacher' ? [] : await toHouseholds(people, actor, households, custody),
+      households: isTeachingView(actor) ? [] : await toHouseholds(people, actor, households, custody),
       hasActiveBadge: custody ? badge !== null : null,
     };
   }

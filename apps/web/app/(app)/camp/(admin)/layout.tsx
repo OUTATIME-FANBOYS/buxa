@@ -4,7 +4,8 @@ import { CampSwitcher } from '@/components/components/camp';
 import { WorkFrame } from '@/components/views/camp';
 import { TaskTopBar } from '@/components/components/kanban/topbar';
 import { WorkArea } from '@/components/views/kanban';
-import { getCurrentCamp, requireSession } from '@buxa/server/session/index';
+import { getCurrentCamp, requireSession, toActor } from '@buxa/server/session/index';
+import { teachingViewOf } from '@buxa/server/composers/members/withMemberOptions';
 import { listArchivedCamps } from '@/actions/camp';
 import { loadNotifications } from '@buxa/server/composers/notifications/loadNotifications';
 
@@ -20,12 +21,14 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const archivedCamps = await listArchivedCamps();
   // An archived camp opens read-only: the store and the services refuse every write, and the page shows the banner.
   const archived = camp?.archived ?? false;
+  const teaching = await teachingViewOf(camp ? toActor(session, camp) : null);
   const notifications = await loadNotifications();
 
   return (
     <WorkArea user={user} archived={archived}>
       <WorkFrame
         role={camp?.role ?? null}
+        teaching={teaching}
         archived={archived}
         topBarStart={<CampSwitcher camps={session.memberships} current={camp} archivedCamps={archivedCamps} />}
         topBarEnd={

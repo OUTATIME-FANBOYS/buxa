@@ -393,12 +393,13 @@ export class PgClassRepository implements ClassRepository {
       if (!isUuid(teacherId)) {
         return [];
       }
-      // A teacher's classes are the classes its linked person (people.user_id) is an instructor of (migration 0051). The join
-      // checks the role too, so a person who stopped being a teacher has no classes.
+      // An instructor's classes are the classes its linked person (people.user_id) is an instructor of (migration 0051). The joins
+      // check the teaching view (viewer access and the instructor person role, migration 0069), so anyone else has no classes here.
       const { rows } = await db.query<{ session_id: string }>(
         `SELECT si.session_id
            FROM people p
-           JOIN org_members m ON m.org_id = p.org_id AND m.user_id = p.user_id AND m.role = 'teacher'
+           JOIN org_members m ON m.org_id = p.org_id AND m.user_id = p.user_id AND m.role = 'viewer'
+           JOIN person_roles r ON r.org_id = p.org_id AND r.person_id = p.id AND r.role = 'instructor'
            JOIN session_instructors si ON si.org_id = p.org_id AND si.person_id = p.id
           WHERE p.user_id = $1`,
         [teacherId],

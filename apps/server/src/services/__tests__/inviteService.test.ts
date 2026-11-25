@@ -10,7 +10,9 @@ const CAMP = new Map([[ORG, 'Camp Pine']]);
 const DAY_MS = 24 * 60 * 60 * 1000;
 const START = new Date('2027-07-01T09:00:00Z');
 
-const actor = (role: Role, userId = `user-${role}`): Actor => ({ userId, orgId: ORG, role });
+/** `teacher` is a viewer whose person is an instructor (migration 0069): the teaching view. */
+const actor = (role: Role | 'teacher', userId = `user-${role}`): Actor =>
+  role === 'teacher' ? { userId, orgId: ORG, role: 'viewer', instructor: true } : { userId, orgId: ORG, role };
 const ann = { userId: 'user-ann', email: 'ann@example.test' };
 const invitee = { name: 'Ann Lee', email: 'ann@example.test', phone: '+61 400 000 000' };
 
@@ -51,7 +53,7 @@ describe('teacher invites: who may create one', () => {
     expect(issued.invite.email).toBe('ann@example.test');
   });
 
-  it.each<Role>(['viewer', 'teacher'])('%s is refused', async role => {
+  it.each<Role | 'teacher'>(['viewer', 'teacher'])('%s is refused', async role => {
     const { service, repo } = setup();
     const refused = await refusalOf(service.createTeacherInvite(actor(role), invitee));
 

@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Empty, PageHeader } from '@/components/components';
 import { campClock, currentActor, loadMyClasses } from '@buxa/server/composers/index.server';
+import { isTeachingView } from '@buxa/domain';
 import { formatCampDateTime, formatCampTime } from '@buxa/shared';
 
 /**
@@ -9,7 +10,7 @@ import { formatCampDateTime, formatCampTime } from '@buxa/shared';
  */
 export async function MyClasses() {
   const actor = await currentActor();
-  if (!actor || actor.role !== 'teacher') {
+  if (!actor || !isTeachingView(actor)) {
     notFound();
   }
   const loaded = await loadMyClasses(actor);

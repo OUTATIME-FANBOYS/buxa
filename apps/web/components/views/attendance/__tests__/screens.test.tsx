@@ -39,7 +39,12 @@ vi.mock('@buxa/server/session/index', () => ({
   requireSession: () => settle(() => ({ user: { id: 'u1', email: 'a@example.test', name: 'Ada' }, memberships: [] })),
   getCurrentCamp: () =>
     settle(() => (session.camp ? { orgId: 'o1', role: session.role, name: 'Sunrise', slug: 'sunrise' } : null)),
-  toActor: (_s: unknown, camp: { role: Role }) => ({ userId: 'u1', orgId: 'o1', role: camp.role }),
+  toActor: (_s: unknown, camp: { role: Role | 'teacher' }) => ({
+    userId: 'u1',
+    orgId: 'o1',
+    role: camp.role === 'teacher' ? 'viewer' : camp.role,
+    instructor: camp.role === 'teacher',
+  }),
 }));
 vi.mock('@/components/components/scanner/ScanField', () => ({
   ScanField: ({ label }: { label: string }) => `SCAN:${label}`,

@@ -15,7 +15,7 @@ export default async function Page() {
     notFound();
   }
   const context = await campContext();
-  if (!can(context.actor, 'members:invite', { orgId: context.actor.orgId, newRole: 'teacher' })) {
+  if (!can(context.actor, 'members:invite', { orgId: context.actor.orgId, newRole: 'viewer' })) {
     notFound();
   }
   const { campName, items } = await loadOutbox(context);

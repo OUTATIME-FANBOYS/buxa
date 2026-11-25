@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { can } from '@buxa/domain';
+import { can, isTeachingView } from '@buxa/domain';
 import { Empty } from '@/components/components';
 import { loadHouseholdList, loadPeoplePageOrForbidden } from '@buxa/server/composers/index.server';
 import { currentActor } from '@buxa/server/composers/index.server';
@@ -16,8 +16,8 @@ const countLine = (n: number) => (n === 1 ? '1 person' : `${n} people`);
 /** The people list with search, role filter and pages. Viewers see names, roles and status; only staff and above see the add button. */
 export async function PeopleList({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
   const actor = await currentActor();
-  // A teacher has no People list: the sidebar hides it, and the address does not open it either.
-  if (!actor || actor.role === 'teacher') {
+  // The teaching view has no People list: the sidebar hides it, and the address does not open it either.
+  if (!actor || isTeachingView(actor)) {
     notFound();
   }
   const params = readListParams(searchParams);

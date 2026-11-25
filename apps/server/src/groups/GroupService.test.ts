@@ -12,7 +12,10 @@ function setUp() {
   const repo = new InMemoryGroupRepository();
   const service = createGroupService({ repo });
   const orgId = randomUUID();
-  const actor = (role: Role): Actor => ({ userId: randomUUID(), orgId, role });
+  const actor = (role: Role | 'teacher'): Actor =>
+    role === 'teacher'
+      ? { userId: randomUUID(), orgId, role: 'viewer', instructor: true }
+      : { userId: randomUUID(), orgId, role };
   const session = repo.seedSession({ orgId, name: 'Summer 1', startsOn: '2027-07-05', endsOn: '2027-07-17' });
 
   return { repo, service, orgId, actor, session };

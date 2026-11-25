@@ -30,9 +30,9 @@ describe.skipIf(!url)('teacher calendar feed on Postgres', () => {
     );
     const userId = rows[0].id;
     teacherIds.push(userId);
-    await pool.query(`INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'teacher')`, [orgId, userId]);
+    await pool.query(`INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'viewer')`, [orgId, userId]);
 
-    return { userId, orgId, role: 'teacher' };
+    return { userId, orgId, role: 'viewer', instructor: true };
   };
 
   /**
@@ -52,6 +52,10 @@ describe.skipIf(!url)('teacher calendar feed on Postgres', () => {
           [orgId, userId],
         )
       ).rows[0].id;
+    await pool.query(
+      `INSERT INTO person_roles (org_id, person_id, role) VALUES ($1, $2, 'instructor') ON CONFLICT DO NOTHING`,
+      [orgId, personId],
+    );
     await pool.query(
       `INSERT INTO session_instructors (org_id, session_id, person_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
       [orgId, classId, personId],

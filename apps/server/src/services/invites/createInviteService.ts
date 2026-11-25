@@ -12,7 +12,7 @@ export function createInviteService({ invites }: InviteServiceDeps): InviteServi
   return {
     async createTeacherInvite(actor, input) {
       // Teachers are the only role an invite can grant in this build; the check is written out here as well as in the database.
-      assertAllowed(actor, 'members:invite', { orgId: actor.orgId, newRole: 'teacher' });
+      assertAllowed(actor, 'members:invite', { orgId: actor.orgId, newRole: 'viewer' });
       const token = generateInviteToken();
       const invite = await guard(() =>
         invites.create(
@@ -26,7 +26,7 @@ export function createInviteService({ invites }: InviteServiceDeps): InviteServi
     },
 
     async resendInvite(actor, inviteId) {
-      assertAllowed(actor, 'members:invite', { orgId: actor.orgId, newRole: 'teacher' });
+      assertAllowed(actor, 'members:invite', { orgId: actor.orgId, newRole: 'viewer' });
       const token = generateInviteToken();
       const invite = await guard(() => invites.resend(actor, inviteId, hashInviteToken(token)));
       if (!invite) {
@@ -37,7 +37,7 @@ export function createInviteService({ invites }: InviteServiceDeps): InviteServi
     },
 
     async listPendingInvites(actor) {
-      assertAllowed(actor, 'members:invite', { orgId: actor.orgId, newRole: 'teacher' });
+      assertAllowed(actor, 'members:invite', { orgId: actor.orgId, newRole: 'viewer' });
 
       return guard(() => invites.listPending(actor));
     },

@@ -41,10 +41,19 @@ describe.skipIf(!url)('PgUserRepository.setMemberOption audit', () => {
     teacherId = await user('teacher');
     staffId = await user('staff');
     campId = (await orgs.createWithOwner({ name: 'Option camp', slug: `option-${tag}`, timezone: 'UTC' }, adminId)).id;
-    await pool.query(`INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'teacher'), ($1, $3, 'staff')`, [
+    await pool.query(`INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'viewer'), ($1, $3, 'staff')`, [
       campId,
       teacherId,
       staffId,
+    ]);
+    // The instructor: a person linked to the login, holding the instructor role (migration 0069).
+    const person = await pool.query<{ id: string }>(
+      `INSERT INTO people (org_id, given_name, family_name, user_id) VALUES ($1, 'Tess', 'Teacher', $2) RETURNING id`,
+      [campId, teacherId],
+    );
+    await pool.query(`INSERT INTO person_roles (org_id, person_id, role) VALUES ($1, $2, 'instructor')`, [
+      campId,
+      person.rows[0].id,
     ]);
   });
 
@@ -64,7 +73,7 @@ describe.skipIf(!url)('PgUserRepository.setMemberOption audit', () => {
   it('a refused write (not a teacher) writes no audit row and leaves the option off', async () => {
     const actor = { userId: adminId, orgId: campId, role: 'admin' as const };
     await expect(users.setMemberOption(actor, staffId, 'teacher.check_in_out', true)).rejects.toThrow(
-      /Teacher not found/,
+      /Instructor not found/,
     );
     expect((await rows(campId)).filter(r => r.entity_id === staffId)).toHaveLength(0);
     expect(await users.memberOptionsOf(adminId, campId, staffId)).toEqual([]);

@@ -72,7 +72,7 @@ const withTeacher = () =>
     members: [
       { id: 'u1', name: 'Maya Chen', email: 'maya@example.com', role: 'owner' },
       { id: 'u2', name: 'Sam Lee', email: 'sam@example.com', role: 'viewer' },
-      { id: 'u3', name: 'Ana Ruiz', email: 'ana@example.com', role: 'teacher' },
+      { id: 'u3', name: 'Ana Ruiz', email: 'ana@example.com', role: 'viewer', instructor: true },
     ],
   }));
 

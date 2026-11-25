@@ -1,5 +1,5 @@
 import 'server-only';
-import type { Actor, CampRole } from '@buxa/domain';
+import { isTeachingView, type Actor, type CampRole } from '@buxa/domain';
 import type { Class, Enrolment, Series, Session } from '@buxa/contracts';
 import type { ActiveHold } from '../../holds/SeatHoldRepository';
 import { getRuntime } from '../../runtime';
@@ -98,7 +98,7 @@ export async function loadEnrolments(actor: Actor, classId: string): Promise<Loa
  */
 export async function loadMyClasses(actor: Actor): Promise<Loaded<AssignedSession[]>> {
   return guarded(async () => {
-    if (actor.role !== 'teacher') {
+    if (!isTeachingView(actor)) {
       throw notFound('That page does not exist.');
     }
     const outcome = await getRuntime().services.classes.listMyClasses(actor);

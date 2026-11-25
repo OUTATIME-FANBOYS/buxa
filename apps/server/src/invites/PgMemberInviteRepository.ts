@@ -60,7 +60,7 @@ export class PgMemberInviteRepository implements MemberInviteRepository {
     return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       const { rows } = await db.query<InviteRow>(
         `INSERT INTO member_invites (org_id, email, name, phone, role, token_hash, created_by)
-         VALUES ($1, $2, $3, $4, 'teacher', $5, $6) RETURNING ${COLUMNS}`,
+         VALUES ($1, $2, $3, $4, 'viewer', $5, $6) RETURNING ${COLUMNS}`,
         [actor.orgId, invite.email, invite.name, invite.phone, tokenHash, actor.userId],
       );
       const record = toRecord(rows[0]);
@@ -69,7 +69,7 @@ export class PgMemberInviteRepository implements MemberInviteRepository {
         action: 'member.invite',
         entity: 'member_invite',
         entityId: record.id,
-        data: { role: 'teacher' },
+        data: { role: 'viewer', instructor: true },
       });
 
       return record;
@@ -97,7 +97,7 @@ export class PgMemberInviteRepository implements MemberInviteRepository {
         action: 'member.invite_resend',
         entity: 'member_invite',
         entityId: row.id,
-        data: { role: 'teacher' },
+        data: { role: 'viewer', instructor: true },
       });
 
       return toRecord(row);

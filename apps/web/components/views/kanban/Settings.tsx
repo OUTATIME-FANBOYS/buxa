@@ -32,7 +32,7 @@ export interface SettingsCamp {
   /** The owner and admins (org:update). Staff and teachers do not see the camp calendar link. */
   canManageFeed: boolean;
   /** A teacher sees a personal calendar link here, for their own assigned classes only. */
-  isTeacher: boolean;
+  isInstructor: boolean;
   archived: boolean;
 }
 
@@ -172,7 +172,7 @@ export function Settings({
           </dl>
         </section>
         {camp?.canManageFeed && !camp.archived && <CalendarLinkCard />}
-        {camp?.isTeacher && !camp.archived && <CalendarLinkCard own />}
+        {camp?.isInstructor && !camp.archived && <CalendarLinkCard own />}
         <ArchivedCampsCard camps={archivedCamps} />
         {(camp?.canArchive || camp?.canDelete) && !camp.archived && (
           <DangerZone campId={camp.id} campName={camp.name} canArchive={camp.canArchive} canDelete={camp.canDelete} />

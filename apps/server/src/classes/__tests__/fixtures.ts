@@ -13,7 +13,9 @@ export const CAMPER_ADA = '00000000-0000-4000-8000-0000000000a1';
 export const CAMPER_BEN = '00000000-0000-4000-8000-0000000000b2';
 export const CAMPER_CY = '00000000-0000-4000-8000-0000000000c3';
 
-export const as = (role: Role, orgId = ORG, userId = `user-${role}`): Actor => ({ userId, orgId, role });
+/** An actor for a test role. `teacher` is an instructor in the teaching view: viewer access with the instructor flag (migration 0069). */
+export const as = (role: Role | 'teacher', orgId = ORG, userId = `user-${role}`): Actor =>
+  role === 'teacher' ? { userId, orgId, role: 'viewer', instructor: true } : { userId, orgId, role };
 
 /** A session (the parent): a date range that covers July 2027 in Sydney. */
 export const JULY_SESSION: NewSessionInput = {

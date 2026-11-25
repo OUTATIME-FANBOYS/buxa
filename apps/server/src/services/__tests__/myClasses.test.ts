@@ -21,7 +21,7 @@ async function build() {
   const staff = camp.actor('staff');
   const store = camp.repos.classes as InMemoryClassRepository;
   store.seedTeacher(camp.orgId, 'teacher-two');
-  const otherTeacher: Actor = { userId: 'teacher-two', orgId: camp.orgId, role: 'teacher' };
+  const otherTeacher: Actor = { userId: 'teacher-two', orgId: camp.orgId, role: 'viewer', instructor: true };
   const classes = createClassService({ repo: camp.repos.classes, timezoneOf: () => Promise.resolve('UTC') });
 
   const july = await classes.createSession(admin, JULY_SESSION);
@@ -129,7 +129,12 @@ describe('listMyClasses', () => {
     const store = unlinked.repos.classes as InMemoryClassRepository;
     store.seedTeacher(unlinked.orgId, 'teacher-without-link');
     expect(
-      await service.listMyClasses({ userId: 'teacher-without-link', orgId: unlinked.orgId, role: 'teacher' }),
+      await service.listMyClasses({
+        userId: 'teacher-without-link',
+        orgId: unlinked.orgId,
+        role: 'viewer',
+        instructor: true,
+      }),
     ).toEqual({ ok: true, value: [] });
   });
 
@@ -138,7 +143,9 @@ describe('listMyClasses', () => {
     const store = bare.repos.classes as InMemoryClassRepository;
     store.seedTeacher(bare.orgId, 'lonely');
     const service = createClassService({ repo: bare.repos.classes, timezoneOf: () => Promise.resolve('UTC') });
-    expect(await service.listMyClasses({ userId: 'lonely', orgId: bare.orgId, role: 'teacher' })).toEqual({
+    expect(
+      await service.listMyClasses({ userId: 'lonely', orgId: bare.orgId, role: 'viewer', instructor: true }),
+    ).toEqual({
       ok: true,
       value: [],
     });

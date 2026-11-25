@@ -28,7 +28,6 @@ describe('the pill hue maps', () => {
       'role-admin': 'teal',
       'role-staff': 'lime',
       'role-viewer': 'blue',
-      'role-teacher': 'orange',
       'role-guardian': 'pink',
       'role-camper': 'purple',
     });

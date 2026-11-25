@@ -4,7 +4,8 @@ import { CampSwitcher } from '@/components/components/camp';
 import { WorkFrame } from '@/components/views/camp';
 import { TaskTopBar } from '@/components/components/kanban/topbar';
 import { WorkArea } from '@/components/views/kanban';
-import { getCurrentCamp, requireSession } from '@buxa/server/session/index';
+import { getCurrentCamp, requireSession, toActor } from '@buxa/server/session/index';
+import { teachingViewOf } from '@buxa/server/composers/members/withMemberOptions';
 import { listArchivedCamps } from '@/actions/camp';
 import { loadNotifications } from '@buxa/server/composers/notifications/loadNotifications';
 
@@ -18,12 +19,14 @@ export default async function AccountLayout({ children }: { children: ReactNode 
   const user = { id: session.user.id, name: session.user.name, email: session.user.email };
   const archivedCamps = await listArchivedCamps();
   const archived = camp?.archived ?? false;
+  const teaching = await teachingViewOf(camp ? toActor(session, camp) : null);
   const notifications = await loadNotifications();
 
   return (
     <WorkArea user={user} campRole={camp?.role ?? null} archived={archived}>
       <WorkFrame
         role={camp?.role ?? null}
+        teaching={teaching}
         archived={archived}
         topBarStart={<CampSwitcher camps={session.memberships} current={camp} archivedCamps={archivedCamps} />}
         topBarEnd={

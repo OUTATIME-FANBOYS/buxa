@@ -28,7 +28,7 @@ export default async function Page({ params }: { params: Promise<{ token: string
       <div className="auth-card">
         {state.kind === 'join' ? (
           <>
-            <h1>{`Join ${state.orgName} as a teacher`}</h1>
+            <h1>{`Join ${state.orgName} as an instructor`}</h1>
             <p className="muted">Check your details, then join the camp.</p>
             <JoinInviteForm
               token={state.token}

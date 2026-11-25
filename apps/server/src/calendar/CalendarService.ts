@@ -1,6 +1,6 @@
 import { assertAllowed } from '../auth/authorize';
 import { forbidden } from '../http/errors';
-import { serializeCalendar, type Actor, type FeedClass } from '@buxa/domain';
+import { isTeachingView, serializeCalendar, type Actor, type FeedClass } from '@buxa/domain';
 import { generateCalendarToken, hashCalendarToken, looksLikeCalendarToken } from './calendarToken';
 
 /*
@@ -51,9 +51,9 @@ export function createCalendarService({ repo }: { repo: CalendarRepository }): C
     },
 
     async rotateOwnToken(actor) {
-      // A personal link shows the teacher's own classes, so only a teacher has one. Other roles use the camp link.
-      if (actor.role !== 'teacher') {
-        throw forbidden('Only a teacher has a personal calendar link');
+      // A personal link shows the instructor's own classes, so only the teaching view has one. Other people use the camp link.
+      if (!isTeachingView(actor)) {
+        throw forbidden('Only an instructor has a personal calendar link');
       }
       const token = generateCalendarToken();
       await repo.saveMemberTokenHash(actor, hashCalendarToken(token));

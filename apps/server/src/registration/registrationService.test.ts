@@ -44,7 +44,11 @@ const CLASSES = {
   [CAMP_B]: [lookup(CLASS_B, SESSION_B, 'Kayaking', '2027-07-10T10:00:00.000Z', '2027-07-10T11:00:00.000Z')],
 };
 
-const as = (role: Role, orgId = CAMP_A): Actor => ({ userId: `user-${role}`, orgId, role });
+/** `teacher` is a viewer whose person is an instructor (migration 0069): the teaching view. */
+const as = (role: Role | 'teacher', orgId = CAMP_A): Actor =>
+  role === 'teacher'
+    ? { userId: `user-${role}`, orgId, role: 'viewer', instructor: true }
+    : { userId: `user-${role}`, orgId, role };
 
 const formInput = {
   name: 'Summer 2027',
