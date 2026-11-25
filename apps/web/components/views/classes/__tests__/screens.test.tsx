@@ -7,6 +7,7 @@ import type { Role } from '@buxa/domain';
 import { UiProvider } from '@buxa/middleware/providers/providers';
 import { forbidden } from '@buxa/server/http/errors';
 import { settle } from '@buxa/domain';
+import { seriesOf } from './seriesOf';
 
 const notFound = vi.hoisted(() =>
   vi.fn(() => {
@@ -19,7 +20,8 @@ const services = vi.hoisted(() => ({
   classes: {
     listSessions: vi.fn(),
     getSession: vi.fn(),
-    listClasses: vi.fn(),
+    listSeries: vi.fn(),
+    listSeriesOccurrences: vi.fn(),
     getClass: vi.fn(),
     listEnrolments: vi.fn(),
   },
@@ -38,6 +40,10 @@ vi.mock('@buxa/server/composers/people/camp', () => ({
 }));
 vi.mock('@/actions/classes', () => ({
   createSessionAction: vi.fn(),
+  updateSeriesAction: vi.fn(),
+  deleteSeriesAction: vi.fn(),
+  cancelOccurrenceAction: vi.fn(),
+  restoreOccurrenceAction: vi.fn(),
   addClassAction: vi.fn(),
   updateClassAction: vi.fn(),
   deleteClassAction: vi.fn(),
@@ -124,7 +130,7 @@ beforeEach(() => {
   services.orgs.listMembers.mockResolvedValue({ members: [] });
   services.classes.listSessions.mockResolvedValue({ ok: true, value: [parent] });
   services.classes.getSession.mockResolvedValue({ ok: true, value: parent });
-  services.classes.listClasses.mockResolvedValue({ ok: true, value: [full] });
+  services.classes.listSeries.mockResolvedValue({ ok: true, value: seriesOf([full]) });
   services.classes.getClass.mockResolvedValue({ ok: true, value: full });
   services.classes.listEnrolments.mockResolvedValue({ ok: true, value: [enrolment] });
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Kept: the compiler needs this assertion to type the value; removing it fails typecheck.
@@ -243,7 +249,7 @@ describe('ClassPage (one session and its classes)', () => {
       instructorIds: [],
       instructors: [],
     };
-    services.classes.listClasses.mockResolvedValue({ ok: true, value: [full, unstaffed] });
+    services.classes.listSeries.mockResolvedValue({ ok: true, value: seriesOf([full, unstaffed]) });
     const html = render(await ClassPage({ classId: SESSION_ID, searchParams: {} }));
     expect(html).toContain('<td>Ivy Chen</td>');
     expect(html).toContain('<td>None yet</td>');

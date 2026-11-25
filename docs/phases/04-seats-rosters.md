@@ -124,10 +124,18 @@ Automatic group creation or auto-assignment (phase 5), transport, meal plans, me
 
 **Enrolment key (decision).** `enrolments`, `seat_holds` and `registration_classes` carry `series_id`. It is the key for everything that counts a child's place: one active enrolment or hold per child per series (a unique index), the capacity count and its lock (`class_series.capacity`), and the overlap check. `session_id` stays on those rows as the **anchor**: the occurrence the row was made against. A composite foreign key `(org_id, session_id, series_id)` makes the anchor belong to its own series. Cancelling an occurrence does not move or remove an enrolment. Existing duplicates stop the migration (see its header).
 
-**Not built yet (the next steps, in order).**
+**Built since (migration `0064_series_occurrence_status.sql`).**
 
-1. The recurring form and the New class dialog still write one-occurrence series (the legacy trigger). Creating a series and its occurrences in one transaction is not done.
-2. Cancelled days still appear in the calendar (`PgCalendarRepository`), in the teacher calendar feed and public class list (SQL functions from 0051 and 0059), and in the check-in list. They need a status filter and, for the two SQL functions, a new migration.
-3. The Classes table (one row per series), the Classes count on the session page (counts series), the series page with Cancel and Restore, and the registration and enrolment pickers offering series. No UI is changed yet.
-4. Instructors are still stored per occurrence (`session_instructors`); the series reads them from its occurrences. `sessions.capacity`, `price` and `name` still mirror the occurrence, and the app reads them, not the series, until the UI moves.
-5. The enrolment, hold and place writes still name only the occurrence; the database fills `series_id` from it. Holds map the new duplicate index (`seat_holds_one_active_series_person_idx`). The enrolment path does not yet map `enrolments_one_active_series_idx`, so a second place in one series surfaces as a generic error, and `class_series_capacity_floor` is not mapped to its message.
+- **One series from the New class form.** The form takes the weekdays ticked (Monday to Friday by default, at least one) and the Starts and Ends date-times in camp time. The server runs `planSeries` and writes the series row and every day in one transaction (`addSeries`, audited `series.create` and `class.create` per day). The single-class path is not used from a class form.
+- **Cancelled days are left out of the public list, the teacher feed (My classes and the calendar feed) and the camp calendar feed.** Migration 0064 filters `sessions.status` in `buxa_public_classes_v2`, `buxa_teacher_calendar_feed_classes` and `buxa_calendar_feed_classes`. The check-in list reads sessions, not days, so it has no day rows to filter.
+- **One row per series on the session page.** The Classes table shows the series' name, ages, days (`Mon to Fri`, `Mon, Wed`), times (its first day's clock times), location, instructors, camp size, price, enrolled, waitlisted and places. The Classes count and the session list count series. Enrol, enrolments and holds are keyed by the series; the anchor day (`anchorClassId`, the first active day) is the id a pick uses.
+- **Edit and delete act on the series.** Edit changes the name, ages, camp size, location, instructors and price on every day (a teacher on the series changes the name only). Delete removes the series and its days; a series with an enrolment, hold or registration is refused with "The class has enrolments", and nothing is deleted (`buxa_delete_series_v1`).
+- **Days panel.** `Days` on a row opens the series' days (`?days=<series id>`): each day's start and end, Active or Cancelled with its reason. Staff cancel one day with a reason (`occurrence.cancel`) or restore it (`occurrence.restore`). The series and its other days are unchanged, and a cancelled day keeps its enrolments.
+- **Readable refusals.** A child already enrolled in a series: "Mia is already enrolled in Art Camp". A full series: "Art Camp is full. The camper can be put on the waitlist instead." A clash: "Mia is already in another class at this time: Swim Stars (Mon 5 Jul, 11:00-13:00)".
+
+**Not built yet.**
+
+- Pickers on the registration and enrolment forms still offer days, not series (one choice per series is still to do).
+- The camp calendar, the check-in list and My classes are filtered for cancelled days in SQL and in the service; the check-in list reads sessions, so there is no day row in it to hide.
+- Editing a series' times or weekdays (the days keep their own times; a change is a new class).
+- Series page as its own route: the days open as a panel on the session page.

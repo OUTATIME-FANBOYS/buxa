@@ -6,6 +6,7 @@ import type { Role } from '@buxa/domain';
 import { UiProvider } from '@buxa/middleware/providers/providers';
 import { settle } from '@buxa/domain';
 import { Dialog as ConfirmDialog } from '@/components/components';
+import { seriesOf } from './seriesOf';
 
 const notFound = vi.hoisted(() =>
   vi.fn(() => {
@@ -16,7 +17,8 @@ const session = vi.hoisted((): { role: Role | null } => ({ role: 'staff' }));
 const services = vi.hoisted(() => ({
   classes: {
     getSession: vi.fn(),
-    listClasses: vi.fn(),
+    listSeries: vi.fn(),
+    listSeriesOccurrences: vi.fn(),
     listEnrolments: vi.fn(),
     listCampWaitlists: vi.fn(),
   },
@@ -148,7 +150,7 @@ beforeEach(() => {
   services.classes.getSession.mockImplementation((_actor: unknown, id: string) =>
     Promise.resolve({ ok: true, value: id === AUTUMN ? autumn : summer }),
   );
-  services.classes.listClasses.mockResolvedValue({ ok: true, value: [robotics] });
+  services.classes.listSeries.mockResolvedValue({ ok: true, value: seriesOf([robotics]) });
   services.classes.listEnrolments.mockResolvedValue({ ok: true, value: [] });
   services.people.list.mockResolvedValue([]);
   services.seatHolds.listActiveHolds.mockResolvedValue([]);
