@@ -2,12 +2,13 @@
 
 import { useActionState, useCallback, useEffect, useRef, useState } from 'react';
 import type { Group, Room } from '@buxa/contracts';
-import { fieldError, idle, RATIO_REFUSAL_KEY, type ActionState } from '@buxa/shared';
+import { fieldError, idle, RATIO_REFUSAL_KEY, ratioPersonIds, refusedPersonIds, type ActionState } from '@buxa/shared';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { assignAction } from '@/actions/groups';
 import { FormPopUp } from '@/components/components';
 import { Button } from '@/components/elements';
 import { HiddenField, Select, TextField } from '@/components/atoms';
+import { PersonPicker } from './PersonPicker';
 
 const FORM_ID = 'assign-form';
 const OVERRIDE_FORM_ID = 'ratio-override-form';
@@ -28,17 +29,24 @@ export interface AssignChoices {
 
 type Role = 'camper' | 'staff';
 
-/** The choices the form has made. The override pop-up posts the same choices again, so they are kept here. */
-interface Selection {
+/** The choices the form has made: the people (one or more), one group and one room. The override pop-up posts the same choices again. */
+export interface Selection {
   role: Role;
-  personId: string | null;
+  personIds: string[];
   groupId: string | null;
   roomId: string | null;
 }
 
+/** A ratio refusal the admin may override: the message, and the people it applies to. */
+interface OverrideRequest {
+  message: string;
+  personIds: string[];
+}
+
 /**
- * The Place or move button. It opens the placement form: a person, their role, a group and a room. A refusal shows as small polite
- * text under the form. A ratio refusal opens a second pop-up that asks an admin for a reason, and only then places the person.
+ * The Place or move button. It opens the placement form: one or more people, their role, a group and a room. A refusal shows as small
+ * polite text under the form, and names each person refused. A ratio refusal opens a second pop-up that asks an admin for a reason,
+ * and only then places those people.
  */
 export function AssignDialog({ choices }: { choices: AssignChoices }) {
   const [open, setOpen] = useState(false);
@@ -69,7 +77,7 @@ export function AssignDialog({ choices }: { choices: AssignChoices }) {
   );
 }
 
-function AssignPopUp({
+export function AssignPopUp({
   choices,
   onCancel,
   onDone,
@@ -81,11 +89,11 @@ function AssignPopUp({
   const [state, formAction, pending] = useActionState(assignAction, idle);
   const [selection, setSelection] = useState<Selection>({
     role: 'camper',
-    personId: null,
+    personIds: [],
     groupId: null,
     roomId: null,
   });
-  const [overrideMessage, setOverrideMessage] = useState<string | null>(null);
+  const [override, setOverride] = useState<OverrideRequest | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -94,10 +102,19 @@ function AssignPopUp({
     }
   }, [state, onDone]);
 
-  // A ratio refusal is the one an admin can override: the pop-up asks for the reason.
+  // After a refusal, only the people who were refused stay chosen: the others are placed and must not be posted again.
+  // A ratio refusal is the one an admin can override: the pop-up asks for the reason, for those people only.
   useEffect(() => {
-    if (state.status === 'error' && state.fieldErrors?.[RATIO_REFUSAL_KEY]) {
-      setOverrideMessage(state.fieldErrors[RATIO_REFUSAL_KEY]);
+    if (state.status !== 'error') {
+      return;
+    }
+    const refused = refusedPersonIds(state.fieldErrors);
+    if (refused.length > 0) {
+      setSelection(current => ({ ...current, personIds: refused }));
+    }
+    const ratioMessage = state.fieldErrors?.[RATIO_REFUSAL_KEY];
+    if (ratioMessage) {
+      setOverride({ message: ratioMessage, personIds: ratioPersonIds(state.fieldErrors) });
     }
   }, [state]);
 
@@ -106,11 +123,21 @@ function AssignPopUp({
   const noGroups = choices.groups.length === 0;
   const noRooms = choices.rooms.length === 0;
 
+  const changeRole = (value: string | null) => {
+    const role: Role = value === 'staff' ? 'staff' : 'camper';
+    const nextPeople = role === 'camper' ? choices.campers : choices.staff;
+    setSelection({
+      ...selection,
+      role,
+      personIds: selection.personIds.filter(id => nextPeople.some(p => p.id === id)),
+    });
+  };
+
   return (
     <>
       <FormPopUp
         title="Place or move a person"
-        intro="Choose a person, a group and a room for this session. Capacity, age, the staff ratio and room use are checked when you place them."
+        intro="Choose one or more people, a group and a room for this session. Capacity, age, the staff ratio and room use are checked for each person when you place them."
         formId={FORM_ID}
         submitLabel="Place"
         pendingLabel="Placing..."
@@ -124,28 +151,28 @@ function AssignPopUp({
           <Select
             label="Role"
             name="role"
+            isRequired
             value={selection.role}
             options={[
               { value: 'camper', label: 'Camper' },
               { value: 'staff', label: 'Staff' },
             ]}
-            onChange={value =>
-              setSelection({ ...selection, role: value === 'staff' ? 'staff' : 'camper', personId: null })
-            }
+            onChange={changeRole}
           />
-          <Select
-            label="Person *"
-            name="personId"
-            value={selection.personId}
+          <PersonPicker
+            label="Person"
+            people={people}
+            chosen={selection.personIds}
             error={fieldError(state, 'personId')}
-            placeholder={noPeople ? 'No one with this role yet' : 'Choose a person'}
-            isDisabled={noPeople}
-            options={people.map(p => ({ value: p.id, label: p.name }))}
-            onChange={personId => setSelection({ ...selection, personId })}
+            onChange={personIds => setSelection({ ...selection, personIds })}
           />
+          {selection.personIds.map(id => (
+            <input key={id} type="hidden" name="personId" value={id} />
+          ))}
           <Select
-            label="Group *"
+            label="Group"
             name="groupId"
+            isRequired
             value={selection.groupId}
             error={fieldError(state, 'groupId')}
             placeholder={noGroups ? 'No groups yet' : 'Choose a group'}
@@ -157,8 +184,9 @@ function AssignPopUp({
             onChange={groupId => setSelection({ ...selection, groupId })}
           />
           <Select
-            label="Room *"
+            label="Room"
             name="roomId"
+            isRequired
             value={selection.roomId}
             error={fieldError(state, 'roomId')}
             placeholder={noRooms ? 'No rooms yet' : 'Choose a room'}
@@ -172,12 +200,13 @@ function AssignPopUp({
           <FormRefusal state={state} />
         </form>
       </FormPopUp>
-      {overrideMessage !== null && (
+      {override !== null && (
         <RatioOverridePopUp
           selection={selection}
           sessionId={choices.sessionId}
-          message={overrideMessage}
-          onCancel={() => setOverrideMessage(null)}
+          message={override.message}
+          personIds={override.personIds}
+          onCancel={() => setOverride(null)}
           onDone={onDone}
         />
       )}
@@ -201,17 +230,22 @@ export function FormRefusal({ state }: { state: ActionState }) {
   );
 }
 
-/** Asks an admin for the reason to place a person over a staff ratio. The reason is required and kept in the audit log. */
+/**
+ * Asks an admin for the reason to place the refused people over a staff ratio. The reason is required and kept in the audit log, and
+ * it is posted only for the people the ratio refused.
+ */
 export function RatioOverridePopUp({
   selection,
   sessionId,
   message,
+  personIds,
   onCancel,
   onDone,
 }: {
   selection: Selection;
   sessionId: string;
   message: string;
+  personIds: readonly string[];
   onCancel: () => void;
   onDone: (message: string) => void;
 }) {
@@ -237,7 +271,9 @@ export function RatioOverridePopUp({
       <form id={OVERRIDE_FORM_ID} action={formAction} className="stack">
         <HiddenField name="sessionId" value={sessionId} />
         <HiddenField name="role" value={selection.role} />
-        <HiddenField name="personId" value={selection.personId ?? ''} />
+        {personIds.map(id => (
+          <HiddenField key={id} name="personId" value={id} />
+        ))}
         <HiddenField name="groupId" value={selection.groupId ?? ''} />
         <HiddenField name="roomId" value={selection.roomId ?? ''} />
         <TextField

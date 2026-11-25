@@ -40,16 +40,16 @@ export function UnassignButton({
   return (
     <>
       <Button
-        variant="secondary"
+        variant="glass"
         size="sm"
         type="button"
+        iconOnly
         icon="user-minus"
         aria-haspopup="dialog"
-        aria-label={`Unassign ${personName} from ${groupName}`}
+        aria-label={`Unassign ${personName}`}
+        title={`Unassign ${personName}`}
         onClick={() => setOpen(true)}
-      >
-        Unassign
-      </Button>
+      />
       {open && (
         <UnassignPopUp
           sessionId={sessionId}

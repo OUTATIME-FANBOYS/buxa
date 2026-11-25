@@ -177,6 +177,26 @@ form.class-form {
   text-align: right;
 }
 
+/* The Assign board's table: a long name wraps inside its cell, and a ratio note sits on its own line under the name. */
+.assign-table__name {
+  overflow-wrap: anywhere;
+}
+.assign-table__name .muted {
+  display: block;
+  font-weight: 400;
+}
+
+/* The campers not placed yet: the list keeps a fixed height and scrolls inside its card, so a long camp does not grow the page. */
+.unplaced-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  display: grid;
+  gap: var(--s2);
+}
+
 /* A dialog's footer (Back and the main action, or Archive and Delete): right-aligned at the bottom, evenly spaced. */
 .class-form-actions {
   display: flex;
