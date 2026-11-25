@@ -47,6 +47,7 @@
 @import './components/button.css';
 @import './components/notices.css';
 @import './components/pill.css';
+@import './components/pagination.css';
 @import './layout/shell.css';
 @import './layout/pages.css';
 @import './features/kanban/filters.css';
