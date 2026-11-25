@@ -134,6 +134,8 @@ export function sessionInput(
     capacity?: number;
     ageRange?: { minAge: number; maxAge: number };
     instructorIds?: string[];
+    /** Lab 1 by default. Two classes that overlap in time must be in different locations (migration 0066). */
+    location?: string;
   } = {},
 ) {
   const at = (h: number) => `2027-07-05T${String(h).padStart(2, '0')}:00:00+10:00`;
@@ -144,7 +146,7 @@ export function sessionInput(
     capacity: extra.capacity ?? 5,
     startsAt: at(fromHour),
     endsAt: at(toHour),
-    location: 'Lab 1',
+    location: extra.location ?? 'Lab 1',
     instructorIds: extra.instructorIds ?? [],
     price: null,
   };

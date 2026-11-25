@@ -3,8 +3,6 @@ import {
   classFieldsOutsideDetails,
   seriesFieldsOutsideDetails,
   classWithinSession,
-  findClash,
-  formatClash,
   teachingDays,
   planSeries,
   planSessionDates,
@@ -27,7 +25,8 @@ import {
   type SessionEditInput,
 } from '@buxa/contracts';
 import { assertAllowed } from '../auth/authorize';
-import type { CampClassSpan, CampWaitlistEntry, ClassRecord, ClassRepository } from './ClassRepository';
+import type { CampWaitlistEntry, ClassRecord, ClassRepository } from './ClassRepository';
+import { activeDays, assertNoLocationClash, dayOf, otherPlaces } from './locationClash';
 import { detailsOfInput, detailsOfSeries, fieldsOf, scheduleOfSeries } from './seriesSchedule';
 import { teacherScopeOf, type TeacherScope } from './teacherScope';
 import {
@@ -371,8 +370,18 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
 
     async restoreOccurrence(actor, occurrenceId) {
       assertAllowed(actor, 'classes:manage');
+      const timeZone = await timezoneOf(actor);
 
-      return attempt(() => repo.setOccurrenceStatus(actor, occurrenceId, { kind: 'restore' }), await timezoneOf(actor));
+      return attempt(async () => {
+        // A restored day takes its place again, so it must not overlap a class in its location.
+        const day = await repo.getClass(actor.userId, actor.orgId, occurrenceId);
+        if (day) {
+          const others = otherPlaces(await repo.listCampClassSpans(actor.userId, actor.orgId), day.seriesId);
+          assertNoLocationClash({ name: day.name, location: day.location }, [dayOf(day, timeZone)], others, timeZone);
+        }
+
+        return repo.setOccurrenceStatus(actor, occurrenceId, { kind: 'restore' });
+      }, timeZone);
     },
     async addSeries(actor, sessionId, input) {
       assertAllowed(actor, 'classes:manage');
@@ -396,27 +405,19 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
           session.startsOn !== null && session.endsOn !== null
             ? { startsOn: session.startsOn, endsOn: session.endsOn }
             : null;
-        // Each day is checked against every class in the camp and against the earlier days of this series, as an import is.
-        const existing: CampClassSpan[] = await repo.listCampClassSpans(actor.userId, actor.orgId);
-        const accepted: CampClassSpan[] = [];
         for (const occurrence of plan.series.occurrences) {
           if (days && !classWithinSession(occurrence, days, timeZone)) {
             throw new ClassOutsideSessionError(days.startsOn, days.endsOn);
           }
-          const clash = findClash(occurrence, [...existing, ...accepted]);
-          if (clash) {
-            throw new RecurrenceRefusedError(
-              'class_clash',
-              `${input.name} on ${occurrence.date} clashes with ${clash.className} (${formatClash(clash, timeZone)}). Choose other times or days; nothing was saved.`,
-            );
-          }
-          accepted.push({
-            startsAt: occurrence.startsAt,
-            endsAt: occurrence.endsAt,
-            className: input.name,
-            seriesId: null,
-          });
         }
+        // Each day is checked against the active classes in the same location, and against the earlier days of this series.
+        const existing = otherPlaces(await repo.listCampClassSpans(actor.userId, actor.orgId), null);
+        assertNoLocationClash(
+          { name: input.name, location: input.location },
+          plan.series.occurrences.map(o => ({ date: o.date, startsAt: o.startsAt, endsAt: o.endsAt })),
+          existing,
+          timeZone,
+        );
 
         return repo.addSeries(actor, sessionId, {
           name: input.name,
@@ -518,11 +519,21 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
           if (locked.length > 0) {
             throw new TeacherFieldRefusedError(locked);
           }
-
-          return repo.updateSeries(actor, seriesId, fieldsOf(input), null);
         }
+        // The schedule is null when the weekdays and times are as saved (a teacher's edit never changes them).
         const stored = await repo.listSeriesOccurrences(actor.userId, actor.orgId, seriesId);
-        const schedule = await scheduleOfSeries(repo, actor, existing, stored, input, timeZone);
+        const schedule = detailsOnly ? null : await scheduleOfSeries(repo, actor, existing, stored, input, timeZone);
+
+        // The series may move to another location, or gain days: its kept active days and its added days must not overlap a class in
+        // their location. Removed days take no place, so they are left out.
+        const removed = new Set(schedule?.removeIds ?? []);
+        const kept = activeDays(
+          stored.filter(d => !removed.has(d.id)),
+          timeZone,
+        );
+        const added = (schedule?.add ?? []).map(o => dayOf(o, timeZone));
+        const others = otherPlaces(await repo.listCampClassSpans(actor.userId, actor.orgId), seriesId);
+        assertNoLocationClash({ name: input.name, location: input.location }, [...kept, ...added], others, timeZone);
 
         return repo.updateSeries(actor, seriesId, fieldsOf(input), schedule);
       }, timeZone);
@@ -636,6 +647,13 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
 
       return attempt(async () => {
         await requireWithinSession(repo, actor, sessionId, input, timeZone);
+        const others = otherPlaces(await repo.listCampClassSpans(actor.userId, actor.orgId), null);
+        assertNoLocationClash(
+          { name: input.name, location: input.location },
+          [dayOf(input, timeZone)],
+          others,
+          timeZone,
+        );
 
         return repo.addClass(actor, sessionId, toRecord(input));
       }, timeZone);
@@ -664,6 +682,13 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
             throw new TeacherFieldRefusedError(locked);
           }
         }
+        const others = otherPlaces(await repo.listCampClassSpans(actor.userId, actor.orgId), existing.seriesId);
+        assertNoLocationClash(
+          { name: input.name, location: input.location },
+          [dayOf(input, timeZone)],
+          others,
+          timeZone,
+        );
         await requireWithinSession(repo, actor, existing.sessionId, input, timeZone);
 
         return repo.updateClass(actor, classId, toRecord(input));

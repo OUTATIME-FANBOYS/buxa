@@ -28,11 +28,15 @@ export interface ClassRecord {
   price: ClassPriceInput | null;
 }
 
-/** A class's times and name, for every class in the camp: what a new class must not clash with. */
+/**
+ * An active class day's times, name, location and series, for every class in the camp: what a new class must not overlap in its
+ * location (locationClash.ts). Cancelled days are left out; they take no place.
+ */
 export interface CampClassSpan {
   startsAt: string;
   endsAt: string;
   className: string;
+  location: string;
   /** The series the day belongs to, or null for a span that is not a series day (a candidate not yet saved). */
   seriesId: string | null;
 }

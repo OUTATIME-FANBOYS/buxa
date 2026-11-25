@@ -29,7 +29,7 @@ describe.skipIf(!url)('class prices: constraints and row-level security', () => 
       return db.query<{ id: string }>(
         `INSERT INTO sessions (org_id, class_id, name, starts_at, ends_at, location, capacity, ratio_campers, ratio_instructors,
                                price_minor, price_currency, early_bird_minor, early_bird_until)
-         VALUES ($1, $2, 'Week one', now(), now() + interval '2 hours', 'Lake', 10, 5, 1, $3, $4, $5, $6::date)
+         VALUES ($1, $2, 'Week one', now(), now() + interval '2 hours', 'Lake ' || gen_random_uuid(), 10, 5, 1, $3, $4, $5, $6::date)
          RETURNING id`,
         [org, parent.rows[0].id, ...values],
       );

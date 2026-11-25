@@ -28,7 +28,12 @@ describe.skipIf(!url)('enrolment races on Postgres', () => {
     try {
       for (let trial = 0; trial < TRIALS; trial++) {
         const session = await makeSession(fx.repo, fx.actor);
-        const cls = await fx.repo.addClass(fx.actor, session.id, sessionInput(9, 12, { capacity: 1 }));
+        // Each trial has its own location: classes in one location may not overlap, and the trials share one camp.
+        const cls = await fx.repo.addClass(
+          fx.actor,
+          session.id,
+          sessionInput(9, 12, { capacity: 1, location: `Lab ${trial}` }),
+        );
         const ada = await fx.addPerson(fx.orgA, '2016-03-01', `Ada${trial}`);
         const ben = await fx.addPerson(fx.orgA, '2016-03-01', `Ben${trial}`);
 
@@ -54,8 +59,17 @@ describe.skipIf(!url)('enrolment races on Postgres', () => {
     try {
       for (let trial = 0; trial < TRIALS; trial++) {
         const session = await makeSession(fx.repo, fx.actor);
-        const morning = await fx.repo.addClass(fx.actor, session.id, sessionInput(9, 12, { name: 'Robotics' }));
-        const overlapping = await fx.repo.addClass(fx.actor, session.id, sessionInput(11, 13, { name: 'Painting' }));
+        // Overlapping in time, in two locations: the child rule applies across locations, the location rule does not.
+        const morning = await fx.repo.addClass(
+          fx.actor,
+          session.id,
+          sessionInput(9, 12, { name: 'Robotics', location: `Lab ${trial}` }),
+        );
+        const overlapping = await fx.repo.addClass(
+          fx.actor,
+          session.id,
+          sessionInput(11, 13, { name: 'Painting', location: `Hall ${trial}` }),
+        );
         const camper = await fx.addPerson(fx.orgA, '2016-03-01', `Cam${trial}`);
 
         const results = await settle([

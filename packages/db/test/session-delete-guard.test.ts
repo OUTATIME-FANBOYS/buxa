@@ -21,7 +21,7 @@ describe.skipIf(!url)('session delete guard (migration 0035)', () => {
   const addClass = async (sessionId: string): Promise<void> => {
     await pool.query(
       `INSERT INTO sessions (org_id, class_id, name, age_min, age_max, starts_at, ends_at, location, capacity)
-       VALUES ($1, $2, 'Robotics', 8, 12, '2027-07-05T09:00:00+10:00', '2027-07-05T12:00:00+10:00', 'Lab 1', 12)`,
+       VALUES ($1, $2, 'Robotics', 8, 12, '2027-07-05T09:00:00+10:00', '2027-07-05T12:00:00+10:00', 'Lab ' || gen_random_uuid(), 12)`,
       [org, sessionId],
     );
   };
@@ -90,7 +90,7 @@ describe.skipIf(!url)('session delete guard (migration 0035)', () => {
     ).rows[0].id;
     await pool.query(
       `INSERT INTO sessions (org_id, class_id, name, age_min, age_max, starts_at, ends_at, location, capacity)
-       VALUES ($1, $2, 'Robotics', 8, 12, '2027-07-05T09:00:00+10:00', '2027-07-05T12:00:00+10:00', 'Lab 1', 12)`,
+       VALUES ($1, $2, 'Robotics', 8, 12, '2027-07-05T09:00:00+10:00', '2027-07-05T12:00:00+10:00', 'Lab ' || gen_random_uuid(), 12)`,
       [camp, sessionId],
     );
     await pool.query('DELETE FROM orgs WHERE id = $1', [camp]);

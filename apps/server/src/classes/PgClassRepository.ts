@@ -27,6 +27,7 @@ import { getSeriesRow, listSeriesDayRows, listSeriesHolderNames, listSeriesRows 
 import { ClassNotFoundError } from './errors';
 import { cancelInTransaction, enrolInTransaction } from './PgEnrolmentWrites';
 import { readDatesPlanRows } from './PgSessionDates';
+import { lockLocationAndCheck } from './PgLocationRule';
 import {
   getClass,
   getSession,
@@ -182,10 +183,14 @@ export class PgClassRepository implements ClassRepository {
     });
   }
 
-  setOccurrenceStatus(actor: Actor, occurrenceId: string, command: OccurrenceCommand): Promise<void> {
-    return withOrg(this.pool, actor.userId, actor.orgId, db =>
-      setOccurrenceStatusRow(db, actor, occurrenceId, command),
-    );
+  async setOccurrenceStatus(actor: Actor, occurrenceId: string, command: OccurrenceCommand): Promise<void> {
+    try {
+      await withOrg(this.pool, actor.userId, actor.orgId, db =>
+        setOccurrenceStatusRow(db, actor, occurrenceId, command),
+      );
+    } catch (error) {
+      throw translateClassWriteError(error);
+    }
   }
 
   async addSeries(actor: Actor, sessionId: string, input: SeriesRecord): Promise<Series> {
@@ -262,14 +267,22 @@ export class PgClassRepository implements ClassRepository {
 
   listCampClassSpans(userId: string, orgId: string): Promise<CampClassSpan[]> {
     return withOrg(this.pool, userId, orgId, async db => {
-      const { rows } = await db.query<{ starts_at: Date; ends_at: Date; class_name: string; series_id: string | null }>(
-        'SELECT s.starts_at, s.ends_at, s.name AS class_name, s.series_id FROM sessions s ORDER BY s.starts_at',
+      const { rows } = await db.query<{
+        starts_at: Date;
+        ends_at: Date;
+        class_name: string;
+        location: string;
+        series_id: string | null;
+      }>(
+        `SELECT s.starts_at, s.ends_at, s.name AS class_name, s.location, s.series_id
+           FROM sessions s WHERE s.status = 'active' ORDER BY s.starts_at`,
       );
 
       return rows.map(r => ({
         startsAt: toIso(r.starts_at),
         endsAt: toIso(r.ends_at),
         className: r.class_name,
+        location: r.location,
         seriesId: r.series_id,
       }));
     });
@@ -287,19 +300,35 @@ export class PgClassRepository implements ClassRepository {
     return withOrg(this.pool, userId, orgId, db => getClass(db, classId));
   }
 
-  addClass(actor: Actor, sessionId: string, input: ClassRecord): Promise<Class> {
-    return withOrg(this.pool, actor.userId, actor.orgId, async db => {
-      await requireSessionExists(db, sessionId);
-      const id = await insertClass(db, actor, sessionId, input);
+  async addClass(actor: Actor, sessionId: string, input: ClassRecord): Promise<Class> {
+    try {
+      return await withOrg(this.pool, actor.userId, actor.orgId, async db => {
+        await requireSessionExists(db, sessionId);
+        await lockLocationAndCheck(db, actor.orgId, { name: input.name, location: input.location }, [input], null);
+        const id = await insertClass(db, actor, sessionId, input);
 
-      return requireClass(db, id);
-    });
+        return requireClass(db, id);
+      });
+    } catch (error) {
+      throw translateClassWriteError(error);
+    }
   }
 
   async updateClass(actor: Actor, classId: string, input: ClassRecord): Promise<Class> {
     try {
       return await withOrg(this.pool, actor.userId, actor.orgId, async db => {
         await requireClassExists(db, classId);
+        const { rows: own } = await db.query<{ series_id: string }>(
+          'SELECT series_id FROM sessions WHERE id = $1 AND org_id = $2',
+          [classId, actor.orgId],
+        );
+        await lockLocationAndCheck(
+          db,
+          actor.orgId,
+          { name: input.name, location: input.location },
+          [input],
+          own[0]?.series_id ?? null,
+        );
         await updateClassRow(db, actor, classId, input);
 
         return requireClass(db, classId);

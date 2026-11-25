@@ -96,7 +96,12 @@ export function classRepositoryContract(factory: ClassContractFactory): void {
       sessionNumber += 1;
       const session = await fx.repo.createSession(fx.actor, { ...SESSION, name: `${SESSION.name} ${sessionNumber}` });
       await fx.repo.publishSession(fx.actor, session.id);
-      const cls = await fx.repo.addClass(fx.actor, session.id, { ...ROBOTICS, capacity });
+      // Each class has its own location: classes in one location may not overlap (migration 0066), and these days overlap.
+      const cls = await fx.repo.addClass(fx.actor, session.id, {
+        ...ROBOTICS,
+        capacity,
+        location: `Lab ${sessionNumber}`,
+      });
 
       return cls.id;
     };

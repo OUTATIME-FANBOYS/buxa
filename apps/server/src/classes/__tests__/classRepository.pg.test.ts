@@ -308,7 +308,11 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
 
     it('refuses an overlap with the clashing class, and names it', async () => {
       const session = await makeSession(fx.repo, fx.actor);
-      const clash = await fx.repo.addClass(fx.actor, session.id, sessionInput(11, 13, { name: 'Painting' }));
+      const clash = await fx.repo.addClass(
+        fx.actor,
+        session.id,
+        sessionInput(11, 13, { name: 'Painting', location: 'Lab 2' }),
+      );
       await fx.repo.enrol(fx.actor, { classId: clash.id, camperId: camper }, enrolRule());
       const error: unknown = await fx.repo
         .enrol(fx.actor, { classId, camperId: camper }, enrolRule())
@@ -344,7 +348,11 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
 
     it('lets an admin override an overlap with a reason, recording the reason and the clash', async () => {
       const session = await makeSession(fx.repo, fx.actor);
-      const clash = await fx.repo.addClass(fx.actor, session.id, sessionInput(11, 13, { name: 'Painting' }));
+      const clash = await fx.repo.addClass(
+        fx.actor,
+        session.id,
+        sessionInput(11, 13, { name: 'Painting', location: 'Lab 2' }),
+      );
       await fx.repo.enrol(fx.actor, { classId: clash.id, camperId: camper }, enrolRule());
       const enrolment = await fx.repo.enrol(
         fx.actor,
@@ -359,7 +367,11 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
 
     it('refuses an override from someone who may not give one, and writes nothing', async () => {
       const session = await makeSession(fx.repo, fx.actor);
-      const clash = await fx.repo.addClass(fx.actor, session.id, sessionInput(11, 13, { name: 'Painting' }));
+      const clash = await fx.repo.addClass(
+        fx.actor,
+        session.id,
+        sessionInput(11, 13, { name: 'Painting', location: 'Lab 2' }),
+      );
       await fx.repo.enrol(fx.actor, { classId: clash.id, camperId: camper }, enrolRule());
       await expect(
         fx.repo.enrol(

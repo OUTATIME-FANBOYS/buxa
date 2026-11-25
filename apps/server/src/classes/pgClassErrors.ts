@@ -7,6 +7,7 @@ import {
   SessionHasClassesError,
   SessionHasEnrolmentsError,
   SessionNameTakenError,
+  RecurrenceRefusedError,
   SessionNotDraftError,
   SessionNotFoundError,
 } from './errors';
@@ -20,6 +21,11 @@ import {
 const CHECK_VIOLATION = '23514';
 const FOREIGN_KEY_VIOLATION = '23503';
 const UNIQUE_VIOLATION = '23505';
+const EXCLUSION_VIOLATION = '23P01';
+/** The exclusion constraint of migration 0066: two active days overlap in one location. Reached only by a race the lock did not cover. */
+export const LOCATION_CONSTRAINT = 'sessions_location_overlap';
+const LOCATION_RACE_MESSAGE =
+  'Two classes in the same location cannot overlap. Choose other times, days or a location; nothing was saved.';
 export const SESSION_NAME_CONSTRAINT = 'classes_org_name_normal_key';
 export const CAPACITY_CONSTRAINT = 'enrolments_capacity';
 
@@ -49,6 +55,9 @@ export function translateClassWriteError(error: unknown): unknown {
   }
   if (isPgError(error, 'P0002', null)) {
     return new ClassNotFoundError();
+  }
+  if (isPgError(error, EXCLUSION_VIOLATION, LOCATION_CONSTRAINT)) {
+    return new RecurrenceRefusedError('class_clash', LOCATION_RACE_MESSAGE);
   }
 
   return error;

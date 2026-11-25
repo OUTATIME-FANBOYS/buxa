@@ -2,15 +2,13 @@ import {
   classWithinSession,
   dayLabel,
   diffSeriesDays,
-  findClash,
-  formatClash,
   planSeries,
   seriesDaysInUseMessage,
   type Actor,
   type SeriesDetails,
 } from '@buxa/domain';
 import type { Class, NewSeriesInput, Series } from '@buxa/contracts';
-import type { CampClassSpan, ClassRepository, SeriesFields, SeriesSchedule } from './ClassRepository';
+import type { ClassRepository, SeriesFields, SeriesSchedule } from './ClassRepository';
 import { ClassOutsideSessionError, RecurrenceRefusedError, SeriesDaysInUseError } from './errors';
 
 /*
@@ -60,8 +58,8 @@ export function detailsOfInput(input: NewSeriesInput): SeriesDetails {
 
 /**
  * The change to a series' days that an edit makes, or null when its weekdays and Starts and Ends are as saved (then only the shared
- * fields change). The new days are planned from the weekdays and the two date-times, checked against the session's dates and against
- * every other class in the camp, and the active days no planned day matches are removed. A removed day that a child, a hold or a
+ * fields change). The new days are planned from the weekdays and the two date-times and checked against the session's dates; the
+ * active days no planned day matches are removed. The location check is made by ClassService.updateSeries. A removed day that a child, a hold or a
  * registration is on refuses the whole edit, naming them (SeriesDaysInUseError). Cancelled days are left as they are.
  */
 export async function scheduleOfSeries(
@@ -106,22 +104,7 @@ export async function scheduleOfSeries(
     }
   }
 
-  // The new days are checked against every class in the camp except this series' own days, which are being replaced.
-  const others = (await repo.listCampClassSpans(actor.userId, actor.orgId)).filter(
-    span => span.seriesId !== existing.id,
-  );
-  const accepted: CampClassSpan[] = [];
-  for (const occurrence of diff.add) {
-    const clash = findClash(occurrence, [...others, ...accepted]);
-    if (clash) {
-      throw new RecurrenceRefusedError(
-        'class_clash',
-        `${input.name} on ${occurrence.date} clashes with ${clash.className} (${formatClash(clash, timeZone)}). Choose other times or days; nothing was saved.`,
-      );
-    }
-    accepted.push({ startsAt: occurrence.startsAt, endsAt: occurrence.endsAt, className: input.name, seriesId: null });
-  }
-
+  // The location clash check for the added days is made by ClassService.updateSeries, with the kept days, before the write.
   return {
     weekdays: plan.series.weekdays,
     seriesStartsAt: plan.series.seriesStartsAt,
