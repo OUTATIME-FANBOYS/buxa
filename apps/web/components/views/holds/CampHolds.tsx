@@ -55,11 +55,15 @@ export async function CampHolds({ searchParams = {} }: { searchParams?: SearchPa
 
   return (
     <div className="page">
-      <PageHeader
-        title="Holds"
-        subtitle="Places families hold while they finish registering, and the waitlist for each class. Promote a camper from the class page."
-      />
-      {choices.length > 0 && <SessionFilter action={ROUTES.holds} sessions={choices} value={chosen} />}
+      <div className="holds-head">
+        <PageHeader
+          title="Holds"
+          subtitle="Places families hold while they finish registering, and the waitlist for each class. Promote a camper from the class page."
+          actions={
+            choices.length > 0 ? <SessionFilter action={ROUTES.holds} sessions={choices} value={chosen} /> : undefined
+          }
+        />
+      </div>
       <CampHoldsBoard
         holds={holds.value.filter(hold => inChosenSession(hold.sessionId, chosen))}
         waitlist={waitlist.value.filter(row => inChosenSession(row.sessionId, chosen)).map(toWaitRow)}
