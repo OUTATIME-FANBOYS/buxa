@@ -37,10 +37,7 @@ export function DeskFamilyCheckIn() {
 
   if (lines === null) {
     return (
-      <section className="buxa:grid buxa:gap-3" aria-labelledby="desk-family-heading">
-        <h2 id="desk-family-heading" className="buxa:text-[length:var(--fs-l)]">
-          Check in a family by email
-        </h2>
+      <section className="buxa:grid buxa:gap-3" aria-label="Check in a family by email">
         <FamilyCodeForm
           key={round}
           intro="The family has no phone to scan with. Ask for their registration email, then read the code out to them."

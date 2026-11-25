@@ -3,6 +3,10 @@ import { CheckInScreen } from '@/components/views/attendance';
 
 export const metadata: Metadata = { title: 'Check-in' };
 
-export default function Page() {
-  return <CheckInScreen />;
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  return <CheckInScreen searchParams={await searchParams} />;
 }
