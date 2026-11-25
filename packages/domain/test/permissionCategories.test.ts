@@ -41,7 +41,6 @@ const SPEC: Record<PermissionCategory, Record<Role, Action[]>> = {
     staff: ['attendance:read', 'attendance:record'],
     admin: ['attendance:read', 'attendance:record', 'attendance:override', 'attendance:export'],
     owner: ['attendance:read', 'attendance:record', 'attendance:override', 'attendance:export'],
-    teacher: ['attendance:read'],
   },
   People: {
     viewer: ['people:read'],
@@ -66,7 +65,6 @@ const SPEC: Record<PermissionCategory, Record<Role, Action[]>> = {
       'memberships:manage',
       'credentials:manage',
     ],
-    teacher: ['people:read'],
   },
   'Classes and events': {
     viewer: ['events:read'],
@@ -91,9 +89,8 @@ const SPEC: Record<PermissionCategory, Record<Role, Action[]>> = {
       'events:update_details',
       'events:delete',
     ],
-    teacher: ['events:read', 'events:update_details'],
   },
-  Money: { viewer: [], staff: [], admin: [], owner: [], teacher: [] },
+  Money: { viewer: [], staff: [], admin: [], owner: [] },
   Registration: {
     viewer: [],
     staff: ['registration:read', 'registration:submit', 'registration:confirm', 'holds:manage'],
@@ -113,7 +110,6 @@ const SPEC: Record<PermissionCategory, Record<Role, Action[]>> = {
       'registration:delete',
       'holds:manage',
     ],
-    teacher: [],
   },
   Team: {
     viewer: ['members:read', 'members:leave'],
@@ -138,7 +134,6 @@ const SPEC: Record<PermissionCategory, Record<Role, Action[]>> = {
       'members:remove',
       'members:rename',
     ],
-    teacher: ['members:leave'],
   },
   Work: {
     viewer: ['tasks:read'],
@@ -161,7 +156,6 @@ const SPEC: Record<PermissionCategory, Record<Role, Action[]>> = {
       'tasks:delete',
       'tasks:manage_board',
     ],
-    teacher: [],
   },
   Admin: {
     viewer: ['org:read'],
@@ -178,11 +172,10 @@ const SPEC: Record<PermissionCategory, Record<Role, Action[]>> = {
       'org:transfer_ownership',
       'data:erase',
     ],
-    teacher: ['org:read'],
   },
 };
 
-const ROLE_ORDER: Role[] = ['viewer', 'staff', 'admin', 'owner', 'teacher'];
+const ROLE_ORDER: Role[] = ['viewer', 'staff', 'admin', 'owner'];
 
 describe('permission categories: default role grants match the spec table', () => {
   for (const category of PERMISSION_CATEGORIES) {
