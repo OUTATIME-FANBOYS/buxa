@@ -122,6 +122,26 @@ describe('RegisterForm: the camper and the parent come from the person record', 
     expect(input('standard.camperBirthDate').readOnly).toBe(true);
   });
 
+  it('gives the read-only camper fields the read-only look, and still submits their values', () => {
+    renderWith([camper('c-ada', 'Ada', 'Lovelace', { parent: ON_FILE })]);
+    chooseChild('Ada Lovelace');
+
+    expect(input('standard.camperFirstName').classList.contains('field-readonly')).toBe(true);
+    expect(input('standard.camperLastName').classList.contains('field-readonly')).toBe(true);
+    expect(input('standard.camperBirthDate').classList.contains('field-readonly')).toBe(true);
+    expect(input('standard.guardianPhone').classList.contains('field-readonly')).toBe(true);
+
+    const form = host.querySelector('form');
+    if (!form) {
+      throw new Error('no form');
+    }
+    const data = new FormData(form);
+    expect(data.get('standard.camperFirstName')).toBe('Ada');
+    expect(data.get('standard.camperLastName')).toBe('Lovelace');
+    expect(data.get('standard.camperBirthDate')).toBe('2014-03-09');
+    expect(data.get('standard.guardianPhone')).toBe(ON_FILE.phone);
+  });
+
   it('fills the parent or guardian from the household and makes them read only when one is on file', () => {
     renderWith([camper('c-ada', 'Ada', 'Lovelace', { parent: ON_FILE })]);
     chooseChild('Ada Lovelace');

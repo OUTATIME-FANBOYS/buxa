@@ -74,7 +74,7 @@ export function DatePicker({
         aria-describedby={[describedBy, error || hint ? hintId : undefined].filter(Boolean).join(' ') || undefined}
         {...controlled}
         onChange={e => onChange?.(e.target.value === '' ? null : e.target.value)}
-        className="select-field__input buxa:min-w-0 buxa:aria-[invalid=true]:border-[var(--crit)]"
+        className={`select-field__input buxa:min-w-0 buxa:aria-[invalid=true]:border-[var(--crit)]${isReadOnly ? ' field-readonly' : ''}`}
       />
       {error ? (
         <p id={hintId} className="field-error" role="alert">

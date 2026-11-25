@@ -139,13 +139,35 @@ describe('RegisterForm: children as tags and search', () => {
 
     return box;
   };
+  const classesSection = () => {
+    const section = host.querySelector<HTMLElement>('section[aria-labelledby="register-classes"]');
+    if (!section) {
+      throw new Error('no Classes section');
+    }
+
+    return section;
+  };
   const submitted = () => new FormData(form()).getAll('selections');
 
   it('adds a chosen child as a tag and shows that child’s classes', () => {
     chooseChild('Ada Lovelace');
 
     expect(childTagNames()).toEqual(['Remove Ada Lovelace']);
-    expect(host.querySelector('fieldset legend')?.textContent).toBe('Ada Lovelace');
+    expect(classesSection().querySelector('fieldset')?.getAttribute('aria-label')).toBe('Ada Lovelace');
+  });
+
+  it('shows neither the child name nor the session name as visible text in the Classes section', () => {
+    chooseChild('Ada Lovelace');
+    const section = classesSection();
+
+    // The name is only in the visually hidden legend, so screen readers still hear which child the choices belong to.
+    const named = Array.from(section.querySelectorAll('*')).filter(el => el.textContent === 'Ada Lovelace');
+    expect(named.map(el => el.className)).toEqual(['sr-only']);
+    // The session's name line is gone: the choices sit straight under the child, with no muted paragraph in between.
+    expect(section.querySelector('fieldset')?.querySelector('p')).toBeNull();
+    expect(section.textContent).not.toContain('Art');
+    // The series choices and their checkboxes stay.
+    expect(section.querySelectorAll('fieldset input[type="checkbox"]')).toHaveLength(1);
   });
 
   it('removes a child with its x, and the classes chosen for that child leave the submission', () => {

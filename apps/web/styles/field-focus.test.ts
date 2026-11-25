@@ -39,6 +39,17 @@ describe('form field focus', () => {
     expect(FIELD_DEFAULTS).not.toMatch(/focus-visible\]:border/);
   });
 
+  it('gives a read-only field the surface, a muted border and the default cursor, and keeps that border on focus', () => {
+    const rule = ruleFor(base, ':is(input, select, textarea).field-readonly');
+    expect(rule).toMatch(/background:\s*var\(--surface\)/);
+    expect(rule).toMatch(/border-color:\s*var\(--line\)/);
+    expect(rule).toMatch(/cursor:\s*default/);
+
+    const focus = ruleFor(base, ":is(input, select, textarea).field-readonly:focus:not([aria-invalid='true'])");
+    expect(focus).toMatch(/border-color:\s*var\(--line\)/);
+    expect(focus).not.toMatch(/var\(--focus\)/);
+  });
+
   it('gives the search boxes a border-colour focus with no ring or shadow', () => {
     for (const [css, selector] of [
       [shell, '.search .search-field__box:focus-within'],
