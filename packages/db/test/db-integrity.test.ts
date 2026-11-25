@@ -114,7 +114,7 @@ describe.skipIf(!url)('database integrity (0055, 0056)', () => {
     let holdId = '';
 
     beforeAll(async () => {
-      formId = await one(`INSERT INTO registration_forms (org_id, name) VALUES ($1, 'Form') RETURNING id`, [org]);
+      formId = await one(`INSERT INTO registration_forms (org_id, name, draft_name) VALUES ($1, 'Form', 'Form') RETURNING id`, [org]);
       await pool.query(
         `INSERT INTO registration_form_versions (org_id, form_id, version, fields) VALUES ($1, $2, 1, '[]')`,
         [org, formId],

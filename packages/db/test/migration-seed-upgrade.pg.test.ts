@@ -196,6 +196,7 @@ describe.skipIf(!url)('migration upgrade against existing data (0018-0020)', () 
       '0068_camp_gate.sql',
       '0069_retire_teacher_role.sql',
       '0070_registration_form_delete.sql',
+      '0071_registration_form_drafts.sql',
     ]);
   });
 
@@ -415,6 +416,7 @@ describe.skipIf(!url)('migration 0050 copies session prices onto their classes',
       '0068_camp_gate.sql',
       '0069_retire_teacher_role.sql',
       '0070_registration_form_delete.sql',
+      '0071_registration_form_drafts.sql',
     ]);
 
     const classes = await tempPool.query<{
@@ -619,6 +621,7 @@ describe.skipIf(!url)('migration 0051 links teachers to their people by email', 
       '0068_camp_gate.sql',
       '0069_retire_teacher_role.sql',
       '0070_registration_form_delete.sql',
+      '0071_registration_form_drafts.sql',
     ]);
     const linked = await tempPool.query<{ email: string; user_email: string }>(
       `SELECT p.email, u.email AS user_email FROM people p JOIN users u ON u.id = p.user_id`,
