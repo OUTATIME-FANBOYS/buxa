@@ -49,6 +49,13 @@ const type = (value: string) => {
 };
 
 describe('OnSiteList search', () => {
+  it('renders the search box with its accessible label', () => {
+    act(() => root.render(<OnSiteList rows={rows} canRecord canOverride={false} />));
+    const input = document.querySelector<HTMLInputElement>('input[aria-label="Search people on site"]');
+    expect(input).not.toBeNull();
+    expect(input?.getAttribute('placeholder')).toBe('Search by name');
+  });
+
   it('lists everyone with an empty search box', () => {
     act(() => root.render(<OnSiteList rows={rows} canRecord canOverride={false} />));
     expect(names()).toEqual(['Owen Adeyemi', 'Mila Adeyemi', 'Ben Hartley', 'René Dubois']);
