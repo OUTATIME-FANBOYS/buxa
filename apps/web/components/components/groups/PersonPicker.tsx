@@ -1,6 +1,7 @@
 'use client';
 
-import { useId } from 'react';
+import { useId, useState } from 'react';
+import { SearchField } from '@/components/atoms';
 
 export interface PersonOption {
   id: string;
@@ -10,7 +11,7 @@ export interface PersonOption {
 /*
  * The people a placement covers: a labelled select that adds a person as a tag with an x, the same pattern as the registration
  * form's session tags. Each chosen id is posted as a `personId` field, so the form submits every chosen person. The select itself
- * has no name, so it posts nothing.
+ * has no name, so it posts nothing. With `search`, a search box above the select narrows the people it lists as you type.
  */
 export function PersonPicker({
   label,
@@ -18,20 +19,33 @@ export function PersonPicker({
   chosen,
   onChange,
   error,
+  search = false,
 }: {
   label: string;
   people: readonly PersonOption[];
   chosen: readonly string[];
   onChange: (personIds: string[]) => void;
   error?: string;
+  /** Show a search box that narrows the people the select lists by name. Off by default. */
+  search?: boolean;
 }) {
   const generated = useId();
   const selectId = `${generated}-person`;
   const labelId = `${generated}-person-label`;
+  const searchId = `${generated}-person-search`;
+  const [query, setQuery] = useState('');
   const byId = new Map(people.map(p => [p.id, p.name] as const));
   const available = people.filter(p => !chosen.includes(p.id));
+  const needle = query.trim().toLowerCase();
+  const matching = needle === '' ? available : available.filter(p => p.name.toLowerCase().includes(needle));
   const emptyText =
-    people.length === 0 ? 'No one with this role yet' : available.length === 0 ? 'Everyone is chosen' : 'Add a person';
+    people.length === 0
+      ? 'No one with this role yet'
+      : available.length === 0
+        ? 'Everyone is chosen'
+        : matching.length === 0
+          ? 'No one matches'
+          : 'Add a person';
 
   return (
     <div className="select-field buxa:grid buxa:gap-[var(--s2)] buxa:min-w-0">
@@ -63,6 +77,15 @@ export function PersonPicker({
             ))}
           </ul>
         )}
+        {search && available.length > 0 && (
+          <SearchField
+            id={searchId}
+            aria-label={`Search ${label.toLowerCase()}`}
+            placeholder="Type a name"
+            value={query}
+            onChange={setQuery}
+          />
+        )}
         <select
           id={selectId}
           data-field="person"
@@ -70,7 +93,7 @@ export function PersonPicker({
           aria-invalid={Boolean(error) || undefined}
           className="session-picker__input"
           value=""
-          disabled={available.length === 0}
+          disabled={matching.length === 0}
           onChange={e => {
             const id = e.target.value;
             if (id !== '' && !chosen.includes(id)) {
@@ -79,7 +102,7 @@ export function PersonPicker({
           }}
         >
           <option value="">{emptyText}</option>
-          {available.map(p => (
+          {matching.map(p => (
             <option key={p.id} value={p.id}>
               {p.name}
             </option>

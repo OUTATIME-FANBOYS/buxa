@@ -90,7 +90,7 @@ describe('RegisterForm: sections, one asterisk, no fieldsets', () => {
     expect(html).not.toContain('Record registration');
   });
 
-  it('lists the children to choose from People, as checkboxes, before any class', () => {
+  it('offers the children from People as a tag picker, not a checkbox list, before any class', () => {
     const html = renderToStaticMarkup(
       <RegisterForm
         formId="f-1"
@@ -102,8 +102,11 @@ describe('RegisterForm: sections, one asterisk, no fieldsets', () => {
         variant="dialog"
       />,
     );
-    expect(html).toContain('check-group');
+    expect(html).toContain('data-field="person"');
     expect(html).toContain('>Ada Lovelace<');
+    expect(html).toContain('aria-label="Search children"');
+    expect(html).not.toContain('check-group');
+    expect(html).not.toContain('type="checkbox"');
     expect(html).not.toContain('name="selections"');
   });
 
