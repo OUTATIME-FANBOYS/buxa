@@ -252,3 +252,11 @@ See `04-seats-rosters.md`, "Class series and occurrences", for the model and the
 - **Per series:** the enrolment (one per child), the seat holds (one per child), the waitlist, the camp size (capacity), the price, the registration places, and the overlap rule (a child may not be enrolled in two series whose active days overlap).
 - **Per occurrence (a day):** its date and time, its status (active or cancelled, with a reason), and attendance. A cancelled day does not change the series or the places.
 - Built so far: the database model and migrations 0060 and 0061, the domain rules and cancel and restore on the server. The registration form, the pickers and the New class dialog still work per occurrence until the UI moves (see the 04 document).
+
+## Onboarding, then registering to a series (decided)
+
+- **Onboard first.** A registration is for someone already in the system. Staff create the person first, with their camper details (first name, last name, date of birth), their parent or guardian (name, email, phone) and an emergency contact. Then they register that person to a class series. The registration form does not ask for these details again.
+- **Register to a series.** A family picks a class series once (for example Art Camp, Monday to Friday), not each day. Enrolment, holds and places are per series (see docs/phases/04-seats-rosters.md, class series).
+- **Autofill.** When a camper is selected, the camper's details and parent information are filled in and read only. If there is no parent information on file, the form asks for it and saves it to the person.
+- **Emergency contact on the person.** An optional section on every person's profile, not mandatory to sign up. Required only when a profile is activated (for example before a camper attends). Registration pre-fills it from the profile when known, and asks for it only when it is missing. Staff and the family's guardian can edit a child's emergency contacts.
+- **Registration questions.** Camper, parent and emergency details are fixed fields, not editable questions. Staff can still add their own questions to a form below them.
