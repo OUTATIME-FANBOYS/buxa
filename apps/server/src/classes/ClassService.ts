@@ -4,6 +4,7 @@ import {
   classWithinSession,
   findClash,
   formatClash,
+  teachingDays,
   planSeries,
   planSessionDates,
   type Actor,
@@ -235,8 +236,8 @@ export function createClassService({ repo, timezoneOf }: ClassServiceDeps): Clas
       return attempt(
         async () => {
           const found = await Promise.all([...scope.classIds].map(id => repo.getClass(actor.userId, actor.orgId, id)));
-          // A cancelled day is not a class on a teacher's plan (migration 0064).
-          const classes = found.flatMap(c => (c && c.occurrenceStatus === 'active' ? [c] : []));
+          // The teaching rule (@buxa/domain): a cancelled day is not a class on a teacher's plan (migration 0064).
+          const classes = teachingDays(found.flatMap(c => (c ? [c] : [])));
           const sessionIds = [...new Set(classes.map(c => c.sessionId))];
           const sessions = await Promise.all(sessionIds.map(id => repo.getSession(actor.userId, actor.orgId, id)));
 

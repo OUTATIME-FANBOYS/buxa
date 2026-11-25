@@ -81,7 +81,11 @@ describe('personPageFilter', () => {
   });
 
   it('carries the role, and keeps only a teacher’s campers when there is a scope', () => {
-    const scope = { classIds: new Set<string>(), camperIds: new Set(['p-1', 'p-2']) };
+    const scope = {
+      classIds: new Set<string>(),
+      camperIds: new Set(['p-1', 'p-2']),
+      teaching: { sessionIds: new Set<string>(), seriesIds: new Set<string>() },
+    };
     expect(personPageFilter({ role: 'camper', query: 'Lee' }, scope)).toEqual({
       term: 'Lee',
       role: 'camper',
