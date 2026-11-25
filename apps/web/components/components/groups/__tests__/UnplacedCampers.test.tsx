@@ -112,4 +112,37 @@ describe('the campers not placed yet', () => {
     expect(container.textContent).toContain('Every camper is placed.');
     expect(container.querySelector('input[type="search"]')).toBeNull();
   });
+
+  it('gives each row a Place button named for its camper, when the viewer may place', () => {
+    const container = mountWithChoices(people);
+    const names = [...container.querySelectorAll<HTMLButtonElement>('ul.unplaced-list button')].map(button =>
+      button.getAttribute('aria-label'),
+    );
+
+    expect(names).toEqual(['Place Ada Lovelace', 'Place Grace Hopper', 'Place José Álvarez']);
+    expect([...container.querySelectorAll('ul.unplaced-list button')].map(b => b.textContent)).toEqual([
+      'Place',
+      'Place',
+      'Place',
+    ]);
+  });
+
+  it('has no Place button for a viewer (no choices are passed)', () => {
+    const container = mount(people);
+
+    expect(container.querySelector('ul.unplaced-list button')).toBeNull();
+  });
 });
+
+function mountWithChoices(list: readonly UnplacedPerson[]): HTMLElement {
+  const container = document.createElement('div');
+  document.body.appendChild(container);
+  const root = createRoot(container);
+  const choices = { sessionId: 'session-1', campers: list, staff: [], groups: [], rooms: [] };
+  act(() => {
+    root.render(<UnplacedCampers people={list} choices={choices} />);
+  });
+  mounted = { root, container };
+
+  return container;
+}

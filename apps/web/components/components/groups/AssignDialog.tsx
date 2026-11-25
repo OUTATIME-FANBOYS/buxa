@@ -79,17 +79,20 @@ export function AssignDialog({ choices }: { choices: AssignChoices }) {
 
 export function AssignPopUp({
   choices,
+  presetPersonId,
   onCancel,
   onDone,
 }: {
   choices: AssignChoices;
+  /** A camper chosen before the pop-up opens (from a row's Place button). Still editable: the person picker can change it. */
+  presetPersonId?: string;
   onCancel: () => void;
   onDone: (message: string) => void;
 }) {
   const [state, formAction, pending] = useActionState(assignAction, idle);
   const [selection, setSelection] = useState<Selection>({
     role: 'camper',
-    personIds: [],
+    personIds: presetPersonId ? [presetPersonId] : [],
     groupId: null,
     roomId: null,
   });
