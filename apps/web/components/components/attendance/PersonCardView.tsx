@@ -20,13 +20,13 @@ export function PersonCardView({ card, timeZone, clockFormat, children }: Props)
 
   return (
     <article className="result-card" aria-labelledby="result-name">
-      <h2 id="result-name" className="result-name">
-        {attendanceDisplayName(person)}
-      </h2>
-      {roles && <p className="muted">{roles}</p>}
-      <div className="row">
+      <div className="result-head">
+        <h2 id="result-name" className="result-name">
+          {attendanceDisplayName(person)}
+        </h2>
         <StatusPill status={person.status} />
       </div>
+      {roles && <p className="muted">{roles}</p>}
       {onSiteSince && (
         <p className="result-since">On site since {formatCampTime(onSiteSince, timeZone, clockFormat)}</p>
       )}

@@ -93,6 +93,13 @@
   display: grid;
   gap: var(--s3);
 }
+/* The name on the left, the status pill in the top-right corner of the card. */
+.result-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s3);
+}
 .result-name {
   font-size: var(--fs-n);
   line-height: 1.2;
