@@ -3,7 +3,7 @@
  * Pure: the service passes the facts in, the rule answers. Money is not part of this phase (see docs/phases/03-registration.md).
  */
 
-import { overlaps, type Span } from '../classes/interval';
+import { anySpanOverlaps, type Span } from '../classes/interval';
 
 export type RegistrationRefusal =
   | 'form_not_published'
@@ -23,11 +23,22 @@ export type RegistrationRefusal =
   | 'payment_note_required'
   | 'form_has_registrations';
 
-/** One child and one class the family asks for. `startsAt`/`endsAt` are the class's times (ISO instants). */
+/**
+ * One child and one class series the family asks for. `classId` is the series' anchor occurrence (the row the place is made against),
+ * and `startsAt`/`endsAt` are its times (ISO instants). A child takes one place per series, so `seriesId` is the key of the choice.
+ * `occurrences` are the series' active days: two series clash when any of their days overlap. An empty list checks the anchor alone.
+ */
 export interface ClassSelection extends Span {
   camperId: string;
   classId: string;
   className: string;
+  seriesId: string;
+  occurrences: readonly Span[];
+}
+
+/** The days a selection is checked on: its active days, or its anchor when the series has none listed. */
+function daysOf(selection: ClassSelection): readonly Span[] {
+  return selection.occurrences.length > 0 ? selection.occurrences : [selection];
 }
 
 export type SelectionDecision =
@@ -37,8 +48,8 @@ export type SelectionDecision =
   | { allow: false; reason: 'classes_overlap'; first: ClassSelection; second: ClassSelection };
 
 /**
- * A child may take several classes in one registration only when their times do not overlap (owner decision). Two selections of
- * the same class for the same child are a duplicate. Classes of different children never clash with each other.
+ * A child may take several series in one registration only when none of their days overlap (owner decision). Two selections of
+ * the same series for the same child are a duplicate, whichever day was named. Series of different children never clash.
  */
 export function decideSelections(selections: readonly ClassSelection[]): SelectionDecision {
   if (selections.length === 0) {
@@ -46,7 +57,7 @@ export function decideSelections(selections: readonly ClassSelection[]): Selecti
   }
   const seen = new Set<string>();
   for (const selection of selections) {
-    const key = `${selection.camperId}|${selection.classId}`;
+    const key = `${selection.camperId}|${selection.seriesId}`;
     if (seen.has(key)) {
       return { allow: false, reason: 'duplicate_selection', selection };
     }
@@ -56,7 +67,7 @@ export function decideSelections(selections: readonly ClassSelection[]): Selecti
     for (let j = i + 1; j < selections.length; j++) {
       const a = selections[i];
       const b = selections[j];
-      if (a.camperId === b.camperId && overlaps(a, b)) {
+      if (a.camperId === b.camperId && anySpanOverlaps(daysOf(a), daysOf(b))) {
         return { allow: false, reason: 'classes_overlap', first: a, second: b };
       }
     }

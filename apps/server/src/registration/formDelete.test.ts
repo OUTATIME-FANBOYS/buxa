@@ -23,6 +23,8 @@ const CLASSES = {
       className: 'Painting',
       startsAt: '2027-07-10T13:00:00.000Z',
       endsAt: '2027-07-10T14:00:00.000Z',
+      seriesId: CLASS_A3,
+      occurrences: [{ startsAt: '2027-07-10T13:00:00.000Z', endsAt: '2027-07-10T14:00:00.000Z' }],
     },
   ],
 };

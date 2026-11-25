@@ -325,4 +325,50 @@ describe.skipIf(!url)('registration by class in Postgres', () => {
     await expect(attempt).rejects.toThrow("This class falls outside its session's dates. Fix its dates first.");
     expect(await rowsOf(staff, formId)).toEqual([]);
   });
+
+  it('one place per child per series: a series of three days takes one hold, confirming enrols the child once, and a second place is refused', async () => {
+    const { fx, formId, staff, admin } = await campWithForm();
+    // Three days (Sat, Sun, Mon) inside the session's dates, one series at its own location.
+    const made = await classes.addSeries(admin, fx.sessionId, {
+      name: 'Art Camp',
+      ageRange: { minAge: 3, maxAge: 15 },
+      capacity: 5,
+      location: 'Studio',
+      instructorIds: [],
+      price: null,
+      weekdays: [6, 7, 1],
+      startsAt: '2027-07-10T09:00',
+      endsAt: '2027-07-12T11:00',
+    });
+    if (!made.ok) {
+      throw new Error(made.failure.message);
+    }
+    expect(made.value.occurrenceCount).toBe(3);
+    const anchor = made.value.anchorClassId;
+    /** Rows of the series, counted by its key (series_id), for this child. */
+    const seriesRows = (table: 'seat_holds' | 'enrolments', extra: string) =>
+      withOrg(pool, fx.userId, fx.orgId, db =>
+        db.query<{ n: number }>(
+          `SELECT count(*)::int AS n FROM ${table} t JOIN sessions s ON s.id = $1 AND s.series_id = t.series_id
+            WHERE t.person_id = $2 ${extra}`,
+          [anchor, fx.children.ada],
+        ),
+      ).then(r => r.rows[0].n);
+
+    await submit(formId, staff, [pick(fx.children.ada, anchor)]);
+    expect(await seriesRows('seat_holds', 'AND t.released_at IS NULL')).toBe(1);
+
+    const [first] = await rowsOf(staff, formId);
+    if (!first) {
+      throw new Error('no registration was recorded');
+    }
+    await registration.confirm(staff, first.id);
+    expect(await seriesRows('enrolments', "AND t.status = 'enrolled'")).toBe(1);
+
+    // The same child cannot take the series again, from another family.
+    await expect(submit(formId, staff, [pick(fx.children.ada, anchor)])).rejects.toMatchObject({
+      reason: 'class_refused',
+    });
+    expect(await seriesRows('enrolments', "AND t.status = 'enrolled'")).toBe(1);
+  });
 });

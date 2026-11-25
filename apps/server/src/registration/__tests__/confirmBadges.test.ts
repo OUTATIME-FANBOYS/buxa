@@ -24,6 +24,8 @@ function registrationsFor(camp: Camp): RegistrationService {
           className: 'Archery',
           startsAt: '2027-07-10T10:00:00.000Z',
           endsAt: '2027-07-10T11:00:00.000Z',
+          seriesId: CLASS,
+          occurrences: [{ startsAt: '2027-07-10T10:00:00.000Z', endsAt: '2027-07-10T11:00:00.000Z' }],
         },
       ],
     },

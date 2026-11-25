@@ -52,6 +52,8 @@ function setup() {
           className: 'Archery',
           startsAt: '2027-07-10T10:00:00.000Z',
           endsAt: '2027-07-10T11:00:00.000Z',
+          seriesId: CLASS_LIVE,
+          occurrences: [{ startsAt: '2027-07-10T10:00:00.000Z', endsAt: '2027-07-10T11:00:00.000Z' }],
         },
         {
           classId: CLASS_NEW,
@@ -59,6 +61,8 @@ function setup() {
           className: 'Climbing',
           startsAt: '2027-07-11T10:00:00.000Z',
           endsAt: '2027-07-11T11:00:00.000Z',
+          seriesId: CLASS_NEW,
+          occurrences: [{ startsAt: '2027-07-11T10:00:00.000Z', endsAt: '2027-07-11T11:00:00.000Z' }],
         },
       ],
     },
