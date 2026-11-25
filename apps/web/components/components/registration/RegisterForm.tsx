@@ -8,6 +8,7 @@ import { Button, Checkbox, DatePicker, FileField, RadioGroup, Select, TextField 
 import { registrationFormFilePath, registrationFormPath } from '@/config/routes';
 import { submitRegistrationAction } from '@/actions/registration';
 import { ActionMessage } from '@/components/components/classes/forms';
+import { PersonPicker } from '@/components/components/groups';
 
 /*
  * Records one family's registration on a published form. The family's children are chosen first (from People), then the classes
@@ -153,12 +154,11 @@ export function RegisterForm({
     }
   }, [state, onSaved]);
 
-  function toggleChild(camperId: string, on: boolean) {
+  // A child taken off the tags also loses the classes chosen for them, so the submission never carries a removed child.
+  function setChildren(ids: string[]) {
     setClash(null);
-    setChildIds(current => (on ? [...current, camperId] : current.filter(c => c !== camperId)));
-    if (!on) {
-      setPicks(current => current.filter(p => p.camperId !== camperId));
-    }
+    setChildIds(ids);
+    setPicks(current => current.filter(p => ids.includes(p.camperId)));
   }
 
   function togglePlace(camperId: string, cls: Class, on: boolean) {
@@ -206,26 +206,25 @@ export function RegisterForm({
       ))}
       <p className="muted">Fields marked with an asterisk are required. Nothing is charged here.</p>
 
-      <section className="form-section" aria-labelledby="register-children">
-        <SectionTitle id="register-children" required>
-          Children
-        </SectionTitle>
+      <section className="form-section">
         {campers.length === 0 ? (
-          <p className="muted">
-            No children are in People yet. Add the child there, with a household, and then come back.
-          </p>
+          <>
+            <SectionTitle id="register-children" required>
+              Children
+            </SectionTitle>
+            <p className="muted">
+              No children are in People yet. Add the child there, with a household, and then come back.
+            </p>
+          </>
         ) : (
-          <div className="check-group">
-            {campers.map(camper => (
-              <Checkbox
-                key={camper.id}
-                isSelected={childIds.includes(camper.id)}
-                onChange={on => toggleChild(camper.id, on)}
-              >
-                {camper.name}
-              </Checkbox>
-            ))}
-          </div>
+          <PersonPicker
+            label="Children"
+            people={campers}
+            chosen={childIds}
+            onChange={setChildren}
+            search
+            error={chosenChildren.length === 0 ? err('selections') : undefined}
+          />
         )}
       </section>
 
