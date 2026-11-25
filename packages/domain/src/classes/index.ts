@@ -12,3 +12,4 @@ export * from './teacherClassDetails';
 export * from './sessionName';
 export * from './sessionDateFlags';
 export * from './series';
+export * from './teaching';

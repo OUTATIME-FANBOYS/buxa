@@ -11,6 +11,7 @@ import {
   decideCheckOut,
   isMinor,
   personAccess,
+  teachesVisit,
   toLocalDate,
   type Actor,
   type LocalDate,
@@ -101,9 +102,12 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
     return can(actor, 'people:read_contact') ? entries : entries.map(e => ({ ...e, collectedByName: null }));
   }
 
-  /** Keeps only the records of the teacher's campers. Null scope (not a teacher) keeps everything. */
+  /**
+   * Keeps only the records a teacher may see: its campers' visits to a session and a class it teaches (teachesVisit, the same
+   * teaching rule as My classes). Null scope (not a teacher) keeps everything.
+   */
   const inScope = (scope: TeacherScope | null, records: CheckInRecord[]): CheckInRecord[] =>
-    scope === null ? records : records.filter(r => scope.camperIds.has(r.personId));
+    scope === null ? records : records.filter(r => scope.camperIds.has(r.personId) && teachesVisit(scope.teaching, r));
 
   return {
     async checkInSessions(actor) {
@@ -301,10 +305,17 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
     async filterChoices(actor) {
       const scope = await teacherScopeOf(classes, actor);
       assertAllowed(actor, 'attendance:read', { assignedToClass: scope === null ? undefined : true });
-      const [options, members] = await Promise.all([
-        attendance.filterOptions(actor.userId, actor.orgId),
-        orgs.listMembers(actor.userId, actor.orgId),
-      ]);
+      const options = await attendance.filterOptions(actor.userId, actor.orgId);
+      if (scope !== null) {
+        // A teacher chooses only from the sessions and classes it teaches. The staff list is empty: it would name staff who
+        // checked in people outside those classes, and a teacher has no use for it.
+        return {
+          sessions: options.sessions.filter(s => scope.teaching.sessionIds.has(s.id)),
+          classes: options.classes.filter(c => scope.teaching.seriesIds.has(c.id)),
+          staff: [],
+        };
+      }
+      const members = await orgs.listMembers(actor.userId, actor.orgId);
 
       return { ...options, staff: members.map(m => ({ id: m.id, name: m.name })) };
     },
@@ -316,7 +327,10 @@ export function createAttendanceService(deps: AttendanceServiceDeps): Attendance
       if (!(await people.get(actor.userId, orgId, personId))) {
         throw notFound('Person not found');
       }
-      const records = await attendance.log(actor.userId, orgId, { from: EARLIEST, to: LATEST, personId });
+      const records = inScope(
+        scope,
+        await attendance.log(actor.userId, orgId, { from: EARLIEST, to: LATEST, personId }),
+      );
 
       return entriesOf(actor, records);
     },

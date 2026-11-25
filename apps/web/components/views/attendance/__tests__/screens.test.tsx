@@ -28,7 +28,13 @@ const services = vi.hoisted(() => ({
 }));
 
 vi.mock('next/navigation', () => ({ notFound, useRouter: () => ({ refresh() {}, push() {} }) }));
-vi.mock('@buxa/server/runtime', () => ({ getRuntime: () => ({ services }) }));
+vi.mock('@buxa/server/runtime', () => ({
+  getRuntime: () => ({
+    services,
+    // A teacher's member options are read here (withMemberOptions): none are on.
+    repositories: { users: { memberOptionsOf: () => Promise.resolve([]) } },
+  }),
+}));
 vi.mock('@buxa/server/session/index', () => ({
   requireSession: () => settle(() => ({ user: { id: 'u1', email: 'a@example.test', name: 'Ada' }, memberships: [] })),
   getCurrentCamp: () =>
@@ -265,6 +271,16 @@ describe('AttendanceScreen', () => {
       await AttendanceScreen({ searchParams: { from: '2026-11-12', to: '2026-11-10' } }),
     );
     expect(html).toContain('The end date cannot be before the start date.');
+    expect(services.attendance.log).not.toHaveBeenCalled();
+  });
+});
+
+describe('AttendanceScreen for a teacher', () => {
+  it('keeps the camp-wide log from a teacher: no filter choices or rows are loaded', async () => {
+    session.role = 'teacher';
+    const html = renderToStaticMarkup(await AttendanceScreen({ searchParams: {} }));
+    expect(html).toContain('You cannot see the attendance log');
+    expect(services.attendance.filterChoices).not.toHaveBeenCalled();
     expect(services.attendance.log).not.toHaveBeenCalled();
   });
 });
