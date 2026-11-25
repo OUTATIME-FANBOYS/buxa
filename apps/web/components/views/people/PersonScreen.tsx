@@ -10,6 +10,7 @@ import { ArchivePersonButton, EditPersonButton } from '@/components/components/p
 import { AttendanceHistory } from '@/components/components/people';
 import { BadgePanel } from '@/components/components/people';
 import { HouseholdPanel } from '@/components/components/people';
+import { isFamilyRole } from '@/components/components/people/forms/roleGroups';
 import { MembershipsPanel } from '@/components/components/people';
 import { PersonHeader } from '@/components/components/people';
 import { currentActor } from '@buxa/server/composers/index.server';
@@ -96,16 +97,18 @@ export async function PersonScreen({
             clockFormat={clock.clockFormat}
           />
         )}
-        <HouseholdPanel
-          personId={person.id}
-          households={person.households}
-          householdOptions={households.map(h => ({ id: h.id, name: h.name }))}
-          canUpdate={canUpdate}
-          canCreate={canCreate}
-          canAuthorisePickup={canAuthorisePickup}
-          query={q}
-          linkable={linkable}
-        />
+        {person.roles.some(isFamilyRole) && (
+          <HouseholdPanel
+            personId={person.id}
+            households={person.households}
+            householdOptions={households.map(h => ({ id: h.id, name: h.name }))}
+            canUpdate={canUpdate}
+            canCreate={canCreate}
+            canAuthorisePickup={canAuthorisePickup}
+            query={q}
+            linkable={linkable}
+          />
+        )}
         {person.hasActiveBadge !== null && (
           <BadgePanel
             personId={person.id}
