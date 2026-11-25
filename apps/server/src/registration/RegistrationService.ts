@@ -3,6 +3,7 @@ import {
   can,
   decideConfirmation,
   decideErasure,
+  decideFormDeletion,
   decideRegistration,
   decideSelections,
   decideWithdrawal,
@@ -76,6 +77,11 @@ export interface RegistrationService {
   updateForm(actor: Actor, formId: string, input: unknown, files?: readonly UploadedFile[]): Promise<RegistrationForm>;
   /** Removes one attachment of a form. Needs registration:manage. Audited. */
   removeFormFile(actor: Actor, formId: string, fileId: string): Promise<void>;
+  /**
+   * Deletes a form that no registration names, in any status, with its versions, covered sessions and attachments. Needs
+   * registration:manage. A form with registrations is refused (form_has_registrations) and nothing is written. Audited.
+   */
+  deleteForm(actor: Actor, formId: string): Promise<void>;
   /**
    * A form attachment, for the session the family registers for. The form must cover that session, or the file reads as not found.
    * Needs registration:submit (the people who take a registration hand the form's files out).
@@ -249,6 +255,14 @@ export function createRegistrationService(
       const parsed = parseFormInput(input);
 
       return repo.updateForm(actor, formId, parsed, storeFormFiles(files));
+    },
+
+    async deleteForm(actor, formId) {
+      assertAllowed(actor, 'registration:manage');
+      if (!isUuid(formId)) {
+        throw new RegistrationFormNotFoundError();
+      }
+      await repo.deleteForm(actor, formId, decideFormDeletion);
     },
 
     async removeFormFile(actor, formId, fileId) {

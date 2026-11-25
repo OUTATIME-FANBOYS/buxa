@@ -66,6 +66,9 @@ export interface NewRegistration {
   documents: NewDocument[];
 }
 
+/** Pure: decides from the number of registrations that name a form whether it may be deleted (decideFormDeletion). Runs under the row lock. */
+export type FormDeletionRule = (facts: { registrationCount: number }) => RegistrationDecision;
+
 /** The facts the rule needs, gathered inside the transaction. The service adds the requested sessions. */
 export type RegistrationFactsInTx = Omit<RegistrationFacts, 'requestedSessionIds'>;
 
@@ -111,6 +114,12 @@ export interface RegistrationRepository {
   createForm(actor: Actor, input: RegistrationFormInput, files: readonly StoredFileInput[]): Promise<RegistrationForm>;
   /** Removes an attachment of a form. Audits `registration_form.file_remove`. Throws RegistrationFileNotFoundError. */
   removeFormFile(actor: Actor, formId: string, fileId: string): Promise<void>;
+  /**
+   * Locks the form, counts the registrations that name it, checks the rule and, on allow, deletes the form with its versions, its
+   * covered sessions and its attachments. Audits `registration_form.delete` in the same transaction. Throws
+   * RegistrationFormNotFoundError, or RegistrationRefusedError (form_has_registrations) with nothing written.
+   */
+  deleteForm(actor: Actor, formId: string, rule: FormDeletionRule): Promise<void>;
   /**
    * A form attachment, only when its form covers `sessionId` (the session the family is registering for). Null otherwise: a file of
    * another camp, of another form or for a session the form does not cover.

@@ -24,6 +24,7 @@ import type {
   ConfirmationWork,
   ErasureRule,
   FileDownload,
+  FormDeletionRule,
   NewDocument,
   NewRegistration,
   PublishedVersion,
@@ -233,6 +234,20 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
       if (form.attachments.length === before) {
         throw new RegistrationFileNotFoundError();
       }
+    });
+  }
+
+  deleteForm(actor: Actor, formId: string, rule: FormDeletionRule): Promise<void> {
+    return later(() => {
+      const form = this.ownForm(actor.orgId, formId);
+      const registrationCount = [...this.registrations.values()].filter(
+        r => r.orgId === actor.orgId && r.formId === form.id,
+      ).length;
+      const decision = rule({ registrationCount });
+      if (!decision.allow) {
+        throw new RegistrationRefusedError(decision.reason);
+      }
+      this.forms.delete(form.id);
     });
   }
 

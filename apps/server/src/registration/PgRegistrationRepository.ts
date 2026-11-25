@@ -20,6 +20,7 @@ import {
 import {
   camperIdsInTx,
   confirmRegistrationInTx,
+  deleteFormInTx,
   insertForm,
   insertRegistrationInTx,
   publishFormRow,
@@ -37,6 +38,7 @@ import type {
   ConfirmationWork,
   ErasureRule,
   FileDownload,
+  FormDeletionRule,
   NewRegistration,
   StoredFileInput,
   PublishedVersion,
@@ -89,6 +91,10 @@ export class PgRegistrationRepository implements RegistrationRepository {
 
   removeFormFile(actor: Actor, formId: string, fileId: string): Promise<void> {
     return withOrg(this.pool, actor.userId, actor.orgId, db => removeFormFileInTx(db, actor, formId, fileId));
+  }
+
+  deleteForm(actor: Actor, formId: string, rule: FormDeletionRule): Promise<void> {
+    return withOrg(this.pool, actor.userId, actor.orgId, db => deleteFormInTx(db, actor, formId, rule));
   }
 
   formFileDownload(userId: string, orgId: string, fileId: string, sessionId: string): Promise<FileDownload | null> {

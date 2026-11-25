@@ -2,6 +2,7 @@
 import { createFormAction as createFormActionImpl } from '@buxa/server/composers/registration/formActions';
 import { updateFormAction as updateFormActionImpl } from '@buxa/server/composers/registration/formActions';
 import {
+  deleteFormAction as deleteFormActionImpl,
   publishFormAction as publishFormActionImpl,
   removeFormFileAction as removeFormFileActionImpl,
 } from '@buxa/server/composers/registration/formActions';
@@ -33,6 +34,10 @@ export async function removeFormFileAction(...args: Parameters<typeof removeForm
 
 export async function reviewDocumentAction(...args: Parameters<typeof reviewDocumentActionImpl>) {
   return reviewDocumentActionImpl(...args);
+}
+
+export async function deleteFormAction(...args: Parameters<typeof deleteFormActionImpl>) {
+  return deleteFormActionImpl(...args);
 }
 
 export async function publishFormAction(...args: Parameters<typeof publishFormActionImpl>) {
