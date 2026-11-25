@@ -1,6 +1,5 @@
 'use client';
 
-import { PersonAvatar } from '@/components/elements/PersonAvatar';
 import Link from 'next/link';
 import { useCallback, useState } from 'react';
 import type { PersonSummary } from '@buxa/contracts';
@@ -120,12 +119,9 @@ export function PeopleTable({
                   </td>
                 )}
                 <td>
-                  <span className="buxa:inline-flex buxa:items-center buxa:gap-[10px]">
-                    <PersonAvatar />
-                    <Link className="row-title" href={personPath(person.id)}>
-                      {person.givenName} {person.familyName}
-                    </Link>
-                  </span>
+                  <Link className="row-title" href={personPath(person.id)}>
+                    {person.givenName} {person.familyName}
+                  </Link>
                 </td>
                 <td>
                   <RolePills roles={person.roles} />

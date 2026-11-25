@@ -8,6 +8,7 @@ import { loadHouseholdList, loadPersonMatches } from '@buxa/server/composers/ind
 import { loadVisitHistory, loadSessions } from '@buxa/server/composers/index.server';
 import { ArchivePersonButton, EditPersonButton } from '@/components/components/people/forms';
 import { AttendanceHistory } from '@/components/components/people';
+import { PersonAvatar } from '@/components/elements/PersonAvatar';
 import { BadgePanel } from '@/components/components/people';
 import { HouseholdPanel } from '@/components/components/people';
 import { isFamilyRole } from '@/components/components/people/forms/roleGroups';
@@ -87,6 +88,15 @@ export async function PersonScreen({
         }
       />
       <div className="person-tiles">
+        <section className="panel" aria-labelledby="profile-picture-title">
+          <h2 id="profile-picture-title" className="people-heading">
+            Profile picture
+          </h2>
+          <div className="buxa:flex buxa:items-center buxa:gap-[16px]">
+            <PersonAvatar size={96} />
+            <p className="muted">No picture yet. Photo uploads come in a later phase.</p>
+          </div>
+        </section>
         {person.memberships !== null && (
           <MembershipsPanel
             personId={person.id}
