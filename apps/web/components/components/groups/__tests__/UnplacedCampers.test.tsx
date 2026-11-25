@@ -60,12 +60,44 @@ function shownNames(container: HTMLElement): string[] {
 }
 
 describe('the campers not placed yet', () => {
-  it('lists every unplaced camper, in a list with a fixed height that scrolls inside its card', () => {
+  it('lists every unplaced camper in a labelled list, with no fixed-height scroll', () => {
     const container = mount(people);
     const list = container.querySelector('ul.unplaced-list');
 
     expect(shownNames(container)).toEqual(['Ada Lovelace', 'Grace Hopper', 'José Álvarez']);
-    expect(list?.className).toContain('unplaced-list');
+    expect(list?.getAttribute('aria-label')).toBe('Campers not placed yet');
+    expect(container.querySelector('nav')).toBeNull();
+  });
+
+  it('shows ten campers to a page, with Previous and Next under the list', () => {
+    const many = Array.from({ length: 23 }, (_, index) => ({
+      id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
+      name: `Camper ${index + 1}`,
+    }));
+    const container = mount(many);
+
+    expect(shownNames(container)).toHaveLength(10);
+    expect(container.textContent).toContain('Showing 1–10 of 23');
+    expect(container.querySelector('button[aria-label="Previous page"]')).toBeTruthy();
+    expect(container.querySelector('button[aria-label="Next page"]')).toBeTruthy();
+  });
+
+  it('pages the search results, not the whole list, and returns to page 1 on a new search', () => {
+    const many = Array.from({ length: 23 }, (_, index) => ({
+      id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
+      name: index < 15 ? `Other ${index + 1}` : `Camper ${index + 1}`,
+    }));
+    const container = mount(many);
+    const next = () => container.querySelector<HTMLButtonElement>('button[aria-label="Next page"]');
+
+    act(() => {
+      next()?.click();
+    });
+    type(searchBox(container), 'camper');
+
+    expect(shownNames(container)).toHaveLength(8);
+    expect(container.textContent).toContain('Showing 1–8 of 8');
+    expect(container.querySelector('nav')).toBeNull();
   });
 
   it('filters the list by name as the user types', () => {
