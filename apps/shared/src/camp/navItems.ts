@@ -57,7 +57,6 @@ export const CAMP_NAV_GROUPS: readonly NavGroup[] = [
         requires: 'registration:read',
         under: ROUTES.sessions,
       },
-      { href: ROUTES.holds, label: 'Holds', icon: 'hourglass', requires: 'registration:read', under: ROUTES.sessions },
       { href: ROUTES.checkIn, label: 'Check-in', icon: 'check', requires: 'attendance:record' },
       { href: ROUTES.onSite, label: 'On site', icon: 'map-pin', requires: 'attendance:read' },
       {
