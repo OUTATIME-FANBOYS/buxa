@@ -9,7 +9,6 @@ import { DatePicker, HiddenField, TextField } from '@/components/atoms';
 import { ROUTES, personPath } from '@/config/routes';
 import { fieldError, idle, toHouseholdChoices, type HouseholdChoice } from '@buxa/shared';
 import { createPersonAction, updatePersonAction } from '@/actions/people';
-import { EmergencyContactFields } from './EmergencyContactFields';
 import { FormMessage } from './FormMessage';
 import { ComingSoonInvite, PersonInvite, personInviteDetails } from './PersonInvite';
 import { PersonHouseholdFields, type HouseholdTarget } from './PersonHouseholdFields';
@@ -51,10 +50,11 @@ interface PersonFormCommon {
  * `person`, including the person's household: the household select starts on it, and saving moves, creates or leaves it.
  * Roles are checkboxes in both modes, and every checked role is saved.
  *
- * The sections follow the roles. Camper details (first name, last name, date of birth) are headed as such for a camper. A family role
- * (a camper or a parent or guardian) shows the Parent or guardian section: the household email, phone and household. A camper, when
- * adding, also shows an optional Emergency contact section, saved with the person. Staff-only roles keep Email and Phone in the
- * person's own details.
+ * The sections follow the roles. Camper details (first name, last name, then date of birth beside the phone) are headed as such for a
+ * camper. A family role (a camper or a parent or guardian) shows the Parent or guardian section: the household email, the phone for
+ * a parent or guardian, and the household. Adding a camper requires a date of birth and a phone; adding a family member requires a
+ * phone. Staff-only roles keep Email and Phone in the person's own details. The emergency contact is not entered here: it is on the
+ * person's page.
  */
 export type PersonFormProps = PersonFormCommon &
   ({ mode: 'create'; household: HouseholdTarget | null } | { mode: 'edit'; person: EditablePerson });
@@ -110,8 +110,9 @@ export function PersonForm(props: PersonFormProps) {
   const camper = roles.has('camper');
   const hasFamilyRole = selectedRoles.some(isFamilyRole);
   const showParent = hasFamilyRole;
-  // The emergency contact is entered when a camper is added. Editing leaves it to the person's page.
-  const showEmergency = !isEdit && camper;
+  // A camper's date of birth and a family member's phone are required when a person is added. Editing does not change that rule here.
+  const dateOfBirthRequired = !isEdit && camper;
+  const phoneRequired = !isEdit && showParent;
   // One email for the person. A family role names it Household email; the label is the only difference.
   const emailLabel = hasFamilyRole ? 'Household email' : 'Email';
   // Editing a saved set that is not allowed (legacy data) blocks the save until the roles are changed to an allowed set.
@@ -164,8 +165,24 @@ export function PersonForm(props: PersonFormProps) {
       name="phone"
       defaultValue={person?.phone ?? undefined}
       error={err('phone')}
+      isRequired={phoneRequired}
       autoComplete="off"
       maxLength={32}
+    />
+  );
+
+  const dateOfBirthField = (
+    <DatePicker
+      label="Date of birth"
+      name="dateOfBirth"
+      isRequired={dateOfBirthRequired}
+      defaultValue={person ? (person.dateOfBirth ?? null) : undefined}
+      error={err('dateOfBirth')}
+      hint={
+        isEdit
+          ? 'Only used to tell whether someone is under 18. Leave blank to clear it.'
+          : 'Only used to tell whether someone is under 18.'
+      }
     />
   );
 
@@ -207,18 +224,17 @@ export function PersonForm(props: PersonFormProps) {
             maxLength={80}
           />
         </div>
-        <DatePicker
-          label="Date of birth"
-          name="dateOfBirth"
-          defaultValue={person ? (person.dateOfBirth ?? null) : undefined}
-          error={err('dateOfBirth')}
-          hint={
-            isEdit
-              ? 'Only used to tell whether someone is under 18. Leave blank to clear it.'
-              : 'Only used to tell whether someone is under 18.'
-          }
-        />
-        {!showParent && phoneField}
+        {camper ? (
+          <div className="form-pair">
+            {dateOfBirthField}
+            {phoneField}
+          </div>
+        ) : (
+          <>
+            {dateOfBirthField}
+            {!showParent && phoneField}
+          </>
+        )}
       </fieldset>
 
       <PersonRoles
@@ -238,7 +254,7 @@ export function PersonForm(props: PersonFormProps) {
             a household that already has one.
           </p>
           {emailRow}
-          {phoneField}
+          {!camper && phoneField}
           <PersonHouseholdFields
             household={household}
             choices={choices}
@@ -250,8 +266,6 @@ export function PersonForm(props: PersonFormProps) {
           />
         </fieldset>
       )}
-
-      {showEmergency && <EmergencyContactFields err={err} />}
 
       {/* A pop-up's save posts dialog=1, so the action returns a success instead of redirecting to the person. */}
       {inDialog && <input type="hidden" name="dialog" value="1" />}

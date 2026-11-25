@@ -5,7 +5,7 @@ import { migrate, withOrg } from '@buxa/db';
 import type { Actor } from '@buxa/domain';
 import { PgRegistrationRepository } from './PgRegistrationRepository';
 import { createRegistrationService, type RegistrationService } from './RegistrationService';
-import { createRegistrationFixture, type RegistrationFixture } from './__tests__/registrationFixture';
+import { createRegistrationFixture, pgPeopleService, type RegistrationFixture } from './__tests__/registrationFixture';
 
 const url = process.env.DATABASE_URL;
 
@@ -28,9 +28,13 @@ describe.skipIf(!url)('deleting a registration form in Postgres', () => {
   const pool = new pg.Pool({ connectionString: url });
   const repo = new PgRegistrationRepository(pool);
   // Confirmation is not part of these tests, so no badge is ever issued and the credentials factory is never called.
-  const registration: RegistrationService = createRegistrationService(repo, () => {
-    throw new Error('no badge expected in this test');
-  });
+  const registration: RegistrationService = createRegistrationService(
+    repo,
+    () => {
+      throw new Error('no badge expected in this test');
+    },
+    pgPeopleService(pool),
+  );
   const tag = randomBytes(4).toString('hex');
 
   beforeAll(async () => {

@@ -19,8 +19,8 @@ vi.mock('@buxa/server/composers/people/updatePersonAction', () => ({
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 /**
- * The sections follow the roles: Camper details for a camper, Parent or guardian for a family role, and Emergency contact for a camper
- * when adding (the emergency contact is edited on the person's page, so the Edit form has none).
+ * The sections follow the roles: Camper details for a camper, and Parent or guardian for a family role. The emergency contact is not
+ * on either pop-up: it is kept on the person's page.
  */
 describe('PersonForm: sections follow the roles', () => {
   let root: Root;
@@ -78,17 +78,25 @@ describe('PersonForm: sections follow the roles', () => {
       expect(h.legend('Household')).toBeDefined();
     });
 
-    it('shows an optional Emergency contact section with name, phone and relationship', () => {
-      expect(h.legend('Emergency contact')).toBeDefined();
-      expect(h.input('emergencyContactName')).not.toBeNull();
-      expect(h.input('emergencyContactPhone')).not.toBeNull();
-      expect(h.input('emergencyContactRelationship')).not.toBeNull();
+    it('has no emergency contact section: the pop-up does not ask for one', () => {
+      expect(h.legend('Emergency contact')).toBeUndefined();
+      expect(h.input('emergencyContactName')).toBeNull();
+      expect(h.input('emergencyContactPhone')).toBeNull();
+      expect(h.input('emergencyContactRelationship')).toBeNull();
     });
 
-    it('lists the sections in order: camper details, roles, parent or guardian, then emergency contact', () => {
+    it('puts date of birth and phone side by side, and both are required', () => {
+      const pair = host.querySelector('.form-pair');
+      expect(pair?.querySelector('input[name="dateOfBirth"]')).not.toBeNull();
+      expect(pair?.querySelector('input[name="phone"]')).not.toBeNull();
+      expect(h.input('dateOfBirth')?.getAttribute('aria-required')).toBe('true');
+      expect(h.input('phone')?.getAttribute('aria-required')).toBe('true');
+    });
+
+    it('lists the sections in order: camper details, roles, then parent or guardian', () => {
       const names = legendNames();
       // The Roles legend carries a required mark, so it is matched by its start.
-      const at = ['Camper details', 'Roles', 'Parent or guardian', 'Emergency contact'].map(name =>
+      const at = ['Camper details', 'Roles', 'Parent or guardian'].map(name =>
         names.findIndex(legend => legend.startsWith(name)),
       );
       expect(at.every(i => i >= 0)).toBe(true);

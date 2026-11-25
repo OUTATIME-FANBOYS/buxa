@@ -4,6 +4,7 @@ import { createRegistrationService } from './RegistrationService';
 import { InMemoryRegistrationRepository } from './InMemoryRegistrationRepository';
 import { InMemoryCredentialRepository } from '../credentials/InMemoryCredentialRepository';
 import { InMemoryDatabase } from '../people/InMemoryDatabase';
+import { adaFixture, registrantPeople } from './__tests__/registrantPeople';
 
 /*
  * Deleting a registration form (in memory): only with registration:manage, and only when no registration names the form, in any
@@ -55,9 +56,13 @@ function setup() {
     CLASSES,
   );
   // No badge is expected in these tests: the campers are not in the camp's people.
-  const service = createRegistrationService(repo, () => {
-    throw new Error('no badge expected in this test');
-  });
+  const service = createRegistrationService(
+    repo,
+    () => {
+      throw new Error('no badge expected in this test');
+    },
+    registrantPeople([adaFixture(CAMPER_ADA, '5e6f7a8b-3333-4a2b-8c3d-4e5f6a7b8c9d')]),
+  );
 
   return { service };
 }

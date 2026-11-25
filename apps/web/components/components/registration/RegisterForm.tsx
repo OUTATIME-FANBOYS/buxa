@@ -2,8 +2,17 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState } from 'react';
 import { anySpanOverlaps, MAX_AGE_LIMIT, type ClockFormat } from '@buxa/domain';
-import { STANDARD_FIELDS, type CustomField, type FormAttachment, type RegistrationSeries } from '@buxa/contracts';
-import { ATTACHMENT_ACCEPT, ATTACHMENT_HINT, fieldError, formatCampTime, idle, seriesDaysLabel } from '@buxa/shared';
+import { type CustomField, type FormAttachment, type RegistrationSeries } from '@buxa/contracts';
+import {
+  ATTACHMENT_ACCEPT,
+  ATTACHMENT_HINT,
+  fieldError,
+  formatCampTime,
+  idle,
+  parentOnFile,
+  seriesDaysLabel,
+  type CamperRecord,
+} from '@buxa/shared';
 import { Button, Checkbox, DatePicker, FileField, RadioGroup, Select, TextField } from '@/components/elements';
 import { registrationFormFilePath, registrationFormPath } from '@/config/routes';
 import { submitRegistrationAction } from '@/actions/registration';
@@ -18,28 +27,6 @@ import { ChildPicker } from './ChildPicker';
  * (`variant="dialog"`) the buttons belong to the dialog's pinned footer, tied by `id`.
  */
 
-/** The standard questions, in the order a family answers them, under one short heading each. Labels are short: the heading gives the context. */
-type StandardKey = (typeof STANDARD_FIELDS)[number]['key'];
-
-const GROUPS: { title: string; keys: StandardKey[]; labels: Partial<Record<StandardKey, string>> }[] = [
-  {
-    title: 'Camper details',
-    keys: ['camperFirstName', 'camperLastName', 'camperBirthDate'],
-    labels: { camperFirstName: 'First name', camperLastName: 'Last name', camperBirthDate: 'Date of birth' },
-  },
-  {
-    title: 'Parent or guardian',
-    keys: ['guardianName', 'guardianEmail', 'guardianPhone'],
-    labels: { guardianName: 'Name', guardianEmail: 'Email', guardianPhone: 'Phone' },
-  },
-  {
-    title: 'Emergency contact',
-    keys: ['emergencyContactName', 'emergencyContactPhone'],
-    labels: { emergencyContactName: 'Name', emergencyContactPhone: 'Phone' },
-  },
-];
-
-const REQUIRED = new Map(STANDARD_FIELDS.map(f => [f.key, f.required]));
 const CHOICE_AS_RADIOS = 4;
 const YES_NO = [
   { value: 'yes', label: 'Yes' },
@@ -52,10 +39,8 @@ export interface RegisterSession {
   series: readonly RegistrationSeries[];
 }
 
-export interface RegisterCamper {
-  id: string;
-  name: string;
-}
+/** A child a family can register, with the details the form fills in from the person record (see CamperRecord). */
+export type RegisterCamper = CamperRecord;
 
 /** A section heading with its required mark: one asterisk, the field's own label carries no mark. */
 function SectionTitle({ id, required, children }: { id: string; required?: boolean; children: string }) {
@@ -198,6 +183,15 @@ export function RegisterForm({
 
   const err = (name: string) => fieldError(state, name);
   const chosenChildren = campers.filter(c => childIds.includes(c.id));
+  // The lead child fills in the camper details and the parent or guardian: the first child with a class chosen, else the first child
+  // chosen. The picks are posted with the lead's first, so the server reads the same child (its first selection) on submit.
+  const leadId = childIds.find(id => picks.some(p => p.camperId === id)) ?? childIds[0];
+  const lead = campers.find(c => c.id === leadId) ?? null;
+  const rank = (camperId: string) => (camperId === leadId ? 0 : childIds.indexOf(camperId) + 1);
+  const orderedPicks = [...picks].sort((a, b) => rank(a.camperId) - rank(b.camperId));
+  const leadKey = lead?.id ?? 'none';
+  const parent = lead?.parent ?? null;
+  const parentFilled = parentOnFile(parent);
   // The session a family's download is for: the session of the first series they chose, else the form's first session.
   const downloadSessionId =
     sessions.find(s => s.series.some(x => picks.some(p => p.classId === x.anchorClassId)))?.id ??
@@ -213,7 +207,7 @@ export function RegisterForm({
       className={`${inDialog ? '' : 'panel '}class-form registration-register`}
     >
       <input type="hidden" name="formId" value={formId} />
-      {picks.map(p => (
+      {orderedPicks.map(p => (
         <input
           key={`${p.camperId}|${p.classId}`}
           type="hidden"
@@ -310,37 +304,89 @@ export function RegisterForm({
         </section>
       )}
 
-      {GROUPS.map(group => {
-        const titleId = `register-${group.title.replace(/\s+/g, '-').toLowerCase()}`;
+      {/* The camper's details come from the first child chosen, and are read only: they change on the person's page. */}
+      <section key={`camper-${leadKey}`} className="form-section" aria-labelledby="register-camper-details">
+        <SectionTitle id="register-camper-details">Camper details</SectionTitle>
+        <p className="muted">Filled in from the person&apos;s page. Change them there.</p>
+        <div className="people-form-grid">
+          <TextField
+            label="First name"
+            name="standard.camperFirstName"
+            value={lead?.givenName ?? ''}
+            isReadOnly
+            isRequired
+            error={err('standard.camperFirstName')}
+            maxLength={80}
+            autoComplete="off"
+          />
+          <TextField
+            label="Last name"
+            name="standard.camperLastName"
+            value={lead?.familyName ?? ''}
+            isReadOnly
+            isRequired
+            error={err('standard.camperLastName')}
+            maxLength={80}
+            autoComplete="off"
+          />
+        </div>
+        <div className="form-pair">
+          <DatePicker
+            label="Date of birth"
+            name="standard.camperBirthDate"
+            value={lead?.dateOfBirth ?? ''}
+            isReadOnly
+            isRequired
+            error={err('standard.camperBirthDate')}
+          />
+          <TextField
+            label="Phone"
+            type="tel"
+            name="standard.guardianPhone"
+            value={parentFilled ? (parent?.phone ?? '') : undefined}
+            defaultValue={parentFilled ? undefined : (parent?.phone ?? '')}
+            isReadOnly={parentFilled}
+            isRequired
+            error={err('standard.guardianPhone')}
+            maxLength={32}
+            autoComplete="off"
+          />
+        </div>
+      </section>
 
-        return (
-          <section key={group.title} className="form-section" aria-labelledby={titleId}>
-            <SectionTitle id={titleId}>{group.title}</SectionTitle>
-            {group.keys.map(key => {
-              const name = `standard.${key}`;
-              const required = REQUIRED.get(key) ?? false;
-              const text = group.labels[key] ?? key;
-              if (key === 'camperBirthDate') {
-                return <DatePicker key={key} label={text} name={name} error={err(name)} isRequired={required} />;
-              }
-              const type = key === 'guardianEmail' ? 'email' : key.endsWith('Phone') ? 'tel' : 'text';
-
-              return (
-                <TextField
-                  key={key}
-                  label={text}
-                  name={name}
-                  type={type}
-                  error={err(name)}
-                  isRequired={required}
-                  maxLength={120}
-                  autoComplete="off"
-                />
-              );
-            })}
-          </section>
-        );
-      })}
+      {/* The parent or guardian is on the child's household. When none is on file, these are typed and saved to the household. */}
+      <section key={`parent-${leadKey}`} className="form-section" aria-labelledby="register-parent">
+        <SectionTitle id="register-parent">Parent or guardian</SectionTitle>
+        <p className="muted">
+          {lead === null
+            ? 'Choose a child first, and their household’s parent or guardian is filled in here.'
+            : parentFilled
+              ? 'Filled in from the household. Change it on the person’s page.'
+              : 'Not on file yet. It is saved to the household when the registration is recorded.'}
+        </p>
+        <TextField
+          label="Name"
+          name="standard.guardianName"
+          value={parentFilled ? (parent?.name ?? '') : undefined}
+          defaultValue={parentFilled ? undefined : (parent?.name ?? '')}
+          isReadOnly={parentFilled}
+          isRequired
+          error={err('standard.guardianName')}
+          maxLength={120}
+          autoComplete="off"
+        />
+        <TextField
+          label="Email"
+          type="email"
+          name="standard.guardianEmail"
+          value={parentFilled ? (parent?.email ?? '') : undefined}
+          defaultValue={parentFilled ? undefined : (parent?.email ?? '')}
+          isReadOnly={parentFilled}
+          error={err('standard.guardianEmail')}
+          maxLength={254}
+          autoComplete="off"
+        />
+      </section>
 
       {fields.length > 0 && (
         <section className="form-section" aria-labelledby="register-questions">

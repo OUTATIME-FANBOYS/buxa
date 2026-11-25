@@ -64,6 +64,19 @@ export async function createPersonAction(_previous: ActionState, form: FormData)
   }
   const input = parsed.data;
 
+  // A camper needs a date of birth; a family member (a camper, or a parent or guardian) needs a phone number.
+  const family = input.roles.some(role => role === 'camper' || role === 'guardian');
+  const missing: Record<string, string> = {};
+  if (input.roles.includes('camper') && !input.dateOfBirth) {
+    missing.dateOfBirth = 'Enter the date of birth.';
+  }
+  if (family && !input.phone) {
+    missing.phone = 'Enter a phone number.';
+  }
+  if (Object.keys(missing).length > 0) {
+    return failure('Check the highlighted fields.', missing);
+  }
+
   if (input.householdId && newHouseholdName) {
     return failure('Check the highlighted fields.', { householdId: CHOOSE_ONE_HOUSEHOLD });
   }

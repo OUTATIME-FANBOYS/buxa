@@ -6,7 +6,7 @@ import type { Actor } from '@buxa/domain';
 import { PgRegistrationRepository } from './PgRegistrationRepository';
 import { createRegistrationService, type RegistrationService } from './RegistrationService';
 import { RegistrationRefusedError } from './errors';
-import { createRegistrationFixture, type RegistrationFixture } from './__tests__/registrationFixture';
+import { createRegistrationFixture, pgPeopleService, type RegistrationFixture } from './__tests__/registrationFixture';
 import { createCredentialService } from '../services/credentials/createCredentialService';
 import { createBadgeCipher, parseBadgeKey } from '../credentials/badgeCipher';
 import { PgPeopleRepository } from '../people/PgPeopleRepository';
@@ -42,16 +42,19 @@ const standard = {
 describe.skipIf(!url)('registration by class in Postgres', () => {
   const pool = new pg.Pool({ connectionString: url });
   const repo = new PgRegistrationRepository(pool);
-  const registration: RegistrationService = createRegistrationService(repo, credentials =>
-    createCredentialService({
-      credentials,
-      people: new PgPeopleRepository(pool),
-      memberships: new PgMembershipRepository(pool),
-      attendance: new PgAttendanceRepository(pool),
-      orgs: new PgOrgRepository(pool),
-      clock: systemClock,
-      cipher: createBadgeCipher(() => parseBadgeKey(TEST_KEY)),
-    }),
+  const registration: RegistrationService = createRegistrationService(
+    repo,
+    credentials =>
+      createCredentialService({
+        credentials,
+        people: new PgPeopleRepository(pool),
+        memberships: new PgMembershipRepository(pool),
+        attendance: new PgAttendanceRepository(pool),
+        orgs: new PgOrgRepository(pool),
+        clock: systemClock,
+        cipher: createBadgeCipher(() => parseBadgeKey(TEST_KEY)),
+      }),
+    pgPeopleService(pool),
   );
   const classes: ClassService = createClassService({
     repo: new PgClassRepository(pool),

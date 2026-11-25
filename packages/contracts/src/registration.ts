@@ -119,7 +119,11 @@ export type RegistrationDocument = z.infer<typeof RegistrationDocumentSchema>;
 
 export const MAX_CUSTOM_FIELDS = 40;
 
-/** The standard fields every form has: the camper, the guardian and an emergency contact. Keys are camelCase. */
+/**
+ * The standard fields every form has: the camper and the parent or guardian. Keys are camelCase. The emergency contact is not
+ * asked for here: it is kept on the person's page only (migration 0073). The camper's name and date of birth are read from the
+ * person record by the server, so a registration never changes them.
+ */
 export const STANDARD_FIELDS = [
   { key: 'camperFirstName', label: 'Camper first name', required: true },
   { key: 'camperLastName', label: 'Camper last name', required: true },
@@ -127,8 +131,6 @@ export const STANDARD_FIELDS = [
   { key: 'guardianName', label: 'Parent or guardian name', required: true },
   { key: 'guardianEmail', label: 'Parent or guardian email', required: false },
   { key: 'guardianPhone', label: 'Parent or guardian phone', required: true },
-  { key: 'emergencyContactName', label: 'Emergency contact name', required: true },
-  { key: 'emergencyContactPhone', label: 'Emergency contact phone', required: true },
 ] as const;
 
 /**

@@ -6,6 +6,7 @@ import { createRegistrationService, type RegistrationService } from './Registrat
 import { InMemoryRegistrationRepository } from './InMemoryRegistrationRepository';
 import { InMemoryCredentialRepository } from '../credentials/InMemoryCredentialRepository';
 import { InMemoryDatabase } from '../people/InMemoryDatabase';
+import { adaFixture, benFixture, registrantPeople } from './__tests__/registrantPeople';
 import { RegistrationFileNotFoundError, RegistrationInvalidError } from './errors';
 
 /*
@@ -66,9 +67,16 @@ function setup(): RegistrationService {
     CLASSES,
   );
 
-  return createRegistrationService(repo, () => {
-    throw new Error('no badge expected');
-  });
+  return createRegistrationService(
+    repo,
+    () => {
+      throw new Error('no badge expected');
+    },
+    registrantPeople([
+      adaFixture(CAMPER_ADA, '5e6f7a8b-3333-4a2b-8c3d-4e5f6a7b8c9d'),
+      benFixture(CAMPER_BEN, '5e6f7a8b-4444-4a2b-8c3d-4e5f6a7b8c9d'),
+    ]),
+  );
 }
 
 /** An admin's form, published, with one attached file. */
