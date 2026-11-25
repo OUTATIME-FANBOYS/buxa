@@ -1,9 +1,9 @@
 'use client';
 
 import { useActionState, useEffect, useMemo, useRef, useState } from 'react';
-import { MAX_AGE_LIMIT, overlaps, type ClockFormat } from '@buxa/domain';
-import { STANDARD_FIELDS, type Class, type CustomField, type FormAttachment } from '@buxa/contracts';
-import { ATTACHMENT_ACCEPT, ATTACHMENT_HINT, fieldError, formatCampDateTime, idle } from '@buxa/shared';
+import { anySpanOverlaps, MAX_AGE_LIMIT, type ClockFormat } from '@buxa/domain';
+import { STANDARD_FIELDS, type CustomField, type FormAttachment, type RegistrationSeries } from '@buxa/contracts';
+import { ATTACHMENT_ACCEPT, ATTACHMENT_HINT, fieldError, formatCampTime, idle, seriesDaysLabel } from '@buxa/shared';
 import { Button, Checkbox, DatePicker, FileField, RadioGroup, Select, TextField } from '@/components/elements';
 import { registrationFormFilePath, registrationFormPath } from '@/config/routes';
 import { submitRegistrationAction } from '@/actions/registration';
@@ -11,10 +11,11 @@ import { ActionMessage } from '@/components/components/classes/forms';
 import { ChildPicker } from './ChildPicker';
 
 /*
- * Records one family's registration on a published form. The family's children are chosen first (from People), then the classes
- * each child takes. The session is never picked: it comes with the class. A child cannot take two classes whose times overlap, and
- * that is said here as it happens (the server checks the same rule again). The names are `selections` (camperId|classId), `standard.<key>`
- * and `custom.<key>`. In a dialog (`variant="dialog"`) the buttons belong to the dialog's pinned footer, tied by `id`.
+ * Records one family's registration on a published form. The family's children are chosen first (from People), then the class
+ * series each child takes: one choice per series, not per day. The session is never picked: it comes with the series. A child cannot
+ * take two series with a day that overlaps, and that is said here as it happens (the server checks the same rule again). The names
+ * are `selections` (camperId|anchorClassId, the series' anchor day), `standard.<key>` and `custom.<key>`. In a dialog
+ * (`variant="dialog"`) the buttons belong to the dialog's pinned footer, tied by `id`.
  */
 
 /** The standard questions, in the order a family answers them, under one short heading each. Labels are short: the heading gives the context. */
@@ -48,7 +49,7 @@ const YES_NO = [
 export interface RegisterSession {
   id: string;
   name: string;
-  classes: Class[];
+  series: readonly RegistrationSeries[];
 }
 
 export interface RegisterCamper {
@@ -70,15 +71,25 @@ function SectionTitle({ id, required, children }: { id: string; required?: boole
   );
 }
 
-/** "3 left", or "Full: waitlist" when the class has no place (the family is put on the waitlist). */
-function seatLabel(cls: Class): string {
-  const left = cls.capacity - cls.seatsTaken;
+/** "3 left", or "Full: waitlist" when the series has no place (the family is put on the waitlist). */
+function seatLabel(series: Pick<RegistrationSeries, 'capacity' | 'seatsTaken'>): string {
+  const left = series.capacity - series.seatsTaken;
 
   return left > 0 ? `${left} ${left === 1 ? 'place' : 'places'} left` : 'Full: waitlist';
 }
 
-function ageLabel(cls: Class): string {
-  const { minAge, maxAge } = cls.ageRange;
+/** The series' clock times, from its first active day (camp time), as the Classes table shows them. */
+function timesLabel(series: RegistrationSeries, timeZone: string, clockFormat: ClockFormat): string {
+  const first = series.occurrences[0];
+  if (!first) {
+    return `${series.startTime} to ${series.endTime}`;
+  }
+
+  return `${formatCampTime(first.startsAt, timeZone, clockFormat)} to ${formatCampTime(first.endsAt, timeZone, clockFormat)}`;
+}
+
+function ageLabel(series: Pick<RegistrationSeries, 'ageRange'>): string {
+  const { minAge, maxAge } = series.ageRange;
   if (minAge === 0 && maxAge >= MAX_AGE_LIMIT) {
     return 'All ages';
   }
@@ -86,7 +97,8 @@ function ageLabel(cls: Class): string {
   return maxAge >= MAX_AGE_LIMIT ? `Ages ${minAge}+` : `Ages ${minAge} to ${maxAge}`;
 }
 
-interface Pick {
+/** One child's chosen series: the child, and the series' anchor day. */
+interface Choice {
   camperId: string;
   classId: string;
 }
@@ -124,15 +136,16 @@ export function RegisterForm({
   const formRef = useRef<HTMLFormElement>(null);
   const inDialog = variant === 'dialog';
   const [childIds, setChildIds] = useState<string[]>([]);
-  const [picks, setPicks] = useState<Pick[]>([]);
+  const [picks, setPicks] = useState<Choice[]>([]);
   // The one clash the family just tried to choose, shown under its class. Cleared by the next change.
   const [clash, setClash] = useState<{ key: string; message: string } | null>(null);
 
-  const classById = useMemo(() => {
-    const map = new Map<string, Class>();
+  // Each choice is keyed by its series' anchor day (the id the server takes a place against).
+  const seriesByAnchor = useMemo(() => {
+    const map = new Map<string, RegistrationSeries>();
     for (const session of sessions) {
-      for (const cls of session.classes) {
-        map.set(cls.id, cls);
+      for (const series of session.series) {
+        map.set(series.anchorClassId, series);
       }
     }
 
@@ -161,31 +174,35 @@ export function RegisterForm({
     setPicks(current => current.filter(p => ids.includes(p.camperId)));
   }
 
-  function togglePlace(camperId: string, cls: Class, on: boolean) {
+  function togglePlace(camperId: string, series: RegistrationSeries, on: boolean) {
     setClash(null);
     if (!on) {
-      setPicks(current => current.filter(p => !(p.camperId === camperId && p.classId === cls.id)));
+      setPicks(current => current.filter(p => !(p.camperId === camperId && p.classId === series.anchorClassId)));
 
       return;
     }
-    const taken = picks.filter(p => p.camperId === camperId).map(p => classById.get(p.classId));
-    const other = taken.find((t): t is Class => t !== undefined && overlaps(t, cls));
+    const taken = picks.filter(p => p.camperId === camperId).map(p => seriesByAnchor.get(p.classId));
+    const other = taken.find(
+      (t): t is RegistrationSeries => t !== undefined && anySpanOverlaps(t.occurrences, series.occurrences),
+    );
     if (other) {
       setClash({
-        key: `${camperId}|${cls.id}`,
+        key: `${camperId}|${series.anchorClassId}`,
         message: `This clashes with ${other.name}, which is already chosen for this child. Untick that one first.`,
       });
 
       return;
     }
-    setPicks(current => [...current, { camperId, classId: cls.id }]);
+    setPicks(current => [...current, { camperId, classId: series.anchorClassId }]);
   }
 
   const err = (name: string) => fieldError(state, name);
   const chosenChildren = campers.filter(c => childIds.includes(c.id));
-  // The session a family's download is for: the session of the first class they chose, else the form's first session.
+  // The session a family's download is for: the session of the first series they chose, else the form's first session.
   const downloadSessionId =
-    sessions.find(s => s.classes.some(c => picks.some(p => p.classId === c.id)))?.id ?? sessions[0]?.id ?? null;
+    sessions.find(s => s.series.some(x => picks.some(p => p.classId === x.anchorClassId)))?.id ??
+    sessions[0]?.id ??
+    null;
 
   return (
     <form
@@ -233,7 +250,8 @@ export function RegisterForm({
             Classes
           </SectionTitle>
           <p className="muted">
-            Choose the classes for each child. Two classes that overlap in time cannot both be chosen for one child.
+            Choose the classes for each child. A class is a series of days: choose it once. Two classes with a day that
+            overlaps in time cannot both be chosen for one child.
           </p>
           {err('selections') && (
             <span className="field-error" role="alert">
@@ -244,17 +262,17 @@ export function RegisterForm({
             <fieldset key={child.id} className="form-section">
               <legend className="form-section__title">{child.name}</legend>
               {sessions.map(session =>
-                session.classes.length === 0 ? null : (
+                session.series.length === 0 ? null : (
                   <div key={session.id} className="check-group">
                     <p className="muted">{session.name}</p>
-                    {session.classes.map(cls => {
-                      const selected = picks.some(p => p.camperId === child.id && p.classId === cls.id);
-                      const key = `${child.id}|${cls.id}`;
+                    {session.series.map(series => {
+                      const selected = picks.some(p => p.camperId === child.id && p.classId === series.anchorClassId);
+                      const key = `${child.id}|${series.anchorClassId}`;
 
                       return (
-                        <div key={cls.id}>
-                          <Checkbox isSelected={selected} onChange={on => togglePlace(child.id, cls, on)}>
-                            {`${cls.name}. ${ageLabel(cls)}. ${formatCampDateTime(cls.startsAt, timeZone, clockFormat)}, ${seatLabel(cls)}`}
+                        <div key={series.id}>
+                          <Checkbox isSelected={selected} onChange={on => togglePlace(child.id, series, on)}>
+                            {`${series.name}. ${ageLabel(series)}. ${seriesDaysLabel(series.weekdays)}, ${timesLabel(series, timeZone, clockFormat)}, ${seatLabel(series)}`}
                           </Checkbox>
                           {clash?.key === key && (
                             <span className="field-error" role="alert">

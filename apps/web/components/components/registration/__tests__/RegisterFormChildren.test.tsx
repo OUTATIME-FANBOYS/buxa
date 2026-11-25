@@ -2,12 +2,12 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Class } from '@buxa/contracts';
+import type { RegistrationSeries } from '@buxa/contracts';
 import { failure } from '@buxa/shared';
 import { submitRegistrationAction } from '@/actions/registration';
 import { ROUTES } from '@/config/routes';
 import { CHILD_RESULT_LIMIT } from '../ChildPicker';
-import { RegisterForm } from '../RegisterForm';
+import { RegisterForm, type RegisterSession } from '../RegisterForm';
 
 vi.mock('@/actions/registration', () => ({
   submitRegistrationAction: vi.fn(),
@@ -15,28 +15,35 @@ vi.mock('@/actions/registration', () => ({
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-const CLASS: Class = {
-  id: 'cls-1',
+/** A series of five weekday days, 09:00 to 11:00 camp time (UTC in these tests). Its anchor is its first day. */
+const DAYS = ['2026-07-06', '2026-07-07', '2026-07-08', '2026-07-09', '2026-07-10'] as const;
+const SERIES: RegistrationSeries = {
+  id: 'ser-1',
   sessionId: 's-1',
   sessionName: 'Art',
   name: 'Pottery',
   ageRange: { minAge: 6, maxAge: 12 },
   capacity: 10,
-  startsAt: '2026-07-01T09:00:00Z',
-  endsAt: '2026-07-01T11:00:00Z',
   location: 'Hall',
+  weekdays: [1, 2, 3, 4, 5],
+  startTime: '09:00',
+  endTime: '11:00',
+  firstDay: DAYS[0],
+  lastDay: DAYS[4],
+  startsLocal: '2026-07-06T09:00',
+  endsLocal: '2026-07-10T11:00',
+  occurrenceCount: 5,
+  activeOccurrenceCount: 5,
+  anchorClassId: 'cls-1',
   instructorIds: [],
   instructors: [],
+  price: null,
   seatsTaken: 0,
   waitlisted: 0,
-  price: null,
-  datesOutsideSession: false,
-  seriesId: 'ser-1',
-  occurrenceStatus: 'active',
-  cancelReason: null,
+  occurrences: DAYS.map(day => ({ startsAt: `${day}T09:00:00Z`, endsAt: `${day}T11:00:00Z` })),
 };
 
-const SESSIONS = [{ id: 's-1', name: 'Art', classes: [CLASS] }];
+const SESSIONS: RegisterSession[] = [{ id: 's-1', name: 'Art', series: [SERIES] }];
 const CAMPERS = [
   { id: 'c-ada', name: 'Ada Lovelace' },
   { id: 'c-ben', name: 'Ben Carter' },
@@ -48,12 +55,15 @@ describe('RegisterForm: children as tags and search', () => {
   let root: Root;
   let host: HTMLDivElement;
 
-  const renderWith = (campers: readonly { id: string; name: string }[]) => {
+  const renderWith = (
+    campers: readonly { id: string; name: string }[],
+    sessions: readonly RegisterSession[] = SESSIONS,
+  ) => {
     act(() => {
       root.render(
         <RegisterForm
           formId="form-1"
-          sessions={SESSIONS}
+          sessions={sessions}
           campers={campers}
           timeZone="UTC"
           clockFormat="24h"
@@ -223,5 +233,68 @@ describe('RegisterForm: children as tags and search', () => {
 
     expect(childTagNames()).toEqual(['Remove Ada Lovelace', 'Remove Ben Carter']);
     expect(submitted()).toEqual(['c-ada|cls-1']);
+  });
+
+  it('lists a series once, not once per day: five days show as one choice with its days, times and places', () => {
+    chooseChild('Ada Lovelace');
+
+    const boxes = host.querySelectorAll('fieldset input[type="checkbox"]');
+    expect(boxes).toHaveLength(1);
+    const label = host.querySelector('fieldset')?.textContent ?? '';
+    expect(label).toContain('Pottery');
+    expect(label).toContain('Mon to Fri');
+    expect(label).toContain('09:00 to 11:00');
+    expect(label).toContain('10 places left');
+  });
+
+  it('says Full: waitlist on a series with no place left', () => {
+    renderWith(CAMPERS, [{ id: 's-1', name: 'Art', series: [{ ...SERIES, seatsTaken: 10 }] }]);
+    chooseChild('Ada Lovelace');
+
+    expect(host.querySelector('fieldset')?.textContent).toContain('Full: waitlist');
+  });
+
+  it('enrols a child in a series once: the choice submits the series anchor, one per child', () => {
+    chooseChild('Ada Lovelace');
+    chooseChild('Ben Carter');
+    const boxes = host.querySelectorAll<HTMLInputElement>('fieldset input[type="checkbox"]');
+    act(() => boxes.forEach(box => box.click()));
+
+    expect(submitted()).toEqual(['c-ada|cls-1', 'c-ben|cls-1']);
+  });
+
+  it('refuses two series with a day that overlaps for one child, even when their first days do not clash', () => {
+    const swimming: RegistrationSeries = {
+      ...SERIES,
+      id: 'ser-2',
+      name: 'Swimming',
+      anchorClassId: 'cls-2',
+      occurrences: [{ startsAt: '2026-07-08T10:30:00Z', endsAt: '2026-07-08T12:00:00Z' }],
+    };
+    renderWith(CAMPERS, [{ id: 's-1', name: 'Art', series: [SERIES, swimming] }]);
+    chooseChild('Ada Lovelace');
+    const boxes = host.querySelectorAll<HTMLInputElement>('fieldset input[type="checkbox"]');
+    act(() => boxes[0]?.click());
+    act(() => boxes[1]?.click());
+
+    expect(host.textContent).toContain('This clashes with Pottery');
+    expect(submitted()).toEqual(['c-ada|cls-1']);
+  });
+
+  it('lets one child take two series whose days never overlap', () => {
+    const swimming: RegistrationSeries = {
+      ...SERIES,
+      id: 'ser-2',
+      name: 'Swimming',
+      anchorClassId: 'cls-2',
+      occurrences: DAYS.map(day => ({ startsAt: `${day}T13:00:00Z`, endsAt: `${day}T14:00:00Z` })),
+    };
+    renderWith(CAMPERS, [{ id: 's-1', name: 'Art', series: [SERIES, swimming] }]);
+    chooseChild('Ada Lovelace');
+    const boxes = host.querySelectorAll<HTMLInputElement>('fieldset input[type="checkbox"]');
+    act(() => boxes[0]?.click());
+    act(() => boxes[1]?.click());
+
+    expect(submitted()).toEqual(['c-ada|cls-1', 'c-ada|cls-2']);
   });
 });
