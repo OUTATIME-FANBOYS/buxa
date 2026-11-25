@@ -6,7 +6,7 @@ import { decideStartup, readEmailConfirmation, type StartupDecision } from './au
 import { createVerifier, type Verifier } from './auth/verifier';
 import { loadConfig, type Config } from './config';
 import { createLogger, type Logger } from './log';
-import { createPgRateLimiter, type RateLimiter } from './rateLimit/limiter';
+import { createMemoryRateLimiter, createPgRateLimiter, type RateLimiter } from './rateLimit/limiter';
 import type { Clock } from './services/clock';
 import { createPgRepositories, type Repositories } from './repositories';
 import { createAttendanceService } from './services/attendance/createAttendanceService';
@@ -29,6 +29,9 @@ import { type MembershipService } from './services/memberships/MembershipService
 import { type PeopleService } from './services/people/PeopleService';
 import { createInviteService } from './services/invites/createInviteService';
 import { type InviteService } from './services/invites/InviteService';
+import { createGateService } from './gate/createGateService';
+import type { GateService } from './gate/GateService';
+import { createCodeSender, createMemoryCodeSender, type CodeSender } from './gate/codeSender';
 
 export interface Runtime {
   config: Config;
@@ -64,6 +67,8 @@ export interface Services {
   publicSessions: PublicSessionService;
   /** Teacher invites: a staff member invites a teacher by email, and the teacher joins with the link. */
   invites: InviteService;
+  /** Check-in with a family's email: the gate, the desk and the camp's link (apps/server/src/gate). */
+  gate: GateService;
 }
 
 export interface RuntimeOptions {
@@ -77,6 +82,8 @@ export interface RuntimeOptions {
   clock?: Clock;
   /** Replace the request limiter (tests use the in-memory one). */
   rateLimiter?: RateLimiter;
+  /** Replace where check-in codes are sent (tests keep them in memory). */
+  codeSender?: CodeSender;
 }
 
 /** Everything the server side needs, built from the environment. */
@@ -129,13 +136,21 @@ export function createRuntime(options: RuntimeOptions = {}): Runtime {
     repositories,
     verifier,
     rateLimiter,
-    services: createServices(repositories, options.clock ?? systemClock),
+    services: createServices(repositories, options.clock ?? systemClock, {
+      pepper: config.gatePepper ?? null,
+      sender: options.codeSender ?? createCodeSender({ environment: config.env, log }),
+      limiter: rateLimiter,
+    }),
     startupCheck,
   };
 }
 
 /** Services are built from repositories and a clock only, so tests can assemble them without a runtime. */
-export function createServices(repositories: Repositories, clock: Clock): Services {
+export function createServices(
+  repositories: Repositories,
+  clock: Clock,
+  gateDeps: GateDeps = defaultGateDeps(),
+): Services {
   const { orgs, people, memberships, credentials, attendance, classes } = repositories;
 
   return {
@@ -175,7 +190,27 @@ export function createServices(repositories: Repositories, clock: Clock): Servic
     calendar: createCalendarService({ repo: repositories.calendar }),
     publicSessions: createPublicSessionService({ repo: repositories.publicSessions }),
     invites: createInviteService({ invites: repositories.memberInvites }),
+    gate: createGateService({
+      gate: repositories.gate,
+      pepper: gateDeps.pepper,
+      cipher: badgeCipher,
+      sender: gateDeps.sender,
+      limiter: gateDeps.limiter,
+      clock,
+    }),
   };
+}
+
+/** What check-in with a family's email needs besides the repositories. The pepper is null when GATE_PEPPER is not set. */
+export interface GateDeps {
+  pepper: string | null;
+  sender: CodeSender;
+  limiter: RateLimiter;
+}
+
+/** For tests and tools that build services without a runtime: no pepper (the gate answers 503) and a sender that keeps messages. */
+export function defaultGateDeps(): GateDeps {
+  return { pepper: null, sender: createMemoryCodeSender(), limiter: createMemoryRateLimiter() };
 }
 
 /** Classes, sessions, enrolments and the bulk import. Both storages come from `repositories` (Postgres in production). */

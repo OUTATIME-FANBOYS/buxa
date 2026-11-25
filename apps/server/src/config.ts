@@ -17,6 +17,8 @@ const schema = z
     ENABLE_DEV_OUTBOX: z.enum(['0', '1']).default('0'),
     // Guards the scheduled job routes (Vercel Cron sends it as a bearer token). Unset or too short, the job refuses; see holds/cronAuth.ts.
     CRON_SECRET: z.string().optional(),
+    // Keys the hashes of check-in codes and device tokens (apps/server/src/gate). Unset, check-in with a family's email does not run.
+    GATE_PEPPER: z.string().min(32, 'must be at least 32 characters').optional(),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV === 'production' && !env.NEXT_PUBLIC_SUPABASE_URL) {
@@ -40,6 +42,8 @@ export interface Config {
   devOutboxEnabled: boolean;
   /** The scheduled-job secret, if one is set. Read by the job routes only, never sent to a browser. */
   cronSecret?: string;
+  /** The pepper for check-in codes and device tokens, if one is set. Never sent to a browser. */
+  gatePepper?: string;
 }
 
 /** Reads and validates the environment once, so a bad deploy fails immediately and says why. Secrets are never echoed back. */
@@ -68,5 +72,6 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     logLevel: e.LOG_LEVEL,
     devOutboxEnabled: e.ENABLE_DEV_OUTBOX === '1',
     cronSecret: e.CRON_SECRET,
+    gatePepper: e.GATE_PEPPER,
   };
 }

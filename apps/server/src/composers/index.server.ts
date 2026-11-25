@@ -44,6 +44,7 @@ export * from './registration/loadRegistration';
 export * from './registration/downloads';
 export * from './registration/loadFormSubmissions';
 export * from './invites/loadInvitePage';
+export * from './gate/gateActions';
 export * from './invites/loadOutbox';
 export * from './groups/loadRoster';
 export * from './groups/rosterResponse';
