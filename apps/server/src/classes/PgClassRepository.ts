@@ -53,7 +53,12 @@ import {
   updateSessionRow,
 } from './PgClassWrites';
 import type { OccurrenceCommand } from '@buxa/domain';
-import { translateClassWriteError, translateSessionDeleteError, translateSessionNameError } from './pgClassErrors';
+import {
+  translateClassWriteError,
+  translateEnrolmentWriteError,
+  translateSessionDeleteError,
+  translateSessionNameError,
+} from './pgClassErrors';
 import { listCampActiveHoldRows, listCampWaitlistRows } from './PgCampQueries';
 import { toIso } from '../people/pgRows';
 
@@ -316,8 +321,23 @@ export class PgClassRepository implements ClassRepository {
     return withOrg(this.pool, userId, orgId, listCampWaitlistRows);
   }
 
-  enrol(actor: Actor, request: EnrolRequest, rule: EnrolmentRule): Promise<Enrolment> {
-    return withOrg(this.pool, actor.userId, actor.orgId, db => enrolInTransaction(db, actor, request, rule));
+  async enrol(actor: Actor, request: EnrolRequest, rule: EnrolmentRule): Promise<Enrolment> {
+    try {
+      return await withOrg(this.pool, actor.userId, actor.orgId, db => enrolInTransaction(db, actor, request, rule));
+    } catch (error) {
+      throw translateEnrolmentWriteError(error);
+    }
+  }
+
+  camperNameOf(userId: string, orgId: string, camperId: string): Promise<string | null> {
+    return withOrg(this.pool, userId, orgId, async db => {
+      const { rows } = await db.query<{ name: string }>(
+        "SELECT trim(given_name || ' ' || family_name) AS name FROM people WHERE id = $1",
+        [camperId],
+      );
+
+      return rows[0] ? rows[0].name : null;
+    });
   }
 
   cancelEnrolment(actor: Actor, enrolmentId: string, note: string | null): Promise<Enrolment> {

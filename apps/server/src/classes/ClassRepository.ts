@@ -137,6 +137,8 @@ export interface ClassRepository {
   deleteSeries(actor: Actor, seriesId: string): Promise<void>;
   /** Times and names of every class in the camp, for the clash check. */
   listCampClassSpans(userId: string, orgId: string): Promise<CampClassSpan[]>;
+  /** The camper's display name, or null when the camper is not in the camp. Read only. */
+  camperNameOf(userId: string, orgId: string, camperId: string): Promise<string | null>;
   /** Throws SessionNotFoundError. */
   listClasses(userId: string, orgId: string, sessionId: string): Promise<Class[]>;
   getClass(userId: string, orgId: string, classId: string): Promise<Class | null>;

@@ -59,6 +59,15 @@ export class CapacityBelowEnrolledError extends Error {
   }
 }
 
+/** The child already has an active place in this series: one active enrolment per child per series (migration 0061). */
+export class AlreadyEnrolledError extends Error {
+  readonly kind = 'already-enrolled';
+  constructor() {
+    super('This child is already enrolled in this class.');
+    this.name = 'AlreadyEnrolledError';
+  }
+}
+
 /** A class with any enrolment (cancelled ones included) cannot be deleted. */
 export class ClassHasEnrolmentsError extends Error {
   readonly kind = 'class-has-enrolments';
@@ -271,6 +280,7 @@ export class RecurrenceRefusedError extends Error {
 }
 
 export type ClassErrorKind =
+  | 'already-enrolled'
   | 'occurrence-refused'
   | 'class-not-found'
   | 'session-not-found'

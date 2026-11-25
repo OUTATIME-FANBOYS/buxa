@@ -603,6 +603,14 @@ export class InMemoryClassRepository implements ClassRepository {
     );
   }
 
+  camperNameOf(_userId: string, orgId: string, camperId: string): Promise<string | null> {
+    return settle(() => {
+      const camper = this.camperIn(orgId, camperId);
+
+      return camper ? camper.name : null;
+    });
+  }
+
   listClasses(userId: string, orgId: string, sessionId: string): Promise<Class[]> {
     return settle(() => {
       if (!this.sessionIn(orgId, sessionId)) {

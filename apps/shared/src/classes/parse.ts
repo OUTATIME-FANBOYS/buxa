@@ -4,6 +4,8 @@ import {
   ClassInputSchema,
   EnrolInputSchema,
   NewSeriesInputSchema,
+  SeriesEditInputSchema,
+  type SeriesEditInput,
   NewSessionInputSchema,
   type CancelEnrolmentInput,
   type ClassInput,
@@ -157,6 +159,32 @@ export function seriesForm(form: FormData): PersonParsed<NewSeriesInput> {
         weekdays,
         startsAt: starts ? `${starts.date}T${starts.time}` : '',
         endsAt: ends ? `${ends.date}T${ends.time}` : '',
+      }),
+    { ageRange: 'maxAge' },
+  );
+}
+
+/**
+ * A series' shared fields, from the edit form: name, ages, camp size, location, instructors and price. The days keep their own
+ * times, so the form has no Starts, Ends or weekdays.
+ */
+export function seriesEditForm(form: FormData): PersonParsed<SeriesEditInput> {
+  const problems: FieldErrors = {};
+  const minAge = numberField(form, 'minAge', problems, 'Enter the youngest age.');
+  const maxAge = numberField(form, 'maxAge', problems, 'Enter the oldest age.');
+  const capacity = numberField(form, 'capacity', problems, 'Enter the camp size.');
+  const price = priceFromForm(form, problems);
+
+  return withProblems(
+    problems,
+    () =>
+      parseWith<SeriesEditInput>(SeriesEditInputSchema, {
+        name: field(form, 'name'),
+        ageRange: { minAge, maxAge },
+        capacity,
+        location: field(form, 'location'),
+        instructorIds: fieldAll(form, 'instructorIds'),
+        price: price ?? null,
       }),
     { ageRange: 'maxAge' },
   );
