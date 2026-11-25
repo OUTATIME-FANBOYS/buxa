@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { Household } from '@buxa/contracts';
 import { ROUTES } from '@/config/routes';
 import { LinkHouseholdForm, type HouseholdOption, type PersonOption } from '@/components/components/people/forms';
@@ -19,6 +20,8 @@ export interface HouseholdPanelProps {
   query: string;
   /** People matching `query` (never this person). */
   linkable: readonly PersonOption[];
+  /** Shown inside the card, after the households: the family's emergency contact. */
+  children?: ReactNode;
 }
 
 /**
@@ -34,6 +37,7 @@ export function HouseholdPanel({
   canAuthorisePickup,
   query,
   linkable,
+  children,
 }: HouseholdPanelProps) {
   return (
     <section className="panel" aria-labelledby="household-heading">
@@ -78,6 +82,7 @@ export function HouseholdPanel({
           )}
         </div>
       )}
+      {children}
     </section>
   );
 }

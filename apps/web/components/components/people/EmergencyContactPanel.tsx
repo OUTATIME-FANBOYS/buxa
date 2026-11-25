@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react';
 import type { Person } from '@buxa/contracts';
 import { emergencyContactComplete } from '@buxa/domain';
-import { Button } from '@/components/elements';
+import { Button, Pill } from '@/components/elements';
 import { EmergencyContactForm } from '@/components/components/people/forms';
 
 /**
@@ -13,20 +13,33 @@ import { EmergencyContactForm } from '@/components/components/people/forms';
  */
 export function EmergencyContactPanel({
   person,
+  embedded = false,
 }: {
   person: Pick<Person, 'id' | 'roles' | 'emergencyContact' | 'canEditEmergencyContact'>;
+  /** Inside the household card (families): a tag heading instead of its own card. */
+  embedded?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const finish = useCallback(() => setEditing(false), []);
   const contact = person.emergencyContact;
   const isCamper = person.roles.includes('camper');
 
+  const Wrapper = embedded ? 'div' : 'section';
+  const heading = embedded ? (
+    <Pill tone="neutral">Emergency contact</Pill>
+  ) : (
+    <h2 id="emergency-contact-heading" className="people-heading">
+      Emergency contact
+    </h2>
+  );
+
   return (
-    <section className="panel" aria-labelledby="emergency-contact-heading">
+    <Wrapper
+      className={embedded ? 'stack people-subpanel' : 'panel'}
+      aria-labelledby={embedded ? undefined : 'emergency-contact-heading'}
+    >
       <div className="buxa:flex buxa:flex-wrap buxa:items-center buxa:justify-between buxa:gap-2">
-        <h2 id="emergency-contact-heading" className="people-heading">
-          Emergency contact
-        </h2>
+        {heading}
         {person.canEditEmergencyContact && contact !== null && !editing && (
           <Button size="sm" icon="edit" onClick={() => setEditing(true)}>
             {contact.name === null ? 'Add' : 'Edit'}
@@ -41,7 +54,7 @@ export function EmergencyContactPanel({
       ) : (
         <EmergencyContactView contact={contact} isCamper={isCamper} complete={emergencyContactComplete(person)} />
       )}
-    </section>
+    </Wrapper>
   );
 }
 

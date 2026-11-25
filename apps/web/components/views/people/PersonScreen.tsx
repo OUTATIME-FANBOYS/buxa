@@ -108,7 +108,7 @@ export async function PersonScreen({
             clockFormat={clock.clockFormat}
           />
         )}
-        {person.roles.some(isFamilyRole) && (
+        {person.roles.some(isFamilyRole) ? (
           <HouseholdPanel
             personId={person.id}
             households={person.households}
@@ -118,9 +118,12 @@ export async function PersonScreen({
             canAuthorisePickup={canAuthorisePickup}
             query={q}
             linkable={linkable}
-          />
+          >
+            <EmergencyContactPanel person={person} embedded />
+          </HouseholdPanel>
+        ) : (
+          <EmergencyContactPanel person={person} />
         )}
-        <EmergencyContactPanel person={person} />
         {person.hasActiveBadge !== null && (
           <BadgePanel
             personId={person.id}
