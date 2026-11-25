@@ -131,16 +131,13 @@ export const STANDARD_FIELDS = [
   { key: 'emergencyContactPhone', label: 'Emergency contact phone', required: true },
 ] as const;
 
-/** A form as the camp edits it: name, season, the session set and the custom questions. */
+/**
+ * A form as the camp edits it: name, the session set and the custom questions. A season is no longer entered (migration 0071 kept
+ * the stored value for history); the server writes it as null.
+ */
 export const RegistrationFormInputSchema = z
   .object({
     name: z.string().trim().min(1, 'Enter a form name.').max(120, 'Keep the name to 120 characters.'),
-    season: z
-      .string()
-      .trim()
-      .max(60, 'Keep the season to 60 characters.')
-      .default('')
-      .transform(v => v || null),
     sessionIds: z
       .array(z.string().uuid())
       .min(1, 'Choose at least one session.')
