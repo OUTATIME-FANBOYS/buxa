@@ -23,7 +23,10 @@ export async function loadFormSubmissions(
   try {
     const service = getRuntime().services.registration;
     const forms = await service.listForms(actor);
-    const covering = sessionId ? forms.filter(form => form.sessions.some(s => s.id === sessionId)) : forms;
+    // A registration is for a session of the published version, so a session counts for the forms that publish it.
+    const covering = sessionId
+      ? forms.filter(form => (form.published?.sessions ?? []).some(s => s.id === sessionId))
+      : forms;
     const value: FormSubmissions[] = [];
     for (const form of covering) {
       const rows = await service.listSubmissions(actor, form.id);

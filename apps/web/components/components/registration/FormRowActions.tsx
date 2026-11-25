@@ -32,6 +32,8 @@ export function FormRowActions({
   const close = useCallback(() => setDialog(null), []);
   const openEdit = useCallback(() => setDialog('edit'), []);
   const deletable = decideFormDeletion({ registrationCount: form.submissionCount }).allow;
+  // The row is named as families see it (the published name), as the table shows it.
+  const shownName = form.published?.name ?? form.name;
 
   return (
     <>
@@ -42,7 +44,7 @@ export function FormRowActions({
           size="sm"
           iconOnly
           icon="eye"
-          aria-label={`View ${form.name}`}
+          aria-label={`View ${shownName}`}
           title="View form"
           aria-haspopup="dialog"
           onClick={() => setDialog('view')}
@@ -54,7 +56,7 @@ export function FormRowActions({
             size="sm"
             iconOnly
             icon="edit"
-            aria-label={`Edit ${form.name}`}
+            aria-label={`Edit ${shownName}`}
             title="Edit form"
             aria-haspopup="dialog"
             onClick={openEdit}
@@ -67,7 +69,7 @@ export function FormRowActions({
             size="sm"
             iconOnly
             icon="trash"
-            aria-label={`Delete ${form.name}`}
+            aria-label={`Delete ${shownName}`}
             title={deletable ? 'Delete form' : FORM_HAS_REGISTRATIONS_MESSAGE}
             disabled={!deletable}
             aria-haspopup="dialog"

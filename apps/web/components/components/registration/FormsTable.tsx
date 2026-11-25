@@ -38,28 +38,34 @@ export function FormsTable({
           </tr>
         </thead>
         <tbody>
-          {forms.map(form => (
-            <tr key={form.id}>
-              <td>
-                <Link className="row-title classes-target" href={registrationFormPath(form.id)}>
-                  {form.name}
-                </Link>
-                {form.season && <span className="muted"> · {form.season}</span>}
-              </td>
-              <td>{form.sessions.length}</td>
-              <td>
-                {form.publishedVersion === null ? (
-                  <Pill tone="neutral">Draft</Pill>
-                ) : (
-                  <Pill tone="ok">Published, version {form.publishedVersion}</Pill>
-                )}
-              </td>
-              <td>{form.submissionCount}</td>
-              <td>
-                <FormRowActions form={form} sessions={sessions} canEdit={canEdit} canSubmit={canSubmit} />
-              </td>
-            </tr>
-          ))}
+          {forms.map(form => {
+            // The table shows what families see: the published name, season and sessions. A form never published shows its draft.
+            const shown = form.published ?? { name: form.name, season: form.season, sessions: form.sessions };
+
+            return (
+              <tr key={form.id}>
+                <td>
+                  <Link className="row-title classes-target" href={registrationFormPath(form.id)}>
+                    {shown.name}
+                  </Link>
+                  {shown.season && <span className="muted"> · {shown.season}</span>}
+                </td>
+                <td>{shown.sessions.length}</td>
+                <td>
+                  {form.publishedVersion === null ? (
+                    <Pill tone="neutral">Draft</Pill>
+                  ) : (
+                    <Pill tone="ok">Published, version {form.publishedVersion}</Pill>
+                  )}
+                  {form.hasUnpublishedChanges && <span className="muted"> Unpublished changes</span>}
+                </td>
+                <td>{form.submissionCount}</td>
+                <td>
+                  <FormRowActions form={form} sessions={sessions} canEdit={canEdit} canSubmit={canSubmit} />
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

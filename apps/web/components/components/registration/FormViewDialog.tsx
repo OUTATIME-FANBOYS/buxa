@@ -22,12 +22,14 @@ export interface FormViewDialogProps {
  * content), and the lists are plain rows with a thin divider, not boxes that look like inputs.
  */
 export function FormViewDialog({ form, canEdit, canSubmit, onEdit, onClose }: FormViewDialogProps) {
-  // A file downloads for one session the form covers, so the first one stands in for the form.
-  const downloadSession = form.sessions[0];
+  // This pop-up shows the published version, the one families register on. A form never published shows a note instead.
+  const published = form.published;
+  // A file downloads for one session the published version covers, so the first one stands in for the form.
+  const downloadSession = published?.sessions[0];
 
   return (
     <Dialog
-      title={form.name}
+      title={published?.name ?? form.name}
       onClose={onClose}
       className="class-dialog"
       footer={
@@ -46,24 +48,27 @@ export function FormViewDialog({ form, canEdit, canSubmit, onEdit, onClose }: Fo
       <div className="form-view">
         <div className="form-section">
           <p>
-            {form.season && <span className="muted">{form.season} · </span>}
-            {form.publishedVersion === null ? (
+            {published?.season && <span className="muted">{published.season} · </span>}
+            {published === null ? (
               <Pill tone="neutral">Draft</Pill>
             ) : (
-              <Pill tone="ok">Published, version {form.publishedVersion}</Pill>
+              <Pill tone="ok">Published version {published.version}</Pill>
             )}
           </p>
+          {published === null && (
+            <p className="muted">Not published yet. Families cannot register on this form until it is published.</p>
+          )}
         </div>
 
         <section className="form-section" aria-labelledby="form-view-sessions">
           <h3 id="form-view-sessions" className="form-section__title">
             Sessions this form covers
           </h3>
-          {form.sessions.length === 0 ? (
+          {published === null ? null : published.sessions.length === 0 ? (
             <p className="muted">No sessions yet.</p>
           ) : (
             <ul className="session-picker__tags">
-              {form.sessions.map(session => (
+              {published.sessions.map(session => (
                 <li key={session.id}>
                   <span className="session-tag session-tag--static">{session.name}</span>
                 </li>
@@ -77,11 +82,11 @@ export function FormViewDialog({ form, canEdit, canSubmit, onEdit, onClose }: Fo
             Your questions
           </h3>
           <p className="muted">The standard questions about the camper and family are always asked.</p>
-          {form.fields.length === 0 ? (
+          {published === null ? null : published.fields.length === 0 ? (
             <p className="muted">This form asks no questions of its own.</p>
           ) : (
             <ul className="form-view__list">
-              {form.fields.map(field => (
+              {published.fields.map(field => (
                 <li key={field.key} className="form-view__row">
                   <span className="form-view__name">{field.label}</span>
                   <span className="muted">{`${KIND_LABEL[field.kind]} · ${field.required ? 'Required' : 'Optional'}`}</span>

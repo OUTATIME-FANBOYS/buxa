@@ -47,14 +47,31 @@ function translateSessionError(error: unknown): unknown {
   return error;
 }
 
+/**
+ * Every session id must be a session of this camp. Drafts name sessions without a foreign key (a uuid array), so the check is here,
+ * inside the transaction; the publish copy checks again when it writes the live rows.
+ */
+async function requireSessionsInCamp(db: Db, sessionIds: readonly string[]): Promise<void> {
+  const { rows } = await db.query<{ n: number }>('SELECT count(*)::int AS n FROM classes WHERE id = ANY($1::uuid[])', [
+    [...sessionIds],
+  ]);
+  if (rows[0].n !== new Set(sessionIds).size) {
+    throw new RegistrationSessionNotFoundError();
+  }
+}
+
+/**
+ * Creates a form. Its draft holds the values; nothing is published yet, so the live name and season (which NOT NULL needs) are the
+ * same as the draft, and no live session rows are written. Families cannot see a form until it is published.
+ */
 export async function insertForm(db: Db, actor: Actor, input: RegistrationFormInput): Promise<string> {
+  await requireSessionsInCamp(db, input.sessionIds);
   const { rows } = await db.query<{ id: string }>(
-    `INSERT INTO registration_forms (org_id, name, season, draft_fields)
-     VALUES ($1, $2, $3, $4::jsonb) RETURNING id`,
-    [actor.orgId, input.name, input.season, JSON.stringify(input.fields)],
+    `INSERT INTO registration_forms (org_id, name, season, draft_name, draft_season, draft_session_ids, draft_fields)
+     VALUES ($1, $2, $3, $2, $3, $4::uuid[], $5::jsonb) RETURNING id`,
+    [actor.orgId, input.name, input.season, input.sessionIds, JSON.stringify(input.fields)],
   );
   const id = rows[0].id;
-  await replaceSessions(db, actor, id, input.sessionIds);
   await recordAudit(db, {
     actor,
     action: 'registration_form.create',
@@ -66,17 +83,21 @@ export async function insertForm(db: Db, actor: Actor, input: RegistrationFormIn
   return id;
 }
 
+/**
+ * Saves the draft: name, season, sessions and questions. The live name, season and sessions, and the published version, are not
+ * touched; only a publish changes them (families register on the published version). Audited with the name only.
+ */
 export async function updateFormRow(db: Db, actor: Actor, formId: string, input: RegistrationFormInput): Promise<void> {
+  await requireSessionsInCamp(db, input.sessionIds);
   const { rowCount } = await db.query(
     `UPDATE registration_forms
-        SET name = $2, season = $3, draft_fields = $4::jsonb, updated_at = now()
+        SET draft_name = $2, draft_season = $3, draft_session_ids = $4::uuid[], draft_fields = $5::jsonb, updated_at = now()
       WHERE id = $1`,
-    [formId, input.name, input.season, JSON.stringify(input.fields)],
+    [formId, input.name, input.season, input.sessionIds, JSON.stringify(input.fields)],
   );
   if (rowCount === 0) {
     throw new RegistrationFormNotFoundError();
   }
-  await replaceSessions(db, actor, formId, input.sessionIds);
   await recordAudit(db, {
     actor,
     action: 'registration_form.update',
@@ -86,11 +107,21 @@ export async function updateFormRow(db: Db, actor: Actor, formId: string, input:
   });
 }
 
-/** Writes the next immutable version from the draft and points the form at it. */
+/**
+ * Publishes the draft in one transaction: the draft's name, season and sessions become the live row (the session set is replaced,
+ * and every session must still be in this camp), and the draft's questions, name, season and session ids are written as the next
+ * immutable version. A form whose draft has no sessions is refused, and nothing is written.
+ */
 export async function publishFormRow(db: Db, actor: Actor, formId: string): Promise<number> {
-  const { rows } = await db.query<{ fields: unknown; version: number }>(
-    `SELECT f.draft_fields AS fields, COALESCE((SELECT max(v.version) FROM registration_form_versions v
-                                                WHERE v.form_id = f.id), 0) + 1 AS version
+  const { rows } = await db.query<{
+    name: string;
+    season: string | null;
+    session_ids: string[];
+    fields: unknown;
+    version: number;
+  }>(
+    `SELECT f.draft_name AS name, f.draft_season AS season, f.draft_session_ids::text[] AS session_ids, f.draft_fields AS fields,
+            COALESCE((SELECT max(v.version) FROM registration_form_versions v WHERE v.form_id = f.id), 0) + 1 AS version
        FROM registration_forms f WHERE f.id = $1 FOR UPDATE`,
     [formId],
   );
@@ -98,22 +129,31 @@ export async function publishFormRow(db: Db, actor: Actor, formId: string): Prom
   if (!draft) {
     throw new RegistrationFormNotFoundError();
   }
-  const covered = await db.query<{ n: string }>(
-    'SELECT count(*) AS n FROM registration_form_sessions WHERE form_id = $1',
-    [formId],
-  );
-  if (Number(covered.rows[0]?.n ?? 0) === 0) {
+  if (draft.session_ids.length === 0) {
     throw new RegistrationFormNoSessionsError();
   }
+  // Replaces the live session set. The function refuses a session that is not in this camp (P0002), so nothing below runs for it.
+  await replaceSessions(db, actor, formId, draft.session_ids);
   await db.query(
-    `INSERT INTO registration_form_versions (org_id, form_id, version, fields, published_by)
-     VALUES ($1, $2, $3, $4::jsonb, $5)`,
-    [actor.orgId, formId, draft.version, JSON.stringify(draft.fields), actor.userId],
+    `INSERT INTO registration_form_versions (org_id, form_id, version, fields, published_by, name, season, session_ids)
+     VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, $8::uuid[])`,
+    [
+      actor.orgId,
+      formId,
+      draft.version,
+      JSON.stringify(draft.fields),
+      actor.userId,
+      draft.name,
+      draft.season,
+      draft.session_ids,
+    ],
   );
-  await db.query('UPDATE registration_forms SET published_version = $2, updated_at = now() WHERE id = $1', [
-    formId,
-    draft.version,
-  ]);
+  await db.query(
+    `UPDATE registration_forms
+        SET name = draft_name, season = draft_season, published_version = $2, updated_at = now()
+      WHERE id = $1`,
+    [formId, draft.version],
+  );
   await recordAudit(db, {
     actor,
     action: 'registration_form.publish',
@@ -182,8 +222,10 @@ export async function insertRegistrationInTx(
   registration: NewRegistration,
   rule: RegistrationRule,
 ): Promise<string> {
-  const { rows } = await db.query<{ published_version: number | null }>(
-    'SELECT published_version FROM registration_forms WHERE id = $1 FOR UPDATE',
+  // The sessions a family may ask for are the published version's (migration 0071), never the draft's.
+  const { rows } = await db.query<{ published_version: number | null; session_ids: string[] }>(
+    `SELECT f.published_version, buxa_form_published_session_ids(f.org_id, f.id)::text[] AS session_ids
+       FROM registration_forms f WHERE f.id = $1 FOR UPDATE OF f`,
     [registration.formId],
   );
   if (rows.length === 0) {
@@ -191,17 +233,16 @@ export async function insertRegistrationInTx(
   }
   // A session takes registrations only while it is live (migration 0053). A draft or archived session of the form is closed: a
   // submission that names it is refused. A session that is archived by archived_at alone (an older release) is closed too.
-  const sessions = await db.query<{ session_id: string; closed: boolean }>(
-    `SELECT fs.session_id, (c.status <> 'live' OR c.archived_at IS NOT NULL) AS closed
-       FROM registration_form_sessions fs
-       JOIN classes c ON c.id = fs.session_id AND c.org_id = fs.org_id
-      WHERE fs.form_id = $1`,
-    [registration.formId],
+  const sessions = await db.query<{ id: string; closed: boolean }>(
+    `SELECT c.id, (c.status <> 'live' OR c.archived_at IS NOT NULL) AS closed
+       FROM classes c
+      WHERE c.org_id = $1 AND c.id = ANY($2::uuid[])`,
+    [actor.orgId, rows[0].session_ids],
   );
   const facts: RegistrationFactsInTx = {
     publishedVersion: rows[0].published_version,
-    formSessionIds: sessions.rows.map(r => r.session_id),
-    closedSessionIds: sessions.rows.filter(r => r.closed).map(r => r.session_id),
+    formSessionIds: rows[0].session_ids,
+    closedSessionIds: sessions.rows.filter(r => r.closed).map(r => r.id),
   };
   const decision = rule(facts);
   if (!decision.allow) {

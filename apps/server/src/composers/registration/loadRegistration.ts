@@ -61,9 +61,10 @@ export function loadRegisterPage(actor: Actor, formId: string): Promise<LoadedRe
     const runtime = getRuntime();
     const service = runtime.services.registration;
     const form = await service.getForm(actor, formId);
+    // Families register on the published version: its sessions (not the draft's) are the ones offered.
     const published = await service.publishedVersion(actor, formId);
     const sessions = [];
-    for (const session of form.sessions) {
+    for (const session of published?.sessions ?? []) {
       // Only a live session is offered for registration. A draft is not open yet, and an archived one is closed (its classes and
       // history stay; see migrations 0052 and 0053).
       const found = await runtime.services.classes.getSession(actor, session.id);
