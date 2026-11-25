@@ -15,14 +15,17 @@ import { ActionMessage } from '@/components/components/classes/forms';
 type RegistrationAction = (previous: ActionState, form: FormData) => Promise<ActionState>;
 
 /**
- * One lifecycle step as a form. A step with `confirmLabel` asks first: the tap opens a ConfirmDialog that shows the warning, and its
- * action runs the step. The dialog closes when the step succeeds; a failure stays in the dialog.
+ * One lifecycle step as an icon button named for the camper ("Withdraw Ada Lovelace"), with a tooltip. A step with `confirmLabel`
+ * asks first: the tap opens a ConfirmDialog that shows the warning, and its action runs the step. The dialog closes when the step
+ * succeeds; a failure stays in the dialog. A step without `confirmLabel` submits at once.
  */
 function Step({
   action,
   formId,
   registrationId,
+  camperName,
   label,
+  icon,
   confirmLabel,
   warning,
   danger = false,
@@ -30,7 +33,11 @@ function Step({
   action: RegistrationAction;
   formId: string;
   registrationId: string;
+  /** The camper's name, which completes the button's accessible name. */
+  camperName: string;
   label: string;
+  /** A lucide icon name (icons.tsx). */
+  icon: string;
   /** When set, the first tap asks in a dialog and its action runs the step. */
   confirmLabel?: string;
   warning?: string;
@@ -44,6 +51,9 @@ function Step({
       <input type="hidden" name="registrationId" value={registrationId} />
     </>
   );
+  const variant = danger ? 'glass-danger' : 'glass';
+  const ariaLabel = `${label} ${camperName}`;
+  const title = `${label} registration`;
 
   useEffect(() => {
     if (state.status === 'success') {
@@ -56,9 +66,16 @@ function Step({
       <div className="registration-step">
         <form action={formAction}>
           {fields}
-          <Button type="submit" variant="secondary" size="sm" disabled={pending}>
-            {pending ? 'Working...' : label}
-          </Button>
+          <Button
+            type="submit"
+            variant={variant}
+            size="sm"
+            iconOnly
+            icon={icon}
+            aria-label={ariaLabel}
+            title={title}
+            disabled={pending}
+          />
         </form>
         <ActionMessage state={state} />
       </div>
@@ -69,13 +86,16 @@ function Step({
     <div className="registration-step">
       <Button
         type="button"
-        variant={danger ? 'glass-danger' : 'secondary'}
+        variant={variant}
         size="sm"
+        iconOnly
+        icon={icon}
+        aria-label={ariaLabel}
+        title={title}
+        aria-haspopup="dialog"
         disabled={pending}
         onClick={() => setAsking(true)}
-      >
-        {pending ? 'Working...' : label}
-      </Button>
+      />
       {asking && (
         <ConfirmDialog
           title={`${label} registration?`}
@@ -100,19 +120,22 @@ function Step({
 }
 
 /**
- * What staff can do with a registration beyond confirming it. Withdraw releases its holds and cancels its enrolments but keeps the
- * record. Archive hides it from the lists and keeps it. Delete erases it and all its answers for good, and is offered to an admin
- * or the owner only (`canDelete`); a confirmed registration with enrolments must be withdrawn first, which the server enforces.
+ * What staff can do with a registration beyond confirming it, as icon buttons in one row. Withdraw releases its holds and cancels
+ * its enrolments but keeps the record. Archive hides it from the lists and keeps it (Unarchive brings it back). Delete erases it and
+ * all its answers for good, and is offered to an admin or the owner only (`canDelete`); a confirmed registration with enrolments must
+ * be withdrawn first, which the server enforces.
  */
 export function RegistrationActions({
   formId,
   registrationId,
+  camperName,
   status,
   archived,
   canDelete,
 }: {
   formId: string;
   registrationId: string;
+  camperName: string;
   status: 'pending' | 'confirmed' | 'withdrawn';
   archived: boolean;
   canDelete: boolean;
@@ -124,7 +147,9 @@ export function RegistrationActions({
           action={withdrawRegistrationAction}
           formId={formId}
           registrationId={registrationId}
+          camperName={camperName}
           label="Withdraw"
+          icon="undo"
           confirmLabel="Confirm withdraw"
           warning="Withdrawing releases its holds and cancels its enrolments. The record is kept."
         />
@@ -133,14 +158,18 @@ export function RegistrationActions({
         action={archived ? unarchiveRegistrationAction : archiveRegistrationAction}
         formId={formId}
         registrationId={registrationId}
+        camperName={camperName}
         label={archived ? 'Unarchive' : 'Archive'}
+        icon={archived ? 'archive-restore' : 'archive'}
       />
       {canDelete ? (
         <Step
           action={deleteRegistrationAction}
           formId={formId}
           registrationId={registrationId}
+          camperName={camperName}
           label="Delete"
+          icon="trash"
           confirmLabel="Confirm delete"
           warning="Deleting erases this registration and all its answers. This cannot be undone. A confirmed registration with enrolments must be withdrawn first."
           danger

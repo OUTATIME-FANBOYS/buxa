@@ -37,19 +37,21 @@ function PlaceList({ formId, places }: { formId: string; places: readonly Regist
         const paid = place.paymentStatus === 'paid';
 
         return (
-          <li key={place.id}>
-            <span>
-              {place.camperName}, {place.className}
-            </span>{' '}
-            <Pill tone={status.tone}>{status.label}</Pill>{' '}
-            {place.price ? (
-              <span className="muted">
-                {formatMoney(place.price.amountMinor, place.price.currency)}
-                {place.price.earlyBird ? ' early bird' : ''}
+          <li key={place.id} className="registration-place">
+            <div className="registration-place__line">
+              <span>
+                {place.camperName}, {place.className}
               </span>
-            ) : null}{' '}
-            <Pill tone={paid ? 'ok' : 'neutral'}>{paid ? 'Paid' : 'Unpaid'}</Pill>
-            {paid && place.paymentNote ? <span className="muted"> {place.paymentNote}</span> : null}
+              <Pill tone={status.tone}>{status.label}</Pill>
+              <Pill tone={paid ? 'ok' : 'neutral'}>{paid ? 'Paid' : 'Unpaid'}</Pill>
+              {place.price ? (
+                <span className="muted">
+                  {formatMoney(place.price.amountMinor, place.price.currency)}
+                  {place.price.earlyBird ? ' early bird' : ''}
+                </span>
+              ) : null}
+              {paid && place.paymentNote ? <span className="muted">{place.paymentNote}</span> : null}
+            </div>
             {place.status === 'cancelled' ? null : (
               <RecordPayment formId={formId} registrationClassId={place.id} paid={paid} />
             )}
@@ -89,10 +91,10 @@ function StatusCell({ formId, row }: { formId: string; row: RegistrationRow }) {
   }
 
   return (
-    <>
+    <div className="registration-status">
       <Pill tone="warn">Pending</Pill>
       <ConfirmRegistration formId={formId} registrationId={row.id} />
-    </>
+    </div>
   );
 }
 
@@ -141,7 +143,7 @@ function RegistrationsTable({
                 <PlaceList formId={formId} places={placesOf(row)} />
               </td>
               <td>
-                <details>
+                <details className="registration-disclosure">
                   <summary>Answers, version {row.formVersion}</summary>
                   <dl className="registration-answers">
                     {answerRows(row, fields).map(item => (
@@ -158,6 +160,7 @@ function RegistrationsTable({
                 <RegistrationActions
                   formId={formId}
                   registrationId={row.id}
+                  camperName={`${row.standard.camperFirstName} ${row.standard.camperLastName}`}
                   status={row.status}
                   archived={row.archivedAt !== null}
                   canDelete={canDelete}

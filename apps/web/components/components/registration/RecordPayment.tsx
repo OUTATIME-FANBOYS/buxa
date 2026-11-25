@@ -28,6 +28,7 @@ export function RecordPayment({
       <input type="hidden" name="paid" value={paid ? 'no' : 'yes'} />
       {paid ? null : (
         <TextField
+          className="registration-payment__note"
           label="How it was paid"
           name="note"
           isRequired

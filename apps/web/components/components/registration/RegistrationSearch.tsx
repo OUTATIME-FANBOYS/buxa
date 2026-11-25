@@ -100,6 +100,7 @@ export function RegistrationSearch({
                     <RegistrationActions
                       formId={row.formId}
                       registrationId={row.registrationId}
+                      camperName={row.camperName}
                       status={row.status}
                       archived={row.archived}
                       canDelete={canDelete}
