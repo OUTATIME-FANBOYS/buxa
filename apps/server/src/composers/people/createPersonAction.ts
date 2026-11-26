@@ -16,8 +16,8 @@ import {
 import { expectedFailure, NO_CAMP } from './failures';
 import { dropBlank, field, fieldAll, parseWith } from '@buxa/shared';
 
-/** Blank phone is kept, so the schema's phone message is the one shown (a phone is required on add). */
-const OPTIONAL = ['dateOfBirth', 'email', 'householdId', 'relationship'] as const;
+/** Blank phone and date of birth are kept, so the schema's own messages are the ones shown (both are required on add). */
+const OPTIONAL = ['email', 'householdId', 'relationship'] as const;
 
 /**
  * The emergency contact's form fields are named apart from the person's own (`phone` is the person's). The schema reports its
@@ -64,15 +64,6 @@ export async function createPersonAction(_previous: ActionState, form: FormData)
     return parsed.state;
   }
   const input = parsed.data;
-
-  // A camper needs a date of birth. The phone is required by the schema for every person added.
-  const missing: Record<string, string> = {};
-  if (input.roles.includes('camper') && !input.dateOfBirth) {
-    missing.dateOfBirth = 'Enter the date of birth.';
-  }
-  if (Object.keys(missing).length > 0) {
-    return failure('Check the highlighted fields.', missing);
-  }
 
   if (input.householdId && newHouseholdName) {
     return failure('Check the highlighted fields.', { householdId: CHOOSE_ONE_HOUSEHOLD });

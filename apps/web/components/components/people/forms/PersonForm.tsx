@@ -52,8 +52,7 @@ interface PersonFormCommon {
  *
  * The person's details are first name and last name, then date of birth beside the phone. A camper's section is headed Camper details;
  * for any other role the heading is for screen readers only. A family role (a camper or a parent or guardian) shows the Parent or
- * guardian section: the household email and the household. Adding a person requires a phone; adding a camper also requires a date of
- * birth. Email is optional, but one that is typed must be a valid address. The emergency contact is not entered here: it is on the
+ * guardian section: the household email and the household. Date of birth and phone are required, on add and on edit. Email is optional, but one that is typed must be a valid address. The emergency contact is not entered here: it is on the
  * person's page.
  */
 export type PersonFormProps = PersonFormCommon &
@@ -112,17 +111,9 @@ export function PersonForm(props: PersonFormProps) {
   const camper = roles.has('camper');
   const hasFamilyRole = selectedRoles.some(isFamilyRole);
   const showParent = hasFamilyRole;
-  // When a person is added, the phone is required for every role and a camper's date of birth too. Editing does not require either.
-  const dateOfBirthRequired = !isEdit && camper;
-  const phoneRequired = !isEdit;
-  const phoneProblem = (value: string): string | undefined => {
-    const trimmed = value.trim();
-    if (trimmed === '') {
-      return phoneRequired ? PHONE_NUMBER_MESSAGE : undefined;
-    }
-
-    return isValidPhone(trimmed) ? undefined : PHONE_NUMBER_MESSAGE;
-  };
+  // Date of birth and phone are required for every person, on add and on edit: a blank one gets its message.
+  const phoneProblem = (value: string): string | undefined =>
+    isValidPhone(value.trim()) ? undefined : PHONE_NUMBER_MESSAGE;
   const emailProblem = (value: string): string | undefined => {
     const trimmed = value.trim();
 
@@ -208,7 +199,7 @@ export function PersonForm(props: PersonFormProps) {
       name="phone"
       defaultValue={person?.phone ?? undefined}
       error={problems.phone ?? err('phone')}
-      isRequired={phoneRequired}
+      isRequired
       inputProps={{
         onBlur: event => setProblems(current => ({ ...current, phone: phoneProblem(event.currentTarget.value) })),
       }}
@@ -218,15 +209,13 @@ export function PersonForm(props: PersonFormProps) {
   );
 
   // The hint sits under the whole row, so a taller hint never pushes the phone field away from the date field.
-  const dateOfBirthHint = isEdit
-    ? 'Only used to tell whether someone is under 18. Leave blank to clear it.'
-    : 'Only used to tell whether someone is under 18.';
+  const dateOfBirthHint = 'Only used to tell whether someone is under 18.';
 
   const dateOfBirthField = (
     <DatePicker
       label="Date of birth"
       name="dateOfBirth"
-      isRequired={dateOfBirthRequired}
+      isRequired
       defaultValue={person ? (person.dateOfBirth ?? null) : undefined}
       error={err('dateOfBirth')}
     />

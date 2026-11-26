@@ -6,7 +6,6 @@ import {
   isPlausiblePhone,
   isValidPhone,
   OptionalEmailSchema,
-  PatchPhoneSchema,
   PersonPhoneSchema,
 } from './contact';
 import { NewPersonFormSchema, NewPersonInputSchema, PersonPatchInputSchema } from './people';
@@ -89,7 +88,7 @@ describe('shared schemas used by people', () => {
   });
 
   it('add person form: a bad email or phone is refused with its field message, and a good pair is accepted', () => {
-    const base = { givenName: 'Ada', familyName: 'Lovelace', roles: ['camper'] };
+    const base = { givenName: 'Ada', familyName: 'Lovelace', roles: ['camper'], dateOfBirth: '2012-06-15' };
     const badEmail = NewPersonFormSchema.safeParse({ ...base, email: 'ada@example', phone: '0400 000 000' });
     expect(badEmail.success).toBe(false);
     expect(badEmail.error?.issues.map(issue => issue.message)).toContain(EMAIL_MESSAGE);
@@ -103,16 +102,17 @@ describe('shared schemas used by people', () => {
   });
 
   it('service input: the phone is optional there, but a phone that is given must be valid', () => {
-    const base = { givenName: 'Ada', familyName: 'Lovelace', roles: ['camper'] };
+    const base = { givenName: 'Ada', familyName: 'Lovelace', roles: ['camper'], dateOfBirth: '2012-06-15' };
     expect(NewPersonInputSchema.safeParse(base).success).toBe(true);
     expect(NewPersonInputSchema.safeParse({ ...base, phone: 'call me' }).success).toBe(false);
   });
 
-  it('patch: a blank phone or email is passed on unchanged; a non-empty bad value is refused with its message', () => {
+  it('patch: a blank email is passed on unchanged; a blank or bad phone or date is refused with its message', () => {
     expect(PersonPatchInputSchema.parse({ email: '' })).toEqual({ email: '' });
-    expect(PersonPatchInputSchema.parse({ email: null, phone: null })).toEqual({ email: null, phone: null });
-    expect(PersonPatchInputSchema.parse({ phone: '' })).toEqual({ phone: '' });
-    expect(PatchPhoneSchema.safeParse('nope').error?.issues[0]?.message).toBe(PHONE_NUMBER_MESSAGE);
+    expect(PersonPatchInputSchema.parse({ email: null })).toEqual({ email: null });
+    expect(PersonPatchInputSchema.safeParse({ phone: '' }).success).toBe(false);
+    expect(PersonPatchInputSchema.safeParse({ dateOfBirth: '' }).success).toBe(false);
+    expect(PersonPatchInputSchema.safeParse({ phone: '' }).error?.issues[0]?.message).toBe(PHONE_NUMBER_MESSAGE);
     expect(PersonPatchInputSchema.safeParse({ email: 'nope' }).success).toBe(false);
     expect(PersonPatchInputSchema.safeParse({ phone: 'nope' }).success).toBe(false);
   });

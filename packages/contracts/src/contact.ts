@@ -76,12 +76,6 @@ export const OptionalPhoneSchema = z
   .transform(v => (v === '' ? undefined : v))
   .optional();
 
-/** Optional on edit: an empty value is passed on unchanged (a blank clears the phone, as before); anything else must be valid. */
-export const PatchPhoneSchema = z
-  .string()
-  .trim()
-  .refine(v => v === '' || isValidPhone(v), PHONE_NUMBER_MESSAGE);
-
 /** Optional on add: an empty value means "none" and becomes undefined. */
 export const OptionalEmailSchema = z
   .string()

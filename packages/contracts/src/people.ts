@@ -6,7 +6,6 @@ import {
   OptionalPhoneSchema,
   PHONE_MESSAGE,
   PatchEmailSchema,
-  PatchPhoneSchema,
   PersonPhoneSchema,
   isPlausiblePhone,
 } from './contact';
@@ -147,18 +146,25 @@ export const NewPersonInputSchema = z.object({
 });
 export type NewPersonInput = z.infer<typeof NewPersonInputSchema>;
 
-/** The Add person form's input: the same fields, with a phone number required (every person added has one). */
-export const NewPersonFormSchema = NewPersonInputSchema.extend({ phone: PersonPhoneSchema });
+/** A date of birth the Add and Edit person forms require: blank gets its own message, then a real date is checked. */
+const RequiredDateOfBirthSchema = z
+  .string()
+  .min(1, 'Enter the date of birth.')
+  .refine(isLocalDate, 'Use a real date (YYYY-MM-DD).');
+
+/** The Add person form's input: the same fields, with a phone number and a date of birth required (every person has both). */
+export const NewPersonFormSchema = NewPersonInputSchema.extend({
+  phone: PersonPhoneSchema,
+  dateOfBirth: RequiredDateOfBirthSchema,
+});
 
 export const PersonPatchInputSchema = z.object({
   givenName: Name.optional(),
   familyName: Name.optional(),
-  dateOfBirth: LocalDateSchema.nullable().optional(),
+  /** Required on edit too: a blank date or phone is refused, the same as on add. */
+  dateOfBirth: RequiredDateOfBirthSchema.optional(),
   email: PatchEmailSchema.nullable().optional(),
-  // A blank phone on edit clears it: the column holds a valid phone or no phone at all, never an empty string.
-  phone: PatchPhoneSchema.transform(v => (v === '' ? null : v))
-    .nullable()
-    .optional(),
+  phone: PersonPhoneSchema.optional(),
   roles: AllowedRoleSet(z.array(CampRoleSchema).min(1, 'Pick a role.')).optional(),
 });
 export type PersonPatchInput = z.infer<typeof PersonPatchInputSchema>;
