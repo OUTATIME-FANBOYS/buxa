@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { InviteTeacherInputSchema } from '@buxa/contracts';
 import { Button, Field } from '@/components/elements';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { createTeacherInviteAction } from '@/actions/invites';
@@ -9,6 +10,17 @@ export interface PersonInviteDetails {
   name: string;
   email: string;
   phone: string;
+  dateOfBirth: string;
+}
+
+/**
+ * The first message the invite contract gives for these details, or undefined when they are all valid. It is the server's schema, so
+ * the words are the person form's: a blank phone or date of birth gets the same message as on the person form.
+ */
+export function inviteProblem(details: PersonInviteDetails): string | undefined {
+  const checked = InviteTeacherInputSchema.safeParse(details);
+
+  return checked.success ? undefined : (checked.error.issues[0]?.message ?? 'Check the invite details.');
 }
 
 /** The person's name, email and phone as the form holds them now. The invite is sent with what is typed. */
@@ -24,6 +36,7 @@ export function personInviteDetails(form: HTMLFormElement | null): PersonInviteD
     name: `${field('givenName')} ${field('familyName')}`.trim(),
     email: field('email'),
     phone: field('phone'),
+    dateOfBirth: field('dateOfBirth'),
   };
 }
 
@@ -52,10 +65,18 @@ export function PersonInvite({
   const { toast } = useUi();
 
   const send = async () => {
+    const details = readDetails();
+    // The details are checked here first, so a missing phone or date of birth is named without a round trip.
+    const problem = inviteProblem(details);
+    if (problem) {
+      setMessage(problem);
+
+      return;
+    }
     setPending(true);
     setMessage(null);
     try {
-      const result = await createTeacherInviteAction(readDetails());
+      const result = await createTeacherInviteAction(details);
       if (result.status === 'sent') {
         setSent({ email: result.email, link: result.link });
         setCopied(false);
