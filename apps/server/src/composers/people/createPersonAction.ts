@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { EmergencyContactInputSchema, NewPersonInputSchema, NewHouseholdInputSchema } from '@buxa/contracts';
+import { EmergencyContactInputSchema, NewPersonFormSchema, NewHouseholdInputSchema } from '@buxa/contracts';
 import { ROUTES, personPath } from '@buxa/shared/config/routes';
 import { failure, success, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../runtime';
@@ -16,7 +16,8 @@ import {
 import { expectedFailure, NO_CAMP } from './failures';
 import { dropBlank, field, fieldAll, parseWith } from '@buxa/shared';
 
-const OPTIONAL = ['dateOfBirth', 'email', 'phone', 'householdId', 'relationship'] as const;
+/** Blank phone is kept, so the schema's phone message is the one shown (a phone is required on add). */
+const OPTIONAL = ['dateOfBirth', 'email', 'householdId', 'relationship'] as const;
 
 /**
  * The emergency contact's form fields are named apart from the person's own (`phone` is the person's). The schema reports its
@@ -58,20 +59,16 @@ export async function createPersonAction(_previous: ActionState, form: FormData)
     },
     OPTIONAL,
   );
-  const parsed = parseWith(NewPersonInputSchema, posted);
+  const parsed = parseWith(NewPersonFormSchema, posted);
   if (!parsed.ok) {
     return parsed.state;
   }
   const input = parsed.data;
 
-  // A camper needs a date of birth; a family member (a camper, or a parent or guardian) needs a phone number.
-  const family = input.roles.some(role => role === 'camper' || role === 'guardian');
+  // A camper needs a date of birth. The phone is required by the schema for every person added.
   const missing: Record<string, string> = {};
   if (input.roles.includes('camper') && !input.dateOfBirth) {
     missing.dateOfBirth = 'Enter the date of birth.';
-  }
-  if (family && !input.phone) {
-    missing.phone = 'Enter a phone number.';
   }
   if (Object.keys(missing).length > 0) {
     return failure('Check the highlighted fields.', missing);
