@@ -21,13 +21,11 @@ describe('the Assign page layout', () => {
   });
 
   it('lets each column grow with the page, with no fixed height and no inner scroll', () => {
-    const groups = ruleFor('.assign-layout__groups');
-    const unplaced = ruleFor('.assign-layout__unplaced');
+    // The two columns share one selector list in the stylesheet, so one rule holds both.
+    const columns = ruleFor('.assign-layout__groups, .assign-layout__unplaced');
 
-    expect(classes).toContain('.assign-layout__groups,');
-    expect(groups).toContain('min-width: 0;');
-    expect(unplaced).toContain('min-width: 0;');
-    expect(`${groups}${unplaced}`).not.toMatch(/height|overflow/);
+    expect(columns).toContain('min-width: 0;');
+    expect(columns).not.toMatch(/height|overflow/);
   });
 
   it('stacks the two columns into one at the phone breakpoint the stylesheet already uses', () => {

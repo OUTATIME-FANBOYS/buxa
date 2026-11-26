@@ -10,4 +10,5 @@ export * from './LinkHouseholdForm';
 export * from './PersonFinder';
 export * from './PersonForm';
 export * from './RevokeMembershipForm';
+export * from './roleGroups';
 export * from './UnlinkButton';

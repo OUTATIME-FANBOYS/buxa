@@ -19,8 +19,15 @@ export async function notifyForAudit(db: Pick<PoolClient, 'query'>, event: Notif
   if (!rule) {
     return;
   }
-  const members = await db.query<{ user_id: string; role: Role }>(
-    'SELECT user_id, role FROM org_members WHERE org_id = $1',
+  // Each member's instructor flag decides the teaching view, so a teacher gets only what the teaching view may see (docs/ROLES.md).
+  const members = await db.query<{ user_id: string; role: Role; instructor: boolean }>(
+    `SELECT om.user_id, om.role,
+            EXISTS (
+              SELECT 1 FROM people p JOIN person_roles r ON r.org_id = p.org_id AND r.person_id = p.id
+               WHERE p.org_id = om.org_id AND p.user_id = om.user_id AND r.role = 'instructor'
+            ) AS instructor
+       FROM org_members om
+      WHERE om.org_id = $1`,
     [event.orgId],
   );
   // A class's teachers are the logins linked to its instructors (people.user_id, migration 0051).
@@ -34,7 +41,7 @@ export async function notifyForAudit(db: Pick<PoolClient, 'query'>, event: Notif
     : null;
   const recipients = recipientsFor(
     rule,
-    members.rows.map(row => ({ userId: row.user_id, role: row.role })),
+    members.rows.map(row => ({ userId: row.user_id, role: row.role, instructor: row.instructor })),
     event.actorUserId,
     new Set((teachers?.rows ?? []).map(row => row.user_id)),
     event.orgId,

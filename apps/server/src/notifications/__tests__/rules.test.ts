@@ -23,7 +23,7 @@ const members: MemberRole[] = [
   { userId: 'owner', role: 'owner' },
   { userId: 'admin', role: 'admin' },
   { userId: 'staff', role: 'staff' },
-  { userId: 'teacher', role: 'viewer' },
+  { userId: 'teacher', role: 'viewer', instructor: true },
   { userId: 'viewer', role: 'viewer' },
 ];
 const none = new Set<string>();

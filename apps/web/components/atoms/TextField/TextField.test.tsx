@@ -31,14 +31,14 @@ describe('TextField: read only', () => {
   it('marks a read-only field with the read-only class and the readonly attribute, and keeps its value to submit', () => {
     const html = renderToStaticMarkup(<TextField {...base} isReadOnly />);
     expect(html).toMatch(/class="[^"]*field-readonly[^"]*"/);
-    expect(html).toContain('readonly=""');
+    expect(html).toMatch(/ readonly=""/i); // React writes readOnly, in any case: HTML attributes are case-insensitive
     expect(html).toContain('name="name"');
     expect(html).toContain('value="Lake"');
   });
   it('leaves an editable field without the read-only class', () => {
     const html = renderToStaticMarkup(<TextField {...base} />);
     expect(html).not.toContain('field-readonly');
-    expect(html).not.toContain('readonly=""');
+    expect(html).not.toMatch(/readonly=""/i);
   });
   it('does not mark a disabled field as read only', () => {
     const html = renderToStaticMarkup(<TextField {...base} isDisabled />);

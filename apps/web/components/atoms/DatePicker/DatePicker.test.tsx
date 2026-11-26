@@ -8,7 +8,7 @@ describe('DatePicker: read only', () => {
       <DatePicker label="Date of birth" name="standard.camperBirthDate" value="2014-03-09" isReadOnly />,
     );
     expect(html).toMatch(/class="[^"]*field-readonly[^"]*"/);
-    expect(html).toContain('readonly=""');
+    expect(html).toMatch(/ readonly=""/i); // React writes readOnly, in any case: HTML attributes are case-insensitive
     expect(html).toContain('name="standard.camperBirthDate"');
     expect(html).toContain('value="2014-03-09"');
   });
@@ -16,6 +16,6 @@ describe('DatePicker: read only', () => {
   it('leaves an editable date without the read-only class', () => {
     const html = renderToStaticMarkup(<DatePicker label="Date of birth" name="dob" value="2014-03-09" />);
     expect(html).not.toContain('field-readonly');
-    expect(html).not.toContain('readonly=""');
+    expect(html).not.toMatch(/readonly=""/i);
   });
 });

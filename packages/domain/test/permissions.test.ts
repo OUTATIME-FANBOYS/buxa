@@ -12,7 +12,8 @@ import {
   type Role,
 } from '../src';
 
-const ROLES = ORG_ACCESS_KEYS;
+// ORG_ACCESS_KEYS is highest first (owner, admin, staff, viewer). The matrix columns below read lowest first, so flip the order.
+const ROLES: readonly Role[] = [...ORG_ACCESS_KEYS].reverse();
 const ORG = 'org-1';
 const as = (role: Role, userId = 'me'): Actor => ({ userId, orgId: ORG, role });
 
@@ -84,6 +85,7 @@ describe('role grants', () => {
   }
 
   it('a higher role never has fewer grants than a lower one (the ladder; teacher is outside it)', () => {
+    // Lowest first: each role's grants are a subset of the next role up.
     const ladder = ROLES;
     for (let i = 1; i < ladder.length; i++) {
       for (const a of GRANTS[ladder[i - 1]]) {

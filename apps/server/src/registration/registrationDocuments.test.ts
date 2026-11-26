@@ -88,10 +88,13 @@ async function publishedForm(service: RegistrationService) {
   return form;
 }
 
+// A posted camper name and date of birth must match the person on file (standardAnswers), so Ben gets his own.
+const BEN_STANDARD = { ...standard, camperFirstName: 'Ben', camperLastName: 'Carrow', camperBirthDate: '2013-05-01' };
+
 const submission = (formId: string, camperId: string) => ({
   formId,
   selections: [{ camperId, classId: CLASS_A }],
-  standard,
+  standard: camperId === CAMPER_BEN ? BEN_STANDARD : standard,
   custom: { photos: 'yes' },
 });
 

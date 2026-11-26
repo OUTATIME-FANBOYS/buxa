@@ -49,6 +49,10 @@ const repositories = vi.hoisted(() => ({
   people: {
     getMany: vi.fn((): Promise<{ id: string; dateOfBirth: string | null; roles: string[] }[]> => settle(() => [])),
   },
+  users: {
+    isInstructorIn: vi.fn((): Promise<boolean> => settle(() => false)),
+    memberOptionsOf: vi.fn((): Promise<string[]> => settle(() => [])),
+  },
 }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services, repositories }) }));
 vi.mock('../../../session', () => ({

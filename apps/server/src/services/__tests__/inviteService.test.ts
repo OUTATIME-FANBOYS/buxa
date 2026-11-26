@@ -114,7 +114,7 @@ describe('teacher invites: what is stored', () => {
         orgId: ORG,
         actorId: 'user-staff',
         entityId: issued.invite.id,
-        data: { role: 'teacher' },
+        data: { role: 'viewer' },
       },
     ]);
   });
@@ -130,7 +130,7 @@ describe('teacher invites: accepting', () => {
     const joined = await service.acceptInvite(ann, issued.token, profile);
 
     expect(joined).toEqual({ orgId: ORG, orgName: 'Camp Pine' });
-    expect(repo.joins).toEqual([{ orgId: ORG, userId: 'user-ann', role: 'teacher' }]);
+    expect(repo.joins).toEqual([{ orgId: ORG, userId: 'user-ann', role: 'viewer' }]);
     expect([...repo.profiles.keys()].sort()).toEqual(['user-ann', 'user-other']);
     expect(repo.profiles.get('user-ann')).toEqual(profile);
     expect(repo.profiles.get('user-other')).toEqual({ firstName: 'Bo', lastName: null, phone: null });
