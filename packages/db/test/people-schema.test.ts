@@ -41,13 +41,13 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
     return withOrg(pool, user, org, async db => {
       const person = (
         await db.query<{ id: string }>(
-          `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, $2, 'Test') RETURNING id`,
+          `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, $2, 'Test', '1985-06-15', '+1 555 0100') RETURNING id`,
           [org, label],
         )
       ).rows[0].id;
       const guardian = (
         await db.query<{ id: string }>(
-          `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Guardian', $2) RETURNING id`,
+          `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'Guardian', $2, '1985-06-15', '+1 555 0100') RETURNING id`,
           [org, label],
         )
       ).rows[0].id;
@@ -137,7 +137,10 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
     it('org A cannot insert into org B on any tenant table', async () => {
       await expect(
         withOrg(pool, userA, orgA, db =>
-          db.query(`INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'X', 'Y')`, [orgB]),
+          db.query(
+            `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'X', 'Y', '1985-06-15', '+1 555 0100')`,
+            [orgB],
+          ),
         ),
       ).rejects.toThrow(/row-level security/);
       await expect(
@@ -357,7 +360,12 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
 
     it('names and roles are checked', async () => {
       await expect(
-        asA(db => db.query(`INSERT INTO people (org_id, given_name, family_name) VALUES ($1, '  ', 'Y')`, [orgA])),
+        asA(db =>
+          db.query(
+            `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, '  ', 'Y', '1985-06-15', '+1 555 0100')`,
+            [orgA],
+          ),
+        ),
       ).rejects.toMatchObject({ code: '23514' });
       await expect(
         asA(db =>
@@ -417,7 +425,7 @@ describe.skipIf(!url)('phase 1 schema: isolation, constraints and grants', () =>
       const id = (
         await withOrg(pool, userA, orgA, db =>
           db.query<{ id: string }>(
-            `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'José', 'García') RETURNING id`,
+            `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'José', 'García', '1985-06-15', '+1 555 0100') RETURNING id`,
             [orgA],
           ),
         )

@@ -48,7 +48,7 @@ describe.skipIf(!url)('teacher calendar feed on Postgres', () => {
       linked.rows[0]?.id ??
       (
         await pool.query<{ id: string }>(
-          `INSERT INTO people (org_id, given_name, family_name, user_id) VALUES ($1, 'Tess', 'Teacher', $2) RETURNING id`,
+          `INSERT INTO people (org_id, given_name, family_name, user_id, date_of_birth, phone) VALUES ($1, 'Tess', 'Teacher', $2, '1985-06-15', '+1 555 0100') RETURNING id`,
           [orgId, userId],
         )
       ).rows[0].id;

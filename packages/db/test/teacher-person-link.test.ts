@@ -47,13 +47,13 @@ describe.skipIf(!url)('teacher login linked to a roster person (row-level securi
     ]);
     personA = (
       await pool.query<{ id: string }>(
-        `INSERT INTO people(org_id, given_name, family_name, email, user_id) VALUES ($1, 'Tina', 'Teacher', $2, $3) RETURNING id`,
+        `INSERT INTO people(org_id, given_name, family_name, email, user_id, date_of_birth, phone) VALUES ($1, 'Tina', 'Teacher', $2, $3, '1985-06-15', '+1 555 0100') RETURNING id`,
         [campA, `tina-${tag}@t.test`, teacherA],
       )
     ).rows[0].id;
     otherPersonA = (
       await pool.query<{ id: string }>(
-        `INSERT INTO people(org_id, given_name, family_name, email) VALUES ($1, 'Other', 'Person', $2) RETURNING id`,
+        `INSERT INTO people(org_id, given_name, family_name, email, date_of_birth, phone) VALUES ($1, 'Other', 'Person', $2, '1985-06-15', '+1 555 0100') RETURNING id`,
         [campA, `other-${tag}@t.test`],
       )
     ).rows[0].id;
@@ -83,7 +83,7 @@ describe.skipIf(!url)('teacher login linked to a roster person (row-level securi
     ownerB = await memberOf(pool, campB);
     const personB = (
       await pool.query<{ id: string }>(
-        `INSERT INTO people(org_id, given_name, family_name, email, user_id) VALUES ($1, 'Bea', 'Bee', $2, $3) RETURNING id`,
+        `INSERT INTO people(org_id, given_name, family_name, email, user_id, date_of_birth, phone) VALUES ($1, 'Bea', 'Bee', $2, $3, '1985-06-15', '+1 555 0100') RETURNING id`,
         [campB, `bea-${tag}@t.test`, teacherB],
       )
     ).rows[0].id;

@@ -52,10 +52,10 @@ describe.skipIf(!url)('PgUserRepository.renameMember audit', () => {
       await orgs.createWithOwner({ name: 'Other camp', slug: `rename-other-${tag}`, timezone: 'UTC' }, ownerId)
     ).id;
     await pool.query(`INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'viewer')`, [campId, targetId]);
-    await pool.query(`INSERT INTO people (org_id, given_name, family_name, user_id) VALUES ($1, 'Old', 'Name', $2)`, [
-      campId,
-      targetId,
-    ]);
+    await pool.query(
+      `INSERT INTO people (org_id, given_name, family_name, user_id, date_of_birth, phone) VALUES ($1, 'Old', 'Name', $2, '1985-06-15', '+1 555 0100')`,
+      [campId, targetId],
+    );
   });
 
   afterAll(async () => {

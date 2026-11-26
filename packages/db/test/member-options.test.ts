@@ -54,7 +54,7 @@ describe.skipIf(!url)('member options (row-level security)', () => {
       [campB, teacherB],
     ]) {
       const { rows } = await pool.query<{ id: string }>(
-        `INSERT INTO people (org_id, given_name, family_name, user_id) VALUES ($1, 'Tess', 'Teacher', $2) RETURNING id`,
+        `INSERT INTO people (org_id, given_name, family_name, user_id, date_of_birth, phone) VALUES ($1, 'Tess', 'Teacher', $2, '1985-06-15', '+1 555 0100') RETURNING id`,
         [orgId, userId],
       );
       await pool.query(`INSERT INTO person_roles (org_id, person_id, role) VALUES ($1, $2, 'instructor')`, [

@@ -13,7 +13,7 @@ export async function householdWithChild(
   );
   const householdId = household.rows[0].id;
   const person = await db.query<{ id: string }>(
-    `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Child', $2) RETURNING id`,
+    `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'Child', $2, '2012-06-15', '+1 555 0100') RETURNING id`,
     [orgId, name],
   );
   const personId = person.rows[0].id;
@@ -28,7 +28,7 @@ export async function householdWithChild(
 /** A further child in an existing household (a sibling). */
 export async function addSibling(db: Db, orgId: string, householdId: string, name: string): Promise<string> {
   const person = await db.query<{ id: string }>(
-    `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, $2, 'Sibling') RETURNING id`,
+    `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, $2, 'Sibling', '2012-06-15', '+1 555 0100') RETURNING id`,
     [orgId, name],
   );
   await db.query(

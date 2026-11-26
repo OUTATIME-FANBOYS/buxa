@@ -68,7 +68,7 @@ describe.skipIf(!url)('role-aware policies (migrations 0057 and 0058)', () => {
     );
     personId = (
       await pool.query<{ id: string }>(
-        `INSERT INTO people (org_id, given_name, family_name, email) VALUES ($1, 'Pat', 'Self', $2) RETURNING id`,
+        `INSERT INTO people (org_id, given_name, family_name, email, date_of_birth, phone) VALUES ($1, 'Pat', 'Self', $2, '1985-06-15', '+1 555 0100') RETURNING id`,
         [camp, personEmail],
       )
     ).rows[0].id;
@@ -181,7 +181,7 @@ describe.skipIf(!url)('role-aware policies (migrations 0057 and 0058)', () => {
       );
       childId = (
         await pool.query<{ id: string }>(
-          `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Kid', 'Self') RETURNING id`,
+          `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'Kid', 'Self', '2012-06-15', '+1 555 0100') RETURNING id`,
           [camp],
         )
       ).rows[0].id;
@@ -193,7 +193,7 @@ describe.skipIf(!url)('role-aware policies (migrations 0057 and 0058)', () => {
       const guardianEmail = `guardian-${tag}@roster.test`;
       const guardianPerson = (
         await pool.query<{ id: string }>(
-          `INSERT INTO people (org_id, given_name, family_name, email) VALUES ($1, 'Gus', 'Guardian', $2) RETURNING id`,
+          `INSERT INTO people (org_id, given_name, family_name, email, date_of_birth, phone) VALUES ($1, 'Gus', 'Guardian', $2, '1985-06-15', '+1 555 0100') RETURNING id`,
           [camp, guardianEmail],
         )
       ).rows[0].id;
@@ -369,7 +369,7 @@ describe.skipIf(!url)('role-aware policies (migrations 0057 and 0058)', () => {
       const person = async (org: string): Promise<string> =>
         (
           await pool.query<{ id: string }>(
-            `INSERT INTO people (org_id, given_name, family_name, user_id) VALUES ($1, 'Old', 'Name', $2) RETURNING id`,
+            `INSERT INTO people (org_id, given_name, family_name, user_id, date_of_birth, phone) VALUES ($1, 'Old', 'Name', $2, '1985-06-15', '+1 555 0100') RETURNING id`,
             [org, target],
           )
         ).rows[0].id;

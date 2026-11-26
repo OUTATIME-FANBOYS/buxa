@@ -45,7 +45,7 @@ describe.skipIf(!url)('groups, rooms and assignments: isolation and constraints'
       otherSessionA = otherClassId;
       personA = (
         await db.query<{ id: string }>(
-          `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Ada', 'L') RETURNING id`,
+          `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'Ada', 'L', '1985-06-15', '+1 555 0100') RETURNING id`,
           [orgA],
         )
       ).rows[0].id;
