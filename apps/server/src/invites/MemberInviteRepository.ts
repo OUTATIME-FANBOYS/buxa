@@ -5,7 +5,10 @@ export interface InviteRecord {
   id: string;
   email: string;
   name: string;
+  /** Null for an invite made before the phone was required. */
   phone: string | null;
+  /** A local date (YYYY-MM-DD). Null for an invite made before the date of birth was required: it shows as nothing. */
+  dateOfBirth: string | null;
   createdAt: string;
   expiresAt: string;
 }
@@ -13,7 +16,9 @@ export interface InviteRecord {
 export interface NewInvite {
   email: string;
   name: string;
-  phone: string | null;
+  phone: string;
+  /** A local date (YYYY-MM-DD). The invite carries it to the person row the join creates. */
+  dateOfBirth: string;
 }
 
 /** The signed-in person who is joining. Only their id is used for the database; the email is compared in the database. */

@@ -147,7 +147,7 @@ export const NewPersonInputSchema = z.object({
 export type NewPersonInput = z.infer<typeof NewPersonInputSchema>;
 
 /** A date of birth the Add and Edit person forms require: blank gets its own message, then a real date is checked. */
-const RequiredDateOfBirthSchema = z
+export const RequiredDateOfBirthSchema = z
   .string()
   .min(1, 'Enter the date of birth.')
   .refine(isLocalDate, 'Use a real date (YYYY-MM-DD).');

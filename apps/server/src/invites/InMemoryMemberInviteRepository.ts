@@ -42,6 +42,7 @@ export class InMemoryMemberInviteRepository implements MemberInviteRepository {
       email: invite.email,
       name: invite.name,
       phone: invite.phone,
+      dateOfBirth: invite.dateOfBirth,
       createdAt: createdAt.toISOString(),
       expiresAt: new Date(createdAt.getTime() + INVITE_DAYS * DAY_MS).toISOString(),
       tokenHash,
@@ -145,6 +146,7 @@ const toRecord = (i: StoredInvite): InviteRecord => ({
   email: i.email,
   name: i.name,
   phone: i.phone,
+  dateOfBirth: i.dateOfBirth,
   createdAt: i.createdAt,
   expiresAt: i.expiresAt,
 });

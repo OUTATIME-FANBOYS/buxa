@@ -25,15 +25,25 @@ export async function createTeacherInviteAction(input: {
   name: string;
   email: string;
   phone: string;
+  dateOfBirth: string;
 }): Promise<InviteSendResult> {
   const context = await findCampContext();
   if (!context) {
     return NOT_IN_CAMP;
   }
-  const parsed = parseInput(InviteTeacherInputSchema, { name: input.name, email: input.email, phone: input.phone });
+  const parsed = parseInput(InviteTeacherInputSchema, {
+    name: input.name,
+    email: input.email,
+    phone: input.phone,
+    dateOfBirth: input.dateOfBirth,
+  });
   if (!parsed.ok) {
     return parsed.state.status === 'error'
-      ? { status: 'error', message: parsed.state.message, fieldErrors: parsed.state.fieldErrors }
+      ? {
+          status: 'error',
+          message: firstFieldMessage(parsed.state) ?? parsed.state.message,
+          fieldErrors: parsed.state.fieldErrors,
+        }
       : { status: 'error', message: 'Check the highlighted fields.' };
   }
 
@@ -67,6 +77,11 @@ export async function resendTeacherInviteAction(inviteId: string): Promise<Invit
 /** The full link: the request's origin plus /invite/<token>. Built only here, for the one response that shows it. */
 async function linkFor(token: string): Promise<string> {
   return `${await requestOrigin()}${invitePath(token)}`;
+}
+
+/** The first field's message, so the pop-up can say what is missing (the person form shows the same words under each field). */
+function firstFieldMessage(state: { fieldErrors?: Record<string, string | undefined> }): string | undefined {
+  return Object.values(state.fieldErrors ?? {}).find(message => message !== undefined);
 }
 
 function failureFrom(error: unknown, fallback: string): InviteSendResult {
