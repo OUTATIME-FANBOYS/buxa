@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CAMPER_BIRTH_DATE_MISSING,
   CAMPER_DETAILS_ON_PERSON,
+  PARENT_DETAILS_ON_PERSON,
   parentOnFile,
   splitName,
   standardAnswers,
@@ -17,7 +18,9 @@ const CAMPER: CamperRecord = {
   parent: null,
 };
 
-const ON_FILE = { name: 'Byron Lovelace', email: 'byron@example.test', phone: '555-0100' };
+const ON_FILE = { name: 'Byron Lovelace', email: 'byron@example.test', phone: '555-0100', dateOfBirth: '1979-11-02' };
+/** A parent on file (a phone recorded) with no date of birth: the form asks for it. */
+const ON_FILE_NO_BIRTH = { ...ON_FILE, dateOfBirth: null };
 
 /** What the form posts for a child whose parent is not on file yet: the camper's details and the parent the family types. */
 const posted = {
@@ -32,8 +35,8 @@ const posted = {
 describe('parentOnFile', () => {
   it('is false with no parent, and with a parent who has no phone', () => {
     expect(parentOnFile(null)).toBe(false);
-    expect(parentOnFile({ name: 'Byron Lovelace', email: null, phone: null })).toBe(false);
-    expect(parentOnFile({ name: 'Byron Lovelace', email: null, phone: '   ' })).toBe(false);
+    expect(parentOnFile({ name: 'Byron Lovelace', email: null, phone: null, dateOfBirth: null })).toBe(false);
+    expect(parentOnFile({ name: 'Byron Lovelace', email: null, phone: '   ', dateOfBirth: null })).toBe(false);
   });
 
   it('is true when the parent has a phone number', () => {
@@ -97,8 +100,34 @@ describe('standardAnswers', () => {
 
     const notOnFile = standardAnswers(posted, {
       ...CAMPER,
-      parent: { name: 'Byron Lovelace', email: null, phone: null },
+      parent: { name: 'Byron Lovelace', email: null, phone: null, dateOfBirth: null },
     });
     expect(notOnFile.standard).toMatchObject({ guardianName: 'Byron Lovelace', guardianPhone: '555-0100' });
+  });
+
+  it('stores the posted parent date of birth when the parent is not on file, and asks for it (blank is left for the schema)', () => {
+    const typed = standardAnswers({ ...posted, guardianDateOfBirth: '1979-11-02' }, CAMPER);
+    expect(typed.errors).toEqual({});
+    expect(typed.standard.guardianDateOfBirth).toBe('1979-11-02');
+
+    const blank = standardAnswers(posted, CAMPER);
+    expect(blank.errors).toEqual({});
+    expect(blank.standard.guardianDateOfBirth).toBeUndefined();
+  });
+
+  it("fills the parent's date of birth from the record when it is on file, and refuses a different one", () => {
+    const onFile = standardAnswers({ ...posted, guardianDateOfBirth: '1990-01-01' }, { ...CAMPER, parent: ON_FILE });
+    expect(onFile.errors).toEqual({ 'standard.guardianDateOfBirth': PARENT_DETAILS_ON_PERSON });
+    expect(onFile.standard.guardianDateOfBirth).toBe('1979-11-02');
+  });
+
+  it('keeps the parent date of birth as a posted answer when the parent is on file without one', () => {
+    const { standard, errors } = standardAnswers(
+      { ...posted, guardianDateOfBirth: '1979-11-02' },
+      { ...CAMPER, parent: ON_FILE_NO_BIRTH },
+    );
+    expect(errors).toEqual({});
+    expect(standard.guardianDateOfBirth).toBe('1979-11-02');
+    expect(standard).toMatchObject({ guardianName: 'Byron Lovelace', guardianPhone: '555-0100' });
   });
 });

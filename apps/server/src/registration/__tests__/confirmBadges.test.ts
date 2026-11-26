@@ -52,6 +52,8 @@ function registrationsFor(camp: Camp): RegistrationService {
 async function pendingRegistration(camp: Camp, service: RegistrationService) {
   const admin = camp.actor('admin');
   const guardian = await camp.people.create(admin, {
+    dateOfBirth: '1985-06-15',
+    phone: '+1 555 0100',
     givenName: 'Byron',
     familyName: 'Lovelace',
     roles: ['guardian'],
@@ -60,6 +62,7 @@ async function pendingRegistration(camp: Camp, service: RegistrationService) {
   });
   const [household] = await camp.repos.people.householdsOf(admin.userId, camp.orgId, guardian.id);
   const camper = await camp.people.create(admin, {
+    phone: '+1 555 0100',
     givenName: 'Ada',
     familyName: 'Lovelace',
     dateOfBirth: '2014-03-09',
@@ -87,6 +90,7 @@ function submissionFor(formId: string, camperId: string) {
       camperLastName: 'Lovelace',
       camperBirthDate: '2014-03-09',
       guardianName: 'Byron Lovelace',
+      guardianDateOfBirth: '1979-11-02',
       guardianPhone: '555-0100',
       emergencyContactName: 'Mary Somerville',
       emergencyContactPhone: '555-0111',

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { PHONE_NUMBER_MESSAGE } from './contact';
 import { RegistrationFormInputSchema, buildSubmissionSchema, type CustomField } from './registration';
 
 const SESSION = '3f2b8c1e-5a4d-4b6e-9f70-1a2b3c4d5e6f';
@@ -19,6 +20,7 @@ const standard = {
   camperBirthDate: '2014-03-09',
   guardianName: 'Byron Lovelace',
   guardianEmail: 'byron@example.test',
+  guardianDateOfBirth: '1979-11-02',
   guardianPhone: '555-0100',
   emergencyContactName: 'Mary Somerville',
   emergencyContactPhone: '555-0111',
@@ -87,6 +89,18 @@ describe('submission schema built from a form version', () => {
   it('refuses a missing required standard field', () => {
     const r = schema.safeParse({ ...submission, standard: { ...standard, guardianPhone: '' } });
     expect(r.success).toBe(false);
+  });
+
+  it('refuses a parent with no date of birth, and a parent phone that is not a phone, with the person messages', () => {
+    const noBirth = schema.safeParse({ ...submission, standard: { ...standard, guardianDateOfBirth: '' } });
+    expect(noBirth.success).toBe(false);
+    expect(noBirth.error?.issues.map(issue => issue.message)).toContain('Enter the date of birth.');
+
+    const badBirth = schema.safeParse({ ...submission, standard: { ...standard, guardianDateOfBirth: '2001-02-30' } });
+    expect(badBirth.error?.issues.map(issue => issue.message)).toContain('Use a real date (YYYY-MM-DD).');
+
+    const badPhone = schema.safeParse({ ...submission, standard: { ...standard, guardianPhone: 'call me' } });
+    expect(badPhone.error?.issues.map(issue => issue.message)).toContain(PHONE_NUMBER_MESSAGE);
   });
 
   it('accepts an optional guardian email left blank, and refuses a malformed one', () => {

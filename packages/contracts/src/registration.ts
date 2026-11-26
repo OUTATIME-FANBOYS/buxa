@@ -10,6 +10,8 @@ import {
   sniffAttachmentType,
   type AttachmentContentType,
 } from '@buxa/domain';
+import { PersonPhoneSchema } from './contact';
+import { RequiredDateOfBirthSchema } from './people';
 
 export const FIELD_KINDS = ['text', 'choice', 'date', 'yes_no', 'document'] as const;
 export type FieldKind = (typeof FIELD_KINDS)[number];
@@ -129,6 +131,7 @@ export const STANDARD_FIELDS = [
   { key: 'camperLastName', label: 'Camper last name', required: true },
   { key: 'camperBirthDate', label: 'Camper date of birth', required: true },
   { key: 'guardianName', label: 'Parent or guardian name', required: true },
+  { key: 'guardianDateOfBirth', label: 'Parent or guardian date of birth', required: true },
   { key: 'guardianEmail', label: 'Parent or guardian email', required: false },
   { key: 'guardianPhone', label: 'Parent or guardian phone', required: true },
 ] as const;
@@ -228,6 +231,12 @@ function answerSchema(field: ValueField): z.ZodType<string | boolean | undefined
 export function buildSubmissionSchema(fields: readonly CustomField[]) {
   const standardShape = Object.fromEntries(
     STANDARD_FIELDS.map(f => {
+      // The parent's date of birth and phone are the person rules, with the same messages as the Add person form.
+      if (f.key === 'guardianDateOfBirth' || f.key === 'guardianPhone') {
+        const personRule = f.key === 'guardianPhone' ? PersonPhoneSchema : RequiredDateOfBirthSchema;
+
+        return [f.key, z.preprocess(v => blankAsMissing(v) ?? '', personRule)];
+      }
       const text = z.string().trim().max(120, `${f.label} is too long.`);
       const value =
         f.key === 'camperBirthDate'

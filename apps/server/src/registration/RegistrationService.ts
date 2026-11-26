@@ -25,7 +25,14 @@ import {
   type RegistrationRow,
 } from '@buxa/contracts';
 import { assertAllowed } from '../auth/authorize';
-import { readCamper, saveParent, type CamperOnFile, type ParentSave, type RegistrantPeople } from './registrantPeople';
+import {
+  readCamper,
+  saveParent,
+  saveParentDateOfBirth,
+  type CamperOnFile,
+  type ParentSave,
+  type RegistrantPeople,
+} from './registrantPeople';
 import { PARENT_NAME_NEEDS_TWO_WORDS, parentOnFile, splitName, standardAnswers } from '@buxa/shared';
 import type { CredentialService } from '../services/credentials/CredentialService';
 import type { CredentialRepository } from '../credentials/CredentialRepository';
@@ -360,6 +367,7 @@ export function createRegistrationService(
       const { selections: chosen, standard, custom } = parsed.data;
       // Checked before anything is written: a parent or guardian to save needs a first and last name, and a household.
       const parentToSave = parentToSaveFor(camper, standard);
+      const parentBirthDate = parentBirthDateToSave(camper, standard);
       const uploaded = storeDocuments(published.fields, documents);
       const selections = await resolveSelections(repo, actor, chosen);
       // The session is taken from each class: the family never picks one.
@@ -380,6 +388,10 @@ export function createRegistrationService(
       // Recorded: a parent or guardian who was not on file is now saved to the child's household.
       if (parentToSave) {
         await saveParent(people, actor, camper, parentToSave);
+      }
+      // A parent on file with no date of birth gets the one posted.
+      if (parentBirthDate !== null) {
+        await saveParentDateOfBirth(people, actor, camper, parentBirthDate);
       }
 
       return registration;
@@ -522,7 +534,20 @@ function parentToSaveFor(camper: CamperOnFile, standard: Record<string, string |
     ...names,
     email: standard.guardianEmail ? standard.guardianEmail : null,
     phone: standard.guardianPhone ?? '',
+    dateOfBirth: standard.guardianDateOfBirth ?? '',
   };
+}
+
+/**
+ * The date of birth to save on a parent who is on file without one, or null when there is nothing to save (the parent has a date of
+ * birth on file, or is not on file at all, in which case parentToSaveFor saves the whole parent).
+ */
+function parentBirthDateToSave(camper: CamperOnFile, standard: Record<string, string | undefined>): string | null {
+  if (!parentOnFile(camper.parent) || camper.parent?.dateOfBirth) {
+    return null;
+  }
+
+  return standard.guardianDateOfBirth ?? null;
 }
 
 async function resolveSelections(

@@ -108,6 +108,7 @@ const standard = {
   camperLastName: 'Lovelace',
   camperBirthDate: '2014-03-09',
   guardianName: 'Byron Lovelace',
+  guardianDateOfBirth: '1979-11-02',
   guardianPhone: '555-0100',
 };
 /** Ben's answers: the camper's name and date of birth are his own, read from his record. */
@@ -317,6 +318,22 @@ describe('registration service: submissions', () => {
       'custom.swim',
       'standard.guardianPhone',
     ]);
+  });
+
+  it('refuses a parent or guardian with no date of birth, or no phone, with a field message and writes nothing', async () => {
+    const { service, formId } = await publishedForm();
+    const noBirth = { ...submission(formId), standard: { ...standard, guardianDateOfBirth: '' } };
+    const noBirthError = await service.submit(as('staff'), formId, noBirth).catch((e: unknown) => e);
+    expect(noBirthError).toBeInstanceOf(RegistrationInvalidError);
+    expect((noBirthError as RegistrationInvalidError).fieldErrors['standard.guardianDateOfBirth']).toBe(
+      'Enter the date of birth.',
+    );
+
+    const badPhone = { ...submission(formId), standard: { ...standard, guardianPhone: 'call me' } };
+    const phoneError = await service.submit(as('staff'), formId, badPhone).catch((e: unknown) => e);
+    expect((phoneError as RegistrationInvalidError).fieldErrors['standard.guardianPhone']).toBe(
+      'Enter a phone number with at least 7 digits.',
+    );
   });
 
   it('ignores a form id in the body that differs from the route, because the route id is used', async () => {

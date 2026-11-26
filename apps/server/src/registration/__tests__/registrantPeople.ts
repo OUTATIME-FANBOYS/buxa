@@ -14,6 +14,7 @@ export interface GuardianFixture {
   familyName: string;
   email: string | null;
   phone: string | null;
+  dateOfBirth: string | null;
 }
 
 export interface ChildFixture {
@@ -76,7 +77,7 @@ export function registrantPeople(children: readonly ChildFixture[]): RegistrantP
         givenName: guardian.givenName,
         familyName: guardian.familyName,
         roles: ['guardian'],
-        dateOfBirth: null,
+        dateOfBirth: guardian.dateOfBirth,
         email: guardian.email,
         phone: guardian.phone,
         households: [],
@@ -115,6 +116,7 @@ export function registrantPeople(children: readonly ChildFixture[]): RegistrantP
         ...current,
         givenName: patch.givenName ?? current.givenName,
         familyName: patch.familyName ?? current.familyName,
+        dateOfBirth: patch.dateOfBirth ?? current.dateOfBirth,
         email: patch.email === undefined ? current.email : patch.email,
         phone: patch.phone === undefined ? current.phone : patch.phone,
       });
@@ -129,9 +131,9 @@ export function registrantPeople(children: readonly ChildFixture[]): RegistrantP
         givenName: input.givenName,
         familyName: input.familyName,
         roles: [...input.roles],
-        dateOfBirth: input.dateOfBirth ?? null,
+        dateOfBirth: input.dateOfBirth,
         email: input.email ?? null,
-        phone: input.phone ?? null,
+        phone: input.phone,
         households: [],
       });
       records.set(id, created);
@@ -148,7 +150,14 @@ export function adaFixture(id: string, guardianId: string): ChildFixture {
     givenName: 'Ada',
     familyName: 'Lovelace',
     dateOfBirth: '2014-03-09',
-    guardian: { id: guardianId, givenName: 'Byron', familyName: 'Lovelace', email: null, phone: null },
+    guardian: {
+      id: guardianId,
+      givenName: 'Byron',
+      familyName: 'Lovelace',
+      email: null,
+      phone: null,
+      dateOfBirth: null,
+    },
   };
 }
 
@@ -159,6 +168,6 @@ export function benFixture(id: string, guardianId: string): ChildFixture {
     givenName: 'Ben',
     familyName: 'Carrow',
     dateOfBirth: '2013-05-01',
-    guardian: { id: guardianId, givenName: 'Mira', familyName: 'Carrow', email: null, phone: null },
+    guardian: { id: guardianId, givenName: 'Mira', familyName: 'Carrow', email: null, phone: null, dateOfBirth: null },
   };
 }
