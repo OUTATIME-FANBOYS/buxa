@@ -104,6 +104,7 @@ describe('PersonForm (add): a camper must join a household with a parent or guar
     });
     act(() => requirePresent(h.role('camper'), 'camper').click());
     requirePresent(h.input('givenName'), 'givenName').value = 'Ada';
+    requirePresent(h.input('phone'), 'phone').value = '555-0100';
     act(() => requirePresent(host.querySelector('form'), 'form').requestSubmit());
     await flush();
 
