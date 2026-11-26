@@ -409,7 +409,12 @@ describe('HouseholdScreen', () => {
 describe('PersonScreen', () => {
   it('finds the person as the actor, and answers not-found for an unknown one', async () => {
     await PersonScreen({ id: ID.ben });
-    expect(services.people.get).toHaveBeenCalledWith({ userId: 'u1', orgId: 'o1', role: 'staff' }, ID.ben);
+    // The signed-in email is passed too, so a guardian sees the child's emergency contact (loadPerson).
+    expect(services.people.get).toHaveBeenCalledWith(
+      { userId: 'u1', orgId: 'o1', role: 'staff' },
+      ID.ben,
+      'a@example.test',
+    );
     services.people.get.mockRejectedValueOnce(notFoundError('no such person'));
     await expect(PersonScreen({ id: ID.anna })).rejects.toThrow('NEXT_NOT_FOUND');
   });
@@ -622,7 +627,7 @@ describe('PersonScreen', () => {
     expect(html).toContain('value="Anna"');
     expect(html).toContain(`action="/camp/households/${ID.household}"`);
     expect(html).toContain(`<option value="${ID.anna}">Anna Lee</option>`);
-    expect(html).toContain(`<option value="${ID.household}">Lee family</option>`);
+    expect(html).toContain(`<option value="${ID.household}" selected="">Lee family</option>`);
   });
 
   it('household page: asks for a search first, and does not load the whole camp to fill the link form', async () => {
@@ -645,7 +650,7 @@ describe('PersonScreen', () => {
       summary({ id: ID.anna, givenName: 'Anna', roles: ['guardian'], status: 'none', onSite: false }),
     ]);
     const html = render(await HouseholdScreen({ householdId: ID.household, searchParams: { q: 'Anna' } }));
-    expect(html).toContain(`<option value="${ID.household}">Lee family</option>`);
+    expect(html).toContain(`<option value="${ID.household}" selected="">Lee family</option>`);
     expect(html).not.toContain('Stone family');
   });
 

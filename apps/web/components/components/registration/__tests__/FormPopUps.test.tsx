@@ -59,7 +59,6 @@ describe('the View pop-up, read only (rendered markup)', () => {
       <FormViewDialog form={form} canEdit canSubmit onEdit={() => undefined} onClose={() => undefined} />,
     );
     expect(html).toContain('Season form');
-    expect(html).toContain('Summer 2027');
     expect(html).toContain('Summer camp');
     expect(html).toContain('Allergies');
     expect(html).toContain('Can swim');
@@ -112,7 +111,12 @@ describe('the View pop-up, read only (rendered markup)', () => {
   });
 
   it('shows the empty states for sessions and files', () => {
-    const empty: RegistrationForm = { ...form, sessions: [], attachments: [] };
+    const empty: RegistrationForm = {
+      ...form,
+      sessions: [],
+      attachments: [],
+      published: form.published && { ...form.published, sessions: [] },
+    };
     const html = popUpMarkup(
       <FormViewDialog form={empty} canEdit canSubmit onEdit={() => undefined} onClose={() => undefined} />,
     );

@@ -36,7 +36,10 @@ const form: RegistrationForm = {
     name: 'Season form',
     season: 'Summer 2027',
     sessions: [SUMMER],
-    fields: [{ key: 'allergies', label: 'Allergies', kind: 'text', required: false }],
+    fields: [
+      { key: 'allergies', label: 'Allergies', kind: 'text', required: false },
+      { key: 'lunch', label: 'Lunch', kind: 'choice', required: false, options: ['Hot', 'Packed'] },
+    ],
   },
   hasUnpublishedChanges: false,
   submissionCount: 0,
@@ -138,6 +141,11 @@ describe('the delete confirmation', () => {
   });
 
   it('carries the form id as a hidden field for the server', () => {
-    expect(html).toContain(`name="formId" value="${form.id}"`);
+    // React writes `value` before `name` on an input, so the attributes are read through the DOM, not as one string.
+    const page = document.createElement('div');
+    page.innerHTML = html;
+    const field = page.querySelector<HTMLInputElement>('input[name="formId"]');
+    expect(field?.type).toBe('hidden');
+    expect(field?.value).toBe(form.id);
   });
 });
