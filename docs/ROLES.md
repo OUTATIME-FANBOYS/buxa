@@ -12,25 +12,25 @@ These never stand in for one another. A person role does not change access, and 
 
 ## Organization access (highest first)
 
-| Key | Label | Can do |
-|---|---|---|
-| `owner` | Owner | Everything, including deleting the camp and unarchiving sessions |
-| `admin` | Admin | Everything except deleting the camp: settings, team access, the audit log |
-| `staff` | Staff | Day-to-day camp work: sessions, classes, registration, check-in, rosters, attendance |
-| `viewer` | Viewer | Read-only access to the camp data it is allowed to see; no changes |
+| Key      | Label  | Can do                                                                               |
+| -------- | ------ | ------------------------------------------------------------------------------------ |
+| `owner`  | Owner  | Everything, including deleting the camp and unarchiving sessions                     |
+| `admin`  | Admin  | Everything except deleting the camp: settings, team access, the audit log            |
+| `staff`  | Staff  | Day-to-day camp work: sessions, classes, registration, check-in, rosters, attendance |
+| `viewer` | Viewer | Read-only access to the camp data it is allowed to see; no changes                   |
 
 Only `admin` and `owner` see the audit log.
 
 ## Person roles (highest priority first)
 
-| Key | Label | Type | Function |
-|---|---|---|---|
-| `admin_staff` | Admin staff | Staff | Runs the camp operation |
-| `organizer` | Organizer | Staff | Plans the programme |
-| `instructor` | Instructor | Staff | Teaches assigned classes; the only role that can be assigned to a class |
-| `participant` | Participant | Staff | Takes part in the programme without teaching |
-| `guardian` | Parent or guardian | Family | Manages their children |
-| `camper` | Camper | Family | Attends camp |
+| Key           | Label              | Type   | Function                                                                |
+| ------------- | ------------------ | ------ | ----------------------------------------------------------------------- |
+| `admin_staff` | Admin staff        | Staff  | Runs the camp operation                                                 |
+| `organizer`   | Organizer          | Staff  | Plans the programme                                                     |
+| `instructor`  | Instructor         | Staff  | Teaches assigned classes; the only role that can be assigned to a class |
+| `participant` | Participant        | Staff  | Takes part in the programme without teaching                            |
+| `guardian`    | Parent or guardian | Family | Manages their children                                                  |
+| `camper`      | Camper             | Family | Attends camp                                                            |
 
 ## Priority and display
 

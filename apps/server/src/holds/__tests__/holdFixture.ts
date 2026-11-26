@@ -41,15 +41,18 @@ export async function addSibling(db: Db, orgId: string, householdId: string, nam
 
 /**
  * Moves holds' expiry into the past without waiting for the clock. The request role cannot change an expiry (migration 0055) and
- * the guard trigger refuses it for everyone, so this runs as the test login with triggers off for the one statement.
+ * the guard trigger refuses it for everyone. The test login owns the table (it ran the migrations), so it turns the user triggers off
+ * for the one statement inside a transaction. This needs no superuser: managed Postgres does not give one (CI runs this as a login
+ * that is not a superuser).
  * `where` is a SQL condition over seat_holds with its parameters.
  */
 export async function backdateHolds(pool: Pool, where: string, values: unknown[]): Promise<void> {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    await client.query('SET LOCAL session_replication_role = replica');
+    await client.query('ALTER TABLE seat_holds DISABLE TRIGGER USER');
     await client.query(`UPDATE seat_holds SET expires_at = now() - interval '1 minute' WHERE ${where}`, values);
+    await client.query('ALTER TABLE seat_holds ENABLE TRIGGER USER');
     await client.query('COMMIT');
   } catch (error) {
     await client.query('ROLLBACK');

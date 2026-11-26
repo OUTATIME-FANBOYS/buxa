@@ -43,8 +43,9 @@ async function expireHoldNow(fx: ClassFixture, _orgId: string, holdId: string): 
   const client = await fx.pool.connect();
   try {
     await client.query('BEGIN');
-    await client.query(`SET LOCAL session_replication_role = replica`);
+    await client.query('ALTER TABLE seat_holds DISABLE TRIGGER USER');
     await client.query(`UPDATE seat_holds SET expires_at = now() - interval '1 minute' WHERE id = $1`, [holdId]);
+    await client.query('ALTER TABLE seat_holds ENABLE TRIGGER USER');
     await client.query('COMMIT');
   } catch (error) {
     await client.query('ROLLBACK');
