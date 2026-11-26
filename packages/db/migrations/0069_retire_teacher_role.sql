@@ -107,10 +107,10 @@ SELECT p.org_id, p.id, 'instructor'
 ON CONFLICT (person_id, role) DO NOTHING;
 
 -- Step 4. The triggers that deleted data when a teacher stopped being one. They fire on the role change in step 5.
-DROP TRIGGER org_members_drop_teacher_classes ON org_members;
-DROP FUNCTION org_members_drop_teacher_classes();
-DROP TRIGGER org_members_drop_teacher_options ON org_members;
-DROP FUNCTION member_options_drop_teacher();
+DROP TRIGGER IF EXISTS org_members_drop_teacher_classes ON org_members;
+DROP FUNCTION IF EXISTS org_members_drop_teacher_classes();
+DROP TRIGGER IF EXISTS org_members_drop_teacher_options ON org_members;
+DROP FUNCTION IF EXISTS member_options_drop_teacher();
 
 -- Step 5. The access level. Nothing else about the membership changes.
 UPDATE org_members SET role = 'viewer' WHERE role = 'teacher';
