@@ -21,7 +21,11 @@ const services = vi.hoisted(() => ({
   orgs: { getCamp: vi.fn() },
 }));
 
-vi.mock('next/navigation', () => ({ notFound, redirect: vi.fn() }));
+vi.mock('next/navigation', () => ({
+  notFound,
+  redirect: vi.fn(),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+}));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('@buxa/server/runtime', () => ({ getRuntime: () => ({ services }) }));
 vi.mock('@buxa/server/session/index', () => ({
@@ -35,6 +39,7 @@ const { PeopleList } = await import('@/components/views/people');
 const { NewPerson } = await import('@/components/views/people');
 const { PersonScreen } = await import('@/components/views/people');
 const { EditPerson } = await import('@/components/views/people');
+const { HouseholdScreen } = await import('@/components/views/households');
 
 const ID = {
   ben: '22222222-2222-4222-8222-222222222222',
@@ -169,6 +174,38 @@ describe('PeopleList', () => {
     expect(render(await PeopleList({ searchParams: {} }))).not.toContain('Add person');
   });
 
+  it('shows People and Households tabs, with People selected when the address has no tab', async () => {
+    const html = render(await PeopleList({ searchParams: {} }));
+    expect(html).toContain('aria-label="People sections"');
+    expect(html).toContain('>People<');
+    expect(html).toContain('>Households<');
+    expect(html).toContain('Ben Lee');
+    expect(services.people.listHouseholds).toHaveBeenCalled();
+  });
+
+  it('shows the Households tab from ?tab=households, and lists households without the people list', async () => {
+    const html = render(await PeopleList({ searchParams: { tab: 'households' } }));
+    expect(html).toContain('Lee family');
+    expect(html).toContain('Members of Lee family');
+    expect(html).toContain(`href="/camp/households/${ID.household}"`);
+    expect(html).toContain('Search households by name');
+    expect(html).not.toContain('Search by name');
+    expect(services.people.listPage).not.toHaveBeenCalled();
+  });
+
+  it('has no new household button on the Households tab, and no add person button either', async () => {
+    const html = render(await PeopleList({ searchParams: { tab: 'households' } }));
+    expect(html).not.toMatch(/new household|add household/i);
+    expect(html).not.toContain('Add person');
+    expect(html).not.toContain('/camp/people/new');
+  });
+
+  it('falls back to the People list for an unknown tab', async () => {
+    const html = render(await PeopleList({ searchParams: { tab: 'nonsense' } }));
+    expect(html).toContain('Ben Lee');
+    expect(html).not.toContain('Members of Lee family');
+  });
+
   it('passes the search and role from the address to the service, and keeps them in the form', async () => {
     const html = render(await PeopleList({ searchParams: { q: ' Ben ', role: 'camper' } }));
     expect(services.people.listPage).toHaveBeenCalledWith(
@@ -282,6 +319,47 @@ describe('NewPerson household picker', () => {
   });
 });
 
+describe('HouseholdScreen', () => {
+  it('shows the household name and its members with their roles and the Can collect child tag', async () => {
+    const html = render(await HouseholdScreen({ householdId: ID.household }));
+    expect(html).toContain('<h1>Lee family</h1>');
+    expect(html).toContain('2 members');
+    expect(html).toContain('Anna Lee');
+    expect(html).toContain('Guardian');
+    expect(html).toContain('Can collect child');
+    expect(html).toContain('Child');
+  });
+
+  it('gives staff the remove, add-a-child and link controls, with the pick-up choice only for admins', async () => {
+    const staff = render(await HouseholdScreen({ householdId: ID.household, searchParams: { q: 'Anna' } }));
+    expect(staff).toContain('Remove Anna Lee from this household');
+    expect(staff).toContain(`/camp/people/new?household=${ID.household}`);
+    expect(staff).toContain('Link someone to this household');
+    expect(staff).not.toContain('May collect the child (guardians only)');
+
+    as('admin');
+    services.people.list.mockResolvedValueOnce([
+      summary({ id: ID.anna, givenName: 'Anna', roles: ['guardian'], status: 'none', onSite: false }),
+    ]);
+    const admin = render(await HouseholdScreen({ householdId: ID.household, searchParams: { q: 'Anna' } }));
+    expect(admin).toContain('May collect the child (guardians only)');
+  });
+
+  it('shows a viewer the members and no edit controls', async () => {
+    as('viewer');
+    const html = render(await HouseholdScreen({ householdId: ID.household }));
+    expect(html).toContain('Anna Lee');
+    expect(html).not.toContain('Remove ');
+    expect(html).not.toContain('Add a child to this household');
+    expect(html).not.toContain('Link someone to this household');
+  });
+
+  it('is not found when the household is not in this camp', async () => {
+    services.people.getHousehold.mockRejectedValueOnce(notFoundError('Household not found'));
+    await expect(HouseholdScreen({ householdId: ID.household })).rejects.toThrow('NEXT_NOT_FOUND');
+  });
+});
+
 describe('PersonScreen', () => {
   it('finds the person as the actor, and answers not-found for an unknown one', async () => {
     await PersonScreen({ id: ID.ben });
@@ -306,11 +384,29 @@ describe('PersonScreen', () => {
     expect(headerOf(render(await PersonScreen({ id: ID.ben })))).not.toContain('people-email');
   });
 
-  it('shows household members with their guardian and pick-up status in words', async () => {
+  it('shows the household card as links: the name, the role in it, Can collect child, and Open household', async () => {
     const html = render(await PersonScreen({ id: ID.ben }));
+    expect(html).toContain('Lee family');
+    expect(html).toContain('Child');
+    expect(html).toContain(`href="/camp/households/${ID.household}"`);
+    expect(html).toContain('Open household');
+    expect(html).not.toContain('Can collect child');
+  });
+
+  it('shows the Guardian role and the Can collect child tag for a guardian with pick-up on the person page', async () => {
+    services.people.get.mockResolvedValueOnce(
+      person({ id: ID.anna, givenName: 'Anna', roles: ['guardian'], households: [household] }),
+    );
+    const html = render(await PersonScreen({ id: ID.anna }));
     expect(html).toContain('Guardian');
     expect(html).toContain('Can collect child');
-    expect(html).toContain(`/camp/people/new?household=${ID.household}`);
+  });
+
+  it('shows the empty line and a link to the Households tab when the person is in no household', async () => {
+    services.people.get.mockResolvedValueOnce(person({ households: [] }));
+    const html = render(await PersonScreen({ id: ID.ben }));
+    expect(html).toContain('Not in a household yet.');
+    expect(html).toContain('href="/camp/people?tab=households"');
   });
 
   it('shows membership status in words, and the badge once issued is not re-displayed', async () => {
@@ -323,7 +419,10 @@ describe('PersonScreen', () => {
 
   it('gives staff the household and membership controls, and admins the badge and archive controls too', async () => {
     const staff = render(await PersonScreen({ id: ID.ben }));
-    expect(staff).toContain('Link someone to a household');
+    // The household card on the person page is links only: no link, add, remove or pick-up controls (those are on the household page).
+    expect(staff).not.toContain('Link someone to a household');
+    expect(staff).not.toContain('Add a child to this household');
+    expect(staff).not.toContain('Remove ');
     expect(staff).not.toContain('Add membership');
     expect(staff).not.toContain('Archive person');
 
@@ -467,39 +566,41 @@ describe('PersonScreen', () => {
     expect(render(await PersonScreen({ id: ID.ben }))).not.toContain('Edit details');
   });
 
-  it('searches the camp by name for someone to link, and offers only the matches (never the person themselves)', async () => {
+  it('household page: searches the camp by name for someone to link, and offers only the matches (never the household as a person)', async () => {
     services.people.list.mockResolvedValueOnce([
       summary(),
       summary({ id: ID.anna, givenName: 'Anna', roles: ['guardian'], status: 'none', onSite: false }),
     ]);
-    const html = render(await PersonScreen({ id: ID.ben, searchParams: { q: ' Anna ' } }));
+    const html = render(await HouseholdScreen({ householdId: ID.household, searchParams: { q: ' Anna ' } }));
     expect(services.people.list).toHaveBeenCalledWith({ userId: 'u1', orgId: 'o1', role: 'staff' }, { query: 'Anna' });
     expect(html).toContain('value="Anna"');
+    expect(html).toContain(`action="/camp/households/${ID.household}"`);
     expect(html).toContain(`<option value="${ID.anna}">Anna Lee</option>`);
-    expect(html).not.toContain(`<option value="${ID.ben}">`);
+    expect(html).toContain(`<option value="${ID.household}">Lee family</option>`);
   });
 
-  it('asks for a search first, and does not load the whole camp to fill the link form', async () => {
-    const html = render(await PersonScreen({ id: ID.ben }));
+  it('household page: asks for a search first, and does not load the whole camp to fill the link form', async () => {
+    const html = render(await HouseholdScreen({ householdId: ID.household }));
     expect(services.people.list).not.toHaveBeenCalled();
     expect(html).toContain('Search by name to find someone in the camp.');
   });
 
-  it('says so when a search matches nobody', async () => {
+  it('household page: says so when a search matches nobody', async () => {
     services.people.list.mockResolvedValueOnce([]);
-    expect(render(await PersonScreen({ id: ID.ben, searchParams: { q: 'zzz' } }))).toContain(
+    expect(render(await HouseholdScreen({ householdId: ID.household, searchParams: { q: 'zzz' } }))).toContain(
       'No one matches that search.',
     );
   });
 
-  it('offers every household in the camp for linking, not only the ones this person is in', async () => {
+  it('household page: the link form goes to this household only, not every household in the camp', async () => {
     const stone = { id: '66666666-6666-4666-8666-666666666666', name: 'Stone family', members: [] };
     services.people.listHouseholds.mockResolvedValueOnce([household, stone]);
     services.people.list.mockResolvedValueOnce([
       summary({ id: ID.anna, givenName: 'Anna', roles: ['guardian'], status: 'none', onSite: false }),
     ]);
-    const html = render(await PersonScreen({ id: ID.ben, searchParams: { q: 'Anna' } }));
-    expect(html).toContain(`<option value="${stone.id}">Stone family</option>`);
+    const html = render(await HouseholdScreen({ householdId: ID.household, searchParams: { q: 'Anna' } }));
+    expect(html).toContain(`<option value="${ID.household}">Lee family</option>`);
+    expect(html).not.toContain('Stone family');
   });
 
   it('shows a membership revoke time in the camp zone, not the server zone', async () => {

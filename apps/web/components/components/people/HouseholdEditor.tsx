@@ -21,7 +21,14 @@ export interface HouseholdEditorProps {
  * Everything that changes one household: its members (remove, with their guardian and pick-up flags), adding a child, and linking
  * someone in by name. The server checks each action again; these controls only show what the viewer may do.
  */
-export function HouseholdEditor({ household, canUpdate, canCreate, canAuthorisePickup, query, linkable }: HouseholdEditorProps) {
+export function HouseholdEditor({
+  household,
+  canUpdate,
+  canCreate,
+  canAuthorisePickup,
+  query,
+  linkable,
+}: HouseholdEditorProps) {
   return (
     <div className="stack">
       <section className="panel stack" aria-labelledby="household-members-heading">
@@ -30,7 +37,9 @@ export function HouseholdEditor({ household, canUpdate, canCreate, canAuthoriseP
             Members
           </h2>
           {canCreate && (
-            <Button href={`${ROUTES.newPerson}?household=${encodeURIComponent(household.id)}`}>Add a child to this household</Button>
+            <Button href={`${ROUTES.newPerson}?household=${encodeURIComponent(household.id)}`}>
+              Add a child to this household
+            </Button>
           )}
         </div>
         {household.members.length === 0 ? (
@@ -38,7 +47,12 @@ export function HouseholdEditor({ household, canUpdate, canCreate, canAuthoriseP
         ) : (
           <ul className="people-list" aria-label={`Members of ${household.name}`}>
             {household.members.map(member => (
-              <HouseholdMemberRow key={member.personId} member={member} householdId={household.id} canUpdate={canUpdate} />
+              <HouseholdMemberRow
+                key={member.personId}
+                member={member}
+                householdId={household.id}
+                canUpdate={canUpdate}
+              />
             ))}
           </ul>
         )}

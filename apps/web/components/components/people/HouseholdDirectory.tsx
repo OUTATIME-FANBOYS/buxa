@@ -23,10 +23,18 @@ export function HouseholdDirectory({ households, query }: { households: readonly
         className="form-row buxa:flex buxa:flex-wrap buxa:gap-[var(--s3)] buxa:items-end buxa:[&>.field]:flex-[1_1_180px] buxa:[&>.field]:min-w-0 buxa:[&>.button]:flex-none"
       >
         <HiddenField name="tab" value="households" />
-        <SearchField label="Search households by name" name="q" defaultValue={query} maxLength={80} autoComplete="off" />
+        <SearchField
+          label="Search households by name"
+          name="q"
+          defaultValue={query}
+          maxLength={80}
+          autoComplete="off"
+        />
         <Button type="submit" iconOnly icon="search" aria-label="Search households by name" />
       </form>
-      {households.length === 0 && <p className="muted">No households yet. A family appears here once a child is added to it.</p>}
+      {households.length === 0 && (
+        <p className="muted">No households yet. A family appears here once a child is added to it.</p>
+      )}
       {households.length > 0 && shown.length === 0 && <p className="muted">No household matches that search.</p>}
       {shown.length > 0 && (
         <>
