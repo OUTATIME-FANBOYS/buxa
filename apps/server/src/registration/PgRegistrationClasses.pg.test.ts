@@ -24,12 +24,14 @@ import { backdateHolds } from '../holds/__tests__/holdFixture';
 const TEST_KEY = Buffer.alloc(32, 3).toString('base64');
 const url = process.env.DATABASE_URL;
 
+// The camper's name and birth date are read from the child's record, so a blank answer is filled from it. One answer set then serves
+// both children of the fixture (Ada and Ben).
 const standard = {
-  camperFirstName: 'Ada',
-  camperLastName: 'Lovelace',
-  camperBirthDate: '2014-03-09',
+  camperFirstName: '',
+  camperLastName: '',
+  camperBirthDate: '',
   guardianName: 'Byron Lovelace',
-  guardianDateOfBirth: '1979-11-02',
+  guardianDateOfBirth: '1985-06-15',
   guardianPhone: '555-0100',
   emergencyContactName: 'Mary Somerville',
   emergencyContactPhone: '555-0111',
@@ -259,7 +261,7 @@ describe.skipIf(!url)('registration by class in Postgres', () => {
     const { fx, formId, staff } = await campWithForm();
     const sibling = await withOrg(pool, fx.userId, fx.orgId, async db => {
       const person = await db.query<{ id: string }>(
-        `INSERT INTO people (org_id, given_name, family_name, date_of_birth) VALUES ($1, 'Cleo', 'Sibling', '2014-06-01') RETURNING id`,
+        `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'Cleo', 'Sibling', '2014-06-01', '+1 555 0100') RETURNING id`,
         [fx.orgId],
       );
       await db.query(`INSERT INTO person_roles (org_id, person_id, role) VALUES ($1, $2, 'camper')`, [
