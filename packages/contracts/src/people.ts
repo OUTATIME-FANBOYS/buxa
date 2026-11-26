@@ -155,7 +155,10 @@ export const PersonPatchInputSchema = z.object({
   familyName: Name.optional(),
   dateOfBirth: LocalDateSchema.nullable().optional(),
   email: PatchEmailSchema.nullable().optional(),
-  phone: PatchPhoneSchema.nullable().optional(),
+  // A blank phone on edit clears it: the column holds a valid phone or no phone at all, never an empty string.
+  phone: PatchPhoneSchema.transform(v => (v === '' ? null : v))
+    .nullable()
+    .optional(),
   roles: AllowedRoleSet(z.array(CampRoleSchema).min(1, 'Pick a role.')).optional(),
 });
 export type PersonPatchInput = z.infer<typeof PersonPatchInputSchema>;
