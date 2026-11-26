@@ -64,10 +64,11 @@ describe('Edit on a People row opens the Edit person pop-up, not a page', () => 
     document.body.innerHTML = '';
   });
 
+  // The row's Edit is an icon button, so it is found by its accessible name (the person's name).
   const editButton = () =>
     requirePresent(
-      Array.from(host.querySelectorAll('button')).find(b => b.textContent === 'Edit'),
-      "Array.from(host.querySelectorAll('button')).find(b => b.textContent === 'Edit')",
+      host.querySelector<HTMLButtonElement>('button[aria-label="Edit Ana Lee"]'),
+      'Edit button for Ana Lee',
     );
   const dialog = () => document.querySelector<HTMLElement>('[role="dialog"]');
 

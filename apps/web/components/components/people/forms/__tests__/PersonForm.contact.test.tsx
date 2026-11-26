@@ -169,9 +169,19 @@ describe('PersonForm: phone and email checks', () => {
   });
 
   describe('edit', () => {
-    it('does not require a phone, so a blank phone still saves', async () => {
+    it('requires a phone too: a blank phone is refused with the message, and is not saved', async () => {
       renderEdit();
       type('givenName', 'Ada');
+      submit();
+      await flush();
+      expect(errors()).toContain(PHONE_NUMBER_MESSAGE);
+      expect(actions.update).not.toHaveBeenCalled();
+    });
+
+    it('saves when the phone is given', async () => {
+      renderEdit();
+      type('givenName', 'Ada');
+      type('phone', '0400 000 000');
       submit();
       await flush();
       expect(errors()).not.toContain(PHONE_NUMBER_MESSAGE);

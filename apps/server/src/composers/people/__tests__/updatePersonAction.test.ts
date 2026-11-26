@@ -23,7 +23,7 @@ const details = {
   familyName: 'Lee',
   dateOfBirth: '2016-05-02',
   email: 'ben@example.test',
-  phone: '',
+  phone: '555-0102',
   roles: 'camper',
 };
 
@@ -129,23 +129,32 @@ describe('updatePersonAction', () => {
     });
   });
 
-  it('sends the whole patch to the service, with a blank date of birth as "none" and blank contact fields as null', async () => {
-    await expect(
-      updatePersonAction(idle, formOf({ ...details, dateOfBirth: '', email: '', phone: '  ' })),
-    ).rejects.toThrow(`NEXT_REDIRECT ${personPath(IDS.person)}`);
+  it('sends the whole patch to the service, with a blank email passed on as an empty value', async () => {
+    await expect(updatePersonAction(idle, formOf({ ...details, email: '' }))).rejects.toThrow(
+      `NEXT_REDIRECT ${personPath(IDS.person)}`,
+    );
     expect(h.people.updateWithHousehold).toHaveBeenCalledWith(
       h.actor,
       IDS.person,
       {
         givenName: 'Ben',
         familyName: 'Lee',
-        dateOfBirth: null,
+        dateOfBirth: '2016-05-02',
         email: '',
-        phone: '',
+        phone: '555-0102',
         roles: ['camper'],
       },
       undefined,
     );
+  });
+
+  it('refuses a blank date of birth or phone on edit (they are not cleared), and saves nothing', async () => {
+    const state = await updatePersonAction(idle, formOf({ ...details, dateOfBirth: '', phone: '  ' }));
+    expect(state).toMatchObject({
+      status: 'error',
+      fieldErrors: { dateOfBirth: 'Enter the date of birth.', phone: 'Enter a phone number with at least 7 digits.' },
+    });
+    expect(h.people.updateWithHousehold).not.toHaveBeenCalled();
   });
 
   it('saves every role the form posts, so two roles survive an edit that changes nothing', async () => {

@@ -11,6 +11,7 @@ import { LEE, PERSON, formHelpers } from './personFormFixtures';
 
 const createPerson = vi.hoisted(() => vi.fn());
 vi.mock('@buxa/server/composers/people/createPersonAction', () => ({ createPersonAction: createPerson }));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), push: vi.fn(), refresh: vi.fn() }) }));
 vi.mock('@buxa/server/composers/people/updatePersonAction', () => ({
   updatePersonAction: () => settle(() => idle),
 }));
