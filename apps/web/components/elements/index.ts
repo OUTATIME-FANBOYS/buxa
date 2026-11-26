@@ -6,6 +6,7 @@ export * from './Legend';
 export * from './LiveRegion';
 export * from './Pill';
 export * from './PrintButton';
+export * from './PersonAvatar';
 export * from './PriorityMark';
 export * from './Progress';
 export * from './Ring';

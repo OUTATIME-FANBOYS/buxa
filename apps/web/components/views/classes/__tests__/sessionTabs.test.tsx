@@ -169,27 +169,23 @@ beforeEach(() => {
     hold('hold-autumn', AUTUMN, 'Autumn camp', 'Ito family'),
   ]);
   services.classes.listCampWaitlists.mockResolvedValue([]);
+  // A session counts for a form only through the published version (see loadFormSubmissions), so each form publishes its session.
+  const formFor = (id: string, name: string, sessionId: string, sessionName: string) => ({
+    id,
+    name,
+    season: null,
+    sessions: [{ id: sessionId, name: sessionName }],
+    fields: [],
+    attachments: [],
+    publishedVersion: 1,
+    published: { version: 1, name, season: null, sessions: [{ id: sessionId, name: sessionName }], fields: [] },
+    hasUnpublishedChanges: false,
+    submissionCount: 1,
+    updatedAt: '2027-06-01T00:00:00.000Z',
+  });
   services.registration.listForms.mockResolvedValue([
-    {
-      id: FORM_SUMMER,
-      name: 'Summer form',
-      season: null,
-      sessions: [{ id: SUMMER, name: 'Summer camp' }],
-      fields: [],
-      publishedVersion: 1,
-      submissionCount: 1,
-      updatedAt: '2027-06-01T00:00:00.000Z',
-    },
-    {
-      id: FORM_AUTUMN,
-      name: 'Autumn form',
-      season: null,
-      sessions: [{ id: AUTUMN, name: 'Autumn camp' }],
-      fields: [],
-      publishedVersion: 1,
-      submissionCount: 1,
-      updatedAt: '2027-06-01T00:00:00.000Z',
-    },
+    formFor(FORM_SUMMER, 'Summer form', SUMMER, 'Summer camp'),
+    formFor(FORM_AUTUMN, 'Autumn form', AUTUMN, 'Autumn camp'),
   ]);
   services.registration.listSubmissions.mockImplementation((_actor: unknown, formId: string) =>
     Promise.resolve(

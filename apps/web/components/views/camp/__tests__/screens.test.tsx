@@ -15,7 +15,11 @@ const session = vi.hoisted(() => ({
   current: null as null | { user: { id: string; email: string; name: string }; memberships: Membership[] },
   camp: null as Membership | null,
 }));
-const users = vi.hoisted(() => ({ memberOptionsIn: vi.fn(() => Promise.resolve([])) }));
+const users = vi.hoisted(() => ({
+  memberOptionsIn: vi.fn(() => Promise.resolve([])),
+  isInstructorIn: vi.fn(() => Promise.resolve(false)),
+  memberOptionsOf: vi.fn(() => Promise.resolve([])),
+}));
 const orgs = vi.hoisted(() => ({
   getCamp: vi.fn(() =>
     settle(() => ({ id: 'o1', name: 'Sunrise', slug: 'sunrise', createdAt: '2026-03-04T10:00:00Z', memberCount: 2 })),
@@ -134,7 +138,6 @@ describe('CampFrame', () => {
       'Home',
       'Sessions',
       'Registration',
-      'Holds',
       'Check-in',
       'On site',
       'Attendance',
