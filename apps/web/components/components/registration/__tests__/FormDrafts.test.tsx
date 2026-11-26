@@ -1,9 +1,11 @@
+// @vitest-environment jsdom
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import type { RegistrationForm } from '@buxa/contracts';
 import { FormsTable } from '../FormsTable';
 import { FormViewDialog } from '../FormViewDialog';
 import { RegistrationFormDialog } from '../RegistrationFormDialog';
+import { popUpMarkup } from './popUpMarkup';
 
 vi.mock('@/actions/registration', () => ({
   createFormAction: vi.fn(),
@@ -16,7 +18,7 @@ vi.mock('@buxa/middleware/providers/UiProvider', () => ({ useUi: () => ({ toast:
 
 /*
  * Drafts and published versions (migration 0071). Staff see the draft in the edit pop-up, the published version in the view pop-up
- * and on the Registration table, and a note when the two differ. Server render only, like the other pop-up tests.
+ * and on the Registration table, and a note when the two differ. The table is server rendered; the pop-ups are read from the DOM.
  */
 
 const SUMMER = { id: '11111111-1111-4111-8111-111111111111', name: 'Summer camp' };
@@ -69,7 +71,7 @@ describe('the Registration table shows the published name and the unpublished no
     expect(html).toContain('Published name');
     expect(html).not.toContain('Summer 2027');
     expect(html).not.toContain(' · ');
-    expect(html).toContain('Published version 2');
+    expect(html).toContain('Published V2');
     expect(html).toContain('Unpublished changes');
     expect(html).not.toContain('Draft name');
   });
@@ -101,7 +103,7 @@ describe('the Registration table shows the published name and the unpublished no
 
 describe('the View pop-up shows the published values', () => {
   it('labels the version and shows its name, sessions and questions, not the draft', () => {
-    const html = renderToStaticMarkup(
+    const html = popUpMarkup(
       <FormViewDialog
         form={drafted}
         canEdit={false}
@@ -110,7 +112,7 @@ describe('the View pop-up shows the published values', () => {
         onClose={() => undefined}
       />,
     );
-    expect(html).toContain('Published version 2');
+    expect(html).toContain('Published V2');
     expect(html).toContain('Published name');
     expect(html).toContain('Photo consent');
     expect(html).toContain('Summer camp');
@@ -121,7 +123,7 @@ describe('the View pop-up shows the published values', () => {
   });
 
   it('says a form never published has no published version yet', () => {
-    const html = renderToStaticMarkup(
+    const html = popUpMarkup(
       <FormViewDialog
         form={neverPublished}
         canEdit={false}
@@ -137,7 +139,7 @@ describe('the View pop-up shows the published values', () => {
 
 describe('the edit pop-up loads the draft values', () => {
   it('fills the name, sessions and questions from the draft, not the published version, with no Season field', () => {
-    const html = renderToStaticMarkup(
+    const html = popUpMarkup(
       <RegistrationFormDialog mode="edit" form={drafted} sessions={[SUMMER, AUTUMN]} onClose={() => undefined} />,
     );
     expect(html).toContain('value="Draft name"');

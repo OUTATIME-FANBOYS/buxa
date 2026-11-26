@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import type { RegistrationForm } from '@buxa/contracts';
@@ -5,6 +6,7 @@ import { FORM_HAS_REGISTRATIONS_MESSAGE } from '@buxa/domain';
 import { FormRowActions } from '../FormRowActions';
 import { FormViewDialog } from '../FormViewDialog';
 import { DeleteFormDialog } from '../DeleteFormDialog';
+import { popUpMarkup } from './popUpMarkup';
 
 vi.mock('@/actions/registration', () => ({
   createFormAction: vi.fn(),
@@ -95,7 +97,7 @@ describe('the three icon buttons on a forms row', () => {
 
 describe('the read-only View pop-up', () => {
   const view = (canEdit: boolean) =>
-    renderToStaticMarkup(
+    popUpMarkup(
       <FormViewDialog form={form} canEdit={canEdit} canSubmit onEdit={() => undefined} onClose={() => undefined} />,
     );
 
@@ -122,7 +124,7 @@ describe('the read-only View pop-up', () => {
 });
 
 describe('the delete confirmation', () => {
-  const html = renderToStaticMarkup(<DeleteFormDialog form={form} onClose={() => undefined} />);
+  const html = popUpMarkup(<DeleteFormDialog form={form} onClose={() => undefined} />);
 
   it('names the form and says it cannot be undone', () => {
     expect(html).toContain('Delete form?');

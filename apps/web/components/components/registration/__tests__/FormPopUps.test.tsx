@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 import { act } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RegistrationForm } from '@buxa/contracts';
 import { FormViewDialog } from '../FormViewDialog';
 import { NewRegistrationFormButton } from '../NewRegistrationFormButton';
 import { FormRowActions } from '../FormRowActions';
+import { popUpMarkup } from './popUpMarkup';
 
 vi.mock('@/actions/registration', () => ({
   createFormAction: vi.fn(),
@@ -53,9 +53,9 @@ const form: RegistrationForm = {
 /** The close animation runs for about 190 ms before the pop-up leaves the page. */
 const settle = (ms = 250) => act(() => new Promise<void>(resolve => setTimeout(resolve, ms)));
 
-describe('the View pop-up, read only (server render)', () => {
+describe('the View pop-up, read only (rendered markup)', () => {
   it('shows the name, sessions, questions and files families download', () => {
-    const html = renderToStaticMarkup(
+    const html = popUpMarkup(
       <FormViewDialog form={form} canEdit canSubmit onEdit={() => undefined} onClose={() => undefined} />,
     );
     expect(html).toContain('Season form');
@@ -68,7 +68,7 @@ describe('the View pop-up, read only (server render)', () => {
   });
 
   it('has no input to change anything: no form, no field, no Save draft', () => {
-    const html = renderToStaticMarkup(
+    const html = popUpMarkup(
       <FormViewDialog form={form} canEdit canSubmit onEdit={() => undefined} onClose={() => undefined} />,
     );
     expect(html).not.toContain('<form');
@@ -77,10 +77,10 @@ describe('the View pop-up, read only (server render)', () => {
   });
 
   it('offers Edit form only when the viewer may manage forms', () => {
-    const manager = renderToStaticMarkup(
+    const manager = popUpMarkup(
       <FormViewDialog form={form} canEdit canSubmit onEdit={() => undefined} onClose={() => undefined} />,
     );
-    const viewer = renderToStaticMarkup(
+    const viewer = popUpMarkup(
       <FormViewDialog form={form} canEdit={false} canSubmit onEdit={() => undefined} onClose={() => undefined} />,
     );
     expect(manager).toContain('Edit form');
@@ -88,7 +88,7 @@ describe('the View pop-up, read only (server render)', () => {
   });
 
   it('offers no file download to a viewer who may not take registrations', () => {
-    const html = renderToStaticMarkup(
+    const html = popUpMarkup(
       <FormViewDialog
         form={form}
         canEdit={false}
@@ -102,7 +102,7 @@ describe('the View pop-up, read only (server render)', () => {
   });
 
   it('shows covered sessions as tags with no remove control, and lists in plain rows', () => {
-    const html = renderToStaticMarkup(
+    const html = popUpMarkup(
       <FormViewDialog form={form} canEdit canSubmit onEdit={() => undefined} onClose={() => undefined} />,
     );
     expect(html).toContain('session-tag session-tag--static');
@@ -113,7 +113,7 @@ describe('the View pop-up, read only (server render)', () => {
 
   it('shows the empty states for sessions and files', () => {
     const empty: RegistrationForm = { ...form, sessions: [], attachments: [] };
-    const html = renderToStaticMarkup(
+    const html = popUpMarkup(
       <FormViewDialog form={empty} canEdit canSubmit onEdit={() => undefined} onClose={() => undefined} />,
     );
     expect(html).toContain('No sessions yet.');

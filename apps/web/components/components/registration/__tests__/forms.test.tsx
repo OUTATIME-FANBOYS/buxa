@@ -144,7 +144,8 @@ describe('FormEditor: the fields only, the pop-up footer holds the buttons', () 
     expect(html).not.toContain('Form name *');
     expect(html).toContain('Form name');
     expect(html).toContain('Sessions this form covers');
-    expect(html).toContain('<form noValidate=""');
+    // The form carries its id, which the pop-up footer's Save and Publish buttons submit by.
+    expect(html).toContain('<form id="f-1" noValidate=""');
   });
 
   it('has no buttons of its own: Save draft, Publish and Cancel belong to the pop-up footer', () => {
