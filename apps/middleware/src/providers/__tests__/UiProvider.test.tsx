@@ -6,11 +6,16 @@ import type { ComponentType } from 'react';
 import { UiProvider, useUi, type ConfirmDialogProps } from '../UiProvider';
 import { settle, requirePresent } from '@buxa/domain';
 
-// A stand-in for the web app's Dialog: the same role and label, so the confirm prompt can be tested here.
-const Dialog: ComponentType<ConfirmDialogProps> = ({ title, footer, children }) => (
+// A stand-in for the web app's ConfirmDialog: the same role and label, so the confirm prompt can be tested here.
+const Dialog: ComponentType<ConfirmDialogProps> = ({ title, body, confirmLabel, onCancel, onConfirm }) => (
   <div role="dialog" aria-label={title}>
-    {children}
-    {footer}
+    <p>{body}</p>
+    <button type="button" onClick={onCancel}>
+      Cancel
+    </button>
+    <button type="button" onClick={onConfirm}>
+      {confirmLabel}
+    </button>
   </div>
 );
 
@@ -77,7 +82,6 @@ describe('UiProvider', () => {
       Array.from(dialog.querySelectorAll('button')).find(b => b.textContent === 'Delete'),
       "Array.from(dialog.querySelectorAll('button')).find((b) => b.textContent === 'Delete')",
     );
-    expect(confirm.className).toContain('btn-danger');
     await act(() => {
       return settle(() => {
         confirm.click();

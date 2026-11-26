@@ -311,3 +311,9 @@ export const SeriesSchema = z.object({
   waitlisted: z.number().int(),
 });
 export type Series = z.infer<typeof SeriesSchema>;
+
+/**
+ * A series as a family picks it on a registration form: the series, and its active days as instants. The days are what a child's
+ * series are checked against for overlap; the choice itself is the series' anchor (`anchorClassId`).
+ */
+export type RegistrationSeries = Series & { occurrences: { startsAt: string; endsAt: string }[] };

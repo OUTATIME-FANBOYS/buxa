@@ -311,7 +311,10 @@ export async function getSessionDeleteImpact(db: Db, sessionId: string): Promise
             (SELECT count(*)::int FROM assignments a WHERE a.session_id = p.id) AS assignments,
             (SELECT count(*)::int FROM session_instructors si JOIN sessions s ON s.id = si.session_id
               WHERE s.class_id = p.id) AS instructors,
-            (SELECT count(*)::int FROM registration_form_sessions f WHERE f.session_id = p.id) AS "formLinks"
+            (SELECT count(*)::int FROM registration_forms rf
+              WHERE rf.org_id = p.org_id
+                AND (p.id = ANY(rf.draft_session_ids)
+                     OR EXISTS (SELECT 1 FROM registration_form_sessions f WHERE f.form_id = rf.id AND f.session_id = p.id))) AS "formLinks"
        FROM classes p WHERE p.id = $1`,
     [sessionId],
   );

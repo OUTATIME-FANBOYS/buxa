@@ -1,17 +1,12 @@
 import { randomUUID } from 'node:crypto';
-import type { Actor, DocumentReviewStatus, RegistrationStatus } from '@buxa/domain';
+import { formDraftDiffers, type Actor, type DocumentReviewStatus, type RegistrationStatus } from '@buxa/domain';
 import type { FormAttachment } from '@buxa/contracts';
 import { documentRowsFor } from './documentRows';
-import type {
-  CustomField,
-  RegistrationClass,
-  RegistrationForm,
-  RegistrationFormInput,
-  RegistrationRow,
-} from '@buxa/contracts';
+import type { CustomField, RegistrationClass, RegistrationForm, RegistrationRow } from '@buxa/contracts';
 import {
   RegistrationClassNotFoundError,
   RegistrationFileNotFoundError,
+  RegistrationFormNoSessionsError,
   RegistrationFormNotFoundError,
   RegistrationNotFoundError,
   RegistrationRefusedError,
@@ -24,11 +19,13 @@ import type {
   ConfirmationWork,
   ErasureRule,
   FileDownload,
+  FormDeletionRule,
   NewDocument,
   NewRegistration,
   PublishedVersion,
   StoredFileInput,
   RegistrationRepository,
+  RegistrationFormWrite,
   RegistrationRule,
   WithdrawalRule,
 } from './RegistrationRepository';
@@ -46,16 +43,27 @@ interface StoredPlace {
   price: RegistrationClass['price'];
 }
 
+/** The draft of a form: what staff last saved. Only a publish copies it into a version (families read the versions). */
+interface FormDraft {
+  name: string;
+  season: string | null;
+  sessionIds: string[];
+  fields: CustomField[];
+}
+
 interface StoredForm {
   id: string;
   orgId: string;
-  name: string;
-  season: string | null;
-  draft: CustomField[];
-  sessionIds: string[];
+  draft: FormDraft;
+  /** Published versions, oldest first. The last one is what families register on. */
   versions: PublishedVersion[];
   updatedAt: string;
   attachments: (StoredFileInput & { formId: string })[];
+}
+
+/** The session ids families may register for: the last published version's, or none before the first publish. */
+function publishedSessionIds(form: StoredForm): string[] {
+  return form.versions.at(-1)?.sessions.map(s => s.id) ?? [];
 }
 
 interface StoredRegistration {
@@ -146,14 +154,29 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
   private view(form: StoredForm): RegistrationForm {
     const submissionCount = [...this.registrations.values()].filter(r => r.formId === form.id).length;
 
+    const latest = form.versions.at(-1) ?? null;
+    const draft = form.draft;
+
     return {
       id: form.id,
-      name: form.name,
-      season: form.season,
-      sessions: [...form.sessionIds].sort().map(id => ({ id, name: id })),
-      fields: form.draft,
+      name: draft.name,
+      season: draft.season,
+      sessions: [...draft.sessionIds].sort().map(id => ({ id, name: id })),
+      fields: draft.fields,
       attachments: form.attachments.map(toAttachment),
-      publishedVersion: form.versions.at(-1)?.version ?? null,
+      publishedVersion: latest?.version ?? null,
+      published: latest,
+      hasUnpublishedChanges:
+        latest !== null &&
+        formDraftDiffers(
+          { name: draft.name, season: draft.season, sessionIds: draft.sessionIds, fields: draft.fields },
+          {
+            name: latest.name,
+            season: latest.season,
+            sessionIds: latest.sessions.map(s => s.id),
+            fields: latest.fields,
+          },
+        ),
       submissionCount,
       updatedAt: form.updatedAt,
     };
@@ -182,16 +205,13 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
     });
   }
 
-  createForm(actor: Actor, input: RegistrationFormInput, files: readonly StoredFileInput[]): Promise<RegistrationForm> {
+  createForm(actor: Actor, input: RegistrationFormWrite, files: readonly StoredFileInput[]): Promise<RegistrationForm> {
     return later(() => {
       this.requireSessions(actor.orgId, input.sessionIds);
       const form: StoredForm = {
         id: randomUUID(),
         orgId: actor.orgId,
-        name: input.name,
-        season: input.season,
-        draft: input.fields,
-        sessionIds: input.sessionIds,
+        draft: { name: input.name, season: input.season, sessionIds: input.sessionIds, fields: input.fields },
         versions: [],
         updatedAt: new Date().toISOString(),
         attachments: [],
@@ -206,19 +226,15 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
   updateForm(
     actor: Actor,
     formId: string,
-    input: RegistrationFormInput,
+    input: RegistrationFormWrite,
     files: readonly StoredFileInput[],
   ): Promise<RegistrationForm> {
     return later(() => {
       const form = this.ownForm(actor.orgId, formId);
       this.requireSessions(actor.orgId, input.sessionIds);
-      Object.assign(form, {
-        name: input.name,
-        season: input.season,
-        draft: input.fields,
-        sessionIds: input.sessionIds,
-        updatedAt: new Date().toISOString(),
-      });
+      // Saving changes the draft only. The versions (what families register on) are untouched until publish.
+      form.draft = { name: input.name, season: input.season, sessionIds: input.sessionIds, fields: input.fields };
+      form.updatedAt = new Date().toISOString();
       form.attachments.push(...files.map(f => ({ ...f, formId })));
 
       return this.view(form);
@@ -236,11 +252,25 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
     });
   }
 
+  deleteForm(actor: Actor, formId: string, rule: FormDeletionRule): Promise<void> {
+    return later(() => {
+      const form = this.ownForm(actor.orgId, formId);
+      const registrationCount = [...this.registrations.values()].filter(
+        r => r.orgId === actor.orgId && r.formId === form.id,
+      ).length;
+      const decision = rule({ registrationCount });
+      if (!decision.allow) {
+        throw new RegistrationRefusedError(decision.reason);
+      }
+      this.forms.delete(form.id);
+    });
+  }
+
   formFileDownload(userId: string, orgId: string, fileId: string, sessionId: string): Promise<FileDownload | null> {
     return later(() => {
       for (const form of this.forms.values()) {
         const file = form.orgId === orgId ? form.attachments.find(a => a.id === fileId) : undefined;
-        if (file && form.sessionIds.includes(sessionId)) {
+        if (file && publishedSessionIds(form).includes(sessionId)) {
           return { id: file.id, name: file.name, contentType: file.contentType, bytes: file.bytes };
         }
       }
@@ -280,8 +310,18 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
   publishForm(actor: Actor, formId: string): Promise<RegistrationForm> {
     return later(() => {
       const form = this.ownForm(actor.orgId, formId);
+      if (form.draft.sessionIds.length === 0) {
+        throw new RegistrationFormNoSessionsError();
+      }
+      this.requireSessions(actor.orgId, form.draft.sessionIds);
       const version = (form.versions.at(-1)?.version ?? 0) + 1;
-      form.versions.push({ version, fields: form.draft });
+      form.versions.push({
+        version,
+        name: form.draft.name,
+        season: form.draft.season,
+        sessions: form.draft.sessionIds.map(id => ({ id, name: id })),
+        fields: form.draft.fields,
+      });
 
       return this.view(form);
     });
@@ -333,10 +373,11 @@ export class InMemoryRegistrationRepository implements RegistrationRepository {
   submit(actor: Actor, registration: NewRegistration, rule: RegistrationRule): Promise<string> {
     return later(() => {
       const form = this.ownForm(actor.orgId, registration.formId);
+      const formSessionIds = publishedSessionIds(form);
       const decision = rule({
         publishedVersion: form.versions.at(-1)?.version ?? null,
-        formSessionIds: form.sessionIds,
-        closedSessionIds: form.sessionIds.filter(id => this.closedSessionIds.has(id)),
+        formSessionIds,
+        closedSessionIds: formSessionIds.filter(id => this.closedSessionIds.has(id)),
       });
       if (!decision.allow) {
         throw new RegistrationRefusedError(decision.reason);

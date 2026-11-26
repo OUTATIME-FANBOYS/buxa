@@ -26,7 +26,7 @@ export function teacherInviteEmail({
     body: [
       `Hello ${firstName},`,
       '',
-      `${camp} has invited you to join as a teacher. Open the link below, sign in or create an account with this email address, confirm your details, and join the camp.`,
+      `${camp} has invited you to join as an instructor. Open the link below, sign in or create an account with this email address, confirm your details, and join the camp.`,
       '',
       link,
       '',

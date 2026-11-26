@@ -5,7 +5,7 @@ import { CAMP_ROLES, settle } from '@buxa/domain';
 import { idle } from '@buxa/shared';
 import { PersonForm, type EditablePerson } from '@/components/components/people/forms';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
-import { Dialog as ConfirmDialog } from '@/components/components';
+import { ConfirmDialog } from '@/components/components';
 
 /** The form's invite button reads the UI provider, so every render sits inside one, as the app does. */
 const inUi = (form: ReactElement) => renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}>{form}</UiProvider>);

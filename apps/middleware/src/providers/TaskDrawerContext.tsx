@@ -6,7 +6,13 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 export interface TaskDrawerState {
   /** A task id, or the literal `'new'` (a string, so it needs no union of its own). */
   id: string;
-  defaults?: { columnId?: string; due?: string; projectId?: string };
+  defaults?: {
+    columnId?: string;
+    due?: string;
+    projectId?: string;
+    /** A new task whose project the person picks in the drawer (the Calendar). Without it, the task goes to `projectId`. */
+    chooseProject?: boolean;
+  };
 }
 
 interface TaskDrawerCtx {

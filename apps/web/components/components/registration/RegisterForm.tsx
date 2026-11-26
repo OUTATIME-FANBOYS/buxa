@@ -1,43 +1,32 @@
 'use client';
 
 import { useActionState, useEffect, useMemo, useRef, useState } from 'react';
-import { MAX_AGE_LIMIT, overlaps, type ClockFormat } from '@buxa/domain';
-import { STANDARD_FIELDS, type Class, type CustomField, type FormAttachment } from '@buxa/contracts';
-import { ATTACHMENT_ACCEPT, ATTACHMENT_HINT, fieldError, formatCampDateTime, idle } from '@buxa/shared';
+import { anySpanOverlaps, MAX_AGE_LIMIT, type ClockFormat } from '@buxa/domain';
+import { type CustomField, type FormAttachment, type RegistrationSeries } from '@buxa/contracts';
+import {
+  ATTACHMENT_ACCEPT,
+  ATTACHMENT_HINT,
+  fieldError,
+  formatCampTime,
+  idle,
+  parentOnFile,
+  seriesDaysLabel,
+  type CamperRecord,
+} from '@buxa/shared';
 import { Button, Checkbox, DatePicker, FileField, RadioGroup, Select, TextField } from '@/components/elements';
 import { registrationFormFilePath, registrationFormPath } from '@/config/routes';
 import { submitRegistrationAction } from '@/actions/registration';
 import { ActionMessage } from '@/components/components/classes/forms';
+import { ChildPicker } from './ChildPicker';
 
 /*
- * Records one family's registration on a published form. The family's children are chosen first (from People), then the classes
- * each child takes. The session is never picked: it comes with the class. A child cannot take two classes whose times overlap, and
- * that is said here as it happens (the server checks the same rule again). The names are `selections` (camperId|classId), `standard.<key>`
- * and `custom.<key>`. In a dialog (`variant="dialog"`) the buttons belong to the dialog's pinned footer, tied by `id`.
+ * Records one family's registration on a published form. The family's children are chosen first (from People), then the class
+ * series each child takes: one choice per series, not per day. The session is never picked: it comes with the series. A child cannot
+ * take two series with a day that overlaps, and that is said here as it happens (the server checks the same rule again). The names
+ * are `selections` (camperId|anchorClassId, the series' anchor day), `standard.<key>` and `custom.<key>`. In a dialog
+ * (`variant="dialog"`) the buttons belong to the dialog's pinned footer, tied by `id`.
  */
 
-/** The standard questions, in the order a family answers them, under one short heading each. Labels are short: the heading gives the context. */
-type StandardKey = (typeof STANDARD_FIELDS)[number]['key'];
-
-const GROUPS: { title: string; keys: StandardKey[]; labels: Partial<Record<StandardKey, string>> }[] = [
-  {
-    title: 'Camper details',
-    keys: ['camperFirstName', 'camperLastName', 'camperBirthDate'],
-    labels: { camperFirstName: 'First name', camperLastName: 'Last name', camperBirthDate: 'Date of birth' },
-  },
-  {
-    title: 'Parent or guardian',
-    keys: ['guardianName', 'guardianEmail', 'guardianPhone'],
-    labels: { guardianName: 'Name', guardianEmail: 'Email', guardianPhone: 'Phone' },
-  },
-  {
-    title: 'Emergency contact',
-    keys: ['emergencyContactName', 'emergencyContactPhone'],
-    labels: { emergencyContactName: 'Name', emergencyContactPhone: 'Phone' },
-  },
-];
-
-const REQUIRED = new Map(STANDARD_FIELDS.map(f => [f.key, f.required]));
 const CHOICE_AS_RADIOS = 4;
 const YES_NO = [
   { value: 'yes', label: 'Yes' },
@@ -47,13 +36,11 @@ const YES_NO = [
 export interface RegisterSession {
   id: string;
   name: string;
-  classes: Class[];
+  series: readonly RegistrationSeries[];
 }
 
-export interface RegisterCamper {
-  id: string;
-  name: string;
-}
+/** A child a family can register, with the details the form fills in from the person record (see CamperRecord). */
+export type RegisterCamper = CamperRecord;
 
 /** A section heading with its required mark: one asterisk, the field's own label carries no mark. */
 function SectionTitle({ id, required, children }: { id: string; required?: boolean; children: string }) {
@@ -69,15 +56,25 @@ function SectionTitle({ id, required, children }: { id: string; required?: boole
   );
 }
 
-/** "3 left", or "Full: waitlist" when the class has no place (the family is put on the waitlist). */
-function seatLabel(cls: Class): string {
-  const left = cls.capacity - cls.seatsTaken;
+/** "3 left", or "Full: waitlist" when the series has no place (the family is put on the waitlist). */
+function seatLabel(series: Pick<RegistrationSeries, 'capacity' | 'seatsTaken'>): string {
+  const left = series.capacity - series.seatsTaken;
 
   return left > 0 ? `${left} ${left === 1 ? 'place' : 'places'} left` : 'Full: waitlist';
 }
 
-function ageLabel(cls: Class): string {
-  const { minAge, maxAge } = cls.ageRange;
+/** The series' clock times, from its first active day (camp time), as the Classes table shows them. */
+function timesLabel(series: RegistrationSeries, timeZone: string, clockFormat: ClockFormat): string {
+  const first = series.occurrences[0];
+  if (!first) {
+    return `${series.startTime} to ${series.endTime}`;
+  }
+
+  return `${formatCampTime(first.startsAt, timeZone, clockFormat)} to ${formatCampTime(first.endsAt, timeZone, clockFormat)}`;
+}
+
+function ageLabel(series: Pick<RegistrationSeries, 'ageRange'>): string {
+  const { minAge, maxAge } = series.ageRange;
   if (minAge === 0 && maxAge >= MAX_AGE_LIMIT) {
     return 'All ages';
   }
@@ -85,7 +82,8 @@ function ageLabel(cls: Class): string {
   return maxAge >= MAX_AGE_LIMIT ? `Ages ${minAge}+` : `Ages ${minAge} to ${maxAge}`;
 }
 
-interface Pick {
+/** One child's chosen series: the child, and the series' anchor day. */
+interface Choice {
   camperId: string;
   classId: string;
 }
@@ -123,15 +121,16 @@ export function RegisterForm({
   const formRef = useRef<HTMLFormElement>(null);
   const inDialog = variant === 'dialog';
   const [childIds, setChildIds] = useState<string[]>([]);
-  const [picks, setPicks] = useState<Pick[]>([]);
+  const [picks, setPicks] = useState<Choice[]>([]);
   // The one clash the family just tried to choose, shown under its class. Cleared by the next change.
   const [clash, setClash] = useState<{ key: string; message: string } | null>(null);
 
-  const classById = useMemo(() => {
-    const map = new Map<string, Class>();
+  // Each choice is keyed by its series' anchor day (the id the server takes a place against).
+  const seriesByAnchor = useMemo(() => {
+    const map = new Map<string, RegistrationSeries>();
     for (const session of sessions) {
-      for (const cls of session.classes) {
-        map.set(cls.id, cls);
+      for (const series of session.series) {
+        map.set(series.anchorClassId, series);
       }
     }
 
@@ -153,39 +152,53 @@ export function RegisterForm({
     }
   }, [state, onSaved]);
 
-  function toggleChild(camperId: string, on: boolean) {
+  // A child taken off the tags also loses the classes chosen for them, so the submission never carries a removed child.
+  function setChildren(ids: string[]) {
     setClash(null);
-    setChildIds(current => (on ? [...current, camperId] : current.filter(c => c !== camperId)));
-    if (!on) {
-      setPicks(current => current.filter(p => p.camperId !== camperId));
-    }
+    setChildIds(ids);
+    setPicks(current => current.filter(p => ids.includes(p.camperId)));
   }
 
-  function togglePlace(camperId: string, cls: Class, on: boolean) {
+  function togglePlace(camperId: string, series: RegistrationSeries, on: boolean) {
     setClash(null);
     if (!on) {
-      setPicks(current => current.filter(p => !(p.camperId === camperId && p.classId === cls.id)));
+      setPicks(current => current.filter(p => !(p.camperId === camperId && p.classId === series.anchorClassId)));
 
       return;
     }
-    const taken = picks.filter(p => p.camperId === camperId).map(p => classById.get(p.classId));
-    const other = taken.find((t): t is Class => t !== undefined && overlaps(t, cls));
+    const taken = picks.filter(p => p.camperId === camperId).map(p => seriesByAnchor.get(p.classId));
+    const other = taken.find(
+      (t): t is RegistrationSeries => t !== undefined && anySpanOverlaps(t.occurrences, series.occurrences),
+    );
     if (other) {
       setClash({
-        key: `${camperId}|${cls.id}`,
+        key: `${camperId}|${series.anchorClassId}`,
         message: `This clashes with ${other.name}, which is already chosen for this child. Untick that one first.`,
       });
 
       return;
     }
-    setPicks(current => [...current, { camperId, classId: cls.id }]);
+    setPicks(current => [...current, { camperId, classId: series.anchorClassId }]);
   }
 
   const err = (name: string) => fieldError(state, name);
   const chosenChildren = campers.filter(c => childIds.includes(c.id));
-  // The session a family's download is for: the session of the first class they chose, else the form's first session.
+  // The lead child fills in the camper details and the parent or guardian: the first child with a class chosen, else the first child
+  // chosen. The picks are posted with the lead's first, so the server reads the same child (its first selection) on submit.
+  const leadId = childIds.find(id => picks.some(p => p.camperId === id)) ?? childIds[0];
+  const lead = campers.find(c => c.id === leadId) ?? null;
+  const rank = (camperId: string) => (camperId === leadId ? 0 : childIds.indexOf(camperId) + 1);
+  const orderedPicks = [...picks].sort((a, b) => rank(a.camperId) - rank(b.camperId));
+  const leadKey = lead?.id ?? 'none';
+  const parent = lead?.parent ?? null;
+  const parentFilled = parentOnFile(parent);
+  // The parent's date of birth is read only once it is on file; a parent on file without one asks for it.
+  const parentBirthOnFile = parentFilled && parent?.dateOfBirth != null;
+  // The session a family's download is for: the session of the first series they chose, else the form's first session.
   const downloadSessionId =
-    sessions.find(s => s.classes.some(c => picks.some(p => p.classId === c.id)))?.id ?? sessions[0]?.id ?? null;
+    sessions.find(s => s.series.some(x => picks.some(p => p.classId === x.anchorClassId)))?.id ??
+    sessions[0]?.id ??
+    null;
 
   return (
     <form
@@ -196,7 +209,7 @@ export function RegisterForm({
       className={`${inDialog ? '' : 'panel '}class-form registration-register`}
     >
       <input type="hidden" name="formId" value={formId} />
-      {picks.map(p => (
+      {orderedPicks.map(p => (
         <input
           key={`${p.camperId}|${p.classId}`}
           type="hidden"
@@ -206,26 +219,24 @@ export function RegisterForm({
       ))}
       <p className="muted">Fields marked with an asterisk are required. Nothing is charged here.</p>
 
-      <section className="form-section" aria-labelledby="register-children">
-        <SectionTitle id="register-children" required>
-          Children
-        </SectionTitle>
+      <section className="form-section">
         {campers.length === 0 ? (
-          <p className="muted">
-            No children are in People yet. Add the child there, with a household, and then come back.
-          </p>
+          <>
+            <SectionTitle id="register-children" required>
+              Children
+            </SectionTitle>
+            <p className="muted">
+              No children are in People yet. Add the child there, with a household, and then come back.
+            </p>
+          </>
         ) : (
-          <div className="check-group">
-            {campers.map(camper => (
-              <Checkbox
-                key={camper.id}
-                isSelected={childIds.includes(camper.id)}
-                onChange={on => toggleChild(camper.id, on)}
-              >
-                {camper.name}
-              </Checkbox>
-            ))}
-          </div>
+          <ChildPicker
+            label="Children"
+            people={campers}
+            chosen={childIds}
+            onChange={setChildren}
+            error={chosenChildren.length === 0 ? err('selections') : undefined}
+          />
         )}
       </section>
 
@@ -235,7 +246,8 @@ export function RegisterForm({
             Classes
           </SectionTitle>
           <p className="muted">
-            Choose the classes for each child. Two classes that overlap in time cannot both be chosen for one child.
+            Choose the classes for each child. A class is a series of days: choose it once. Two classes with a day that
+            overlaps in time cannot both be chosen for one child.
           </p>
           {err('selections') && (
             <span className="field-error" role="alert">
@@ -243,20 +255,20 @@ export function RegisterForm({
             </span>
           )}
           {chosenChildren.map(child => (
-            <fieldset key={child.id} className="form-section">
-              <legend className="form-section__title">{child.name}</legend>
+            <fieldset key={child.id} className="form-section" aria-label={child.name}>
+              {/* The child's name is for screen readers only: the choices under it are the child's, and the name is not shown. */}
+              <legend className="sr-only">{child.name}</legend>
               {sessions.map(session =>
-                session.classes.length === 0 ? null : (
+                session.series.length === 0 ? null : (
                   <div key={session.id} className="check-group">
-                    <p className="muted">{session.name}</p>
-                    {session.classes.map(cls => {
-                      const selected = picks.some(p => p.camperId === child.id && p.classId === cls.id);
-                      const key = `${child.id}|${cls.id}`;
+                    {session.series.map(series => {
+                      const selected = picks.some(p => p.camperId === child.id && p.classId === series.anchorClassId);
+                      const key = `${child.id}|${series.anchorClassId}`;
 
                       return (
-                        <div key={cls.id}>
-                          <Checkbox isSelected={selected} onChange={on => togglePlace(child.id, cls, on)}>
-                            {`${cls.name}. ${ageLabel(cls)}. ${formatCampDateTime(cls.startsAt, timeZone, clockFormat)}, ${seatLabel(cls)}`}
+                        <div key={series.id}>
+                          <Checkbox isSelected={selected} onChange={on => togglePlace(child.id, series, on)}>
+                            {`${series.name}. ${ageLabel(series)}. ${seriesDaysLabel(series.weekdays)}, ${timesLabel(series, timeZone, clockFormat)}, ${seatLabel(series)}`}
                           </Checkbox>
                           {clash?.key === key && (
                             <span className="field-error" role="alert">
@@ -294,37 +306,99 @@ export function RegisterForm({
         </section>
       )}
 
-      {GROUPS.map(group => {
-        const titleId = `register-${group.title.replace(/\s+/g, '-').toLowerCase()}`;
+      {/* The camper's details come from the first child chosen, and are read only: they change on the person's page. */}
+      <section key={`camper-${leadKey}`} className="form-section" aria-labelledby="register-camper-details">
+        <SectionTitle id="register-camper-details">Camper details</SectionTitle>
+        <p className="muted">Filled in from the person&apos;s page. Change them there.</p>
+        <div className="people-form-grid">
+          <TextField
+            label="First name"
+            name="standard.camperFirstName"
+            value={lead?.givenName ?? ''}
+            isReadOnly
+            isRequired
+            error={err('standard.camperFirstName')}
+            maxLength={80}
+            autoComplete="off"
+          />
+          <TextField
+            label="Last name"
+            name="standard.camperLastName"
+            value={lead?.familyName ?? ''}
+            isReadOnly
+            isRequired
+            error={err('standard.camperLastName')}
+            maxLength={80}
+            autoComplete="off"
+          />
+        </div>
+        <DatePicker
+          label="Date of birth"
+          name="standard.camperBirthDate"
+          value={lead?.dateOfBirth ?? ''}
+          isReadOnly
+          isRequired
+          error={err('standard.camperBirthDate')}
+        />
+      </section>
 
-        return (
-          <section key={group.title} className="form-section" aria-labelledby={titleId}>
-            <SectionTitle id={titleId}>{group.title}</SectionTitle>
-            {group.keys.map(key => {
-              const name = `standard.${key}`;
-              const required = REQUIRED.get(key) ?? false;
-              const text = group.labels[key] ?? key;
-              if (key === 'camperBirthDate') {
-                return <DatePicker key={key} label={text} name={name} error={err(name)} isRequired={required} />;
-              }
-              const type = key === 'guardianEmail' ? 'email' : key.endsWith('Phone') ? 'tel' : 'text';
-
-              return (
-                <TextField
-                  key={key}
-                  label={text}
-                  name={name}
-                  type={type}
-                  error={err(name)}
-                  isRequired={required}
-                  maxLength={120}
-                  autoComplete="off"
-                />
-              );
-            })}
-          </section>
-        );
-      })}
+      {/* The parent or guardian is on the child's household. When none is on file, these are typed and saved to the household. */}
+      <section key={`parent-${leadKey}`} className="form-section" aria-labelledby="register-parent">
+        <SectionTitle id="register-parent">Parent or guardian</SectionTitle>
+        <p className="muted">
+          {lead === null
+            ? 'Choose a child first, and their household’s parent or guardian is filled in here.'
+            : parentFilled
+              ? 'Filled in from the household. Change it on the person’s page.'
+              : 'Not on file yet. It is saved to the household when the registration is recorded.'}
+        </p>
+        <TextField
+          label="Name"
+          name="standard.guardianName"
+          value={parentFilled ? (parent?.name ?? '') : undefined}
+          defaultValue={parentFilled ? undefined : (parent?.name ?? '')}
+          isReadOnly={parentFilled}
+          isRequired
+          error={err('standard.guardianName')}
+          maxLength={120}
+          autoComplete="off"
+        />
+        {/* Date of birth and phone sit side by side. A parent on file with no date of birth gets the date typed here, and it is saved. */}
+        <div className="form-pair">
+          <DatePicker
+            label="Date of birth"
+            name="standard.guardianDateOfBirth"
+            value={parentBirthOnFile ? (parent?.dateOfBirth ?? '') : undefined}
+            defaultValue={parentBirthOnFile ? undefined : (parent?.dateOfBirth ?? '')}
+            isReadOnly={parentBirthOnFile}
+            isRequired
+            error={err('standard.guardianDateOfBirth')}
+          />
+          <TextField
+            label="Phone"
+            type="tel"
+            name="standard.guardianPhone"
+            value={parentFilled ? (parent?.phone ?? '') : undefined}
+            defaultValue={parentFilled ? undefined : (parent?.phone ?? '')}
+            isReadOnly={parentFilled}
+            isRequired
+            error={err('standard.guardianPhone')}
+            maxLength={32}
+            autoComplete="off"
+          />
+        </div>
+        <TextField
+          label="Email"
+          type="email"
+          name="standard.guardianEmail"
+          value={parentFilled ? (parent?.email ?? '') : undefined}
+          defaultValue={parentFilled ? undefined : (parent?.email ?? '')}
+          isReadOnly={parentFilled}
+          error={err('standard.guardianEmail')}
+          maxLength={254}
+          autoComplete="off"
+        />
+      </section>
 
       {fields.length > 0 && (
         <section className="form-section" aria-labelledby="register-questions">

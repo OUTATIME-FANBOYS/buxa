@@ -139,7 +139,14 @@ export function PeopleTable({
                 {(canEdit || canDelete) && (
                   <td>
                     <div className="buxa:flex buxa:flex-wrap buxa:justify-center buxa:gap-2">
-                      {canEdit && <EditPersonButton personId={person.id} households={households} />}
+                      {canEdit && (
+                        <EditPersonButton
+                          personId={person.id}
+                          households={households}
+                          iconOnly
+                          accessibleName={`Edit ${person.givenName} ${person.familyName}`}
+                        />
+                      )}
                       {canDelete && (
                         <Button
                           type="button"

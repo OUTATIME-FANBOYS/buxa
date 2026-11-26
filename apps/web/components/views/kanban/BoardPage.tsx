@@ -12,7 +12,7 @@ import { BoardView } from '@/components/components/kanban/board';
 import { CalendarView } from '@/components/components/kanban/board-views';
 import { ListView } from '@/components/components/kanban/board-views';
 import { TimelineView } from '@/components/components/kanban/board-views';
-import { FilterBar } from '@/components/components/kanban';
+import { FilterBar, ProjectSwitcher } from '@/components/components/kanban';
 import { ProjectDialog } from '@/components/components/kanban/dialogs';
 import { emptyFilter, matchesFilter, sortTasks } from '@buxa/shared';
 import { diffDays, fmt, today } from '@buxa/shared';
@@ -24,7 +24,7 @@ import { requirePresent } from '@buxa/domain';
 
 export function BoardPage({ projectId }: { projectId?: string }) {
   const router = useRouter();
-  const { s, actions, project, kindOf, readOnly, members } = useStore();
+  const { s, actions, project, projects, kindOf, readOnly, members } = useStore();
   const { openTask } = useTaskDrawer();
   const [filter, setFilter] = useState<Filter>(emptyFilter);
   const [edit, setEdit] = useState(false);
@@ -90,7 +90,10 @@ export function BoardPage({ projectId }: { projectId?: string }) {
     <div className="page page-board">
       <header className="page-head">
         <div className="page-title">
-          <h1>{target.name}</h1>
+          <div className="page-title-row">
+            <h1>{target.name}</h1>
+            <ProjectSwitcher projects={projects} current={target} />
+          </div>
           {target.description && <p className="muted clamp">{target.description}</p>}
           <div className="proj-meta">
             <Pill tone={HEALTH_TONE[health]}>{HEALTH_LABEL[health]}</Pill>
@@ -139,7 +142,7 @@ export function BoardPage({ projectId }: { projectId?: string }) {
           <BoardView project={target} tasks={visible} readOnly={readOnly} manual={filter.sort === 'manual'} />
         )}
         {view === 'list' && <ListView tasks={visible} projects={s.projects} readOnly={readOnly} />}
-        {view === 'calendar' && <CalendarView tasks={visible} canCreate={!readOnly} projectId={target.id} />}
+        {view === 'calendar' && <CalendarView tasks={visible} canCreate={!readOnly} newTaskProjectId={target.id} />}
         {view === 'timeline' && <TimelineView tasks={visible} />}
       </div>
       {edit && <ProjectDialog project={target} onClose={() => setEdit(false)} />}

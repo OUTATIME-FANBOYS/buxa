@@ -41,7 +41,7 @@ describe.skipIf(!url)('session status and registration erasure (migrations 0053 
   const person = async (orgId: string, given: string): Promise<string> =>
     (
       await pool.query<{ id: string }>(
-        `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, $2, 'Tester') RETURNING id`,
+        `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, $2, 'Tester', '1985-06-15', '+1 555 0100') RETURNING id`,
         [orgId, given],
       )
     ).rows[0].id;
@@ -164,7 +164,7 @@ describe.skipIf(!url)('session status and registration erasure (migrations 0053 
       );
       const form = (
         await pool.query<{ id: string }>(
-          `INSERT INTO registration_forms (org_id, name) VALUES ($1, 'Form') RETURNING id`,
+          `INSERT INTO registration_forms (org_id, name, draft_name) VALUES ($1, 'Form', 'Form') RETURNING id`,
           [org],
         )
       ).rows[0].id;
@@ -235,7 +235,7 @@ describe.skipIf(!url)('session status and registration erasure (migrations 0053 
     beforeAll(async () => {
       formId = (
         await pool.query<{ id: string }>(
-          `INSERT INTO registration_forms (org_id, name) VALUES ($1, 'Erase form') RETURNING id`,
+          `INSERT INTO registration_forms (org_id, name, draft_name) VALUES ($1, 'Erase form', 'Erase form') RETURNING id`,
           [org],
         )
       ).rows[0].id;

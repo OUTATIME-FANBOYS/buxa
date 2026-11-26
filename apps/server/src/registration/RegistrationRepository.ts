@@ -8,13 +8,19 @@ import type {
   RegistrationStatus,
 } from '@buxa/domain';
 import type {
-  CustomField,
   DocumentAnswer,
+  PublishedForm,
   RegistrationForm,
   RegistrationFormInput,
   RegistrationRow,
 } from '@buxa/contracts';
 import type { CredentialRepository } from '../credentials/CredentialRepository';
+
+/**
+ * What a repository writes for a form's draft: the contract's input plus its season. The camp no longer enters a season, so the
+ * service writes null; forms written before that keep their stored season, which is still read.
+ */
+export type RegistrationFormWrite = RegistrationFormInput & { season: string | null };
 
 /** A file the service has checked and is about to store: its id (made by the service), name, type and bytes. */
 export interface StoredFileInput {
@@ -38,18 +44,21 @@ export interface FileDownload {
 }
 
 /** The published definitions a submission is checked against. */
-export interface PublishedVersion {
-  version: number;
-  fields: CustomField[];
-}
+/** The published version a family registers on: its name, season, sessions and questions (see PublishedForm in contracts). */
+export type PublishedVersion = PublishedForm;
 
-/** A class of the camp as a registration reads it: its parent session, its name and its times. */
+/**
+ * A class of the camp as a registration reads it: its parent session, its name and its times, and the series it is a day of, with
+ * the series' active days (the ones a child's places are checked against).
+ */
 export interface ClassLookup {
   classId: string;
   sessionId: string;
   className: string;
   startsAt: string;
   endsAt: string;
+  seriesId: string;
+  occurrences: { startsAt: string; endsAt: string }[];
 }
 
 /**
@@ -65,6 +74,9 @@ export interface NewRegistration {
   /** The files for the document questions, one per question given. Stored with the registration, in the same transaction. */
   documents: NewDocument[];
 }
+
+/** Pure: decides from the number of registrations that name a form whether it may be deleted (decideFormDeletion). Runs under the row lock. */
+export type FormDeletionRule = (facts: { registrationCount: number }) => RegistrationDecision;
 
 /** The facts the rule needs, gathered inside the transaction. The service adds the requested sessions. */
 export type RegistrationFactsInTx = Omit<RegistrationFacts, 'requestedSessionIds'>;
@@ -108,9 +120,15 @@ export interface RegistrationRepository {
   getPublishedVersion(userId: string, orgId: string, formId: string): Promise<PublishedVersion | null>;
   /** Audits `registration_form.create`. Throws RegistrationSessionNotFoundError for a session outside the camp. */
   /** Files in `files` are attached to the new form in the same transaction. Audits `registration_form.file_add` for each. */
-  createForm(actor: Actor, input: RegistrationFormInput, files: readonly StoredFileInput[]): Promise<RegistrationForm>;
+  createForm(actor: Actor, input: RegistrationFormWrite, files: readonly StoredFileInput[]): Promise<RegistrationForm>;
   /** Removes an attachment of a form. Audits `registration_form.file_remove`. Throws RegistrationFileNotFoundError. */
   removeFormFile(actor: Actor, formId: string, fileId: string): Promise<void>;
+  /**
+   * Locks the form, counts the registrations that name it, checks the rule and, on allow, deletes the form with its versions, its
+   * covered sessions and its attachments. Audits `registration_form.delete` in the same transaction. Throws
+   * RegistrationFormNotFoundError, or RegistrationRefusedError (form_has_registrations) with nothing written.
+   */
+  deleteForm(actor: Actor, formId: string, rule: FormDeletionRule): Promise<void>;
   /**
    * A form attachment, only when its form covers `sessionId` (the session the family is registering for). Null otherwise: a file of
    * another camp, of another form or for a session the form does not cover.
@@ -127,7 +145,7 @@ export interface RegistrationRepository {
   updateForm(
     actor: Actor,
     formId: string,
-    input: RegistrationFormInput,
+    input: RegistrationFormWrite,
     files: readonly StoredFileInput[],
   ): Promise<RegistrationForm>;
   /** Freezes the draft as the next version. Audits `registration_form.publish`. Throws RegistrationFormNotFoundError. */

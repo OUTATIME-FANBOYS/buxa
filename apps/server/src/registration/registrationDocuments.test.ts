@@ -6,6 +6,7 @@ import { createRegistrationService, type RegistrationService } from './Registrat
 import { InMemoryRegistrationRepository } from './InMemoryRegistrationRepository';
 import { InMemoryCredentialRepository } from '../credentials/InMemoryCredentialRepository';
 import { InMemoryDatabase } from '../people/InMemoryDatabase';
+import { adaFixture, benFixture, registrantPeople } from './__tests__/registrantPeople';
 import { RegistrationFileNotFoundError, RegistrationInvalidError } from './errors';
 
 /*
@@ -29,6 +30,8 @@ const CLASSES = {
       className: 'Archery',
       startsAt: '2027-07-10T10:00:00.000Z',
       endsAt: '2027-07-10T11:00:00.000Z',
+      seriesId: CLASS_A,
+      occurrences: [{ startsAt: '2027-07-10T10:00:00.000Z', endsAt: '2027-07-10T11:00:00.000Z' }],
     },
   ],
   [CAMP_B]: [],
@@ -44,13 +47,14 @@ const FIELDS: CustomField[] = [
   { kind: 'yes_no', key: 'photos', label: 'Photo consent', required: true },
 ];
 
-const formInput = { name: 'Summer 2027', season: 'Summer', sessionIds: [SESSION_A], fields: FIELDS };
+const formInput = { name: 'Summer 2027', sessionIds: [SESSION_A], fields: FIELDS };
 
 const standard = {
   camperFirstName: 'Ada',
   camperLastName: 'Lovelace',
   camperBirthDate: '2014-03-09',
   guardianName: 'Byron Lovelace',
+  guardianDateOfBirth: '1979-11-02',
   guardianPhone: '555-0100',
   emergencyContactName: 'Mary Somerville',
   emergencyContactPhone: '555-0111',
@@ -64,9 +68,16 @@ function setup(): RegistrationService {
     CLASSES,
   );
 
-  return createRegistrationService(repo, () => {
-    throw new Error('no badge expected');
-  });
+  return createRegistrationService(
+    repo,
+    () => {
+      throw new Error('no badge expected');
+    },
+    registrantPeople([
+      adaFixture(CAMPER_ADA, '5e6f7a8b-3333-4a2b-8c3d-4e5f6a7b8c9d'),
+      benFixture(CAMPER_BEN, '5e6f7a8b-4444-4a2b-8c3d-4e5f6a7b8c9d'),
+    ]),
+  );
 }
 
 /** An admin's form, published, with one attached file. */
@@ -77,10 +88,13 @@ async function publishedForm(service: RegistrationService) {
   return form;
 }
 
+// A posted camper name and date of birth must match the person on file (standardAnswers), so Ben gets his own.
+const BEN_STANDARD = { ...standard, camperFirstName: 'Ben', camperLastName: 'Carrow', camperBirthDate: '2013-05-01' };
+
 const submission = (formId: string, camperId: string) => ({
   formId,
   selections: [{ camperId, classId: CLASS_A }],
-  standard,
+  standard: camperId === CAMPER_BEN ? BEN_STANDARD : standard,
   custom: { photos: 'yes' },
 });
 

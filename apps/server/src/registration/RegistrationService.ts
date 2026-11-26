@@ -3,6 +3,7 @@ import {
   can,
   decideConfirmation,
   decideErasure,
+  decideFormDeletion,
   decideRegistration,
   decideSelections,
   decideWithdrawal,
@@ -24,6 +25,15 @@ import {
   type RegistrationRow,
 } from '@buxa/contracts';
 import { assertAllowed } from '../auth/authorize';
+import {
+  readCamper,
+  saveParent,
+  saveParentDateOfBirth,
+  type CamperOnFile,
+  type ParentSave,
+  type RegistrantPeople,
+} from './registrantPeople';
+import { PARENT_NAME_NEEDS_TWO_WORDS, parentOnFile, splitName, standardAnswers } from '@buxa/shared';
 import type { CredentialService } from '../services/credentials/CredentialService';
 import type { CredentialRepository } from '../credentials/CredentialRepository';
 import {
@@ -76,6 +86,11 @@ export interface RegistrationService {
   updateForm(actor: Actor, formId: string, input: unknown, files?: readonly UploadedFile[]): Promise<RegistrationForm>;
   /** Removes one attachment of a form. Needs registration:manage. Audited. */
   removeFormFile(actor: Actor, formId: string, fileId: string): Promise<void>;
+  /**
+   * Deletes a form that no registration names, in any status, with its versions, covered sessions and attachments. Needs
+   * registration:manage. A form with registrations is refused (form_has_registrations) and nothing is written. Audited.
+   */
+  deleteForm(actor: Actor, formId: string): Promise<void>;
   /**
    * A form attachment, for the session the family registers for. The form must cover that session, or the file reads as not found.
    * Needs registration:submit (the people who take a registration hand the form's files out).
@@ -223,6 +238,7 @@ export type CredentialsFor = (credentials: CredentialRepository) => CredentialSe
 export function createRegistrationService(
   repo: RegistrationRepository,
   credentialsFor: CredentialsFor,
+  people: RegistrantPeople,
 ): RegistrationService {
   return {
     async listForms(actor) {
@@ -241,14 +257,22 @@ export function createRegistrationService(
       assertAllowed(actor, 'registration:manage');
       const parsed = parseFormInput(input);
 
-      return repo.createForm(actor, parsed, storeFormFiles(files));
+      return repo.createForm(actor, { ...parsed, season: null }, storeFormFiles(files));
     },
 
     async updateForm(actor, formId, input, files = []) {
       assertAllowed(actor, 'registration:manage');
       const parsed = parseFormInput(input);
 
-      return repo.updateForm(actor, formId, parsed, storeFormFiles(files));
+      return repo.updateForm(actor, formId, { ...parsed, season: null }, storeFormFiles(files));
+    },
+
+    async deleteForm(actor, formId) {
+      assertAllowed(actor, 'registration:manage');
+      if (!isUuid(formId)) {
+        throw new RegistrationFormNotFoundError();
+      }
+      await repo.deleteForm(actor, formId, decideFormDeletion);
     },
 
     async removeFormFile(actor, formId, fileId) {
@@ -324,20 +348,32 @@ export function createRegistrationService(
       if (!published) {
         throw new RegistrationRefusedError('form_not_published');
       }
+      const submission = isRecord(input) ? input : {};
+      // The child's name and date of birth, and the parent or guardian on file, are read from People. A posted camper value that
+      // differs is refused; the parent or guardian on file is the one stored.
+      const camper = await childOf(people, actor, submission);
+      const checked = standardAnswers(postedStrings(submission.standard), camper);
+      if (Object.keys(checked.errors).length > 0) {
+        throw new RegistrationInvalidError(checked.errors);
+      }
       const parsed = buildSubmissionSchema(published.fields).safeParse({
-        ...(typeof input === 'object' && input !== null ? input : {}),
+        ...submission,
         formId,
+        standard: checked.standard,
       });
       if (!parsed.success) {
         throw new RegistrationInvalidError(fieldErrorsOf(parsed.error.issues));
       }
       const { selections: chosen, standard, custom } = parsed.data;
+      // Checked before anything is written: a parent or guardian to save needs a first and last name, and a household.
+      const parentToSave = parentToSaveFor(camper, standard);
+      const parentBirthDate = parentBirthDateToSave(camper, standard);
       const uploaded = storeDocuments(published.fields, documents);
       const selections = await resolveSelections(repo, actor, chosen);
       // The session is taken from each class: the family never picks one.
       const sessionIds = [...new Set(selections.map(s => s.sessionId))];
 
-      return repo.submit(
+      const registration = await repo.submit(
         actor,
         {
           formId,
@@ -349,6 +385,16 @@ export function createRegistrationService(
         },
         facts => decideRegistration({ ...facts, requestedSessionIds: sessionIds }),
       );
+      // Recorded: a parent or guardian who was not on file is now saved to the child's household.
+      if (parentToSave) {
+        await saveParent(people, actor, camper, parentToSave);
+      }
+      // A parent on file with no date of birth gets the one posted.
+      if (parentBirthDate !== null) {
+        await saveParentDateOfBirth(people, actor, camper, parentBirthDate);
+      }
+
+      return registration;
     },
 
     async recordPayment(actor, registrationClassId, input) {
@@ -428,9 +474,82 @@ function refuseSelections(decision: Exclude<SelectionDecision, { allow: true }>,
 }
 
 /**
- * Looks up each chosen class in the camp and checks that the child-and-class pairs fit together: no class twice for one child, and
- * no two classes of one child at overlapping times. Each class must be in the camp; a form's own session set is checked by the rule.
+ * Looks up each chosen class in the camp and checks that the child-and-series pairs fit together: no series twice for one child, and
+ * no two series of one child with a day that overlaps. Each class must be in the camp; a form's own session set is checked by the rule.
  */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/** The string values of a posted object. Anything else is left out, so the schema reports it as missing. */
+function postedStrings(value: unknown): Record<string, string> {
+  if (!isRecord(value)) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(value).filter((entry): entry is [string, string] => typeof entry[1] === 'string'),
+  );
+}
+
+/**
+ * The child a registration is for: the first class selection's camper, read from People. Refused when that camper is not a child
+ * in People. The rest of the family's children are checked when their places are taken.
+ */
+async function childOf(
+  people: RegistrantPeople,
+  actor: Actor,
+  submission: Record<string, unknown>,
+): Promise<CamperOnFile> {
+  const selections: unknown = submission.selections;
+  const first: unknown = Array.isArray(selections) ? selections.at(0) : undefined;
+  const camperId = isRecord(first) && typeof first.camperId === 'string' ? first.camperId : '';
+  const camper = isUuid(camperId) ? await readCamper(people, actor, camperId) : null;
+  if (!camper) {
+    throw new RegistrationInvalidError({ selections: 'Choose the children from People first.' });
+  }
+
+  return camper;
+}
+
+/**
+ * The parent or guardian to save, or null when one is already on file. Refused, before anything is written, when the name has no
+ * last name or when the child has no household to hold a guardian.
+ */
+function parentToSaveFor(camper: CamperOnFile, standard: Record<string, string | undefined>): ParentSave | null {
+  if (parentOnFile(camper.parent)) {
+    return null;
+  }
+  const names = splitName(standard.guardianName ?? '');
+  if (!names) {
+    throw new RegistrationInvalidError({ 'standard.guardianName': PARENT_NAME_NEEDS_TWO_WORDS });
+  }
+  if (camper.householdId === null) {
+    throw new RegistrationInvalidError({
+      'standard.guardianName': 'This child has no household yet. Add them to one in People first.',
+    });
+  }
+
+  return {
+    ...names,
+    email: standard.guardianEmail ? standard.guardianEmail : null,
+    phone: standard.guardianPhone ?? '',
+    dateOfBirth: standard.guardianDateOfBirth ?? '',
+  };
+}
+
+/**
+ * The date of birth to save on a parent who is on file without one, or null when there is nothing to save (the parent has a date of
+ * birth on file, or is not on file at all, in which case parentToSaveFor saves the whole parent).
+ */
+function parentBirthDateToSave(camper: CamperOnFile, standard: Record<string, string | undefined>): string | null {
+  if (!parentOnFile(camper.parent) || camper.parent?.dateOfBirth) {
+    return null;
+  }
+
+  return standard.guardianDateOfBirth ?? null;
+}
+
 async function resolveSelections(
   repo: RegistrationRepository,
   actor: Actor,
@@ -454,6 +573,8 @@ async function resolveSelections(
       className: lookup.className,
       startsAt: lookup.startsAt,
       endsAt: lookup.endsAt,
+      seriesId: lookup.seriesId,
+      occurrences: lookup.occurrences,
       sessionId: lookup.sessionId,
     };
   });

@@ -46,11 +46,12 @@ describe('registrationSearchRows', () => {
 
 describe('RegistrationSearch (the main registration list)', () => {
   it('shows each registration with Withdraw and Archive, and Delete only for an admin or the owner', () => {
+    // The actions are icon buttons named for the camper ("Delete Ada Lovelace"), so the name is the check.
     const staff = render([row('reg-1')]);
-    expect(staff).toContain('Withdraw');
-    expect(staff).toContain('Archive');
-    expect(staff).not.toContain('>Delete<');
-    expect(render([row('reg-1')], true)).toContain('>Delete<');
+    expect(staff).toContain('aria-label="Withdraw Ada Lovelace"');
+    expect(staff).toContain('aria-label="Archive Ada Lovelace"');
+    expect(staff).not.toContain('aria-label="Delete Ada Lovelace"');
+    expect(render([row('reg-1')], true)).toContain('aria-label="Delete Ada Lovelace"');
   });
 
   it('shows a withdrawn registration as Withdrawn', () => {
@@ -62,7 +63,8 @@ describe('RegistrationSearch (the main registration list)', () => {
   it('hides an archived registration until archived ones are asked for', () => {
     const html = render([row('reg-1'), row('reg-2', { archivedAt: '2027-06-02T00:00:00.000Z' })]);
     expect(html).toContain('Show archived registrations');
-    expect(html.match(/Ada Lovelace/g)).toHaveLength(1);
+    // One camper cell per visible registration; the action buttons' names also carry the camper's name.
+    expect(html.match(/<td>Ada Lovelace<\/td>/g)).toHaveLength(1);
   });
 
   it('says when every registration is archived', () => {

@@ -7,7 +7,7 @@ import type { Assignment, Group, Room } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
 import { settle } from '@buxa/domain';
 import { UiProvider } from '@buxa/middleware/providers/providers';
-import { Dialog as ConfirmDialog } from '@/components/components';
+import { ConfirmDialog } from '@/components/components';
 import { FormRefusal, RatioOverridePopUp } from '@/components/components/groups/AssignDialog';
 
 // The groups and assign screens: they render for a staff member and a viewer, and a refusal shows as small polite text. Mocks follow
@@ -17,7 +17,7 @@ const services = vi.hoisted(() => ({
   groups: { listGroups: vi.fn(), listRooms: vi.fn(), listAssignments: vi.fn(), assign: vi.fn() },
   people: { list: vi.fn() },
 }));
-const session = vi.hoisted<{ role: Role | null }>(() => ({ role: 'staff' }));
+const session = vi.hoisted<{ role: Role | 'teacher' | null }>(() => ({ role: 'staff' }));
 const notFound = vi.hoisted(() =>
   vi.fn(() => {
     throw new Error('NEXT_NOT_FOUND');
@@ -27,7 +27,17 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('next/navigation', () => ({ notFound, redirect: vi.fn() }));
 vi.mock('@buxa/server/runtime', () => ({ getRuntime: () => ({ services }) }));
 vi.mock('@buxa/server/composers/people/camp', () => ({
-  currentActor: () => settle(() => (session.role ? { userId: 'u1', orgId: 'o1', role: session.role } : null)),
+  currentActor: () =>
+    settle(() =>
+      session.role
+        ? {
+            userId: 'u1',
+            orgId: 'o1',
+            role: session.role === 'teacher' ? 'viewer' : session.role,
+            instructor: session.role === 'teacher',
+          }
+        : null,
+    ),
 }));
 const { GroupsPage } = await import('@/components/views/groups/GroupsPage');
 const { AssignPage } = await import('@/components/views/groups/AssignPage');
@@ -128,10 +138,20 @@ describe('the assign page', () => {
     expect(html).toContain('Grace Hopper');
   });
 
-  it('offers the Place or move button to staff', async () => {
+  it('offers one Place button, in the header of the campers not placed yet, to staff', async () => {
     const html = render(await AssignPage({ sessionId: SESSION_ID }));
 
-    expect(html).toContain('Place or move');
+    expect(html).toMatch(/class="unplaced-head"[\s\S]*?>Place<\//);
+    expect(html).not.toContain('Place or move');
+    expect(html).not.toContain('aria-label="Place Ada Lovelace"');
+  });
+
+  it('puts the groups and the campers not placed yet in the two-column layout', async () => {
+    const html = render(await AssignPage({ sessionId: SESSION_ID }));
+
+    expect(html).toContain('class="assign-layout"');
+    expect(html).toContain('assign-layout__groups');
+    expect(html).toContain('assign-layout__unplaced');
   });
 
   it('shows the Unassign button on each member to staff only', async () => {
@@ -151,6 +171,7 @@ describe('the assign page', () => {
 
     expect(html).toContain('Ada Lovelace');
     expect(html).not.toContain('Place or move');
+    expect(html).not.toMatch(/>Place</);
     expect(html).toContain('Only staff can place or move people.');
   });
 });

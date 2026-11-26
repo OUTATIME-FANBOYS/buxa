@@ -4,22 +4,19 @@ import { useActionState, useEffect, useRef } from 'react';
 import type { CustomField, FormAttachment } from '@buxa/contracts';
 import { ATTACHMENT_ACCEPT, ATTACHMENT_HINT, fieldError, idle } from '@buxa/shared';
 import { Button, FileField, TextField } from '@/components/elements';
-import { ROUTES } from '@/config/routes';
 import { createFormAction, removeFormFileAction, updateFormAction } from '@/actions/registration';
 import { ActionMessage } from '@/components/components/classes/forms';
 import { QuestionBuilder } from './QuestionBuilder';
 import { SessionPicker } from './SessionPicker';
 
 /*
- * A registration form's name, season, sessions and own questions. The same screen creates a form and edits its draft: the create
- * mode posts to createFormAction and the edit mode to updateFormAction (with the form id). Saving a draft does not publish it.
- * In a dialog (`variant="dialog"`) the buttons belong to the dialog's pinned footer, tied by `id`, and `onPendingChange` reports
- * the pending state to it.
+ * A registration form's name, sessions and own questions, in a pop-up. The same fields create a form and edit its draft: the
+ * create mode posts to createFormAction and the edit mode to updateFormAction (with the form id). Saving a draft does not publish
+ * it. The buttons are not here: RegistrationFormDialog puts them in the pop-up's pinned footer, tied to this form by `id`.
  */
 
 export interface FormEditorInitial {
   name: string;
-  season: string | null;
   sessionIds: string[];
   fields: CustomField[];
   attachments: FormAttachment[];
@@ -29,7 +26,6 @@ export function FormEditor({
   mode,
   formId,
   id,
-  variant = 'page',
   sessions,
   initial,
   onPendingChange,
@@ -37,9 +33,8 @@ export function FormEditor({
 }: {
   mode: 'create' | 'edit';
   formId?: string;
-  /** The form element's id, for a dialog footer's submit button to name with its `form` attribute. */
-  id?: string;
-  variant?: 'page' | 'dialog';
+  /** The form element's id. The pop-up's footer submit button names it with its `form` attribute. */
+  id: string;
   sessions: readonly { id: string; name: string }[];
   initial?: FormEditorInitial;
   onPendingChange?: (pending: boolean) => void;
@@ -50,7 +45,6 @@ export function FormEditor({
   // Removing an attachment is its own action, posted from the row's button (formAction), so it never submits the form's draft.
   const [removeState, removeFile] = useActionState(removeFormFileAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
-  const inDialog = variant === 'dialog';
 
   useEffect(() => {
     if (state.status === 'error' && state.fieldErrors) {
@@ -70,13 +64,7 @@ export function FormEditor({
   const err = (name: string) => fieldError(state, name);
 
   return (
-    <form
-      id={id}
-      ref={formRef}
-      action={formAction}
-      noValidate
-      className={`${inDialog ? '' : 'panel '}class-form registration-editor`}
-    >
+    <form id={id} ref={formRef} action={formAction} noValidate className="class-form registration-editor">
       {formId && <input type="hidden" name="formId" value={formId} />}
 
       <div className="form-section">
@@ -89,19 +77,13 @@ export function FormEditor({
           maxLength={120}
           autoComplete="off"
         />
-        <TextField
-          label="Season"
-          name="season"
-          defaultValue={initial?.season ?? ''}
-          error={err('season')}
-          maxLength={60}
-          hint="For example Summer 2027. Only for your own reference."
-          autoComplete="off"
-        />
       </div>
 
-      <section className="form-section" aria-labelledby="registration-sessions">
-        <h3 id="registration-sessions" className="form-section__title">
+      <section className="form-section form-section--flat" aria-labelledby="registration-sessions">
+        <h3
+          id="registration-sessions"
+          className="form-section__title field-label buxa:text-[length:var(--fs-s)] buxa:font-semibold buxa:text-[var(--text-2)]"
+        >
           Sessions this form covers
           <span className="field-required" aria-hidden="true">
             {' *'}
@@ -170,26 +152,9 @@ export function FormEditor({
         <span className="field-hint">{ATTACHMENT_HINT}</span>
       </section>
 
-      {/* A pop-up's create posts dialog=1, so the action returns a success instead of redirecting to the new form. */}
-      {inDialog && <input type="hidden" name="dialog" value="1" />}
+      {/* A create posts dialog=1, so the action returns a success instead of redirecting to the new form. */}
+      {mode === 'create' && <input type="hidden" name="dialog" value="1" />}
       <ActionMessage state={state} />
-      {!inDialog && (
-        <div className="classes-actions">
-          <Button
-            type="submit"
-            variant={mode === 'create' ? 'primary' : 'glass'}
-            disabled={pending || sessions.length === 0}
-            className="classes-target"
-          >
-            {pending ? 'Saving...' : mode === 'create' ? 'Create form' : 'Save draft'}
-          </Button>
-          {mode === 'create' && (
-            <Button variant="glass" className="classes-target" href={ROUTES.registration}>
-              Cancel
-            </Button>
-          )}
-        </div>
-      )}
     </form>
   );
 }

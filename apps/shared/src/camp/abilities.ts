@@ -1,21 +1,17 @@
-import { GRANTS, type Action, type Role } from '@buxa/domain';
+import { grantsOf, ORG_ACCESS, type Action, type Role } from '@buxa/domain';
 import type { RoleTone } from '../tones';
 
-export const ROLE_LABEL: Readonly<Record<Role, string>> = {
-  owner: 'Owner',
-  admin: 'Admin',
-  staff: 'Staff',
-  viewer: 'Viewer',
-  teacher: 'Teacher',
-};
+/** The label of each organization access level, from the role table in @buxa/domain (docs/ROLES.md). */
+export const ROLE_LABEL: Readonly<Record<Role, string>> = Object.fromEntries(
+  ORG_ACCESS.map(role => [role.key, role.label]),
+) as Record<Role, string>;
 
-/** The pill colour for each camp role: owner violet, admin teal, staff lime, viewer blue, teacher orange. */
+/** The pill colour for each access level: owner violet, admin teal, staff lime, viewer blue. */
 export const ROLE_TONE: Readonly<Record<Role, RoleTone>> = {
   owner: 'role-owner',
   admin: 'role-admin',
   staff: 'role-staff',
   viewer: 'role-viewer',
-  teacher: 'role-teacher',
 };
 
 /** The abilities worth showing a person, in plain words. */
@@ -30,9 +26,13 @@ const ABILITIES: readonly { action: Action; label: string }[] = [
   { action: 'org:delete', label: 'Delete the camp' },
 ];
 
-/** What this role is granted, from the same table the server checks. Per-request rules (like not granting above your own role) are not shown here. */
-export const abilitiesFor = (role: Role): { label: string; allowed: boolean }[] =>
-  ABILITIES.map(({ action, label }) => ({ label, allowed: GRANTS[role].has(action) }));
+/**
+ * What this access level is granted, from the same table the server checks. `teaching` is the teaching view (a viewer whose person is
+ * an instructor). Per-request rules (like not granting above your own role, or the assigned-classes scope) are not shown here.
+ */
+export const abilitiesFor = (role: Role, teaching = false): { label: string; allowed: boolean }[] =>
+  ABILITIES.map(({ action, label }) => ({ label, allowed: grantsOf({ role, instructor: teaching }).has(action) }));
 
-/** Whether a role is granted an action, for deciding what to show. The server still decides what is allowed. */
-export const roleAllows = (role: Role, action: Action): boolean => GRANTS[role].has(action);
+/** Whether an access level is granted an action, for deciding what to show. The server still decides what is allowed. */
+export const roleAllows = (role: Role, action: Action, teaching = false): boolean =>
+  grantsOf({ role, instructor: teaching }).has(action);

@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { AppProviders } from '../AppProviders';
 import { useUi, type ConfirmDialogProps } from '../UiProvider';
 
-const Dialog: ComponentType<ConfirmDialogProps> = ({ children }) => <div>{children}</div>;
+const Dialog: ComponentType<ConfirmDialogProps> = ({ title }) => <div role="dialog">{title}</div>;
 
 function Probe() {
   useUi();

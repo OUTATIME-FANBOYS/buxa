@@ -7,6 +7,13 @@ import { describe, expect, it } from 'vitest';
 // order ambiguous and a later rename breaks databases that already ran the file. This test fails the build instead.
 const DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'migrations');
 
+/**
+ * Numbers that are deliberately left without a file. Do not renumber migrations to fill them: 0073 and 0074 keep their names.
+ * 0072 is held back pending an owner decision, so the numbering check skips it and nothing else.
+ * Remove an entry here only when the number is used by a real migration file.
+ */
+const RESERVED_NUMBERS: ReadonlyMap<number, string> = new Map([[72, 'held back pending an owner decision']]);
+
 describe('migration numbering', () => {
   const files = readdirSync(DIR)
     .filter(f => f.endsWith('.sql'))
@@ -26,7 +33,22 @@ describe('migration numbering', () => {
     }
   });
 
-  it('the numbers run 0001, 0002, ... with no gaps', () => {
-    numbers.forEach((n, i) => expect(n, `${files[i]} should be number ${String(i + 1).padStart(4, '0')}`).toBe(i + 1));
+  it('the numbers run 0001, 0002, ... with no gaps, except the reserved numbers', () => {
+    let expected = 1;
+    numbers.forEach((n, i) => {
+      while (RESERVED_NUMBERS.has(expected)) {
+        expected += 1;
+      }
+      expect(n, `${files[i]} should be number ${String(expected).padStart(4, '0')}`).toBe(expected);
+      expected += 1;
+    });
+  });
+
+  it('a reserved number has no file', () => {
+    for (const reserved of RESERVED_NUMBERS.keys()) {
+      expect(numbers, `${String(reserved).padStart(4, '0')} is reserved and must not have a file`).not.toContain(
+        reserved,
+      );
+    }
   });
 });

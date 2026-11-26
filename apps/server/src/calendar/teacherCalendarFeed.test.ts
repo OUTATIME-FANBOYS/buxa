@@ -9,10 +9,10 @@ const CAMP = '11111111-1111-4111-8111-111111111111';
 const OTHER_CAMP = '22222222-2222-4222-8222-222222222222';
 const NOW = new Date('2027-07-01T00:00:00Z');
 
-const teacher: Actor = { userId: 'user-teacher', orgId: CAMP, role: 'teacher' };
-const teacherTwo: Actor = { userId: 'user-teacher-two', orgId: CAMP, role: 'teacher' };
-const unassigned: Actor = { userId: 'user-unassigned', orgId: CAMP, role: 'teacher' };
-const otherCampTeacher: Actor = { userId: 'user-other-camp', orgId: OTHER_CAMP, role: 'teacher' };
+const teacher: Actor = { userId: 'user-teacher', orgId: CAMP, role: 'viewer', instructor: true };
+const teacherTwo: Actor = { userId: 'user-teacher-two', orgId: CAMP, role: 'viewer', instructor: true };
+const unassigned: Actor = { userId: 'user-unassigned', orgId: CAMP, role: 'viewer', instructor: true };
+const otherCampTeacher: Actor = { userId: 'user-other-camp', orgId: OTHER_CAMP, role: 'viewer', instructor: true };
 const viewer: Actor = { userId: 'user-viewer', orgId: CAMP, role: 'viewer' };
 const staff: Actor = { userId: 'user-staff', orgId: CAMP, role: 'staff' };
 const admin: Actor = { userId: 'user-admin', orgId: CAMP, role: 'admin' };

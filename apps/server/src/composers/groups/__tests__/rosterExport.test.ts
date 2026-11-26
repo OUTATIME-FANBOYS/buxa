@@ -68,7 +68,11 @@ let staff: Actor;
 let session: SeededSession;
 let otherSession: SeededSession;
 
-const actorIn = (role: Role, org?: string): Actor => ({ userId: randomUUID(), orgId: org ?? orgId, role });
+/** `teacher` is a viewer whose person is an instructor (migration 0069): the teaching view. */
+const actorIn = (role: Role | 'teacher', org?: string): Actor =>
+  role === 'teacher'
+    ? { userId: randomUUID(), orgId: org ?? orgId, role: 'viewer', instructor: true }
+    : { userId: randomUUID(), orgId: org ?? orgId, role };
 
 async function placeOne(name: string, dateOfBirth: string, groupId: string, roomId: string) {
   const person = repo.seedPerson({ orgId, name, dateOfBirth });

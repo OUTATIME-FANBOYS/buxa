@@ -1,4 +1,4 @@
-import { Dialog as ConfirmDialog } from '@/components/components';
+import { ConfirmDialog } from '@/components/components';
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -11,7 +11,7 @@ const notFound = vi.hoisted(() =>
     throw new Error('NEXT_NOT_FOUND');
   }),
 );
-const session: { role: Role | null } = vi.hoisted(() => ({ role: 'teacher' }));
+const session: { role: Role | 'teacher' | null } = vi.hoisted(() => ({ role: 'teacher' }));
 const services = vi.hoisted(() => ({
   classes: { listMyClasses: vi.fn() },
   orgs: { getCamp: vi.fn(), listMembers: vi.fn() },
@@ -23,7 +23,17 @@ vi.mock('@buxa/server/session/index', () => ({
   requireSession: () => Promise.resolve({ user: { clockFormat: null } }),
 }));
 vi.mock('@buxa/server/composers/people/camp', () => ({
-  currentActor: () => settle(() => (session.role ? { userId: 'teacher-1', orgId: 'o1', role: session.role } : null)),
+  currentActor: () =>
+    settle(() =>
+      session.role
+        ? {
+            userId: 'teacher-1',
+            orgId: 'o1',
+            role: session.role === 'teacher' ? 'viewer' : session.role,
+            instructor: session.role === 'teacher',
+          }
+        : null,
+    ),
 }));
 
 const { MyClasses } = await import('@/components/views/classes');

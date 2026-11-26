@@ -32,7 +32,8 @@ export function registrationSearchRows(
         formId: form.id,
         archived: row.archivedAt !== null,
         camperName: `${row.standard.camperFirstName ?? ''} ${row.standard.camperLastName ?? ''}`.trim(),
-        formName: form.name,
+        // Registrations are for the published version, so the list names the form as families see it.
+        formName: form.published?.name ?? form.name,
         sessionId: session.sessionId,
         sessionName: session.sessionName,
         status: row.status,

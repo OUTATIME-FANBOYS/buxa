@@ -15,7 +15,11 @@ const session = vi.hoisted(() => ({
   current: null as null | { user: { id: string; email: string; name: string }; memberships: Membership[] },
   camp: null as Membership | null,
 }));
-const users = vi.hoisted(() => ({ memberOptionsIn: vi.fn(() => Promise.resolve([])) }));
+const users = vi.hoisted(() => ({
+  memberOptionsIn: vi.fn(() => Promise.resolve([])),
+  isInstructorIn: vi.fn(() => Promise.resolve(false)),
+  memberOptionsOf: vi.fn(() => Promise.resolve([])),
+}));
 const orgs = vi.hoisted(() => ({
   getCamp: vi.fn(() =>
     settle(() => ({ id: 'o1', name: 'Sunrise', slug: 'sunrise', createdAt: '2026-03-04T10:00:00Z', memberCount: 2 })),
@@ -72,7 +76,7 @@ const withTeacher = () =>
     members: [
       { id: 'u1', name: 'Maya Chen', email: 'maya@example.com', role: 'owner' },
       { id: 'u2', name: 'Sam Lee', email: 'sam@example.com', role: 'viewer' },
-      { id: 'u3', name: 'Ana Ruiz', email: 'ana@example.com', role: 'teacher' },
+      { id: 'u3', name: 'Ana Ruiz', email: 'ana@example.com', role: 'viewer', instructor: true },
     ],
   }));
 
@@ -107,7 +111,8 @@ describe('Members', () => {
   it('lists the members with their roles', async () => {
     as('viewer');
     const html = renderToStaticMarkup(await Members());
-    expect(orgs.listMembers).toHaveBeenCalledWith({ userId: 'u1', orgId: 'o1', role: 'viewer' });
+    // A viewer's actor carries its teaching flag (withMemberOptions), so an instructor flag of false is part of the shape.
+    expect(orgs.listMembers).toHaveBeenCalledWith({ userId: 'u1', orgId: 'o1', role: 'viewer', instructor: false });
     expect(html).toContain('Maya Chen');
     expect(html).toContain('2 people have access');
     expect(html).toContain('Owner');
@@ -134,7 +139,6 @@ describe('CampFrame', () => {
       'Home',
       'Sessions',
       'Registration',
-      'Holds',
       'Check-in',
       'On site',
       'Attendance',

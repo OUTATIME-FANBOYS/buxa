@@ -9,7 +9,8 @@ import { Button, Checkbox, Select, TextField } from '@/components/elements';
  * in the hidden `fields` input; the server checks it with the contract, so nothing here is trusted.
  */
 
-const KIND_LABEL: Record<FieldKind, string> = {
+/** The name of each kind of question, as the form shows it. Exported so the read-only view names a question the same way. */
+export const KIND_LABEL: Record<FieldKind, string> = {
   text: 'Text',
   choice: 'Choice',
   date: 'Date',
@@ -36,7 +37,8 @@ export function keyFromLabel(label: string, taken: readonly string[]): string {
   return key;
 }
 
-function describe(field: CustomField): string {
+/** One line about a question: its kind, whether it is required, and a choice's options. Shared by the builder and the read-only view. */
+export function describeQuestion(field: CustomField): string {
   const parts = [KIND_LABEL[field.kind], field.required ? 'Required' : 'Optional'];
   if (field.kind === 'choice') {
     parts.push(field.options.join(', '));
@@ -102,7 +104,7 @@ export function QuestionBuilder({ initial = [] }: { initial?: CustomField[] }) {
             <li key={field.key} className="question-list__item">
               <span className="question-list__text">
                 <strong>{field.label}</strong>
-                <span className="muted">{describe(field)}</span>
+                <span className="muted">{describeQuestion(field)}</span>
               </span>
               <Button
                 variant="ghost"
@@ -138,9 +140,11 @@ export function QuestionBuilder({ initial = [] }: { initial?: CustomField[] }) {
               value={kind}
               onChange={value => setKind((value ?? 'text') as FieldKind)}
             />
-            <Checkbox isSelected={required} onChange={setRequired}>
-              Required
-            </Checkbox>
+            <div className="question-add__required">
+              <Checkbox isSelected={required} onChange={setRequired}>
+                Required
+              </Checkbox>
+            </div>
           </div>
           {kind === 'choice' && (
             <TextField

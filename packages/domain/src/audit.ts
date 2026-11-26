@@ -8,6 +8,7 @@ export const AUDIT_ACTIONS = [
   'person.update',
   'person.archive',
   'person.delete',
+  'person.emergency_contact.update',
   'member.rename',
   'member.role_change',
   'member.expiry_set',
@@ -57,6 +58,7 @@ export const AUDIT_ACTIONS = [
   'registration_form.publish',
   'registration_form.file_add',
   'registration_form.file_remove',
+  'registration_form.delete',
   'registration.submit',
   'registration.document_review',
   'registration.confirm',
@@ -77,5 +79,10 @@ export const AUDIT_ACTIONS = [
   'assignment.move',
   'assignment.override',
   'assignment.unassign',
+  'gate.rotate',
+  'gate.code_request',
+  'gate.verify',
+  'gate.device_issue',
+  'gate.device_revoke',
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

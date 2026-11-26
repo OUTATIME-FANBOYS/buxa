@@ -94,7 +94,13 @@ async function build() {
   ]);
 
   const camper = async (givenName: string) => {
-    const person = await camp.people.create(admin, { givenName, familyName: 'Camp', roles: ['participant'] });
+    const person = await camp.people.create(admin, {
+      dateOfBirth: '1985-06-15',
+      phone: '+1 555 0100',
+      givenName,
+      familyName: 'Camp',
+      roles: ['participant'],
+    });
     store.seedCamper(camp.orgId, person.id, givenName, '2015-03-01');
 
     return person.id;

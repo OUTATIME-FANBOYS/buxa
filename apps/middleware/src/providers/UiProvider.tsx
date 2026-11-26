@@ -12,12 +12,17 @@ import {
 } from 'react';
 import { ACTION_TOAST_MS, TOAST_MS, ToastView, type ToastAction } from './ToastView';
 
-/** The props the confirm prompt needs from a dialog. The web app passes its Dialog component in, so this package never imports the web app. */
+/**
+ * The props the confirm prompt needs. The web app passes its ConfirmDialog in, so this package never imports the web app. The
+ * prompt owns its layout (title, body, footer); this package only says what to ask.
+ */
 export interface ConfirmDialogProps {
   title: string;
-  onClose: () => void;
-  footer: ReactNode;
-  children: ReactNode;
+  body?: string;
+  variant: 'danger' | 'neutral';
+  confirmLabel: string;
+  onCancel: () => void;
+  onConfirm: () => void;
 }
 
 interface Toast {
@@ -92,24 +97,12 @@ export function UiProvider({ children, Dialog }: { children: ReactNode; Dialog: 
       {conf && (
         <Dialog
           title={conf.title}
-          onClose={() => done(false)}
-          footer={
-            <>
-              <button className="btn" onClick={() => done(false)}>
-                Cancel
-              </button>
-              <button
-                className={`btn ${conf.danger ? 'btn-danger' : 'btn-primary'}`}
-                data-autofocus
-                onClick={() => done(true)}
-              >
-                {conf.confirmLabel ?? 'Confirm'}
-              </button>
-            </>
-          }
-        >
-          {conf.body && <p className="muted">{conf.body}</p>}
-        </Dialog>
+          body={conf.body}
+          variant={conf.danger ? 'danger' : 'neutral'}
+          confirmLabel={conf.confirmLabel ?? 'Confirm'}
+          onCancel={() => done(false)}
+          onConfirm={() => done(true)}
+        />
       )}
     </Ctx.Provider>
   );

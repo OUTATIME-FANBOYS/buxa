@@ -8,7 +8,7 @@ import { PgRegistrationRepository } from './PgRegistrationRepository';
 import { createRegistrationService, type RegistrationService } from './RegistrationService';
 import { RegistrationFileNotFoundError, RegistrationInvalidError } from './errors';
 import { HttpError } from '../http/errors';
-import { createRegistrationFixture, type RegistrationFixture } from './__tests__/registrationFixture';
+import { createRegistrationFixture, pgPeopleService, type RegistrationFixture } from './__tests__/registrationFixture';
 import { createCredentialService } from '../services/credentials/createCredentialService';
 import { createBadgeCipher, parseBadgeKey } from '../credentials/badgeCipher';
 import { PgPeopleRepository } from '../people/PgPeopleRepository';
@@ -25,11 +25,14 @@ const url = process.env.DATABASE_URL;
 const PDF = new TextEncoder().encode('%PDF-1.4\n% immunization record\n');
 const TEXT = new TextEncoder().encode('just some text, not a PDF');
 
+// The camper's name and birth date are read from the child's record, so a blank answer is filled from it. One answer set then serves
+// both children of the fixture (Ada and Ben).
 const standard = {
-  camperFirstName: 'Ada',
-  camperLastName: 'Lovelace',
-  camperBirthDate: '2014-03-09',
+  camperFirstName: '',
+  camperLastName: '',
+  camperBirthDate: '',
   guardianName: 'Byron Lovelace',
+  guardianDateOfBirth: '1985-06-15',
   guardianPhone: '555-0100',
   emergencyContactName: 'Mary Somerville',
   emergencyContactPhone: '555-0111',
@@ -45,16 +48,19 @@ const FIELDS: CustomField[] = [
 describe.skipIf(!url)('registration files in Postgres', () => {
   const pool = new pg.Pool({ connectionString: url });
   const repo = new PgRegistrationRepository(pool);
-  const service: RegistrationService = createRegistrationService(repo, credentials =>
-    createCredentialService({
-      credentials,
-      people: new PgPeopleRepository(pool),
-      memberships: new PgMembershipRepository(pool),
-      attendance: new PgAttendanceRepository(pool),
-      orgs: new PgOrgRepository(pool),
-      clock: systemClock,
-      cipher: createBadgeCipher(() => parseBadgeKey(TEST_KEY)),
-    }),
+  const service: RegistrationService = createRegistrationService(
+    repo,
+    credentials =>
+      createCredentialService({
+        credentials,
+        people: new PgPeopleRepository(pool),
+        memberships: new PgMembershipRepository(pool),
+        attendance: new PgAttendanceRepository(pool),
+        orgs: new PgOrgRepository(pool),
+        clock: systemClock,
+        cipher: createBadgeCipher(() => parseBadgeKey(TEST_KEY)),
+      }),
+    pgPeopleService(pool),
   );
 
   beforeAll(async () => {
@@ -79,7 +85,6 @@ describe.skipIf(!url)('registration files in Postgres', () => {
 
   const formInput = (sessionId: string) => ({
     name: 'Summer 2027',
-    season: 'Summer',
     sessionIds: [sessionId],
     fields: FIELDS,
   });

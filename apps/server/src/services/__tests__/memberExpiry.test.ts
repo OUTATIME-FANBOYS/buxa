@@ -14,7 +14,7 @@ const PAST = '2020-01-01T00:00:00.000Z';
 const FUTURE = '2099-01-01T00:00:00.000Z';
 
 /** The session the sign-in path builds for this person: the same user row, and the memberships the database would return. */
-async function sessionFor(camp: Camp, role: 'admin' | 'staff' | 'owner' | 'teacher' | 'viewer'): Promise<Session> {
+async function sessionFor(camp: Camp, role: 'admin' | 'staff' | 'owner' | 'viewer'): Promise<Session> {
   const user = await camp.store.upsertFromIdentity({
     authId: `${role}-user`,
     email: `${role}@example.org`,

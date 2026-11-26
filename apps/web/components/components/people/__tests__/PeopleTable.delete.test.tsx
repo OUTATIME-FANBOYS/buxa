@@ -4,7 +4,7 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { PersonSummary } from '@buxa/contracts';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
-import { Dialog as ConfirmDialog } from '@/components/components';
+import { ConfirmDialog } from '@/components/components';
 import { PeopleTable } from '@/components/components/people';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -43,7 +43,8 @@ describe('PeopleTable: Edit and Delete by role', () => {
   it('shows Edit to someone who can update people (staff), and no Delete (only the owner deletes)', () => {
     const { host, cleanup } = renderTable({ canEdit: true, canDelete: false });
 
-    expect(host.textContent).toContain('Edit');
+    // The row's Edit is an icon button named for the person.
+    expect(host.querySelector('[aria-label="Edit Ana Lee"]')).not.toBeNull();
     expect(host.querySelector('input[type="checkbox"]')).toBeNull();
     expect(host.querySelector('[aria-label="Delete Ana Lee"]')).toBeNull();
     expect(host.textContent).not.toContain('Delete selected');

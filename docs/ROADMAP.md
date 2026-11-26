@@ -76,3 +76,12 @@ A parent or guardian gets a login through a family invite, linked to their perso
 - **Invoices and receipts:** phase 9, with payments.
 
 A family role gets its own access rules and row-level security, so one family cannot see another.
+
+## Later: profile pictures
+
+Until this phase, every person shows a blank template picture (`PersonAvatar`, apps/web/components/elements/PersonAvatar.tsx). The real feature, agreed for a later phase:
+
+- **Storage:** Postgres, like registration files, resized to about 256 pixels on upload.
+- **Who can upload:** staff, and the family's guardian for their children. Staff-only is the default for children.
+- **Where it shows:** the People list and the person page. Children's pictures stay off the on-site and check-in screens by default.
+- **Fallback:** the blank template when no picture is set.

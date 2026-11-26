@@ -47,6 +47,7 @@
 @import './components/button.css';
 @import './components/notices.css';
 @import './components/pill.css';
+@import './components/pagination.css';
 @import './layout/shell.css';
 @import './layout/pages.css';
 @import './features/kanban/filters.css';
@@ -57,6 +58,7 @@
 @import './features/kanban/timeline.css';
 @import './features/kanban/charts.css';
 @import './components/toasts.css';
+@import './components/page-head-row.css';
 @import './layout/auth.css';
 @import './responsive.css';
 @import './features/kanban/agents.css';
@@ -64,6 +66,7 @@
 @import './features/attendance.css';
 @import './features/people.css';
 @import './features/classes.css';
+@import './features/registration.css';
 @import './features/holds.css';
 @import './features/help.css';
 @import './features/home.css';

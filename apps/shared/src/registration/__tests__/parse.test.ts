@@ -20,14 +20,13 @@ describe('registrationFormForm', () => {
     const parsed = registrationFormForm(
       formOf({
         name: 'Summer 2027',
-        season: '',
         sessionIds: [SESSION],
         fields: JSON.stringify([{ kind: 'yes_no', key: 'photos', label: 'Photo consent', required: true }]),
       }),
     );
     expect(parsed.ok).toBe(true);
     if (parsed.ok) {
-      expect(parsed.data.season).toBeNull();
+      expect(parsed.data).not.toHaveProperty('season');
       expect(parsed.data.fields).toHaveLength(1);
     }
   });
@@ -63,7 +62,8 @@ describe('registrationSubmissionFromForm', () => {
     );
     expect(raw.selections).toEqual([{ camperId: CAMPER, classId: SESSION }]);
     expect(raw.standard.camperFirstName).toBe('Ada');
-    expect(raw.standard.emergencyContactName).toBe('');
+    // The emergency contact is not a registration answer: it is kept on the person's page only.
+    expect(raw.standard).not.toHaveProperty('emergencyContactName');
     expect(raw.custom).toEqual({ photos: 'yes' });
   });
 });

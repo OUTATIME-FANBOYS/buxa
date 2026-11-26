@@ -8,6 +8,7 @@ import {
   createClassFixture,
   makeSession,
   sessionInput,
+  uniqueLocation,
   type ClassFixture,
 } from '../../classes/__tests__/pgClassFixture';
 import { isHttpError } from '../../http/errors';
@@ -57,7 +58,11 @@ describe.skipIf(!url)('seat hold length per camp in Postgres', () => {
   /** A class with room for many holds, and three households to hold it for. */
   async function setUp() {
     const session = await makeSession(fx.repo, fx.actor);
-    const cls = await fx.repo.addClass(fx.actor, session.id, sessionInput(9, 12, { capacity: 10 }));
+    const cls = await fx.repo.addClass(
+      fx.actor,
+      session.id,
+      sessionInput(9, 12, { location: uniqueLocation(), capacity: 10 }),
+    );
     const made = await withOrg(pool, fx.actor.userId, fx.orgA, async db => {
       const out: { householdId: string; personId: string }[] = [];
       for (const name of ['Ada', 'Bea', 'Cy']) {

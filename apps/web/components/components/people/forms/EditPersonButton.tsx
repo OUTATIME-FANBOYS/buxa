@@ -23,6 +23,8 @@ export function EditPersonButton({
   households = [],
   label = 'Edit',
   variant = 'glass',
+  iconOnly = false,
+  accessibleName,
   initiallyOpen = false,
 }: {
   personId: string;
@@ -31,6 +33,9 @@ export function EditPersonButton({
   label?: string;
   /** The button's look. The rows use the neutral glass; the person page's main action is primary. */
   variant?: ComponentProps<typeof Button>['variant'];
+  /** A pencil icon with no text, for table rows. Its name is given by accessibleName and shown as a tooltip. */
+  iconOnly?: boolean;
+  accessibleName?: string;
   initiallyOpen?: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -84,9 +89,22 @@ export function EditPersonButton({
 
   return (
     <>
-      <Button variant={variant} type="button" aria-haspopup="dialog" onClick={openPopUp}>
-        {label}
-      </Button>
+      {iconOnly ? (
+        <Button
+          variant={variant}
+          type="button"
+          iconOnly
+          icon="edit"
+          aria-label={accessibleName ?? label}
+          title={accessibleName ?? label}
+          aria-haspopup="dialog"
+          onClick={openPopUp}
+        />
+      ) : (
+        <Button variant={variant} type="button" aria-haspopup="dialog" onClick={openPopUp}>
+          {label}
+        </Button>
+      )}
       {open && (
         <FormPopUp
           title="Edit person"

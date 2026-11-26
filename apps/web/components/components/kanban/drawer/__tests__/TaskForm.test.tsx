@@ -1,4 +1,4 @@
-import { Dialog as ConfirmDialog } from '@/components/components';
+import { ConfirmDialog } from '@/components/components';
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
@@ -47,7 +47,7 @@ describe('TaskForm', () => {
     act(() =>
       root.render(
         <UiProvider Dialog={ConfirmDialog}>
-          <TaskForm task={null} project={project} onClose={() => undefined} />
+          <TaskForm task={null} projects={[project]} onClose={() => undefined} />
         </UiProvider>,
       ),
     );
@@ -65,11 +65,34 @@ describe('TaskForm', () => {
     act(() =>
       root.render(
         <UiProvider Dialog={ConfirmDialog}>
-          <TaskForm task={seed.tasks[0]} project={project} onClose={() => undefined} />
+          <TaskForm task={seed.tasks[0]} projects={[project]} onClose={() => undefined} />
         </UiProvider>,
       ),
     );
     const fieldset = requirePresent(document.querySelector('fieldset'), "document.querySelector('fieldset')");
     expect(fieldset.disabled).toBe(true);
+  });
+  it('asks for a project on a new task from the Calendar, with no project chosen yet', () => {
+    act(() =>
+      root.render(
+        <UiProvider Dialog={ConfirmDialog}>
+          <TaskForm task={null} projects={seed.projects} chooseProject onClose={() => undefined} />
+        </UiProvider>,
+      ),
+    );
+    const dialog = requirePresent(document.querySelector('[role="dialog"]'), 'dialog');
+    expect(dialog.textContent).toContain('Choose a project');
+    expect(dialog.textContent).toContain('New task');
+  });
+  it('shows no project field on a board’s new task', () => {
+    act(() =>
+      root.render(
+        <UiProvider Dialog={ConfirmDialog}>
+          <TaskForm task={null} projects={[project]} onClose={() => undefined} />
+        </UiProvider>,
+      ),
+    );
+    const dialog = requirePresent(document.querySelector('[role="dialog"]'), 'dialog');
+    expect(dialog.textContent).not.toContain('Choose a project');
   });
 });

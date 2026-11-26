@@ -1,4 +1,4 @@
-import { teachingScopeOf, type Actor, type TeachingScope } from '@buxa/domain';
+import { isTeachingView, teachingScopeOf, type Actor, type TeachingScope } from '@buxa/domain';
 import type { ClassRepository } from './ClassRepository';
 
 /*
@@ -18,9 +18,9 @@ export interface TeacherScope {
   readonly teaching: TeachingScope;
 }
 
-/** The scope for this actor, or null when the actor is not a teacher. */
+/** The scope for this actor, or null when the actor is not in the teaching view (a viewer whose person is an instructor). */
 export async function teacherScopeOf(source: TeacherScopeSource, actor: Actor): Promise<TeacherScope | null> {
-  if (actor.role !== 'teacher') {
+  if (!isTeachingView(actor)) {
     return null;
   }
   const classIds = await source.assignedClassIds(actor.userId, actor.orgId, actor.userId);

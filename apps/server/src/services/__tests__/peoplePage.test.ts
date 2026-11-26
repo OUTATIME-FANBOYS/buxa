@@ -9,7 +9,13 @@ type Role = NewPersonInput['roles'][number];
 async function seed(camp: Camp, count: number, givenName = 'Pat', roles: Role[] = ['participant']) {
   const admin = camp.actor('admin');
   for (let i = 0; i < count; i++) {
-    await camp.people.create(admin, { givenName, familyName: `Name${String(i).padStart(3, '0')}`, roles });
+    await camp.people.create(admin, {
+      dateOfBirth: '1985-06-15',
+      phone: '+1 555 0100',
+      givenName,
+      familyName: `Name${String(i).padStart(3, '0')}`,
+      roles,
+    });
   }
 }
 

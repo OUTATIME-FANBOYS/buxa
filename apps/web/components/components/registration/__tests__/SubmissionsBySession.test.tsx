@@ -62,14 +62,31 @@ describe('SubmissionsBySession status and confirmation', () => {
 });
 
 describe('SubmissionsBySession registration lifecycle', () => {
-  it('offers Withdraw and Archive to staff, and Delete only when the person may delete', () => {
+  it('offers Withdraw and Archive to staff as icon buttons named for the camper, and Delete only when the person may delete', () => {
     const staffHtml = render([row('pending', 'reg-1')]);
-    expect(staffHtml).toContain('Withdraw');
-    expect(staffHtml).toContain('Archive');
-    expect(staffHtml).not.toContain('Delete');
+    expect(staffHtml).toContain('aria-label="Withdraw Ada Lovelace"');
+    expect(staffHtml).toContain('aria-label="Archive Ada Lovelace"');
+    expect(staffHtml).not.toContain('aria-label="Delete Ada Lovelace"');
 
     const adminHtml = render([row('pending', 'reg-1')], true);
-    expect(adminHtml).toContain('Delete');
+    expect(adminHtml).toContain('aria-label="Delete Ada Lovelace"');
+  });
+
+  it('gives each icon action a tooltip and shows no text label for it', () => {
+    const html = render([row('pending', 'reg-1')], true);
+    expect(html).toContain('title="Withdraw registration"');
+    expect(html).toContain('title="Archive registration"');
+    expect(html).toContain('title="Delete registration"');
+    expect(html).not.toContain('>Withdraw<');
+    expect(html).not.toContain('>Archive<');
+    expect(html).not.toContain('>Delete<');
+  });
+
+  it('keeps the row action Confirm as a labelled button, and no other button in the row is labelled', () => {
+    const html = render([row('pending', 'reg-1')], true);
+    expect(html).toContain('>Confirm</button>');
+    expect(html).not.toContain('>Withdraw</button>');
+    expect(html).not.toContain('>Archive</button>');
   });
 
   it('shows a withdrawn registration as withdrawn, with no Confirm and no Withdraw', () => {
@@ -88,5 +105,47 @@ describe('SubmissionsBySession registration lifecycle', () => {
     expect(html).toContain('Unarchive');
     // The count in the heading is for the registrations that are not archived.
     expect(html).toMatch(/Week 1 <span class="muted">1<\/span>/);
+  });
+});
+
+const heldPlace = {
+  id: 'rc-1',
+  classId: 'class-1',
+  className: 'Art',
+  sessionId: SESSION.id,
+  sessionName: SESSION.name,
+  camperId: 'camper-1',
+  camperName: 'Ada Lovelace',
+  status: 'held',
+  paymentStatus: 'unpaid',
+  paymentNote: null,
+  price: { amountMinor: 12000, currency: 'USD', earlyBird: false },
+} as const;
+
+describe('SubmissionsBySession places and payment', () => {
+  it('puts the places line, the Held and Unpaid pills and the price on one line', () => {
+    const html = render([row('pending', 'reg-1', { classes: [heldPlace] })]);
+    const line = html.match(/<div class="registration-place__line">[\s\S]*?<\/div>/)?.[0] ?? '';
+
+    expect(line).toContain('Ada Lovelace, Art');
+    expect(line).toContain('Held');
+    expect(line).toContain('Unpaid');
+    expect(line).toContain('120');
+  });
+
+  it('puts the "How it was paid" box and the Mark paid button in the same payment row', () => {
+    const html = render([row('pending', 'reg-1', { classes: [heldPlace] })]);
+    const payment = html.match(/<form[^>]*class="registration-payment"[\s\S]*?<\/form>/)?.[0] ?? '';
+
+    expect(payment).toContain('registration-payment__note');
+    expect(payment).toContain('How it was paid');
+    expect(payment).toContain('>Mark paid</button>');
+  });
+
+  it('keeps the Answers disclosure with its version in its summary', () => {
+    const html = render([row('pending', 'reg-1')]);
+
+    expect(html).toContain('class="registration-disclosure"');
+    expect(html).toContain('<summary>Answers, version 1</summary>');
   });
 });

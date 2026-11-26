@@ -11,7 +11,7 @@ import {
 } from '@buxa/shared';
 import { ROUTES } from '@/config/routes';
 import { currentActor, loadFormSubmissions, loadSessions } from '@buxa/server/composers/index.server';
-import { Empty, PageHeader } from '@/components/components';
+import { Empty, PageHeader, PageHeaderRow } from '@/components/components';
 import { SessionFilter } from '@/components/components/filters';
 import {
   FormsTable,
@@ -36,11 +36,9 @@ export async function RegistrationList({ searchParams = {} }: { searchParams?: S
   // One read gives the forms and their registrations; the filter's choices come from it and from the session list.
   const loaded = await loadFormSubmissions(actor);
   const sessions = await loadSessions(actor);
+  const sessionChoices = sessions.ok ? sessions.value.map(s => ({ id: s.id, name: s.name })) : [];
 
-  const actions =
-    canManage && sessions.ok ? (
-      <NewRegistrationFormButton sessions={sessions.value.map(s => ({ id: s.id, name: s.name }))} />
-    ) : undefined;
+  const actions = canManage && sessions.ok ? <NewRegistrationFormButton sessions={sessionChoices} /> : undefined;
 
   if (!loaded.ok) {
     return (
@@ -60,13 +58,25 @@ export async function RegistrationList({ searchParams = {} }: { searchParams?: S
   // A chosen session is read again through the service, which keeps only the forms and registrations that ask for it.
   const shown = chosen === ALL_SESSIONS ? loaded : await loadFormSubmissions(actor, chosen);
   const shownEntries = shown.ok ? shown.value : [];
+  // The session dropdown sits on the title line, before the New Form button, as on the Holds page.
+  const sessionFilter =
+    loaded.value.length > 0 && choices.length > 0 ? (
+      <SessionFilter action={ROUTES.registration} sessions={choices} value={chosen} />
+    ) : undefined;
+  const headerActions =
+    sessionFilter || actions ? (
+      <>
+        {sessionFilter}
+        {actions}
+      </>
+    ) : undefined;
 
   return (
     <div className="page">
-      <PageHeader
+      <PageHeaderRow
         title="Registration"
         subtitle="Forms families fill in to register campers for sessions. Nothing is charged in this phase."
-        actions={actions}
+        controls={headerActions}
       />
       {loaded.value.length === 0 ? (
         <Empty
@@ -74,19 +84,23 @@ export async function RegistrationList({ searchParams = {} }: { searchParams?: S
           title="No registration forms yet"
           body={
             canManage
-              ? 'Create a form for a season, choose its sessions and add any questions. Publish it to start taking registrations.'
+              ? 'Create a form for your sessions, choose its sessions and add any questions. Publish it to start taking registrations.'
               : 'Nobody has created a registration form yet.'
           }
           action={canManage ? actions : undefined}
         />
       ) : (
         <>
-          {choices.length > 0 && <SessionFilter action={ROUTES.registration} sessions={choices} value={chosen} />}
           {shownEntries.length === 0 ? (
             <Empty icon="list" title="No forms cover this session" body="Choose another session, or All sessions." />
           ) : (
             <>
-              <FormsTable forms={shownEntries.map(entry => entry.form)} />
+              <FormsTable
+                forms={shownEntries.map(entry => entry.form)}
+                sessions={sessionChoices}
+                canEdit={canManage && sessions.ok}
+                canSubmit={can(actor, 'registration:submit')}
+              />
               <section className="registration-section" aria-labelledby="registrations-list-heading">
                 <h2 id="registrations-list-heading" className="people-subheading">
                   Registrations

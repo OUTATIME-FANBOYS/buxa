@@ -5,7 +5,7 @@ import type { Actor } from '@buxa/domain';
 import { PgRegistrationRepository } from './PgRegistrationRepository';
 import { createRegistrationService } from './RegistrationService';
 import { RegistrationRefusedError } from './errors';
-import { createRegistrationFixture, type RegistrationFixture } from './__tests__/registrationFixture';
+import { createRegistrationFixture, pgPeopleService, type RegistrationFixture } from './__tests__/registrationFixture';
 import { createCredentialService } from '../services/credentials/createCredentialService';
 import { createBadgeCipher, parseBadgeKey } from '../credentials/badgeCipher';
 import { PgPeopleRepository } from '../people/PgPeopleRepository';
@@ -19,11 +19,14 @@ const TEST_KEY = Buffer.alloc(32, 3).toString('base64');
 
 const url = process.env.DATABASE_URL;
 
+// The camper's name and birth date are read from the child's record, so a blank answer is filled from it. One answer set then serves
+// both children of the fixture (Ada and Ben).
 const standard = {
-  camperFirstName: 'Ada',
-  camperLastName: 'Lovelace',
-  camperBirthDate: '2014-03-09',
+  camperFirstName: '',
+  camperLastName: '',
+  camperBirthDate: '',
   guardianName: 'Byron Lovelace',
+  guardianDateOfBirth: '1985-06-15',
   guardianPhone: '555-0100',
   emergencyContactName: 'Mary Somerville',
   emergencyContactPhone: '555-0111',
@@ -34,16 +37,19 @@ const standard = {
 describe.skipIf(!url)('registration in Postgres: camps are isolated', () => {
   const pool = new pg.Pool({ connectionString: url });
   const repo = new PgRegistrationRepository(pool);
-  const service = createRegistrationService(repo, credentials =>
-    createCredentialService({
-      credentials,
-      people: new PgPeopleRepository(pool),
-      memberships: new PgMembershipRepository(pool),
-      attendance: new PgAttendanceRepository(pool),
-      orgs: new PgOrgRepository(pool),
-      clock: systemClock,
-      cipher: createBadgeCipher(() => parseBadgeKey(TEST_KEY)),
-    }),
+  const service = createRegistrationService(
+    repo,
+    credentials =>
+      createCredentialService({
+        credentials,
+        people: new PgPeopleRepository(pool),
+        memberships: new PgMembershipRepository(pool),
+        attendance: new PgAttendanceRepository(pool),
+        orgs: new PgOrgRepository(pool),
+        clock: systemClock,
+        cipher: createBadgeCipher(() => parseBadgeKey(TEST_KEY)),
+      }),
+    pgPeopleService(pool),
   );
   let campA: RegistrationFixture;
   let campB: RegistrationFixture;
@@ -59,14 +65,15 @@ describe.skipIf(!url)('registration in Postgres: camps are isolated', () => {
   });
 
   afterAll(async () => {
-    await pool.query('DELETE FROM orgs WHERE id = ANY($1)', [[campA.orgId, campB.orgId]]).catch(() => {});
-    await pool.query('DELETE FROM users WHERE id = ANY($1)', [[campA.userId, campB.userId]]).catch(() => {});
+    // beforeAll may have failed before both camps were made, so only the ones that exist are removed.
+    const camps = [campA, campB].filter((c): c is RegistrationFixture => c !== undefined);
+    await pool.query('DELETE FROM orgs WHERE id = ANY($1)', [camps.map(c => c.orgId)]).catch(() => {});
+    await pool.query('DELETE FROM users WHERE id = ANY($1)', [camps.map(c => c.userId)]).catch(() => {});
     await pool.end();
   });
 
   const formInput = (sessionId: string) => ({
     name: 'Summer 2027',
-    season: 'Summer',
     sessionIds: [sessionId],
     fields: [{ kind: 'yes_no' as const, key: 'photos', label: 'Photo consent', required: true }],
   });

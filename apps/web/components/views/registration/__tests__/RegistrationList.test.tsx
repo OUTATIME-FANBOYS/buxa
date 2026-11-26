@@ -6,7 +6,7 @@ import type { Role } from '@buxa/domain';
 import { UiProvider } from '@buxa/middleware/providers/providers';
 import { forbidden } from '@buxa/server/http/errors';
 import { settle } from '@buxa/domain';
-import { Dialog as ConfirmDialog } from '@/components/components';
+import { ConfirmDialog } from '@/components/components';
 
 const notFound = vi.hoisted(() =>
   vi.fn(() => {
@@ -19,7 +19,12 @@ const services = vi.hoisted(() => ({
   classes: { listSessions: vi.fn() },
 }));
 
-vi.mock('next/navigation', () => ({ notFound, redirect: vi.fn() }));
+vi.mock('next/navigation', () => ({
+  notFound,
+  redirect: vi.fn(),
+  // The session filter moves to its chosen address with router.replace, so the page only needs the hook to exist.
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn(), refresh: vi.fn() }),
+}));
 vi.mock('@buxa/server/runtime', () => ({ getRuntime: () => ({ services }) }));
 vi.mock('@buxa/server/session/index', () => ({
   requireSession: () => Promise.resolve({ user: { clockFormat: null } }),
@@ -45,6 +50,17 @@ const form: RegistrationForm = {
   fields: [],
   attachments: [],
   publishedVersion: 1,
+  published: {
+    version: 1,
+    name: 'Season form',
+    season: '2027',
+    sessions: [
+      { id: SUMMER, name: 'Summer camp' },
+      { id: AUTUMN, name: 'Autumn camp' },
+    ],
+    fields: [],
+  },
+  hasUnpublishedChanges: false,
   submissionCount: 1,
   updatedAt: '2027-06-01T00:00:00.000Z',
 };
@@ -100,9 +116,10 @@ describe('the Registration page', () => {
   });
 
   it('shows Ben once per session he asks for, and Ada once', async () => {
+    // Counted by their camper cells: the action buttons' names also carry the camper's name.
     const html = render(await RegistrationList());
-    expect(html.split('Ben').length - 1).toBe(2);
-    expect(html.split('Ada').length - 1).toBe(1);
+    expect(html.match(/<td>Ben Ito<\/td>/g)).toHaveLength(2);
+    expect(html.match(/<td>Ada Lovelace<\/td>/g)).toHaveLength(1);
   });
 
   it('still lists the forms above the registrations', async () => {
@@ -142,14 +159,15 @@ describe('the session filter on the Registration page', () => {
 
   it('shows every session under All sessions (an empty session parameter)', async () => {
     const html = render(await RegistrationList({ searchParams: { session: '' } }));
-    expect(html.split('Ben').length - 1).toBe(2);
-    expect(html.split('Ada').length - 1).toBe(1);
+    expect(html.match(/<td>Ben Ito<\/td>/g)).toHaveLength(2);
+    expect(html.match(/<td>Ada Lovelace<\/td>/g)).toHaveLength(1);
   });
 
-  it('carries the choice in the URL: a GET form to the Registration address, with the choice selected', async () => {
+  it('is a search form for the session, with the chosen session selected', async () => {
+    // The choice moves to its address inside the app (router.replace), so the filter is a search form, not a GET form.
     const html = render(await RegistrationList({ searchParams: { session: AUTUMN } }));
-    expect(html).toContain('method="get"');
-    expect(html).toContain('action="/camp/registration"');
+    expect(html).toContain('role="search"');
+    expect(html).toContain('aria-label="Filter by session"');
     expect(html).toMatch(new RegExp(`<option value="${AUTUMN}"[^>]*selected`));
   });
 
@@ -161,5 +179,36 @@ describe('the session filter on the Registration page', () => {
     const html = render(await RegistrationList());
     expect(html).toContain('Ada');
     expect(html).not.toContain(`href="/camp/sessions/${AUTUMN}?tab=registrations"`);
+  });
+});
+
+describe('the forms table on the Registration page', () => {
+  it('shows each form in the table with a View button named for it', async () => {
+    const html = render(await RegistrationList());
+    expect(html).toContain('Season form');
+    expect(html).toContain('aria-label="View Season form"');
+  });
+
+  it('shows no question editor on the page: the questions are read in the View pop-up', async () => {
+    const html = render(await RegistrationList());
+    expect(html).not.toContain('Your questions');
+    expect(html).not.toContain('Save draft');
+    expect(html).not.toContain('Publish a new version');
+    expect(html).not.toContain('Files for families');
+  });
+
+  it('keeps the registrations list and its search on the page for a viewer, without New Form', async () => {
+    asRole('viewer');
+    const html = render(await RegistrationList());
+    expect(html).toContain('Season form');
+    expect(html).toContain('aria-label="Search registrations"');
+    expect(html).not.toContain('New Form');
+  });
+
+  it('shows New Form to an admin, who may manage forms, and not to staff', async () => {
+    asRole('admin');
+    expect(render(await RegistrationList())).toContain('New Form');
+    asRole('staff');
+    expect(render(await RegistrationList())).not.toContain('New Form');
   });
 });

@@ -1,6 +1,7 @@
 import { matchesName, MAX_SEARCH_RESULTS, normalizeForSearch, type Actor, type CampRole, settle } from '@buxa/domain';
 import {
   PersonNotFoundError,
+  type EmergencyContactRecord,
   type HouseholdLinkRecord,
   type HouseholdRecord,
   type NewPersonRecord,
@@ -33,6 +34,7 @@ const toRecord = (p: StoredPerson): PersonRecord => ({
   email: p.email,
   phone: p.phone,
   roles: [...p.roles],
+  emergencyContact: p.emergencyContact === null ? null : { ...p.emergencyContact },
   archivedAt: p.archivedAt,
   createdAt: p.createdAt,
 });
@@ -87,6 +89,7 @@ export class InMemoryPeopleRepository implements PeopleRepository {
         email: input.email,
         phone: input.phone,
         roles: sortRoles(input.roles),
+        emergencyContact: input.emergencyContact === null ? null : { ...input.emergencyContact },
         archivedAt: null,
         createdAt: new Date().toISOString(),
       };
@@ -115,6 +118,16 @@ export class InMemoryPeopleRepository implements PeopleRepository {
       const person = this.require(actor.orgId, id);
       const fields = applyPatch(person, patch);
       this.db.record(actor, 'person.update', 'person', id, { fields });
+
+      return toRecord(person);
+    });
+  }
+
+  setEmergencyContact(actor: Actor, id: string, contact: EmergencyContactRecord | null): Promise<PersonRecord> {
+    return settle(() => {
+      const person = this.require(actor.orgId, id);
+      person.emergencyContact = contact === null ? null : { ...contact };
+      this.db.record(actor, 'person.emergency_contact.update', 'person', id);
 
       return toRecord(person);
     });

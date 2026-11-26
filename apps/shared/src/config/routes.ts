@@ -1,3 +1,4 @@
+import type { PeopleTab } from '../camp/peopleTabs';
 import type { SessionTab } from '../camp/sessionTabs';
 
 /**
@@ -16,7 +17,10 @@ export const ROUTES = {
   membersManage: '/camp/members/manage',
   newCamp: '/camp/new',
   people: '/camp/people',
-  newPerson: '/camp/people/new',
+  // Opens the Add person pop-up on the People page (the page itself has no add address).
+  addPerson: '/camp/people?add=person',
+  // One household: its members and every edit to it. Needs people:read to see it; the edits need the same rights as on a person.
+  households: '/camp/households',
   checkIn: '/camp/check-in',
   onSite: '/camp/on-site',
   attendance: '/camp/attendance',
@@ -29,12 +33,10 @@ export const ROUTES = {
   sessionImport: '/camp/sessions/import',
   sessionImportTemplate: '/camp/sessions/import/template',
   sessionImportErrorReport: '/camp/sessions/import/error-report',
-  // Registration: forms per season that cover sessions. Reading submissions needs registration:read; building a form needs
+  // Registration: forms that cover sessions. Reading submissions needs registration:read; building a form needs
   // registration:manage; taking a registration needs registration:submit.
   registration: '/camp/registration',
   newRegistrationForm: '/camp/registration/new',
-  // Holds: every place a family holds across the camp, and each class's waitlist beside it. Read only; needs registration:read.
-  holds: '/camp/holds',
   // Work: tasks kept in this browser (the kanban demo), shown in the same shell.
   tasks: '/camp/tasks',
   projects: '/camp/projects',
@@ -92,6 +94,12 @@ export const newClassPath = (sessionId: string): string => `${sessionPath(sessio
 
 /** The page that changes a person's details. Needs people:update. */
 export const personEditPath = (id: string): string => `${personPath(id)}/edit`;
+
+/** The People page on one of its tabs (`people` or `households`). The URL keeps the tab in `?tab=`, so refresh and back return to it. */
+export const peopleTabPath = (tab: PeopleTab): string => `${ROUTES.people}?tab=${tab}`;
+
+/** One household's page: its members and every edit to the household. */
+export const householdPath = (id: string): string => `${ROUTES.households}/${encodeURIComponent(id)}`;
 
 /** The board (board, list, calendar and timeline views) of one project. */
 export const boardPath = (projectId: string): string => `${ROUTES.boards}/${encodeURIComponent(projectId)}`;

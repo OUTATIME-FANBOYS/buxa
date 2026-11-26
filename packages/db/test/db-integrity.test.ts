@@ -18,11 +18,10 @@ describe.skipIf(!url)('database integrity (0055, 0056)', () => {
   const one = async (sql: string, values: unknown[]): Promise<string> =>
     (await pool.query<{ id: string }>(sql, values)).rows[0].id;
   const newPerson = (label: string, email: string | null = null): Promise<string> =>
-    one(`INSERT INTO people (org_id, given_name, family_name, email) VALUES ($1, $2, 'Test', $3) RETURNING id`, [
-      org,
-      label,
-      email,
-    ]);
+    one(
+      `INSERT INTO people (org_id, given_name, family_name, email, date_of_birth, phone) VALUES ($1, $2, 'Test', $3, '1985-06-15', '+1 555 0100') RETURNING id`,
+      [org, label, email],
+    );
 
   beforeAll(async () => {
     await migrate(pool);
@@ -114,7 +113,10 @@ describe.skipIf(!url)('database integrity (0055, 0056)', () => {
     let holdId = '';
 
     beforeAll(async () => {
-      formId = await one(`INSERT INTO registration_forms (org_id, name) VALUES ($1, 'Form') RETURNING id`, [org]);
+      formId = await one(
+        `INSERT INTO registration_forms (org_id, name, draft_name) VALUES ($1, 'Form', 'Form') RETURNING id`,
+        [org],
+      );
       await pool.query(
         `INSERT INTO registration_form_versions (org_id, form_id, version, fields) VALUES ($1, $2, 1, '[]')`,
         [org, formId],
@@ -261,10 +263,10 @@ describe.skipIf(!url)('database integrity (0055, 0056)', () => {
         `integrity-o-${tag}`,
       ]);
       try {
-        await pool.query(`INSERT INTO people (org_id, given_name, family_name, email) VALUES ($1, 'X', 'Y', $2)`, [
-          other,
-          `ann.${tag}@example.com`,
-        ]);
+        await pool.query(
+          `INSERT INTO people (org_id, given_name, family_name, email, date_of_birth, phone) VALUES ($1, 'X', 'Y', $2, '1985-06-15', '+1 555 0100')`,
+          [other, `ann.${tag}@example.com`],
+        );
       } finally {
         await pool.query('DELETE FROM orgs WHERE id = $1', [other]);
       }

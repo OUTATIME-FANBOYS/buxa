@@ -186,13 +186,38 @@ form.class-form {
   font-weight: 400;
 }
 
-/* The campers not placed yet: the list keeps a fixed height and scrolls inside its card, so a long camp does not grow the page. */
+/* The Assign page: the groups column takes three parts of the width and the campers not placed yet two (60/40), with a gap between.
+   Each column is left to grow with the page, so it scrolls with the page rather than inside a box. On a phone (720px and under) they stack. */
+.assign-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--s5);
+  align-items: start;
+}
+.assign-layout__groups,
+.assign-layout__unplaced {
+  min-width: 0;
+}
+@media (max-width: 720px) {
+  .assign-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The campers not placed yet: the heading on the left, the Place button on the right, on one line above the search. */
+.unplaced-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+}
+
+/* The campers not placed yet: one page of rows at a time. The pagination under the list is in components/pagination.css. */
 .unplaced-list {
   list-style: none;
   margin: 0;
   padding: 0;
-  max-height: 320px;
-  overflow-y: auto;
   display: grid;
   gap: var(--s2);
 }
@@ -363,6 +388,18 @@ form.class-form {
   justify-content: center;
 }
 
+/* Two fields side by side, each half the width, on a desktop. They stack on a phone (the same 720px breakpoint as the page). */
+.form-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--s4);
+}
+@media (max-width: 720px) {
+  .form-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* A form section (registration forms and their dialogs): a heading, a rule above every section after the first, then the fields.
  * No fieldset box. */
 .form-section {
@@ -377,6 +414,11 @@ form.class-form {
 .form-section + .form-section {
   padding-top: var(--s4);
   border-top: 1px solid var(--line);
+}
+/* A section that continues the one above it, with no divider line between them. */
+.form-section.form-section--flat {
+  padding-top: 0;
+  border-top: 0;
 }
 .form-section__title {
   font-size: var(--fs-b);
@@ -428,6 +470,10 @@ form.class-form {
   padding: 0;
   list-style: none;
 }
+/* A covered session in the read-only View pop-up: the same tag, with no remove cross and no pointer. */
+.session-tag--static {
+  cursor: default;
+}
 .session-picker__input {
   flex: 1 1 10rem;
   min-width: 0;
@@ -455,6 +501,55 @@ form.class-form {
   font: inherit;
   font-size: var(--fs-b);
   cursor: pointer;
+}
+
+/* The registration's Children field: tags, then one full-width search with the add button beside it, then the matches in the flow. */
+.child-picker {
+  display: grid;
+  gap: var(--s2);
+  min-width: 0;
+}
+.child-picker__label {
+  font-size: var(--fs-s);
+  font-weight: 600;
+  color: var(--text-2);
+}
+.child-picker__search-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+  min-width: 0;
+}
+.child-picker__search {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+.child-picker__results {
+  display: grid;
+  gap: var(--s1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.child-picker__result {
+  width: 100%;
+  min-height: var(--control-h);
+  padding: 0 var(--s3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-2);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-b);
+  text-align: left;
+  cursor: pointer;
+}
+.child-picker__result:hover {
+  background: var(--hover);
+}
+.child-picker__none {
+  margin: 0;
 }
 
 /* Your questions: the list of the camp's own questions, then the add area. Each row is a bordered line with its remove button. */
@@ -491,6 +586,12 @@ form.class-form {
   border: 1px solid var(--line);
   border-radius: var(--r-2);
 }
+/* The Required checkbox sits level with the answer type box (not its label): the box is one control high. */
+.question-add__required {
+  display: flex;
+  align-items: center;
+  height: var(--control-h);
+}
 .question-add__row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -524,6 +625,45 @@ form.class-form {
 .form-file__name {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+/* The read-only View pop-up: its sections stack like the edit form's, and each list is plain rows with a thin divider in the table-rule
+ * colour (--line), not boxes that look like inputs. A file row keeps its name on the left and its size and Download on the right. */
+.form-view {
+  display: grid;
+  gap: var(--s3);
+  min-width: 0;
+}
+.form-view__list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.form-view__row {
+  display: grid;
+  gap: var(--s1);
+  min-width: 0;
+  padding: var(--s2) 0;
+}
+.form-view__row + .form-view__row {
+  border-top: 1px solid var(--line);
+}
+.form-view__row--file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s1) var(--s3);
+}
+.form-view__name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+.form-view__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
 }
 .document-field {
   display: grid;

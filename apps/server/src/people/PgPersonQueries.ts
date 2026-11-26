@@ -1,5 +1,11 @@
 import { isUuid, MAX_SEARCH_RESULTS, normalizeForSearch, type CampRole } from '@buxa/domain';
-import { PersonNotFoundError, type PersonFilter, type PersonPageFilter, type PersonRecord } from './PeopleRepository';
+import {
+  PersonNotFoundError,
+  type EmergencyContactRecord,
+  type PersonFilter,
+  type PersonPageFilter,
+  type PersonRecord,
+} from './PeopleRepository';
 import { type Db, type SqlParam, nullableIso, toIso } from './pgRows';
 
 interface PersonRow {
@@ -9,6 +15,9 @@ interface PersonRow {
   date_of_birth: string | null;
   email: string | null;
   phone: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  emergency_contact_relationship: string | null;
   archived_at: Date | null;
   created_at: Date;
   roles: CampRole[];
@@ -17,10 +26,21 @@ interface PersonRow {
 /** Dates are formatted in SQL, so they never arrive as Date objects. Roles are aggregated and sorted. */
 const SELECT_PEOPLE = `
   SELECT p.id, p.given_name, p.family_name, to_char(p.date_of_birth, 'YYYY-MM-DD') AS date_of_birth,
-         p.email, p.phone, p.archived_at, p.created_at,
+         p.email, p.phone, p.emergency_contact_name, p.emergency_contact_phone, p.emergency_contact_relationship,
+         p.archived_at, p.created_at,
          COALESCE((SELECT array_agg(pr.role ORDER BY pr.role) FROM person_roles pr WHERE pr.person_id = p.id), '{}') AS roles
     FROM people p`;
 const ORDER_PEOPLE = 'ORDER BY lower(p.family_name), lower(p.given_name), p.id';
+
+/** The contact is set only when its name and phone are both there (the migration keeps them together). */
+const toContact = (row: PersonRow): EmergencyContactRecord | null =>
+  row.emergency_contact_name === null || row.emergency_contact_phone === null
+    ? null
+    : {
+        name: row.emergency_contact_name,
+        phone: row.emergency_contact_phone,
+        relationship: row.emergency_contact_relationship,
+      };
 
 const toRecord = (row: PersonRow): PersonRecord => ({
   id: row.id,
@@ -30,6 +50,7 @@ const toRecord = (row: PersonRow): PersonRecord => ({
   email: row.email,
   phone: row.phone,
   roles: row.roles,
+  emergencyContact: toContact(row),
   archivedAt: nullableIso(row.archived_at),
   createdAt: toIso(row.created_at),
 });

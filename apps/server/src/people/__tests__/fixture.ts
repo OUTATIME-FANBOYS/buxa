@@ -28,10 +28,12 @@ export function samplePerson(overrides: Partial<NewPersonRecord> = {}): NewPerso
   return {
     givenName: 'Ada',
     familyName: 'Lovelace',
-    dateOfBirth: null,
+    // Phone and date of birth are required for every person (migration 0074). An adult's values are used by default.
+    dateOfBirth: '1985-06-15',
     email: null,
-    phone: null,
+    phone: '+1 555 0100',
     roles: ['participant'],
+    emergencyContact: null,
     ...overrides,
   };
 }

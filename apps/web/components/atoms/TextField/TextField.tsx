@@ -30,6 +30,8 @@ export interface TextFieldProps {
   autoFocus?: boolean;
   isRequired?: boolean;
   isDisabled?: boolean;
+  /** Shows the value, which still submits with the form, but cannot be changed here (filled in from another record). */
+  isReadOnly?: boolean;
   id?: string;
   /** The underlying input element, for a parent that moves focus (a scanner field). */
   inputRef?: Ref<HTMLInputElement>;
@@ -61,6 +63,7 @@ export function TextField({
   autoFocus,
   isRequired,
   isDisabled,
+  isReadOnly,
   id,
   inputRef,
   onKeyDown,
@@ -101,6 +104,7 @@ export function TextField({
         required={isRequired}
         aria-required={isRequired || undefined}
         disabled={isDisabled}
+        readOnly={isReadOnly}
         spellCheck={spellCheck}
         autoCapitalize={autoCapitalize}
         enterKeyHint={enterKeyHint}
@@ -114,7 +118,7 @@ export function TextField({
           setOwn(e.target.value);
           onChange?.(e.target.value);
         }}
-        className="buxa:box-border buxa:h-[var(--control-h)] buxa:w-full buxa:min-w-0 buxa:rounded-[var(--r-1)] buxa:border buxa:border-[var(--line)] buxa:bg-[var(--surface)] buxa:px-3 buxa:font-[inherit] buxa:text-[var(--text)] buxa:outline-none buxa:aria-[invalid=true]:border-[var(--crit)] buxa:disabled:opacity-60 buxa:disabled:cursor-not-allowed"
+        className={`buxa:box-border buxa:h-[var(--control-h)] buxa:w-full buxa:min-w-0 buxa:rounded-[var(--r-1)] buxa:border buxa:border-[var(--line)] buxa:bg-[var(--surface)] buxa:px-3 buxa:font-[inherit] buxa:text-[var(--text)] buxa:outline-none buxa:aria-[invalid=true]:border-[var(--crit)] buxa:disabled:opacity-60 buxa:disabled:cursor-not-allowed${isReadOnly ? ' field-readonly' : ''}`}
       />
       {error ? (
         <p id={hintId} className="field-error" role={errorRole}>

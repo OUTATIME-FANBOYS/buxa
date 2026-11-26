@@ -28,7 +28,13 @@ async function build() {
   const classes = createClassService({ repo: camp.repos.classes, timezoneOf: () => Promise.resolve('UTC') });
 
   const adult = (givenName: string) =>
-    camp.people.create(admin, { givenName, familyName: 'Camp', roles: ['participant'] });
+    camp.people.create(admin, {
+      dateOfBirth: '1985-06-15',
+      phone: '+1 555 0100',
+      givenName,
+      familyName: 'Camp',
+      roles: ['participant'],
+    });
   const kim = await adult('Kim');
   const lia = await adult('Lia');
   const mo = await adult('Mo');

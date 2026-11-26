@@ -1,8 +1,8 @@
 'use client';
 
-import { useActionState, useEffect, useRef, useState } from 'react';
+import { useActionState, useEffect, useRef, useState, type FormEvent } from 'react';
 import type { Person } from '@buxa/contracts';
-import { isPlausibleEmail } from '@buxa/contracts';
+import { EMAIL_MESSAGE, PHONE_NUMBER_MESSAGE, isPlausibleEmail, isValidPhone } from '@buxa/contracts';
 import { isAllowedRoleSet, type CampRole } from '@buxa/domain';
 import { Button } from '@/components/elements';
 import { DatePicker, HiddenField, TextField } from '@/components/atoms';
@@ -48,8 +48,12 @@ interface PersonFormCommon {
  * The one person form, in two modes. `create` adds a person: with `household` (from the guardian's page) the person joins that
  * household, otherwise the form offers the camp's households or a new one. `edit` changes a person's details, pre-filled from
  * `person`, including the person's household: the household select starts on it, and saving moves, creates or leaves it.
- * Roles are checkboxes in both modes, and every checked role is saved. Which email fields show depends on the roles: a family role
- * shows Household email (and no Email); a staff or participant role shows Email; both show both.
+ * Roles are checkboxes in both modes, and every checked role is saved.
+ *
+ * The person's details are first name and last name, then date of birth beside the phone. A camper's section is headed Camper details;
+ * for any other role the heading is for screen readers only. A family role (a camper or a parent or guardian) shows the Parent or
+ * guardian section: the household email and the household. Date of birth and phone are required, on add and on edit. Email is optional, but one that is typed must be a valid address. The emergency contact is not entered here: it is on the
+ * person's page.
  */
 export type PersonFormProps = PersonFormCommon &
   ({ mode: 'create'; household: HouseholdTarget | null } | { mode: 'edit'; person: EditablePerson });
@@ -78,6 +82,8 @@ export function PersonForm(props: PersonFormProps) {
     });
   // The personal email, held so the invite button can wait for a valid address.
   const [email, setEmail] = useState(person?.email ?? '');
+  // The form's own checks on the phone and email, shown on blur and on submit. The server refuses the same values with the same messages.
+  const [problems, setProblems] = useState<{ phone?: string; email?: string }>({});
 
   // A field error moves focus to the first invalid field, so the person can correct it without searching the page.
   useEffect(() => {
@@ -102,8 +108,39 @@ export function PersonForm(props: PersonFormProps) {
 
   const err = (name: string) => fieldError(state, name);
   const selectedRoles = [...roles];
+  const camper = roles.has('camper');
   const hasFamilyRole = selectedRoles.some(isFamilyRole);
-  const showHousehold = hasFamilyRole;
+  const showParent = hasFamilyRole;
+  // Date of birth and phone are required for every person, on add and on edit: a blank one gets its message.
+  const phoneProblem = (value: string): string | undefined =>
+    isValidPhone(value.trim()) ? undefined : PHONE_NUMBER_MESSAGE;
+  const emailProblem = (value: string): string | undefined => {
+    const trimmed = value.trim();
+
+    return trimmed === '' || isPlausibleEmail(trimmed) ? undefined : EMAIL_MESSAGE;
+  };
+  // Submit checks the phone and email as typed. The first invalid field takes focus, the phone before the email.
+  const checkOnSubmit = (event: FormEvent<HTMLFormElement>) => {
+    if (blockSave) {
+      event.preventDefault();
+
+      return;
+    }
+    const data = new FormData(event.currentTarget);
+    const phoneValue = data.get('phone');
+    const next = {
+      phone: phoneProblem(typeof phoneValue === 'string' ? phoneValue : ''),
+      email: emailProblem(email),
+    };
+    setProblems(next);
+    if (next.phone || next.email) {
+      event.preventDefault();
+      const first = event.currentTarget.elements.namedItem(next.phone ? 'phone' : 'email');
+      if (first instanceof HTMLElement) {
+        first.focus();
+      }
+    }
+  };
   // One email for the person. A family role names it Household email; the label is the only difference.
   const emailLabel = hasFamilyRole ? 'Household email' : 'Email';
   // Editing a saved set that is not allowed (legacy data) blocks the save until the roles are changed to an allowed set.
@@ -121,64 +158,121 @@ export function PersonForm(props: PersonFormProps) {
   const defaultRelationship =
     person?.households[0]?.members.find(m => m.personId === person.id)?.relationship ?? undefined;
 
+  const emailRow = (
+    <div className="buxa:flex buxa:flex-wrap buxa:items-end buxa:gap-2">
+      <div className="buxa:min-w-[14rem] buxa:flex-1">
+        <TextField
+          label={emailLabel}
+          type="email"
+          name="email"
+          value={email}
+          onChange={value => {
+            setEmail(value);
+            setProblems(current => ({ ...current, email: undefined }));
+          }}
+          error={problems.email ?? err('email')}
+          inputProps={{
+            // Read the value now: React runs the state updater later, when the event's currentTarget is already cleared.
+            onBlur: event => {
+              const typed = event.currentTarget.value;
+              setProblems(current => ({ ...current, email: emailProblem(typed) }));
+            },
+          }}
+          autoComplete="off"
+          maxLength={254}
+        />
+      </div>
+      {inviteAvailable ? (
+        <PersonInvite
+          key={savedTeacher ? 'sent' : 'send'}
+          label={inviteLabel}
+          readDetails={() => personInviteDetails(formRef.current)}
+          autoSend={savedTeacher}
+          disabled={!inviteEnabled}
+        />
+      ) : (
+        <ComingSoonInvite label={inviteLabel} />
+      )}
+    </div>
+  );
+
+  const phoneField = (
+    <TextField
+      label="Phone"
+      type="tel"
+      name="phone"
+      defaultValue={person?.phone ?? undefined}
+      error={problems.phone ?? err('phone')}
+      isRequired
+      inputProps={{
+        onBlur: event => {
+          const typed = event.currentTarget.value;
+          setProblems(current => ({ ...current, phone: phoneProblem(typed) }));
+        },
+      }}
+      autoComplete="off"
+      maxLength={32}
+    />
+  );
+
+  // The hint sits under the whole row, so a taller hint never pushes the phone field away from the date field.
+  const dateOfBirthHint = 'Only used to tell whether someone is under 18.';
+
+  const dateOfBirthField = (
+    <DatePicker
+      label="Date of birth"
+      name="dateOfBirth"
+      isRequired
+      defaultValue={person ? (person.dateOfBirth ?? null) : undefined}
+      error={err('dateOfBirth')}
+    />
+  );
+
   return (
     <form
       ref={formRef}
       id={formId}
       action={formAction}
+      // The browser's own required bubble is off: the form's submit check and the server show each message under its field.
+      noValidate
       // A pop-up's footer submits by formId, so the block is enforced here as well as on the in-page button.
-      onSubmit={event => {
-        if (blockSave) {
-          event.preventDefault();
-        }
-      }}
+      onSubmit={checkOnSubmit}
       className={`${inDialog ? '' : 'panel '}people-form person-form`}
     >
       {person && <HiddenField name="id" value={person.id} />}
-      <div className="people-form-grid">
-        <TextField
-          label="First name"
-          isRequired
-          name="givenName"
-          defaultValue={person?.givenName}
-          error={err('givenName')}
-          autoComplete="off"
-          maxLength={80}
-          autoFocus={!inDialog}
-        />
-        <TextField
-          label="Last name"
-          isRequired={isEdit}
-          name="familyName"
-          defaultValue={person?.familyName}
-          error={err('familyName')}
-          autoComplete="off"
-          maxLength={80}
-        />
-      </div>
 
-      <div className="people-form-half">
-        <DatePicker
-          label="Date of birth"
-          name="dateOfBirth"
-          defaultValue={person ? (person.dateOfBirth ?? null) : undefined}
-          error={err('dateOfBirth')}
-          hint={
-            isEdit
-              ? 'Only used to tell whether someone is under 18. Leave blank to clear it.'
-              : 'Only used to tell whether someone is under 18.'
-          }
-        />
-        <TextField
-          label="Phone"
-          type="tel"
-          name="phone"
-          defaultValue={person?.phone ?? undefined}
-          error={err('phone')}
-          autoComplete="off"
-          maxLength={32}
-        />
-      </div>
+      <fieldset className="plain person-section buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
+        {/* The heading is for a camper only. Other roles keep the group name for screen readers, with no visible heading. */}
+        <legend className={camper ? 'person-legend' : 'person-legend sr-only'}>
+          {camper ? 'Camper details' : 'Person details'}
+        </legend>
+        <div className="people-form-grid">
+          <TextField
+            label="First name"
+            isRequired
+            name="givenName"
+            defaultValue={person?.givenName}
+            error={err('givenName')}
+            autoComplete="off"
+            maxLength={80}
+            autoFocus={!inDialog}
+          />
+          <TextField
+            label="Last name"
+            isRequired={isEdit}
+            name="familyName"
+            defaultValue={person?.familyName}
+            error={err('familyName')}
+            autoComplete="off"
+            maxLength={80}
+          />
+        </div>
+        <div className="form-pair">
+          {dateOfBirthField}
+          {phoneField}
+        </div>
+        <p className="muted">{dateOfBirthHint}</p>
+      </fieldset>
 
       <PersonRoles
         selected={roles}
@@ -187,42 +281,26 @@ export function PersonForm(props: PersonFormProps) {
         notice={blockSave ? "This person's roles don't match the rules. Change them to save." : undefined}
       />
 
-      <div className="buxa:flex buxa:flex-wrap buxa:items-end buxa:gap-2">
-        <div className="buxa:min-w-[14rem] buxa:flex-1">
-          <TextField
-            label={emailLabel}
-            type="email"
-            name="email"
-            value={email}
-            onChange={setEmail}
-            error={err('email')}
-            autoComplete="off"
-            maxLength={254}
-          />
-        </div>
-        {inviteAvailable ? (
-          <PersonInvite
-            key={savedTeacher ? 'sent' : 'send'}
-            label={inviteLabel}
-            readDetails={() => personInviteDetails(formRef.current)}
-            autoSend={savedTeacher}
-            disabled={!inviteEnabled}
-          />
-        ) : (
-          <ComingSoonInvite label={inviteLabel} />
-        )}
-      </div>
+      {!showParent && emailRow}
 
-      {showHousehold && (
-        <PersonHouseholdFields
-          household={household}
-          choices={choices}
-          defaultHouseholdId={defaultHouseholdId}
-          // Editing always shows it: a move to another household needs one, and it is pre-filled with the current one.
-          showRelationship={isEdit || roles.has('camper')}
-          defaultRelationship={defaultRelationship}
-          err={err}
-        />
+      {showParent && (
+        <fieldset className="plain person-section buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
+          <legend className="person-legend">Parent or guardian</legend>
+          <p className="person-helper">
+            The family&apos;s parent or guardian. For a parent or guardian, the name above is their own. A camper joins
+            a household that already has one.
+          </p>
+          {emailRow}
+          <PersonHouseholdFields
+            household={household}
+            choices={choices}
+            defaultHouseholdId={defaultHouseholdId}
+            // Editing always shows it: a move to another household needs one, and it is pre-filled with the current one.
+            showRelationship={isEdit || camper}
+            defaultRelationship={defaultRelationship}
+            err={err}
+          />
+        </fieldset>
       )}
 
       {/* A pop-up's save posts dialog=1, so the action returns a success instead of redirecting to the person. */}

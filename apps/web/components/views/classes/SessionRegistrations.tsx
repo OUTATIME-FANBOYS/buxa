@@ -36,7 +36,7 @@ export async function SessionRegistrations({
       {loaded.value.map(({ form, rows }) => (
         <section key={form.id} className="registration-section" aria-labelledby={`session-form-${form.id}`}>
           <h2 id={`session-form-${form.id}`} className="people-subheading">
-            {form.name}
+            {form.published?.name ?? form.name}
           </h2>
           <SubmissionsBySession
             formId={form.id}

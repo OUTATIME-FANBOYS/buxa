@@ -93,6 +93,13 @@
   display: grid;
   gap: var(--s3);
 }
+/* The name on the left, the status pill in the top-right corner of the card. */
+.result-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s3);
+}
 .result-name {
   font-size: var(--fs-n);
   line-height: 1.2;
@@ -127,16 +134,14 @@
   outline-offset: 4px;
   border-radius: var(--r-3);
 }
-/* The search sits at the right of the page, 320px wide and pill-shaped, with 16px of space above the cards. */
+/* The search is pill-shaped and sits in the page header's controls (page-head-row.css sets its 320px width). The cards sit 16px below the header. */
 .onsite-search {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: var(--s4);
   --control-h: var(--control-compact);
 }
-.onsite-search .search-field {
-  width: 320px;
-  max-width: 100%;
+.onsite-wrap {
+  margin-top: var(--s4);
 }
 .onsite-search .search-field__input {
   height: var(--control-h);

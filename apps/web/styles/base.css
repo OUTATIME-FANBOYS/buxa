@@ -96,6 +96,17 @@ code {
   outline: none;
   box-shadow: none;
 }
+/* A read-only field (filled in from another record) shows its value on the surface, with a muted border and the default cursor.
+ * It is not disabled: the value still submits. It keeps its border on focus, so it does not look like a field you can change. */
+:is(input, select, textarea).field-readonly {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--text-2);
+  cursor: default;
+}
+:is(input, select, textarea).field-readonly:focus:not([aria-invalid='true']) {
+  border-color: var(--line);
+}
 ::selection {
   background: var(--accent-soft);
 }

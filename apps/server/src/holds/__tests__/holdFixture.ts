@@ -13,7 +13,7 @@ export async function householdWithChild(
   );
   const householdId = household.rows[0].id;
   const person = await db.query<{ id: string }>(
-    `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Child', $2) RETURNING id`,
+    `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'Child', $2, '2012-06-15', '+1 555 0100') RETURNING id`,
     [orgId, name],
   );
   const personId = person.rows[0].id;
@@ -28,7 +28,7 @@ export async function householdWithChild(
 /** A further child in an existing household (a sibling). */
 export async function addSibling(db: Db, orgId: string, householdId: string, name: string): Promise<string> {
   const person = await db.query<{ id: string }>(
-    `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, $2, 'Sibling') RETURNING id`,
+    `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, $2, 'Sibling', '2012-06-15', '+1 555 0100') RETURNING id`,
     [orgId, name],
   );
   await db.query(
@@ -41,15 +41,18 @@ export async function addSibling(db: Db, orgId: string, householdId: string, nam
 
 /**
  * Moves holds' expiry into the past without waiting for the clock. The request role cannot change an expiry (migration 0055) and
- * the guard trigger refuses it for everyone, so this runs as the test login with triggers off for the one statement.
+ * the guard trigger refuses it for everyone. The test login owns the table (it ran the migrations), so it turns the user triggers off
+ * for the one statement inside a transaction. This needs no superuser: managed Postgres does not give one (CI runs this as a login
+ * that is not a superuser).
  * `where` is a SQL condition over seat_holds with its parameters.
  */
 export async function backdateHolds(pool: Pool, where: string, values: unknown[]): Promise<void> {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    await client.query('SET LOCAL session_replication_role = replica');
+    await client.query('ALTER TABLE seat_holds DISABLE TRIGGER USER');
     await client.query(`UPDATE seat_holds SET expires_at = now() - interval '1 minute' WHERE ${where}`, values);
+    await client.query('ALTER TABLE seat_holds ENABLE TRIGGER USER');
     await client.query('COMMIT');
   } catch (error) {
     await client.query('ROLLBACK');

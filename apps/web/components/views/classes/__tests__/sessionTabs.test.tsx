@@ -5,7 +5,7 @@ import type { Class, Session } from '@buxa/contracts';
 import type { Role } from '@buxa/domain';
 import { UiProvider } from '@buxa/middleware/providers/providers';
 import { settle } from '@buxa/domain';
-import { Dialog as ConfirmDialog } from '@/components/components';
+import { ConfirmDialog } from '@/components/components';
 import { seriesOf } from './seriesOf';
 
 const notFound = vi.hoisted(() =>
@@ -13,7 +13,7 @@ const notFound = vi.hoisted(() =>
     throw new Error('NEXT_NOT_FOUND');
   }),
 );
-const session = vi.hoisted((): { role: Role | null } => ({ role: 'staff' }));
+const session = vi.hoisted((): { role: Role | 'teacher' | null } => ({ role: 'staff' }));
 const services = vi.hoisted(() => ({
   classes: {
     getSession: vi.fn(),
@@ -34,7 +34,17 @@ vi.mock('@buxa/server/session/index', () => ({
   requireSession: () => Promise.resolve({ user: { clockFormat: null } }),
 }));
 vi.mock('@buxa/server/composers/people/camp', () => ({
-  currentActor: () => settle(() => (session.role ? { userId: 'u1', orgId: 'o1', role: session.role } : null)),
+  currentActor: () =>
+    settle(() =>
+      session.role
+        ? {
+            userId: 'u1',
+            orgId: 'o1',
+            role: session.role === 'teacher' ? 'viewer' : session.role,
+            instructor: session.role === 'teacher',
+          }
+        : null,
+    ),
 }));
 
 const { ClassPage } = await import('@/components/views/classes');
@@ -120,7 +130,7 @@ const hold = (id: string, sessionId: string, sessionName: string, household: str
 });
 
 const render = (node: ReactNode) => renderToStaticMarkup(<UiProvider Dialog={ConfirmDialog}>{node}</UiProvider>);
-const asRole = (role: Role | null) => {
+const asRole = (role: Role | 'teacher' | null) => {
   session.role = role;
 };
 
@@ -159,27 +169,23 @@ beforeEach(() => {
     hold('hold-autumn', AUTUMN, 'Autumn camp', 'Ito family'),
   ]);
   services.classes.listCampWaitlists.mockResolvedValue([]);
+  // A session counts for a form only through the published version (see loadFormSubmissions), so each form publishes its session.
+  const formFor = (id: string, name: string, sessionId: string, sessionName: string) => ({
+    id,
+    name,
+    season: null,
+    sessions: [{ id: sessionId, name: sessionName }],
+    fields: [],
+    attachments: [],
+    publishedVersion: 1,
+    published: { version: 1, name, season: null, sessions: [{ id: sessionId, name: sessionName }], fields: [] },
+    hasUnpublishedChanges: false,
+    submissionCount: 1,
+    updatedAt: '2027-06-01T00:00:00.000Z',
+  });
   services.registration.listForms.mockResolvedValue([
-    {
-      id: FORM_SUMMER,
-      name: 'Summer form',
-      season: null,
-      sessions: [{ id: SUMMER, name: 'Summer camp' }],
-      fields: [],
-      publishedVersion: 1,
-      submissionCount: 1,
-      updatedAt: '2027-06-01T00:00:00.000Z',
-    },
-    {
-      id: FORM_AUTUMN,
-      name: 'Autumn form',
-      season: null,
-      sessions: [{ id: AUTUMN, name: 'Autumn camp' }],
-      fields: [],
-      publishedVersion: 1,
-      submissionCount: 1,
-      updatedAt: '2027-06-01T00:00:00.000Z',
-    },
+    formFor(FORM_SUMMER, 'Summer form', SUMMER, 'Summer camp'),
+    formFor(FORM_AUTUMN, 'Autumn form', AUTUMN, 'Autumn camp'),
   ]);
   services.registration.listSubmissions.mockImplementation((_actor: unknown, formId: string) =>
     Promise.resolve(

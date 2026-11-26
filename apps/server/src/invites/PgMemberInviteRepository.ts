@@ -19,17 +19,20 @@ interface InviteRow {
   email: string;
   name: string;
   phone: string | null;
+  date_of_birth: string | null;
   created_at: Date;
   expires_at: Date;
 }
 
-const COLUMNS = 'id, email, name, phone, created_at, expires_at';
+/** The date is read as YYYY-MM-DD text, so it is not shifted by the driver's time zone. */
+const COLUMNS = "id, email, name, phone, to_char(date_of_birth, 'YYYY-MM-DD') AS date_of_birth, created_at, expires_at";
 
 const toRecord = (row: InviteRow): InviteRecord => ({
   id: row.id,
   email: row.email,
   name: row.name,
   phone: row.phone,
+  dateOfBirth: row.date_of_birth,
   createdAt: toIso(row.created_at),
   expiresAt: toIso(row.expires_at),
 });
@@ -59,9 +62,9 @@ export class PgMemberInviteRepository implements MemberInviteRepository {
   create(actor: Actor, invite: NewInvite, tokenHash: Buffer): Promise<InviteRecord> {
     return withOrg(this.pool, actor.userId, actor.orgId, async db => {
       const { rows } = await db.query<InviteRow>(
-        `INSERT INTO member_invites (org_id, email, name, phone, role, token_hash, created_by)
-         VALUES ($1, $2, $3, $4, 'teacher', $5, $6) RETURNING ${COLUMNS}`,
-        [actor.orgId, invite.email, invite.name, invite.phone, tokenHash, actor.userId],
+        `INSERT INTO member_invites (org_id, email, name, phone, date_of_birth, role, token_hash, created_by)
+         VALUES ($1, $2, $3, $4, $5, 'viewer', $6, $7) RETURNING ${COLUMNS}`,
+        [actor.orgId, invite.email, invite.name, invite.phone, invite.dateOfBirth, tokenHash, actor.userId],
       );
       const record = toRecord(rows[0]);
       await recordAudit(db, {
@@ -69,7 +72,7 @@ export class PgMemberInviteRepository implements MemberInviteRepository {
         action: 'member.invite',
         entity: 'member_invite',
         entityId: record.id,
-        data: { role: 'teacher' },
+        data: { role: 'viewer', instructor: true },
       });
 
       return record;
@@ -97,7 +100,7 @@ export class PgMemberInviteRepository implements MemberInviteRepository {
         action: 'member.invite_resend',
         entity: 'member_invite',
         entityId: row.id,
-        data: { role: 'teacher' },
+        data: { role: 'viewer', instructor: true },
       });
 
       return toRecord(row);

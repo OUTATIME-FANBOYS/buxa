@@ -26,7 +26,7 @@ describe('FormEditor: sessions this form covers as tags', () => {
     host = document.body.appendChild(document.createElement('div'));
     root = createRoot(host);
     act(() => {
-      root.render(<FormEditor mode="create" variant="dialog" id="form-under-test" sessions={SESSIONS} />);
+      root.render(<FormEditor mode="create" id="form-under-test" sessions={SESSIONS} />);
     });
   });
 

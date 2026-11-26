@@ -5,7 +5,7 @@ import { migrate, withOrg } from '@buxa/db';
 import type { Actor } from '@buxa/domain';
 import { PgRegistrationRepository } from './PgRegistrationRepository';
 import { createRegistrationService, type RegistrationService } from './RegistrationService';
-import { createRegistrationFixture, type RegistrationFixture } from './__tests__/registrationFixture';
+import { createRegistrationFixture, pgPeopleService, type RegistrationFixture } from './__tests__/registrationFixture';
 import { createCredentialService } from '../services/credentials/createCredentialService';
 import { createBadgeCipher, parseBadgeKey } from '../credentials/badgeCipher';
 import { PgPeopleRepository } from '../people/PgPeopleRepository';
@@ -20,11 +20,14 @@ import { PgClassRepository } from '../classes/PgClassRepository';
 const TEST_KEY = Buffer.alloc(32, 3).toString('base64');
 const url = process.env.DATABASE_URL;
 
+// The camper's name and birth date are read from the child's record, so a blank answer is filled from it. One answer set then serves
+// both children of the fixture (Ada and Ben).
 const standard = {
-  camperFirstName: 'Ada',
-  camperLastName: 'Lovelace',
-  camperBirthDate: '2014-03-09',
+  camperFirstName: '',
+  camperLastName: '',
+  camperBirthDate: '',
   guardianName: 'Byron Lovelace',
+  guardianDateOfBirth: '1985-06-15',
   guardianPhone: '555-0100',
   emergencyContactName: 'Mary Somerville',
   emergencyContactPhone: '555-0111',
@@ -38,16 +41,19 @@ const standard = {
 describe.skipIf(!url)('session and registration lifecycle in Postgres', () => {
   const pool = new pg.Pool({ connectionString: url });
   const repo = new PgRegistrationRepository(pool);
-  const registration: RegistrationService = createRegistrationService(repo, credentials =>
-    createCredentialService({
-      credentials,
-      people: new PgPeopleRepository(pool),
-      memberships: new PgMembershipRepository(pool),
-      attendance: new PgAttendanceRepository(pool),
-      orgs: new PgOrgRepository(pool),
-      clock: systemClock,
-      cipher: createBadgeCipher(() => parseBadgeKey(TEST_KEY)),
-    }),
+  const registration: RegistrationService = createRegistrationService(
+    repo,
+    credentials =>
+      createCredentialService({
+        credentials,
+        people: new PgPeopleRepository(pool),
+        memberships: new PgMembershipRepository(pool),
+        attendance: new PgAttendanceRepository(pool),
+        orgs: new PgOrgRepository(pool),
+        clock: systemClock,
+        cipher: createBadgeCipher(() => parseBadgeKey(TEST_KEY)),
+      }),
+    pgPeopleService(pool),
   );
   const classes: ClassService = createClassService({
     repo: new PgClassRepository(pool),
@@ -69,7 +75,6 @@ describe.skipIf(!url)('session and registration lifecycle in Postgres', () => {
     const staff = fx.actor('staff');
     const form = await registration.createForm(admin, {
       name: 'Summer',
-      season: 'Summer 2027',
       sessionIds: [fx.sessionId],
       fields: [],
     });

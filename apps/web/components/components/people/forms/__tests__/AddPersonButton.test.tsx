@@ -9,6 +9,7 @@ import { UiProvider } from '@buxa/middleware/providers/providers';
 
 const createPerson = vi.hoisted(() => vi.fn());
 vi.mock('@buxa/server/composers/people/createPersonAction', () => ({ createPersonAction: createPerson }));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), push: vi.fn(), refresh: vi.fn() }) }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 const NoDialog = () => null;
@@ -122,6 +123,7 @@ describe('AddPersonButton (the People page)', () => {
     );
     // The first name is required in the browser, so it is filled in: the action's own refusal is what this test checks.
     requirePresent(form.querySelector<HTMLInputElement>('input[name="givenName"]'), 'givenName').value = 'Ada';
+    requirePresent(form.querySelector<HTMLInputElement>('input[name="phone"]'), 'phone').value = '555-0100';
     act(() => form.requestSubmit());
     await flush();
     expect(createPerson).toHaveBeenCalledTimes(1);
@@ -150,6 +152,10 @@ describe('AddPersonButton (the People page)', () => {
     );
     given.value = 'Ada';
     family.value = 'Lovelace';
+    requirePresent(
+      requirePresent(dialog(), 'dialog()').querySelector<HTMLInputElement>('input[name="phone"]'),
+      'phone',
+    ).value = '555-0100';
     act(() =>
       requirePresent(
         requirePresent(dialog(), 'dialog()').querySelector('form'),
@@ -160,6 +166,7 @@ describe('AddPersonButton (the People page)', () => {
     const data = createPerson.mock.calls[0]?.[1] as FormData;
     expect(data.get('givenName')).toBe('Ada');
     expect(data.get('familyName')).toBe('Lovelace');
+    expect(data.get('phone')).toBe('555-0100');
   });
   it('a successful add closes the pop-up and shows the toast with the server’s message', async () => {
     createPerson.mockResolvedValue(success('Person added.'));
@@ -176,6 +183,10 @@ describe('AddPersonButton (the People page)', () => {
       'givenName',
     );
     given.value = 'Ada';
+    requirePresent(
+      requirePresent(dialog(), 'dialog()').querySelector<HTMLInputElement>('input[name="phone"]'),
+      'phone',
+    ).value = '555-0100';
     act(() => requirePresent(requirePresent(dialog(), 'dialog()').querySelector('form'), 'form').requestSubmit());
     await settle();
     expect(dialog()).toBeNull();

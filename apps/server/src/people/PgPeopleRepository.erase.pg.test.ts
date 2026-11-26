@@ -42,7 +42,7 @@ describe.skipIf(!url)('PgPeopleRepository.erase', () => {
 
   it('refuses staff with 403 and leaves the person in place', async () => {
     const { rows } = await pool.query<{ id: string }>(
-      `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Keep', 'Me') RETURNING id`,
+      `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'Keep', 'Me', '1985-06-15', '+1 555 0100') RETURNING id`,
       [orgId],
     );
     const asStaff = { userId: staff, orgId, role: 'staff' as const };
@@ -56,7 +56,7 @@ describe.skipIf(!url)('PgPeopleRepository.erase', () => {
 
   it('the owner deletes the person and their linked rows, and writes the audit entry', async () => {
     const { rows } = await pool.query<{ id: string }>(
-      `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Remove', 'Me') RETURNING id`,
+      `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'Remove', 'Me', '1985-06-15', '+1 555 0100') RETURNING id`,
       [orgId],
     );
     const personId = rows[0].id;

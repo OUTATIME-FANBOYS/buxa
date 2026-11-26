@@ -30,9 +30,9 @@ describe.skipIf(!url)('teacher calendar feed on Postgres', () => {
     );
     const userId = rows[0].id;
     teacherIds.push(userId);
-    await pool.query(`INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'teacher')`, [orgId, userId]);
+    await pool.query(`INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'viewer')`, [orgId, userId]);
 
-    return { userId, orgId, role: 'teacher' };
+    return { userId, orgId, role: 'viewer', instructor: true };
   };
 
   /**
@@ -48,10 +48,14 @@ describe.skipIf(!url)('teacher calendar feed on Postgres', () => {
       linked.rows[0]?.id ??
       (
         await pool.query<{ id: string }>(
-          `INSERT INTO people (org_id, given_name, family_name, user_id) VALUES ($1, 'Tess', 'Teacher', $2) RETURNING id`,
+          `INSERT INTO people (org_id, given_name, family_name, user_id, date_of_birth, phone) VALUES ($1, 'Tess', 'Teacher', $2, '1985-06-15', '+1 555 0100') RETURNING id`,
           [orgId, userId],
         )
       ).rows[0].id;
+    await pool.query(
+      `INSERT INTO person_roles (org_id, person_id, role) VALUES ($1, $2, 'instructor') ON CONFLICT DO NOTHING`,
+      [orgId, personId],
+    );
     await pool.query(
       `INSERT INTO session_instructors (org_id, session_id, person_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
       [orgId, classId, personId],
@@ -142,10 +146,12 @@ describe.skipIf(!url)('teacher calendar feed on Postgres', () => {
   });
 
   it('a person who stops being a teacher loses the link at once', async () => {
-    await pool.query(`UPDATE org_members SET role = 'viewer' WHERE org_id = $1 AND user_id = $2`, [
-      fx.orgA,
-      teacherA.userId,
-    ]);
+    // A teacher is a viewer whose person holds the instructor role (migration 0069), so stopping is losing that role.
+    await pool.query(
+      `DELETE FROM person_roles WHERE org_id = $1 AND role = 'instructor'
+         AND person_id IN (SELECT id FROM people WHERE org_id = $1 AND user_id = $2)`,
+      [fx.orgA, teacherA.userId],
+    );
 
     expect(await repo.findTeacherByTokenHash(hashA)).toBeNull();
     expect(await names(hashA)).toEqual([]);

@@ -1,12 +1,14 @@
 'use client';
 
 import { useActionState, useCallback, useEffect, useState } from 'react';
-import { Dialog } from '@/components/components/Dialog';
+import { ConfirmDialog } from '@/components/components/ConfirmDialog';
 import { Button } from '@/components/elements';
 import { deleteSeriesAction } from '@/actions/classes';
 import { idle } from '@buxa/shared';
 import { useUi } from '@buxa/middleware/providers/UiProvider';
 import { ActionMessage } from './ActionMessage';
+
+const FORM_ID = 'delete-class-form';
 
 /**
  * Deletes a class after a confirmation. A class with enrolments is refused by the server with the reason shown in the dialog,
@@ -48,25 +50,28 @@ export function DeleteClassButton({
         onClick={() => setOpen(true)}
       />
       {open && (
-        <Dialog title="Delete class?" onClose={close} className="class-dialog">
-          <form action={formAction} className="class-form">
-            <input type="hidden" name="seriesId" value={seriesId} />
-            <input type="hidden" name="sessionId" value={sessionId} />
-            <p className="class-helper">
-              {className} and every one of its days will be removed from this session. A class with enrolments cannot be
-              deleted: cancel them first.
-            </p>
-            <ActionMessage state={state} />
-            <div className="classes-actions">
-              <Button variant="glass" type="button" onClick={close}>
-                Cancel
-              </Button>
-              <Button type="submit" variant="glass-danger" disabled={pending}>
-                {pending ? 'Deleting...' : 'Delete class'}
-              </Button>
-            </div>
-          </form>
-        </Dialog>
+        <ConfirmDialog
+          title="Delete class?"
+          variant="danger"
+          className="class-dialog"
+          confirmLabel="Delete class"
+          pendingLabel="Deleting..."
+          pending={pending}
+          onCancel={close}
+          formId={FORM_ID}
+          formAction={formAction}
+          body={
+            <>
+              <input type="hidden" name="seriesId" value={seriesId} />
+              <input type="hidden" name="sessionId" value={sessionId} />
+              <p className="class-helper">
+                {className} and every one of its days will be removed from this session. A class with enrolments cannot
+                be deleted: cancel them first.
+              </p>
+              <ActionMessage state={state} />
+            </>
+          }
+        />
       )}
     </>
   );

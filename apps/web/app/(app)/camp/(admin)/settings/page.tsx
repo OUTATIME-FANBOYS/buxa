@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { authorize } from '@buxa/domain';
+import { authorize, isTeachingView } from '@buxa/domain';
 import { campContext, loadCampProfile } from '@buxa/server/composers/index.server';
 import { SettingsPage } from '@/components/views/kanban';
 import { listArchivedCamps } from '@/actions/camp';
@@ -26,7 +26,7 @@ export default async function Page() {
         canArchive: authorize(actor, 'org:archive').allow,
         canDelete: authorize(actor, 'org:delete').allow,
         canManageFeed: authorize(actor, 'org:update').allow,
-        isTeacher: actor.role === 'teacher',
+        isInstructor: isTeachingView(actor),
         archived,
       }}
       archivedCamps={archivedCamps}

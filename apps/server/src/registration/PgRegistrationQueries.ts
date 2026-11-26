@@ -2,12 +2,13 @@ import { z } from 'zod';
 import {
   CustomFieldSchema,
   DocumentAnswerSchema,
-  type CustomField,
   type FormAttachment,
+  type PublishedForm,
   type RegistrationClass,
   type RegistrationForm,
   type RegistrationRow,
 } from '@buxa/contracts';
+import { formDraftDiffers } from '@buxa/domain';
 import type { Db } from '../people/pgRows';
 import { RegistrationFormNotFoundError } from './errors';
 import { documentRowsFor } from './documentRows';
@@ -15,30 +16,48 @@ import { documentRowsFor } from './documentRows';
 /*
  * Reads for registration forms and submissions. Rows are parsed with zod where they leave the database, so the rest of the server
  * sees typed values and no casts. Every query runs inside withOrg (row-level security), so another camp's rows never appear.
+ *
+ * A form is read in two halves: the draft (name, season, sessions and questions as staff last saved them) and the published version
+ * (what families register on, from registration_form_versions; migration 0071). The published session set comes from
+ * buxa_form_published_session_ids, which falls back to the live rows for a version published before migration 0071.
  */
 
-/** The form row with its session set and its submission count, as the list and the detail screens need it. */
+/** The form row with its draft, its published version and its counts, as the list and the detail screens need it. */
 const FORM_SELECT = `
-  SELECT f.id, f.name, f.season, f.draft_fields AS fields, f.published_version, f.updated_at,
+  SELECT f.id, f.draft_name AS name, f.draft_season AS season, f.draft_fields AS fields,
+         f.draft_session_ids::text[] AS session_ids, f.published_version, f.updated_at,
          COALESCE((SELECT json_agg(json_build_object('id', c.id, 'name', c.name) ORDER BY c.name, c.id)
-                     FROM registration_form_sessions s
-                     JOIN classes c ON c.id = s.session_id AND c.org_id = s.org_id
-                    WHERE s.form_id = f.id), '[]') AS sessions,
+                     FROM classes c WHERE c.org_id = f.org_id AND c.id = ANY(f.draft_session_ids)), '[]') AS sessions,
+         buxa_form_published_session_ids(f.org_id, f.id)::text[] AS published_session_ids,
+         COALESCE((SELECT json_agg(json_build_object('id', c.id, 'name', c.name) ORDER BY c.name, c.id)
+                     FROM classes c
+                    WHERE c.org_id = f.org_id AND c.id = ANY(buxa_form_published_session_ids(f.org_id, f.id))), '[]') AS published_sessions,
+         CASE WHEN pv.session_ids IS NULL THEN f.name ELSE pv.name END AS published_name,
+         CASE WHEN pv.session_ids IS NULL THEN f.season ELSE pv.season END AS published_season,
+         pv.fields AS published_fields,
          (SELECT count(*)::int FROM registrations r WHERE r.form_id = f.id) AS submission_count,
          COALESCE((SELECT json_agg(json_build_object('id', a.id, 'name', a.name, 'contentType', a.content_type,
                                                      'sizeBytes', a.size_bytes) ORDER BY a.name, a.id)
                      FROM registration_form_files a
                     WHERE a.form_id = f.id), '[]') AS attachments
-    FROM registration_forms f`;
+    FROM registration_forms f
+    LEFT JOIN registration_form_versions pv
+      ON pv.org_id = f.org_id AND pv.form_id = f.id AND pv.version = f.published_version`;
 
 interface FormRow {
   id: string;
   name: string;
   season: string | null;
   fields: unknown;
+  session_ids: string[];
   published_version: number | null;
   updated_at: Date;
   sessions: { id: string; name: string }[];
+  published_session_ids: string[];
+  published_sessions: { id: string; name: string }[];
+  published_name: string;
+  published_season: string | null;
+  published_fields: unknown;
   submission_count: number;
   attachments: { id: string; name: string; contentType: string; sizeBytes: number }[];
 }
@@ -55,21 +74,45 @@ function toAttachment(a: FormRow['attachments'][number]): FormAttachment {
 }
 
 function toForm(row: FormRow): RegistrationForm {
+  const fields = FieldsSchema.parse(row.fields);
+  const published: PublishedForm | null =
+    row.published_version === null
+      ? null
+      : {
+          version: row.published_version,
+          name: row.published_name,
+          season: row.published_season,
+          sessions: row.published_sessions,
+          fields: FieldsSchema.parse(row.published_fields),
+        };
+
   return {
     id: row.id,
     name: row.name,
     season: row.season,
     sessions: row.sessions,
-    fields: FieldsSchema.parse(row.fields),
+    fields,
     attachments: row.attachments.map(toAttachment),
     publishedVersion: row.published_version,
+    published,
+    hasUnpublishedChanges:
+      published !== null &&
+      formDraftDiffers(
+        { name: row.name, season: row.season, sessionIds: row.session_ids, fields },
+        {
+          name: published.name,
+          season: published.season,
+          sessionIds: row.published_session_ids,
+          fields: published.fields,
+        },
+      ),
     submissionCount: row.submission_count,
     updatedAt: row.updated_at.toISOString(),
   };
 }
 
 export async function listFormRows(db: Db): Promise<RegistrationForm[]> {
-  const { rows } = await db.query<FormRow>(`${FORM_SELECT} ORDER BY lower(f.name), f.id`);
+  const { rows } = await db.query<FormRow>(`${FORM_SELECT} ORDER BY lower(f.draft_name), f.id`);
 
   return rows.map(toForm);
 }
@@ -90,20 +133,38 @@ export async function requireFormRow(db: Db, formId: string): Promise<Registrati
   return form;
 }
 
-export async function publishedVersionRow(
-  db: Db,
-  formId: string,
-): Promise<{ version: number; fields: CustomField[] } | null> {
-  const { rows } = await db.query<{ version: number; fields: unknown }>(
-    `SELECT v.version, v.fields
+/** The published version families register on, or null when the form has never been published. */
+export async function publishedVersionRow(db: Db, formId: string): Promise<PublishedForm | null> {
+  const { rows } = await db.query<{
+    version: number;
+    name: string;
+    season: string | null;
+    fields: unknown;
+    sessions: { id: string; name: string }[];
+  }>(
+    `SELECT f.published_version AS version,
+            CASE WHEN v.session_ids IS NULL THEN f.name ELSE v.name END AS name,
+            CASE WHEN v.session_ids IS NULL THEN f.season ELSE v.season END AS season,
+            v.fields,
+            COALESCE((SELECT json_agg(json_build_object('id', c.id, 'name', c.name) ORDER BY c.name, c.id)
+                        FROM classes c
+                       WHERE c.org_id = f.org_id AND c.id = ANY(buxa_form_published_session_ids(f.org_id, f.id))), '[]') AS sessions
        FROM registration_forms f
-       JOIN registration_form_versions v ON v.form_id = f.id AND v.version = f.published_version
+       JOIN registration_form_versions v ON v.org_id = f.org_id AND v.form_id = f.id AND v.version = f.published_version
       WHERE f.id = $1`,
     [formId],
   );
   const row = rows[0];
 
-  return row ? { version: row.version, fields: FieldsSchema.parse(row.fields) } : null;
+  return row
+    ? {
+        version: row.version,
+        name: row.name,
+        season: row.season,
+        sessions: row.sessions,
+        fields: FieldsSchema.parse(row.fields),
+      }
+    : null;
 }
 
 /** Every submission to a form, with the sessions it asks for. The screen groups them by session. */

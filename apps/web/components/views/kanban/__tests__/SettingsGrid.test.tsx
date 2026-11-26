@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { Dialog as ConfirmDialog } from '@/components/components';
+import { ConfirmDialog } from '@/components/components';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -47,7 +47,7 @@ const OWNER_CAMP = {
   canArchive: true,
   canDelete: true,
   canManageFeed: false,
-  isTeacher: false,
+  isInstructor: false,
   archived: false,
 };
 /** An admin: may rename and archive (org:update, org:archive), but not delete (org:delete is the owner's). */

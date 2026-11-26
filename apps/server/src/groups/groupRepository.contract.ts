@@ -157,7 +157,7 @@ export function groupRepositoryContract(factory: () => Promise<GroupFixture>): v
         ratioCampers: 1,
         ageRange: null,
       });
-      const staff = await fx.person({ dateOfBirth: null, roles: ['instructor'] });
+      const staff = await fx.person({ dateOfBirth: '1985-06-15', roles: ['instructor'] });
       const a = await fx.person({ dateOfBirth: '2019-01-01' });
       const b = await fx.person({ dateOfBirth: '2019-01-01' });
       await fx.repo.assign(

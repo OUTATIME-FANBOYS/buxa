@@ -1,3 +1,4 @@
+export * from './roles';
 export * from './permissions';
 export * from './permissionCategories';
 export * from './ids';
@@ -13,3 +14,4 @@ export * from './prices';
 export * from './presence';
 export * from './settle';
 export * from './calendar';
+export * from './gate';

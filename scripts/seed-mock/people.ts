@@ -71,6 +71,8 @@ async function setPickup(
 async function addFamily(services: Services, actor: Actor, family: RosterFamily, year: number, counts: RosterCounts) {
   const [first, ...others] = family.guardians;
   const primary = await services.people.create(actor, {
+    dateOfBirth: '1985-06-15',
+    phone: '+1 555 0100',
     givenName: first.givenName,
     familyName: family.surname,
     email: first.email,
@@ -84,6 +86,8 @@ async function addFamily(services: Services, actor: Actor, family: RosterFamily,
   const guardianIds = [primary.id];
   for (const guardian of others) {
     const person = await services.people.create(actor, {
+      dateOfBirth: '1985-06-15',
+      phone: '+1 555 0100',
       givenName: guardian.givenName,
       familyName: family.surname,
       email: guardian.email,
@@ -109,6 +113,7 @@ async function addFamily(services: Services, actor: Actor, family: RosterFamily,
 
 async function addCamper(services: Services, actor: Actor, householdId: string, camper: RosterCamper): Promise<string> {
   const person = await services.people.create(actor, {
+    phone: '+1 555 0100',
     givenName: camper.givenName,
     familyName: camper.familyName,
     dateOfBirth: camper.dateOfBirth,
@@ -141,6 +146,8 @@ export async function seedRoster(
   }
   for (const adult of ADULTS) {
     const person = await services.people.create(actor, {
+      dateOfBirth: '1985-06-15',
+      phone: '+1 555 0100',
       givenName: adult.givenName,
       familyName: adult.familyName,
       email: adult.email,

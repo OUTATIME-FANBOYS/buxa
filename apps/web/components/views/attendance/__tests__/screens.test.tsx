@@ -25,27 +25,43 @@ const services = vi.hoisted(() => ({
   },
   people: { list: vi.fn() },
   credentials: { scan: vi.fn() },
+  gate: {
+    listDevices: vi.fn(() => Promise.resolve([])),
+    linkToken: vi.fn(() => Promise.resolve(null)),
+    rotateLink: vi.fn(),
+  },
 }));
 
 vi.mock('next/navigation', () => ({ notFound, useRouter: () => ({ refresh() {}, push() {} }) }));
 vi.mock('@buxa/server/runtime', () => ({
   getRuntime: () => ({
     services,
-    // A teacher's member options are read here (withMemberOptions): none are on.
-    repositories: { users: { memberOptionsOf: () => Promise.resolve([]) } },
+    // A teacher's instructor flag and member options are read here (withMemberOptions): only a teacher is an instructor, and none are on.
+    repositories: {
+      users: {
+        isInstructorIn: () => Promise.resolve(session.role === 'teacher'),
+        memberOptionsOf: () => Promise.resolve([]),
+      },
+    },
   }),
 }));
 vi.mock('@buxa/server/session/index', () => ({
   requireSession: () => settle(() => ({ user: { id: 'u1', email: 'a@example.test', name: 'Ada' }, memberships: [] })),
   getCurrentCamp: () =>
     settle(() => (session.camp ? { orgId: 'o1', role: session.role, name: 'Sunrise', slug: 'sunrise' } : null)),
-  toActor: (_s: unknown, camp: { role: Role }) => ({ userId: 'u1', orgId: 'o1', role: camp.role }),
+  toActor: (_s: unknown, camp: { role: Role | 'teacher' }) => ({
+    userId: 'u1',
+    orgId: 'o1',
+    role: camp.role === 'teacher' ? 'viewer' : camp.role,
+    instructor: camp.role === 'teacher',
+  }),
 }));
 vi.mock('@/components/components/scanner/ScanField', () => ({
   ScanField: ({ label }: { label: string }) => `SCAN:${label}`,
 }));
 vi.mock('@/components/components/scanner/CameraScanner', () => ({
   CameraScanner: () => 'CAMERA',
+  canReadQrWithCamera: () => true,
 }));
 vi.mock('@buxa/server/composers/attendance/searchPeople', () => ({
   searchPeopleAction: () => settle(() => ({ kind: 'ok', value: [] })),
@@ -108,22 +124,47 @@ afterEach(() => {
 
 describe('CheckInScreen', () => {
   it('shows the console to someone who may record attendance', async () => {
-    const html = renderToStaticMarkup(await CheckInScreen());
+    const html = renderToStaticMarkup(await CheckInScreen({ searchParams: {} }));
     expect(html).toContain('SCAN:Scan a badge, or type a code');
     expect(html).toContain('Find by name');
     expect(html).toContain('Scan with camera');
   });
 
+  it('gives the scan tab first, with the four tab labels and the new subtext', async () => {
+    const html = renderToStaticMarkup(await CheckInScreen({ searchParams: {} }));
+    expect(html).toContain('Check people in: scan a badge, find a name, or check in a family by email.');
+    expect(html).toContain('Scan or find');
+    expect(html).toContain('Family by email');
+    expect(html).toContain('Phones verified');
+    // Staff do not make the link, so its tab is not offered.
+    expect(html).not.toContain('Check-in link');
+  });
+
+  it('offers the check-in link tab to someone who may update the camp, and opens it from the URL', async () => {
+    session.role = 'admin';
+    const html = renderToStaticMarkup(await CheckInScreen({ searchParams: { tab: 'link' } }));
+    expect(html).toContain('Check-in link');
+    expect(html).toContain('Make the check-in link');
+  });
+
+  it('shows Scan or find for an unknown or hidden tab', async () => {
+    const unknown = renderToStaticMarkup(await CheckInScreen({ searchParams: { tab: 'nope' } }));
+    expect(unknown).toContain('Find by name');
+    session.role = 'staff';
+    const hidden = renderToStaticMarkup(await CheckInScreen({ searchParams: { tab: 'link' } }));
+    expect(hidden).not.toContain('Make the check-in link');
+  });
+
   it('gives a viewer a friendly answer, not an error', async () => {
     session.role = 'viewer';
-    const html = renderToStaticMarkup(await CheckInScreen());
+    const html = renderToStaticMarkup(await CheckInScreen({ searchParams: {} }));
     expect(html).toContain('Ask a staff member to check people in');
     expect(html).not.toContain('Find by name');
   });
 
   it('answers not-found with no camp', async () => {
     session.camp = false;
-    await expect(CheckInScreen()).rejects.toThrow('NEXT_NOT_FOUND');
+    await expect(CheckInScreen({ searchParams: {} })).rejects.toThrow('NEXT_NOT_FOUND');
   });
 });
 

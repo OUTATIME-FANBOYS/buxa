@@ -28,14 +28,18 @@ function gridDays(cursor: Date): string[] {
   });
 }
 
+/**
+ * The month of tasks by due date. `newTaskProjectId` is the board's project: a new task from a day goes there. Without it
+ * (the workspace Calendar), the drawer asks the person which project the task belongs to.
+ */
 export function CalendarView({
   tasks,
   canCreate,
-  projectId,
+  newTaskProjectId,
 }: {
   tasks: Task[];
   canCreate: boolean;
-  projectId?: string;
+  newTaskProjectId?: string;
 }) {
   const { kindOf } = useStore();
   const { openTask } = useTaskDrawer();
@@ -125,13 +129,20 @@ export function CalendarView({
             >
               <div className="cal-num">
                 <span>{d.getDate()}</span>
-                {canCreate && projectId && (
+                {canCreate && (
                   <Button
                     iconOnly
                     icon="plus"
                     className="add-day"
                     aria-label={`Add task due ${fmt(day)}`}
-                    onClick={() => openTask('new', { due: day, projectId })}
+                    onClick={() =>
+                      openTask(
+                        'new',
+                        newTaskProjectId
+                          ? { due: day, projectId: newTaskProjectId }
+                          : { due: day, chooseProject: true },
+                      )
+                    }
                   />
                 )}
               </div>

@@ -6,7 +6,7 @@ import { CAMP_ROLES, settle, type CampRole } from '@buxa/domain';
 import { idle, type HouseholdChoice } from '@buxa/shared';
 import { PersonForm, type EditablePerson } from '@/components/components/people/forms';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
-import { Dialog as ConfirmDialog } from '@/components/components';
+import { ConfirmDialog } from '@/components/components';
 import { LEE, PERSON, formHelpers } from './personFormFixtures';
 
 vi.mock('@buxa/server/composers/people/createPersonAction', () => ({
@@ -83,7 +83,10 @@ describe('PersonForm: roles are checkboxes in both modes', () => {
     renderAdd();
     const headings = Array.from(host.querySelectorAll('h3')).map(el => el.textContent);
     expect(headings).toEqual(['Family', 'Staff and participants']);
-    expect(host.querySelector('.people-check')?.textContent).toBe('Camper');
+    // The Family group comes first and holds the family roles, the camper among them.
+    const [family] = Array.from(host.querySelectorAll('.person-role-group'));
+    expect(family?.querySelector('.people-check')?.textContent).toBe('Parent or guardian');
+    expect(family?.textContent).toContain('Camper');
   });
 });
 

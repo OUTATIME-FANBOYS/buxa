@@ -3,7 +3,7 @@ import {
   ACTIONS,
   GRANTS,
   OPTION_ACTION,
-  ROLES,
+  ORG_ACCESS_KEYS,
   authorize,
   can,
   rank,
@@ -12,62 +12,64 @@ import {
   type Role,
 } from '../src';
 
+// ORG_ACCESS_KEYS is highest first (owner, admin, staff, viewer). The matrix columns below read lowest first, so flip the order.
+const ROLES: readonly Role[] = [...ORG_ACCESS_KEYS].reverse();
 const ORG = 'org-1';
 const as = (role: Role, userId = 'me'): Actor => ({ userId, orgId: ORG, role });
 
 // The matrix, written out so a reviewer can read it. Y = allowed, . = denied.
-//                          viewer staff admin owner teacher
+//                          viewer staff admin owner
 const MATRIX: Record<Action, string> = {
-  'org:read': 'YYYYY',
-  'org:update': '..YY.',
-  'org:archive': '..YY.',
-  'org:delete': '...Y.',
-  'org:unarchive': '..YY.',
-  'org:transfer_ownership': '...Y.',
-  'members:read': 'YYYY.',
-  'members:read_contact': '..YY.',
-  'members:invite': '.YYY.',
-  'members:change_role': '..YY.',
-  'members:set_options': '..YY.',
-  'members:remove': '..YY.',
-  'members:rename': '..YY.',
-  'members:leave': 'YYYYY',
-  'audit:read': '..YY.',
-  'data:export': '..YY.',
-  'data:erase': '...Y.',
-  'people:read': 'YYYYY',
-  'people:read_contact': '.YYY.',
-  'people:create': '.YYY.',
-  'people:update': '.YYY.',
-  'people:delete': '..YY.',
-  'people:authorise_pickup': '..YY.',
-  'memberships:manage': '..YY.',
-  'credentials:manage': '..YY.',
-  'attendance:read': '.YYYY',
-  'attendance:record': '.YYY.',
-  'attendance:override': '..YY.',
-  'attendance:export': '..YY.',
-  'events:read': 'YYYYY',
-  'events:create': '.YYY.',
-  'events:update': '.YYY.',
-  'events:update_details': '..YYY',
-  'events:delete': '.YYY.',
-  'classes:manage': '.YYY.',
-  'classes:delete_with_classes': '..YY.',
-  'classes:publish': '..YY.',
-  'tasks:read': 'YYYY.',
-  'tasks:create': '.YYY.',
-  'tasks:update': '.YYY.',
-  'tasks:move': '.YYY.',
-  'tasks:comment': '.YYY.',
-  'tasks:delete': '..YY.',
-  'tasks:manage_board': '..YY.',
-  'holds:manage': '.YYY.',
-  'registration:read': '.YYY.',
-  'registration:submit': '.YYY.',
-  'registration:manage': '..YY.',
-  'registration:confirm': '.YYY.',
-  'registration:delete': '..YY.',
+  'org:read': 'YYYY',
+  'org:update': '..YY',
+  'org:archive': '..YY',
+  'org:delete': '...Y',
+  'org:unarchive': '..YY',
+  'org:transfer_ownership': '...Y',
+  'members:read': 'YYYY',
+  'members:read_contact': '..YY',
+  'members:invite': '.YYY',
+  'members:change_role': '..YY',
+  'members:set_options': '..YY',
+  'members:remove': '..YY',
+  'members:rename': '..YY',
+  'members:leave': 'YYYY',
+  'audit:read': '..YY',
+  'data:export': '..YY',
+  'data:erase': '...Y',
+  'people:read': 'YYYY',
+  'people:read_contact': '.YYY',
+  'people:create': '.YYY',
+  'people:update': '.YYY',
+  'people:delete': '..YY',
+  'people:authorise_pickup': '..YY',
+  'memberships:manage': '..YY',
+  'credentials:manage': '..YY',
+  'attendance:read': '.YYY',
+  'attendance:record': '.YYY',
+  'attendance:override': '..YY',
+  'attendance:export': '..YY',
+  'events:read': 'YYYY',
+  'events:create': '.YYY',
+  'events:update': '.YYY',
+  'events:update_details': '..YY',
+  'events:delete': '.YYY',
+  'classes:manage': '.YYY',
+  'classes:delete_with_classes': '..YY',
+  'classes:publish': '..YY',
+  'tasks:read': 'YYYY',
+  'tasks:create': '.YYY',
+  'tasks:update': '.YYY',
+  'tasks:move': '.YYY',
+  'tasks:comment': '.YYY',
+  'tasks:delete': '..YY',
+  'tasks:manage_board': '..YY',
+  'holds:manage': '.YYY',
+  'registration:read': '.YYY',
+  'registration:submit': '.YYY',
+  'registration:manage': '..YY',
+  'registration:confirm': '.YYY',
+  'registration:delete': '..YY',
 };
 
 describe('role grants', () => {
@@ -83,7 +85,8 @@ describe('role grants', () => {
   }
 
   it('a higher role never has fewer grants than a lower one (the ladder; teacher is outside it)', () => {
-    const ladder = ROLES.filter(r => r !== 'teacher');
+    // Lowest first: each role's grants are a subset of the next role up.
+    const ladder = ROLES;
     for (let i = 1; i < ladder.length; i++) {
       for (const a of GRANTS[ladder[i - 1]]) {
         expect(GRANTS[ladder[i]].has(a)).toBe(true);
@@ -92,25 +95,33 @@ describe('role grants', () => {
   });
 });
 
-describe('teacher: assigned classes only', () => {
-  const T = 'teacher' as const;
+/** A viewer whose person is an instructor: the teaching view. */
+const teaching = (options?: Actor['options']): Actor => ({
+  userId: 'me',
+  orgId: ORG,
+  role: 'viewer',
+  instructor: true,
+  options,
+});
+
+describe('teaching view: assigned classes only', () => {
   const scoped: Action[] = ['events:read', 'events:update_details', 'people:read', 'attendance:read'];
 
   it('is refused the scoped actions unless the class is one it is assigned to', () => {
     for (const a of scoped) {
-      expect(authorize(as(T), a, { orgId: ORG })).toEqual({ allow: false, reason: 'not_assigned' });
-      expect(authorize(as(T), a, { orgId: ORG, assignedToClass: false })).toEqual({
+      expect(authorize(teaching(), a, { orgId: ORG })).toEqual({ allow: false, reason: 'not_assigned' });
+      expect(authorize(teaching(), a, { orgId: ORG, assignedToClass: false })).toEqual({
         allow: false,
         reason: 'not_assigned',
       });
-      expect(authorize(as(T), a, { orgId: ORG, assignedToClass: true })).toEqual({ allow: true });
+      expect(authorize(teaching(), a, { orgId: ORG, assignedToClass: true })).toEqual({ allow: true });
     }
   });
 
   it('is allowed on its own classes, and the scope does not change any other role', () => {
-    expect(can(as(T), 'attendance:read', { orgId: ORG, assignedToClass: true })).toBe(true);
+    expect(can(teaching(), 'attendance:read', { orgId: ORG, assignedToClass: true })).toBe(true);
     // Check-in is off for a teacher by default; an admin turns it on per person (not part of the role).
-    expect(authorize(as(T), 'attendance:record', { orgId: ORG, assignedToClass: true })).toEqual({
+    expect(authorize(teaching(), 'attendance:record', { orgId: ORG, assignedToClass: true })).toEqual({
       allow: false,
       reason: 'role_not_allowed',
     });
@@ -143,21 +154,21 @@ describe('teacher: assigned classes only', () => {
       'tasks:create',
     ];
     for (const a of denied) {
-      expect(can(as(T), a, own), a).toBe(false);
+      expect(can(teaching(), a, own), a).toBe(false);
     }
   });
 
   it('is refused events:update (the whole class) and may change only the class details', () => {
-    expect(authorize(as(T), 'events:update', { orgId: ORG, assignedToClass: true })).toEqual({
+    expect(authorize(teaching(), 'events:update', { orgId: ORG, assignedToClass: true })).toEqual({
       allow: false,
       reason: 'role_not_allowed',
     });
-    expect(can(as(T), 'events:update_details', { orgId: ORG, assignedToClass: true })).toBe(true);
-    expect(can(as(T), 'events:update_details', { orgId: ORG })).toBe(false);
+    expect(can(teaching(), 'events:update_details', { orgId: ORG, assignedToClass: true })).toBe(true);
+    expect(can(teaching(), 'events:update_details', { orgId: ORG })).toBe(false);
   });
 
   it('is refused in another organisation even when assigned', () => {
-    expect(authorize(as(T), 'attendance:read', { orgId: 'org-2', assignedToClass: true })).toEqual({
+    expect(authorize(teaching(), 'attendance:read', { orgId: 'org-2', assignedToClass: true })).toEqual({
       allow: false,
       reason: 'other_org',
     });
@@ -189,8 +200,8 @@ describe('fail closed', () => {
     expect(authorize(as('owner'), 'org:transfer_ownership')).toEqual({ allow: false, reason: 'missing_context' });
   });
   it('a role the grant table denies cannot be rescued by context', () => {
-    expect(can(as('viewer'), 'members:invite', { newRole: 'teacher' })).toBe(false);
-    expect(can(as('teacher'), 'members:invite', { newRole: 'teacher' })).toBe(false);
+    expect(can(as('viewer'), 'members:invite', { newRole: 'viewer' })).toBe(false);
+    expect(can(teaching(), 'members:invite', { newRole: 'viewer' })).toBe(false);
     expect(can(as('viewer'), 'members:remove', { target: { userId: 'u', role: 'viewer' } })).toBe(false);
   });
 });
@@ -275,9 +286,8 @@ describe('transferring ownership', () => {
 });
 
 describe('ranks', () => {
-  it('are strictly ordered on the ladder, and teacher sits at the bottom with viewer', () => {
+  it('are strictly ordered on the ladder: viewer, staff, admin, owner', () => {
     expect(['viewer', 'staff', 'admin', 'owner'].map(r => rank(r as Role))).toEqual([0, 1, 2, 3]);
-    expect(rank('teacher')).toBe(rank('viewer'));
   });
 });
 
@@ -313,18 +323,20 @@ describe('members:rename', () => {
   });
 });
 
-describe('member options: check-in and check-out for a teacher', () => {
-  const T = 'teacher' as const;
+describe('member options: check-in and check-out for an instructor', () => {
   const on = (role: Role, options?: Actor['options'], userId = 'me'): Actor => ({ userId, orgId: ORG, role, options });
   const assigned = { orgId: ORG, assignedToClass: true };
 
   it('the option is refused without the flag, so check-in stays off by default', () => {
-    expect(authorize(on(T), 'attendance:record', assigned)).toEqual({ allow: false, reason: 'role_not_allowed' });
-    expect(authorize(on(T, []), 'attendance:record', assigned)).toEqual({ allow: false, reason: 'role_not_allowed' });
+    expect(authorize(teaching(), 'attendance:record', assigned)).toEqual({ allow: false, reason: 'role_not_allowed' });
+    expect(authorize(teaching([]), 'attendance:record', assigned)).toEqual({
+      allow: false,
+      reason: 'role_not_allowed',
+    });
   });
 
   it('with the flag, a teacher may record attendance in its assigned classes only', () => {
-    const flagged = on(T, ['teacher.check_in_out']);
+    const flagged = teaching(['teacher.check_in_out']);
     expect(authorize(flagged, 'attendance:record', assigned)).toEqual({ allow: true });
     expect(authorize(flagged, 'attendance:record', { orgId: ORG })).toEqual({ allow: false, reason: 'not_assigned' });
     expect(authorize(flagged, 'attendance:record', { orgId: ORG, assignedToClass: false })).toEqual({
@@ -334,7 +346,7 @@ describe('member options: check-in and check-out for a teacher', () => {
   });
 
   it('the option grants only the action it names, not the other actions of the teacher', () => {
-    const flagged = on(T, ['teacher.check_in_out']);
+    const flagged = teaching(['teacher.check_in_out']);
     expect(can(flagged, 'attendance:override', assigned)).toBe(false);
     expect(can(flagged, 'attendance:export', assigned)).toBe(false);
     expect(can(flagged, 'people:read_contact', assigned)).toBe(false);
@@ -359,29 +371,32 @@ describe('member options: check-in and check-out for a teacher', () => {
 });
 
 describe('members:set_options', () => {
-  const target = (role: Role, userId = 'them') => ({ userId, role });
-  const set = (actor: Actor, t: { userId: string; role: Role }) =>
+  const target = (role: Role, userId = 'them', instructor = true) => ({ userId, role, instructor });
+  const set = (actor: Actor, t: { userId: string; role: Role; instructor?: boolean }) =>
     authorize(actor, 'members:set_options', { orgId: ORG, target: t, option: 'teacher.check_in_out' });
 
   it('an admin or owner may set an option on a teacher', () => {
-    expect(set(as('admin', 'a'), target('teacher'))).toEqual({ allow: true });
-    expect(set(as('owner', 'o'), target('teacher'))).toEqual({ allow: true });
+    expect(set(as('admin', 'a'), target('viewer'))).toEqual({ allow: true });
+    expect(set(as('owner', 'o'), target('viewer'))).toEqual({ allow: true });
   });
 
-  it('staff, viewers and teachers may not set options', () => {
-    expect(set(as('staff', 's'), target('teacher'))).toEqual({ allow: false, reason: 'role_not_allowed' });
-    expect(set(as('viewer', 'v'), target('teacher'))).toEqual({ allow: false, reason: 'role_not_allowed' });
-    expect(set(as('teacher', 't'), target('teacher'))).toEqual({ allow: false, reason: 'role_not_allowed' });
+  it('staff, viewers and instructors in the teaching view may not set options', () => {
+    expect(set(as('staff', 's'), target('viewer'))).toEqual({ allow: false, reason: 'role_not_allowed' });
+    expect(set(as('viewer', 'v'), target('viewer'))).toEqual({ allow: false, reason: 'role_not_allowed' });
+    expect(set(teaching(), target('viewer'))).toEqual({ allow: false, reason: 'role_not_allowed' });
   });
 
-  it('an option can be set only on a teacher', () => {
+  it('an option can be set only on an instructor in the teaching view', () => {
     expect(set(as('admin', 'a'), target('staff'))).toEqual({ allow: false, reason: 'option_not_for_role' });
-    expect(set(as('owner', 'o'), target('viewer'))).toEqual({ allow: false, reason: 'option_not_for_role' });
+    expect(set(as('owner', 'o'), target('viewer', 'them', false))).toEqual({
+      allow: false,
+      reason: 'option_not_for_role',
+    });
   });
 
   it('an admin may not set an option on itself, and a write needs a target and an option', () => {
-    expect(set(as('admin', 'a'), target('teacher', 'a'))).toEqual({ allow: false, reason: 'self_change' });
-    expect(authorize(as('admin', 'a'), 'members:set_options', { orgId: ORG, target: target('teacher') })).toEqual({
+    expect(set(as('admin', 'a'), target('viewer', 'a'))).toEqual({ allow: false, reason: 'self_change' });
+    expect(authorize(as('admin', 'a'), 'members:set_options', { orgId: ORG, target: target('viewer') })).toEqual({
       allow: false,
       reason: 'missing_context',
     });
@@ -391,9 +406,42 @@ describe('members:set_options', () => {
     expect(
       authorize({ ...as('admin', 'a'), archived: true }, 'members:set_options', {
         orgId: ORG,
-        target: target('teacher'),
+        target: target('viewer'),
         option: 'teacher.check_in_out',
       }),
     ).toEqual({ allow: false, reason: 'archived_camp' });
+  });
+});
+
+describe('teaching view: no staff or admin right from teaching', () => {
+  const instructorStaff: Actor = { userId: 'me', orgId: ORG, role: 'staff', instructor: true };
+
+  it('a viewer who teaches cannot read the team, settings, the audit log or invite anyone', () => {
+    for (const action of [
+      'members:read',
+      'members:change_role',
+      'org:update',
+      'audit:read',
+      'members:invite',
+    ] as const) {
+      expect(can(teaching(), action, { orgId: ORG, newRole: 'viewer' }), action).toBe(false);
+    }
+  });
+
+  it('a teaching viewer sees the restricted list only, and no tasks or contact details', () => {
+    expect(can(teaching(), 'tasks:read', { orgId: ORG })).toBe(false);
+    expect(can(teaching(), 'people:read_contact', { orgId: ORG, assignedToClass: true })).toBe(false);
+  });
+
+  it('a plain viewer (not an instructor) keeps the viewer grants without the class restriction', () => {
+    expect(can(as('viewer'), 'people:read', { orgId: ORG })).toBe(true);
+    expect(can(as('viewer'), 'members:read', { orgId: ORG })).toBe(true);
+    expect(can(as('viewer'), 'tasks:read', { orgId: ORG })).toBe(true);
+  });
+
+  it('an instructor on staff access keeps every staff grant and is not restricted to assigned classes', () => {
+    expect(can(instructorStaff, 'people:create', { orgId: ORG })).toBe(true);
+    expect(can(instructorStaff, 'events:read', { orgId: ORG })).toBe(true);
+    expect(can(instructorStaff, 'audit:read', { orgId: ORG })).toBe(false);
   });
 });

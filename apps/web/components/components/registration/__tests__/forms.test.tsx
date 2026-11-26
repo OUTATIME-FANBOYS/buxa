@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { FormEditor } from '../FormEditor';
 import { RegisterForm } from '../RegisterForm';
+import { camper } from './camperFixture';
 
 vi.mock('@/actions/registration', () => ({
   createFormAction: vi.fn(),
@@ -12,11 +13,11 @@ vi.mock('@/actions/registration', () => ({
 }));
 
 const SESSIONS = [
-  { id: 's-1', name: 'Art', classes: [] },
-  { id: 's-2', name: 'Robotics', classes: [] },
+  { id: 's-1', name: 'Art', series: [] },
+  { id: 's-2', name: 'Robotics', series: [] },
 ];
 
-const CAMPERS = [{ id: 'c-1', name: 'Ada Lovelace' }];
+const CAMPERS = [camper('c-1', 'Ada', 'Lovelace')];
 
 describe('RegisterForm: sections, one asterisk, no fieldsets', () => {
   it('draws each group as a heading and a section, never a fieldset box', () => {
@@ -34,7 +35,8 @@ describe('RegisterForm: sections, one asterisk, no fieldsets', () => {
     expect(html).not.toContain('<fieldset');
     expect(html).not.toContain('<legend');
     expect(html).toContain('Parent or guardian');
-    expect(html).toContain('Emergency contact');
+    // The emergency contact is kept on the person's page only, never on a registration.
+    expect(html).not.toContain('Emergency contact');
   });
 
   it('asks each required question once: one asterisk, never a double one', () => {
@@ -90,7 +92,7 @@ describe('RegisterForm: sections, one asterisk, no fieldsets', () => {
     expect(html).not.toContain('Record registration');
   });
 
-  it('lists the children to choose from People, as checkboxes, before any class', () => {
+  it('offers the children from People as a search with an Add a person link, not a checkbox list, before any class', () => {
     const html = renderToStaticMarkup(
       <RegisterForm
         formId="f-1"
@@ -102,8 +104,11 @@ describe('RegisterForm: sections, one asterisk, no fieldsets', () => {
         variant="dialog"
       />,
     );
-    expect(html).toContain('check-group');
-    expect(html).toContain('>Ada Lovelace<');
+    expect(html).toContain('aria-label="Search children"');
+    expect(html).toContain('href="/camp/people?add=person"');
+    expect(html).toContain('>Add a person<');
+    expect(html).not.toContain('check-group');
+    expect(html).not.toContain('type="checkbox"');
     expect(html).not.toContain('name="selections"');
   });
 
@@ -123,14 +128,15 @@ describe('RegisterForm: sections, one asterisk, no fieldsets', () => {
   });
 });
 
-describe('FormEditor: sections, one asterisk, glass Cancel and Save draft', () => {
+describe('FormEditor: the fields only, the pop-up footer holds the buttons', () => {
   it('marks the form name and sessions once, and draws no fieldset', () => {
     const html = renderToStaticMarkup(
       <FormEditor
         mode="edit"
+        id="f-1"
         formId="f-1"
         sessions={SESSIONS}
-        initial={{ name: 'Reg Kids', season: null, sessionIds: [], fields: [], attachments: [] }}
+        initial={{ name: 'Reg Kids', sessionIds: [], fields: [], attachments: [] }}
       />,
     );
     expect(html).not.toContain('<fieldset');
@@ -138,28 +144,39 @@ describe('FormEditor: sections, one asterisk, glass Cancel and Save draft', () =
     expect(html).not.toContain('Form name *');
     expect(html).toContain('Form name');
     expect(html).toContain('Sessions this form covers');
-    expect(html).toContain('<form noValidate=""');
+    // The form carries its id, which the pop-up footer's Save and Publish buttons submit by.
+    expect(html).toContain('<form id="f-1" noValidate=""');
   });
 
-  it('uses the glass variant for Save draft on the edit page, and the primary for Create form', () => {
+  it('has no buttons of its own: Save draft, Publish and Cancel belong to the pop-up footer', () => {
     const edit = renderToStaticMarkup(
       <FormEditor
         mode="edit"
+        id="f-1"
         formId="f-1"
         sessions={SESSIONS}
-        initial={{ name: 'Reg Kids', season: null, sessionIds: [], fields: [], attachments: [] }}
+        initial={{ name: 'Reg Kids', sessionIds: [], fields: [], attachments: [] }}
       />,
     );
-    expect(edit).toContain('button--glass');
-    expect(edit).toContain('Save draft');
-    const create = renderToStaticMarkup(<FormEditor mode="create" sessions={SESSIONS} />);
-    expect(create).toContain('button--primary');
-    expect(create).toContain('Create form');
+    expect(edit).not.toContain('Save draft');
+    expect(edit).not.toContain('Cancel');
+    const create = renderToStaticMarkup(<FormEditor mode="create" id="new-form" sessions={SESSIONS} />);
+    expect(create).not.toContain('Create form');
+    expect(create).toContain('id="new-form"');
   });
 
-  it('leaves the buttons to the dialog footer in a dialog', () => {
-    const html = renderToStaticMarkup(<FormEditor mode="create" variant="dialog" id="new-form" sessions={SESSIONS} />);
-    expect(html).toContain('id="new-form"');
-    expect(html).not.toContain('Create form');
+  it('marks a create as a pop-up create, so the action returns instead of redirecting', () => {
+    const create = renderToStaticMarkup(<FormEditor mode="create" id="new-form" sessions={SESSIONS} />);
+    expect(create).toContain('name="dialog" value="1"');
+    const edit = renderToStaticMarkup(
+      <FormEditor
+        mode="edit"
+        id="f-1"
+        formId="f-1"
+        sessions={SESSIONS}
+        initial={{ name: 'Reg Kids', sessionIds: [], fields: [], attachments: [] }}
+      />,
+    );
+    expect(edit).not.toContain('name="dialog"');
   });
 });

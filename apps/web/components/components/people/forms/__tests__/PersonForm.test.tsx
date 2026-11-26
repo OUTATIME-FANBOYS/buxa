@@ -17,9 +17,12 @@ describe('PersonForm (create): the static frame', () => {
     expect(html).toContain('First name');
   });
 
-  it('puts Date of birth and Phone on one half-width row, and drops the Contact and age heading', () => {
+  it('with no family role, puts Date of birth and Phone side by side in one row, under a screen-reader-only Person details group', () => {
     const html = renderToStaticMarkup(<PersonForm mode="create" household={null} households={[]} />);
-    expect(html).toMatch(/class="people-form-half"[^>]*>[\s\S]*Date of birth[\s\S]*Phone/);
+    expect(html).toContain('<legend class="person-legend sr-only">Person details</legend>');
+    expect(html).not.toContain('<legend class="person-legend">Person details</legend>');
+    expect(html).toMatch(/class="form-pair">[\s\S]*Date of birth[\s\S]*Phone/);
+    expect(html).not.toContain('people-form-half');
     expect(html).not.toContain('Contact and age');
   });
 

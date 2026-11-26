@@ -1,0 +1,13 @@
+/* The pagination under a list: the status line, then Previous and Next, right-aligned. The caller hides it when one page is enough. */
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s2);
+}
+
+.pagination__status {
+  margin: 0;
+  margin-inline-end: auto;
+}

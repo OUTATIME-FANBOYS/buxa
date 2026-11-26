@@ -93,6 +93,8 @@ export const NOTIFY_RULES: Partial<Record<AuditAction, NotifyRule>> = {
 export interface MemberRole {
   userId: string;
   role: Role;
+  /** True when the person holds the instructor role. With viewer access that is the teaching view, which gets no people rights. */
+  instructor?: boolean;
 }
 
 /**
@@ -110,7 +112,7 @@ export function recipientsFor(
     .filter(member => member.userId !== actorUserId)
     .filter(
       member =>
-        can({ userId: member.userId, orgId, role: member.role }, rule.permission) ||
+        can({ userId: member.userId, orgId, role: member.role, instructor: member.instructor }, rule.permission) ||
         (rule.assignedTeachers && assignedTeacherIds.has(member.userId)),
     )
     .map(member => member.userId);

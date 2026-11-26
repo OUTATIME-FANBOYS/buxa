@@ -8,8 +8,9 @@ describe('audit action names', () => {
   });
 
   it('use the entity.verb form, in lower case, with underscores only inside a word', () => {
+    // One nested noun is allowed: person.emergency_contact.update is the documented name (docs/security.md).
     for (const action of AUDIT_ACTIONS) {
-      expect(action, action).toMatch(/^[a-z]+(_[a-z]+)?\.[a-z]+(_[a-z]+)?$/);
+      expect(action, action).toMatch(/^[a-z]+(_[a-z]+)?(\.[a-z]+(_[a-z]+)?){1,2}$/);
     }
   });
 

@@ -45,9 +45,23 @@ describe.skipIf(!url)('member options (row-level security)', () => {
     adminB = await user('admin-b');
     teacherB = await user('teacher-b');
     await pool.query<Row>(
-      `INSERT INTO org_members(org_id, user_id, role) VALUES ($1,$2,'teacher'), ($1,$3,'staff'), ($1,$4,'admin'), ($5,$6,'teacher'), ($5,$7,'admin')`,
+      `INSERT INTO org_members(org_id, user_id, role) VALUES ($1,$2,'viewer'), ($1,$3,'staff'), ($1,$4,'admin'), ($5,$6,'viewer'), ($5,$7,'admin')`,
       [campA, teacherA, staffA, adminA, campB, teacherB, adminB],
     );
+    // The two teachers are instructors: a person linked to each login, holding the instructor role (migration 0069).
+    for (const [orgId, userId] of [
+      [campA, teacherA],
+      [campB, teacherB],
+    ]) {
+      const { rows } = await pool.query<{ id: string }>(
+        `INSERT INTO people (org_id, given_name, family_name, user_id, date_of_birth, phone) VALUES ($1, 'Tess', 'Teacher', $2, '1985-06-15', '+1 555 0100') RETURNING id`,
+        [orgId, userId],
+      );
+      await pool.query(`INSERT INTO person_roles (org_id, person_id, role) VALUES ($1, $2, 'instructor')`, [
+        orgId,
+        rows[0].id,
+      ]);
+    }
   });
 
   afterAll(async () => {
@@ -88,8 +102,8 @@ describe.skipIf(!url)('member options (row-level security)', () => {
   });
 
   it('refuses to set an option on anyone who is not a teacher of that camp', async () => {
-    await expect(setOption(adminA, campA, staffA)).rejects.toThrow(/Teacher not found/);
-    await expect(setOption(adminB, campB, teacherA)).rejects.toThrow(/Teacher not found/);
+    await expect(setOption(adminA, campA, staffA)).rejects.toThrow(/Instructor not found/);
+    await expect(setOption(adminB, campB, teacherA)).rejects.toThrow(/Instructor not found/);
   });
 
   it('a camp sees only its own options', async () => {
@@ -100,9 +114,9 @@ describe.skipIf(!url)('member options (row-level security)', () => {
     expect(seenByA.rows.map(r => r.user_id)).toEqual([teacherA]);
   });
 
-  it('a teacher who stops being one loses its options at once', async () => {
-    await pool.query(`UPDATE org_members SET role = 'viewer' WHERE org_id = $1 AND user_id = $2`, [campA, teacherA]);
+  it('options stay on the person when the access level changes; they count only in the teaching view', async () => {
+    await pool.query(`UPDATE org_members SET role = 'staff' WHERE org_id = $1 AND user_id = $2`, [campA, teacherA]);
     const left = await pool.query(`SELECT 1 FROM member_options WHERE org_id = $1 AND user_id = $2`, [campA, teacherA]);
-    expect(left.rowCount).toBe(0);
+    expect(left.rowCount).toBe(1);
   });
 });

@@ -102,7 +102,7 @@ export function SearchField({
             aria-label="Clear search"
             onClick={() => set('')}
           >
-            <Icon name="close" size={14} />
+            <Icon name="x" size={14} />
           </button>
         ) : null}
       </div>

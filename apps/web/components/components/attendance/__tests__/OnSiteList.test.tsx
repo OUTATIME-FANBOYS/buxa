@@ -50,19 +50,31 @@ const type = (value: string) => {
 
 describe('OnSiteList search', () => {
   it('renders the search box with its accessible label', () => {
-    act(() => root.render(<OnSiteList rows={rows} canRecord canOverride={false} />));
+    act(() =>
+      root.render(
+        <OnSiteList title="On site" subtitle="4 people on site now" rows={rows} canRecord canOverride={false} />,
+      ),
+    );
     const input = document.querySelector<HTMLInputElement>('input[aria-label="Search people on site"]');
     expect(input).not.toBeNull();
     expect(input?.getAttribute('placeholder')).toBe('Search by name');
   });
 
   it('lists everyone with an empty search box', () => {
-    act(() => root.render(<OnSiteList rows={rows} canRecord canOverride={false} />));
+    act(() =>
+      root.render(
+        <OnSiteList title="On site" subtitle="4 people on site now" rows={rows} canRecord canOverride={false} />,
+      ),
+    );
     expect(names()).toEqual(['Owen Adeyemi', 'Mila Adeyemi', 'Ben Hartley', 'René Dubois']);
   });
 
   it('filters by name as you type, ignoring case and accents', () => {
-    act(() => root.render(<OnSiteList rows={rows} canRecord canOverride={false} />));
+    act(() =>
+      root.render(
+        <OnSiteList title="On site" subtitle="4 people on site now" rows={rows} canRecord canOverride={false} />,
+      ),
+    );
     type('ADEY');
     expect(names()).toEqual(['Owen Adeyemi', 'Mila Adeyemi']);
     type('rene');
@@ -70,14 +82,22 @@ describe('OnSiteList search', () => {
   });
 
   it('shows a message when nobody matches', () => {
-    act(() => root.render(<OnSiteList rows={rows} canRecord canOverride={false} />));
+    act(() =>
+      root.render(
+        <OnSiteList title="On site" subtitle="4 people on site now" rows={rows} canRecord canOverride={false} />,
+      ),
+    );
     type('zzz');
     expect(names()).toEqual([]);
     expect(document.body.textContent).toContain('No one on site matches');
   });
 
   it('ignores spaces around the query', () => {
-    act(() => root.render(<OnSiteList rows={rows} canRecord canOverride={false} />));
+    act(() =>
+      root.render(
+        <OnSiteList title="On site" subtitle="4 people on site now" rows={rows} canRecord canOverride={false} />,
+      ),
+    );
     type('  ben  ');
     expect(names()).toEqual(['Ben Hartley']);
   });

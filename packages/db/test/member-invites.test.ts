@@ -52,13 +52,13 @@ describe.skipIf(!url)('teacher invites (migration 0038)', () => {
     ).rows[0].id;
     await pool.query<Row>(`INSERT INTO org_members(org_id, user_id, role) VALUES ($1, $2, 'staff')`, [org, staff]);
     await pool.query<Row>(
-      `INSERT INTO member_invites(org_id, email, name, role, token_hash, created_by)
-       VALUES ($1, $2, 'Ann Lee', 'teacher', $3, $4), ($1, $5, 'Wrong Person', 'teacher', $6, $4)`,
+      `INSERT INTO member_invites(org_id, email, name, role, token_hash, created_by, phone, date_of_birth)
+       VALUES ($1, $2, 'Ann Lee', 'viewer', $3, $4, '+1 555 0100', '1985-06-15'), ($1, $5, 'Wrong Person', 'viewer', $6, $4, '+1 555 0100', '1985-06-15')`,
       [org, annEmail, liveHash, staff, annEmail, wrongEmailHash],
     );
     await pool.query<Row>(
-      `INSERT INTO member_invites(org_id, email, name, role, token_hash, created_by, expires_at)
-       VALUES ($1, $2, 'Ann Lee', 'teacher', $3, $4, now() - interval '1 day')`,
+      `INSERT INTO member_invites(org_id, email, name, role, token_hash, created_by, expires_at, phone, date_of_birth)
+       VALUES ($1, $2, 'Ann Lee', 'viewer', $3, $4, now() - interval '1 day', '+1 555 0100', '1985-06-15')`,
       [org, annEmail, expiredHash, staff],
     );
   });
@@ -82,7 +82,7 @@ describe.skipIf(!url)('teacher invites (migration 0038)', () => {
     }
   };
 
-  it('accepts a live invite once, joins the person as a teacher, and records who accepted it', async () => {
+  it('accepts a live invite once, joins the camp as a viewer (the teacher role is retired, migration 0069), and records who accepted it', async () => {
     const joined = await withOrg(pool, ann, null, db =>
       db.query<{ org_id: string; org_name: string }>('SELECT org_id, org_name FROM buxa_accept_invite($1)', [liveHash]),
     );
@@ -92,7 +92,7 @@ describe.skipIf(!url)('teacher invites (migration 0038)', () => {
       'SELECT role::text AS role FROM org_members WHERE org_id = $1 AND user_id = $2',
       [org, ann],
     );
-    expect(membership.rows).toEqual([{ role: 'teacher' }]);
+    expect(membership.rows).toEqual([{ role: 'viewer' }]);
     const accepted = await pool.query<{ accepted_by: string | null }>(
       'SELECT accepted_by FROM member_invites WHERE token_hash = $1',
       [liveHash],

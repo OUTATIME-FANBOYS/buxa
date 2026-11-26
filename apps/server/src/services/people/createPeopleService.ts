@@ -1,4 +1,7 @@
+import { PersonPhoneSchema, RequiredDateOfBirthSchema } from '@buxa/contracts';
 import type {
+  EmergencyContact,
+  EmergencyContactInput,
   HouseholdLinkInput,
   NewPersonInput,
   Person,
@@ -7,12 +10,13 @@ import type {
   PersonPatchInput,
   PersonSummary,
 } from '@buxa/contracts';
-import { can, isMinor, MAX_SEARCH_RESULTS, pageSpan, type Actor, type LocalDate } from '@buxa/domain';
+import { can, isMinor, isTeachingView, MAX_SEARCH_RESULTS, pageSpan, type Actor, type LocalDate } from '@buxa/domain';
 import { assertAllowed } from '../../auth/authorize';
 import { assignedTo, teacherScopeOf } from '../../classes/teacherScope';
 import { badRequest, conflict, notFound } from '../../http/errors';
 import type { MembershipRecord } from '../../memberships/MembershipRepository';
 import type {
+  EmergencyContactRecord,
   HouseholdRecord,
   PersonHouseholdLink,
   PersonPatchRecord,
@@ -21,6 +25,7 @@ import type {
 import { campToday } from '../shared/campDay';
 import { guard } from '../shared/errors';
 import { campZone, toHouseholds, toPersonMembership, toSummary, onSiteByPerson } from '../shared/views';
+import { childIdsOf } from '../credentials/badgeAccess';
 import type { PeopleService, PeopleServiceDeps } from './PeopleService';
 import { personPageFilter } from './personPageFilter';
 import {
@@ -30,6 +35,30 @@ import {
   PICKUP_NEEDS_GUARDIAN,
   RELATIONSHIP_NEEDED,
 } from './rules';
+
+/** The first message of a failed parse, or the fallback when there is none to name. */
+const firstMessage = (error: { issues: readonly { message: string }[] }, fallback: string): string =>
+  error.issues[0]?.message ?? fallback;
+
+/**
+ * Every person is saved with a date of birth and a phone number, whatever their role (the rules of NewPersonInputSchema, which the
+ * Add and Edit forms and the registration use too). The service checks them itself, so a caller that skips the form cannot save a
+ * person without them.
+ */
+function assertBirthAndPhone(dateOfBirth: string | undefined, phone: string | undefined): void {
+  if (dateOfBirth !== undefined) {
+    const birth = RequiredDateOfBirthSchema.safeParse(dateOfBirth);
+    if (!birth.success) {
+      throw badRequest(firstMessage(birth.error, 'Enter the date of birth.'));
+    }
+  }
+  if (phone !== undefined) {
+    const tel = PersonPhoneSchema.safeParse(phone);
+    if (!tel.success) {
+      throw badRequest(firstMessage(tel.error, 'Enter a phone number.'));
+    }
+  }
+}
 
 /** Blank text means "no value" for the optional contact fields. */
 const blankToNull = (value: string | null): string | null => (value === null || value.trim() === '' ? null : value);
@@ -64,6 +93,19 @@ function toPatchRecord(patch: PersonPatchInput): PersonPatchRecord {
 
   return out;
 }
+
+/** The stored contact for a posted one. A blank name means none (the input schema keeps name and phone blank together). */
+const contactRecordOf = (input: EmergencyContactInput | undefined): EmergencyContactRecord | null =>
+  input === undefined || input.name === ''
+    ? null
+    : { name: input.name, phone: input.phone, relationship: blankToNull(input.relationship) };
+
+/** What a viewer is shown for the contact: blanks where none is recorded. The caller decides whether to show it at all. */
+const emergencyView = (contact: EmergencyContactRecord | null): EmergencyContact => ({
+  name: contact?.name ?? null,
+  phone: contact?.phone ?? null,
+  relationship: contact?.relationship ?? null,
+});
 
 const requireRelationship = (relationship: string | undefined): string => {
   if (relationship === undefined || relationship.trim() === '') {
@@ -134,16 +176,49 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
    * The full record as this actor may see it. Contact details and the minor flag are withheld from anyone without people:read_contact.
    * Memberships, pick-up flags and badge status are withheld from the same roles (see seesCustody).
    */
-  async function personView(actor: Actor, record: PersonRecord, today: LocalDate): Promise<Person> {
+  /**
+   * Whether the signed-in user (recognised by email, as the badge rules do) is a guardian of a household this person is a child in.
+   * Only the family's own guardian counts: a guardian of another household is refused.
+   */
+  async function isGuardianOf(
+    actor: Pick<Actor, 'userId' | 'orgId'>,
+    personId: string,
+    viewerEmail: string | undefined,
+  ): Promise<boolean> {
+    if (viewerEmail === undefined) {
+      return false;
+    }
+    const selves = await people.byEmail(actor.userId, actor.orgId, viewerEmail);
+    for (const self of selves) {
+      const households = await people.householdsOf(actor.userId, actor.orgId, self.id);
+      if (childIdsOf(self.id, households).includes(personId)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  async function personView(
+    actor: Actor,
+    record: PersonRecord,
+    today: LocalDate,
+    viewerEmail?: string,
+  ): Promise<Person> {
     const orgId = actor.orgId;
-    const [ms, households, open, badge] = await Promise.all([
+    const [ms, households, open, badge, guardian] = await Promise.all([
       memberships.forPerson(actor.userId, orgId, record.id),
       people.householdsOf(actor.userId, orgId, record.id),
       attendance.openFor(actor.userId, orgId, record.id),
       credentials.activeFor(actor.userId, orgId, record.id),
+      isGuardianOf(actor, record.id, viewerEmail),
     ]);
     const seeContact = can(actor, 'people:read_contact');
     const custody = seesCustody(actor);
+    // The emergency contact: staff see it, and so does the family's guardian. Editing is staff (people:update) or that guardian, with
+    // read access to the camp, and never in an archived camp.
+    const seeEmergency = seeContact || guardian;
+    const editEmergency = !actor.archived && (can(actor, 'people:update') || (guardian && can(actor, 'people:read')));
 
     return {
       ...toSummary(record, ms, open !== null, today, custody),
@@ -153,8 +228,10 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       isMinor: seeContact ? isMinor(record, today) : null,
       memberships: custody ? ms.map(m => toPersonMembership(m, today)) : null,
       // A teacher sees no households: their members are guardians and other families, by name.
-      households: actor.role === 'teacher' ? [] : await toHouseholds(people, actor, households, custody),
+      households: isTeachingView(actor) ? [] : await toHouseholds(people, actor, households, custody),
       hasActiveBadge: custody ? badge !== null : null,
+      emergencyContact: seeEmergency ? emergencyView(record.emergencyContact) : null,
+      canEditEmergencyContact: editEmergency,
     };
   }
 
@@ -275,7 +352,7 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       };
     },
 
-    async get(actor, id) {
+    async get(actor, id, viewerEmail) {
       const scope = await teacherScopeOf(classes, actor);
       assertAllowed(actor, 'people:read', { assignedToClass: assignedTo(scope, id) });
       const record = await people.get(actor.userId, actor.orgId, id);
@@ -283,13 +360,35 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
         throw notFound('Person not found');
       }
 
-      return personView(actor, record, await todayFor(actor));
+      return personView(actor, record, await todayFor(actor), viewerEmail);
+    },
+
+    async updateEmergencyContact(actor, id, input, viewerEmail) {
+      // A guardian of the household may edit (with read access and not in an archived camp). Anyone else needs people:update, which
+      // is checked first, so a refusal does not reveal whether the person exists.
+      const guardian = await isGuardianOf(actor, id, viewerEmail);
+      if (!(guardian && !actor.archived && can(actor, 'people:read'))) {
+        assertAllowed(actor, 'people:update');
+      }
+      if (!(await people.get(actor.userId, actor.orgId, id))) {
+        throw notFound('Person not found');
+      }
+      await guard(() => people.setEmergencyContact(actor, id, contactRecordOf(input)));
     },
 
     async create(actor, input) {
       assertAllowed(actor, 'people:create');
       if (input.roles.length === 0) {
         throw badRequest(CHOOSE_ROLE);
+      }
+      // A date of birth and a phone are required, so a missing one is refused here (undefined is a missing value, not a skipped one).
+      const birth = RequiredDateOfBirthSchema.safeParse(input.dateOfBirth);
+      if (!birth.success) {
+        throw badRequest(firstMessage(birth.error, 'Enter the date of birth.'));
+      }
+      const tel = PersonPhoneSchema.safeParse(input.phone);
+      if (!tel.success) {
+        throw badRequest(firstMessage(tel.error, 'Enter a phone number.'));
       }
       if (input.householdId !== undefined && input.newHouseholdName !== undefined) {
         throw badRequest('Choose an existing household or name a new one, not both.');
@@ -301,10 +400,11 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
           {
             givenName: input.givenName,
             familyName: input.familyName,
-            dateOfBirth: input.dateOfBirth ?? null,
+            dateOfBirth: birth.data,
             email: emailOrNull(input.email ?? null),
-            phone: blankToNull(input.phone ?? null),
+            phone: tel.data,
             roles: input.roles,
+            emergencyContact: contactRecordOf(input.emergencyContact),
           },
           link,
         ),
@@ -319,6 +419,7 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       if (patch.roles !== undefined && patch.roles.length === 0) {
         throw badRequest(CHOOSE_ROLE);
       }
+      assertBirthAndPhone(patch.dateOfBirth, patch.phone);
       if (!(await people.get(actor.userId, orgId, id))) {
         throw notFound('Person not found');
       }

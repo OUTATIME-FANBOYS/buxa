@@ -6,11 +6,12 @@ import { requirePresent, settle } from '@buxa/domain';
 import { CAMPER_NEEDS_HOUSEHOLD, failure, idle } from '@buxa/shared';
 import { AddPersonButton, PersonForm } from '@/components/components/people/forms';
 import { UiProvider } from '@buxa/middleware/providers/UiProvider';
-import { Dialog as ConfirmDialog } from '@/components/components';
+import { ConfirmDialog } from '@/components/components';
 import { LEE, PERSON, formHelpers } from './personFormFixtures';
 
 const createPerson = vi.hoisted(() => vi.fn());
 vi.mock('@buxa/server/composers/people/createPersonAction', () => ({ createPersonAction: createPerson }));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), push: vi.fn(), refresh: vi.fn() }) }));
 vi.mock('@buxa/server/composers/people/updatePersonAction', () => ({
   updatePersonAction: () => settle(() => idle),
 }));
@@ -104,6 +105,7 @@ describe('PersonForm (add): a camper must join a household with a parent or guar
     });
     act(() => requirePresent(h.role('camper'), 'camper').click());
     requirePresent(h.input('givenName'), 'givenName').value = 'Ada';
+    requirePresent(h.input('phone'), 'phone').value = '555-0100';
     act(() => requirePresent(host.querySelector('form'), 'form').requestSubmit());
     await flush();
 

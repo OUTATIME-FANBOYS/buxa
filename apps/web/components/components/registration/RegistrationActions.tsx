@@ -1,8 +1,9 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { idle, type ActionState } from '@buxa/shared';
 import { Button } from '@/components/elements';
+import { ConfirmDialog } from '@/components/components/ConfirmDialog';
 import {
   archiveRegistrationAction,
   deleteRegistrationAction,
@@ -13,12 +14,18 @@ import { ActionMessage } from '@/components/components/classes/forms';
 
 type RegistrationAction = (previous: ActionState, form: FormData) => Promise<ActionState>;
 
-/** One lifecycle step as a form. A step that cannot be undone asks again before it runs: the first tap shows what it will do. */
+/**
+ * One lifecycle step as an icon button named for the camper ("Withdraw Ada Lovelace"), with a tooltip. A step with `confirmLabel`
+ * asks first: the tap opens a ConfirmDialog that shows the warning, and its action runs the step. The dialog closes when the step
+ * succeeds; a failure stays in the dialog. A step without `confirmLabel` submits at once.
+ */
 function Step({
   action,
   formId,
   registrationId,
+  camperName,
   label,
+  icon,
   confirmLabel,
   warning,
   danger = false,
@@ -26,57 +33,109 @@ function Step({
   action: RegistrationAction;
   formId: string;
   registrationId: string;
+  /** The camper's name, which completes the button's accessible name. */
+  camperName: string;
   label: string;
-  /** When set, the first tap asks and the second runs the step. */
+  /** A lucide icon name (icons.tsx). */
+  icon: string;
+  /** When set, the first tap asks in a dialog and its action runs the step. */
   confirmLabel?: string;
   warning?: string;
   danger?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(action, idle);
   const [asking, setAsking] = useState(false);
-
-  return (
-    <form action={formAction} className="registration-step">
+  const fields = (
+    <>
       <input type="hidden" name="formId" value={formId} />
       <input type="hidden" name="registrationId" value={registrationId} />
-      {asking && warning ? (
-        <p className="class-helper" role="alert">
-          {warning}
-        </p>
-      ) : null}
+    </>
+  );
+  const variant = danger ? 'glass-danger' : 'glass';
+  const ariaLabel = `${label} ${camperName}`;
+  const title = `${label} registration`;
+
+  useEffect(() => {
+    if (state.status === 'success') {
+      setAsking(false);
+    }
+  }, [state.status]);
+
+  if (!confirmLabel) {
+    return (
+      <div className="registration-step">
+        <form action={formAction}>
+          {fields}
+          <Button
+            type="submit"
+            variant={variant}
+            size="sm"
+            iconOnly
+            icon={icon}
+            aria-label={ariaLabel}
+            title={title}
+            disabled={pending}
+          />
+        </form>
+        <ActionMessage state={state} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="registration-step">
       <Button
-        type={confirmLabel && !asking ? 'button' : 'submit'}
-        variant={danger ? 'glass-danger' : 'secondary'}
+        type="button"
+        variant={variant}
         size="sm"
+        iconOnly
+        icon={icon}
+        aria-label={ariaLabel}
+        title={title}
+        aria-haspopup="dialog"
         disabled={pending}
-        onClick={confirmLabel && !asking ? () => setAsking(true) : undefined}
-      >
-        {pending ? 'Working...' : asking && confirmLabel ? confirmLabel : label}
-      </Button>
-      {asking ? (
-        <Button type="button" variant="ghost" size="sm" disabled={pending} onClick={() => setAsking(false)}>
-          Cancel
-        </Button>
-      ) : null}
-      <ActionMessage state={state} />
-    </form>
+        onClick={() => setAsking(true)}
+      />
+      {asking && (
+        <ConfirmDialog
+          title={`${label} registration?`}
+          variant={danger ? 'danger' : 'neutral'}
+          confirmLabel={confirmLabel}
+          pendingLabel="Working..."
+          pending={pending}
+          onCancel={() => setAsking(false)}
+          formId={`registration-${registrationId}-${label.toLowerCase()}`}
+          formAction={formAction}
+          body={
+            <>
+              {fields}
+              {warning && <p className="class-helper">{warning}</p>}
+              <ActionMessage state={state} />
+            </>
+          }
+        />
+      )}
+    </div>
   );
 }
 
 /**
- * What staff can do with a registration beyond confirming it. Withdraw releases its holds and cancels its enrolments but keeps the
- * record. Archive hides it from the lists and keeps it. Delete erases it and all its answers for good, and is offered to an admin
- * or the owner only (`canDelete`); a confirmed registration with enrolments must be withdrawn first, which the server enforces.
+ * What staff can do with a registration beyond confirming it, as icon buttons in one row. Withdraw releases its holds and cancels
+ * its enrolments but keeps the record. Archive hides it from the lists and keeps it (Unarchive brings it back). Delete erases it and
+ * all its answers for good, and is offered to an admin or the owner only (`canDelete`); a confirmed registration with enrolments must
+ * be withdrawn first, which the server enforces.
  */
 export function RegistrationActions({
   formId,
   registrationId,
+  camperName,
   status,
   archived,
   canDelete,
 }: {
   formId: string;
   registrationId: string;
+  camperName: string;
   status: 'pending' | 'confirmed' | 'withdrawn';
   archived: boolean;
   canDelete: boolean;
@@ -88,7 +147,9 @@ export function RegistrationActions({
           action={withdrawRegistrationAction}
           formId={formId}
           registrationId={registrationId}
+          camperName={camperName}
           label="Withdraw"
+          icon="undo"
           confirmLabel="Confirm withdraw"
           warning="Withdrawing releases its holds and cancels its enrolments. The record is kept."
         />
@@ -97,14 +158,18 @@ export function RegistrationActions({
         action={archived ? unarchiveRegistrationAction : archiveRegistrationAction}
         formId={formId}
         registrationId={registrationId}
+        camperName={camperName}
         label={archived ? 'Unarchive' : 'Archive'}
+        icon={archived ? 'archive-restore' : 'archive'}
       />
       {canDelete ? (
         <Step
           action={deleteRegistrationAction}
           formId={formId}
           registrationId={registrationId}
+          camperName={camperName}
           label="Delete"
+          icon="trash"
           confirmLabel="Confirm delete"
           warning="Deleting erases this registration and all its answers. This cannot be undone. A confirmed registration with enrolments must be withdrawn first."
           danger

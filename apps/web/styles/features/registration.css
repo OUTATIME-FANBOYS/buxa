@@ -1,0 +1,60 @@
+/* ---------- Registrations (the table under a session or a form: components/components/registration) ---------- */
+
+/* Status: the pill, then the Confirm button, on one line. They wrap only on a narrow screen. */
+.registration-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+}
+.registration-status form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+}
+
+/* Places: each place is its line (the camper and class, the status and paid pills, the price) with its payment row under it. */
+.registration-places {
+  display: grid;
+  gap: var(--s3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.registration-place__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+}
+
+/* The payment row: the "How it was paid" box at a set width, and the Mark paid button beside it. They wrap on a narrow screen. */
+.registration-payment {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--s2);
+}
+.registration-payment__note {
+  width: min(100%, 16rem);
+}
+
+/* Actions: icon buttons in one row, right aligned. An error message sits under its own button. */
+.registration-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s2);
+}
+.registration-step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+/* The Answers disclosure keeps its summary on one line. */
+.registration-disclosure > summary {
+  white-space: nowrap;
+}

@@ -1,5 +1,6 @@
+import { InviteTeacherInputSchema } from '@buxa/contracts';
 import { assertAllowed } from '../../auth/authorize';
-import { conflict, forbidden, notFound } from '../../http/errors';
+import { badRequest, conflict, forbidden, notFound } from '../../http/errors';
 import { generateInviteToken, hashInviteToken, looksLikeInviteToken } from '../../invites/inviteToken';
 import { isInviteRefused, type SignedInPerson } from '../../invites/MemberInviteRepository';
 import { guard } from '../shared/errors';
@@ -12,12 +13,22 @@ export function createInviteService({ invites }: InviteServiceDeps): InviteServi
   return {
     async createTeacherInvite(actor, input) {
       // Teachers are the only role an invite can grant in this build; the check is written out here as well as in the database.
-      assertAllowed(actor, 'members:invite', { orgId: actor.orgId, newRole: 'teacher' });
+      assertAllowed(actor, 'members:invite', { orgId: actor.orgId, newRole: 'viewer' });
+      // The same contract the form uses. A missing or invalid phone or date of birth is refused before anything is stored.
+      const checked = InviteTeacherInputSchema.safeParse(input);
+      if (!checked.success) {
+        throw badRequest(checked.error.issues[0]?.message ?? 'Check the invite details.');
+      }
       const token = generateInviteToken();
       const invite = await guard(() =>
         invites.create(
           actor,
-          { email: input.email, name: input.name, phone: input.phone || null },
+          {
+            email: checked.data.email,
+            name: checked.data.name,
+            phone: checked.data.phone,
+            dateOfBirth: checked.data.dateOfBirth,
+          },
           hashInviteToken(token),
         ),
       );
@@ -26,7 +37,7 @@ export function createInviteService({ invites }: InviteServiceDeps): InviteServi
     },
 
     async resendInvite(actor, inviteId) {
-      assertAllowed(actor, 'members:invite', { orgId: actor.orgId, newRole: 'teacher' });
+      assertAllowed(actor, 'members:invite', { orgId: actor.orgId, newRole: 'viewer' });
       const token = generateInviteToken();
       const invite = await guard(() => invites.resend(actor, inviteId, hashInviteToken(token)));
       if (!invite) {
@@ -37,7 +48,7 @@ export function createInviteService({ invites }: InviteServiceDeps): InviteServi
     },
 
     async listPendingInvites(actor) {
-      assertAllowed(actor, 'members:invite', { orgId: actor.orgId, newRole: 'teacher' });
+      assertAllowed(actor, 'members:invite', { orgId: actor.orgId, newRole: 'viewer' });
 
       return guard(() => invites.listPending(actor));
     },

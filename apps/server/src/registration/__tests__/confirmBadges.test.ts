@@ -24,21 +24,27 @@ function registrationsFor(camp: Camp): RegistrationService {
           className: 'Archery',
           startsAt: '2027-07-10T10:00:00.000Z',
           endsAt: '2027-07-10T11:00:00.000Z',
+          seriesId: CLASS,
+          occurrences: [{ startsAt: '2027-07-10T10:00:00.000Z', endsAt: '2027-07-10T11:00:00.000Z' }],
         },
       ],
     },
   );
 
-  return createRegistrationService(repo, credentials =>
-    createCredentialService({
-      credentials,
-      people: camp.repos.people,
-      memberships: camp.repos.memberships,
-      attendance: camp.repos.attendance,
-      orgs: camp.repos.orgs,
-      clock: () => new Date(NOW),
-      cipher: createBadgeCipher(() => parseBadgeKey(TEST_BADGE_KEY)),
-    }),
+  return createRegistrationService(
+    repo,
+    credentials =>
+      createCredentialService({
+        credentials,
+        people: camp.repos.people,
+        memberships: camp.repos.memberships,
+        attendance: camp.repos.attendance,
+        orgs: camp.repos.orgs,
+        clock: () => new Date(NOW),
+        cipher: createBadgeCipher(() => parseBadgeKey(TEST_BADGE_KEY)),
+      }),
+    // The real people service of this camp: the camper and their household are the ones created above.
+    camp.people,
   );
 }
 
@@ -46,6 +52,8 @@ function registrationsFor(camp: Camp): RegistrationService {
 async function pendingRegistration(camp: Camp, service: RegistrationService) {
   const admin = camp.actor('admin');
   const guardian = await camp.people.create(admin, {
+    dateOfBirth: '1985-06-15',
+    phone: '+1 555 0100',
     givenName: 'Byron',
     familyName: 'Lovelace',
     roles: ['guardian'],
@@ -54,6 +62,7 @@ async function pendingRegistration(camp: Camp, service: RegistrationService) {
   });
   const [household] = await camp.repos.people.householdsOf(admin.userId, camp.orgId, guardian.id);
   const camper = await camp.people.create(admin, {
+    phone: '+1 555 0100',
     givenName: 'Ada',
     familyName: 'Lovelace',
     dateOfBirth: '2014-03-09',
@@ -63,7 +72,6 @@ async function pendingRegistration(camp: Camp, service: RegistrationService) {
   });
   const form = await service.createForm(admin, {
     name: 'Summer 2027',
-    season: 'Summer',
     sessionIds: [SESSION],
     fields: [],
   });
@@ -82,6 +90,8 @@ function submissionFor(formId: string, camperId: string) {
       camperLastName: 'Lovelace',
       camperBirthDate: '2014-03-09',
       guardianName: 'Byron Lovelace',
+      // The guardian on file (see pendingRegistration): a posted date of birth that differs from it is refused.
+      guardianDateOfBirth: '1985-06-15',
       guardianPhone: '555-0100',
       emergencyContactName: 'Mary Somerville',
       emergencyContactPhone: '555-0111',

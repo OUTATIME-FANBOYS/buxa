@@ -3,6 +3,7 @@ import type { Actor, Role } from '@buxa/domain';
 import { createRegistrationService } from './RegistrationService';
 import { InMemoryRegistrationRepository } from './InMemoryRegistrationRepository';
 import { InMemoryCredentialRepository } from '../credentials/InMemoryCredentialRepository';
+import { adaFixture, benFixture, registrantPeople } from './__tests__/registrantPeople';
 import { InMemoryDatabase } from '../people/InMemoryDatabase';
 import {
   RegistrationClassNotFoundError,
@@ -25,14 +26,54 @@ const CLASS_A4 = 'cccccccc-0000-4000-8000-00000000000d';
 const CLASS_B = 'cccccccc-0000-4000-8000-00000000000e';
 const CAMPER_ADA = '5e6f7a8b-1111-4a2b-8c3d-4e5f6a7b8c9d';
 const CAMPER_BEN = '5e6f7a8b-2222-4a2b-8c3d-4e5f6a7b8c9d';
+const GUARDIAN_ADA = '5e6f7a8b-3333-4a2b-8c3d-4e5f6a7b8c9d';
+const GUARDIAN_BEN = '5e6f7a8b-4444-4a2b-8c3d-4e5f6a7b8c9d';
+// Two series of days. Art has a day on each of two days (one choice for the family, one anchor per day); Swim starts after Art's
+// first day but overlaps Art's second day.
+const SERIES_ART = 'dddddddd-0000-4000-8000-00000000000a';
+const SERIES_SWIM = 'dddddddd-0000-4000-8000-00000000000b';
+const CLASS_ART_DAY1 = 'cccccccc-0000-4000-8000-0000000000a1';
+const CLASS_ART_DAY2 = 'cccccccc-0000-4000-8000-0000000000a2';
+const CLASS_SWIM_DAY1 = 'cccccccc-0000-4000-8000-0000000000b1';
 
+/** A one-day class: its own series, with its only day as the series' occurrence. */
 const lookup = (classId: string, sessionId: string, className: string, startsAt: string, endsAt: string) => ({
   classId,
   sessionId,
   className,
   startsAt,
   endsAt,
+  seriesId: classId,
+  occurrences: [{ startsAt, endsAt }],
 });
+
+type Day = readonly [startsAt: string, endsAt: string];
+const ART_DAYS: readonly Day[] = [
+  ['2027-07-10T10:00:00.000Z', '2027-07-10T11:00:00.000Z'],
+  ['2027-07-11T10:00:00.000Z', '2027-07-11T11:00:00.000Z'],
+];
+const SWIM_DAYS: readonly Day[] = [
+  ['2027-07-10T13:00:00.000Z', '2027-07-10T14:00:00.000Z'],
+  ['2027-07-11T10:30:00.000Z', '2027-07-11T11:30:00.000Z'],
+];
+
+/**
+ * The lookup of one day of a series: the day is the anchor the family's choice names (`anchorIndex` is the day it is made against),
+ * and `occurrences` are all the series' days.
+ */
+const seriesDay = (classId: string, seriesId: string, className: string, days: readonly Day[], anchorIndex: number) => {
+  const [startsAt, endsAt] = days[anchorIndex] ?? days[0];
+
+  return {
+    classId,
+    sessionId: SESSION_A,
+    className,
+    startsAt,
+    endsAt,
+    seriesId,
+    occurrences: days.map(([start, end]) => ({ startsAt: start, endsAt: end })),
+  };
+};
 
 const CLASSES = {
   [CAMP_A]: [
@@ -40,15 +81,21 @@ const CLASSES = {
     lookup(CLASS_A2, SESSION_A, 'Swimming', '2027-07-10T10:30:00.000Z', '2027-07-10T11:30:00.000Z'),
     lookup(CLASS_A3, SESSION_A, 'Painting', '2027-07-10T13:00:00.000Z', '2027-07-10T14:00:00.000Z'),
     lookup(CLASS_A4, SESSION_A2, 'Climbing', '2027-07-11T10:00:00.000Z', '2027-07-11T11:00:00.000Z'),
+    seriesDay(CLASS_ART_DAY1, SERIES_ART, 'Art', ART_DAYS, 0),
+    seriesDay(CLASS_ART_DAY2, SERIES_ART, 'Art', ART_DAYS, 1),
+    seriesDay(CLASS_SWIM_DAY1, SERIES_SWIM, 'Swim', SWIM_DAYS, 0),
   ],
   [CAMP_B]: [lookup(CLASS_B, SESSION_B, 'Kayaking', '2027-07-10T10:00:00.000Z', '2027-07-10T11:00:00.000Z')],
 };
 
-const as = (role: Role, orgId = CAMP_A): Actor => ({ userId: `user-${role}`, orgId, role });
+/** `teacher` is a viewer whose person is an instructor (migration 0069): the teaching view. */
+const as = (role: Role | 'teacher', orgId = CAMP_A): Actor =>
+  role === 'teacher'
+    ? { userId: `user-${role}`, orgId, role: 'viewer', instructor: true }
+    : { userId: `user-${role}`, orgId, role };
 
 const formInput = {
   name: 'Summer 2027',
-  season: 'Summer',
   sessionIds: [SESSION_A],
   fields: [
     { kind: 'choice', key: 'swim', label: 'Swim level', required: true, options: ['None', 'Beginner'] },
@@ -61,10 +108,11 @@ const standard = {
   camperLastName: 'Lovelace',
   camperBirthDate: '2014-03-09',
   guardianName: 'Byron Lovelace',
+  guardianDateOfBirth: '1979-11-02',
   guardianPhone: '555-0100',
-  emergencyContactName: 'Mary Somerville',
-  emergencyContactPhone: '555-0111',
 };
+/** Ben's answers: the camper's name and date of birth are his own, read from his record. */
+const benStandard = { ...standard, camperFirstName: 'Ben', camperLastName: 'Carrow', camperBirthDate: '2013-05-01' };
 
 /** These tests have no camper in their registrations, so no badge may be issued. */
 function failNoBadges(): never {
@@ -82,7 +130,9 @@ function setup() {
     CLASSES,
   );
 
-  return { repo, service: createRegistrationService(repo, () => failNoBadges()) };
+  const people = registrantPeople([adaFixture(CAMPER_ADA, GUARDIAN_ADA), benFixture(CAMPER_BEN, GUARDIAN_BEN)]);
+
+  return { repo, service: createRegistrationService(repo, () => failNoBadges(), people) };
 }
 
 describe('registration service: permissions', () => {
@@ -219,6 +269,20 @@ describe('registration service: submissions', () => {
     await expect(service.listSubmissions(as('staff'), formId)).resolves.toEqual([]);
   });
 
+  it('does not accept a changed camper name or date of birth: those come from the person record', async () => {
+    const { service, formId } = await publishedForm();
+    const changed = {
+      ...submission(formId),
+      standard: { ...standard, camperFirstName: 'Grace', camperBirthDate: '2010-01-01' },
+    };
+    const error = await service.submit(as('staff'), formId, changed).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(RegistrationInvalidError);
+    expect(Object.keys((error as RegistrationInvalidError).fieldErrors).sort()).toEqual([
+      'standard.camperBirthDate',
+      'standard.camperFirstName',
+    ]);
+  });
+
   it('allows two children to take overlapping classes, because each child is checked on their own', async () => {
     const { service, formId } = await publishedForm();
     const twoChildren = {
@@ -254,6 +318,22 @@ describe('registration service: submissions', () => {
       'custom.swim',
       'standard.guardianPhone',
     ]);
+  });
+
+  it('refuses a parent or guardian with no date of birth, or no phone, with a field message and writes nothing', async () => {
+    const { service, formId } = await publishedForm();
+    const noBirth = { ...submission(formId), standard: { ...standard, guardianDateOfBirth: '' } };
+    const noBirthError = await service.submit(as('staff'), formId, noBirth).catch((e: unknown) => e);
+    expect(noBirthError).toBeInstanceOf(RegistrationInvalidError);
+    expect((noBirthError as RegistrationInvalidError).fieldErrors['standard.guardianDateOfBirth']).toBe(
+      'Enter the date of birth.',
+    );
+
+    const badPhone = { ...submission(formId), standard: { ...standard, guardianPhone: 'call me' } };
+    const phoneError = await service.submit(as('staff'), formId, badPhone).catch((e: unknown) => e);
+    expect((phoneError as RegistrationInvalidError).fieldErrors['standard.guardianPhone']).toBe(
+      'Enter a phone number with at least 7 digits.',
+    );
   });
 
   it('ignores a form id in the body that differs from the route, because the route id is used', async () => {
@@ -369,7 +449,7 @@ describe('registration service: lifecycle (withdraw, archive, delete)', () => {
       service.submit(as('staff'), formId, {
         formId,
         selections: [{ camperId: CAMPER_BEN, classId: CLASS_A3 }],
-        standard,
+        standard: benStandard,
         custom: { swim: 'Beginner', photos: 'yes' },
       }),
     ).rejects.toMatchObject({ kind: 'registration-refused', reason: 'session_not_open' });
@@ -380,7 +460,7 @@ describe('registration service: lifecycle (withdraw, archive, delete)', () => {
       service.submit(as('staff'), formId, {
         formId,
         selections: [{ camperId: CAMPER_BEN, classId: CLASS_A3 }],
-        standard,
+        standard: benStandard,
         custom: { swim: 'Beginner', photos: 'yes' },
       }),
     ).resolves.toEqual(expect.any(String));
@@ -446,5 +526,69 @@ describe('registration service: lifecycle (withdraw, archive, delete)', () => {
     const { service, id } = await withRegistration();
     await expect(service.withdraw(as('admin', CAMP_B), id)).rejects.toBeInstanceOf(RegistrationNotFoundError);
     await expect(service.erase(as('admin'), 'not-a-uuid')).rejects.toBeInstanceOf(RegistrationNotFoundError);
+  });
+});
+
+describe('registration service: a child takes one place per series', () => {
+  async function formWithSessionA() {
+    const { repo, service } = setup();
+    const admin = as('admin');
+    const form = await service.createForm(admin, { ...formInput, sessionIds: [SESSION_A] });
+    await service.publishForm(admin, form.id);
+
+    return { repo, service, formId: form.id };
+  }
+
+  /** Each named series day is one selection; `camperId` defaults to Ada. */
+  const choose = (formId: string, classIds: string[], camperId = CAMPER_ADA) => ({
+    formId,
+    selections: classIds.map(classId => ({ camperId, classId })),
+    standard,
+    custom: { swim: 'Beginner', photos: 'yes' },
+  });
+
+  it('records one place per child per series, on the series anchor day', async () => {
+    const { service, formId } = await formWithSessionA();
+    await service.submit(as('staff'), formId, choose(formId, [CLASS_ART_DAY1]));
+
+    const [row] = await service.listSubmissions(as('staff'), formId);
+    expect(row.classes.map(c => c.classId)).toEqual([CLASS_ART_DAY1]);
+  });
+
+  it('refuses one series twice for one child, even when the two selections name different days of it', async () => {
+    const { service, formId } = await formWithSessionA();
+    await expect(
+      service.submit(as('staff'), formId, choose(formId, [CLASS_ART_DAY1, CLASS_ART_DAY2])),
+    ).rejects.toMatchObject({
+      reason: 'duplicate_selection',
+    });
+    await expect(service.listSubmissions(as('staff'), formId)).resolves.toEqual([]);
+  });
+
+  it('lets two children each take the same series once', async () => {
+    const { service, formId } = await formWithSessionA();
+    const both = {
+      ...choose(formId, [CLASS_ART_DAY1]),
+      selections: [
+        { camperId: CAMPER_ADA, classId: CLASS_ART_DAY1 },
+        { camperId: CAMPER_BEN, classId: CLASS_ART_DAY1 },
+      ],
+    };
+    await service.submit(as('staff'), formId, both);
+
+    const [row] = await service.listSubmissions(as('staff'), formId);
+    expect(row.classes).toHaveLength(2);
+  });
+
+  it('refuses two series whose days overlap on a later day, though their first days do not clash', async () => {
+    const { service, formId } = await formWithSessionA();
+    const error = await service
+      .submit(as('staff'), formId, choose(formId, [CLASS_ART_DAY1, CLASS_SWIM_DAY1]))
+      .catch((e: unknown) => e);
+
+    expect(error).toMatchObject({ reason: 'classes_overlap' });
+    expect((error as Error).message).toContain('Art');
+    expect((error as Error).message).toContain('Swim');
+    await expect(service.listSubmissions(as('staff'), formId)).resolves.toEqual([]);
   });
 });

@@ -10,6 +10,8 @@ import {
   sniffAttachmentType,
   type AttachmentContentType,
 } from '@buxa/domain';
+import { PersonPhoneSchema } from './contact';
+import { RequiredDateOfBirthSchema } from './people';
 
 export const FIELD_KINDS = ['text', 'choice', 'date', 'yes_no', 'document'] as const;
 export type FieldKind = (typeof FIELD_KINDS)[number];
@@ -119,28 +121,28 @@ export type RegistrationDocument = z.infer<typeof RegistrationDocumentSchema>;
 
 export const MAX_CUSTOM_FIELDS = 40;
 
-/** The standard fields every form has: the camper, the guardian and an emergency contact. Keys are camelCase. */
+/**
+ * The standard fields every form has: the camper and the parent or guardian. Keys are camelCase. The emergency contact is not
+ * asked for here: it is kept on the person's page only (migration 0073). The camper's name and date of birth are read from the
+ * person record by the server, so a registration never changes them.
+ */
 export const STANDARD_FIELDS = [
   { key: 'camperFirstName', label: 'Camper first name', required: true },
   { key: 'camperLastName', label: 'Camper last name', required: true },
   { key: 'camperBirthDate', label: 'Camper date of birth', required: true },
   { key: 'guardianName', label: 'Parent or guardian name', required: true },
+  { key: 'guardianDateOfBirth', label: 'Parent or guardian date of birth', required: true },
   { key: 'guardianEmail', label: 'Parent or guardian email', required: false },
   { key: 'guardianPhone', label: 'Parent or guardian phone', required: true },
-  { key: 'emergencyContactName', label: 'Emergency contact name', required: true },
-  { key: 'emergencyContactPhone', label: 'Emergency contact phone', required: true },
 ] as const;
 
-/** A form as the camp edits it: name, season, the session set and the custom questions. */
+/**
+ * A form as the camp edits it: name, the session set and the custom questions. A season is no longer entered (migration 0071 kept
+ * the stored value for history); the server writes it as null.
+ */
 export const RegistrationFormInputSchema = z
   .object({
     name: z.string().trim().min(1, 'Enter a form name.').max(120, 'Keep the name to 120 characters.'),
-    season: z
-      .string()
-      .trim()
-      .max(60, 'Keep the season to 60 characters.')
-      .default('')
-      .transform(v => v || null),
     sessionIds: z
       .array(z.string().uuid())
       .min(1, 'Choose at least one session.')
@@ -229,6 +231,12 @@ function answerSchema(field: ValueField): z.ZodType<string | boolean | undefined
 export function buildSubmissionSchema(fields: readonly CustomField[]) {
   const standardShape = Object.fromEntries(
     STANDARD_FIELDS.map(f => {
+      // The parent's date of birth and phone are the person rules, with the same messages as the Add person form.
+      if (f.key === 'guardianDateOfBirth' || f.key === 'guardianPhone') {
+        const personRule = f.key === 'guardianPhone' ? PersonPhoneSchema : RequiredDateOfBirthSchema;
+
+        return [f.key, z.preprocess(v => blankAsMissing(v) ?? '', personRule)];
+      }
       const text = z.string().trim().max(120, `${f.label} is too long.`);
       const value =
         f.key === 'camperBirthDate'
@@ -304,16 +312,34 @@ export const RegistrationRowSchema = z.object({
 });
 export type RegistrationRow = z.infer<typeof RegistrationRowSchema>;
 
+/** The published version of a form: what families register on, and what each registration was checked against (migration 0071). */
+export const PublishedFormSchema = z.object({
+  version: z.number().int().positive(),
+  name: z.string(),
+  season: z.string().nullable(),
+  /** The sessions the version covers, by id and name, in name order. Families may register only for these. */
+  sessions: z.array(z.object({ id: z.string(), name: z.string() })),
+  fields: z.array(CustomFieldSchema),
+});
+export type PublishedForm = z.infer<typeof PublishedFormSchema>;
+
+/**
+ * A form as staff see it. The top-level name, season, sessions and fields are the DRAFT (what the edit pop-up loads and Save draft
+ * writes). `published` is the version families register on (null until the first publish), and `hasUnpublishedChanges` is true when
+ * the draft differs from it.
+ */
 export const RegistrationFormSchema = z.object({
   id: z.string(),
   name: z.string(),
   season: z.string().nullable(),
-  /** The sessions the form covers, by id and name, in name order. */
+  /** The draft's sessions, by id and name, in name order. */
   sessions: z.array(z.object({ id: z.string(), name: z.string() })),
   fields: z.array(CustomFieldSchema),
   /** Files staff attached for families to download (a blank immunization form, say). */
   attachments: z.array(FormAttachmentSchema),
   publishedVersion: z.number().int().nullable(),
+  published: PublishedFormSchema.nullable(),
+  hasUnpublishedChanges: z.boolean(),
   submissionCount: z.number().int(),
   updatedAt: z.string(),
 });

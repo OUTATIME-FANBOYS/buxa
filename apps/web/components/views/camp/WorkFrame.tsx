@@ -7,6 +7,8 @@ import { ArchivedBanner, Shell } from '@/components/components/camp';
 interface Props {
   /** The role in the camp being worked in, or null when the person has no camp yet. Decides which camp items show. */
   role: Role | null;
+  /** True in the teaching view (an instructor with viewer access). */
+  teaching?: boolean;
   topBarStart?: ReactNode;
   /** Whatever the work pages need at the end of the top bar: search, save state, notifications, account. */
   topBarEnd?: ReactNode;
@@ -16,9 +18,14 @@ interface Props {
 }
 
 /** The shell for work pages. The layout around it requires a session; the camp role is null until the person has a camp. */
-export function WorkFrame({ role, topBarStart, topBarEnd, archived = false, children }: Props) {
+export function WorkFrame({ role, teaching = false, topBarStart, topBarEnd, archived = false, children }: Props) {
   return (
-    <Shell nav={navGroupsFor(role)} brandHref={ROUTES.camp} topBarStart={topBarStart} topBarEnd={topBarEnd}>
+    <Shell
+      nav={navGroupsFor(role === null ? null : { role, teaching })}
+      brandHref={ROUTES.camp}
+      topBarStart={topBarStart}
+      topBarEnd={topBarEnd}
+    >
       {archived && <ArchivedBanner />}
       {children}
     </Shell>

@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import type { NewPersonInput } from '@buxa/contracts';
+import { PHONE_NUMBER_MESSAGE, type NewPersonInput } from '@buxa/contracts';
 import { createCamp, thrown, type Camp } from './support';
 
 const adult = (givenName: string, familyName: string, extra: Partial<NewPersonInput> = {}): NewPersonInput => ({
   givenName,
   familyName,
   roles: ['participant'],
+  dateOfBirth: '1985-06-15',
+  phone: '+1 555 0100',
   ...extra,
 });
 
@@ -14,6 +16,8 @@ async function guardianWithHousehold(camp: Camp, name: string, household = 'Lee 
   const admin = camp.actor('admin');
 
   return camp.people.create(admin, {
+    dateOfBirth: '1985-06-15',
+    phone: '+1 555 0100',
     givenName: name,
     familyName: 'Lee',
     roles: ['guardian'],
@@ -98,6 +102,7 @@ describe('PeopleService redaction', () => {
     const guardian = await guardianWithHousehold(camp, 'Ana');
     const household = (await camp.people.get(admin, guardian.id)).households[0];
     const kim = await camp.people.create(admin, {
+      phone: '+1 555 0100',
       givenName: 'Kim',
       familyName: 'Lee',
       roles: ['camper'],
@@ -132,6 +137,8 @@ describe('PeopleService household rules', () => {
     const camp = await createCamp();
     const error = await thrown(() =>
       camp.people.create(camp.actor('staff'), {
+        dateOfBirth: '2012-06-15',
+        phone: '+1 555 0100',
         givenName: 'Kim',
         familyName: 'Lee',
         roles: ['camper'],
@@ -147,6 +154,8 @@ describe('PeopleService household rules', () => {
     const household = await camp.people.createHousehold(admin, { name: 'Empty' });
     const error = await thrown(() =>
       camp.people.create(admin, {
+        dateOfBirth: '2012-06-15',
+        phone: '+1 555 0100',
         givenName: 'Kim',
         familyName: 'Lee',
         roles: ['camper'],
@@ -162,6 +171,8 @@ describe('PeopleService household rules', () => {
     const admin = camp.actor('admin');
     const error = await thrown(() =>
       camp.people.create(admin, {
+        dateOfBirth: '2012-06-15',
+        phone: '+1 555 0100',
         givenName: 'Kim',
         familyName: 'Lee',
         roles: ['camper'],
@@ -180,6 +191,7 @@ describe('PeopleService household rules', () => {
     const guardian = await guardianWithHousehold(camp, 'Ana');
     const household = (await camp.people.get(admin, guardian.id)).households[0];
     const kim = await camp.people.create(admin, {
+      phone: '+1 555 0100',
       givenName: 'Kim',
       familyName: 'Lee',
       roles: ['camper'],
@@ -226,6 +238,8 @@ describe('PeopleService household rules', () => {
     const guardian = await guardianWithHousehold(camp, 'Ana');
     const household = (await camp.people.get(admin, guardian.id)).households[0];
     await camp.people.create(admin, {
+      dateOfBirth: '2012-06-15',
+      phone: '+1 555 0100',
       givenName: 'Kim',
       familyName: 'Lee',
       roles: ['camper'],
@@ -261,6 +275,8 @@ describe('PeopleService edit: household and email', () => {
     const ben = await guardianWithHousehold(camp, 'Ben', 'Beta house');
     const beta = (await camp.people.get(admin, ben.id)).households[0];
     const kim = await camp.people.create(admin, {
+      dateOfBirth: '2012-06-15',
+      phone: '+1 555 0100',
       givenName: 'Kim',
       familyName: 'Lee',
       roles: ['camper'],
@@ -297,6 +313,8 @@ describe('PeopleService edit: household and email', () => {
     const guardian = await guardianWithHousehold(camp, 'Ana');
     const household = (await camp.people.get(admin, guardian.id)).households[0];
     const kim = await camp.people.create(admin, {
+      dateOfBirth: '2012-06-15',
+      phone: '+1 555 0100',
       givenName: 'Kim',
       familyName: 'Lee',
       roles: ['camper'],
@@ -317,6 +335,8 @@ describe('PeopleService edit: household and email', () => {
     const guardian = await guardianWithHousehold(camp, 'Ana');
     const household = (await camp.people.get(admin, guardian.id)).households[0];
     const kim = await camp.people.create(admin, {
+      dateOfBirth: '2012-06-15',
+      phone: '+1 555 0100',
       givenName: 'Kim',
       familyName: 'Lee',
       roles: ['camper'],
@@ -335,6 +355,8 @@ describe('PeopleService edit: household and email', () => {
     const guardian = await guardianWithHousehold(camp, 'Ana');
     const household = (await camp.people.get(admin, guardian.id)).households[0];
     await camp.people.create(admin, {
+      dateOfBirth: '2012-06-15',
+      phone: '+1 555 0100',
       givenName: 'Kim',
       familyName: 'Lee',
       roles: ['camper'],
@@ -355,6 +377,8 @@ describe('PeopleService edit: household and email', () => {
     const ben = await guardianWithHousehold(camp, 'Ben', 'Beta house');
     const beta = (await camp.people.get(admin, ben.id)).households[0];
     const kim = await camp.people.create(admin, {
+      dateOfBirth: '2012-06-15',
+      phone: '+1 555 0100',
       givenName: 'Kim',
       familyName: 'Lee',
       roles: ['camper'],
@@ -378,6 +402,8 @@ describe('PeopleService edit: household and email', () => {
     const ben = await guardianWithHousehold(camp, 'Ben', 'Beta house');
     const beta = (await camp.people.get(admin, ben.id)).households[0];
     const kim = await camp.people.create(admin, {
+      dateOfBirth: '2012-06-15',
+      phone: '+1 555 0100',
       givenName: 'Kim',
       familyName: 'Lee',
       roles: ['camper'],
@@ -402,6 +428,8 @@ describe('PeopleService edit: household and email', () => {
     const guardian = await guardianWithHousehold(camp, 'Ana', 'Alpha house');
     const household = (await camp.people.get(admin, guardian.id)).households[0];
     const kim = await camp.people.create(admin, {
+      dateOfBirth: '2012-06-15',
+      phone: '+1 555 0100',
       givenName: 'Kim',
       familyName: 'Lee',
       roles: ['camper'],
@@ -484,5 +512,46 @@ describe('PeopleService email', () => {
     expect(ana.email).toBe('ana.lee@example.com');
     const updated = await camp.people.update(admin, ana.id, { email: 'ANA@Example.com' });
     expect(updated.email).toBe('ana@example.com');
+  });
+});
+
+describe('PeopleService date of birth and phone are required on every person', () => {
+  it('refuses a person with no date of birth, with the same message as the form (400)', async () => {
+    const camp = await createCamp();
+    const admin = camp.actor('admin');
+    const error = await thrown(() => camp.people.create(admin, adult('Ana', 'Lee', { dateOfBirth: '' })));
+    expect(error.statusCode).toBe(400);
+    expect(error.message).toBe('Enter the date of birth.');
+    const notADate = await thrown(() => camp.people.create(admin, adult('Ana', 'Lee', { dateOfBirth: '2012-02-31' })));
+    expect(notADate.message).toBe('Use a real date (YYYY-MM-DD).');
+  });
+
+  it('refuses a person with no phone, with the phone message (400)', async () => {
+    const camp = await createCamp();
+    const admin = camp.actor('admin');
+    const error = await thrown(() => camp.people.create(admin, adult('Ana', 'Lee', { phone: '' })));
+    expect(error.statusCode).toBe(400);
+    expect(error.message).toBe(PHONE_NUMBER_MESSAGE);
+  });
+
+  it('refuses an edit that blanks the date of birth or the phone, and saves nothing', async () => {
+    const camp = await createCamp();
+    const admin = camp.actor('admin');
+    const ana = await camp.people.create(admin, adult('Ana', 'Lee'));
+    expect((await thrown(() => camp.people.update(admin, ana.id, { dateOfBirth: '' }))).message).toBe(
+      'Enter the date of birth.',
+    );
+    expect((await thrown(() => camp.people.update(admin, ana.id, { phone: '' }))).message).toBe(PHONE_NUMBER_MESSAGE);
+    const after = await camp.people.get(admin, ana.id);
+    expect(after.dateOfBirth).toBe('1985-06-15');
+    expect(after.phone).toBe('+1 555 0100');
+  });
+
+  it('saves a guardian with the date of birth and phone it was given', async () => {
+    const camp = await createCamp();
+    const admin = camp.actor('admin');
+    const guardian = await camp.people.create(admin, adult('Ana', 'Lee', { roles: ['guardian'] }));
+    expect(guardian.dateOfBirth).toBe('1985-06-15');
+    expect(guardian.phone).toBe('+1 555 0100');
   });
 });

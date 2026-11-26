@@ -21,6 +21,8 @@ export interface DatePickerProps {
   describedBy?: string;
   isRequired?: boolean;
   isDisabled?: boolean;
+  /** Shows the value, which still submits with the form, but cannot be changed here (filled in from another record). */
+  isReadOnly?: boolean;
   id?: string;
 }
 
@@ -37,6 +39,7 @@ export function DatePicker({
   describedBy,
   isRequired,
   isDisabled,
+  isReadOnly,
   id,
 }: DatePickerProps) {
   const generated = useId();
@@ -64,13 +67,14 @@ export function DatePicker({
         required={isRequired}
         aria-required={isRequired || undefined}
         disabled={isDisabled}
+        readOnly={isReadOnly}
         min={minValue}
         max={maxValue}
         aria-invalid={Boolean(error) || undefined}
         aria-describedby={[describedBy, error || hint ? hintId : undefined].filter(Boolean).join(' ') || undefined}
         {...controlled}
         onChange={e => onChange?.(e.target.value === '' ? null : e.target.value)}
-        className="select-field__input buxa:min-w-0 buxa:aria-[invalid=true]:border-[var(--crit)]"
+        className={`select-field__input buxa:min-w-0 buxa:aria-[invalid=true]:border-[var(--crit)]${isReadOnly ? ' field-readonly' : ''}`}
       />
       {error ? (
         <p id={hintId} className="field-error" role="alert">

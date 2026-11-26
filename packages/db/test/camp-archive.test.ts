@@ -106,7 +106,7 @@ describe.skipIf(!url)('camp archive and delete (0013)', () => {
     // Fill every table that holds camp data for this camp.
     const person = (
       await pool.query<{ id: string }>(
-        `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Ada', 'Lovelace') RETURNING id`,
+        `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'Ada', 'Lovelace', '1985-06-15', '+1 555 0100') RETURNING id`,
         [camp],
       )
     ).rows[0].id;

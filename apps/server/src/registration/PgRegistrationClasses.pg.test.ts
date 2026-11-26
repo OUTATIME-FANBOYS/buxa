@@ -6,7 +6,7 @@ import type { Actor } from '@buxa/domain';
 import { PgRegistrationRepository } from './PgRegistrationRepository';
 import { createRegistrationService, type RegistrationService } from './RegistrationService';
 import { RegistrationRefusedError } from './errors';
-import { createRegistrationFixture, type RegistrationFixture } from './__tests__/registrationFixture';
+import { createRegistrationFixture, pgPeopleService, type RegistrationFixture } from './__tests__/registrationFixture';
 import { createCredentialService } from '../services/credentials/createCredentialService';
 import { createBadgeCipher, parseBadgeKey } from '../credentials/badgeCipher';
 import { PgPeopleRepository } from '../people/PgPeopleRepository';
@@ -24,11 +24,14 @@ import { backdateHolds } from '../holds/__tests__/holdFixture';
 const TEST_KEY = Buffer.alloc(32, 3).toString('base64');
 const url = process.env.DATABASE_URL;
 
+// The camper's name and birth date are read from the child's record, so a blank answer is filled from it. One answer set then serves
+// both children of the fixture (Ada and Ben).
 const standard = {
-  camperFirstName: 'Ada',
-  camperLastName: 'Lovelace',
-  camperBirthDate: '2014-03-09',
+  camperFirstName: '',
+  camperLastName: '',
+  camperBirthDate: '',
   guardianName: 'Byron Lovelace',
+  guardianDateOfBirth: '1985-06-15',
   guardianPhone: '555-0100',
   emergencyContactName: 'Mary Somerville',
   emergencyContactPhone: '555-0111',
@@ -42,16 +45,19 @@ const standard = {
 describe.skipIf(!url)('registration by class in Postgres', () => {
   const pool = new pg.Pool({ connectionString: url });
   const repo = new PgRegistrationRepository(pool);
-  const registration: RegistrationService = createRegistrationService(repo, credentials =>
-    createCredentialService({
-      credentials,
-      people: new PgPeopleRepository(pool),
-      memberships: new PgMembershipRepository(pool),
-      attendance: new PgAttendanceRepository(pool),
-      orgs: new PgOrgRepository(pool),
-      clock: systemClock,
-      cipher: createBadgeCipher(() => parseBadgeKey(TEST_KEY)),
-    }),
+  const registration: RegistrationService = createRegistrationService(
+    repo,
+    credentials =>
+      createCredentialService({
+        credentials,
+        people: new PgPeopleRepository(pool),
+        memberships: new PgMembershipRepository(pool),
+        attendance: new PgAttendanceRepository(pool),
+        orgs: new PgOrgRepository(pool),
+        clock: systemClock,
+        cipher: createBadgeCipher(() => parseBadgeKey(TEST_KEY)),
+      }),
+    pgPeopleService(pool),
   );
   const classes: ClassService = createClassService({
     repo: new PgClassRepository(pool),
@@ -80,7 +86,6 @@ describe.skipIf(!url)('registration by class in Postgres', () => {
     const staff = fx.actor('staff');
     const form = await registration.createForm(admin, {
       name: 'Summer',
-      season: 'Summer 2027',
       sessionIds: [fx.sessionId],
       fields: [],
     });
@@ -241,7 +246,6 @@ describe.skipIf(!url)('registration by class in Postgres', () => {
     const staff = fx.actor('staff');
     const form = await registration.createForm(fx.actor('admin'), {
       name: 'Not yet',
-      season: '',
       sessionIds: [fx.sessionId],
       fields: [],
     });
@@ -257,7 +261,7 @@ describe.skipIf(!url)('registration by class in Postgres', () => {
     const { fx, formId, staff } = await campWithForm();
     const sibling = await withOrg(pool, fx.userId, fx.orgId, async db => {
       const person = await db.query<{ id: string }>(
-        `INSERT INTO people (org_id, given_name, family_name, date_of_birth) VALUES ($1, 'Cleo', 'Sibling', '2014-06-01') RETURNING id`,
+        `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'Cleo', 'Sibling', '2014-06-01', '+1 555 0100') RETURNING id`,
         [fx.orgId],
       );
       await db.query(`INSERT INTO person_roles (org_id, person_id, role) VALUES ($1, $2, 'camper')`, [
@@ -326,5 +330,51 @@ describe.skipIf(!url)('registration by class in Postgres', () => {
     await expect(attempt).rejects.toBeInstanceOf(RegistrationRefusedError);
     await expect(attempt).rejects.toThrow("This class falls outside its session's dates. Fix its dates first.");
     expect(await rowsOf(staff, formId)).toEqual([]);
+  });
+
+  it('one place per child per series: a series of three days takes one hold, confirming enrols the child once, and a second place is refused', async () => {
+    const { fx, formId, staff, admin } = await campWithForm();
+    // Three days (Sat, Sun, Mon) inside the session's dates, one series at its own location.
+    const made = await classes.addSeries(admin, fx.sessionId, {
+      name: 'Art Camp',
+      ageRange: { minAge: 3, maxAge: 15 },
+      capacity: 5,
+      location: 'Studio',
+      instructorIds: [],
+      price: null,
+      weekdays: [6, 7, 1],
+      startsAt: '2027-07-10T09:00',
+      endsAt: '2027-07-12T11:00',
+    });
+    if (!made.ok) {
+      throw new Error(made.failure.message);
+    }
+    expect(made.value.occurrenceCount).toBe(3);
+    const anchor = made.value.anchorClassId;
+    /** Rows of the series, counted by its key (series_id), for this child. */
+    const seriesRows = (table: 'seat_holds' | 'enrolments', extra: string) =>
+      withOrg(pool, fx.userId, fx.orgId, db =>
+        db.query<{ n: number }>(
+          `SELECT count(*)::int AS n FROM ${table} t JOIN sessions s ON s.id = $1 AND s.series_id = t.series_id
+            WHERE t.person_id = $2 ${extra}`,
+          [anchor, fx.children.ada],
+        ),
+      ).then(r => r.rows[0].n);
+
+    await submit(formId, staff, [pick(fx.children.ada, anchor)]);
+    expect(await seriesRows('seat_holds', 'AND t.released_at IS NULL')).toBe(1);
+
+    const [first] = await rowsOf(staff, formId);
+    if (!first) {
+      throw new Error('no registration was recorded');
+    }
+    await registration.confirm(staff, first.id);
+    expect(await seriesRows('enrolments', "AND t.status = 'enrolled'")).toBe(1);
+
+    // The same child cannot take the series again, from another family.
+    await expect(submit(formId, staff, [pick(fx.children.ada, anchor)])).rejects.toMatchObject({
+      reason: 'class_refused',
+    });
+    expect(await seriesRows('enrolments', "AND t.status = 'enrolled'")).toBe(1);
   });
 });
