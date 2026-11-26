@@ -25,14 +25,24 @@ const services = vi.hoisted(() => ({
   },
   people: { list: vi.fn() },
   credentials: { scan: vi.fn() },
+  gate: {
+    listDevices: vi.fn(() => Promise.resolve([])),
+    linkToken: vi.fn(() => Promise.resolve(null)),
+    rotateLink: vi.fn(),
+  },
 }));
 
 vi.mock('next/navigation', () => ({ notFound, useRouter: () => ({ refresh() {}, push() {} }) }));
 vi.mock('@buxa/server/runtime', () => ({
   getRuntime: () => ({
     services,
-    // A teacher's member options are read here (withMemberOptions): none are on.
-    repositories: { users: { memberOptionsOf: () => Promise.resolve([]) } },
+    // A teacher's instructor flag and member options are read here (withMemberOptions): only a teacher is an instructor, and none are on.
+    repositories: {
+      users: {
+        isInstructorIn: () => Promise.resolve(session.role === 'teacher'),
+        memberOptionsOf: () => Promise.resolve([]),
+      },
+    },
   }),
 }));
 vi.mock('@buxa/server/session/index', () => ({
