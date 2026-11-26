@@ -217,6 +217,11 @@ export function PersonForm(props: PersonFormProps) {
     />
   );
 
+  // The hint sits under the whole row, so a taller hint never pushes the phone field away from the date field.
+  const dateOfBirthHint = isEdit
+    ? 'Only used to tell whether someone is under 18. Leave blank to clear it.'
+    : 'Only used to tell whether someone is under 18.';
+
   const dateOfBirthField = (
     <DatePicker
       label="Date of birth"
@@ -224,11 +229,6 @@ export function PersonForm(props: PersonFormProps) {
       isRequired={dateOfBirthRequired}
       defaultValue={person ? (person.dateOfBirth ?? null) : undefined}
       error={err('dateOfBirth')}
-      hint={
-        isEdit
-          ? 'Only used to tell whether someone is under 18. Leave blank to clear it.'
-          : 'Only used to tell whether someone is under 18.'
-      }
     />
   );
 
@@ -275,6 +275,7 @@ export function PersonForm(props: PersonFormProps) {
           {dateOfBirthField}
           {phoneField}
         </div>
+        <p className="muted">{dateOfBirthHint}</p>
       </fieldset>
 
       <PersonRoles
