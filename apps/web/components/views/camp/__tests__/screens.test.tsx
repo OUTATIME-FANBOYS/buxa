@@ -111,7 +111,8 @@ describe('Members', () => {
   it('lists the members with their roles', async () => {
     as('viewer');
     const html = renderToStaticMarkup(await Members());
-    expect(orgs.listMembers).toHaveBeenCalledWith({ userId: 'u1', orgId: 'o1', role: 'viewer' });
+    // A viewer's actor carries its teaching flag (withMemberOptions), so an instructor flag of false is part of the shape.
+    expect(orgs.listMembers).toHaveBeenCalledWith({ userId: 'u1', orgId: 'o1', role: 'viewer', instructor: false });
     expect(html).toContain('Maya Chen');
     expect(html).toContain('2 people have access');
     expect(html).toContain('Owner');
