@@ -50,7 +50,13 @@ async function setup(): Promise<Setup> {
 /** A camper with a valid membership, known to the group store too (so a placement can name them). */
 async function camper(s: Setup, givenName: string): Promise<string> {
   // A participant needs no guardian household, so the test can check a person in without one.
-  const person = await s.camp.people.create(s.admin, { givenName, familyName: 'Test', roles: ['participant'] });
+  const person = await s.camp.people.create(s.admin, {
+    dateOfBirth: '1985-06-15',
+    phone: '+1 555 0100',
+    givenName,
+    familyName: 'Test',
+    roles: ['participant'],
+  });
   await s.camp.memberships.add(s.admin, {
     personId: person.id,
     plan: 'Summer',
@@ -120,6 +126,8 @@ describe('per-session check-in: the session and the unassigned flag', () => {
     const camp = await createCamp('UTC', TODAY_CLOCK);
     const staff = camp.actor('staff');
     const person = await camp.people.create(camp.actor('admin'), {
+      dateOfBirth: '1985-06-15',
+      phone: '+1 555 0100',
       givenName: 'Ada',
       familyName: 'Plain',
       roles: ['participant'],

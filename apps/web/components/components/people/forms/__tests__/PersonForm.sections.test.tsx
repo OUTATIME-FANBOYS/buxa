@@ -132,11 +132,13 @@ describe('PersonForm: sections follow the roles', () => {
       expect(pair?.querySelector('input[name="phone"]')).not.toBeNull();
     });
 
-    it('marks the phone as required, and the date of birth as optional for a staff role', () => {
+    it('marks the phone and the date of birth as required for every role', () => {
       renderAdd();
       click('participant');
       expect(h.input('phone')?.getAttribute('aria-required')).toBe('true');
-      expect(h.input('dateOfBirth')?.getAttribute('aria-required')).toBeNull();
+      expect(h.input('dateOfBirth')?.getAttribute('aria-required')).toBe('true');
+      click('guardian');
+      expect(h.input('dateOfBirth')?.getAttribute('aria-required')).toBe('true');
     });
 
     it('hides the parent section for an instructor as well', () => {

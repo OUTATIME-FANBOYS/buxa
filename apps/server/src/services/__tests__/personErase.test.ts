@@ -7,7 +7,13 @@ describe('PeopleService.erase (owner deletes a person)', () => {
     const camp = await createCamp();
     const owner = camp.actor('owner');
     const admin = camp.actor('admin');
-    const ana = await camp.people.create(admin, { givenName: 'Ana', familyName: 'Lee', roles: ['participant'] });
+    const ana = await camp.people.create(admin, {
+      dateOfBirth: '1985-06-15',
+      phone: '+1 555 0100',
+      givenName: 'Ana',
+      familyName: 'Lee',
+      roles: ['participant'],
+    });
     await camp.repos.memberships.add(admin, {
       personId: ana.id,
       plan: 'Full week',
@@ -26,7 +32,13 @@ describe('PeopleService.erase (owner deletes a person)', () => {
   it('refuses an admin and staff (403) and leaves the person in place', async () => {
     const camp = await createCamp();
     const admin = camp.actor('admin');
-    const ana = await camp.people.create(admin, { givenName: 'Ana', familyName: 'Lee', roles: ['participant'] });
+    const ana = await camp.people.create(admin, {
+      dateOfBirth: '1985-06-15',
+      phone: '+1 555 0100',
+      givenName: 'Ana',
+      familyName: 'Lee',
+      roles: ['participant'],
+    });
 
     expect((await thrown(() => camp.people.erase(admin, ana.id))).statusCode).toBe(403);
     expect((await thrown(() => camp.people.erase(camp.actor('staff'), ana.id))).statusCode).toBe(403);

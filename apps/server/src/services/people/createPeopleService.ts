@@ -1,3 +1,4 @@
+import { PersonPhoneSchema, RequiredDateOfBirthSchema } from '@buxa/contracts';
 import type {
   EmergencyContact,
   EmergencyContactInput,
@@ -34,6 +35,30 @@ import {
   PICKUP_NEEDS_GUARDIAN,
   RELATIONSHIP_NEEDED,
 } from './rules';
+
+/** The first message of a failed parse, or the fallback when there is none to name. */
+const firstMessage = (error: { issues: readonly { message: string }[] }, fallback: string): string =>
+  error.issues[0]?.message ?? fallback;
+
+/**
+ * Every person is saved with a date of birth and a phone number, whatever their role (the rules of NewPersonInputSchema, which the
+ * Add and Edit forms and the registration use too). The service checks them itself, so a caller that skips the form cannot save a
+ * person without them.
+ */
+function assertBirthAndPhone(dateOfBirth: string | undefined, phone: string | undefined): void {
+  if (dateOfBirth !== undefined) {
+    const birth = RequiredDateOfBirthSchema.safeParse(dateOfBirth);
+    if (!birth.success) {
+      throw badRequest(firstMessage(birth.error, 'Enter the date of birth.'));
+    }
+  }
+  if (phone !== undefined) {
+    const tel = PersonPhoneSchema.safeParse(phone);
+    if (!tel.success) {
+      throw badRequest(firstMessage(tel.error, 'Enter a phone number.'));
+    }
+  }
+}
 
 /** Blank text means "no value" for the optional contact fields. */
 const blankToNull = (value: string | null): string | null => (value === null || value.trim() === '' ? null : value);
@@ -356,6 +381,15 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       if (input.roles.length === 0) {
         throw badRequest(CHOOSE_ROLE);
       }
+      // A date of birth and a phone are required, so a missing one is refused here (undefined is a missing value, not a skipped one).
+      const birth = RequiredDateOfBirthSchema.safeParse(input.dateOfBirth);
+      if (!birth.success) {
+        throw badRequest(firstMessage(birth.error, 'Enter the date of birth.'));
+      }
+      const tel = PersonPhoneSchema.safeParse(input.phone);
+      if (!tel.success) {
+        throw badRequest(firstMessage(tel.error, 'Enter a phone number.'));
+      }
       if (input.householdId !== undefined && input.newHouseholdName !== undefined) {
         throw badRequest('Choose an existing household or name a new one, not both.');
       }
@@ -366,9 +400,9 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
           {
             givenName: input.givenName,
             familyName: input.familyName,
-            dateOfBirth: input.dateOfBirth ?? null,
+            dateOfBirth: birth.data,
             email: emailOrNull(input.email ?? null),
-            phone: blankToNull(input.phone ?? null),
+            phone: tel.data,
             roles: input.roles,
             emergencyContact: contactRecordOf(input.emergencyContact),
           },
@@ -385,6 +419,7 @@ export function createPeopleService(deps: PeopleServiceDeps): PeopleService {
       if (patch.roles !== undefined && patch.roles.length === 0) {
         throw badRequest(CHOOSE_ROLE);
       }
+      assertBirthAndPhone(patch.dateOfBirth, patch.phone);
       if (!(await people.get(actor.userId, orgId, id))) {
         throw notFound('Person not found');
       }

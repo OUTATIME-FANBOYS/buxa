@@ -6,7 +6,13 @@ import { JULY_SESSION } from '../../classes/__tests__/fixtures';
 async function setup(start?: string) {
   const camp = await createCamp('UTC', start);
   const admin = camp.actor('admin');
-  const ben = await camp.people.create(admin, { givenName: 'Ben', familyName: 'Stone', roles: ['participant'] });
+  const ben = await camp.people.create(admin, {
+    dateOfBirth: '1985-06-15',
+    phone: '+1 555 0100',
+    givenName: 'Ben',
+    familyName: 'Stone',
+    roles: ['participant'],
+  });
 
   return { camp, admin, ben };
 }

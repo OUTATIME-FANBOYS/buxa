@@ -1,14 +1,7 @@
 /** People, households, memberships and badges: what the camp's screens and services exchange. */
 import { z } from 'zod';
 import { CAMP_ROLES, PEOPLE_PAGE_SIZE_MAX, isAllowedRoleSet, isLocalDate, type PageSpan } from '@buxa/domain';
-import {
-  OptionalEmailSchema,
-  OptionalPhoneSchema,
-  PHONE_MESSAGE,
-  PatchEmailSchema,
-  PersonPhoneSchema,
-  isPlausiblePhone,
-} from './contact';
+import { OptionalEmailSchema, PHONE_MESSAGE, PatchEmailSchema, PersonPhoneSchema, isPlausiblePhone } from './contact';
 
 export const CampRoleSchema = z.enum(CAMP_ROLES);
 /** The roles a person holds together must be one of the allowed sets (see isAllowedRoleSet in @buxa/domain). */
@@ -128,12 +121,22 @@ export const PersonSchema = PersonSummarySchema.extend({
 });
 export type Person = z.infer<typeof PersonSchema>;
 
+/**
+ * A date of birth every person must have, on every form that saves one (add, edit, registration guardian). Blank gets its own
+ * message, then a real date is checked.
+ */
+export const RequiredDateOfBirthSchema = z
+  .string()
+  .min(1, 'Enter the date of birth.')
+  .refine(isLocalDate, 'Use a real date (YYYY-MM-DD).');
+
+/** Every person is saved with a date of birth and a phone number, whatever their role (a guardian included). */
 export const NewPersonInputSchema = z.object({
   givenName: Name,
   familyName: Name,
-  dateOfBirth: LocalDateSchema.optional(),
+  dateOfBirth: RequiredDateOfBirthSchema,
   email: OptionalEmailSchema,
-  phone: OptionalPhoneSchema,
+  phone: PersonPhoneSchema,
   roles: AllowedRoleSet(z.array(CampRoleSchema).min(1, 'Pick a role.')),
   /** Required when the person is a camper: a household that already has a guardian. */
   householdId: z.string().uuid().optional(),
@@ -146,22 +149,10 @@ export const NewPersonInputSchema = z.object({
 });
 export type NewPersonInput = z.infer<typeof NewPersonInputSchema>;
 
-/** A date of birth the Add and Edit person forms require: blank gets its own message, then a real date is checked. */
-const RequiredDateOfBirthSchema = z
-  .string()
-  .min(1, 'Enter the date of birth.')
-  .refine(isLocalDate, 'Use a real date (YYYY-MM-DD).');
-
-/** The Add person form's input: the same fields, with a phone number and a date of birth required (every person has both). */
-export const NewPersonFormSchema = NewPersonInputSchema.extend({
-  phone: PersonPhoneSchema,
-  dateOfBirth: RequiredDateOfBirthSchema,
-});
-
 export const PersonPatchInputSchema = z.object({
   givenName: Name.optional(),
   familyName: Name.optional(),
-  /** Required on edit too: a blank date or phone is refused, the same as on add. */
+  /** Required on edit too: a blank date or phone is refused, the same as on add (see NewPersonInputSchema). */
   dateOfBirth: RequiredDateOfBirthSchema.optional(),
   email: PatchEmailSchema.nullable().optional(),
   phone: PersonPhoneSchema.optional(),

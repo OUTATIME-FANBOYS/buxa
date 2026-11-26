@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { EmergencyContactInputSchema, NewPersonFormSchema, NewHouseholdInputSchema } from '@buxa/contracts';
+import { EmergencyContactInputSchema, NewPersonInputSchema, NewHouseholdInputSchema } from '@buxa/contracts';
 import { ROUTES, personPath } from '@buxa/shared/config/routes';
 import { failure, success, type ActionState } from '@buxa/shared';
 import { getRuntime } from '../../runtime';
@@ -59,7 +59,7 @@ export async function createPersonAction(_previous: ActionState, form: FormData)
     },
     OPTIONAL,
   );
-  const parsed = parseWith(NewPersonFormSchema, posted);
+  const parsed = parseWith(NewPersonInputSchema, posted);
   if (!parsed.ok) {
     return parsed.state;
   }

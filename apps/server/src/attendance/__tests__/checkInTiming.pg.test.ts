@@ -55,7 +55,13 @@ describe.skipIf(!url)('check-in timing on Postgres', () => {
       const batch = await Promise.all(
         Array.from({ length: Math.min(SEED_CONCURRENCY, CAMP_PEOPLE - start) }, async (_, offset) => {
           const index = start + offset;
-          const input: NewPersonInput = { givenName: `Member ${index}`, familyName: 'Timing', roles: ['participant'] };
+          const input: NewPersonInput = {
+            givenName: `Member ${index}`,
+            familyName: 'Timing',
+            roles: ['participant'],
+            dateOfBirth: '1985-06-15',
+            phone: '+1 555 0100',
+          };
           const person = await services.people.create(actor, input);
           await services.memberships.add(actor, {
             personId: person.id,

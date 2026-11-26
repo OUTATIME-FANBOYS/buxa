@@ -8,7 +8,7 @@ import {
   OptionalEmailSchema,
   PersonPhoneSchema,
 } from './contact';
-import { NewPersonFormSchema, NewPersonInputSchema, PersonPatchInputSchema } from './people';
+import { NewPersonInputSchema, PersonPatchInputSchema } from './people';
 
 describe('email format', () => {
   it.each([
@@ -89,22 +89,40 @@ describe('shared schemas used by people', () => {
 
   it('add person form: a bad email or phone is refused with its field message, and a good pair is accepted', () => {
     const base = { givenName: 'Ada', familyName: 'Lovelace', roles: ['camper'], dateOfBirth: '2012-06-15' };
-    const badEmail = NewPersonFormSchema.safeParse({ ...base, email: 'ada@example', phone: '0400 000 000' });
+    const badEmail = NewPersonInputSchema.safeParse({ ...base, email: 'ada@example', phone: '0400 000 000' });
     expect(badEmail.success).toBe(false);
     expect(badEmail.error?.issues.map(issue => issue.message)).toContain(EMAIL_MESSAGE);
 
-    const noPhone = NewPersonFormSchema.safeParse({ ...base, email: 'ada@example.com' });
+    const noPhone = NewPersonInputSchema.safeParse({ ...base, email: 'ada@example.com', phone: '' });
     expect(noPhone.error?.issues.map(issue => issue.message)).toContain(PHONE_NUMBER_MESSAGE);
 
     expect(
-      NewPersonFormSchema.safeParse({ ...base, email: 'ada@example.com', phone: '+44 20 7946 0958' }).success,
+      NewPersonInputSchema.safeParse({ ...base, email: 'ada@example.com', phone: '+44 20 7946 0958' }).success,
     ).toBe(true);
   });
 
-  it('service input: the phone is optional there, but a phone that is given must be valid', () => {
-    const base = { givenName: 'Ada', familyName: 'Lovelace', roles: ['camper'], dateOfBirth: '2012-06-15' };
+  it('service input: the phone and the date of birth are required, so a person without either is refused', () => {
+    const base = {
+      givenName: 'Ada',
+      familyName: 'Lovelace',
+      roles: ['camper'],
+      dateOfBirth: '2012-06-15',
+      phone: '0400 000 000',
+    };
     expect(NewPersonInputSchema.safeParse(base).success).toBe(true);
     expect(NewPersonInputSchema.safeParse({ ...base, phone: 'call me' }).success).toBe(false);
+
+    const noPhone = NewPersonInputSchema.safeParse({ ...base, phone: '' });
+    expect(noPhone.error?.issues.map(issue => issue.message)).toContain(PHONE_NUMBER_MESSAGE);
+
+    const noBirth = NewPersonInputSchema.safeParse({ ...base, dateOfBirth: undefined });
+    expect(noBirth.success).toBe(false);
+    expect(NewPersonInputSchema.safeParse({ ...base, dateOfBirth: '' }).error?.issues[0]?.message).toBe(
+      'Enter the date of birth.',
+    );
+    expect(NewPersonInputSchema.safeParse({ ...base, dateOfBirth: '2012-02-31' }).error?.issues[0]?.message).toBe(
+      'Use a real date (YYYY-MM-DD).',
+    );
   });
 
   it('patch: a blank email is passed on unchanged; a blank or bad phone or date is refused with its message', () => {

@@ -16,6 +16,8 @@ async function signedIn(camp: Camp, email: string, role: Role): Promise<Actor> {
 async function household(camp: Camp) {
   const admin = camp.actor('admin');
   const guardian = await camp.people.create(admin, {
+    dateOfBirth: '1985-06-15',
+    phone: '+1 555 0100',
     givenName: 'Gina',
     familyName: 'Lee',
     email: 'guardian@example.org',
@@ -25,6 +27,8 @@ async function household(camp: Camp) {
   });
   const [lee] = await camp.repos.people.householdsOf(admin.userId, camp.orgId, guardian.id);
   const child = await camp.people.create(admin, {
+    dateOfBirth: '1985-06-15',
+    phone: '+1 555 0100',
     givenName: 'Cal',
     familyName: 'Lee',
     email: 'cal@example.org',
@@ -33,6 +37,8 @@ async function household(camp: Camp) {
     relationship: 'Child',
   });
   const unrelated = await camp.people.create(admin, {
+    dateOfBirth: '1985-06-15',
+    phone: '+1 555 0100',
     givenName: 'Una',
     familyName: 'Other',
     email: 'una@example.org',
