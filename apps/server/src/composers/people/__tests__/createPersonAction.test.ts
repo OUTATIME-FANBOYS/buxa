@@ -18,7 +18,7 @@ vi.mock('next/navigation', () => ({ redirect: h.redirect }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: { people: h.people } }) }));
 vi.mock('../camp', () => ({ currentActor: () => settle(() => h.actor) }));
 
-// A family member needs a phone, and a camper also needs a date of birth (both are required when a person is added).
+// Every person added needs a phone, and a camper also needs a date of birth.
 const adult = { givenName: 'Anna', familyName: 'Lee', roles: 'guardian', phone: '555-0100' };
 const camper = { givenName: 'Ben', familyName: 'Lee', roles: 'camper', dateOfBirth: '2014-03-09', phone: '555-0101' };
 
@@ -59,7 +59,7 @@ describe('createPersonAction', () => {
     },
   );
 
-  it('requires a date of birth for a camper and a phone number for a family member, and creates nothing', async () => {
+  it('requires a date of birth for a camper and a phone number for every person, and creates nothing', async () => {
     const noBirthDate = await createPersonAction(
       idle,
       formOf({ ...camper, householdId: IDS.household, dateOfBirth: '' }),
@@ -67,7 +67,30 @@ describe('createPersonAction', () => {
     expect(noBirthDate).toMatchObject({ status: 'error', fieldErrors: { dateOfBirth: 'Enter the date of birth.' } });
 
     const noPhone = await createPersonAction(idle, formOf({ ...adult, phone: '' }));
-    expect(noPhone).toMatchObject({ status: 'error', fieldErrors: { phone: 'Enter a phone number.' } });
+    expect(noPhone).toMatchObject({
+      status: 'error',
+      fieldErrors: { phone: 'Enter a phone number with at least 7 digits.' },
+    });
+    const staffNoPhone = await createPersonAction(
+      idle,
+      formOf({ givenName: 'Sam', familyName: 'Ortiz', roles: 'instructor', phone: '' }),
+    );
+    expect(staffNoPhone).toMatchObject({
+      status: 'error',
+      fieldErrors: { phone: 'Enter a phone number with at least 7 digits.' },
+    });
+    expect(h.people.create).not.toHaveBeenCalled();
+  });
+
+  it('refuses an invalid email and an invalid phone with the form messages, and creates nothing', async () => {
+    const badEmail = await createPersonAction(idle, formOf({ ...adult, email: 'anna@example' }));
+    expect(badEmail).toMatchObject({ status: 'error', fieldErrors: { email: 'Enter a valid email address.' } });
+
+    const badPhone = await createPersonAction(idle, formOf({ ...adult, phone: 'call me' }));
+    expect(badPhone).toMatchObject({
+      status: 'error',
+      fieldErrors: { phone: 'Enter a phone number with at least 7 digits.' },
+    });
     expect(h.people.create).not.toHaveBeenCalled();
   });
 

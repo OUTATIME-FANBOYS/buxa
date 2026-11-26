@@ -1,8 +1,8 @@
 'use client';
 
-import { useActionState, useEffect, useRef, useState } from 'react';
+import { useActionState, useEffect, useRef, useState, type FormEvent } from 'react';
 import type { Person } from '@buxa/contracts';
-import { isPlausibleEmail } from '@buxa/contracts';
+import { EMAIL_MESSAGE, PHONE_NUMBER_MESSAGE, isPlausibleEmail, isValidPhone } from '@buxa/contracts';
 import { isAllowedRoleSet, type CampRole } from '@buxa/domain';
 import { Button } from '@/components/elements';
 import { DatePicker, HiddenField, TextField } from '@/components/atoms';
@@ -50,10 +50,10 @@ interface PersonFormCommon {
  * `person`, including the person's household: the household select starts on it, and saving moves, creates or leaves it.
  * Roles are checkboxes in both modes, and every checked role is saved.
  *
- * The sections follow the roles. Camper details (first name, last name, then date of birth beside the phone) are headed as such for a
- * camper. A family role (a camper or a parent or guardian) shows the Parent or guardian section: the household email, the phone for
- * a parent or guardian, and the household. Adding a camper requires a date of birth and a phone; adding a family member requires a
- * phone. Staff-only roles keep Email and Phone in the person's own details. The emergency contact is not entered here: it is on the
+ * The person's details are first name and last name, then date of birth beside the phone. A camper's section is headed Camper details;
+ * for any other role the heading is for screen readers only. A family role (a camper or a parent or guardian) shows the Parent or
+ * guardian section: the household email and the household. Adding a person requires a phone; adding a camper also requires a date of
+ * birth. Email is optional, but one that is typed must be a valid address. The emergency contact is not entered here: it is on the
  * person's page.
  */
 export type PersonFormProps = PersonFormCommon &
@@ -83,6 +83,8 @@ export function PersonForm(props: PersonFormProps) {
     });
   // The personal email, held so the invite button can wait for a valid address.
   const [email, setEmail] = useState(person?.email ?? '');
+  // The form's own checks on the phone and email, shown on blur and on submit. The server refuses the same values with the same messages.
+  const [problems, setProblems] = useState<{ phone?: string; email?: string }>({});
 
   // A field error moves focus to the first invalid field, so the person can correct it without searching the page.
   useEffect(() => {
@@ -110,9 +112,44 @@ export function PersonForm(props: PersonFormProps) {
   const camper = roles.has('camper');
   const hasFamilyRole = selectedRoles.some(isFamilyRole);
   const showParent = hasFamilyRole;
-  // A camper's date of birth and a family member's phone are required when a person is added. Editing does not change that rule here.
+  // When a person is added, the phone is required for every role and a camper's date of birth too. Editing does not require either.
   const dateOfBirthRequired = !isEdit && camper;
-  const phoneRequired = !isEdit && showParent;
+  const phoneRequired = !isEdit;
+  const phoneProblem = (value: string): string | undefined => {
+    const trimmed = value.trim();
+    if (trimmed === '') {
+      return phoneRequired ? PHONE_NUMBER_MESSAGE : undefined;
+    }
+
+    return isValidPhone(trimmed) ? undefined : PHONE_NUMBER_MESSAGE;
+  };
+  const emailProblem = (value: string): string | undefined => {
+    const trimmed = value.trim();
+
+    return trimmed === '' || isPlausibleEmail(trimmed) ? undefined : EMAIL_MESSAGE;
+  };
+  // Submit checks the phone and email as typed. The first invalid field takes focus, the phone before the email.
+  const checkOnSubmit = (event: FormEvent<HTMLFormElement>) => {
+    if (blockSave) {
+      event.preventDefault();
+
+      return;
+    }
+    const data = new FormData(event.currentTarget);
+    const phoneValue = data.get('phone');
+    const next = {
+      phone: phoneProblem(typeof phoneValue === 'string' ? phoneValue : ''),
+      email: emailProblem(email),
+    };
+    setProblems(next);
+    if (next.phone || next.email) {
+      event.preventDefault();
+      const first = event.currentTarget.elements.namedItem(next.phone ? 'phone' : 'email');
+      if (first instanceof HTMLElement) {
+        first.focus();
+      }
+    }
+  };
   // One email for the person. A family role names it Household email; the label is the only difference.
   const emailLabel = hasFamilyRole ? 'Household email' : 'Email';
   // Editing a saved set that is not allowed (legacy data) blocks the save until the roles are changed to an allowed set.
@@ -138,8 +175,14 @@ export function PersonForm(props: PersonFormProps) {
           type="email"
           name="email"
           value={email}
-          onChange={setEmail}
-          error={err('email')}
+          onChange={value => {
+            setEmail(value);
+            setProblems(current => ({ ...current, email: undefined }));
+          }}
+          error={problems.email ?? err('email')}
+          inputProps={{
+            onBlur: event => setProblems(current => ({ ...current, email: emailProblem(event.currentTarget.value) })),
+          }}
           autoComplete="off"
           maxLength={254}
         />
@@ -164,8 +207,11 @@ export function PersonForm(props: PersonFormProps) {
       type="tel"
       name="phone"
       defaultValue={person?.phone ?? undefined}
-      error={err('phone')}
+      error={problems.phone ?? err('phone')}
       isRequired={phoneRequired}
+      inputProps={{
+        onBlur: event => setProblems(current => ({ ...current, phone: phoneProblem(event.currentTarget.value) })),
+      }}
       autoComplete="off"
       maxLength={32}
     />
@@ -191,18 +237,19 @@ export function PersonForm(props: PersonFormProps) {
       ref={formRef}
       id={formId}
       action={formAction}
+      // The browser's own required bubble is off: the form's submit check and the server show each message under its field.
+      noValidate
       // A pop-up's footer submits by formId, so the block is enforced here as well as on the in-page button.
-      onSubmit={event => {
-        if (blockSave) {
-          event.preventDefault();
-        }
-      }}
+      onSubmit={checkOnSubmit}
       className={`${inDialog ? '' : 'panel '}people-form person-form`}
     >
       {person && <HiddenField name="id" value={person.id} />}
 
       <fieldset className="plain person-section buxa:border-0 buxa:p-0 buxa:m-0 buxa:min-w-0 buxa:grid buxa:gap-[var(--s4)]">
-        <legend className="person-legend">{camper ? 'Camper details' : 'Person details'}</legend>
+        {/* The heading is for a camper only. Other roles keep the group name for screen readers, with no visible heading. */}
+        <legend className={camper ? 'person-legend' : 'person-legend sr-only'}>
+          {camper ? 'Camper details' : 'Person details'}
+        </legend>
         <div className="people-form-grid">
           <TextField
             label="First name"
@@ -224,17 +271,10 @@ export function PersonForm(props: PersonFormProps) {
             maxLength={80}
           />
         </div>
-        {camper ? (
-          <div className="form-pair">
-            {dateOfBirthField}
-            {phoneField}
-          </div>
-        ) : (
-          <>
-            {dateOfBirthField}
-            {!showParent && phoneField}
-          </>
-        )}
+        <div className="form-pair">
+          {dateOfBirthField}
+          {phoneField}
+        </div>
       </fieldset>
 
       <PersonRoles
@@ -254,7 +294,6 @@ export function PersonForm(props: PersonFormProps) {
             a household that already has one.
           </p>
           {emailRow}
-          {!camper && phoneField}
           <PersonHouseholdFields
             household={household}
             choices={choices}

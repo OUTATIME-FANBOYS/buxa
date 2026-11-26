@@ -7,6 +7,7 @@ import {
   PHONE_MESSAGE,
   PatchEmailSchema,
   PatchPhoneSchema,
+  PersonPhoneSchema,
   isPlausiblePhone,
 } from './contact';
 
@@ -145,6 +146,9 @@ export const NewPersonInputSchema = z.object({
   emergencyContact: EmergencyContactInputSchema.optional(),
 });
 export type NewPersonInput = z.infer<typeof NewPersonInputSchema>;
+
+/** The Add person form's input: the same fields, with a phone number required (every person added has one). */
+export const NewPersonFormSchema = NewPersonInputSchema.extend({ phone: PersonPhoneSchema });
 
 export const PersonPatchInputSchema = z.object({
   givenName: Name.optional(),

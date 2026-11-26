@@ -71,10 +71,9 @@ describe('PersonForm: sections follow the roles', () => {
       expect(h.label('Date of birth')).toBeDefined();
     });
 
-    it('shows the Parent or guardian section, with the household email, phone and household', () => {
+    it('shows the Parent or guardian section, with the household email and household', () => {
       expect(h.legend('Parent or guardian')).toBeDefined();
       expect(h.label('Household email')).toBeDefined();
-      expect(h.label('Phone')).toBeDefined();
       expect(h.legend('Household')).toBeDefined();
     });
 
@@ -110,7 +109,7 @@ describe('PersonForm: sections follow the roles', () => {
   });
 
   describe('add a staff-only role', () => {
-    it('hides the parent section and the emergency contact, and keeps Email and Phone in Person details', () => {
+    it('hides the parent section and the emergency contact, and keeps Email and Phone on the form', () => {
       renderAdd();
       click('participant');
       expect(h.legend('Parent or guardian')).toBeUndefined();
@@ -120,6 +119,24 @@ describe('PersonForm: sections follow the roles', () => {
       expect(h.label('Phone')).toBeDefined();
       expect(h.label('Email')).toBeDefined();
       expect(h.input('emergencyContactName')).toBeNull();
+    });
+
+    it('keeps the Person details group for screen readers only, and puts date of birth and phone side by side', () => {
+      renderAdd();
+      click('participant');
+      const legend = h.legend('Person details');
+      expect(legend?.classList.contains('sr-only')).toBe(true);
+      expect(legend?.classList.contains('person-legend')).toBe(true);
+      const pair = host.querySelector('.form-pair');
+      expect(pair?.querySelector('input[name="dateOfBirth"]')).not.toBeNull();
+      expect(pair?.querySelector('input[name="phone"]')).not.toBeNull();
+    });
+
+    it('marks the phone as required, and the date of birth as optional for a staff role', () => {
+      renderAdd();
+      click('participant');
+      expect(h.input('phone')?.getAttribute('aria-required')).toBe('true');
+      expect(h.input('dateOfBirth')?.getAttribute('aria-required')).toBeNull();
     });
 
     it('hides the parent section for an instructor as well', () => {
@@ -137,6 +154,15 @@ describe('PersonForm: sections follow the roles', () => {
       expect(h.legend('Parent or guardian')).toBeDefined();
       expect(h.legend('Person details')).toBeDefined();
       expect(h.legend('Emergency contact')).toBeUndefined();
+    });
+
+    it('keeps date of birth and phone in one row above the parent section', () => {
+      renderAdd();
+      click('guardian');
+      const pair = host.querySelector('.form-pair');
+      expect(pair?.querySelector('input[name="phone"]')).not.toBeNull();
+      expect(pair?.querySelector('input[name="dateOfBirth"]')).not.toBeNull();
+      expect(h.input('phone')?.getAttribute('aria-required')).toBe('true');
     });
   });
 
