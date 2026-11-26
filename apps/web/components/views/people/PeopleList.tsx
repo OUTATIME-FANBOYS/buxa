@@ -3,8 +3,8 @@ import { can, isTeachingView } from '@buxa/domain';
 import { Empty } from '@/components/components';
 import { loadHouseholdList, loadPeoplePageOrForbidden } from '@buxa/server/composers/index.server';
 import { currentActor } from '@buxa/server/composers/index.server';
-import { readListParams, toHouseholdChoices } from '@buxa/shared';
-import { PeoplePagination } from '@/components/components/people';
+import { readListParams, resolvePeopleTab, toHouseholdChoices } from '@buxa/shared';
+import { HouseholdDirectory, PeoplePagination, PeopleTabs } from '@/components/components/people';
 import { PeopleSearch } from '@/components/components/people';
 import { PeopleTable } from '@/components/components/people';
 import { AddPersonButton } from '@/components/components/people/forms';
@@ -13,20 +13,23 @@ import type { ListParams } from '@buxa/shared';
 
 const countLine = (n: number) => (n === 1 ? '1 person' : `${n} people`);
 
-/** The people list with search, role filter and pages. Viewers see names, roles and status; only staff and above see the add button. */
+/**
+ * The People page, on two tabs (`?tab=people|households`). People is the list with search, role filter and pages; viewers see names,
+ * roles and status, and only staff and above see the add button. Households lists every household with its members; it has no add
+ * button, and each household is edited on its own page.
+ */
 export async function PeopleList({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
   const actor = await currentActor();
   // The teaching view has no People list: the sidebar hides it, and the address does not open it either.
   if (!actor || isTeachingView(actor)) {
     notFound();
   }
+  const tab = resolvePeopleTab(searchParams.tab);
   const params = readListParams(searchParams);
   const canAdd = can(actor, 'people:create');
   const canEdit = can(actor, 'people:update');
-  const result = await listFor(actor, params);
-  const filtered = params.q !== '' || params.role !== '';
-  // The household pickers in the Add and Edit pop-ups. Only staff who can add or edit people load the list.
-  const households = canAdd || canEdit ? toHouseholdChoices(await loadHouseholdList(actor)) : [];
+  // The header button and the Add pop-up's household picker only appear on the People tab.
+  const households = tab === 'people' && (canAdd || canEdit) ? toHouseholdChoices(await loadHouseholdList(actor)) : [];
 
   return (
     <div className="page">
@@ -35,12 +38,40 @@ export async function PeopleList({ searchParams }: { searchParams: Record<string
           <h1>People</h1>
           <p className="muted">Children, families, instructors and staff who belong to the camp.</p>
         </div>
-        {canAdd && (
+        {canAdd && tab === 'people' && (
           <div className="page-actions">
             <AddPersonButton households={households} />
           </div>
         )}
       </header>
+      <PeopleTabs active={tab} />
+      {tab === 'households' ? (
+        <HouseholdsTab actor={actor} query={params.q} />
+      ) : (
+        <PeopleListTab actor={actor} params={params} canAdd={canAdd} canEdit={canEdit} households={households} />
+      )}
+    </div>
+  );
+}
+
+async function PeopleListTab({
+  actor,
+  params,
+  canAdd,
+  canEdit,
+  households,
+}: {
+  actor: Actor;
+  params: ListParams;
+  canAdd: boolean;
+  canEdit: boolean;
+  households: ReturnType<typeof toHouseholdChoices>;
+}) {
+  const result = await listFor(actor, params);
+  const filtered = params.q !== '' || params.role !== '';
+
+  return (
+    <>
       <PeopleSearch params={params} />
       {result === 'forbidden' ? (
         <Empty
@@ -87,8 +118,23 @@ export async function PeopleList({ searchParams }: { searchParams: Record<string
           )}
         </div>
       )}
-    </div>
+    </>
   );
+}
+
+async function HouseholdsTab({ actor, query }: { actor: Actor; query: string }) {
+  if (!can(actor, 'people:read')) {
+    return (
+      <Empty
+        icon="alert"
+        title="You cannot see households"
+        body="Ask an admin if you need to see the households in this camp."
+      />
+    );
+  }
+  const households = await loadHouseholdList(actor);
+
+  return <HouseholdDirectory households={households} query={query} />;
 }
 
 async function listFor(actor: Actor, params: ListParams) {

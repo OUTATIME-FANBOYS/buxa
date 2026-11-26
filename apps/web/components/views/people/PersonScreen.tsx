@@ -4,7 +4,7 @@ import { ROUTES } from '@buxa/shared/config/routes';
 import { displayName } from '@buxa/shared';
 import { can, CAMP_ROLE_LABELS, type Actor, type CampRole } from '@buxa/domain';
 import { campClock, loadCampProfile } from '@buxa/server/composers/index.server';
-import { loadHouseholdList, loadPersonMatches } from '@buxa/server/composers/index.server';
+import { loadHouseholdList } from '@buxa/server/composers/index.server';
 import { loadVisitHistory, loadSessions } from '@buxa/server/composers/index.server';
 import { ArchivePersonButton, EditPersonButton } from '@/components/components/people/forms';
 import { AttendanceHistory } from '@/components/components/people';
@@ -16,24 +16,16 @@ import { isFamilyRole } from '@/components/components/people/forms/roleGroups';
 import { MembershipsPanel } from '@/components/components/people';
 import { PersonHeader } from '@/components/components/people';
 import { currentActor } from '@buxa/server/composers/index.server';
-import { readListParams, toHouseholdChoices } from '@buxa/shared';
+import { toHouseholdChoices } from '@buxa/shared';
 import { loadPerson } from '@buxa/server/composers/index.server';
 
 /**
  * One person. What is shown follows the role: contact details come back null for viewers (and are then left out), link and
  * membership and badge controls appear only where the role allows them. The server still decides every change.
- * `searchParams.q` is the name search for someone to link into a household (staff only; the service caps the matches).
+ * The household card only links to each household's page; the edits to a household are made there.
  * `editOpen` opens the Edit person pop-up on arrival (the /edit address).
  */
-export async function PersonScreen({
-  id,
-  searchParams = {},
-  editOpen = false,
-}: {
-  id: string;
-  searchParams?: Record<string, string | string[] | undefined>;
-  editOpen?: boolean;
-}) {
+export async function PersonScreen({ id, editOpen = false }: { id: string; editOpen?: boolean }) {
   const actor = await currentActor();
   if (!actor) {
     notFound();
@@ -43,23 +35,18 @@ export async function PersonScreen({
     notFound();
   }
 
-  const { canUpdate, canCreate, canManage, canBadge, canArchive, canSeeVisits, canAuthorisePickup } =
-    permissionsFor(actor);
-  const { q } = readListParams(searchParams);
+  const { canUpdate, canManage, canBadge, canArchive, canSeeVisits } = permissionsFor(actor);
   // The camp's own zone (orgs.timezone) is what every time on this page is shown in. Every role may read the camp.
-  const [visits, households, matches, camp, clock, sessions] = await Promise.all([
+  const [visits, households, camp, clock, sessions] = await Promise.all([
     canSeeVisits ? loadVisitHistory(actor, person.id) : Promise.resolve([]),
+    // The household choices for the Edit person pop-up only; the household card itself is links.
     canUpdate ? loadHouseholdList(actor) : Promise.resolve([]),
-    canUpdate && q !== '' ? loadPersonMatches(actor, q) : Promise.resolve([]),
     loadCampProfile(actor),
     campClock(actor),
     // The camp's sessions for the Add membership pop-up. A viewer, or anyone who may not read sessions, gets none.
     canManage ? loadSessions(actor) : Promise.resolve({ ok: true as const, value: [] }),
   ]);
   const roleLabel = person.roles.map((role: CampRole) => CAMP_ROLE_LABELS[role]).join(', ');
-  const linkable = matches
-    .filter(p => p.id !== person.id)
-    .map(p => ({ id: p.id, name: `${p.givenName} ${p.familyName}` }));
 
   return (
     <div className="page">
@@ -108,20 +95,8 @@ export async function PersonScreen({
             clockFormat={clock.clockFormat}
           />
         )}
-        {person.roles.some(isFamilyRole) && (
-          <HouseholdPanel
-            personId={person.id}
-            households={person.households}
-            householdOptions={households.map(h => ({ id: h.id, name: h.name }))}
-            canUpdate={canUpdate}
-            canCreate={canCreate}
-            canAuthorisePickup={canAuthorisePickup}
-            query={q}
-            linkable={linkable}
-          >
-            {person.roles.includes('camper') && <EmergencyContactPanel person={person} embedded />}
-          </HouseholdPanel>
-        )}
+        {person.roles.some(isFamilyRole) && <HouseholdPanel personId={person.id} households={person.households} />}
+        {person.roles.includes('camper') && <EmergencyContactPanel person={person} />}
         {person.hasActiveBadge !== null && (
           <BadgePanel
             personId={person.id}
@@ -145,11 +120,9 @@ export async function PersonScreen({
 function permissionsFor(actor: Actor) {
   return {
     canUpdate: can(actor, 'people:update'),
-    canCreate: can(actor, 'people:create'),
     canManage: can(actor, 'memberships:manage'),
     canBadge: can(actor, 'credentials:manage'),
     canArchive: can(actor, 'people:delete'),
     canSeeVisits: can(actor, 'attendance:record'),
-    canAuthorisePickup: can(actor, 'people:authorise_pickup'),
   };
 }
