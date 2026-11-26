@@ -1,8 +1,10 @@
 import { z } from 'zod';
+import { PersonPhoneSchema } from './contact';
+import { RequiredDateOfBirthSchema } from './people';
 
 /**
- * Teacher invites. The phone is optional: an empty value means none (stored as null). Otherwise it is 3 to 32 characters,
- * the same rule the database applies to a phone.
+ * Teacher invites. The phone and the date of birth are required, with the same messages as the person form: the invite is
+ * accepted into a person row built from them (buxa_accept_invite), so an invite without either cannot be accepted.
  */
 const PhoneField = z
   .string()
@@ -18,7 +20,8 @@ export const InviteTeacherInputSchema = z.object({
     .toLowerCase()
     .email('Enter an email address')
     .max(254, 'Keep the email under 254 characters'),
-  phone: PhoneField,
+  phone: PersonPhoneSchema,
+  dateOfBirth: RequiredDateOfBirthSchema,
 });
 export type InviteTeacherInput = z.infer<typeof InviteTeacherInputSchema>;
 
