@@ -14,7 +14,7 @@ const START = new Date('2027-07-01T09:00:00Z');
 const actor = (role: Role | 'teacher', userId = `user-${role}`): Actor =>
   role === 'teacher' ? { userId, orgId: ORG, role: 'viewer', instructor: true } : { userId, orgId: ORG, role };
 const ann = { userId: 'user-ann', email: 'ann@example.test' };
-const invitee = { name: 'Ann Lee', email: 'ann@example.test', phone: '+61 400 000 000' };
+const invitee = { name: 'Ann Lee', email: 'ann@example.test', phone: '+61 400 000 000', dateOfBirth: '1985-06-15' };
 
 function setup() {
   let now = START;
@@ -85,13 +85,23 @@ describe('teacher invites: what is stored', () => {
     expect(JSON.stringify(repo.audit)).not.toContain(hashInviteToken(issued.token).toString('hex'));
   });
 
-  it('stores the name and phone the inviter typed, and an empty phone as none', async () => {
+  it('stores the name, phone and date of birth the inviter typed', async () => {
     const { service } = setup();
-    const withPhone = await service.createTeacherInvite(actor('staff'), invitee);
-    const withoutPhone = await service.createTeacherInvite(actor('staff'), { ...invitee, phone: '' });
+    const issued = await service.createTeacherInvite(actor('staff'), invitee);
 
-    expect(withPhone.invite).toMatchObject({ name: 'Ann Lee', phone: '+61 400 000 000' });
-    expect(withoutPhone.invite.phone).toBeNull();
+    expect(issued.invite).toMatchObject({ name: 'Ann Lee', phone: '+61 400 000 000', dateOfBirth: '1985-06-15' });
+  });
+
+  it('refuses a missing or invalid phone or date of birth with a field message, and stores nothing', async () => {
+    const { service, repo } = setup();
+    const noPhone = await refusalOf(service.createTeacherInvite(actor('staff'), { ...invitee, phone: '' }));
+    const noBirth = await refusalOf(service.createTeacherInvite(actor('staff'), { ...invitee, dateOfBirth: '' }));
+    const badBirth = await refusalOf(service.createTeacherInvite(actor('staff'), { ...invitee, dateOfBirth: 'soon' }));
+
+    expect(noPhone).toEqual({ status: 400, message: 'Enter a phone number with at least 7 digits.' });
+    expect(noBirth).toEqual({ status: 400, message: 'Enter the date of birth.' });
+    expect(badBirth).toEqual({ status: 400, message: 'Use a real date (YYYY-MM-DD).' });
+    expect(repo.invites).toHaveLength(0);
   });
 
   it('audits member.invite with the role and no token, name, email or phone', async () => {
