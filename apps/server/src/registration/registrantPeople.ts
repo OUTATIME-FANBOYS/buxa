@@ -26,6 +26,7 @@ export interface ParentSave {
   familyName: string;
   email: string | null;
   phone: string;
+  dateOfBirth: string;
 }
 
 /**
@@ -56,7 +57,12 @@ export async function readCamper(
   let parent: CamperRecord['parent'] = null;
   if (guardian) {
     const found = await people.get(actor, guardian.personId);
-    parent = { name: `${found.givenName} ${found.familyName}`, email: found.email, phone: found.phone };
+    parent = {
+      name: `${found.givenName} ${found.familyName}`,
+      email: found.email,
+      phone: found.phone,
+      dateOfBirth: found.dateOfBirth,
+    };
   }
 
   return {
@@ -87,6 +93,7 @@ export async function saveParent(
       familyName: parent.familyName,
       email: parent.email,
       phone: parent.phone,
+      dateOfBirth: parent.dateOfBirth,
     });
 
     return;
@@ -100,7 +107,24 @@ export async function saveParent(
     roles: ['guardian'],
     email: parent.email ?? undefined,
     phone: parent.phone,
+    dateOfBirth: parent.dateOfBirth,
     householdId: camper.householdId,
     relationship: 'Parent',
   });
+}
+
+/**
+ * Saves the date of birth of a parent who is on file without one (their phone is on the record, so they are not saved again). Used
+ * only after the registration is recorded. Needs people:update.
+ */
+export async function saveParentDateOfBirth(
+  people: RegistrantPeople,
+  actor: Actor,
+  camper: CamperOnFile,
+  dateOfBirth: string,
+): Promise<void> {
+  if (camper.guardianId === null) {
+    throw new Error('A camper with no guardian on file cannot save a parent date of birth.');
+  }
+  await people.update(actor, camper.guardianId, { dateOfBirth });
 }

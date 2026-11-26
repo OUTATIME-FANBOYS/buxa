@@ -48,7 +48,7 @@ const SERIES: RegistrationSeries = {
 };
 const SESSIONS: RegisterSession[] = [{ id: 's-1', name: 'Art', series: [SERIES] }];
 
-const ON_FILE = { name: 'Byron Lovelace', email: 'byron@example.test', phone: '555-0100' };
+const ON_FILE = { name: 'Byron Lovelace', email: 'byron@example.test', phone: '555-0100', dateOfBirth: '1979-11-02' };
 
 describe('RegisterForm: the camper and the parent come from the person record', () => {
   let root: Root;
@@ -165,7 +165,11 @@ describe('RegisterForm: the camper and the parent come from the person record', 
   });
 
   it('keeps the camper details read only even when no parent is on file', () => {
-    renderWith([camper('c-ben', 'Ben', 'Carter', { parent: { name: 'Mira Carter', email: null, phone: null } })]);
+    renderWith([
+      camper('c-ben', 'Ben', 'Carter', {
+        parent: { name: 'Mira Carter', email: null, phone: null, dateOfBirth: null },
+      }),
+    ]);
     chooseChild('Ben Carter');
 
     expect(input('standard.camperFirstName').readOnly).toBe(true);
@@ -183,14 +187,29 @@ describe('RegisterForm: the camper and the parent come from the person record', 
     expect(host.querySelector('input[name="standard.emergencyContactPhone"]')).toBeNull();
   });
 
-  it('shows date of birth and phone side by side, both required', () => {
+  it("shows the parent's date of birth and phone side by side, both required", () => {
     renderWith([camper('c-ada', 'Ada', 'Lovelace', { parent: ON_FILE })]);
 
     const pair = host.querySelector('.form-pair');
     expect(pair).not.toBeNull();
-    expect(pair?.querySelector('input[name="standard.camperBirthDate"]')).not.toBeNull();
+    expect(pair?.querySelector('input[name="standard.guardianDateOfBirth"]')).not.toBeNull();
     expect(pair?.querySelector('input[name="standard.guardianPhone"]')).not.toBeNull();
-    expect(input('standard.camperBirthDate').getAttribute('aria-required')).toBe('true');
+    expect(input('standard.guardianDateOfBirth').getAttribute('aria-required')).toBe('true');
     expect(input('standard.guardianPhone').getAttribute('aria-required')).toBe('true');
+  });
+
+  it('fills the parent date of birth from the record and makes it read only when it is on file', () => {
+    renderWith([camper('c-ada', 'Ada', 'Lovelace', { parent: ON_FILE })]);
+    chooseChild('Ada Lovelace');
+    expect(input('standard.guardianDateOfBirth').value).toBe('1979-11-02');
+    expect(input('standard.guardianDateOfBirth').readOnly).toBe(true);
+  });
+
+  it('asks for the parent date of birth when the parent is on file without one', () => {
+    renderWith([camper('c-ada', 'Ada', 'Lovelace', { parent: { ...ON_FILE, dateOfBirth: null } })]);
+    chooseChild('Ada Lovelace');
+    expect(input('standard.guardianDateOfBirth').readOnly).toBe(false);
+    expect(input('standard.guardianDateOfBirth').getAttribute('aria-required')).toBe('true');
+    expect(input('standard.guardianPhone').readOnly).toBe(true);
   });
 });

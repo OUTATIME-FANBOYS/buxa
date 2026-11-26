@@ -5,7 +5,13 @@ import { createCamp, thrown } from './support';
 async function camperWithPerson(name = 'Ben') {
   const camp = await createCamp();
   const admin = camp.actor('admin');
-  const person = await camp.people.create(admin, { givenName: name, familyName: 'Stone', roles: ['participant'] });
+  const person = await camp.people.create(admin, {
+    dateOfBirth: '1985-06-15',
+    phone: '+1 555 0100',
+    givenName: name,
+    familyName: 'Stone',
+    roles: ['participant'],
+  });
 
   return { camp, admin, person };
 }

@@ -136,6 +136,8 @@ export async function thrown(work: () => Promise<unknown>): Promise<{ statusCode
  */
 export async function linkTeacher(camp: Camp, teacherUserId: string): Promise<string> {
   const person = await camp.people.create(camp.actor('admin'), {
+    dateOfBirth: '1985-06-15',
+    phone: '+1 555 0100',
     givenName: 'Tess',
     familyName: 'Teacher',
     roles: ['instructor'],

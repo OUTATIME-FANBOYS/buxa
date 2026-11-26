@@ -24,6 +24,8 @@ async function build(): Promise<{
   const admin = camp.actor('admin');
   // The viewer's login is viewer@example.org (see createCamp). Its person is the guardian of the Viewer family.
   const guardian = await camp.people.create(admin, {
+    dateOfBirth: '1985-06-15',
+    phone: '+1 555 0100',
     givenName: 'Vee',
     familyName: 'Viewer',
     roles: ['guardian'],
@@ -33,6 +35,7 @@ async function build(): Promise<{
   });
   const householdId = (await camp.people.get(admin, guardian.id)).households[0].id;
   const kim = await camp.people.create(admin, {
+    phone: '+1 555 0100',
     givenName: 'Kim',
     familyName: 'Viewer',
     roles: ['camper'],
@@ -42,6 +45,8 @@ async function build(): Promise<{
   });
   // Another family, with its own guardian and no link to Kim.
   await camp.people.create(admin, {
+    dateOfBirth: '1985-06-15',
+    phone: '+1 555 0100',
     givenName: 'Olu',
     familyName: 'Other',
     roles: ['guardian'],
@@ -161,6 +166,8 @@ describe('emergency contact: creation and the input rule', () => {
   it('saves a contact given when the person is added', async () => {
     const { camp, admin } = await build();
     const person = await camp.people.create(admin, {
+      dateOfBirth: '1985-06-15',
+      phone: '+1 555 0100',
       givenName: 'Zed',
       familyName: 'Lee',
       roles: ['participant'],
@@ -175,6 +182,8 @@ describe('emergency contact: creation and the input rule', () => {
       givenName: 'Zed',
       familyName: 'Lee',
       roles: ['participant'],
+      dateOfBirth: '1985-06-15',
+      phone: '+1 555 0100',
       emergencyContact: { name: '', phone: '', relationship: '' },
     });
     expect(person.emergencyContact).toBeNull();

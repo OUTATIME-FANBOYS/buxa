@@ -15,6 +15,8 @@ async function build(timeZone = 'UTC') {
   const camp: Camp = await createCamp(timeZone, '2027-07-10T09:00:00Z');
   const admin = camp.actor('admin');
   const ana = await camp.people.create(admin, {
+    dateOfBirth: '1985-06-15',
+    phone: '+1 555 0100',
     givenName: 'Ana',
     familyName: 'Lee',
     roles: ['guardian'],
@@ -30,6 +32,8 @@ async function build(timeZone = 'UTC') {
     canPickup: true,
   });
   const gus = await camp.people.create(admin, {
+    dateOfBirth: '1985-06-15',
+    phone: '+1 555 0100',
     givenName: 'Gus',
     familyName: 'Lee',
     roles: ['guardian'],
@@ -37,6 +41,7 @@ async function build(timeZone = 'UTC') {
     relationship: 'Father',
   });
   const kim = await camp.people.create(admin, {
+    phone: '+1 555 0100',
     givenName: 'Kim',
     familyName: 'Lee',
     roles: ['camper'],
@@ -45,12 +50,19 @@ async function build(timeZone = 'UTC') {
     dateOfBirth: '2015-03-01',
   });
   const ben = await camp.people.create(admin, {
+    phone: '+1 555 0100',
     givenName: 'Ben',
     familyName: 'Stone',
     roles: ['participant'],
     dateOfBirth: '1990-04-02',
   });
-  const zed = await camp.people.create(admin, { givenName: 'Zed', familyName: 'Zero', roles: ['participant'] });
+  const zed = await camp.people.create(admin, {
+    dateOfBirth: '1985-06-15',
+    phone: '+1 555 0100',
+    givenName: 'Zed',
+    familyName: 'Zero',
+    roles: ['participant'],
+  });
   for (const person of [ana, gus, kim, ben]) {
     await camp.memberships.add(admin, {
       personId: person.id,
@@ -301,6 +313,8 @@ describe('AttendanceService on-site, log, history and export', () => {
   it('exports CSV with a header, CRLF rows, no byte-order mark, newest first, and neutralised formulas', async () => {
     const { camp, admin, staff, ids } = await build();
     const formula = await camp.people.create(admin, {
+      dateOfBirth: '1985-06-15',
+      phone: '+1 555 0100',
       givenName: '=1+1, "quoted"',
       familyName: 'Test',
       roles: ['participant'],

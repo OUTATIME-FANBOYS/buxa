@@ -10,6 +10,8 @@ async function family() {
   const camp = await createCamp();
   const admin = camp.actor('admin');
   const ana = await camp.people.create(admin, {
+    dateOfBirth: '1985-06-15',
+    phone: '+1 555 0100',
     givenName: 'Ana',
     familyName: 'Lee',
     roles: ['guardian'],
@@ -18,6 +20,7 @@ async function family() {
   });
   const householdId = (await camp.people.get(admin, ana.id)).households[0].id;
   const kim = await camp.people.create(admin, {
+    phone: '+1 555 0100',
     givenName: 'Kim',
     familyName: 'Lee',
     roles: ['camper'],
@@ -26,6 +29,8 @@ async function family() {
     dateOfBirth: '2015-03-01',
   });
   const gus = await camp.people.create(admin, {
+    dateOfBirth: '1985-06-15',
+    phone: '+1 555 0100',
     givenName: 'Gus',
     familyName: 'Stone',
     roles: ['guardian'],

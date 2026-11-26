@@ -14,6 +14,7 @@ const standard = {
   camperLastName: 'Lovelace',
   camperBirthDate: '2014-03-09',
   guardianName: 'Byron Lovelace',
+  guardianDateOfBirth: '1979-11-02',
   guardianPhone: '555-0100',
   emergencyContactName: 'Mary Somerville',
   emergencyContactPhone: '555-0111',

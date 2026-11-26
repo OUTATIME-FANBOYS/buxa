@@ -192,6 +192,8 @@ export function RegisterForm({
   const leadKey = lead?.id ?? 'none';
   const parent = lead?.parent ?? null;
   const parentFilled = parentOnFile(parent);
+  // The parent's date of birth is read only once it is on file; a parent on file without one asks for it.
+  const parentBirthOnFile = parentFilled && parent?.dateOfBirth != null;
   // The session a family's download is for: the session of the first series they chose, else the form's first session.
   const downloadSessionId =
     sessions.find(s => s.series.some(x => picks.some(p => p.classId === x.anchorClassId)))?.id ??
@@ -330,28 +332,14 @@ export function RegisterForm({
             autoComplete="off"
           />
         </div>
-        <div className="form-pair">
-          <DatePicker
-            label="Date of birth"
-            name="standard.camperBirthDate"
-            value={lead?.dateOfBirth ?? ''}
-            isReadOnly
-            isRequired
-            error={err('standard.camperBirthDate')}
-          />
-          <TextField
-            label="Phone"
-            type="tel"
-            name="standard.guardianPhone"
-            value={parentFilled ? (parent?.phone ?? '') : undefined}
-            defaultValue={parentFilled ? undefined : (parent?.phone ?? '')}
-            isReadOnly={parentFilled}
-            isRequired
-            error={err('standard.guardianPhone')}
-            maxLength={32}
-            autoComplete="off"
-          />
-        </div>
+        <DatePicker
+          label="Date of birth"
+          name="standard.camperBirthDate"
+          value={lead?.dateOfBirth ?? ''}
+          isReadOnly
+          isRequired
+          error={err('standard.camperBirthDate')}
+        />
       </section>
 
       {/* The parent or guardian is on the child's household. When none is on file, these are typed and saved to the household. */}
@@ -375,6 +363,30 @@ export function RegisterForm({
           maxLength={120}
           autoComplete="off"
         />
+        {/* Date of birth and phone sit side by side. A parent on file with no date of birth gets the date typed here, and it is saved. */}
+        <div className="form-pair">
+          <DatePicker
+            label="Date of birth"
+            name="standard.guardianDateOfBirth"
+            value={parentBirthOnFile ? (parent?.dateOfBirth ?? '') : undefined}
+            defaultValue={parentBirthOnFile ? undefined : (parent?.dateOfBirth ?? '')}
+            isReadOnly={parentBirthOnFile}
+            isRequired
+            error={err('standard.guardianDateOfBirth')}
+          />
+          <TextField
+            label="Phone"
+            type="tel"
+            name="standard.guardianPhone"
+            value={parentFilled ? (parent?.phone ?? '') : undefined}
+            defaultValue={parentFilled ? undefined : (parent?.phone ?? '')}
+            isReadOnly={parentFilled}
+            isRequired
+            error={err('standard.guardianPhone')}
+            maxLength={32}
+            autoComplete="off"
+          />
+        </div>
         <TextField
           label="Email"
           type="email"
