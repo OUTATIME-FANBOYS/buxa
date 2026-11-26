@@ -27,6 +27,9 @@ export async function PeopleList({ searchParams }: { searchParams: Record<string
   const filtered = params.q !== '' || params.role !== '';
   // The household pickers in the Add and Edit pop-ups. Only staff who can add or edit people load the list.
   const households = canAdd || canEdit ? toHouseholdChoices(await loadHouseholdList(actor)) : [];
+  // ?add=person opens the Add person pop-up here (the link from a registration form); ?household= joins it to that family.
+  const addOpen = canAdd && searchParams.add === 'person';
+  const householdId = typeof searchParams.household === 'string' ? searchParams.household : undefined;
 
   return (
     <div className="page">
@@ -37,7 +40,7 @@ export async function PeopleList({ searchParams }: { searchParams: Record<string
         </div>
         {canAdd && (
           <div className="page-actions">
-            <AddPersonButton households={households} />
+            <AddPersonButton households={households} initialOpen={addOpen} householdId={householdId} />
           </div>
         )}
       </header>
@@ -62,7 +65,7 @@ export async function PeopleList({ searchParams }: { searchParams: Record<string
                     ? 'Add the first child, parent or staff member to start the camp list.'
                     : 'Nobody has been added to the camp yet.'
                 }
-                action={canAdd && <AddPersonButton households={households} />}
+                action={canAdd && <AddPersonButton households={households} householdId={householdId} />}
               />
             )
           ) : (

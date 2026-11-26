@@ -218,14 +218,14 @@ describe('RegisterForm: children as tags and search', () => {
   });
 
   it('keeps Add a person visible and linked to the add-person page, with or without a search', () => {
-    expect(addPersonLink().getAttribute('href')).toBe(ROUTES.newPerson);
+    expect(addPersonLink().getAttribute('href')).toBe(ROUTES.addPerson);
     expect(addPersonLink().getAttribute('target')).toBe('_blank');
 
     typeInSearch('zzz');
-    expect(addPersonLink().getAttribute('href')).toBe(ROUTES.newPerson);
+    expect(addPersonLink().getAttribute('href')).toBe(ROUTES.addPerson);
 
     chooseChild('Ada Lovelace');
-    expect(addPersonLink().getAttribute('href')).toBe(ROUTES.newPerson);
+    expect(addPersonLink().getAttribute('href')).toBe(ROUTES.addPerson);
   });
 
   it('asks for a child first: the required message shows when none is chosen and the form is sent', async () => {

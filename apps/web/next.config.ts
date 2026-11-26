@@ -42,6 +42,8 @@ const config: NextConfig = {
           destination: '/camp/sessions/:sessionId/classes/new',
           permanent: true,
         },
+        // The Add person page is now a pop-up on the People page. Old links open that pop-up.
+        { source: '/camp/people/new', destination: '/camp/people?add=person', permanent: true },
         { source: '/camp/classes', destination: '/camp/sessions', permanent: true },
         { source: '/camp/classes/:path*', destination: '/camp/sessions/:path*', permanent: true },
       ];

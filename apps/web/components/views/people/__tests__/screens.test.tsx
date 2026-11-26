@@ -32,7 +32,6 @@ vi.mock('@buxa/server/session/index', () => ({
 }));
 
 const { PeopleList } = await import('@/components/views/people');
-const { NewPerson } = await import('@/components/views/people');
 const { PersonScreen } = await import('@/components/views/people');
 const { EditPerson } = await import('@/components/views/people');
 
@@ -229,55 +228,44 @@ describe('PeopleList', () => {
   });
 });
 
-describe('NewPerson', () => {
-  it('shows the form to staff, with the roles as a labelled group', async () => {
-    const html = render(await NewPerson({}));
-    expect(html).toContain('<legend');
+describe('Add person pop-up on the People page', () => {
+  it('opens the pop-up from ?add=person, for staff', async () => {
+    const html = render(await PeopleList({ searchParams: { add: 'person' } }));
+    expect(html).toContain('person-dialog');
     expect(html).toContain('Parent or guardian');
     expect(html).toContain('Last name');
-    expect(html).not.toContain('Preferred name');
-    expect(html).toContain('Add person');
   });
 
-  it('says the person joins the household when it comes from a guardian page', async () => {
-    const html = render(await NewPerson({ householdId: ID.household }));
-    expect(html).toContain('Adding to the Lee family household');
-    expect(html).not.toContain('New household name');
+  it('stays closed without the address', async () => {
+    expect(render(await PeopleList({ searchParams: {} }))).not.toContain('person-dialog');
   });
 
-  it('explains the rule for a child up front', async () => {
-    // The intro is shown in the Household section only, once a camper or guardian is chosen (see NewPersonForm tests).
-    expect(render(await NewPerson({}))).not.toContain(
-      'A child must join a household that has a parent or guardian in it.',
-    );
+  it('joins the family when opened from a guardian page (?household=), and shows no household picker', async () => {
+    const html = render(await PeopleList({ searchParams: { add: 'person', household: ID.household } }));
+    expect(html).toContain('person-dialog');
+    expect(html).not.toContain('Existing household');
   });
 
-  it('tells a viewer they cannot add people', async () => {
+  it('does not open the pop-up for a viewer', async () => {
     as('viewer');
-    const html = render(await NewPerson({}));
-    expect(html).toContain('Your role cannot add people');
+    const html = render(await PeopleList({ searchParams: { add: 'person' } }));
+    expect(html).not.toContain('person-dialog');
     expect(html).not.toContain('Add person</button>');
   });
 });
 
-describe('NewPerson household picker', () => {
+describe('Add person household picker', () => {
   const stone: Household = { id: '66666666-6666-4666-8666-666666666666', name: 'Stone family', members: [] };
 
   it('loads the camp’s households for the picker (the picker itself shows once a family role is chosen)', async () => {
     services.people.listHouseholds.mockResolvedValueOnce([household, stone]);
-    render(await NewPerson({}));
+    render(await PeopleList({ searchParams: { add: 'person' } }));
     expect(services.people.listHouseholds).toHaveBeenCalledWith({ userId: 'u1', orgId: 'o1', role: 'staff' });
-  });
-
-  it('keeps the picker out of the way when joining from a guardian page (?household=)', async () => {
-    const html = render(await NewPerson({ householdId: ID.household }));
-    expect(html).not.toContain('Existing household');
-    expect(services.people.listHouseholds).not.toHaveBeenCalled();
   });
 
   it('shows no picker when the camp has no households yet', async () => {
     services.people.listHouseholds.mockResolvedValueOnce([]);
-    const html = render(await NewPerson({}));
+    const html = render(await PeopleList({ searchParams: { add: 'person' } }));
     expect(html).not.toContain('Existing household');
   });
 });
@@ -310,7 +298,7 @@ describe('PersonScreen', () => {
     const html = render(await PersonScreen({ id: ID.ben }));
     expect(html).toContain('Guardian');
     expect(html).toContain('Can collect child');
-    expect(html).toContain(`/camp/people/new?household=${ID.household}`);
+    expect(html).toContain(`/camp/people?add=person&amp;household=${ID.household}`);
   });
 
   it('shows membership status in words, and the badge once issued is not re-displayed', async () => {

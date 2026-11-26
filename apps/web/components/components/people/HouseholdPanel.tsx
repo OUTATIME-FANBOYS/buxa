@@ -60,7 +60,7 @@ export function HouseholdPanel({
           </ul>
           {canCreate && (
             <p>
-              <Button href={`${ROUTES.newPerson}?household=${encodeURIComponent(household.id)}`}>
+              <Button href={`${ROUTES.addPerson}&household=${encodeURIComponent(household.id)}`}>
                 Add a child to this household
               </Button>
             </p>

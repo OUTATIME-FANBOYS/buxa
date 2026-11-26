@@ -105,7 +105,7 @@ describe('RegisterForm: sections, one asterisk, no fieldsets', () => {
       />,
     );
     expect(html).toContain('aria-label="Search children"');
-    expect(html).toContain('href="/camp/people/new"');
+    expect(html).toContain('href="/camp/people?add=person"');
     expect(html).toContain('>Add a person<');
     expect(html).not.toContain('check-group');
     expect(html).not.toContain('type="checkbox"');

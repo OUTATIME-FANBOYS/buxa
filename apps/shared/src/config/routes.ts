@@ -16,7 +16,8 @@ export const ROUTES = {
   membersManage: '/camp/members/manage',
   newCamp: '/camp/new',
   people: '/camp/people',
-  newPerson: '/camp/people/new',
+  // Opens the Add person pop-up on the People page (the page itself has no add address).
+  addPerson: '/camp/people?add=person',
   checkIn: '/camp/check-in',
   onSite: '/camp/on-site',
   attendance: '/camp/attendance',

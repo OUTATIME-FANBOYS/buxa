@@ -82,7 +82,7 @@ export function ChildPicker({
           value={query}
           onChange={setQuery}
         />
-        <Button variant="glass" icon="plus" href={ROUTES.newPerson} target="_blank" rel="noopener">
+        <Button variant="glass" icon="plus" href={ROUTES.addPerson} target="_blank" rel="noopener">
           Add a person
         </Button>
       </div>
