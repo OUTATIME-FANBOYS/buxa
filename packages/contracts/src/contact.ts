@@ -9,7 +9,7 @@ const TLD = /^[A-Za-z]{2,}$/;
 /** The emergency contact's phone shape (its own form): digits with optional spaces, brackets, dots or hyphens, a leading +. */
 const EMERGENCY_PHONE_SHAPE = /^\+?[0-9(][0-9 ()\-.]*$/;
 /** The person form's phone shape: an optional leading +, then digits, spaces, dashes and brackets. */
-const PERSON_PHONE_SHAPE = /^\+?[0-9() -]+$/;
+const PERSON_PHONE_SHAPE = /^\+?[0-9(][0-9() -]*$/;
 const PERSON_PHONE_MIN_CHARS = 7;
 const PERSON_PHONE_MIN_DIGITS = 7;
 

@@ -172,7 +172,11 @@ export function PersonForm(props: PersonFormProps) {
           }}
           error={problems.email ?? err('email')}
           inputProps={{
-            onBlur: event => setProblems(current => ({ ...current, email: emailProblem(event.currentTarget.value) })),
+            // Read the value now: React runs the state updater later, when the event's currentTarget is already cleared.
+            onBlur: event => {
+              const typed = event.currentTarget.value;
+              setProblems(current => ({ ...current, email: emailProblem(typed) }));
+            },
           }}
           autoComplete="off"
           maxLength={254}
@@ -201,7 +205,10 @@ export function PersonForm(props: PersonFormProps) {
       error={problems.phone ?? err('phone')}
       isRequired
       inputProps={{
-        onBlur: event => setProblems(current => ({ ...current, phone: phoneProblem(event.currentTarget.value) })),
+        onBlur: event => {
+          const typed = event.currentTarget.value;
+          setProblems(current => ({ ...current, phone: phoneProblem(typed) }));
+        },
       }}
       autoComplete="off"
       maxLength={32}
