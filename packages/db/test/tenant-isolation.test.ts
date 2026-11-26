@@ -138,7 +138,8 @@ describe.skipIf(!url)('tenant isolation (row-level security)', () => {
 
   it('database roles match the permissions module (no drift)', async () => {
     const r = await pool.query<Row>(`SELECT unnest(enum_range(NULL::org_role))::text AS role`);
-    expect(r.rows.map(x => x.role).sort()).toEqual([...ORG_ACCESS_KEYS].sort());
+    // The retired 'teacher' value stays in the enum (migration 0069, step 8: PostgreSQL cannot drop an enum value safely). No code writes it.
+    expect(r.rows.map(x => x.role).sort()).toEqual([...ORG_ACCESS_KEYS, 'teacher'].sort());
   });
 
   it('migrations are idempotent', async () => {
