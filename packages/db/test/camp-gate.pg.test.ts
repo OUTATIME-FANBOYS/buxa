@@ -21,6 +21,8 @@ describe.skipIf(!url)('check-in with a family email: row-level security and the 
   let household = '';
   let person = '';
   let session = '';
+  // The camp-gate check-in takes the parent session (a row of classes), which check_ins and the booked list use; enrolments take the class row (sessions).
+  let parentSession = '';
   let deviceHash = Buffer.alloc(0);
   let linkHash = Buffer.alloc(0);
   let codeHash = Buffer.alloc(0);
@@ -51,7 +53,7 @@ describe.skipIf(!url)('check-in with a family email: row-level security and the 
     ).rows[0].id;
     person = (
       await pool.query<{ id: string }>(
-        `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Mia', 'Stone') RETURNING id`,
+        `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'Mia', 'Stone', '2012-06-15', '+1 555 0100') RETURNING id`,
         [orgA],
       )
     ).rows[0].id;
@@ -64,6 +66,7 @@ describe.skipIf(!url)('check-in with a family email: row-level security and the 
         orgA,
       ])
     ).rows[0].id;
+    parentSession = classId;
     session = (
       await pool.query<{ id: string }>(
         `INSERT INTO sessions (org_id, class_id, name, capacity, location, starts_at, ends_at)
@@ -198,7 +201,7 @@ describe.skipIf(!url)('check-in with a family email: row-level security and the 
       db.query<{ outcome: string }>('SELECT buxa_gate_check_in_v1($1, $2, $3, now()) AS outcome', [
         fresh,
         person,
-        session,
+        parentSession,
       ]),
     );
     expect(first.rows[0]?.outcome).toBe('ok');
@@ -206,7 +209,7 @@ describe.skipIf(!url)('check-in with a family email: row-level security and the 
       db.query<{ outcome: string }>('SELECT buxa_gate_check_in_v1($1, $2, $3, now()) AS outcome', [
         fresh,
         person,
-        session,
+        parentSession,
       ]),
     );
     expect(second.rows[0]?.outcome).toBe('already_on_site');

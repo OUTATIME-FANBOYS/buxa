@@ -75,13 +75,15 @@ describe.skipIf(!url)('cancelled days are left out of the class lists and feeds 
         `teacher-${tag}@example.test`,
       ])
     ).rows[0].id;
-    await pool.query(`INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'teacher')`, [org, user]);
+    // A teacher is a viewer whose person holds the instructor role (migration 0069).
+    await pool.query(`INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'viewer')`, [org, user]);
     const person = (
       await pool.query<{ id: string }>(
         `INSERT INTO people (org_id, given_name, family_name, user_id, date_of_birth, phone) VALUES ($1, 'Tess', 'Teacher', $2, '1985-06-15', '+1 555 0100') RETURNING id`,
         [org, user],
       )
     ).rows[0].id;
+    await pool.query(`INSERT INTO person_roles (org_id, person_id, role) VALUES ($1, $2, 'instructor')`, [org, person]);
     for (const id of days) {
       await pool.query(`INSERT INTO session_instructors (org_id, session_id, person_id) VALUES ($1, $2, $3)`, [
         org,

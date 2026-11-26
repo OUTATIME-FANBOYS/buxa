@@ -495,6 +495,10 @@ async function migrateTeacherDb(
   const setup = new pg.Pool(poolConfigFor(tempUrl));
   setup.on('error', () => {});
   const client = await setup.connect();
+  // Notices from the migrations applied here (0051 to 0073) are collected like the ones from migrate().
+  const notices: string[] = [];
+  client.on('notice', (m: { message?: string }) => notices.push(m.message ?? ''));
+  const preApplied: string[] = [];
   const matchedEmail = `match-${tag}@teachers.test`;
   const unmatchedEmail = `nobody-${tag}@teachers.test`;
   try {
@@ -527,10 +531,10 @@ async function migrateTeacherDb(
       [orgId, matchedUser.rows[0].id, unmatchedUser.rows[0].id],
     );
     // The roster person has the login's email in another case, with spaces around it: the match ignores both.
-    await client.query(`INSERT INTO people (org_id, given_name, family_name, email) VALUES ($1, 'Mia', 'Match', $2)`, [
-      orgId,
-      `  ${matchedEmail.toUpperCase()} `,
-    ]);
+    await client.query(
+      `INSERT INTO people (org_id, given_name, family_name, email, date_of_birth, phone) VALUES ($1, 'Mia', 'Match', $2, '2012-06-15', '+1 555 0100')`,
+      [orgId, `  ${matchedEmail.toUpperCase()} `],
+    );
     await client.query(
       `INSERT INTO classes (org_id, name, default_capacity) VALUES ($1, 'Pottery', 10), ($1, 'Painting', 10)`,
       [orgId],
@@ -557,17 +561,32 @@ async function migrateTeacherDb(
         unmatchedUser.rows[0].id,
       ]);
     }
+    // 0051 to 0073 run here, not in migrate(): 0074 refuses to run while any person lacks a date of birth or phone (by design), and
+    // 0051 creates a person with only a name and email for an unmatched login. The test then stands in for the owner, who would
+    // enter real values, and migrate() applies 0074 alone. The file list is the same as migrate() would apply.
+    for (const file of readdirSync(DIR)
+      .filter(f => f.endsWith('.sql') && f.slice(0, 4) >= '0051' && f.slice(0, 4) < '0074')
+      .sort()) {
+      await client.query('BEGIN');
+      await client.query(readFileSync(join(DIR, file), 'utf8'));
+      await client.query('INSERT INTO schema_migrations(name) VALUES ($1)', [file]);
+      await client.query('COMMIT');
+      preApplied.push(file);
+    }
+    await client.query(
+      `UPDATE people SET date_of_birth = COALESCE(date_of_birth, '1985-06-15'), phone = COALESCE(phone, '+1 555 0100')
+        WHERE date_of_birth IS NULL OR phone IS NULL`,
+    );
   } finally {
     client.release();
     await setup.end();
   }
 
   // A fresh pool, so that every connection migrate() opens reports its notices here.
-  const notices: string[] = [];
   const tempPool = new pg.Pool(poolConfigFor(tempUrl));
   tempPool.on('error', () => {});
   tempPool.on('connect', c => c.on('notice', (m: { message?: string }) => notices.push(m.message ?? '')));
-  const applied = await migrate(tempPool);
+  const applied = [...preApplied, ...(await migrate(tempPool))];
 
   return { rootPool, tempPool, applied, notices, unmatchedEmail };
 }
@@ -632,8 +651,11 @@ describe.skipIf(!url)('migration 0051 links teachers to their people by email', 
     const linked = await tempPool.query<{ email: string; user_email: string }>(
       `SELECT p.email, u.email AS user_email FROM people p JOIN users u ON u.id = p.user_id`,
     );
-    expect(linked.rows).toHaveLength(1);
-    expect(linked.rows[0].email.trim().toLowerCase()).toBe(linked.rows[0].user_email);
+    // Two: the matched roster person, and the person 0069 creates for the unmatched teacher login (it has the login's email).
+    expect(linked.rows).toHaveLength(2);
+    for (const row of linked.rows) {
+      expect(row.email.trim().toLowerCase()).toBe(row.user_email);
+    }
   });
 
   it('copies the matched assignment into session_instructors', async () => {
@@ -1363,8 +1385,8 @@ describe.skipIf(!url)('migration 0061 moves enrolments, holds and places onto th
     handle = await databaseAfter0060(dbName, async (client, org) => {
       orgId = org;
       const people = await client.query<{ id: string }>(
-        `INSERT INTO people (org_id, given_name, family_name)
-         VALUES ($1, 'Ada', 'Lovelace'), ($1, 'Ben', 'Holt'), ($1, 'Cleo', 'Park') RETURNING id`,
+        `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone)
+         VALUES ($1, 'Ada', 'Lovelace', '1985-06-15', '+1 555 0100'), ($1, 'Ben', 'Holt', '2012-06-15', '+1 555 0100'), ($1, 'Cleo', 'Park', '2012-06-15', '+1 555 0100') RETURNING id`,
         [org],
       );
       [childA, childB, childC] = people.rows.map(r => r.id);
@@ -1552,7 +1574,7 @@ describe.skipIf(!url)('migration 0061 stops on data that would break a key', () 
     const dbName = `buxa_keys_dup_${randomBytes(4).toString('hex')}`;
     const handle = await databaseAfter0060(dbName, async (client, org) => {
       const person = await client.query<{ id: string }>(
-        `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Dana', 'Kerr') RETURNING id`,
+        `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'Dana', 'Kerr', '2012-06-15', '+1 555 0100') RETURNING id`,
         [org],
       );
       const occurrences = await client.query<{ id: string }>(
@@ -1591,7 +1613,7 @@ describe.skipIf(!url)('migration 0061 stops on data that would break a key', () 
     const dbName = `buxa_keys_overlap_${randomBytes(4).toString('hex')}`;
     const handle = await databaseAfter0060(dbName, async (client, org) => {
       const person = await client.query<{ id: string }>(
-        `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Eli', 'Stone') RETURNING id`,
+        `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'Eli', 'Stone', '2012-06-15', '+1 555 0100') RETURNING id`,
         [org],
       );
       const pottery = await client.query<{ id: string }>(

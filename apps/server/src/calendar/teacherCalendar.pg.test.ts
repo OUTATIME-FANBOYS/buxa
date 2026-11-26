@@ -146,10 +146,12 @@ describe.skipIf(!url)('teacher calendar feed on Postgres', () => {
   });
 
   it('a person who stops being a teacher loses the link at once', async () => {
-    await pool.query(`UPDATE org_members SET role = 'viewer' WHERE org_id = $1 AND user_id = $2`, [
-      fx.orgA,
-      teacherA.userId,
-    ]);
+    // A teacher is a viewer whose person holds the instructor role (migration 0069), so stopping is losing that role.
+    await pool.query(
+      `DELETE FROM person_roles WHERE org_id = $1 AND role = 'instructor'
+         AND person_id IN (SELECT id FROM people WHERE org_id = $1 AND user_id = $2)`,
+      [fx.orgA, teacherA.userId],
+    );
 
     expect(await repo.findTeacherByTokenHash(hashA)).toBeNull();
     expect(await names(hashA)).toEqual([]);

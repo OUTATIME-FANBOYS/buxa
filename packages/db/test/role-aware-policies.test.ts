@@ -136,7 +136,12 @@ describe.skipIf(!url)('role-aware policies (migrations 0057 and 0058)', () => {
         randomBytes(32),
       ]);
       for (const [label, id] of everyone()) {
-        const updated = await attempt(id, `UPDATE credentials SET issued_by = $2 WHERE person_id = $1`, [personId, id]);
+        // The UPDATE grant covers the sealed-token columns and revoked_at (migration 0055), not issued_by.
+        const updated = await attempt(
+          id,
+          `UPDATE credentials SET token_ciphertext = $2, token_iv = $3, token_auth_tag = $4 WHERE person_id = $1`,
+          [personId, randomBytes(20), randomBytes(12), randomBytes(16)],
+        );
         expect(updated === 'denied' ? 0 : updated, label).toBe(isWriter(label) ? 1 : 0);
         const read = await as(id, db =>
           db.query(`SELECT id, person_id, issued_at, issued_by, revoked_at, token_hash FROM credentials`),

@@ -17,7 +17,7 @@ export interface ClassFixture {
   otherActor: Actor;
   orgA: string;
   orgB: string;
-  /** A person in the given camp. `dob` null leaves the date of birth unknown. */
+  /** A person in the given camp. `dob` null is refused by the database: a date of birth is required (migration 0074). */
   addPerson(orgId: string, dob: string | null, givenName?: string): Promise<string>;
   /** Removes both camps. Their audit rows go with them (erasure is allowed; only edits and deletes of single rows are not). */
   close(): Promise<void>;
