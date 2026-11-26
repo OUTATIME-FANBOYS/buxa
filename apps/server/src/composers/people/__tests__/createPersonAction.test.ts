@@ -18,8 +18,8 @@ vi.mock('next/navigation', () => ({ redirect: h.redirect }));
 vi.mock('../../../runtime', () => ({ getRuntime: () => ({ services: { people: h.people } }) }));
 vi.mock('../camp', () => ({ currentActor: () => settle(() => h.actor) }));
 
-// Every person added needs a phone, and a camper also needs a date of birth.
-const adult = { givenName: 'Anna', familyName: 'Lee', roles: 'guardian', phone: '555-0100' };
+// Every person added needs a phone and a date of birth.
+const adult = { givenName: 'Anna', familyName: 'Lee', roles: 'guardian', dateOfBirth: '1980-04-12', phone: '555-0100' };
 const camper = { givenName: 'Ben', familyName: 'Lee', roles: 'camper', dateOfBirth: '2014-03-09', phone: '555-0101' };
 
 describe('createPersonAction', () => {

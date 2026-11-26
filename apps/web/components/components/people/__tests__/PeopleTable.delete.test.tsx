@@ -43,7 +43,8 @@ describe('PeopleTable: Edit and Delete by role', () => {
   it('shows Edit to someone who can update people (staff), and no Delete (only the owner deletes)', () => {
     const { host, cleanup } = renderTable({ canEdit: true, canDelete: false });
 
-    expect(host.textContent).toContain('Edit');
+    // The row's Edit is an icon button named for the person.
+    expect(host.querySelector('[aria-label="Edit Ana Lee"]')).not.toBeNull();
     expect(host.querySelector('input[type="checkbox"]')).toBeNull();
     expect(host.querySelector('[aria-label="Delete Ana Lee"]')).toBeNull();
     expect(host.textContent).not.toContain('Delete selected');

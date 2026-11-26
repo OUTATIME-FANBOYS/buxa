@@ -9,6 +9,7 @@ import { UiProvider } from '@buxa/middleware/providers/providers';
 
 const createPerson = vi.hoisted(() => vi.fn());
 vi.mock('@buxa/server/composers/people/createPersonAction', () => ({ createPersonAction: createPerson }));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), push: vi.fn(), refresh: vi.fn() }) }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 const NoDialog = () => null;

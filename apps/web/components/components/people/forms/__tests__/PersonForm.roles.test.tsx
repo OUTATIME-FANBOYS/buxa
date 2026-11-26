@@ -83,7 +83,10 @@ describe('PersonForm: roles are checkboxes in both modes', () => {
     renderAdd();
     const headings = Array.from(host.querySelectorAll('h3')).map(el => el.textContent);
     expect(headings).toEqual(['Family', 'Staff and participants']);
-    expect(host.querySelector('.people-check')?.textContent).toBe('Camper');
+    // The Family group comes first and holds the family roles, the camper among them.
+    const [family] = Array.from(host.querySelectorAll('.person-role-group'));
+    expect(family?.querySelector('.people-check')?.textContent).toBe('Parent or guardian');
+    expect(family?.textContent).toContain('Camper');
   });
 });
 

@@ -186,7 +186,8 @@ describe('emergency contact: creation and the input rule', () => {
       phone: '+1 555 0100',
       emergencyContact: { name: '', phone: '', relationship: '' },
     });
-    expect(person.emergencyContact).toBeNull();
+    // A person with no contact recorded is shown the blank view, as after a clear (see the test above).
+    expect(person.emergencyContact).toEqual({ name: null, phone: null, relationship: null });
   });
 
   it('refuses a name without a phone, and a phone that is not a phone', () => {

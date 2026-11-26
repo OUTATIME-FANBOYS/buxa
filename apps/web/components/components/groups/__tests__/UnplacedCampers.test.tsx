@@ -98,7 +98,8 @@ describe('the campers not placed yet', () => {
     type(searchBox(container), 'camper');
 
     expect(shownNames(container)).toHaveLength(8);
-    expect(container.textContent).toContain('Showing 1–8 of 8');
+    // One page of matches: no pager, so no range line either.
+    expect(container.textContent).not.toContain('Showing');
     expect(container.querySelector('nav')).toBeNull();
   });
 
