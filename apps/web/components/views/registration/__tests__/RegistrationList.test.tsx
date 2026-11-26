@@ -19,7 +19,12 @@ const services = vi.hoisted(() => ({
   classes: { listSessions: vi.fn() },
 }));
 
-vi.mock('next/navigation', () => ({ notFound, redirect: vi.fn() }));
+vi.mock('next/navigation', () => ({
+  notFound,
+  redirect: vi.fn(),
+  // The session filter moves to its chosen address with router.replace, so the page only needs the hook to exist.
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn(), refresh: vi.fn() }),
+}));
 vi.mock('@buxa/server/runtime', () => ({ getRuntime: () => ({ services }) }));
 vi.mock('@buxa/server/session/index', () => ({
   requireSession: () => Promise.resolve({ user: { clockFormat: null } }),
@@ -111,9 +116,10 @@ describe('the Registration page', () => {
   });
 
   it('shows Ben once per session he asks for, and Ada once', async () => {
+    // Counted by their camper cells: the action buttons' names also carry the camper's name.
     const html = render(await RegistrationList());
-    expect(html.split('Ben').length - 1).toBe(2);
-    expect(html.split('Ada').length - 1).toBe(1);
+    expect(html.match(/<td>Ben Ito<\/td>/g)).toHaveLength(2);
+    expect(html.match(/<td>Ada Lovelace<\/td>/g)).toHaveLength(1);
   });
 
   it('still lists the forms above the registrations', async () => {
@@ -153,14 +159,15 @@ describe('the session filter on the Registration page', () => {
 
   it('shows every session under All sessions (an empty session parameter)', async () => {
     const html = render(await RegistrationList({ searchParams: { session: '' } }));
-    expect(html.split('Ben').length - 1).toBe(2);
-    expect(html.split('Ada').length - 1).toBe(1);
+    expect(html.match(/<td>Ben Ito<\/td>/g)).toHaveLength(2);
+    expect(html.match(/<td>Ada Lovelace<\/td>/g)).toHaveLength(1);
   });
 
-  it('carries the choice in the URL: a GET form to the Registration address, with the choice selected', async () => {
+  it('is a search form for the session, with the chosen session selected', async () => {
+    // The choice moves to its address inside the app (router.replace), so the filter is a search form, not a GET form.
     const html = render(await RegistrationList({ searchParams: { session: AUTUMN } }));
-    expect(html).toContain('method="get"');
-    expect(html).toContain('action="/camp/registration"');
+    expect(html).toContain('role="search"');
+    expect(html).toContain('aria-label="Filter by session"');
     expect(html).toMatch(new RegExp(`<option value="${AUTUMN}"[^>]*selected`));
   });
 

@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import { act } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RegistrationForm } from '@buxa/contracts';
 import { success } from '@buxa/shared';
 import { RegistrationFormDialog } from '../RegistrationFormDialog';
+import { popUpMarkup } from './popUpMarkup';
 
 const actions = vi.hoisted(() => ({
   createFormAction: vi.fn(),
@@ -45,11 +45,9 @@ const form: RegistrationForm = {
   updatedAt: '2027-06-01T00:00:00.000Z',
 };
 
-describe('RegistrationFormDialog: the pop-up for a new form (server render)', () => {
+describe('RegistrationFormDialog: the pop-up for a new form (rendered markup)', () => {
   it('titles the pop-up New registration form, with Create form as its one action', () => {
-    const html = renderToStaticMarkup(
-      <RegistrationFormDialog mode="create" sessions={SESSIONS} onClose={() => undefined} />,
-    );
+    const html = popUpMarkup(<RegistrationFormDialog mode="create" sessions={SESSIONS} onClose={() => undefined} />);
     expect(html).toContain('New registration form');
     expect(html).toContain('Create form');
     expect(html).not.toContain('Save draft');
@@ -57,18 +55,16 @@ describe('RegistrationFormDialog: the pop-up for a new form (server render)', ()
   });
 
   it('has no Season field and no season hint', () => {
-    const html = renderToStaticMarkup(
-      <RegistrationFormDialog mode="create" sessions={SESSIONS} onClose={() => undefined} />,
-    );
+    const html = popUpMarkup(<RegistrationFormDialog mode="create" sessions={SESSIONS} onClose={() => undefined} />);
     expect(html).not.toContain('Season');
     expect(html).not.toContain('name="season"');
     expect(html).not.toContain('Only for your own reference');
   });
 });
 
-describe('RegistrationFormDialog: edit opens prefilled (server render)', () => {
+describe('RegistrationFormDialog: edit opens prefilled (rendered markup)', () => {
   it('fills the name, sessions and questions from the form, and has no Season field', () => {
-    const html = renderToStaticMarkup(
+    const html = popUpMarkup(
       <RegistrationFormDialog mode="edit" form={form} sessions={SESSIONS} onClose={() => undefined} />,
     );
     expect(html).toContain('Edit registration form');
@@ -80,7 +76,7 @@ describe('RegistrationFormDialog: edit opens prefilled (server render)', () => {
   });
 
   it('offers Save draft beside the primary Publish, and Cancel', () => {
-    const html = renderToStaticMarkup(
+    const html = popUpMarkup(
       <RegistrationFormDialog mode="edit" form={form} sessions={SESSIONS} onClose={() => undefined} />,
     );
     expect(html).toContain('Save draft');
@@ -89,7 +85,7 @@ describe('RegistrationFormDialog: edit opens prefilled (server render)', () => {
   });
 
   it('says Publish form, not a new version, while the form is a draft', () => {
-    const html = renderToStaticMarkup(
+    const html = popUpMarkup(
       <RegistrationFormDialog
         mode="edit"
         form={{ ...form, publishedVersion: null }}
