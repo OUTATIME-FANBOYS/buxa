@@ -3,43 +3,30 @@
 import { useCallback, useState } from 'react';
 import type { Person } from '@buxa/contracts';
 import { emergencyContactComplete } from '@buxa/domain';
-import { Button, Pill } from '@/components/elements';
+import { Button } from '@/components/elements';
 import { EmergencyContactForm } from '@/components/components/people/forms';
 
 /**
- * The person's emergency contact, on every profile. Optional, so a missing contact is only a muted note, and only for a camper.
+ * The camper's emergency contact, on the person's page: its own panel. Optional, so a missing contact is only a muted note.
  * `emergencyContact` is null for a viewer who may not see it (staff and the family's guardian can). Edit is offered only when the
  * server says this viewer may change it (`canEditEmergencyContact`).
  */
 export function EmergencyContactPanel({
   person,
-  embedded = false,
 }: {
   person: Pick<Person, 'id' | 'roles' | 'emergencyContact' | 'canEditEmergencyContact'>;
-  /** Inside the household card (families): a tag heading instead of its own card. */
-  embedded?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const finish = useCallback(() => setEditing(false), []);
   const contact = person.emergencyContact;
   const isCamper = person.roles.includes('camper');
 
-  const Wrapper = embedded ? 'div' : 'section';
-  const heading = embedded ? (
-    <Pill tone="neutral">Emergency contact</Pill>
-  ) : (
-    <h2 id="emergency-contact-heading" className="people-heading">
-      Emergency contact
-    </h2>
-  );
-
   return (
-    <Wrapper
-      className={embedded ? 'stack people-subpanel' : 'panel'}
-      aria-labelledby={embedded ? undefined : 'emergency-contact-heading'}
-    >
+    <section className="panel" aria-labelledby="emergency-contact-heading">
       <div className="buxa:flex buxa:flex-wrap buxa:items-center buxa:justify-between buxa:gap-2">
-        {heading}
+        <h2 id="emergency-contact-heading" className="people-heading">
+          Emergency contact
+        </h2>
         {person.canEditEmergencyContact && contact !== null && !editing && (
           <Button size="sm" icon="edit" onClick={() => setEditing(true)}>
             {contact.name === null ? 'Add' : 'Edit'}
@@ -54,7 +41,7 @@ export function EmergencyContactPanel({
       ) : (
         <EmergencyContactView contact={contact} isCamper={isCamper} complete={emergencyContactComplete(person)} />
       )}
-    </Wrapper>
+    </section>
   );
 }
 

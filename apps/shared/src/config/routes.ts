@@ -1,3 +1,4 @@
+import type { PeopleTab } from '../camp/peopleTabs';
 import type { SessionTab } from '../camp/sessionTabs';
 
 /**
@@ -18,6 +19,8 @@ export const ROUTES = {
   people: '/camp/people',
   // Opens the Add person pop-up on the People page (the page itself has no add address).
   addPerson: '/camp/people?add=person',
+  // One household: its members and every edit to it. Needs people:read to see it; the edits need the same rights as on a person.
+  households: '/camp/households',
   checkIn: '/camp/check-in',
   onSite: '/camp/on-site',
   attendance: '/camp/attendance',
@@ -91,6 +94,12 @@ export const newClassPath = (sessionId: string): string => `${sessionPath(sessio
 
 /** The page that changes a person's details. Needs people:update. */
 export const personEditPath = (id: string): string => `${personPath(id)}/edit`;
+
+/** The People page on one of its tabs (`people` or `households`). The URL keeps the tab in `?tab=`, so refresh and back return to it. */
+export const peopleTabPath = (tab: PeopleTab): string => `${ROUTES.people}?tab=${tab}`;
+
+/** One household's page: its members and every edit to the household. */
+export const householdPath = (id: string): string => `${ROUTES.households}/${encodeURIComponent(id)}`;
 
 /** The board (board, list, calendar and timeline views) of one project. */
 export const boardPath = (projectId: string): string => `${ROUTES.boards}/${encodeURIComponent(projectId)}`;

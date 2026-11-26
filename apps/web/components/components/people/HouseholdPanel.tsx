@@ -1,88 +1,55 @@
-import type { ReactNode } from 'react';
+import Link from 'next/link';
 import type { Household } from '@buxa/contracts';
-import { ROUTES } from '@/config/routes';
-import { LinkHouseholdForm, type HouseholdOption, type PersonOption } from '@/components/components/people/forms';
-import { PersonFinder } from '@/components/components/people/forms';
-import { HouseholdMemberRow } from './HouseholdMemberRow';
-import { Button } from '@/components/elements';
+import { householdPath, peopleTabPath } from '@/config/routes';
+import { Button, Pill } from '@/components/elements';
+import { householdRoleLabel } from './householdRoles';
 
 export interface HouseholdPanelProps {
   personId: string;
   /** The households this person belongs to. */
   households: readonly Household[];
-  /** Every household in the camp, for the link form. */
-  householdOptions: readonly HouseholdOption[];
-  canUpdate: boolean;
-  canCreate: boolean;
-  /** Whether the pick-up flag can be set when linking (people:authorise_pickup, admin and above). */
-  canAuthorisePickup: boolean;
-  /** The search for someone to link, from `?q=`; empty until staff search. */
-  query: string;
-  /** People matching `query` (never this person). */
-  linkable: readonly PersonOption[];
-  /** Shown inside the card, after the households: the family's emergency contact. */
-  children?: ReactNode;
 }
 
 /**
- * The households this person belongs to, with each member's guardian and pick-up status. Staff can link anyone in the camp to any
- * household: they search by name first, then choose from the matches. Adding a child starts from here too.
+ * The household card on a person's page: links only. It names each household this person belongs to, their role in it and whether
+ * they may collect a child, and opens the household's page. Every edit happens on that page, not here.
  */
-export function HouseholdPanel({
-  personId,
-  households,
-  householdOptions,
-  canUpdate,
-  canCreate,
-  canAuthorisePickup,
-  query,
-  linkable,
-  children,
-}: HouseholdPanelProps) {
+export function HouseholdPanel({ personId, households }: HouseholdPanelProps) {
   return (
-    <section className="panel" aria-labelledby="household-heading">
+    <section className="panel stack" aria-labelledby="household-heading">
       <h2 id="household-heading" className="people-heading">
         Household
       </h2>
-      {households.length === 0 && <p className="muted">Not in a household yet.</p>}
-      {households.map(household => (
-        <div key={household.id} className="stack">
-          <h3 className="people-subheading">{household.name}</h3>
-          <ul className="people-list" aria-label={`Members of ${household.name}`}>
-            {household.members.map(member => (
-              <HouseholdMemberRow
-                key={member.personId}
-                member={member}
-                householdId={household.id}
-                canUpdate={canUpdate}
-              />
-            ))}
-          </ul>
-          {canCreate && (
-            <p>
-              <Button href={`${ROUTES.addPerson}&household=${encodeURIComponent(household.id)}`}>
-                Add a child to this household
-              </Button>
-            </p>
-          )}
-        </div>
-      ))}
-      {canUpdate && householdOptions.length > 0 && (
-        <div className="stack people-subpanel">
-          <h3 className="people-subheading">Link someone to a household</h3>
-          <PersonFinder personId={personId} query={query} />
-          {query === '' && <p className="muted">Search by name to find someone in the camp.</p>}
-          {query !== '' && linkable.length === 0 && <p className="muted">No one matches that search.</p>}
-          {linkable.length > 0 && (
-            <LinkHouseholdForm
-              households={householdOptions}
-              people={linkable}
-              canAuthorisePickup={canAuthorisePickup}
-            />
-          )}
-        </div>
+      {households.length === 0 && (
+        <p className="muted">
+          Not in a household yet.{' '}
+          <Link className="link" href={peopleTabPath('households')}>
+            Open the Households tab
+          </Link>
+        </p>
       )}
-      {children}
+      {households.map(household => {
+        const me = household.members.find(member => member.personId === personId);
+
+        return (
+          <div key={household.id} className="stack people-subpanel">
+            <div className="buxa:flex buxa:flex-wrap buxa:items-center buxa:justify-between buxa:gap-2">
+              <h3 className="people-subheading">{household.name}</h3>
+              <Button href={householdPath(household.id)} size="sm">
+                Open household
+              </Button>
+            </div>
+            {me ? (
+              <div className="row">
+                <Pill tone="neutral">{householdRoleLabel(me)}</Pill>
+                {me.canPickup === true && <Pill tone="ok">Can collect child</Pill>}
+              </div>
+            ) : (
+              <p className="muted">Not listed in this household.</p>
+            )}
+          </div>
+        );
+      })}
     </section>
   );
 }

@@ -28,6 +28,7 @@ export * from './camp/input';
 export * from './camp/membershipExpiry';
 export * from './camp/navItems';
 export * from './camp/sessionFilter';
+export * from './camp/peopleTabs';
 export * from './camp/sessionTabs';
 export * from './csv';
 export * from './dates';
