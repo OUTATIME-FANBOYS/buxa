@@ -6,6 +6,7 @@ import {
   createClassFixture,
   makeSession,
   sessionInput,
+  uniqueLocation,
   type ClassFixture,
 } from '../../classes/__tests__/pgClassFixture';
 import { backdateHolds, householdWithChild } from './holdFixture';
@@ -40,7 +41,11 @@ describe.skipIf(!url)('seat holds in Postgres: capacity and expiry', () => {
   async function setUp(capacity: number, households: string[]) {
     const fx: ClassFixture = await createClassFixture(pool);
     const session = await makeSession(fx.repo, fx.actor);
-    const cls = await fx.repo.addClass(fx.actor, session.id, sessionInput(9, 12, { capacity }));
+    const cls = await fx.repo.addClass(
+      fx.actor,
+      session.id,
+      sessionInput(9, 12, { location: uniqueLocation(), capacity }),
+    );
     const ids = await withOrg(pool, fx.actor.userId, fx.orgA, async db => {
       const out: { householdId: string; personId: string }[] = [];
       for (const name of households) {

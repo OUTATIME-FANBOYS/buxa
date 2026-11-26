@@ -25,12 +25,14 @@ const url = process.env.DATABASE_URL;
 const PDF = new TextEncoder().encode('%PDF-1.4\n% immunization record\n');
 const TEXT = new TextEncoder().encode('just some text, not a PDF');
 
+// The camper's name and birth date are read from the child's record, so a blank answer is filled from it. One answer set then serves
+// both children of the fixture (Ada and Ben).
 const standard = {
-  camperFirstName: 'Ada',
-  camperLastName: 'Lovelace',
-  camperBirthDate: '2014-03-09',
+  camperFirstName: '',
+  camperLastName: '',
+  camperBirthDate: '',
   guardianName: 'Byron Lovelace',
-  guardianDateOfBirth: '1979-11-02',
+  guardianDateOfBirth: '1985-06-15',
   guardianPhone: '555-0100',
   emergencyContactName: 'Mary Somerville',
   emergencyContactPhone: '555-0111',

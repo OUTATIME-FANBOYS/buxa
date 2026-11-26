@@ -64,23 +64,31 @@ export async function createRegistrationFixture(
       [orgId, `Session ${tag}`],
     );
     const sessionId = parent.rows[0].id;
-    const classRow = async (name: string, startsAt: string, endsAt: string, capacity: number): Promise<string> => {
+    // Two classes in one location may not overlap in time (migration 0067), so SWIMMING, which overlaps ARCHERY for the child
+    // tests, is in its own location.
+    const classRow = async (
+      name: string,
+      location: string,
+      startsAt: string,
+      endsAt: string,
+      capacity: number,
+    ): Promise<string> => {
       const { rows } = await db.query<{ id: string }>(
         `INSERT INTO sessions (org_id, class_id, name, starts_at, ends_at, location, capacity, ratio_campers, ratio_instructors)
-         VALUES ($1, $2, $3, $4, $5, 'Field', $6, 8, 1) RETURNING id`,
-        [orgId, sessionId, name, startsAt, endsAt, capacity],
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 8, 1) RETURNING id`,
+        [orgId, sessionId, name, startsAt, endsAt, location, capacity],
       );
 
       return rows[0].id;
     };
-    const archery = await classRow('Archery', '2027-07-10T10:00:00Z', '2027-07-10T11:00:00Z', 2);
-    const swimming = await classRow('Swimming', '2027-07-10T10:30:00Z', '2027-07-10T11:30:00Z', 2);
-    const painting = await classRow('Painting', '2027-07-10T13:00:00Z', '2027-07-10T14:00:00Z', 1);
-    const climbing = await classRow('Climbing', '2027-07-11T10:00:00Z', '2027-07-11T11:00:00Z', 10);
+    const archery = await classRow('Archery', 'Field', '2027-07-10T10:00:00Z', '2027-07-10T11:00:00Z', 2);
+    const swimming = await classRow('Swimming', 'Pool', '2027-07-10T10:30:00Z', '2027-07-10T11:30:00Z', 2);
+    const painting = await classRow('Painting', 'Field', '2027-07-10T13:00:00Z', '2027-07-10T14:00:00Z', 1);
+    const climbing = await classRow('Climbing', 'Field', '2027-07-11T10:00:00Z', '2027-07-11T11:00:00Z', 10);
 
     const child = async (given: string, family: string, dob: string): Promise<string> => {
       const guardian = await db.query<{ id: string }>(
-        `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Guardian', $2) RETURNING id`,
+        `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'Guardian', $2, '1985-06-15', '+1 555 0100') RETURNING id`,
         [orgId, `${given} family ${tag}`],
       );
       const household = await db.query<{ id: string }>(
@@ -92,7 +100,7 @@ export async function createRegistrationFixture(
         [orgId, household.rows[0].id, guardian.rows[0].id],
       );
       const camper = await db.query<{ id: string }>(
-        `INSERT INTO people (org_id, given_name, family_name, date_of_birth) VALUES ($1, $2, $3, $4) RETURNING id`,
+        `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, $2, $3, $4, '+1 555 0100') RETURNING id`,
         [orgId, given, family, dob],
       );
       await db.query(`INSERT INTO person_roles (org_id, person_id, role) VALUES ($1, $2, 'camper')`, [

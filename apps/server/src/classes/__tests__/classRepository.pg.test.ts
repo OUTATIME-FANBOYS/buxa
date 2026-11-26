@@ -278,11 +278,10 @@ describe.skipIf(!url)('ClassRepository on Postgres', () => {
       expect(await auditActions(pool, fx.orgA)).not.toContain('enrolment.create');
     });
 
-    it('refuses a camper whose date of birth is unknown', async () => {
-      const unknown = await fx.addPerson(fx.orgA, null, 'Nodob');
-      await expect(fx.repo.enrol(fx.actor, { classId, camperId: unknown }, enrolRule())).rejects.toBeInstanceOf(
-        EnrolmentRefusedError,
-      );
+    // Enrolment refuses a camper with no date of birth. Since migration 0074 no such person can be stored, so the refusal is now
+    // the database's: a camper with an unknown date of birth is not created at all.
+    it('a camper whose date of birth is unknown cannot be stored (migration 0074)', async () => {
+      await expect(fx.addPerson(fx.orgA, null, 'Nodob')).rejects.toThrow(/date_of_birth/);
     });
 
     it('refuses a full class, and waitlists when asked', async () => {

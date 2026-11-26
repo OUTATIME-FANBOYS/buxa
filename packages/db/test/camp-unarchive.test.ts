@@ -40,7 +40,10 @@ describe.skipIf(!url)('camp unarchive (0017)', () => {
       owner,
       admin,
     ]);
-    await pool.query(`INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Ada', 'Lovelace')`, [camp]);
+    await pool.query(
+      `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'Ada', 'Lovelace', '1985-06-15', '+1 555 0100')`,
+      [camp],
+    );
     await withOrg(pool, owner, camp, db => db.query('SELECT buxa_archive_camp($1)', [camp]));
   });
 

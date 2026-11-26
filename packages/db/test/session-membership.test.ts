@@ -54,7 +54,7 @@ describe.skipIf(!url)('session membership (0032)', () => {
     await pool.query(`INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'owner')`, [otherCamp, outsider]);
     person = (
       await pool.query<{ id: string }>(
-        `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Ada', 'Lovelace') RETURNING id`,
+        `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'Ada', 'Lovelace', '1985-06-15', '+1 555 0100') RETURNING id`,
         [camp],
       )
     ).rows[0].id;
@@ -164,10 +164,10 @@ describe.skipIf(!url)('session membership (0032)', () => {
     });
 
     it('an admin can rename a member of the camp (the roster person, not the login)', async () => {
-      await pool.query(`INSERT INTO people (org_id, given_name, family_name, user_id) VALUES ($1, 'Old', 'Name', $2)`, [
-        camp,
-        target,
-      ]);
+      await pool.query(
+        `INSERT INTO people (org_id, given_name, family_name, user_id, date_of_birth, phone) VALUES ($1, 'Old', 'Name', $2, '1985-06-15', '+1 555 0100')`,
+        [camp, target],
+      );
       const rows = await asUser(
         admin,
         camp,

@@ -10,6 +10,7 @@ import {
   enrolRule,
   makeSession,
   sessionInput,
+  uniqueLocation,
   type ClassFixture,
 } from '../../classes/__tests__/pgClassFixture';
 
@@ -62,7 +63,11 @@ describe.skipIf(!url)('seat hold races on Postgres', () => {
     try {
       for (let trial = 0; trial < TRIALS; trial++) {
         const session = await makeSession(fx.repo, fx.actor);
-        const cls = await fx.repo.addClass(fx.actor, session.id, sessionInput(9, 12, { capacity: K }));
+        const cls = await fx.repo.addClass(
+          fx.actor,
+          session.id,
+          sessionInput(9, 12, { location: uniqueLocation(), capacity: K }),
+        );
         const households = await Promise.all(
           Array.from({ length: N }, (_, i) => addHousehold(fx, `Family ${trial}-${i}`)),
         );
@@ -100,7 +105,11 @@ describe.skipIf(!url)('seat hold races on Postgres', () => {
     try {
       for (let trial = 0; trial < TRIALS; trial++) {
         const session = await makeSession(fx.repo, fx.actor);
-        const cls = await fx.repo.addClass(fx.actor, session.id, sessionInput(9, 12, { capacity: K }));
+        const cls = await fx.repo.addClass(
+          fx.actor,
+          session.id,
+          sessionInput(9, 12, { location: uniqueLocation(), capacity: K }),
+        );
         const households = await Promise.all([0, 1, 2].map(i => addHousehold(fx, `Race ${trial}-${i}`)));
         const campers = await Promise.all([0, 1, 2].map(i => fx.addPerson(fx.orgA, '2016-03-01', `Racer${trial}${i}`)));
 
@@ -136,7 +145,11 @@ describe.skipIf(!url)('seat hold races on Postgres', () => {
     try {
       for (let trial = 0; trial < TRIALS; trial++) {
         const session = await makeSession(fx.repo, fx.actor);
-        const cls = await fx.repo.addClass(fx.actor, session.id, sessionInput(9, 12, { capacity: 1 }));
+        const cls = await fx.repo.addClass(
+          fx.actor,
+          session.id,
+          sessionInput(9, 12, { location: uniqueLocation(), capacity: 1 }),
+        );
         const household = await addHousehold(fx, `Last ${trial}`);
         const camper = await fx.addPerson(fx.orgA, '2016-03-01', `Last${trial}`);
 

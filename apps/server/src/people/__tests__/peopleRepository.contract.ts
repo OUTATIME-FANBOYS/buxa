@@ -44,7 +44,7 @@ export function peopleRepositoryContract(factory: RepositoryFactory): void {
         expect(created).toMatchObject({
           email: 'ada@example.test',
           phone: '+44 20 0000 0000',
-          dateOfBirth: null,
+          dateOfBirth: '1985-06-15',
         });
       });
 
@@ -80,9 +80,10 @@ export function peopleRepositoryContract(factory: RepositoryFactory): void {
       });
 
       it('can clear an optional field', async () => {
-        const created = await fx.repos.people.create(fx.actor, samplePerson({ phone: '+44 20 0000 0000' }));
-        const updated = await fx.repos.people.update(fx.actor, created.id, { phone: null });
-        expect(updated.phone).toBeNull();
+        // Phone and date of birth are required (migration 0074), so the optional field here is the email.
+        const created = await fx.repos.people.create(fx.actor, samplePerson({ email: 'ada@example.test' }));
+        const updated = await fx.repos.people.update(fx.actor, created.id, { email: null });
+        expect(updated.email).toBeNull();
       });
 
       it('throws PersonNotFoundError for an unknown id', async () => {

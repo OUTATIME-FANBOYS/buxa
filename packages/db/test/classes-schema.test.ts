@@ -32,7 +32,7 @@ describe.skipIf(!url)('phase 2 schema: isolation, constraints and grants', () =>
     return withOrg(pool, await memberOf(pool, org), org, async db => {
       const person = (
         await db.query<{ id: string }>(
-          `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, $2, 'Camper') RETURNING id`,
+          `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, $2, 'Camper', '2012-06-15', '+1 555 0100') RETURNING id`,
           [org, label],
         )
       ).rows[0].id;
@@ -317,13 +317,13 @@ describe.skipIf(!url)('phase 2 schema: isolation, constraints and grants', () =>
       // Session a has capacity 2. Its enrolled count is now 1 (Ann re-enrolled above), so one more fits and a third does not.
       const other = await asA(db =>
         db.query<{ id: string }>(
-          `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Second', 'Camper') RETURNING id`,
+          `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'Second', 'Camper', '2012-06-15', '+1 555 0100') RETURNING id`,
           [orgA],
         ),
       );
       const third = await asA(db =>
         db.query<{ id: string }>(
-          `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Third', 'Camper') RETURNING id`,
+          `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'Third', 'Camper', '2012-06-15', '+1 555 0100') RETURNING id`,
           [orgA],
         ),
       );

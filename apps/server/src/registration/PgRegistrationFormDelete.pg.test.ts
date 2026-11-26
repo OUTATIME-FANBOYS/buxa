@@ -9,12 +9,14 @@ import { createRegistrationFixture, pgPeopleService, type RegistrationFixture } 
 
 const url = process.env.DATABASE_URL;
 
+// The camper's name and birth date are read from the child's record, so a blank answer is filled from it. One answer set then serves
+// both children of the fixture (Ada and Ben).
 const standard = {
-  camperFirstName: 'Ada',
-  camperLastName: 'Lovelace',
-  camperBirthDate: '2014-03-09',
+  camperFirstName: '',
+  camperLastName: '',
+  camperBirthDate: '',
   guardianName: 'Byron Lovelace',
-  guardianDateOfBirth: '1979-11-02',
+  guardianDateOfBirth: '1985-06-15',
   guardianPhone: '555-0100',
   emergencyContactName: 'Mary Somerville',
   emergencyContactPhone: '555-0111',
@@ -135,10 +137,17 @@ describe.skipIf(!url)('deleting a registration form in Postgres', () => {
   });
 
   it('the database also refuses staff, who may not manage forms (the function checks the role)', async () => {
-    const { fx, formId, staff } = await publishedForm();
+    const { fx, formId } = await publishedForm();
+    // A login that is really a staff member of the camp. The fixture's own login is the admin, so it cannot stand in for staff here.
+    const staffUser = (
+      await pool.query<{ id: string }>(`INSERT INTO users (email, name) VALUES ($1, 'Staff only') RETURNING id`, [
+        `staff-${randomBytes(6).toString('hex')}@reg.test`,
+      ])
+    ).rows[0].id;
+    await pool.query(`INSERT INTO org_members (org_id, user_id, role) VALUES ($1, $2, 'staff')`, [fx.orgId, staffUser]);
 
     await expect(
-      withOrg(pool, staff.userId, staff.orgId, db =>
+      withOrg(pool, staffUser, fx.orgId, db =>
         db.query('SELECT buxa_delete_registration_form_v1($1, $2)', [fx.orgId, formId]),
       ),
     ).rejects.toMatchObject({ code: '42501' });

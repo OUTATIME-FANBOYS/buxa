@@ -68,7 +68,7 @@ describe.skipIf(!url)('role-aware policies (migrations 0057 and 0058)', () => {
     );
     personId = (
       await pool.query<{ id: string }>(
-        `INSERT INTO people (org_id, given_name, family_name, email) VALUES ($1, 'Pat', 'Self', $2) RETURNING id`,
+        `INSERT INTO people (org_id, given_name, family_name, email, date_of_birth, phone) VALUES ($1, 'Pat', 'Self', $2, '1985-06-15', '+1 555 0100') RETURNING id`,
         [camp, personEmail],
       )
     ).rows[0].id;
@@ -136,7 +136,12 @@ describe.skipIf(!url)('role-aware policies (migrations 0057 and 0058)', () => {
         randomBytes(32),
       ]);
       for (const [label, id] of everyone()) {
-        const updated = await attempt(id, `UPDATE credentials SET issued_by = $2 WHERE person_id = $1`, [personId, id]);
+        // The UPDATE grant covers the sealed-token columns and revoked_at (migration 0055), not issued_by.
+        const updated = await attempt(
+          id,
+          `UPDATE credentials SET token_ciphertext = $2, token_iv = $3, token_auth_tag = $4 WHERE person_id = $1`,
+          [personId, randomBytes(20), randomBytes(12), randomBytes(16)],
+        );
         expect(updated === 'denied' ? 0 : updated, label).toBe(isWriter(label) ? 1 : 0);
         const read = await as(id, db =>
           db.query(`SELECT id, person_id, issued_at, issued_by, revoked_at, token_hash FROM credentials`),
@@ -181,7 +186,7 @@ describe.skipIf(!url)('role-aware policies (migrations 0057 and 0058)', () => {
       );
       childId = (
         await pool.query<{ id: string }>(
-          `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Kid', 'Self') RETURNING id`,
+          `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'Kid', 'Self', '2012-06-15', '+1 555 0100') RETURNING id`,
           [camp],
         )
       ).rows[0].id;
@@ -193,7 +198,7 @@ describe.skipIf(!url)('role-aware policies (migrations 0057 and 0058)', () => {
       const guardianEmail = `guardian-${tag}@roster.test`;
       const guardianPerson = (
         await pool.query<{ id: string }>(
-          `INSERT INTO people (org_id, given_name, family_name, email) VALUES ($1, 'Gus', 'Guardian', $2) RETURNING id`,
+          `INSERT INTO people (org_id, given_name, family_name, email, date_of_birth, phone) VALUES ($1, 'Gus', 'Guardian', $2, '1985-06-15', '+1 555 0100') RETURNING id`,
           [camp, guardianEmail],
         )
       ).rows[0].id;
@@ -369,7 +374,7 @@ describe.skipIf(!url)('role-aware policies (migrations 0057 and 0058)', () => {
       const person = async (org: string): Promise<string> =>
         (
           await pool.query<{ id: string }>(
-            `INSERT INTO people (org_id, given_name, family_name, user_id) VALUES ($1, 'Old', 'Name', $2) RETURNING id`,
+            `INSERT INTO people (org_id, given_name, family_name, user_id, date_of_birth, phone) VALUES ($1, 'Old', 'Name', $2, '1985-06-15', '+1 555 0100') RETURNING id`,
             [org, target],
           )
         ).rows[0].id;

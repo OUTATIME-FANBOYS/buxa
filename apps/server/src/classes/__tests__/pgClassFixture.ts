@@ -17,7 +17,7 @@ export interface ClassFixture {
   otherActor: Actor;
   orgA: string;
   orgB: string;
-  /** A person in the given camp. `dob` null leaves the date of birth unknown. */
+  /** A person in the given camp. `dob` null is refused by the database: a date of birth is required (migration 0074). */
   addPerson(orgId: string, dob: string | null, givenName?: string): Promise<string>;
   /** Removes both camps. Their audit rows go with them (erasure is allowed; only edits and deletes of single rows are not). */
   close(): Promise<void>;
@@ -82,7 +82,7 @@ export async function createClassFixture(pool: Pool): Promise<ClassFixture> {
         async db =>
           (
             await db.query<{ id: string }>(
-              `INSERT INTO people (org_id, given_name, family_name, date_of_birth) VALUES ($1, $2, 'Test', $3::date) RETURNING id`,
+              `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, $2, 'Test', $3::date, '+1 555 0100') RETURNING id`,
               [orgId, givenName, dob],
             )
           ).rows[0].id,
@@ -104,6 +104,16 @@ export function uniqueSessionName(base: string): string {
   sessionSeq += 1;
 
   return `${base} ${sessionSeq}`;
+}
+
+/**
+ * A location no other class in the camp has. Two classes in one location may not overlap in time (migration 0067), so a test that
+ * adds several classes on the same day gives each one its own location.
+ */
+export function uniqueLocation(): string {
+  sessionSeq += 1;
+
+  return `Room ${sessionSeq}`;
 }
 
 /** A session (the parent) covering July 2027. */

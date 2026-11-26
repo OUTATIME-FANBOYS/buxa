@@ -58,7 +58,7 @@ describe.skipIf(!url)('seat holds: isolation and constraints', () => {
       ).rows[0].id;
       const childA = (
         await db.query<{ id: string }>(
-          `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Kid', 'A') RETURNING id`,
+          `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'Kid', 'A', '2012-06-15', '+1 555 0100') RETURNING id`,
           [orgA],
         )
       ).rows[0].id;

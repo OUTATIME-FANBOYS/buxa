@@ -18,6 +18,7 @@ import {
   enrolRule,
   makeSession,
   sessionInput,
+  uniqueLocation,
   type ClassFixture,
 } from '../../classes/__tests__/pgClassFixture';
 
@@ -88,7 +89,11 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
 
   it('a hold takes one place, shows in the seat count, and a full session refuses the next one', async () => {
     const session = await makeSession(fx.repo, actor);
-    const cls = await fx.repo.addClass(actor, session.id, sessionInput(9, 12, { capacity: 1 }));
+    const cls = await fx.repo.addClass(
+      actor,
+      session.id,
+      sessionInput(9, 12, { location: uniqueLocation(), capacity: 1 }),
+    );
     const first = await addHousehold(fx, fx.orgA, 'Hart family');
     const second = await addHousehold(fx, fx.orgA, 'Lin family');
 
@@ -118,7 +123,11 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
 
   it('one child holds at most one place per class, and may hold again after releasing it', async () => {
     const session = await makeSession(fx.repo, actor);
-    const cls = await fx.repo.addClass(actor, session.id, sessionInput(9, 12, { capacity: 3 }));
+    const cls = await fx.repo.addClass(
+      actor,
+      session.id,
+      sessionInput(9, 12, { location: uniqueLocation(), capacity: 3 }),
+    );
     const household = await addHousehold(fx, fx.orgA, 'Repeat family');
     const expiresAt = holdExpiresAt(new Date());
 
@@ -149,7 +158,11 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
 
   it('an expired hold stops counting at once, even before the cleanup runs', async () => {
     const session = await makeSession(fx.repo, actor);
-    const cls = await fx.repo.addClass(actor, session.id, sessionInput(9, 12, { capacity: 1 }));
+    const cls = await fx.repo.addClass(
+      actor,
+      session.id,
+      sessionInput(9, 12, { location: uniqueLocation(), capacity: 1 }),
+    );
     const household = await addHousehold(fx, fx.orgA, 'Late family');
     const hold = await holds.placeHold(actor, {
       sessionId: cls.id,
@@ -169,7 +182,11 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
 
   it('the cleanup releases expired holds, promotes the first waitlisted camper, and is safe to run twice', async () => {
     const session = await makeSession(fx.repo, actor);
-    const cls = await fx.repo.addClass(actor, session.id, sessionInput(9, 12, { capacity: 1 }));
+    const cls = await fx.repo.addClass(
+      actor,
+      session.id,
+      sessionInput(9, 12, { location: uniqueLocation(), capacity: 1 }),
+    );
     const household = await addHousehold(fx, fx.orgA, 'Waiting family');
     const hold = await holds.placeHold(actor, {
       sessionId: cls.id,
@@ -203,7 +220,11 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
 
   it('releasing a hold hands its place to the first waitlisted camper', async () => {
     const session = await makeSession(fx.repo, actor);
-    const cls = await fx.repo.addClass(actor, session.id, sessionInput(9, 12, { capacity: 1 }));
+    const cls = await fx.repo.addClass(
+      actor,
+      session.id,
+      sessionInput(9, 12, { location: uniqueLocation(), capacity: 1 }),
+    );
     const household = await addHousehold(fx, fx.orgA, 'Release family');
     const hold = await holds.placeHold(actor, {
       sessionId: cls.id,
@@ -223,7 +244,11 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
 
   it('cancelling an enrolment hands its place to the first waitlisted camper, in the order they joined', async () => {
     const session = await makeSession(fx.repo, actor);
-    const cls = await fx.repo.addClass(actor, session.id, sessionInput(9, 12, { capacity: 1 }));
+    const cls = await fx.repo.addClass(
+      actor,
+      session.id,
+      sessionInput(9, 12, { location: uniqueLocation(), capacity: 1 }),
+    );
     const first = await fx.addPerson(fx.orgA, '2016-03-01', 'Ann');
     const second = await fx.addPerson(fx.orgA, '2016-03-01', 'Bea');
     const third = await fx.addPerson(fx.orgA, '2016-03-01', 'Cy');
@@ -243,7 +268,11 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
 
   it('cancelling a waitlisted entry frees no place, so nobody is promoted', async () => {
     const session = await makeSession(fx.repo, actor);
-    const cls = await fx.repo.addClass(actor, session.id, sessionInput(9, 12, { capacity: 1 }));
+    const cls = await fx.repo.addClass(
+      actor,
+      session.id,
+      sessionInput(9, 12, { location: uniqueLocation(), capacity: 1 }),
+    );
     const holder = await fx.addPerson(fx.orgA, '2016-03-01', 'Dan');
     const queued = await fx.addPerson(fx.orgA, '2016-03-01', 'Eli');
     await fx.repo.enrol(actor, { classId: cls.id, camperId: holder }, enrolRule());
@@ -261,7 +290,11 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
 
   it('a hold for a household or class outside the camp is not found, and a malformed id is not found', async () => {
     const session = await makeSession(fx.repo, actor);
-    const cls = await fx.repo.addClass(actor, session.id, sessionInput(9, 12, { capacity: 2 }));
+    const cls = await fx.repo.addClass(
+      actor,
+      session.id,
+      sessionInput(9, 12, { location: uniqueLocation(), capacity: 2 }),
+    );
     const expiresAt = holdExpiresAt(new Date());
     const otherHousehold = await addHousehold(fx, fx.orgB, 'Other camp family');
     await expect(
@@ -283,7 +316,11 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
   });
   it('siblings of one household each hold a place in the same class, and one child cannot hold it twice', async () => {
     const session = await makeSession(fx.repo, actor);
-    const cls = await fx.repo.addClass(actor, session.id, sessionInput(9, 12, { capacity: 5 }));
+    const cls = await fx.repo.addClass(
+      actor,
+      session.id,
+      sessionInput(9, 12, { location: uniqueLocation(), capacity: 5 }),
+    );
     const first = await addHousehold(fx, fx.orgA, 'Sibling family');
     const sibling = await withOrg(pool, actor.userId, fx.orgA, db =>
       addSibling(db, fx.orgA, first.householdId, 'Second'),
@@ -312,7 +349,11 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
 
   it('a child who is not in the household cannot be held for it', async () => {
     const session = await makeSession(fx.repo, actor);
-    const cls = await fx.repo.addClass(actor, session.id, sessionInput(9, 12, { capacity: 2 }));
+    const cls = await fx.repo.addClass(
+      actor,
+      session.id,
+      sessionInput(9, 12, { location: uniqueLocation(), capacity: 2 }),
+    );
     const one = await addHousehold(fx, fx.orgA, 'Own family');
     const other = await addHousehold(fx, fx.orgA, 'Stranger family');
     await expect(
@@ -327,7 +368,11 @@ describe.skipIf(!url)('seat holds on Postgres', () => {
 
   it('a released hold cannot change, and the request role cannot update any column but the release ones', async () => {
     const session = await makeSession(fx.repo, actor);
-    const cls = await fx.repo.addClass(actor, session.id, sessionInput(9, 12, { capacity: 2 }));
+    const cls = await fx.repo.addClass(
+      actor,
+      session.id,
+      sessionInput(9, 12, { location: uniqueLocation(), capacity: 2 }),
+    );
     const family = await addHousehold(fx, fx.orgA, 'Final family');
     const hold = await holds.placeHold(actor, {
       sessionId: cls.id,

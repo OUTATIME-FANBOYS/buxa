@@ -58,7 +58,7 @@ describe.skipIf(!url)('teacher scope on Postgres (row-level security)', () => {
     ).rows[0].id;
     const teacherPersonA = (
       await pool.query<{ id: string }>(
-        `INSERT INTO people (org_id, given_name, family_name, user_id) VALUES ($1, 'Tess', 'Teacher', $2) RETURNING id`,
+        `INSERT INTO people (org_id, given_name, family_name, user_id, date_of_birth, phone) VALUES ($1, 'Tess', 'Teacher', $2, '1985-06-15', '+1 555 0100') RETURNING id`,
         [orgA, teacherA],
       )
     ).rows[0].id;
@@ -69,7 +69,7 @@ describe.skipIf(!url)('teacher scope on Postgres (row-level security)', () => {
     ]);
     personA = (
       await pool.query<{ id: string }>(
-        `INSERT INTO people (org_id, given_name, family_name) VALUES ($1, 'Kim', 'Camp') RETURNING id`,
+        `INSERT INTO people (org_id, given_name, family_name, date_of_birth, phone) VALUES ($1, 'Kim', 'Camp', '1985-06-15', '+1 555 0100') RETURNING id`,
         [orgA],
       )
     ).rows[0].id;
